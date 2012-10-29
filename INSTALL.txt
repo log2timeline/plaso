@@ -1,9 +1,13 @@
 # Small INSTALL file.
+# This is more of a scratch pad than anything else, and will most likely either be completely removed or changed when the installation has
+# actually been succesful.
+#   (most likely removed and put on the actual site page instead of here in the code).
+
 
 Mac OS X:
 
 Prepare:
-Install XCode, since we are about to start compiling bunch of stuff.
++ Install XCode, since we are about to start compiling bunch of stuff.
 
 Install these libraries:
 + install FUSE (http://osxfuse.github.com/)
@@ -18,6 +22,7 @@ Actual Work:
 1. Get this repo, check.
 2. Download protobuf: http://code.google.com/p/protobuf/downloads/list (http://protobuf.googlecode.com/files/protobuf-2.4.1.tar.bz2)
     (standard ./configure, make and make install should do)
+    (remember to also go into the python directory and install the python bindings)
 3. Compile the proto
     (run ./compile_proto.sh)
 

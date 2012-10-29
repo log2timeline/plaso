@@ -19,10 +19,6 @@
 
 syntax = "proto2";
 
-// option cc_api_version = 2;
-// option java_api_version = 2;
-// option py_api_version = 2;
-
 package transmission;
 
 // This is a message that is passed between threads/processes during

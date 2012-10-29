@@ -18,13 +18,9 @@
 
 syntax = "proto2";
 
-// option cc_api_version = 2;
-// option java_api_version = 2;
-// option py_api_version = 2;
-
 package plaso_storage;
 
-import "proto/transmission.proto";
+import "plaso/proto/transmission.proto";
 
 // Each EventObject/EventContainer can contain any attribute
 // as long as it can be expressed in a string value.
