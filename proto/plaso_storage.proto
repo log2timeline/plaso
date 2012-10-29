@@ -1,0 +1,152 @@
+// Copyright 2012 Google Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Author: Kristinn Gudjonsson <kristinn at log2timeline dot net>>
+
+// This is the main protobuf for event storage in plaso.o
+
+syntax = "proto2";
+
+// option cc_api_version = 2;
+// option java_api_version = 2;
+// option py_api_version = 2;
+
+package plaso_storage;
+
+import "proto/transmission.proto";
+
+// Each EventObject/EventContainer can contain any attribute
+// as long as it can be expressed in a string value.
+// This can be looked as a hash or a dict object, with a key
+// and a value values.
+message Attribute {
+  // The key to the dict object, something like 'username'.
+  required string key = 1;
+
+  // The value of the key, something like 'johndoe'.
+  optional string value = 2;
+};
+
+// Each event read by the tool is stored as an EventObject,
+// an EventObject contains certain fixed sets of attributes
+// and it can also store any additional attributes.
+// This message stores the main attributes inside the each record
+// instead of nesting them possibly deep down.
+message EventObject {
+  // The timestamp is presented as a 64 bit Unix Epoch time,
+  // stored in UTC.
+  optional int64 timestamp = 1;
+
+  // A short description of the meaning of the timestamp.
+  // This could be something as 'File Written', 'Last Written',
+  // 'Page Visited', 'File Downloaded', or something like that.
+  optional string timestamp_desc = 2;
+
+  // Description of the origin of the event in generic terms that
+  // mostly adhere to the definition of the TLN format.
+  enum SourceShort {
+    AV = 1; // All Anti-Virus engine log files.
+    BACK = 2; // Information from backup points, eg. restore points, VSS.
+    EVT = 3; // EventLog entries, both the EVT format and EVTX.
+    EXIF = 4; // EXIF information.
+    FILE = 5; // FILE related information, mactime information.
+    LOG = 6; // Generic log file, most log files should fit this.
+    LNK = 7; // Shortcut or link files.
+    LSO = 8; // Flash cookies, or Local Shared Objects.
+    META = 9; // Metadata information.
+    PLIST = 10; // Information extracted from plist files.
+    RAM = 11; // Information extracted from RAM.
+    RECBIN = 12; // Recycle bin or deleted items.
+    REG = 13; // Registry information.
+    WEBHIST = 14; // Browser history.
+  }
+
+  // The category or short description of the source.
+  required SourceShort source_short = 3;
+
+  // The short description is not sufficient to describe the source
+  // of the event. A longer source field is therefore provided to add
+  // more context to the source. The source_long field should not be
+  // long, two or three words should be sufficient for most parts.
+  // The field is not strictly defined, it should just be short and
+  // fully descriptive.
+  //
+  // Example field names are:
+  //    Chrome Browser History
+  //    Chrome Download History
+  //    Recycle Bin
+  //    NTUSER.DAT Registry
+  //    Sophos AV Log
+  required string source_long = 4;
+
+  // This is the meat of the storage. This field stores most of the
+  // extracted information from the event, something that should be
+  // fully descriptive of the event in question without containing
+  // information that is stored in other events, such as hostname,
+  // username or timestamps.
+  required string description_long = 5;
+
+  // The description_long field can be too long to present in visual
+  // tools. The shorter version of that string is the description_short.
+  // This field should contain the bare amount of information extracted
+  // from the logfile to describe the event, stripped of all verbose
+  // information.
+  // This compressed information is the information that visual tools
+  // use to present the information to the investigator, with the option
+  // of showing the full description described in description_long.
+  required string description_short = 6;
+
+  // A list of all the stored attributes within the EventObject.
+  repeated Attribute attributes = 8;
+
+  // The timezone of the source where the timestamp came from.
+  optional string timezone = 9;
+
+  // The filename from where the event was extracted from.
+  optional string filename = 10;
+  optional string display_name = 11;
+
+  // The full PathSpec where the file was extracted from.
+  optional transmission.PathSpec pathspec = 12;
+
+  // The offset into the original file from where the event came from.
+  optional int64 offset = 13;
+};
+
+
+// The EventContainer is a simple container that serves as a storage
+// to other EventContainers and EventObjects.
+// The EventContainer can store common attributes that are shared
+// with each EventObjects stored within it.
+message EventContainer {
+  // The timestamp of the earliest EventObject that is stored within
+  // the container. It can be used to filter out entire containers
+  // or for first version of the sorting.
+  // The timestamp is stored as a 64 bit Unix Epoch time in UTC.
+  required int64 first_time = 1;
+
+  // The time of the last EventObject stored within the container.
+  // The timestamp is stored as a 64 bit Unix Epoch time in UTC.
+  required int64 last_time = 2;
+
+  // A list of the EventContainers stored within this container.
+  repeated EventContainer containers = 4;
+
+  // A list of the EventObjects that are stored within this container.
+  repeated EventObject events = 6;
+
+  // A list of the attributes that are stored within this container.
+  repeated Attribute attributes = 8;
+};
+
