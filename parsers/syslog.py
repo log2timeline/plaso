@@ -61,9 +61,9 @@ class ParseSyslog(parser.TextParser):
     if not time:
       return 0
 
-   timestamp = datetime.datetime.fromtimestamp(time, zone)
+    timestamp = datetime.datetime.fromtimestamp(time, zone)
 
-   return timestamp.year
+    return timestamp.year
 
   def ParseLine(self, zone):
     """Parse a single line from the syslog file.
