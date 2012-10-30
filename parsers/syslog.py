@@ -82,7 +82,7 @@ class ParseSyslog(parser.TextParser):
       # TODO Find a decent way to actually calculate the correct year
       # from the syslog file, instead of relying on stats object.
       stat = self.fd.Stat()
-      year = self.GetYear(stat)
+      year = self.GetYear(stat, zone)
 
       if not year:
         # TODO: Make this sensible, not have the year permanent.

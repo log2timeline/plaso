@@ -122,6 +122,7 @@ class Engine(object):
     """Run the preprocessors."""
 
     logging.info('Starting to collect pre-processing information.')
+    logging.info('Filename: %s', self.config.filename)
 
     if self.config.image:
       ofs = self.config.image_offset_bytes or self.config.image_offset * 512
