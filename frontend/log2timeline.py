@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Copyright 2012 Google Inc. All Rights Reserved.
 #
@@ -14,8 +15,9 @@
 # limitations under the License.
 """This file contains log2timeline, the friendly front-end to plaso."""
 
+import argparse
+import os
 import logging
-import optparse
 import sys
 
 from plaso.lib import engine
@@ -25,72 +27,71 @@ BYTES_IN_A_MB = 1024 * 1024
 
 
 if __name__ == '__main__':
-  option_parser = optparse.OptionParser()
+  arg_parser = argparse.ArgumentParser()
 
-  option_parser.add_option('-z', '--zone', dest='tzone', action='store',
-                           type='string', default='UTC',
-                           help='Define the timezone of the IMAGE.')
+  arg_parser.add_argument(
+      '-z', '--zone', dest='tzone', action='store', type=str, default='UTC',
+      help='Define the timezone of the IMAGE (not the output).')
 
-  option_parser.add_option('-f', '--file', dest='filename', action='store',
-                           default='.', metavar='FILE',
-                           help='File we are about to parse.')
+  arg_parser.add_argument(
+      '-p', '--preprocess', dest='preprocess', action='store_true', default=False,
+      help='Turn on pre-processing. Pre-processing is turned on by default in image parsing')
 
-  option_parser.add_option('-r', '--recursive', dest='recursive',
-                           action='store_true', default=False,
-                           help='Turn on recursive mode.')
+  arg_parser.add_argument(
+      '--buffer-size', '--bs', dest='buffer_size', action='store', default=0,
+      help='The buffer size for the output (defaults to 256Mb).')
 
-  option_parser.add_option('-p', '--preprocess', dest='preprocess',
-                           action='store_true', default=False,
-                           help='Turn on pre-processing.')
+  arg_parser.add_argument(
+      '--workers', dest='workers', action='store', type=int, default=10,
+      help='The number of worker threads [default 10].')
 
-  option_parser.add_option('-w', '--write', dest='output', action='store',
-                           default='/tmp/wheredidmytimelinego.dump',
-                           metavar='FILE', help='The output file.')
+  arg_parser.add_argument(
+      '-i', '--image', dest='image', action='store_true',
+      default=False, help='Indicates that this is an image instaed of a regular file.')
 
-  option_parser.add_option('--buffer-size', '--bs', dest='buffer_size',
-                           action='store', default=0,
-                           help='The buffer size for the output.')
+  arg_parser.add_argument(
+      '--vss', dest='parse_vss', action='store_true', default=False,
+      help=('Collect data from VSS. Off by default, this should be used on Windows systems'
+            ' that have active VSS (Volume Shadow Copies) that need to be included in the '
+            'analyzis.'))
 
-  option_parser.add_option('--workers', dest='workers', action='store',
-                           type='int', default=10,
-                           help='The number of worker threads [default 10].')
+  arg_parser.add_argument(
+      '--single-thread', dest='single_thread', action='store_true', default=False,
+       help='Indicate that the tool should run in a single thread.')
 
-  option_parser.add_option('-i', '--image', dest='image', action='store_true',
-                           default=False, help='We are processing an image.')
+  arg_parser.add_argument(
+      '--open-files', dest='open_files', action='store_true', default=False,
+      help=('Indicate that the tool should try to open files to extract embedded files '
+            'within them, for instance to extract files from compressed containers, etc.'))
 
-  option_parser.add_option('--vss', dest='parse_vss', action='store_true',
-                           default=False, help='Collect data from VSS.')
+  arg_parser.add_argument(
+      '--noopen-files', dest='open_files', action='store_false',
+      help=('Indicate that the tool should NOT try to '
+            'open files to extract embedded files within them.'))
 
-  option_parser.add_option('--single-thread', dest='single_thread',
-                           action='store_true', default=False,
-                           help=('Indicate that the tool should run in a '
-                                 'single thread.'))
+  arg_parser.add_argument(
+      '-o', '--offset', dest='image_offset', action='store', default=0, type=int,
+      help='The sector offset to the image in sector sizes (512 bytes).')
 
-  option_parser.add_option('--open-files', dest='open_files',
-                           action='store_true', default=False,
-                           help=('Indicate that the tool should try to '
-                                 'open files to extract embedded files within'
-                                 ' them, for instance to extract files from '
-                                 'compressed containers, etc.'))
+  arg_parser.add_argument(
+      '--ob', '--offset_bytes', dest='image_offset_bytes', action='store', default=0,
+      type=int, help='The bytes offset to the image')
 
-  option_parser.add_option('--noopen-files', dest='open_files',
-                           action='store_false',
-                           help=('Indicate that the tool should NOT try to '
-                                 'open files to extract embedded files within'
-                                 ' them.'))
+  arg_parser.add_argument(
+      '-d', '--debug', dest='debug', action='store_true', default=False,
+      help='Turn on debug information in the tool.')
 
-  option_parser.add_option('-o', '--offset', dest='image_offset',
-                           action='store', default=0, type='int',
-                           help='The sector offset to the image')
+  arg_parser.add_argument(
+      '-w', '--write', dest='output', action='store', required=True, metavar='STORAGE_FILE',
+      help='The output file (needs to be defined).')
 
-  option_parser.add_option('--ob', '--offset_bytes', dest='image_offset_bytes',
-                           action='store', default=0, type='int',
-                           help='The bytes offset to the image')
+  arg_parser.add_argument(
+      'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT', default=None,
+      help=('The path to the file, directory, image file or mount point that the tool'
+            ' should parse. If this is a directory it will recursively go through it, '
+            'same with an image file.'))
 
-  option_parser.add_option('-d', '--debug', dest='debug', action='store_true',
-                           default=False, help='Turn on debug information.')
-
-  options, args = option_parser.parse_args()
+  options = arg_parser.parse_args()
 
   if options.tzone == 'list':
     print '=' * 40
@@ -104,11 +105,19 @@ if __name__ == '__main__':
   # This frontend only deals with local setup of the tool.
   options.local = True
 
+  options.recursive = os.path.isdir(options.filename)
+
+  if options.image_offset or options.image_offset_bytes:
+    options.image = True
+
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   if options.debug:
     logging.basicConfig(level=logging.DEBUG, format=format_str)
   else:
     logging.basicConfig(level=logging.INFO, format=format_str)
+
+  if options.image:
+    options.preprocess = True
 
   if options.buffer_size:
     if options.buffer_size[-1].lower() == 'm':
@@ -124,6 +133,7 @@ if __name__ == '__main__':
   l2t = engine.Engine(options)
   try:
     l2t.Start()
+    logging.info('Run completed.')
   except KeyboardInterrupt:
     logging.warning('Tool being killed.')
     l2t.StopThreads()
