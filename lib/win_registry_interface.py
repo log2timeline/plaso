@@ -270,7 +270,7 @@ class WinRegValue(object):
       try:
         ret = unicode(ret)
       except UnicodeDecodeError:
-        ret = self.GetRegistryStringValue(ret, val_type)
+        ret = GetRegistryStringValue(ret, val_type)
 
     return ret
 

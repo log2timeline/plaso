@@ -43,7 +43,11 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
       data_type = value.GetTypeStr()
 
       if 'SZ' in data_type or 'DWORD' in data_type:
-        text_dict[u'%s' % value.name] = u'%s' % value.GetData(unicode)
+        try:
+          text_dict[u'%s' % value.name] = u'%s' % value.GetData(unicode)
+        except UnicodeDecodeError:
+          text_dict[u'%s' % value.name] = u'[unicode error while processing] %s' % value.GetData(
+              unicode).decode('utf_16_le', 'ignore')
       else:
         text_dict[u'%s' % value.name] = u'[DATA TYPE %s]' % data_type
 

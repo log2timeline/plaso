@@ -32,6 +32,7 @@ import pytz
 import pyvshadow
 
 from plaso import preprocessors
+from plaso import registry as reg_plugins
 
 from plaso.lib import collector
 from plaso.lib import errors

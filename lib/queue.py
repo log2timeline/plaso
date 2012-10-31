@@ -75,7 +75,13 @@ class SimpleQueue(PlasoQueue):
       self._queue.put(item)
 
   def __len__(self):
-    return self._queue.qsize()
+    size = 0
+    try:
+      size = self._queue.qsize()
+    except NotImplementedError:
+      logging.warning(
+          'Returning queue length does not work on Mac OS X because of broken sem_getvalue()')
+    return size
 
 
 class SingleThreadedQueue(PlasoQueue):
