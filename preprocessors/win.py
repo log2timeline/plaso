@@ -265,6 +265,7 @@ class WinRegTimeZone(preprocess.WinRegistryPreprocess):
       '@tzres.dll,-880': 'UTC',
       '@tzres.dll,-271': 'UTC',
       '@tzres.dll,-272': 'UTC',
+      'Central Standard Time': 'CST6CDT',
   }
 
   def ParseKey(self, key):

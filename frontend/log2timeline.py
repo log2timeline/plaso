@@ -27,7 +27,9 @@ BYTES_IN_A_MB = 1024 * 1024
 
 
 if __name__ == '__main__':
-  arg_parser = argparse.ArgumentParser()
+  arg_parser = argparse.ArgumentParser(
+      description=('log2timeline is the main frontend to the plaso backend, used'
+                   ' to collect and correlate events extracted from the filesystem')) 
 
   arg_parser.add_argument(
       '-z', '--zone', dest='tzone', action='store', type=str, default='UTC',
