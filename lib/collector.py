@@ -102,7 +102,11 @@ class PCollector(object):
       cur_inode: The inode number in which the directory begins.
       path: The full path name of the directory (string).
     """
-    directory = fs.fs.open_dir(inode=cur_inode)
+    try:
+      directory = fs.fs.open_dir(inode=cur_inode)
+    except IOError:
+      logging.error('IOError while trying to open a directory: %s [%d]', path, cur_inode)
+      return
     for f in directory:
       try:
         name = f.info.name.name
