@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A simple dump information gathered from a plaso storage container."""
-
 import datetime
 import logging
 import os
@@ -24,6 +23,7 @@ import sys
 # To make YAML loading work.
 # pylint: disable=W0611
 import argparse
+import collections
 import pytz
 
 from plaso.lib import preprocess
@@ -57,10 +57,17 @@ def DisplayInformation(info, params):
   for key, value in info.collection_information.items():
     information += u'\t{0} = {1}\n'.format(key, value)
 
+  if hasattr(info, 'counter'):
+    information += u'\nCounter information:\n'
+    for key, value in info.counter.most_common():
+      information += u'\tCounter: %s = %d\n' % (key, value)
+
   preprocessing = u'Pre-processing information:\n'
   if params.verbose:
     for key, value in info.__dict__.items():
       if key == 'collection_information':
+        continue
+      elif key == 'counter':
         continue
       if isinstance(value, list):
         printer = pprint.PrettyPrinter(indent=8)

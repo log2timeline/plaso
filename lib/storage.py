@@ -56,6 +56,7 @@ Otherwise the structure of a proto file is:
 For further details about the storage design see:
 https://sites.google.com/a/kiddaland.net/plaso/developer/libraries/storage
 """
+import collections
 import heapq
 import logging
 import struct
@@ -111,6 +112,7 @@ class PlasoStorage(object):
     self._buffer_last_timestamp = 0
     self._max_buffer_size = buffer_size or self.MAX_BUFFER_SIZE
     self._write_counter = 0
+    self._pre_obj = pre_obj
 
     if read_only:
       mode = 'r'
@@ -126,8 +128,10 @@ class PlasoStorage(object):
     if not read_only:
       logging.debug('Writing to file. Buffer size used: %s',
                     self._max_buffer_size)
+
       if pre_obj:
-        self._StorePreObject(pre_obj)
+        pre_obj.counter = collections.Counter()
+        pre_obj.collection_information['cmd_line'] = u' '.join(sys.argv)
 
       # Need to get the last number in the list.
       for name in self.zipfile.namelist():
@@ -294,6 +298,11 @@ class PlasoStorage(object):
     if not serialized:
       return
 
+    # Add values to counters.
+    if self._pre_obj:
+      self._pre_obj.counter['total'] += 1
+      self._pre_obj.counter[event.source_long] += 1
+
     heapq.heappush(self._buffer, (event.timestamp, serialized))
     self._buffer_size += len(serialized)
     self._write_counter += 1
@@ -370,6 +379,8 @@ class PlasoStorage(object):
   def CloseStorage(self):
     """Closes the storage, flush the last buffer and closes the ZIP file."""
     if self._file_open:
+      if self._pre_obj:
+        self._StorePreObject(self._pre_obj)
       self.FlushBuffer()
       self.zipfile.close()
       self._file_open = False
