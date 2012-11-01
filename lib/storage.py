@@ -301,7 +301,8 @@ class PlasoStorage(object):
     # Add values to counters.
     if self._pre_obj:
       self._pre_obj.counter['total'] += 1
-      self._pre_obj.counter[event.source_long] += 1
+      if hasattr(event, 'parser'):
+        self._pre_obj.counter[event.parser] += 1
 
     heapq.heappush(self._buffer, (event.timestamp, serialized))
     self._buffer_size += len(serialized)
