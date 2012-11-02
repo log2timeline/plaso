@@ -195,7 +195,6 @@ class PlasoEventUnitTest(unittest.TestCase):
     """Calls to an attribute that is stored within the EventObject itself."""
     events = list(container)
 
-    print events[0]
     self.assertEquals(events[0].keyname, '//HKCU/Windows/Normal')
 
   def testExistsInParentObject(self):

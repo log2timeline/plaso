@@ -18,6 +18,7 @@ import os
 import unittest
 import pytz
 
+from plaso.lib import putils
 from plaso.parsers import syslog
 
 
@@ -32,7 +33,7 @@ class SyslogUnitTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     self.base_path = os.path.join('plaso/test_data')
     file_path = os.path.join(self.base_path, 'syslog')
-    self.filehandle = open(file_path, 'rb')
+    self.filehandle = putils.OpenOSFile(file_path)
 
   def testParsing(self):
     """Test parsing of a syslog file."""

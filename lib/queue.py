@@ -81,6 +81,8 @@ class SimpleQueue(PlasoQueue):
     except NotImplementedError:
       logging.warning(
           'Returning queue length does not work on Mac OS X because of broken sem_getvalue()')
+      raise
+
     return size
 
 
