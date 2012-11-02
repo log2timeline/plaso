@@ -278,6 +278,9 @@ class Engine(object):
     # Save some information about the run time into the pre-processing object.
     self._StoreCollectionInformation(pre_obj)
 
+    # Create a lock
+    lock = multiprocessing.Lock()
+    
     # Start the collector.
     start_collection_thread = True
     if self.config.image:
@@ -285,7 +288,7 @@ class Engine(object):
       my_collector = collector.SimpleImageCollector(
           self.config.filename, offset=self.config.image_offset,
           offset_bytes=self.config.image_offset_bytes,
-          parse_vss=self.config.parse_vss)
+          parse_vss=self.config.parse_vss, lock=lock)
     elif self.config.recursive:
       logging.debug('Collection started from a directory.')
       my_collector = collector.SimpleFileCollector(self.config.filename)
@@ -331,7 +334,7 @@ class Engine(object):
     for worker_nr in range(self.config.workers):
       logging.debug('Starting worker: %d', worker_nr)
       my_worker = worker.PlasoWorker(
-          my_collector, my_storage, self.config, pre_obj)
+          my_collector, my_storage, self.config, pre_obj, lock)
       self.worker_threads.append(multiprocessing.Process(
           name='Worker_%d' % worker_nr,
           target=my_worker.Run))

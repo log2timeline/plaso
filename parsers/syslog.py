@@ -84,11 +84,11 @@ class ParseSyslog(parser.TextParser):
       # TODO Find a decent way to actually calculate the correct year
       # from the syslog file, instead of relying on stats object.
       stat = self.fd.Stat()
-      year = self.GetYear(stat, zone)
+      self._year_use = self.GetYear(stat, zone)
 
-      if not year:
+      if not self._year_use:
         # TODO: Make this sensible, not have the year permanent.
-        year = 2012
+        self._year_use = 2012
 
     if self._last_month > int(self.attributes['imonth']):
       self._year_use += 1

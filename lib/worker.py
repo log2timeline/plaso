@@ -66,7 +66,7 @@ class PlasoWorker(object):
   # This is only used temporary until files can be classified.
   magic_max_length = 0
 
-  def __init__(self, proc_queue, stor_queue, config, pre_obj):
+  def __init__(self, proc_queue, stor_queue, config, pre_obj, lock=None):
     """Constructor for the class.
 
     Args:
@@ -75,11 +75,13 @@ class PlasoWorker(object):
       config: A config object that contains all the tool's configuration.
       pre_obj: A PlasoPreprocess object containing information collected from
       image.
+      lock: A thread-lock
     """
     self._proc_queue = proc_queue
     self._stor_queue = stor_queue
     self.config = config
     self._pre_obj = pre_obj
+    self._lock = lock
     self._parsers = self.FindAllParsers()
 
   def Run(self):
@@ -96,12 +98,13 @@ class PlasoWorker(object):
 
       # Either parse this file and all extracted files, or just the file.
       try:
-        with pfile.OpenPFile(proto) as fh:
+        with pfile.OpenPFile(proto, lock=self._lock) as fh:
           self.ParseFile(fh)
           if self.config.open_files:
             self.ParseAllFiles(fh)
       except IOError as e:
         logging.warning('Unable to parse file: %s (%s)', proto.file_path, e)
+        logging.warning('Proto\n%s\n%s\n%s', '-+' * 20, proto, '-+' * 20)
     logging.debug('Processing is completed.')
 
   def ParseAllFiles(self, filehandle):
@@ -213,7 +216,7 @@ class PlasoWorker(object):
       proto = transmission_pb2.PathSpec()
       proto.CopyFrom(p)
       try:
-        new_fh = pfile.OpenPFile(spec=p, orig=proto)
+        new_fh = pfile.OpenPFile(spec=p, orig=proto, lock=self._lock)
         yield new_fh
       except IOError as e:
         logging.debug(('Unable to open file: {%s}, not sure if we can extract '

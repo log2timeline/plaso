@@ -140,12 +140,13 @@ class PlasoFile(object):
   TYPE = transmission_pb2.PathSpec.UNSET
   fh = None
 
-  def __init__(self, proto, root=None):
+  def __init__(self, proto, root=None, lock=None):
     """Constructor.
 
     Args:
       proto: The transmission_proto that describes the file.
       root: The root transmission_proto that describes the file if one exists.
+      lock: A thread lock object, to control libraries that are not thread-safe.
 
     Raises:
       IOError: If this class supports the wrong driver for this file.
@@ -156,6 +157,7 @@ class PlasoFile(object):
     else:
       self.pathspec_root = proto
     self.name = ''
+    self._lock = lock
 
     if proto.type != self.TYPE:
       raise errors.UnableToOpenFile('Unable to handle this file type.')
@@ -273,6 +275,7 @@ class TskFile(PlasoFile):
 
     info = self.fh.fileobj.info
     meta = info.meta
+
     if not meta:
       return ret
 
@@ -365,7 +368,7 @@ class TskFile(PlasoFile):
     if self.pathspec.HasField('image_inode'):
       inode = self.pathspec.image_inode
 
-    self.fh = sleuthkit.Open(self._fs, inode, self.pathspec.file_path)
+    self.fh = sleuthkit.Open(self._fs, inode, self.pathspec.file_path, self._lock)
 
     self.name = self.pathspec.file_path
     self.size = self.fh.size
@@ -879,7 +882,7 @@ def InitPFile():
     PFILE_TYPES[value.number] = value.name
 
 
-def OpenPFile(spec, fh=None, orig=None):
+def OpenPFile(spec, fh=None, orig=None, lock=None):
   """Open up a PlasoFile object.
 
   The location and how to open the file is described in the PathSpec protobuf
@@ -915,6 +918,7 @@ def OpenPFile(spec, fh=None, orig=None):
     spec: A PathSpec protobuf that describes the file that needs to be opened.
     fh: A PFile object that is used as base for extracting the needed file out.
     orig: A PathSpec protobuf that describes the root pathspec of the file.
+    lock: A thread lock to control access to the TSK library (not thread-safe)
 
   Returns:
     A PFile object, that is a file like object.
@@ -928,14 +932,18 @@ def OpenPFile(spec, fh=None, orig=None):
   handler_class = PFILE_HANDLERS.get(spec.type,
                                      transmission_pb2.PathSpec.UNSET)
   try:
-    handler = handler_class(spec, orig)
+    handler = handler_class(spec, orig, lock)
   except errors.UnableToOpenFile:
+    if lock:
+      lock.release()
     raise IOError('Unable to open the file: %s using %s' % (
         spec.file_path, PFILE_TYPES[spec.type]))
 
   try:
     handler.Open(fh)
   except IOError as e:
+    if lock:
+      lock.release()
     raise IOError('[%s] Unable to open the file: %s, error: %s' % (
         handler.__class__.__name__, spec.file_path, e))
 
@@ -944,12 +952,14 @@ def OpenPFile(spec, fh=None, orig=None):
       orig_proto = orig
     else:
       orig_proto = spec
-    return OpenPFile(spec.nested_pathspec, handler, orig_proto)
+    return OpenPFile(spec.nested_pathspec, handler, orig_proto, lock)
   else:
     logging.debug('Opening file: %s [%s]', handler.name,
                   PFILE_TYPES[spec.type])
     return handler
 
+  if lock:
+    lock.release()
   raise IOError('Unable to open the file.')
 
 

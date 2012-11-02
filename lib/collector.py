@@ -57,7 +57,7 @@ class PCollector(object):
         except IOError as e:
           logging.warning('Unable to further process %s:%s', filename, e)
 
-  def CollectFromVss(self, image_path, store_nr, offset=0):
+  def CollectFromVss(self, image_path, store_nr, offset=0, lock=None):
     """Collect files from a VSS image.
 
     Args:
@@ -65,15 +65,16 @@ class PCollector(object):
       store_nr: The store number for the VSS store.
       offset: An offset into the disk image to where the volume
       lies (sector size, not byte).
+      lock: A thread lock, if applicable to prevent TSK to fail.
     """
     logging.debug('Collecting from VSS store %d', store_nr)
 
     fs = pfile.FilesystemCache.Open(image_path, offset, store_nr)
 
-    self.ParseImageDir(fs, fs.fs.info.root_inum, '/')
+    self.ParseImageDir(fs, fs.fs.info.root_inum, '/', lock)
     logging.debug('Collection from VSS store: %d COMPLETED.', store_nr)
 
-  def CollectFromImage(self, image=None, offset=0):
+  def CollectFromImage(self, image=None, offset=0, lock=None):
     """Start the collector as an image collector.
 
     This collector goes over an image using pytsk.
@@ -81,6 +82,7 @@ class PCollector(object):
     Args:
       image: The path to the image that needs to be opened.
       offset: An integer, a byte offset into the partition.
+      lock: A thread lock, if applicable to prevent TSK to fail.
     """
 
     logging.debug(u'Collecting from an image file [%s]', image)
@@ -88,9 +90,9 @@ class PCollector(object):
     fs = pfile.FilesystemCache.Open(image, offset)
 
     # read the root dir, and move from there
-    self.ParseImageDir(fs, fs.fs.info.root_inum, '/')
+    self.ParseImageDir(fs, fs.fs.info.root_inum, '/', lock)
 
-  def ParseImageDir(self, fs, cur_inode, path):
+  def ParseImageDir(self, fs, cur_inode, path, lock=None):
     """A recursive traversal of a directory inside an image file.
 
     Recursive traversal through a directory that injects every file
@@ -101,12 +103,19 @@ class PCollector(object):
       filesystem being used to collect from.
       cur_inode: The inode number in which the directory begins.
       path: The full path name of the directory (string).
+      lock: A thread lock, if applicable to prevent TSK to fail.
     """
     try:
+      if lock:
+        lock.acquire()
       directory = fs.fs.open_dir(inode=cur_inode)
     except IOError:
+      if lock:
+        lock.release()
       logging.error('IOError while trying to open a directory: %s [%d]', path, cur_inode)
       return
+
+    directories = []
     for f in directory:
       try:
         name = f.info.name.name
@@ -125,7 +134,7 @@ class PCollector(object):
 
       # We only care about regular files and directories
       if f_type == pytsk3.TSK_FS_META_TYPE_DIR:
-        self.ParseImageDir(fs, inode_addr, os.path.join(path, name))
+        directories.append((inode_addr, os.path.join(path, name)))
       elif f_type == pytsk3.TSK_FS_META_TYPE_REG:
         transfer_proto = transmission_pb2.PathSpec()
         if fs.store_nr >= 0:
@@ -140,6 +149,12 @@ class PCollector(object):
         transfer_proto.file_path = pfile.GetUnicodeString(file_path)
 
         self._queue.Queue(transfer_proto.SerializeToString())
+
+    if lock:
+      lock.release()
+
+    for inode_addr, path in directories:
+      self.ParseImageDir(fs, inode_addr, path, lock)
 
   def ProcessFile(self, filename, my_queue):
     """Finds all files available inside a file and inserts into queue."""
@@ -183,7 +198,7 @@ class SimpleImageCollector(queue.SimpleQueue):
 
   SECTOR_SIZE = 512
 
-  def __init__(self, image, offset=0, offset_bytes=0, parse_vss=False):
+  def __init__(self, image, offset=0, offset_bytes=0, parse_vss=False, lock=None):
     """Initialize the image collector.
 
     Args:
@@ -193,18 +208,20 @@ class SimpleImageCollector(queue.SimpleQueue):
       offset_bytes: A bytes offset into the image file if this is a disk image.
       parse_vss: Boolean determining if we should collect from VSS as well
       (only applicaple in Windows with Volume Shadow Snapshot).
+      lock: A lock that is used to control access to TSK resources.
     """
     super(SimpleImageCollector, self).__init__()
     self._image = image
     self._offset = offset
     self._offset_bytes = offset_bytes
     self._vss = parse_vss
+    self._lock = lock
 
   def Run(self):
     """Start the collection."""
     with PCollector(self) as my_collector:
       offset = self._offset_bytes or self._offset * self.SECTOR_SIZE
-      my_collector.CollectFromImage(self._image, offset)
+      my_collector.CollectFromImage(self._image, offset, self._lock)
 
       if self._vss:
         logging.debug('Searching for VSS')
@@ -217,6 +234,6 @@ class SimpleImageCollector(queue.SimpleQueue):
         except IOError as e:
           logging.warning('Error while trying to read VSS information: %s', e)
         for store_nr in range(0, vss_numbers):
-          my_collector.CollectFromVss(self._image, store_nr, offset)
+          my_collector.CollectFromVss(self._image, store_nr, offset, self._lock)
 
     logging.debug('Simple Image Collector - Done.')

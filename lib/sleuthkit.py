@@ -22,24 +22,25 @@ import logging
 import pytsk3
 
 
-def Open(fs, inode, name):
+def Open(fs, inode, name, lock=None):
   """Shorthand for TSKFile(fs, inode, path).
 
   Args:
     fs: An FS_Info object from PyTSK3
     inode: The inode number of the file needed to be read.
     name: The full path to the file inside the image.
+    lock: A threading lock, in case this is used in a threaded application.
   Returns:
     A filehandle that can be used by Python.
   """
-  return TSKFile(fs, inode, name)
+  return TSKFile(fs, inode, name, lock)
 
 
 class TSKFile(object):
   """Class that simulates most of the methods of a read-only file object."""
   MIN_READSIZE = 1024 * 1024
 
-  def __init__(self, filesystem, inode, path):
+  def __init__(self, filesystem, inode, path, lock=None):
     """Constructor for the TSKFile class.
 
     This class assumes that a filesystem using pytsk3.FS_Info has already been
@@ -54,6 +55,7 @@ class TSKFile(object):
       filesystem: A pytsk3.FS_Info filesystem object.
       inode: An inode number for the the file.
       path: Full name (with path) of the file being opened.
+      lock: A threading lock, in case this is used in a threaded application.
 
     Raises:
       IOError: if the file opened does not have a metadata structure available
@@ -64,9 +66,17 @@ class TSKFile(object):
 
     # We prefer opening up a file by it's inode number.
     if inode:
+      if lock:
+        lock.acquire()
       self.fileobj = self.fs.open_meta(inode=inode)
+      if lock:
+        lock.release()
     else:
+      if lock:
+        lock.acquire()
       self.fileobj = self.fs.open(path)
+      if lock:
+        lock.release()
 
     self.size = self.fileobj.info.meta.size
     self.name = path
@@ -80,6 +90,7 @@ class TSKFile(object):
 
     self.readahead = ''
     self.next_read_offset = 0
+    self._lock = lock
 
   # Deviate from the naming convention since we are implementing an interface.
   # pylint: disable=C6409
@@ -118,11 +129,17 @@ class TSKFile(object):
       if read_now_size < 0:
         return data
       try:
+        if self._lock:
+          self._lock.acquire()
         buf = self.fileobj.read_random(self.next_read_offset, read_now_size)
+        if self._lock:
+          self._lock.release()
         self.next_read_offset += len(buf)
         self.readahead = buf[read_size:]
         data += buf[:read_size]
       except IOError:
+        if self._lock:
+          self._lock.release()
         return data
 
     return data
