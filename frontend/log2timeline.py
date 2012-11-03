@@ -22,8 +22,8 @@ import sys
 
 from plaso.lib import engine
 
-# The number of bytes in a Mb.
-BYTES_IN_A_MB = 1024 * 1024
+# The number of bytes in a MiB.
+BYTES_IN_A_MIB = 1024 * 1024
 
 
 if __name__ == '__main__':
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
   if options.buffer_size:
     if options.buffer_size[-1].lower() == 'm':
-      options.buffer_size = int(options.buffer_size[:-1]) * BYTES_IN_A_MB
+      options.buffer_size = int(options.buffer_size[:-1]) * BYTES_IN_A_MIB
     else:
       try:
         options.buffer_size = int(options.buffer_size)
