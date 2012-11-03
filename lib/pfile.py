@@ -273,8 +273,17 @@ class TskFile(PlasoFile):
     if not self.fh:
       return ret
 
-    info = self.fh.fileobj.info
-    meta = info.meta
+    try:
+      if self._lock:
+        self._lock.acquire()
+      info = self.fh.fileobj.info
+      meta = info.meta
+      if self._lock:
+        self._lock.release()
+    except IOError:
+      if self._lock:
+        self._lock.release()
+      return ret
 
     if not meta:
       return ret
