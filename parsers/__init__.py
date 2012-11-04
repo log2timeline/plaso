@@ -19,5 +19,6 @@ from plaso.parsers import appusage
 from plaso.parsers import chrome
 from plaso.parsers import filestat
 from plaso.parsers import firefox
+from plaso.parsers import ls_quarantine
 from plaso.parsers import syslog
 from plaso.parsers import winreg
