@@ -16,6 +16,7 @@
 """This file contains a console, the CLI friendly front-end to plaso."""
 
 import datetime
+import os
 import logging
 import tempfile
 
@@ -197,12 +198,14 @@ def PrintTimestamp(timestamp):
 
 
 if __name__ == '__main__':
+  temp_location = tempfile.gettempdir()
+
   options = Options()
   options.tzone = 'UTC'
   options.filename = '.'
   options.recursive = False
   options.preprocess = False
-  options.output = '/tmp/nowhere.dump'
+  options.output = os.path.join(temp_location, 'wheredidmytimelinego.dump')
   options.buffer_size = 0
   options.workers = 10
   options.image = False
