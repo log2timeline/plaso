@@ -296,15 +296,15 @@ class TSKFileCollector(Collector):
     self._fs_obj = pfile.FilesystemCache.Open(image_path, offset)
 
   def GetPath(self, path_list):
-    """Return a path ."""
+    """Return a path."""
     real_path = u''
 
     for part in path_list:
       if isinstance(part, (str, unicode)):
-        real_path = os.path.join(real_path, part)
+        real_path = u'/'.join([real_path, part])
       else:
         found_path = False
-        directory = self._fs_obj.fs.open_dir(real_path.replace('\\', '/'))
+        directory = self._fs_obj.fs.open_dir(real_path)
         for f in directory:
           try:
             name = f.info.name.name
@@ -317,7 +317,7 @@ class TSKFileCollector(Collector):
 
           m = part.match(name)
           if m:
-            real_path = os.path.join(real_path, m.group(0))
+            real_path = u'/'.join([real_path, m.group(0)])
             found_path = True
             break
         if not found_path:
