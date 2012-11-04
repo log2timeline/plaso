@@ -14,8 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains few methods for Plaso."""
+import datetime
+import tempfile
+
+from plaso.lib import output
+from plaso.lib import parser
 from plaso.lib import pfile
 from plaso.proto import transmission_pb2
+
+
+class Options(object):
+  """A simple configuration object."""
 
 
 def OpenTskFile(file_to_open, image_path, image_offset=0):
@@ -73,3 +82,86 @@ def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0):
     proto.file_path = file_to_open
 
   return pfile.OpenPFile(proto)
+
+
+def Pfile2File(fh_in, path=None):
+  """Save a PFile object into a "real" file.
+
+  Args:
+    fh_in: A PFile object.
+    path: Full path to where the file should be saved.
+          If not used then a temporary file will be allocated.
+
+  Returns:
+    The name of the file that was written out.
+  """
+  if path:
+    fh_out = open(path, 'wb')
+  else:
+    fh_out = tempfile.NamedTemporaryFile()
+    path = fh_out.name
+
+  fh_in.seek(0)
+  data = fh_in.read(32768)
+  while data:
+    fh_out.write(data)
+    data = fh_in.read(32768)
+
+  fh_out.close()
+  return path
+
+
+def FindAllParsers():
+  """Find all available parser objects.
+
+  A parser is defined as an object that implements the PlasoParser
+  class and does not have the __abstract attribute set.
+
+  Returns:
+    A set of objects that implement the LogParser object.
+  """
+  pre_obj = Options()
+  results = {}
+  results['all'] = []
+  parser_objs = _FindClasses(parser.PlasoParser, pre_obj)
+  for parser_obj in parser_objs:
+    results['all'].append(parser_obj)
+    parser_type = parser_obj.PARSER_TYPE
+    results.setdefault(parser_type, []).append(parser_obj)
+
+  return results
+
+
+def _FindClasses(class_object, *args):
+  """Find all registered classes.
+
+  A method to find all registered classes of a particular
+  class.
+
+  Args:
+    class_object: The parent class.
+
+  Returns:
+    A list of registered classes of that class.
+  """
+  results = []
+  for cl in class_object.classes:
+    results.append(class_object.classes[cl](args))
+
+  return results
+
+
+def FindAllOutputs():
+  """Find all available output modules."""
+  return _FindClasses(output.LogOutputFormatter)
+
+
+def PrintTimestamp(timestamp):
+  """Print a human readable timestamp using ISO 8601 format."""
+  epoch = int(timestamp / 1e6)
+  my_date = (datetime.datetime.utcfromtimestamp(epoch) +
+             datetime.timedelta(microseconds=(timestamp % 1e6)))
+
+  return my_date.isoformat()
+
+

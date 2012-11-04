@@ -304,7 +304,7 @@ class TSKFileCollector(Collector):
         real_path = os.path.join(real_path, part)
       else:
         found_path = False
-        directory = self._fs_obj.fs.open_dir(real_path)
+        directory = self._fs_obj.fs.open_dir(real_path.replace('\\', '/'))
         for f in directory:
           try:
             name = f.info.name.name
