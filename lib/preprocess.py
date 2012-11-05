@@ -304,7 +304,11 @@ class TSKFileCollector(Collector):
         real_path = u'/'.join([real_path, part])
       else:
         found_path = False
-        directory = self._fs_obj.fs.open_dir(real_path)
+        try:
+          directory = self._fs_obj.fs.open_dir(real_path)
+        except IOError as e:
+          logging.error('Unable to open directory (TSK): %s', e)
+          raise errors.PathNotFound(u'Path not found inside: %s', real_path)
         for f in directory:
           try:
             name = f.info.name.name
