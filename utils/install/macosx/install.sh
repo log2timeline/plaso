@@ -1,9 +1,5 @@
 #!/bin/bash
-# Small helper for installing sources in the Mac OS X built
-# of the pyinstaller binaries (onedir solution).
-# Build instructions:
-# https://sites.google.com/a/kiddaland.net/plaso/developer/\
-#   building-the-tool/mac-osx
+# A small script that submits a code for code review.
 #
 # Copyright 2012 Google Inc. All Rights Reserved.
 #
@@ -50,7 +46,7 @@ install_tool()
 
 if [ ! -d "$FOLDER" ]
 then
-  sudo mkdir $FOLDER
+  sudo mkdir -p $FOLDER
 fi
 
 
@@ -58,3 +54,6 @@ install_tool log2timeline
 install_tool plaso_information
 install_tool plaso_console
 install_tool psort
+
+sudo mv libregf.1.dylib /usr/lib/
+sudo mv libvshadow.1.dylib /usr/lib/
