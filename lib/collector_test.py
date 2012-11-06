@@ -33,6 +33,9 @@ class TempDirectory(object):
     return self.name
 
   def __exit__(self, exc_type, exc_value, traceback):
+    _ = exc_type
+    _ = exc_value
+    _ = traceback
     shutil.rmtree(self.name, True)
 
 

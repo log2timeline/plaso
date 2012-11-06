@@ -80,6 +80,7 @@ class FilesystemCache(object):
     Returns:
       A FilesystemContainer object that stores a cache of the FS.
     """
+    __pychecker__ = 'unusednames=cls'
     img = pytsk3.Img_Info(path)
     fs = pytsk3.FS_Info(img, offset=offset)
     return FilesystemContainer(fs, img, path, offset)
@@ -96,6 +97,7 @@ class FilesystemCache(object):
     Returns:
       A FilesystemContainer object that stores a cache of the FS.
     """
+    __pychecker__ = 'unusednames=cls'
     volume = pyvshadow.volume()
     fh = vss.VShadowVolume(path, offset)
     volume.open_file_object(fh)
@@ -166,11 +168,15 @@ class PlasoFile(object):
     return self
 
   def __exit__(self, exc_type, exc_value, traceback):
+    _ = exc_type
+    _ = exc_value
+    _ = traceback
     self.close()
     return False
 
   def __str__(self):
     if hasattr(self, 'display_name'):
+      __pychecker__ = 'missingattrs=display_name'
       return self.display_name
     else:
       return 'Unknown File'

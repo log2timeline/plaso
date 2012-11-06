@@ -201,5 +201,5 @@ class ParseFirefox(parser.SQLiteParser):
     if row:
       hostname = self._GetHostname(row['rev_host'])
       return u'%s (%s)' % (row['url'], hostname)
-    return ''
+    return u''
 

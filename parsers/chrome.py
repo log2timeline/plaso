@@ -164,5 +164,6 @@ class ParseChrome(parser.SQLiteParser):
 
     if row:
       return u'%s (%s)' % (row['url'], row['title'])
-    return ''
+
+    return u''
 

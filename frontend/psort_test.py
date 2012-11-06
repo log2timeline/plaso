@@ -93,6 +93,7 @@ class PsortTest(unittest.TestCase):
         self.record_count = 0
 
       def Append(self, item):
+        __pychecker__ = 'missingattrs=buffer_list,record_count'
         self.buffer_list.append(item)
         self.record_count += 1
 

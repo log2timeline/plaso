@@ -27,7 +27,7 @@ CHANGELIST=$1
 # First find all files that need linter
 git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | while read lint_file
 do
-  pychecker --only -q "$lint_file"
+  pychecker -Q --only -6 "$lint_file"
 
   if [ $? -ne 0 ]
   then

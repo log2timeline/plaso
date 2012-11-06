@@ -23,6 +23,7 @@ import abc
 import calendar
 import datetime
 import logging
+import pytz
 import tempfile
 
 import sqlite3
@@ -270,7 +271,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
     if self.local_zone:
       time_zone = zone
     else:
-      time_zone = self.use_zone
+      time_zone = pytz.UTC
 
     if len(times) < 3:
       raise errors.TimestampNotCorrectlyFormed(('Unable to parse timestamp, '
@@ -296,6 +297,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
     epoch = int(calendar.timegm(timestamp.timetuple()) * 1e6)
     epoch += timestamp.microsecond
 
+    __pychecker__ = ('missingattrs=source_long')
     evt = event.TextEvent(epoch, self.attributes['body'], self.source_long,
                           self.attributes['hostname'],
                           self.attributes['username'])
@@ -397,5 +399,6 @@ class SQLiteParser(PlasoParser):
         logging.debug('SQLite error occured: %s', e)
 
   def Default(self, **kwarg):
+    __pychecker__ = 'unusednames=self'
     logging.debug('Default handler: %s', kwarg)
 

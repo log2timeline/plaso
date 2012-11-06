@@ -130,6 +130,7 @@ class PlasoStorage(object):
                     self._max_buffer_size)
 
       if pre_obj:
+        __pychecker__ = 'no-abstract'
         pre_obj.counter = collections.Counter()
         pre_obj.collection_information['cmd_line'] = u' '.join(sys.argv)
 
