@@ -144,6 +144,9 @@ class FakeTextParser(parser.TextParser):
     self.attributes['iyear'] = int(year)
     self.attributes['iday'] = int(day)
 
+  def Scan(self, filehandle):
+    pass
+
 
 class ParserUnitTest(unittest.TestCase):
   """An unit test for the plaso parser library."""

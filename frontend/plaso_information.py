@@ -22,6 +22,7 @@ import sys
 
 # To make YAML loading work.
 # pylint: disable=W0611
+__pychecker__ = 'no-import'
 import argparse
 import collections
 import pytz

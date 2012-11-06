@@ -310,10 +310,32 @@ class EventObject(object):
 
   def __str__(self):
     """Print a human readable string from the EventObject."""
-    return '[%s] %s/%s - %s' % (self.timestamp,
-                                self.source_short,
-                                self.source_long,
-                                self.description_long)
+    time = 0
+    short = u''
+    s_long = u''
+    desc = u''
+
+    __pychecker__ = ('missingattrs=timestamp,source_short,sou'
+                     'rce_long,description_long')
+    try:
+      time = self.timestamp
+    except AttributeError:
+      pass
+
+    try:
+      short = self.source_short
+    except AttributeError:
+      pass
+    try:
+      s_long = self.source_long
+    except AttributeError:
+      pass
+    try:
+      desc = self.description_long
+    except AttributeError:
+      pass
+
+    return u'[{0}] {1}/{2} - {3}'.format(time, short, s_long, desc)
 
 
 class RegistryEvent(EventObject):

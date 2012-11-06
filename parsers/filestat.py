@@ -26,7 +26,7 @@ class ParsePfileStat(parser.PlasoParser):
 
   DATE_MULTIPLIER = 1000000
 
-  def Parse(self, filehandle, _=None):
+  def Parse(self, filehandle):
     """Extract the stat object and parse it."""
     stat = filehandle.Stat()
 

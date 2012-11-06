@@ -21,35 +21,35 @@ import abc
 class MetaclassRegistry(abc.ABCMeta):
   """Automatic Plugin Registration through metaclasses."""
 
-  def __init__(mcs, name, bases, env_dict):
-    abc.ABCMeta.__init__(mcs, name, bases, env_dict)
+  def __init__(self, name, bases, env_dict):
+    abc.ABCMeta.__init__(self, name, bases, env_dict)
 
     # Attach the classes dict to the baseclass and have all derived classes
     # use the same one:
     for base in bases:
       try:
-        mcs.classes = base.classes
-        mcs.plugin_feature = base.plugin_feature
-        mcs.top_level_class = base.top_level_class
+        self.classes = base.classes
+        self.plugin_feature = base.plugin_feature
+        self.top_level_class = base.top_level_class
         break
       except AttributeError:
-        mcs.classes = {}
-        mcs.plugin_feature = mcs.__name__
+        self.classes = {}
+        self.plugin_feature = self.__name__
         # Keep a reference to the top level class
-        mcs.top_level_class = mcs
+        self.top_level_class = self
 
     # The following should not be registered as they are abstract. Classes
     # are abstract if the have the __abstract attribute (note this is not
     # inheritable so each abstract class must be explicitely marked).
     abstract_attribute = '_%s__abstract' % name
-    if getattr(mcs, abstract_attribute, None):
+    if getattr(self, abstract_attribute, None):
       return
 
-    if not mcs.__name__.startswith('Abstract'):
-      mcs.classes[mcs.__name__] = mcs
+    if not self.__name__.startswith('Abstract'):
+      self.classes[self.__name__] = self
 
       try:
-        if mcs.top_level_class.include_plugins_as_attributes:
-          setattr(mcs.top_level_class, mcs.__name__, mcs)
+        if self.top_level_class.include_plugins_as_attributes:
+          setattr(self.top_level_class, self.__name__, self)
       except AttributeError:
         pass

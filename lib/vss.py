@@ -70,6 +70,7 @@ class VShadowVolume(object):
 
   def GetImageSize(self, file_path, offset):
     """Read the partition information to gather volume size."""
+    __pychecker__ = 'unusednames=self'
     img = pytsk3.Img_Info(file_path)
     try:
       volume = pytsk3.Volume_Info(img)
@@ -82,6 +83,7 @@ class VShadowVolume(object):
         size = vol.len
         break
 
+    __pychecker__ = 'no-objattrs'
     size *= volume.info.block_size
     return volume.info.block_size, size
 

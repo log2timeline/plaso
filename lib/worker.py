@@ -66,6 +66,8 @@ class PlasoWorker(object):
   # This is only used temporary until files can be classified.
   magic_max_length = 0
 
+  _lock = None
+
   def __init__(self, proc_queue, stor_queue, config, pre_obj, lock=None):
     """Constructor for the class.
 
@@ -216,7 +218,7 @@ class PlasoWorker(object):
       proto = transmission_pb2.PathSpec()
       proto.CopyFrom(p)
       try:
-        new_fh = pfile.OpenPFile(spec=p, orig=proto, lock=self._lock)
+        new_fh = pfile.OpenPFile(spec=p, orig=proto, lock=cls._lock)
         yield new_fh
       except IOError as e:
         logging.debug(('Unable to open file: {%s}, not sure if we can extract '
