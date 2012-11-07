@@ -18,7 +18,7 @@ from plaso.lib import event
 from plaso.lib import parser
 
 
-class ParseLsQuarantine(parser.SQLiteParser):
+class LsQuarantine(parser.SQLiteParser):
   """Parse the LaunchServices.QuarantineEvents databse on Mac OS X.
 
   File can be found here:
