@@ -20,6 +20,7 @@ import os
 import logging
 import sys
 
+from plaso.lib import errors
 from plaso.lib import engine
 
 # The number of bytes in a MiB.
@@ -132,7 +133,12 @@ if __name__ == '__main__':
                        ' end with M'))
         sys.exit(1)
 
-  l2t = engine.Engine(options)
+  try:
+    l2t = engine.Engine(options)
+  except errors.BadConfigOption as e:
+    logging.warning('Unable to run tool, bad configuration: %s', e)
+    sys.exit(1)
+
   try:
     l2t.Start()
     logging.info('Run completed.')

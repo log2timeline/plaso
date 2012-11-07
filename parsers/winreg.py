@@ -22,7 +22,7 @@ from plaso.lib import win_registry
 from plaso.lib import win_registry_interface
 
 
-class RegistryParser(parser.PlasoParser):
+class WinRegistry(parser.PlasoParser):
   """A Windows Registry assistance parser for Plaso."""
 
   # List of types registry types and required keys to identify each of these
@@ -36,11 +36,11 @@ class RegistryParser(parser.PlasoParser):
   }
 
   # Description of the log file.
-  NAME = 'Registry Parsing'
-  PARSER_TYPE = 'reg'
+  NAME = 'WinRegistry'
+  PARSER_TYPE = 'REG'
 
   def __init__(self, pre_obj):
-    super(RegistryParser, self).__init__(pre_obj)
+    super(WinRegistry, self).__init__(pre_obj)
     self._plugins = win_registry_interface.GetRegistryPlugins()
 
   def Parse(self, filehandle):
@@ -65,7 +65,7 @@ class RegistryParser(parser.PlasoParser):
           '[%s] Unable to parse file %s: %s' % (self.NAME, filehandle.name, e))
 
     # Detect registry type.
-    registry_type = 'all'
+    registry_type = 'unknown'
     for reg_type in self.REG_TYPES:
       found = True
       for key in self.REG_TYPES[reg_type]:

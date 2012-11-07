@@ -32,7 +32,7 @@ class FileStatTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self.base_path = os.path.join('plaso/test_data')
-    self.parser_obj = filestat.ParsePfileStat(EmptyObject())
+    self.parser_obj = filestat.PfileStat(EmptyObject())
 
   def testTSKFile(self):
     """Read a file within an image file and make few tests."""

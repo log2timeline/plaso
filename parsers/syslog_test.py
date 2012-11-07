@@ -39,7 +39,7 @@ class SyslogUnitTest(unittest.TestCase):
     """Test parsing of a syslog file."""
     pre = EmptyObject()
     pre.zone = pytz.UTC
-    sl = syslog.ParseSyslog(pre)
+    sl = syslog.Syslog(pre)
 
     self.filehandle.seek(0)
     sl_generator = sl.Parse(self.filehandle)

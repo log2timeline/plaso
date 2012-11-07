@@ -134,6 +134,11 @@ class PlasoStorage(object):
         pre_obj.counter = collections.Counter()
         pre_obj.collection_information['cmd_line'] = u' '.join(sys.argv)
 
+      # Start up a counter for modules in buffer.
+      self._count_evt_long = collections.Counter()
+      self._count_evt_short = collections.Counter()
+      self._count_parser = collections.Counter()
+
       # Need to get the last number in the list.
       for name in self.zipfile.namelist():
         if 'plaso_meta.' in name:
@@ -155,7 +160,15 @@ class PlasoStorage(object):
     """Return gathered preprocessing information from a storage file."""
     try:
       pre_file = self.zipfile.open('information.yaml', 'r')
-      return yaml.load(pre_file)
+      pre_file_obj = yaml.load(pre_file)
+
+      stores = list(self.GetProtoNumbers())
+      pre_file_obj[0].stores = {}
+      pre_file_obj[0].stores['Number'] = len(stores)
+      for store in stores:
+        pre_file_obj[0].stores['Store %d' % store] = self.ReadMeta(store)
+
+      return pre_file_obj
     except KeyError:
       return None
 
@@ -302,7 +315,15 @@ class PlasoStorage(object):
     # Add values to counters.
     if self._pre_obj:
       self._pre_obj.counter['total'] += 1
-      self._pre_obj.counter[event.source_long] += 1
+      self._pre_obj.counter[event.parser] += 1
+
+    # Add to temporary counter.
+    self._count_evt_long[event.source_long] += 1
+    self._count_evt_short[event.source_short] += 1
+    if hasattr(event, 'parser'):
+      self._count_parser[event.parser] += 1
+    else:
+      self._count_parser['unknown_parser'] += 1
 
     heapq.heappush(self._buffer, (event.timestamp, serialized))
     self._buffer_size += len(serialized)
@@ -343,6 +364,7 @@ class PlasoStorage(object):
 
     if not self._buffer_size:
       return
+
     meta_fh = 'plaso_meta.%06d' % self._filenumber
     proto_fh = 'plaso_proto.%06d' % self._filenumber
     index_fh = 'plaso_index.%06d' % self._filenumber
@@ -351,7 +373,14 @@ class PlasoStorage(object):
     # that can be used for quick filtering data chunks.
     yaml_dict = {'range': (self._buffer_first_timestamp,
                            self._buffer_last_timestamp),
-                 'version': self.STORAGE_VERSION}
+                 'version': self.STORAGE_VERSION,
+                 'source_short': list(self._count_evt_short.viewkeys()),
+                 'source_long': list(self._count_evt_long.viewkeys()),
+                 'parsers': list(self._count_parser.viewkeys()),
+                 'source_count': self._count_evt_long.most_common()}
+    self._count_evt_long = collections.Counter()
+    self._count_evt_short = collections.Counter()
+    self._count_parser = collections.Counter()
     self.zipfile.writestr(meta_fh, yaml.dump(yaml_dict))
 
     ofs = 0

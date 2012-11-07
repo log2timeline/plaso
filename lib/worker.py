@@ -173,7 +173,7 @@ class PlasoWorker(object):
             event.display_name = filehandle.display_name
             event.filename = filehandle.name
             event.pathspec = filehandle.pathspec_root.SerializeToString()
-            event.parser = parsing_object.NAME
+            event.parser = parsing_object.__class__.__name__
             stat_obj = filehandle.Stat()
             if hasattr(stat_obj, 'ino'):
               event.inode = stat_obj.ino

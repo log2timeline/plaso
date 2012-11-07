@@ -18,7 +18,7 @@ from plaso.lib import event
 from plaso.lib import parser
 
 
-class ParseFirefox(parser.SQLiteParser):
+class Firefox(parser.SQLiteParser):
   """Parse Firefox history files using SQLiteParser."""
 
   NAME = 'Firefox History'

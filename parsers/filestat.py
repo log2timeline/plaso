@@ -18,7 +18,7 @@ from plaso.lib import event
 from plaso.lib import parser
 
 
-class ParsePfileStat(parser.PlasoParser):
+class PfileStat(parser.PlasoParser):
   """Parse the PFile Stat object to extract filesystem timestamps.."""
 
   NAME = 'TSK Stat'

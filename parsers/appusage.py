@@ -18,7 +18,7 @@ from plaso.lib import event
 from plaso.lib import parser
 
 
-class ParseApplicationUsage(parser.SQLiteParser):
+class ApplicationUsage(parser.SQLiteParser):
   """Parse Application Usage history files.
 
   Application usage is a SQLite database that logs down entries

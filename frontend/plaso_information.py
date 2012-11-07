@@ -50,6 +50,7 @@ def DisplayInformation(info, params):
   date = datetime.datetime.utcfromtimestamp(
       info.collection_information['time_of_run'])
   filename = info.collection_information['file_processed']
+  printer = pprint.PrettyPrinter(indent=8)
 
   header = (u'{0}\n\t\tPlaso Storage Information\n{0}\nStorage file: {3}\nFil'
             'e processed: {1}\nTime of processing: {2}\n').format(
@@ -63,15 +64,25 @@ def DisplayInformation(info, params):
     for key, value in info.counter.most_common():
       information += u'\tCounter: %s = %d\n' % (key, value)
 
+  if hasattr(info, 'stores'):
+    information += u'\nStore information:\n'
+    information += u'\tNumber of available stores: %d\n' % info.stores['Number']
+    if params.verbose:
+      for key, value in info.stores.items():
+        if key == 'Number':
+          continue
+        information += u'\t%s =\n%s\n' % (key, printer.pformat(value))
+    else:
+      information += u'\tPrintout omitted (use verbose to see)\n'
+
   preprocessing = u'Pre-processing information:\n'
   if params.verbose:
     for key, value in info.__dict__.items():
       if key == 'collection_information':
         continue
-      elif key == 'counter':
+      elif key == 'counter' or key == 'stores':
         continue
       if isinstance(value, list):
-        printer = pprint.PrettyPrinter(indent=8)
         preprocessing += u'\t{0} = \n{1}\n'.format(key, printer.pformat(value))
       else:
         preprocessing += u'\t{0} = {1}\n'.format(key, value)
