@@ -18,7 +18,7 @@ from plaso.lib import event
 from plaso.lib import parser
 
 
-class ParseChrome(parser.SQLiteParser):
+class Chrome(parser.SQLiteParser):
   """Parse Chrome history files."""
 
   NAME = 'Chrome History'

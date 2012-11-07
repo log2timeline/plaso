@@ -29,23 +29,32 @@ class PlasoStorageUnitTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self.events = []
+
     event_1 = event.RegistryEvent(
         u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'}, 13349615269295969)
     event_1.source_long = 'NTUSER.DAT Registry File'
+    event_1.parser = 'UNKNOWN'
+
     event_2 = event.RegistryEvent(
         u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
         {u'Value': u'send all the exes to the other world'}, 13359662069295961)
     event_2.source_long = 'NTUSER.DAT Registry File'
+    event_2.parser = 'UNKNOWN'
+
     event_3 = event.RegistryEvent(
         u'\\HKCU\\Windows\\Normal', {u'Value': u'run all the benign stuff'},
         13349402860000000)
     event_3.source_long = 'NTUSER.DAT Registry File'
+    event_3.parser = 'UNKNOWN'
+
     event_4 = event.TextEvent(12389344590000000,
                               ('This is a line by someone not reading the log'
                                ' line properly. And since this log line exceed'
                                's the accepted 80 chars it will be '
                                'shortened.'), 'Some random text file',
                               'nomachine', 'johndoe')
+    event_4.parser = 'UNKNOWN'
+
     self.events.append(event_1)
     self.events.append(event_2)
     self.events.append(event_3)

@@ -20,7 +20,7 @@ from plaso.lib import lexer
 from plaso.lib import parser
 
 
-class ParseSyslog(parser.TextParser):
+class Syslog(parser.TextParser):
   """Parse syslog files using the TextParser."""
 
   NAME = 'Syslog'
@@ -45,7 +45,7 @@ class ParseSyslog(parser.TextParser):
       ]
 
   def __init__(self, pre_obj):
-    super(ParseSyslog, self).__init__(pre_obj, True)
+    super(Syslog, self).__init__(pre_obj, True)
     # Set the initial year to 0 (fixed in the actual Parse method)
     self._year_use = 0
     self._last_month = 0
@@ -107,7 +107,7 @@ class ParseSyslog(parser.TextParser):
       line = self.attributes['body']
 
     self.attributes['body'] = line
-    return super(ParseSyslog, self).ParseLine(zone)
+    return super(Syslog, self).ParseLine(zone)
 
   def ParseHost(self, match, **_):
     self.attributes['hostname'] = match.group(1)
@@ -135,6 +135,6 @@ class ParseSyslog(parser.TextParser):
 
   def PrintLine(self):
     self.attributes['iyear'] = 2012
-    return super(ParseSyslog, self).PrintLine()
+    return super(Syslog, self).PrintLine()
 
 
