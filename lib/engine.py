@@ -39,6 +39,7 @@ from plaso.lib import errors
 from plaso.lib import preprocess
 from plaso.lib import queue
 from plaso.lib import storage
+from plaso.lib import putils
 from plaso.lib import vss
 from plaso.lib import worker
 
@@ -270,7 +271,13 @@ class Engine(object):
     # Run pre-processing if necessary.
     if self.config.preprocess:
       logging.info('Starting to preprocess.')
-      self._PreProcess(pre_obj)
+      try:
+        self._PreProcess(pre_obj)
+      except IOError as e:
+        logging.error(
+            (u'An IOError occurred while trying to pre-process, bailing out. The error '
+             'given is: %s'), e)
+        return
     else:
       pre_obj.zone = self.config.zone
 
@@ -363,6 +370,8 @@ class Engine(object):
     obj.collection_information['output_file'] = self.config.output
     obj.collection_information['protobuf_size'] = self.config.buffer_size
     obj.collection_information['time_of_run'] = time.time()
+    obj.collection_information['parsers'] = [
+        x.parser_name for x in putils.FindAllParsers()['all']]
 
     obj.collection_information['preprocess'] = str(
         bool(self.config.preprocess))

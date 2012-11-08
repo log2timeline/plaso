@@ -111,16 +111,26 @@ def Pfile2File(fh_in, path=None):
   return path
 
 
-def FindAllParsers():
+def FindAllParsers(pre_obj=None, filters=None):
   """Find all available parser objects.
 
   A parser is defined as an object that implements the PlasoParser
   class and does not have the __abstract attribute set.
 
+  Args:
+    pre_obj: A PlasoPreprocess object containing information collected from
+             image.
+    filters: A Plaso Filter object.
+
   Returns:
     A set of objects that implement the LogParser object.
   """
-  pre_obj = Options()
+  if not pre_obj:
+    pre_obj = Options()
+
+  # TODO: Add filter support.
+  _ = filters
+
   results = {}
   results['all'] = []
   parser_objs = _FindClasses(parser.PlasoParser, pre_obj)
