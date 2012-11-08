@@ -61,6 +61,11 @@ class PlasoParser(object):
     """
     self._pre_obj = pre_obj
 
+  @property
+  def parser_name(self):
+    """Return the name of the parser."""
+    return self.__class__.__name__
+
   @abc.abstractmethod
   def Parse(self, filehandle):
     """Verifies and parses the log file and returns EventObjects.

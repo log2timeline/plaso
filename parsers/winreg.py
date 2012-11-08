@@ -32,7 +32,8 @@ class WinRegistry(parser.PlasoParser):
       'SOFTWARE': ('\\Microsoft\\Windows\\CurrentVersion\\App Paths',),
       'SECURITY': ('\\Policy\\PolAdtEv',),
       'SYSTEM': ('\\Select',),
-      'SAM': ('\\SAM\\Domains\\Account\\Users',)
+      'SAM': ('\\SAM\\Domains\\Account\\Users',),
+      'UNKNOWN': (),
   }
 
   # Description of the log file.
@@ -65,8 +66,10 @@ class WinRegistry(parser.PlasoParser):
           '[%s] Unable to parse file %s: %s' % (self.NAME, filehandle.name, e))
 
     # Detect registry type.
-    registry_type = 'unknown'
+    registry_type = 'UNKNOWN'
     for reg_type in self.REG_TYPES:
+      if reg_type == 'UNKNOWN':
+        continue
       found = True
       for key in self.REG_TYPES[reg_type]:
         if not key in reg:
