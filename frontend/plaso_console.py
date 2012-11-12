@@ -99,7 +99,9 @@ if __name__ == '__main__':
             'File object from an image file, for a file inside a VSS.\n\t'
             'OpenTskFile(file_to_open, image_path, image_offset) - Open a P'
             'File object from an image file.\n\tPfile2File(fh_in, path) - '
-            'Save a PFile object to a path in the OS.\n\n'
+            'Save a PFile object to a path in the OS.\n\tGetEventData(event'
+            '_proto, before) - Print out a hexdump of the event for manual '
+            'verification.\n\n'
             '\nHappy command line console fu-ing.')
 
   ipshell = InteractiveShellEmbed(user_ns=namespace, banner1=banner,
