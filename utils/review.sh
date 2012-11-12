@@ -24,6 +24,7 @@ fi
 REVIEWER=$1
 
 # First find all files that need linter
+echo "Run through pychecker."
 git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | while read lint_file
 do
   pychecker -Q --only -6  "$lint_file"
@@ -34,6 +35,11 @@ do
     exit 1
   fi
 done
+
+if [ $? -ne 0 ]
+then
+  exit 1
+fi
 
 echo "Linter clear."
 

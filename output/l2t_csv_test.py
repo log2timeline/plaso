@@ -70,13 +70,13 @@ class L2tCsvTest(unittest.TestCase):
     evt.source_short = 6
     evt.source_long = 'Syslog'
     evt.hostname = 'ubuntu'
-    evt.display_name = 'log/syslog.1'
+    evt.filename = 'log/syslog.1'
     evt.description_short = ('Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
                              ': session\n closed for user root)')
     evt.description_long = ('Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
                             ':session closed for user root)')
     self.formatter.EventBody(self.CreateProto(evt))
-    correct = ('06/27/2012,18:17:01,UTC,....,LOG,Syslog,Entry '
+    correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
                '(pam_unix(cron:session): session closed for user '
                'root),Reporter <CRON> PID: 8442 (pam_unix(cron:session):'
@@ -91,13 +91,13 @@ class L2tCsvTest(unittest.TestCase):
     evt.source_short = 6
     evt.source_long = 'Syslog'
     evt.hostname = 'ubuntu'
-    evt.display_name = 'log/syslog.1'
+    evt.filename = 'log/syslog.1'
     evt.description_short = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
                              ': session closed for user root)')
     evt.description_long = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
                             ':session closed for user root)')
     self.formatter.EventBody(self.CreateProto(evt))
-    correct = ('06/27/2012,18:17:01,UTC,....,LOG,Syslog,Entry '
+    correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
                '(pam_unix(cron:session): session closed for user '
                'root),Reporter <CRON> PID: 8442 (pam_unix(cron:session):'
