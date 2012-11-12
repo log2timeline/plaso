@@ -186,6 +186,9 @@ class Firefox(parser.SQLiteParser):
     Returns:
       Reversed string with the first dot removed.
     """
+    if not hostname:
+      return ''
+
     return hostname[::-1][1:]
 
   def _GetUrl(self, url_id):
