@@ -1323,7 +1323,7 @@ class GitVCS(VersionControlSystem):
     # append a diff (with rename detection), without deletes.
     cmd = [
         "git", "diff", "--no-color", "--no-ext-diff", "--full-index",
-        "--ignore-submodules", "--cached",
+        "--ignore-submodules",
     ]
     diff = RunShell(
         cmd + ["--no-renames", "--diff-filter=D"] + extra_args,
@@ -1331,6 +1331,9 @@ class GitVCS(VersionControlSystem):
     diff += RunShell(
         cmd + ["--find-copies-harder", "-l100000", "--diff-filter=AMCRT"]
             + extra_args,
+        env=env, silent_ok=True)
+    diff += RunShell(
+        cmd + ["--no-renames", "--diff-filter=D", "--cached"] + extra_args,
         env=env, silent_ok=True)
 
     # The CL could be only file deletion or not. So accept silent diff for both
