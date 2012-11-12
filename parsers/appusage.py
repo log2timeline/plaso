@@ -29,6 +29,8 @@ class ApplicationUsage(parser.SQLiteParser):
   See the code here:
   http://code.google.com/p/google-macops/source/browse/trunk/crankd/\
       ApplicationUsage.py
+
+  Default installation: /var/db/application_usage.sqlite
   """
 
   NAME = 'Application Usage'

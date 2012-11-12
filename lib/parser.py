@@ -398,6 +398,12 @@ class SQLiteParser(PlasoParser):
                     # set, change this soon so the timestamp does not need to
                     # be set.
                     evt.timestamp = 0
+                  evt.query = query
+                  if not hasattr(evt, 'offset'):
+                    if 'id' in row.keys():
+                      evt.offset = row['id']
+                    else:
+                      evt.offset = 0
                   yield evt
               row = sql_results.fetchone()
       except sqlite3.DatabaseError as e:
