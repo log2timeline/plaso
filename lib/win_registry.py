@@ -38,7 +38,12 @@ class WinPyregKey(win_registry_interface.WinRegKey):
     self._key = key
     self.name = key.name
     self.path = '%s\\%s' % (parent_path, self.name)
-    self.timestamp = self._key.get_last_written_time_as_integer()
+    # Timestamp as FILETIME
+    filetime = self._key.get_last_written_time_as_integer()
+    # TODO: Add a helper function for this since this conversion
+    # will take place in several places and could potentially
+    # be made less lossy.
+    self.timestamp = filetime / 10 - 11644473600000000
     self.offset = self._key.get_offset()
 
   def GetValues(self):
