@@ -38,6 +38,7 @@ from plaso.lib import collector
 from plaso.lib import errors
 from plaso.lib import preprocess
 from plaso.lib import queue
+from plaso.lib import sleuthkit
 from plaso.lib import storage
 from plaso.lib import putils
 from plaso.lib import vss
@@ -214,6 +215,9 @@ class Engine(object):
     collection_queue = queue.SingleThreadedQueue()
     storage_queue = queue.SingleThreadedQueue()
 
+    # Since we are running this single-threaded we don't need a real lock.
+    lock = sleuthkit.FakeLock()
+
     # Save some information about the run time into the pre-processing object.
     self._StoreCollectionInformation(pre_obj)
 
@@ -222,7 +226,7 @@ class Engine(object):
     with collector.PCollector(collection_queue) as my_collector:
       if self.config.image:
         ofs = self.config.image_offset_bytes or self.config.image_offset * 512
-        my_collector.CollectFromImage(self.config.filename, ofs)
+        my_collector.CollectFromImage(self.config.filename, lock, ofs)
         if self.config.parse_vss:
           logging.debug('Parsing VSS from image.')
           volume = pyvshadow.volume()
@@ -235,7 +239,7 @@ class Engine(object):
             logging.warning('Error while trying to read VSS: %s', e)
           for store_nr in range(0, vss_numbers):
             my_collector.CollectFromVss(
-                self.config.filename, store_nr, ofs)
+                self.config.filename, store_nr, lock, ofs)
       elif self.config.recursive:
         my_collector.CollectFromDir(self.config.filename)
       else:
@@ -249,7 +253,7 @@ class Engine(object):
     logging.debug('Starting worker.')
     # Start processing entries.
     my_worker = worker.PlasoWorker(
-        collection_queue, storage_queue, self.config, pre_obj)
+        collection_queue, storage_queue, self.config, pre_obj, lock)
     my_worker.Run()
     logging.debug('Worker process done.')
 

@@ -159,7 +159,10 @@ class PlasoFile(object):
     else:
       self.pathspec_root = proto
     self.name = ''
-    self._lock = lock
+    if lock:
+      self._lock = lock
+    else:
+      self._lock = sleuthkit.FakeLock()
 
     if proto.type != self.TYPE:
       raise errors.UnableToOpenFile('Unable to handle this file type.')
@@ -280,15 +283,10 @@ class TskFile(PlasoFile):
       return ret
 
     try:
-      if self._lock:
-        self._lock.acquire()
-      info = self.fh.fileobj.info
-      meta = info.meta
-      if self._lock:
-        self._lock.release()
+      with self._lock:
+        info = self.fh.fileobj.info
+        meta = info.meta
     except IOError:
-      if self._lock:
-        self._lock.release()
       return ret
 
     if not meta:

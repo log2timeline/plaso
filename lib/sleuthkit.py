@@ -22,6 +22,18 @@ import logging
 import pytsk3
 
 
+class FakeLock(object):
+  """A fake lock object, used when no locks are in place."""
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    pass
+
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
+
+
 def Open(fs, inode, name, lock=None):
   """Shorthand for TSKFile(fs, inode, path).
 
@@ -64,19 +76,16 @@ class TSKFile(object):
     self.inode = inode
     self.fs = filesystem
 
+    if not lock:
+      lock = FakeLock()
+
     # We prefer opening up a file by it's inode number.
     if inode:
-      if lock:
-        lock.acquire()
-      self.fileobj = self.fs.open_meta(inode=inode)
-      if lock:
-        lock.release()
+      with lock:
+        self.fileobj = self.fs.open_meta(inode=inode)
     else:
-      if lock:
-        lock.acquire()
-      self.fileobj = self.fs.open(path)
-      if lock:
-        lock.release()
+      with lock:
+        self.fileobj = self.fs.open(path)
 
     self.size = self.fileobj.info.meta.size
     self.name = path
@@ -129,17 +138,12 @@ class TSKFile(object):
       if read_now_size < 0:
         return data
       try:
-        if self._lock:
-          self._lock.acquire()
-        buf = self.fileobj.read_random(self.next_read_offset, read_now_size)
-        if self._lock:
-          self._lock.release()
+        with self._lock:
+          buf = self.fileobj.read_random(self.next_read_offset, read_now_size)
         self.next_read_offset += len(buf)
         self.readahead = buf[read_size:]
         data += buf[:read_size]
       except IOError:
-        if self._lock:
-          self._lock.release()
         return data
 
     return data
