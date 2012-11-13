@@ -54,4 +54,4 @@ fi
 
 echo "Tests all came up clean. Send for review."
 
-python utils/upload.py --cc log2timeline-dev@googlegroups.com -r $REVIEWER --send_mail
+python utils/upload.py -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER --send_mail

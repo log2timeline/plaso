@@ -50,7 +50,12 @@ fi
 echo "All came out clean, let's submit the code."
 
 # Get the proper text:
-text=`curl https://codereview.appspot.com/$CHANGELIST/ -s | grep "Issue $CHANGELIST" | awk -F ':' '{print $2}' | tail -1`
+if [ "x`which json_xs`" != "x" ]
+then
+  text=`curl -s https://codereview.appspot.com/api/6818098 | json_xs | grep '"description"' | awk -F ':' '{print $2}' | cut -c3- | rev | cut -c3- | rev`
+else
+  text=`curl https://codereview.appspot.com/$CHANGELIST/ -s | grep "Issue $CHANGELIST" | awk -F ':' '{print $2}' | tail -1`
+fi
 
 if [ "x$text" == "x" ]
 then
@@ -61,4 +66,4 @@ fi
 git commit -a -m "Code review: $CHANGELIST: $text"
 git push
 
-
+#curl -s https://codereview.appspot.com/api/$CHANGELIST/close
