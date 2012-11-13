@@ -45,6 +45,9 @@ from plaso.lib import vss
 from plaso.lib import worker
 
 
+__version__ = '1.0b'
+
+
 def GetTimeZoneList():
   """Generates a list of all supported time zones."""
   yield 'local'
@@ -369,6 +372,7 @@ class Engine(object):
     """Store information about collection into an object."""
     obj.collection_information = {}
 
+    obj.collection_information['version'] = __version__
     obj.collection_information['configured_zone'] = self.config.zone
     obj.collection_information['file_processed'] = self.config.filename
     obj.collection_information['output_file'] = self.config.output
