@@ -14,14 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for the Stat object of a PFile."""
+import pytsk3
+
 from plaso.lib import event
 from plaso.lib import parser
+from plaso.lib import sleuthkit
 
 
 class PfileStat(parser.PlasoParser):
   """Parse the PFile Stat object to extract filesystem timestamps.."""
 
-  NAME = 'TSK Stat'
+  NAME = 'File Stat'
   PARSER_TYPE = 'FILE'
 
   DATE_MULTIPLIER = 1000000
@@ -38,6 +41,8 @@ class PfileStat(parser.PlasoParser):
       if item[-4:] == 'time':
         times.append(item)
 
+    flags = stat.attributes.get('flags', None)
+
     for time in times:
       evt = event.EventObject()
       evt.timestamp = int(self.DATE_MULTIPLIER * getattr(stat, time, 0))
@@ -51,8 +56,13 @@ class PfileStat(parser.PlasoParser):
       evt.source_short = 'FILE'
       evt.source_long = u'%s Time' % getattr(stat, 'os_type', 'N/A')
 
-      evt.description_long = filehandle.name
-      evt.description_short = filehandle.display_name
+      evt.description_short = filehandle.name
+      append = u''
+      if flags:
+        if int(flags) & int(pytsk3.TSK_FS_META_FLAG_UNALLOC):
+          append = u' (unallocated)'
+      evt.description_long = u'{0}{1}'.format(
+          filehandle.display_name, append)
       evt.offset = 0
 
       yield evt
