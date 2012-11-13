@@ -30,7 +30,8 @@ BYTES_IN_A_MIB = 1024 * 1024
 if __name__ == '__main__':
   arg_parser = argparse.ArgumentParser(
       description=('log2timeline is the main frontend to the plaso backend, used'
-                   ' to collect and correlate events extracted from the filesystem')) 
+                   ' to collect and correlate events extracted from the filesystem'),
+      epilog='And that\'s how you build a timeline using log2timeline.') 
 
   arg_parser.add_argument(
       '-z', '--zone', dest='tzone', action='store', type=str, default='UTC',
@@ -81,11 +82,16 @@ if __name__ == '__main__':
       type=int, help='The bytes offset to the image')
 
   arg_parser.add_argument(
+      '-v', '--version', action='version',
+      version='log2timeline - plaso backend %s' % engine.__version__,
+      help='Show the current version of the backend.')
+
+  arg_parser.add_argument(
       '-d', '--debug', dest='debug', action='store_true', default=False,
       help='Turn on debug information in the tool.')
 
   arg_parser.add_argument(
-      '-w', '--write', dest='output', action='store', required=True, metavar='STORAGE_FILE',
+      '-w', '--write', dest='output', action='store', metavar='STORAGE_FILE',
       help='The output file (needs to be defined).')
 
   arg_parser.add_argument(
@@ -109,6 +115,11 @@ if __name__ == '__main__':
   options.local = True
 
   options.recursive = os.path.isdir(options.filename)
+
+  if not options.output:
+    print 'Wrong usage: need to define an output.'
+    arg_parser.print_help()
+    sys.exit(1)
 
   if options.image_offset or options.image_offset_bytes:
     options.image = True
