@@ -48,5 +48,5 @@ fi
 
 echo "All came out clean, let's submit the code."
 
-python utils/upload.py -i $CHANGELIST -t ""
+python utils/upload.py -y -i $CHANGELIST -t "." -m "."
 

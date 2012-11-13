@@ -20,6 +20,7 @@ import tempfile
 import unittest
 
 from plaso.lib import collector
+from plaso.lib import sleuthkit
 from plaso.lib import queue
 from plaso.proto import transmission_pb2
 
@@ -78,9 +79,10 @@ class PlasoCollectorUnitTest(unittest.TestCase):
     path = os.path.join(self.base_path, 'syslog_image.dd')
 
     # Start with a collector without opening files.
+    lock = sleuthkit.FakeLock()
     my_queue = queue.SingleThreadedQueue()
     my_collect = collector.PCollector(my_queue)
-    my_collect.CollectFromImage(path, 0)
+    my_collect.CollectFromImage(path, lock, 0)
     events = self.GetEvents(my_queue)
 
     self.assertEquals(len(events), 2)
