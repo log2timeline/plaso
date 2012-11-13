@@ -72,6 +72,23 @@ class WinUsers(preprocess.WinRegistryPreprocess):
     return users
 
 
+class WinHostName(preprocess.WinRegistryPreprocess):
+  """A preprocessing class that fetches the hostname information."""
+
+  ATTRIBUTE = 'hostname'
+
+  # Depend upon the current control set to be found.
+  WEIGHT = 3
+
+  REG_KEY = '{current_control_set}\\Control\\ComputerName\\ComputerName'
+  REG_FILE = 'SYSTEM'
+
+  def ParseKey(self, key):
+    """Extract the hostname from the registry."""
+    val = key.GetValue('ComputerName')
+    return val.GetData()
+
+
 class WinRegCodePage(preprocess.WinRegistryPreprocess):
   """A preprocessing class that fetches code page information."""
 
