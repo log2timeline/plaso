@@ -68,7 +68,7 @@ class PlasoWorker(object):
 
   _lock = None
 
-  def __init__(self, proc_queue, stor_queue, config, pre_obj, lock=None):
+  def __init__(self, proc_queue, stor_queue, config, pre_obj, lock):
     """Constructor for the class.
 
     Args:
