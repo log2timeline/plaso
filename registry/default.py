@@ -29,6 +29,7 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
   WEIGHT = 3
 
   def Process(self, key):
+    """Process the key and return a generator to extract EventObjects."""
     self._key = key
     return self.GetEntries()
 
@@ -43,10 +44,11 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
       data_type = value.GetTypeStr()
 
       if 'SZ' in data_type or 'DWORD' in data_type:
+        entry = u'%s' % value.name
         try:
-          text_dict[u'%s' % value.name] = u'%s' % value.GetData(unicode)
+          text_dict[entry] = u'%s' % value.GetData(unicode)
         except UnicodeDecodeError:
-          text_dict[u'%s' % value.name] = u'[unicode error while processing] %s' % value.GetData(
+          text_dict[entry] = u'[unicode error encountered] %s' % value.GetData(
               unicode).decode('utf_16_le', 'ignore')
       else:
         text_dict[u'%s' % value.name] = u'[DATA TYPE %s]' % data_type

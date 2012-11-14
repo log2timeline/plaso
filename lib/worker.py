@@ -68,7 +68,7 @@ class PlasoWorker(object):
 
   _lock = None
 
-  def __init__(self, proc_queue, stor_queue, config, pre_obj, lock=None):
+  def __init__(self, proc_queue, stor_queue, config, pre_obj, lock):
     """Constructor for the class.
 
     Args:
@@ -175,6 +175,8 @@ class PlasoWorker(object):
             event.pathspec = filehandle.pathspec_root.SerializeToString()
             event.parser = parsing_object.parser_name
             stat_obj = filehandle.Stat()
+            if hasattr(self._pre_obj, 'hostname'):
+              event.hostname = self._pre_obj.hostname
             if hasattr(stat_obj, 'ino'):
               event.inode = stat_obj.ino
             self._stor_queue.AddEvent(event)

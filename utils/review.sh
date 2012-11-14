@@ -19,22 +19,21 @@
 if [ $# -ne 1 ]
 then
   echo "Wrong USAGE: `basename $0` REVIEWER"
+  exit 1
 fi
 
 REVIEWER=$1
 
-# First find all files that need linter
-echo "Run through pychecker."
-git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | while read lint_file
-do
-  pychecker -Q --only -6  "$lint_file"
+if [ ! -f "utils/common.sh" ]
+then
+  echo "Missing common functions, are you in the wrong directory?"
+  exit 1
+fi
 
-  if [ $? -ne 0 ]
-  then
-    echo "Fix linter errors before proceeding."
-    exit 1
-  fi
-done
+. utils/common.sh
+
+# First find all files that need linter
+linter
 
 if [ $? -ne 0 ]
 then
@@ -53,5 +52,4 @@ then
 fi
 
 echo "Tests all came up clean. Send for review."
-
-python utils/upload.py --cc log2timeline-dev@googlegroups.com -r $REVIEWER --send_mail
+python utils/upload.py -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER --send_mail

@@ -148,7 +148,7 @@ class PlasoFile(object):
     Args:
       proto: The transmission_proto that describes the file.
       root: The root transmission_proto that describes the file if one exists.
-      lock: A thread lock object, to control libraries that are not thread-safe.
+      lock: A thread lock object to control libraries that are not thread-safe.
 
     Raises:
       IOError: If this class supports the wrong driver for this file.
@@ -159,15 +159,20 @@ class PlasoFile(object):
     else:
       self.pathspec_root = proto
     self.name = ''
-    self._lock = lock
+    if lock:
+      self._lock = lock
+    else:
+      self._lock = sleuthkit.FakeLock()
 
     if proto.type != self.TYPE:
       raise errors.UnableToOpenFile('Unable to handle this file type.')
 
   def __enter__(self):
+    """Make it work with the with statement."""
     return self
 
   def __exit__(self, exc_type, exc_value, traceback):
+    """Make it work with the with statement."""
     _ = exc_type
     _ = exc_value
     _ = traceback
@@ -175,6 +180,7 @@ class PlasoFile(object):
     return False
 
   def __str__(self):
+    """Return a string representation of the file object, the display name."""
     if hasattr(self, 'display_name'):
       __pychecker__ = 'missingattrs=display_name'
       return self.display_name
@@ -280,79 +286,37 @@ class TskFile(PlasoFile):
       return ret
 
     try:
-      if self._lock:
-        self._lock.acquire()
-      info = self.fh.fileobj.info
-      meta = info.meta
-      if self._lock:
-        self._lock.release()
+      with self._lock:
+        info = self.fh.fileobj.info
+        meta = info.meta
     except IOError:
-      if self._lock:
-        self._lock.release()
       return ret
 
     if not meta:
       return ret
 
-    ret.mode = meta.mode
-    try:
-      ret.ino = meta.addr
-    except AttributeError:
-      pass
+    fs_type = ''
+    with self._lock:
+      ret.mode = getattr(meta, 'mode', None)
+      ret.ino = getattr(meta, 'addr', None)
+      ret.nlink = getattr(meta, 'nlink', None)
+      ret.uid = getattr(meta, 'uid', None)
+      ret.gid = getattr(meta, 'gid', None)
+      ret.size = getattr(meta, 'size', None)
+      ret.atime = getattr(meta, 'atime', None)
+      ret.atime_nano = getattr(meta, 'atime_nano', None)
+      ret.crtime = getattr(meta, 'crtime', None)
+      ret.crtime_nano = getattr(meta, 'crtime_nano', None)
+      ret.mtime = getattr(meta, 'mtime', None)
+      ret.mtime_nano = getattr(meta, 'mtime_nano', None)
+      ret.ctime = getattr(meta, 'ctime', None)
+      ret.ctime_nano = getattr(meta, 'ctime_nano', None)
+      ret.dtime = getattr(meta, 'dtime', None)
+      ret.dtime_nano = getattr(meta, 'dtime_nano', None)
+      ret.bkup_time = getattr(meta, 'bktime', None)
+      ret.bkup_time_nano = getattr(meta, 'bktime_nano', None)
+      fs_type = str(self._fs.info.ftype)
 
-    try:
-      ret.nlink = meta.nlink
-    except AttributeError:
-      pass
-
-    try:
-      ret.uid = meta.uid
-      ret.gid = meta.gid
-    except AttributeError:
-      pass
-
-    try:
-      ret.size = meta.size
-    except AttributeError:
-      pass
-
-    try:
-      ret.atime = meta.atime
-      ret.atime_nano = meta.atime_nano
-    except AttributeError:
-      pass
-
-    try:
-      ret.crtime = meta.crtime
-      ret.crtime_nano = meta.crtime_nano
-    except AttributeError:
-      pass
-
-    try:
-      ret.mtime = meta.mtime
-      ret.mtime_nano = meta.mtime_nano
-    except AttributeError:
-      pass
-
-    try:
-      ret.ctime = meta.ctime
-      ret.ctime_nano = meta.ctime_nano
-    except AttributeError:
-      pass
-
-    try:
-      ret.dtime = meta.ctime
-      ret.dtime_nano = meta.ctime_nano
-    except AttributeError:
-      pass
-
-    try:
-      ret.bkup_time = meta.ctime
-      ret.bkup_time_nano = meta.ctime_nano
-    except AttributeError:
-      pass
-
-    fs_type = str(self._fs.info.ftype)
     if len(fs_type) > 12:
       ret.os_type = fs_type[12:]
     else:
@@ -383,7 +347,8 @@ class TskFile(PlasoFile):
     if self.pathspec.HasField('image_inode'):
       inode = self.pathspec.image_inode
 
-    self.fh = sleuthkit.Open(self._fs, inode, self.pathspec.file_path, self._lock)
+    self.fh = sleuthkit.Open(
+        self._fs, inode, self.pathspec.file_path, self._lock)
 
     self.name = self.pathspec.file_path
     self.size = self.fh.size
@@ -548,12 +513,14 @@ class ZipFile(PlasoFile):
     return self.offset
 
   def close(self):
+    """Close the file."""
     if self.fh:
       self.fh.close()
       self.fh = None
       self.offset = 0
 
   def seek(self, offset, whence=0):
+    """Seek into the file."""
     if not self.fh:
       raise RuntimeError('Unable to seek into a file that is not open.')
 
@@ -802,6 +769,7 @@ class TarFile(PlasoFile):
     return result + sep
 
   def seek(self, offset, whence=0):
+    """Seek into the filehandle."""
     if not self.fh:
       raise RuntimeError('Unable to seek into a file that is not open.')
 
@@ -817,6 +785,7 @@ class TarFile(PlasoFile):
       self.fh.seek(offset, whence)
 
   def tell(self):
+    """Return the current offset of the filehandle."""
     if not self.fh:
       return 0
 
@@ -829,6 +798,7 @@ class VssFile(TskFile):
   TYPE = transmission_pb2.PathSpec.VSS
 
   def _OpenFileSystem(self, path, offset):
+    """Open a filesystem object for a VSS file."""
     if not self.pathspec.HasField('vss_store_number'):
       raise IOError((u'Unable to open VSS file: {%s} -> No VSS store number '
                      'defined.') % self.name)
@@ -839,6 +809,7 @@ class VssFile(TskFile):
     self._fs = self._fs_obj.fs
 
   def Open(self, filehandle=None):
+    """Open a VSS file, which is a subset of a TSK file."""
     super(VssFile, self).Open(filehandle)
 
     self.display_name = u'%s:vss_store_%d' % (
@@ -851,10 +822,13 @@ class Stats(object):
   attributes = None
 
   def __init__(self):
+    """Constructor for the stats object."""
     self.attributes = {}
 
   def __setattr__(self, attr, value):
     """Sets the value to either the default or the attribute store."""
+    if value == None:
+      return
     try:
       object.__getattribute__(self, attr)
       object.__setattr__(self, attr, value)
@@ -903,8 +877,8 @@ def OpenPFile(spec, fh=None, orig=None, lock=None):
   The location and how to open the file is described in the PathSpec protobuf
   that includes location and information about which driver to use to open it.
 
-  Each PathSpec can also define a nested PathSpec, if that file is stored within
-  another file, or even an embedded one.
+  Each PathSpec can also define a nested PathSpec, if that file is stored
+  within another file, or even an embedded one.
 
   An example PathSpec describing an image file that contains a GZIP compressed
   TAR file, that contains a GZIP compressed syslog file, providing multiple
