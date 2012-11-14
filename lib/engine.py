@@ -282,8 +282,8 @@ class Engine(object):
         self._PreProcess(pre_obj)
       except IOError as e:
         logging.error(
-            (u'An IOError occurred while trying to pre-process, bailing out. The error '
-             'given is: %s'), e)
+            (u'An IOError occurred while trying to pre-process, bailing out.'
+             'The error given is: %s'), e)
         return
     else:
       pre_obj.zone = self.config.zone

@@ -23,17 +23,17 @@ fi
 
 CHANGELIST=$1
 
-# First find all files that need linter
-git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | while read lint_file
-do
-  pychecker -f -Q --only -6 "$lint_file"
+if [ ! -f "utils/common.sh" ]
+then
+  echo "Missing common functions, are you in the wrong directory?"
+  exit 1
+fi
 
-  if [ $? -ne 0 ]
-  then
-    echo "Fix linter errors before proceeding."
-    exit 1
-  fi
-done
+. utils/common.sh
+
+# First find all files that need linter
+echo "Run through pychecker."
+linter
 
 if [ $? -ne 0 ]
 then

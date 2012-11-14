@@ -148,7 +148,7 @@ class PlasoFile(object):
     Args:
       proto: The transmission_proto that describes the file.
       root: The root transmission_proto that describes the file if one exists.
-      lock: A thread lock object, to control libraries that are not thread-safe.
+      lock: A thread lock object to control libraries that are not thread-safe.
 
     Raises:
       IOError: If this class supports the wrong driver for this file.
@@ -347,7 +347,8 @@ class TskFile(PlasoFile):
     if self.pathspec.HasField('image_inode'):
       inode = self.pathspec.image_inode
 
-    self.fh = sleuthkit.Open(self._fs, inode, self.pathspec.file_path, self._lock)
+    self.fh = sleuthkit.Open(
+        self._fs, inode, self.pathspec.file_path, self._lock)
 
     self.name = self.pathspec.file_path
     self.size = self.fh.size
@@ -876,8 +877,8 @@ def OpenPFile(spec, fh=None, orig=None, lock=None):
   The location and how to open the file is described in the PathSpec protobuf
   that includes location and information about which driver to use to open it.
 
-  Each PathSpec can also define a nested PathSpec, if that file is stored within
-  another file, or even an embedded one.
+  Each PathSpec can also define a nested PathSpec, if that file is stored
+  within another file, or even an embedded one.
 
   An example PathSpec describing an image file that contains a GZIP compressed
   TAR file, that contains a GZIP compressed syslog file, providing multiple
