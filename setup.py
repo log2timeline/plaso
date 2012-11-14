@@ -29,7 +29,8 @@ except ImportError:
   from distutils.core import find_packages, setup
 
 if sys.version < '2.7':
-  print 'Wrong Python Version, require version 2.7 or higher (and lower than 3.X).\n%s' % sys.version
+  print ('Wrong Python Version, require version 2.7 or higher (and lower '
+         'than 3.X).\n%s') % sys.version
   sys.exit(1)
 
 def GetTools():
@@ -68,7 +69,7 @@ def GetFileList(path, patterns):
 
 setup(name='plaso',
       version='0.1',
-      description='The plaso backend as well as few front-ends, such as log2timeline.',
+      description='The plaso backend as well as few front-ends.',
       license='Apache License, Version 2.0',
       url='https://sites.google.com/a/kiddaland.net/plaso',
       package_dir={'plaso': '../plaso'},

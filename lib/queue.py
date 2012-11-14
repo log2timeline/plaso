@@ -51,6 +51,7 @@ class SimpleQueue(PlasoQueue):
   """Queue management for Plaso."""
 
   def __init__(self):
+    """Constructor for a simple multiprocessing queue."""
     self._queue = multiprocessing.Queue()
     super(SimpleQueue, self).__init__()
     self.closed = False
@@ -71,16 +72,19 @@ class SimpleQueue(PlasoQueue):
     self._queue.put('STOP')
 
   def Queue(self, item):
+    """Add an item to the queue."""
     if not self.closed:
       self._queue.put(item)
 
   def __len__(self):
+    """Return the total number of events stored inside the queue."""
     size = 0
     try:
       size = self._queue.qsize()
     except NotImplementedError:
       logging.warning(
-          'Returning queue length does not work on Mac OS X because of broken sem_getvalue()')
+          ('Returning queue length does not work on Mac OS X because of broken'
+           'sem_getvalue()'))
       raise
 
     return size
@@ -90,11 +94,13 @@ class SingleThreadedQueue(PlasoQueue):
   """Simple queue that is used in a single threaded solution."""
 
   def __init__(self):
+    """Constructor for a simple single threaded queue."""
     super(SingleThreadedQueue, self).__init__()
     self._queue = collections.deque()
     self.closed = False
 
   def PopItems(self):
+    """Return a generator that gets items of the queue."""
     try:
       while 1:
         yield self._queue.pop()
@@ -102,16 +108,20 @@ class SingleThreadedQueue(PlasoQueue):
       pass
 
   def Close(self):
+    """Indicate that the queue has been closed."""
     self.closed = True
 
   def __len__(self):
+    """Return the number of items inside the queue."""
     return len(self._queue)
 
   def Queue(self, item):
+    """Add an even to the queue."""
     if not self.closed:
       self._queue.append(item)
     else:
       logging.debug('Unable to add item to queue, since it is closed.')
 
   def AddEvent(self, item):
+    """Add an event to the queue."""
     self.Queue(item)
