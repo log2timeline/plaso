@@ -67,13 +67,13 @@ if __name__ == '__main__':
       help='Indicate that the tool should run in a single thread.')
 
   arg_parser.add_argument(
-      '--open-files', dest='open_files', action='store_true', default=False,
+      '--scan-archives', dest='open_files', action='store_true', default=False,
       help=('Indicate that the tool should try to open files to extract embedd'
             'ed files within them, for instance to extract files from compress'
             'ed containers, etc.'))
 
   arg_parser.add_argument(
-      '--noopen-files', dest='open_files', action='store_false',
+      '--noscan-archives', dest='open_files', action='store_false',
       help=('Indicate that the tool should NOT try to '
             'open files to extract embedded files within them.'))
 
