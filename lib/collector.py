@@ -111,7 +111,8 @@ class PCollector(object):
       with lock:
         directory = fs.fs.open_dir(inode=cur_inode)
     except IOError:
-      logging.error(u'IOError while trying to open a directory: %s [%d]', path, cur_inode)
+      logging.error(u'IOError while trying to open a directory: %s [%d]',
+                    path, cur_inode)
       if not retry:
         logging.info(u'Reopening directory due to an IOError: %s', path)
         self.ParseImageDir(fs, cur_inode, path, lock, True)

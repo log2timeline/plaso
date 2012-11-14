@@ -48,8 +48,8 @@ class LsQuarantine(parser.SQLiteParser):
 
     date = int(row['Epoch'] * self.DATE_MULTIPLIER)
 
-    evt = event.SQLiteEvent(date, 'File Downloaded', text_long, text_short, 'HIST',
-                            u'%s Download Event' % self.NAME)
+    evt = event.SQLiteEvent(date, 'File Downloaded', text_long, text_short,
+                            'HIST', u'%s Download Event' % self.NAME)
 
     yield evt
 
