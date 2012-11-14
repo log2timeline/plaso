@@ -24,17 +24,21 @@ fi
 
 CHANGELIST=$1
 
-# First find all files that need linter
-git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | while read lint_file
-do
-  pychecker -Q --only -6 "$lint_file"
+if [ ! -f "utils/common.sh" ]
+then
+  echo "Missing common functions, are you in the wrong directory?"
+  exit 1
+fi
 
-  if [ $? -ne 0 ]
-  then
-    echo "Fix linter errors before proceeding."
-    exit 1
-  fi
-done
+# Source the common library.
+. utils/common.sh
+
+linter
+
+if [ $? -ne 0 ]
+then
+  exit 1
+fi
 
 echo "Linter clear."
 
@@ -50,7 +54,12 @@ fi
 echo "All came out clean, let's submit the code."
 
 # Get the proper text:
-text=`curl https://codereview.appspot.com/$CHANGELIST/ -s | grep "Issue $CHANGELIST" | awk -F ':' '{print $2}' | tail -1`
+if [ "x`which json_xs`" != "x" ]
+then
+  text=`curl -s https://codereview.appspot.com/api/6818098 | json_xs | grep '"description"' | awk -F ':' '{print $2}' | cut -c3- | rev | cut -c3- | rev`
+else
+  text=`curl https://codereview.appspot.com/$CHANGELIST/ -s | grep "Issue $CHANGELIST" | awk -F ':' '{print $2}' | tail -1`
+fi
 
 if [ "x$text" == "x" ]
 then
@@ -61,4 +70,4 @@ fi
 git commit -a -m "Code review: $CHANGELIST: $text"
 git push
 
-
+#curl -s https://codereview.appspot.com/api/$CHANGELIST/close

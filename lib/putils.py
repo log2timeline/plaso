@@ -25,13 +25,17 @@ from plaso.lib import parser
 from plaso.lib import pfile
 from plaso.proto import transmission_pb2
 
+# TODO: Refactor the putils library so it does not end up being a trash can
+# for all things core/front-end. We don't want this to be end up being a
+# collection for all methods that have no other home.
+
 
 class Options(object):
   """A simple configuration object."""
 
 
 def _OpenImageFile(file_to_open, image_path, image_type='tsk',
-                   image_offset=0):
+                   image_offset=0, store_nr=0):
   """Return a PFile like object for a file in a raw disk image.
 
   Args:
@@ -40,6 +44,8 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
     image_type: 'tsk' or 'vss' depending on the type of image being
     opened.
     image_offset: Offset in sectors if this is a disk image.
+    store_nr: Applicaple only in the VSS sense, indicates the
+    store number.
 
   Returns:
     A PFile object.
@@ -52,6 +58,7 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
   proto = transmission_pb2.PathSpec()
   if image_type == 'vss':
     proto.type = transmission_pb2.PathSpec.VSS
+    proto.vss_store_number = store_nr
   elif image_type == 'tsk':
     proto.type = transmission_pb2.PathSpec.TSK
 
@@ -106,7 +113,8 @@ def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0):
   Returns:
     A PFile object.
   """
-  return _OpenImageFile(file_to_open, image_path, 'vss', image_offset)
+  return _OpenImageFile(
+      file_to_open, image_path, 'vss', image_offset, store_nr)
 
 
 def Pfile2File(fh_in, path=None):
@@ -228,7 +236,6 @@ def GetEventData(event_proto, before=0):
   if event_proto.HasField('offset'):
     offset = event_proto.offset
 
-  count = 0
   if offset - before > 0:
     offset -= before
 
@@ -237,10 +244,10 @@ def GetEventData(event_proto, before=0):
   hexdata = binascii.hexlify(data)
   data_out = []
 
-  def FlushLine(line, entry_nr=0):
+  def FlushLine(line, orig_ofs, entry_nr=0):
     """Return a single line of 'xxd' dump like style."""
     out = []
-    out.append('{0:07x}: '.format(entry_nr * 32))
+    out.append('{0:07x}: '.format(orig_ofs + entry_nr * 16))
 
     for bit in range(0, 8):
       out.append('%s ' % line[bit * 4:bit * 4 + 4])
@@ -255,14 +262,14 @@ def GetEventData(event_proto, before=0):
 
   for entry_nr in range(0, len(hexdata) / 32):
     point = 32 * entry_nr
-    data_out.append(FlushLine(hexdata[point:point + 32], entry_nr))
+    data_out.append(FlushLine(hexdata[point:point + 32], offset, entry_nr))
 
   if len(hexdata) % 32:
     breakpoint = len(hexdata) / 32
     leftovers = hexdata[breakpoint:]
     pad = ' ' * (32 - len(leftovers))
 
-    data_out.append(FlushLine(leftovers + pad, breakpoint))
+    data_out.append(FlushLine(leftovers + pad, offset, breakpoint))
 
   return '\n'.join(data_out)
 
