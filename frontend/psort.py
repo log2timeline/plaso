@@ -47,6 +47,7 @@ from plaso.lib import output as output_lib
 from plaso.lib import storage
 
 MAX_64INT = 2**64-1
+__version__ = '1.0'
 
 def GetMicroseconds(date_str, timezone):
   """Returns microseconds from epoch for a given date string and pytz timezone.
@@ -213,7 +214,7 @@ class OutputRenderer(object):
      Currently only supports dumping basic to string formating of objects.
   """
 
-  def __init__(self, Format='Timeline', output_fd=None, timezone='UTC'):
+  def __init__(self, Format='L2tCsv', output_fd=None, timezone='UTC'):
     """Initalizes the OutputRenderer.
 
     Args:
@@ -274,12 +275,14 @@ if __name__ == '__main__':
 
   parser.add_argument('-tus', '--first_time_microsec',
                       metavar='FIRSTTIMESTAMP_USEC', dest='first_time_microsec',
-                      default=0, type=int, help='Earliest time as a microsecond')
+                      default=0, type=int,
+                      help='Earliest time as a microsecond')
 
   parser.add_argument('-T', '--last_time', metavar='ENDDATE', dest='last_time',
                       help='Last time as "YYYY-MM-DD HH:MM:SS"')
 
-  parser.add_argument('-Tus', '--last_time_microsec', metavar='LASTIMESTAMP_USEC',
+  parser.add_argument('-Tus', '--last_time_microsec', 
+                      metavar='LASTIMESTAMP_USEC',
                       dest='last_time_microsec', default=MAX_64INT, type=int,
                       help='Latest time as microsecond.')
 
@@ -288,10 +291,15 @@ if __name__ == '__main__':
                       help='Output format.  -o list to see loaded modules.')
 
   parser.add_argument('-z', '--zone', metavar='TIMEZONE', default='UTC',
-                      dest='timezone', help='Timezone of output. list: "-z list"')
+                      dest='timezone',
+                      help='Timezone of output. list: "-z list"')
 
   parser.add_argument('-w', '--write', metavar='OUTPUTFILE', dest='write',
                       help='Output filename.  Defaults to stdout.')
+
+  parser.add_argument('-v', '--version', dest='version', action='version',
+                      version='log2timeline - psort version %s' % __version__,
+                      help='Show the current version of psort.')
 
   my_args = parser.parse_args()
 

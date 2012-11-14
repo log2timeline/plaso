@@ -18,6 +18,7 @@
 Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
 """
 import datetime
+import logging
 import pytz
 import re
 
@@ -53,8 +54,14 @@ class L2tCsv(output.LogOutputFormatter):
       proto_read: Protobuf to format.
     """
 
-    mydate = datetime.datetime.utcfromtimestamp(
-        proto_read.timestamp / self.MICROSEC)
+    try:
+      mydate = datetime.datetime.utcfromtimestamp(
+          proto_read.timestamp / self.MICROSEC)
+    except ValueError as e:
+       logging.error(
+           u'Unable to print: %s - %d: %s', proto_read.description_short,
+           proto_read.timestamp, e)
+       return
     date_use = mydate.replace(tzinfo=pytz.utc).astimezone(self.zone)
 
     attributes = {}
@@ -77,8 +84,8 @@ class L2tCsv(output.LogOutputFormatter):
            date_use.strftime('%H:%M:%S'),
            self.zone,
            self.GetLegacy(proto_read),
-           proto_read.DESCRIPTOR.enum_types_by_name['SourceShort'].values_by_number[
-               proto_read.source_short].name,
+           proto_read.DESCRIPTOR.enum_types_by_name[
+             'SourceShort'].values_by_number[proto_read.source_short].name,
            proto_read.source_long,
            proto_read.timestamp_desc,
            attributes.get('username', '-'),
