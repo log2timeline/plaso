@@ -90,7 +90,7 @@ class PCollector(object):
     fs = pfile.FilesystemCache.Open(image, offset)
 
     # read the root dir, and move from there
-    self.ParseImageDir(fs, fs.fs.info.root_inum, '/', lock)
+    self.ParseImageDir(fs, fs.fs.info.root_inum, os.path.sep, lock)
 
   def ParseImageDir(self, fs, cur_inode, path, lock, retry=False):
     """A recursive traversal of a directory inside an image file.
@@ -165,6 +165,7 @@ class PCollector(object):
     my_queue.Queue(transfer_proto.SerializeToString())
 
   def Close(self):
+    """Close the queue."""
     self._queue.Close()
 
   def __exit__(self, unused_type, unused_value, unused_traceback):

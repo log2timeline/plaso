@@ -293,7 +293,7 @@ class Engine(object):
 
     # Create a lock
     lock = multiprocessing.Lock()
-    
+
     # Start the collector.
     start_collection_thread = True
     if self.config.image:

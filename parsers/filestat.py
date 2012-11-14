@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for the Stat object of a PFile."""
-import pytsk3
 
 from plaso.lib import event
 from plaso.lib import parser
@@ -41,7 +40,11 @@ class PfileStat(parser.PlasoParser):
       if item[-4:] == 'time':
         times.append(item)
 
-    flags = stat.attributes.get('flags', None)
+    append = u''
+    # Check if file is allocated (only applicable for TSK).
+    check_allocated = getattr(filehandle, 'IsAllocated', None)
+    if check_allocated and check_allocated():
+      append = u' (unallocated)'
 
     for time in times:
       evt = event.EventObject()
@@ -57,10 +60,6 @@ class PfileStat(parser.PlasoParser):
       evt.source_long = u'%s Time' % getattr(stat, 'os_type', 'N/A')
 
       evt.description_short = filehandle.name
-      append = u''
-      if flags:
-        if int(flags) & int(pytsk3.TSK_FS_META_FLAG_UNALLOC):
-          append = u' (unallocated)'
       evt.description_long = u'{0}{1}'.format(
           filehandle.display_name, append)
       evt.offset = 0

@@ -27,7 +27,7 @@ REVIEWER=$1
 echo "Run through pychecker."
 git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | while read lint_file
 do
-  pychecker -Q --only -6  "$lint_file"
+  pychecker -Q -f --only -6  "$lint_file"
 
   if [ $? -ne 0 ]
   then
