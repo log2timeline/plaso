@@ -29,17 +29,19 @@ BYTES_IN_A_MIB = 1024 * 1024
 
 if __name__ == '__main__':
   arg_parser = argparse.ArgumentParser(
-      description=('log2timeline is the main frontend to the plaso backend, used'
-                   ' to collect and correlate events extracted from the filesystem'),
-      epilog='And that\'s how you build a timeline using log2timeline.') 
+      description=('log2timeline is the main frontend to the plaso backend, us'
+                   'ed to collect and correlate events extracted from the file'
+                   'system'),
+      epilog='And that\'s how you build a timeline using log2timeline.')
 
   arg_parser.add_argument(
       '-z', '--zone', dest='tzone', action='store', type=str, default='UTC',
       help='Define the timezone of the IMAGE (not the output).')
 
   arg_parser.add_argument(
-      '-p', '--preprocess', dest='preprocess', action='store_true', default=False,
-      help='Turn on pre-processing. Pre-processing is turned on by default in image parsing')
+      '-p', '--preprocess', dest='preprocess', action='store_true',
+      default=False, help=('Turn on pre-processing. Pre-processing is turned '
+                           'on by default in image parsing'))
 
   arg_parser.add_argument(
       '--buffer-size', '--bs', dest='buffer_size', action='store', default=0,
@@ -50,36 +52,39 @@ if __name__ == '__main__':
       help='The number of worker threads [default 10].')
 
   arg_parser.add_argument(
-      '-i', '--image', dest='image', action='store_true',
-      default=False, help='Indicates that this is an image instaed of a regular file.')
+      '-i', '--image', dest='image', action='store_true', default=False,
+      help='Indicates that this is an image instaed of a regular file.')
 
   arg_parser.add_argument(
       '--vss', dest='parse_vss', action='store_true', default=False,
-      help=('Collect data from VSS. Off by default, this should be used on Windows systems'
-            ' that have active VSS (Volume Shadow Copies) that need to be included in the '
-            'analyzis.'))
+      help=('Collect data from VSS. Off by default, this should be used on Wi'
+            'ndows systems that have active VSS (Volume Shadow Copies) that n'
+            'eed to be included in the analysis.'))
 
   arg_parser.add_argument(
-      '--single-thread', dest='single_thread', action='store_true', default=False,
-       help='Indicate that the tool should run in a single thread.')
+      '--single-thread', dest='single_thread', action='store_true',
+      default=False,
+      help='Indicate that the tool should run in a single thread.')
 
   arg_parser.add_argument(
-      '--open-files', dest='open_files', action='store_true', default=False,
-      help=('Indicate that the tool should try to open files to extract embedded files '
-            'within them, for instance to extract files from compressed containers, etc.'))
+      '--scan-archives', dest='open_files', action='store_true', default=False,
+      help=('Indicate that the tool should try to open files to extract embedd'
+            'ed files within them, for instance to extract files from compress'
+            'ed containers, etc.'))
 
   arg_parser.add_argument(
-      '--noopen-files', dest='open_files', action='store_false',
+      '--noscan-archives', dest='open_files', action='store_false',
       help=('Indicate that the tool should NOT try to '
             'open files to extract embedded files within them.'))
 
   arg_parser.add_argument(
-      '-o', '--offset', dest='image_offset', action='store', default=0, type=int,
-      help='The sector offset to the image in sector sizes (512 bytes).')
+      '-o', '--offset', dest='image_offset', action='store', default=0,
+      type=int, help=('The sector offset to the image in sector sizes (512'
+                      ' bytes).'))
 
   arg_parser.add_argument(
-      '--ob', '--offset_bytes', dest='image_offset_bytes', action='store', default=0,
-      type=int, help='The bytes offset to the image')
+      '--ob', '--offset_bytes', dest='image_offset_bytes', action='store',
+      default=0, type=int, help='The bytes offset to the image')
 
   arg_parser.add_argument(
       '-v', '--version', action='version',
@@ -95,10 +100,11 @@ if __name__ == '__main__':
       help='The output file (needs to be defined).')
 
   arg_parser.add_argument(
-      'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT', default=None,
-      help=('The path to the file, directory, image file or mount point that the tool'
-            ' should parse. If this is a directory it will recursively go through it, '
-            'same with an image file.'))
+      'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT',
+      default=None, help=(
+          'The path to the file, directory, image file or mount point that the'
+          ' tool should parse. If this is a directory it will recursively go '
+          'through it, same with an image file.'))
 
   options = arg_parser.parse_args()
 
