@@ -49,9 +49,10 @@ class FileStatTest(unittest.TestCase):
     fh.Open()
 
     evts = list(self.parser_obj.Parse(fh))
-    self.assertEquals(len(evts), 5)
+    self.assertEquals(len(evts), 3)
 
   def testZipFile(self):
+    """Test a ZIP file."""
     image_path = os.path.join(self.base_path, 'syslog.zip')
 
     path = transmission_pb2.PathSpec()
@@ -65,6 +66,7 @@ class FileStatTest(unittest.TestCase):
     self.assertEquals(len(evts), 1)
 
   def testGzipFile(self):
+    """Test a GZIP file."""
     file_path = os.path.join(self.base_path, 'syslog.gz')
 
     path = transmission_pb2.PathSpec()
@@ -77,6 +79,7 @@ class FileStatTest(unittest.TestCase):
     self.assertEquals(len(evts), 0)
 
   def testTarFile(self):
+    """Test a TAR file."""
     image_path = os.path.join(self.base_path, 'syslog.tar')
 
     path = transmission_pb2.PathSpec()
@@ -90,6 +93,7 @@ class FileStatTest(unittest.TestCase):
     self.assertEquals(len(evts), 0)
 
   def testNestedFile(self):
+    """Test a nested file."""
     file_path = os.path.join(self.base_path, 'syslog.tgz')
 
     path = transmission_pb2.PathSpec()
@@ -124,6 +128,7 @@ class FileStatTest(unittest.TestCase):
     self.assertEquals(len(evts), 0)
 
   def testNestedTSK(self):
+    """Test a nested TSK file."""
     image_path = os.path.join(self.base_path, 'syslog_image.dd')
 
     path = transmission_pb2.PathSpec()

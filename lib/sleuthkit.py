@@ -148,13 +148,28 @@ class TSKFile(object):
 
     return data
 
+  def IsAllocated(self):
+    """Return a boolean indicating if the file is allocated or not."""
+    ret = False
+    with self._lock:
+      flags = self.fileobj.info.meta.flags
+
+      if flags:
+        if int(flags) & int(pytsk3.TSK_FS_META_FLAG_UNALLOC):
+          ret = True
+
+    return ret
+
   def close(self):
+    """Close the file."""
     return
 
   def isatty(self):
+    """Return a bool indicating if the file is connected to tty-like device."""
     return False
 
   def tell(self):
+    """Return the current offset into the file."""
     return self.next_read_offset - len(self.readahead)
 
   def seek(self, offset, whence=0):
@@ -226,6 +241,7 @@ class TSKFile(object):
       sizehint -= len(line)
 
   def __iter__(self):
+    """Return a generator that returns all the lines in the file."""
     while 1:
       line = self.readline()
       if not line:
