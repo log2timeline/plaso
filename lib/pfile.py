@@ -923,16 +923,12 @@ def OpenPFile(spec, fh=None, orig=None, lock=None):
   try:
     handler = handler_class(spec, orig, lock)
   except errors.UnableToOpenFile:
-    if lock:
-      lock.release()
     raise IOError('Unable to open the file: %s using %s' % (
         spec.file_path, PFILE_TYPES[spec.type]))
 
   try:
     handler.Open(fh)
   except IOError as e:
-    if lock:
-      lock.release()
     raise IOError('[%s] Unable to open the file: %s, error: %s' % (
         handler.__class__.__name__, spec.file_path, e))
 
@@ -947,8 +943,6 @@ def OpenPFile(spec, fh=None, orig=None, lock=None):
                   PFILE_TYPES[spec.type])
     return handler
 
-  if lock:
-    lock.release()
   raise IOError('Unable to open the file.')
 
 
