@@ -29,12 +29,12 @@ class L2tSqlite(output.LogOutputFormatter):
   """Contains functions for outputing as l2t_R sqlite database."""
 
   SKIP = frozenset(['username', 'inode', 'hostname', 'body', 'parser'])
-  
+
   # Few regular expressions.
   MODIFIED_RE = re.compile(r'modif', re.I)
   ACCESS_RE = re.compile(r'visit', re.I)
   CREATE_RE = re.compile(r'(create|written)', re.I)
-  
+
   def __init__(self, filehandle=sys.stdout, zone=pytz.utc,
                fields=['host','user','source','sourcetype',
                        'type','datetime','key','color'],
@@ -57,7 +57,7 @@ class L2tSqlite(output.LogOutputFormatter):
     return ('l2t_R sqlite database format. database with one table, which'
             'has 17 fields e.g. user, host, date, etc.')
 
-  # Override LogOutputFormatter methods so it won't write to the file 
+  # Override LogOutputFormatter methods so it won't write to the file
   # handle any more.
   def Start(self):
     """Connect to the database and create the table before inserting."""
@@ -72,12 +72,13 @@ class L2tSqlite(output.LogOutputFormatter):
 
     # Create table in database.
     if not self.append:
-      self.curs.execute('CREATE TABLE log2timeline (date date, time time,'
-                        'timezone TEXT, MACB TEXT, source TEXT, sourcetype TEXT, type TEXT,'
-                        'user TEXT, host TEXT, short TEXT, desc TEXT, version TEXT, filename '
-                        'TEXT, inode TEXT, notes TEXT, format TEXT, extra TEXT, datetime '
-                        'datetime, reportnotes TEXT, inreport TEXT, key rowid, tag TEXT,'
-                        'color TEXT)')
+      self.curs.execute(
+          ('CREATE TABLE log2timeline (date date, time time, timezone TEXT, '
+           'MACB TEXT, source TEXT, sourcetype TEXT, type TEXT, user TEXT, '
+           'host TEXT, short TEXT, desc TEXT, version TEXT, filename '
+           'TEXT, inode TEXT, notes TEXT, format TEXT, extra TEXT, datetime '
+           'datetime, reportnotes TEXT, inreport TEXT, key rowid, tag TEXT,'
+           'color TEXT)'))
 
     self.count = 0
 
@@ -152,14 +153,15 @@ class L2tSqlite(output.LogOutputFormatter):
             self.count,
             '',
             '')
-    self.curs.execute('INSERT INTO log2timeline(date, time, timezone,'
-                      'MACB, source, sourcetype, type, user, host, short, desc, version,'
-                      'filename, inode, notes, format, extra, datetime, reportnotes, inreport,'
-                      'key, tag, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-                      '?, ?, ?, ?, ?, ?, ?, ?)', row)
+    self.curs.execute(
+        ('INSERT INTO log2timeline(date, time, timezone, MACB, source, '
+         'sourcetype, type, user, host, short, desc, version, filename, '
+         'inode, notes, format, extra, datetime, reportnotes, inreport,'
+         'key, tag, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
+         '?, ?, ?, ?, ?, ?, ?, ?)'), row)
 
     self.count += 1
-    
+
     # Commit the current transaction every 10000 inserts.
     if self.count % 10000 == 0:
       self.conn.commit()
