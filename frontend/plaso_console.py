@@ -40,6 +40,7 @@ from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
+from plaso.lib import objectfilter
 from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfile
