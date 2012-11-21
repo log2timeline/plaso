@@ -33,6 +33,7 @@ from plaso import parsers    # pylint: disable=W0611
 from plaso.lib import errors
 from plaso.lib import parser
 from plaso.lib import pfile
+from plaso.lib import storage
 from plaso.proto import transmission_pb2
 
 
@@ -179,7 +180,8 @@ class PlasoWorker(object):
               event.hostname = self._pre_obj.hostname
             if hasattr(stat_obj, 'ino'):
               event.inode = stat_obj.ino
-            self._stor_queue.AddEvent(event)
+            serialized = storage.PlasoStorage.SerializeEvent(event)
+            self._stor_queue.AddEvent(serialized)
 
       except errors.UnableToParseFile as e:
         logging.debug('Not a %s file (%s) - %s', parsing_object.NAME,
