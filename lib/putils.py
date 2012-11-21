@@ -239,12 +239,16 @@ def GetEventData(event_proto, before=0):
   if offset - before > 0:
     offset -= before
 
+  return GetHexDump(fh, offset)
+
+def GetHexDump(fh, offset):
+  """Return a hex dump from a filehandle and an offset."""
   fh.seek(offset)
   data = fh.read(10 * 32)
   hexdata = binascii.hexlify(data)
   data_out = []
 
-  def FlushLine(line, orig_ofs, entry_nr=0):
+  def GetHexDumpLine(line, orig_ofs, entry_nr=0):
     """Return a single line of 'xxd' dump like style."""
     out = []
     out.append('{0:07x}: '.format(orig_ofs + entry_nr * 16))
@@ -262,14 +266,14 @@ def GetEventData(event_proto, before=0):
 
   for entry_nr in range(0, len(hexdata) / 32):
     point = 32 * entry_nr
-    data_out.append(FlushLine(hexdata[point:point + 32], offset, entry_nr))
+    data_out.append(GetHexDumpLine(hexdata[point:point + 32], offset, entry_nr))
 
   if len(hexdata) % 32:
     breakpoint = len(hexdata) / 32
     leftovers = hexdata[breakpoint:]
     pad = ' ' * (32 - len(leftovers))
 
-    data_out.append(FlushLine(leftovers + pad, offset, breakpoint))
+    data_out.append(GetHexDumpLine(leftovers + pad, offset, breakpoint))
 
   return '\n'.join(data_out)
 

@@ -72,6 +72,8 @@ from plaso.lib import queue
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
+__pychecker__ = 'no-abstract'
+
 
 class PlasoStorage(object):
   """Abstract the storage reading and writing."""
@@ -132,7 +134,8 @@ class PlasoStorage(object):
       if pre_obj:
         __pychecker__ = 'no-abstract'
         pre_obj.counter = collections.Counter()
-        pre_obj.collection_information['cmd_line'] = u' '.join(sys.argv)
+        if hasattr(pre_obj, 'collection_information'):
+          pre_obj.collection_information['cmd_line'] = u' '.join(sys.argv)
 
       # Start up a counter for modules in buffer.
       self._count_evt_long = collections.Counter()
@@ -172,7 +175,7 @@ class PlasoStorage(object):
     except KeyError:
       return None
 
-  def GetEntry(self, number, entry=None):
+  def GetEntry(self, number, entry_index=-1):
     """Return a protobuf read from filehandle.
 
     By default the next entry in the appropriate proto file is read
@@ -180,7 +183,7 @@ class PlasoStorage(object):
 
     Args:
       number: The proto file number.
-      entry: Read a specific entry in the file, otherwise the next one.
+      entry_index: Read a specific entry in the file, otherwise the next one.
 
     Returns:
       A protobuf entry read from the file.
@@ -194,17 +197,25 @@ class PlasoStorage(object):
       fh = self.zipfile.open('plaso_proto.%06d' % number, 'r')
       self.protofiles[number] = fh
 
-    if entry:
-      # TODO: Add the possibility to seek a particular entry.
-      # The problem here is that seeking to a file can be problematic
-      # since it is stored within a ZIP container.
-      # Extracting the file and then parsing it may serve as a quick
-      # workaraound, yet these files may be 256Mb or larger so that isn't
-      # perhaps what we would like to do.
-      # The commented-out implementation below both does not work and is
-      # very slow, it needs to be cached and handled properly.
-      logging.error('This is not supported as of now.')
-      return ''
+    if entry_index > 0:
+      index_fh = self.zipfile.open('plaso_index.%06d' % number, 'r')
+      ofs = entry_index * 4
+
+      # Since seek is not supported we need to read and ignore the data.
+      _ = index_fh.read(ofs)
+      size_byte_stream = index_fh.read(4)
+
+      if len(size_byte_stream) != 4:
+        logging.error('Unable to read entry number: %d from store %d',
+                      entry_index, number)
+        return None
+
+      ofs = struct.unpack('<I', size_byte_stream)[0]
+      # Again, since seek is not supported we need to close the file and reopen
+      # it to be able to "fake" seek.
+      fh = self.zipfile.open('plaso_proto.%06d' % number, 'r')
+      self.protofiles[number] = fh
+      _ = fh.read(ofs)
 
     unpacked = fh.read(4)
 
@@ -288,13 +299,14 @@ class PlasoStorage(object):
     return self._buffer_size
 
   def GetFileNumber(self):
+    """Return the current file number of the storage."""
     return self._filenumber
 
-  def AddEntry(self, event):
+  def AddEntry(self, event_str):
     """Add an entry into the buffer.
 
     Args:
-      event: An EventObject to append to the buffer.
+      event: An EventObject to append to the buffer (serialized).
 
     Raises:
       IOError: When trying to write to a closed storage file.
@@ -302,42 +314,42 @@ class PlasoStorage(object):
     if not self._file_open:
       raise IOError('Trying to add an entry to a closed storage file.')
 
+    event = plaso_storage_pb2.EventObject()
+    event.ParseFromString(event_str)
+    attributes = dict((a.key, a.value) for a in event.attributes)
+
     if event.timestamp > self._buffer_last_timestamp:
       self._buffer_last_timestamp = event.timestamp
 
     if event.timestamp < self._buffer_first_timestamp and event.timestamp > 0:
       self._buffer_first_timestamp = event.timestamp
 
-    serialized = self.SerializeEvent(event)
-    if not serialized:
-      return
-
     # Add values to counters.
     if self._pre_obj:
       self._pre_obj.counter['total'] += 1
-      self._pre_obj.counter[event.parser] += 1
+      self._pre_obj.counter[attributes.get('parser', 'N/A')] += 1
 
     # Add to temporary counter.
     self._count_evt_long[event.source_long] += 1
-    self._count_evt_short[event.source_short] += 1
-    if hasattr(event, 'parser'):
-      self._count_parser[event.parser] += 1
-    else:
-      self._count_parser['unknown_parser'] += 1
+    source = event.DESCRIPTOR.enum_types_by_name[
+        'SourceShort'].values_by_number[event.source_short].name
+    self._count_evt_short[source] += 1
+    self._count_parser[attributes.get('parser', 'unknown_parser')] += 1
 
-    heapq.heappush(self._buffer, (event.timestamp, serialized))
-    self._buffer_size += len(serialized)
+    heapq.heappush(self._buffer, (event.timestamp, event_str))
+    self._buffer_size += len(event_str)
     self._write_counter += 1
 
     if self._buffer_size > self._max_buffer_size:
       self.FlushBuffer()
 
-  def SerializeEvent(self, an_event):
+  @classmethod
+  def SerializeEvent(cls, an_event):
     """Return a serialized event."""
     proto = plaso_storage_pb2.EventObject()
     for attr in an_event.GetAttributes():
       if attr == 'source_short':
-        proto.source_short = self.source_short_map.get(
+        proto.source_short = cls.source_short_map.get(
             an_event.source_short, 6)
       elif attr == 'pathspec':
         path = transmission_pb2.PathSpec()
@@ -369,14 +381,13 @@ class PlasoStorage(object):
     proto_fh = 'plaso_proto.%06d' % self._filenumber
     index_fh = 'plaso_index.%06d' % self._filenumber
 
-    # TODO: Add more information into the meta file
-    # that can be used for quick filtering data chunks.
     yaml_dict = {'range': (self._buffer_first_timestamp,
                            self._buffer_last_timestamp),
                  'version': self.STORAGE_VERSION,
                  'source_short': list(self._count_evt_short.viewkeys()),
                  'source_long': list(self._count_evt_long.viewkeys()),
                  'parsers': list(self._count_parser.viewkeys()),
+                 'count': len(self._buffer),
                  'source_count': self._count_evt_long.most_common()}
     self._count_evt_long = collections.Counter()
     self._count_evt_short = collections.Counter()
@@ -414,8 +425,8 @@ class PlasoStorage(object):
       self.FlushBuffer()
       self.zipfile.close()
       self._file_open = False
-      logging.debug(('[Storage] Closing the storage, nr. of events processed:'
-                     ' %d'), self._write_counter)
+      logging.info(('[Storage] Closing the storage, nr. of events processed:'
+                    ' %d'), self._write_counter)
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
@@ -451,7 +462,9 @@ class SimpleStorageDumper(object):
         storage_buffer.AddEntry(item)
 
   def AddEvent(self, item):
+    """Add an event to the storage."""
     self._queue.Queue(item)
 
   def Close(self):
+    """Close the queue, indicating to the storage to flush and close."""
     self._queue.Close()
