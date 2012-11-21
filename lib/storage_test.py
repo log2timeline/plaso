@@ -61,6 +61,7 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.events.append(event_4)
 
   def testStorageDumper(self):
+    """Test the storage dumper."""
     self.assertEquals(len(self.events), 4)
 
     with tempfile.NamedTemporaryFile() as fh:
@@ -69,7 +70,8 @@ class PlasoStorageUnitTest(unittest.TestCase):
       # all has been queued up.
       dumper = storage.SimpleStorageDumper(fh)
       for e in self.events:
-        dumper.AddEvent(e)
+        serial = storage.PlasoStorage.SerializeEvent(e)
+        dumper.AddEvent(serial)
       dumper.Close()
       dumper.Run()
 
@@ -81,13 +83,15 @@ class PlasoStorageUnitTest(unittest.TestCase):
                                                     'plaso_proto.000001'])
 
   def testStorage(self):
+    """Test the storage object."""
     protos = []
     timestamps = []
     with tempfile.NamedTemporaryFile() as fh:
       store = storage.PlasoStorage(fh)
 
       for my_event in self.events:
-        store.AddEntry(my_event)
+        serial = storage.PlasoStorage.SerializeEvent(my_event)
+        store.AddEntry(serial)
 
       store.CloseStorage()
 
