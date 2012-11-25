@@ -35,6 +35,7 @@ class WinLnk(parser.PlasoParser):
     cont = event.EventContainer()
     cont.source_short = self.PARSER_TYPE
     cont.source_long = self.NAME
+    cont.offset = 0
 
     texts = []
 

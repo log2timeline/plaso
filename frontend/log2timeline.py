@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
   arg_parser.add_argument(
       '--buffer-size', '--bs', dest='buffer_size', action='store', default=0,
-      help='The buffer size for the output (defaults to 256Mb).')
+      help='The buffer size for the output (defaults to 196MiB).')
 
   arg_parser.add_argument(
       '--workers', dest='workers', action='store', type=int, default=10,
