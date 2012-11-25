@@ -25,7 +25,7 @@ from plaso.proto import plaso_storage_pb2
 from plaso.lib import output
 
 
-class L2tSqlite(output.LogOutputFormatter):
+class L2R(output.LogOutputFormatter):
   """Contains functions for outputing as l2t_R sqlite database."""
 
   SKIP = frozenset(['username', 'inode', 'hostname', 'body', 'parser'])
@@ -78,7 +78,7 @@ class L2tSqlite(output.LogOutputFormatter):
            'host TEXT, short TEXT, desc TEXT, version TEXT, filename '
            'TEXT, inode TEXT, notes TEXT, format TEXT, extra TEXT, datetime '
            'datetime, reportnotes TEXT, inreport TEXT, key rowid, tag TEXT,'
-           'color TEXT)'))
+           'color TEXT, store_number INT, store_index INT)'))
 
     self.count = 0
 
@@ -152,12 +152,15 @@ class L2tSqlite(output.LogOutputFormatter):
             '',
             self.count,
             '',
-            '')
+            '',
+            proto_read.store_number,
+            proto_read.store_index)
     self.curs.execute(
         ('INSERT INTO log2timeline(date, time, timezone, MACB, source, '
          'sourcetype, type, user, host, short, desc, version, filename, '
          'inode, notes, format, extra, datetime, reportnotes, inreport,'
-         'key, tag, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
+         'key, tag, color, store_number, store_index) VALUES (?, ?, ?, ?'
+         ', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
          '?, ?, ?, ?, ?, ?, ?, ?)'), row)
 
     self.count += 1

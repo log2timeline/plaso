@@ -47,17 +47,20 @@ def GetInformation(params):
 
 def DisplayInformation(info, params):
   """Return information gathered from storage."""
-  date = datetime.datetime.utcfromtimestamp(
-      info.collection_information['time_of_run'])
-  filename = info.collection_information['file_processed']
-  printer = pprint.PrettyPrinter(indent=8)
-
-  header = (u'{0}\n\t\tPlaso Storage Information\n{0}\nStorage file: {3}\nFil'
-            'e processed: {1}\nTime of processing: {2}\n').format(
-                '-' * 80, filename, date.isoformat(), params.storage_file)
+  header = u''
   information = u''
-  for key, value in info.collection_information.items():
-    information += u'\t{0} = {1}\n'.format(key, value)
+  printer = pprint.PrettyPrinter(indent=8)
+  if hasattr(info, 'collection_information'):
+    date = datetime.datetime.utcfromtimestamp(
+        info.collection_information.get('time_of_run', 0))
+    filename = info.collection_information.get('file_processed', 'N/A')
+
+    header = (u'{0}\n\t\tPlaso Storage Information\n{0}\nStorage file: {3}\nFil'
+              'e processed: {1}\nTime of processing: {2}\n').format(
+                  '-' * 80, filename, date.isoformat(), params.storage_file)
+
+    for key, value in info.collection_information.items():
+      information += u'\t{0} = {1}\n'.format(key, value)
 
   if hasattr(info, 'counter'):
     information += u'\nCounter information:\n'

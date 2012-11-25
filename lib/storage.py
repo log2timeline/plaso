@@ -78,8 +78,8 @@ __pychecker__ = 'no-abstract'
 class PlasoStorage(object):
   """Abstract the storage reading and writing."""
 
-  # Set the buffer size to 256Mb
-  MAX_BUFFER_SIZE = 1024 * 1024 * 256
+  # Set the buffer size to 196MiB
+  MAX_BUFFER_SIZE = 1024 * 1024 * 196
 
   # Set the version of this storage mechanism.
   STORAGE_VERSION = 1
@@ -191,13 +191,14 @@ class PlasoStorage(object):
     Raises:
       EOFError: When we reach the end of the protobuf file.
     """
+    last_index = 0
     if number in self.protofiles:
-      fh = self.protofiles[number]
+      fh, last_index = self.protofiles[number]
     else:
       fh = self.zipfile.open('plaso_proto.%06d' % number, 'r')
-      self.protofiles[number] = fh
+      self.protofiles[number] = (fh, 0)
 
-    if entry_index > 0:
+    if entry_index > -1:
       index_fh = self.zipfile.open('plaso_index.%06d' % number, 'r')
       ofs = entry_index * 4
 
@@ -211,10 +212,12 @@ class PlasoStorage(object):
         return None
 
       ofs = struct.unpack('<I', size_byte_stream)[0]
+
       # Again, since seek is not supported we need to close the file and reopen
       # it to be able to "fake" seek.
       fh = self.zipfile.open('plaso_proto.%06d' % number, 'r')
-      self.protofiles[number] = fh
+      self.protofiles[number] = (fh, entry_index)
+      last_index = entry_index
       _ = fh.read(ofs)
 
     unpacked = fh.read(4)
@@ -227,9 +230,12 @@ class PlasoStorage(object):
     if size > 1024 * 1024 * 40:
       raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
 
+    self.protofiles[number] = (fh, last_index + 1)
     proto_serialized = fh.read(size)
     proto = plaso_storage_pb2.EventObject()
     proto.ParseFromString(proto_serialized)
+    proto.store_number = number
+    proto.store_index = last_index
 
     return proto
 
@@ -416,6 +422,233 @@ class PlasoStorage(object):
     self._buffer = []
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = 0
+
+  def HasTagging(self):
+    """Return a bool indicating whether or not a Tag file is stored."""
+    for name in self.zipfile.namelist():
+      if 'plaso_tagging.' in name:
+        return True
+    return False
+
+  def HasGrouping(self):
+    """Return a bool indicating whether or not a Group file is stored."""
+    for name in self.zipfile.namelist():
+      if 'plaso_grouping.' in name:
+        return True
+    return False
+
+  def StoreGrouping(self, rows):
+    """Store group information into the storage file.
+
+    An EventGroup protobuf stores information about several
+    EventObjects that belong to the same behavior or action. It can then
+    be used to group similar events together to create a super event, or
+    a higher level event.
+
+    This function is used to store that information inside the storage
+    file so it can be read later.
+
+    The object that is passed in needs to have an iterator implemented
+    and has to implement the following attributes (optional names within
+    bracket):
+      name - The name of the grouped event.
+      [description] - More detailed description of the event.
+      [category] - If this group of events falls into a specific category.
+      [color] - To highlight this particular group with a HTML color tag.
+      [first_timestamp] - The first timestamp if applicaple of the group.
+      [last_timestamp] - The last timestamp if applicaple of the group.
+      events - A list of tuples (store_number and store_index of the
+      EventObject protobuf that belongs to this group of events).
+
+    Args:
+      rows: An object that contains the necessary fields to contruct
+      an EventGroup. Has to be a generator object or an object that implements
+      an iterator.
+    """
+    group_number = 1
+    if self.HasGrouping():
+      for name in self.zipfile.namelist():
+        if 'plaso_grouping.' in name:
+          _, number = name.split('.')
+          if int(number) >= group_number:
+            group_number = int(number) + 1
+
+    group_packed = []
+    size = 0
+    for row in rows:
+      group = plaso_storage_pb2.EventGroup()
+      group.name = row.name
+      if hasattr(row, 'description'):
+        group.description = pfile.GetUnicodeString(row.description)
+      if hasattr(row, 'category'):
+        group.category = pfile.GetUnicodeString(row.category)
+      if hasattr(row, 'color'):
+        group.color = pfile.GetUnicodeString(row.color)
+
+      for number, index in row.events:
+        evt = group.events.add()
+        evt.store_number = int(number)
+        evt.store_index = int(index)
+
+      if hasattr(row, 'first_timestamp'):
+        group.first_timestamp = int(row.first_timestamp)
+      if hasattr(row, 'last_timestamp'):
+        group.last_timestamp = int(row.last_timestamp)
+
+      group_str = group.SerializeToString()
+      packed = struct.pack('<I', len(group_str)) + group_str
+      size += len(packed)
+      group_packed.append(packed)
+
+    self.zipfile.writestr('plaso_grouping.%06d' % group_number,
+                          ''.join(group_packed))
+
+  def StoreTagging(self, rows):
+    """Store tag information into the storage file.
+
+    Each EventObject can be tagged either manually or automatically
+    to make analysis simpler, by providing more context to certain
+    events or to highlight events for later viewing.
+
+    The object that is passed in needs to have an iterator implemented
+    and has to implement the following attributes (optional names within
+    bracket):
+      store_number - The plaso store number.
+      store_index - The index into the store where the EventObject lies.
+      [comment] - A comment that has been made about the event.
+      [tag] - A tag, describing the event.
+      [color] - To highlight this particular group with a HTML color tag.
+
+    Args:
+      rows: A generator object (or an object providing an iterator)
+      that contains each attribute of the EventTagging protobuf as
+      an attribute.
+    """
+    tag_number = 1
+    if self.HasTagging():
+      for name in self.zipfile.namelist():
+        if 'plaso_tagging.' in name:
+          _, number = name.split('.')
+          if int(number) >= tag_number:
+            tag_number = int(number) + 1
+
+    tag_packed = []
+    size = 0
+    for row in rows:
+      tag = plaso_storage_pb2.EventTagging()
+      tag.store_number = int(row.store_number)
+      tag.store_index = int(row.store_index)
+      if hasattr(row, 'comment'):
+        tag.comment = pfile.GetUnicodeString(row.comment)
+      if hasattr(row, 'color'):
+        tag.color = pfile.GetUnicodeString(row.color)
+      if hasattr(row, 'tag'):
+        tag.tag = pfile.GetUnicodeString(row.tag)
+
+      tag_str = tag.SerializeToString()
+      packed = struct.pack('<I', len(tag_str)) + tag_str
+      size += len(packed)
+      tag_packed.append(packed)
+
+    self.zipfile.writestr('plaso_tagging.%06d' % tag_number,
+                          ''.join(tag_packed))
+
+  def GetGrouping(self):
+    """Return a generator that reads all grouping information from storage."""
+    if not self.HasGrouping():
+      return
+
+    for name in self.zipfile.namelist():
+      if 'plaso_grouping.' in name:
+        fh = self.zipfile.open(name, 'r')
+        group_entry = self._GetGroupEntry(fh)
+        while group_entry:
+          yield group_entry
+          group_entry = self._GetGroupEntry(fh)
+
+  def _GetGroupEntry(self, fh):
+    """Return a single group entry from a filehandle."""
+    unpacked = fh.read(4)
+    if len(unpacked) != 4:
+      return None
+
+    size = struct.unpack('<I', unpacked)[0]
+
+    if size > 1024 * 1024 * 40:
+      raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
+
+    proto_serialized = fh.read(size)
+    proto = plaso_storage_pb2.EventGroup()
+
+    proto.ParseFromString(proto_serialized)
+    return proto
+
+  def GetTagging(self):
+    """Return a generator that reads all tagging information from storage.
+
+    This function reads all tagging files inside the storage and returns
+    back the EventTagging protobuf, and only that protobuf.
+
+    To get the full EventObject with tags attached it is possible to use
+    the GetTaggedEvent and pass the EventTagging protobuf to it.
+
+    Yields:
+      All EventTagging protobufs stored inside the storage container.
+    """
+    if not self.HasTagging():
+      return
+
+    for name in self.zipfile.namelist():
+      if 'plaso_tagging.' in name:
+        fh = self.zipfile.open(name, 'r')
+
+        tag_entry = self._GetTagEntry(fh)
+        while tag_entry:
+          yield tag_entry
+          tag_entry = self._GetTagEntry(fh)
+
+  def GetEventsFromGroup(self, group_proto):
+    """Return a generator with all EventObjects from a group."""
+    for group_event in group_proto.events:
+      yield self.GetEntry(group_event.store_number, group_event.store_index)
+
+  def GetTaggedEvent(self, tag_proto):
+    """Read in an EventObject protobuf from a tag and return it.
+
+    This function uses the information inside the EventTagging proto
+    to open the EventObject that was tagged and returns it, with the
+    tag information attached to it.
+
+    Args:
+      tag_proto: An EventTagging protobuf.
+
+    Returns:
+      An EventObject protobuf with the EventTagging protobuf attached.
+    """
+    evt = self.GetEntry(tag_proto.store_number, tag_proto.store_index)
+    if not evt:
+      return None
+
+    evt.tag.MergeFrom(tag_proto)
+
+    return evt
+
+  def _GetTagEntry(self, fh):
+    """Read a single EventTag from a tag store file."""
+    unpacked = fh.read(4)
+    if len(unpacked) != 4:
+      return None
+
+    size = struct.unpack('<I', unpacked)[0]
+
+    if size > 1024 * 1024 * 40:
+      raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
+
+    proto_serialized = fh.read(size)
+    proto = plaso_storage_pb2.EventTagging()
+
+    proto.ParseFromString(proto_serialized)
+    return proto
 
   def CloseStorage(self):
     """Closes the storage, flush the last buffer and closes the ZIP file."""
