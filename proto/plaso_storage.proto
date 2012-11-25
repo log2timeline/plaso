@@ -118,8 +118,91 @@ message EventObject {
 
   // The offset into the original file from where the event came from.
   optional int64 offset = 13;
+
+  // Information about where this object is stored, added by the storage
+  // library to make it easier to quickly recover the EventObject from
+  // the storage file.
+  optional int64 store_number = 14;
+  optional int64 store_index = 15;
+
+  // EventTagging is a message that can be added that include information
+  // about coloring, tagging or comments that this object contains.
+  optional EventTagging tag = 16;
 };
 
+// The EventTagging is a simple message that describes comments,
+// color information or tagging of EventObjects. This information
+// is usually manually added by an investigator and can be used
+// to add more context to certain events.
+message EventTagging {
+  // Description of where the EventObject is stored that this
+  // tag is describing. This information is required and can be
+  // used to find and read in the EventObject.
+  required int64 store_number = 1;
+  required int64 store_index = 2;
+
+  // An arbitrary string that contains a comment describing
+  // observations the investigator has about this EventObject.
+  optional string comment = 3;
+
+  // Color information, used in some front-ends to make this
+  // event stand out. This should be either a simple description
+  // of the color, eg "red", "yellow", etc or a HTML color code,
+  // eg: "#E11414".
+  optional string color = 4;
+
+  // A short string or a tag that describes that can be used to
+  // group together events that are related to one another, eg
+  // "Malware", "Entry Point", "Event of Interest", etc.
+  optional string tag = 5;
+};
+
+// The EventGroup is a simple mechanism to describe a group of
+// events that belong to the same action or behavior. This is
+// a simple mechanism to store this information so a front-end
+// can collapse all these events into a single source.
+message EventGroup {
+  // The name of the EventGroup, what is displayed in the front-end
+  // as a substitute for the other events, should be descriptive
+  // of the events that are grouped together, as in "USB Drive inserted",
+  // or "User Logged On".
+  required string name = 1;
+
+  // Optional longer description of the group, giving a more detailed
+  // description of what the grouping describes or why these events
+  // were grouped together.
+  optional string description = 2;
+
+  // If these events contain a timestamp it can be beneficial to
+  // include the timerange of events this group spans. That time range
+  // can be described by the first and last timestamp that is contained
+  // within the group.
+  optional int64 first_timestamp = 3;
+  optional int64 last_timestamp = 4;
+
+  // Optional color information that can be used in the front-end
+  // to give color information about the group. This can be described
+  // as a simple color, eg: "red", "orange", "green" or as a HTML
+  // color code, eg "#E11414".
+  optional string color = 5;
+
+  // If this group of events falls into a specific category it can
+  // be included here, eg: "User Behavior", "Malware Related", etc.
+  optional string category = 6;
+
+  // Information about which EventObjects are included in this group.
+  // The information is stored in an attribute called EventDescription
+  // that simply defines where the EventObjects are stored so they can
+  // be easily identified and recovered.
+  message EventDescription {
+    // Description of where these events are stored within the storage
+    // file.
+    required int64 store_number = 1;
+    required int64 store_index = 2;
+  };
+
+  repeated EventDescription events = 7;
+};
 
 // The EventContainer is a simple container that serves as a storage
 // to other EventContainers and EventObjects.

@@ -19,7 +19,7 @@
 export PYTHONPATH=.
 
 cd ..
-find plaso -name "*_test.py" | while read test_file
+find plaso -name "*_test.py" | grep -v "\/build\/" | while read test_file
 do
   echo "---+ $test_file +---"
   PYTHONPATH=. /usr/bin/python ./${test_file}
