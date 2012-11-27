@@ -307,6 +307,7 @@ class WinRegTimeZone(preprocess.WinRegistryPreprocess):
       '@tzres.dll,-1661': 'America/Bahia',
       '@tzres.dll,-1662': 'America/Bahia',
       'Central Standard Time': 'CST6CDT',
+      'Pacific Standard Time': 'PST8PDT',
   }
 
   def ParseKey(self, key):

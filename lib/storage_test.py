@@ -35,19 +35,19 @@ class TagMock(object):
   def __init__(self):
     self.items = []
 
-  def AddEntry(self, store_number=1, store_index=0, comment=None, tag=None,
+  def AddEntry(self, store_number=1, store_index=0, comment=None, tags=None,
                color=None):
-    self.items.append((store_number, store_index, comment, tag, color))
+    self.items.append((store_number, store_index, comment, tags, color))
 
   def __iter__(self):
-    for nr, index, cmt, tag, color in self.items:
+    for nr, index, cmt, tags, color in self.items:
       dummy = DummyObject()
       dummy.store_number = nr
       dummy.store_index = index
       if cmt:
         dummy.comment = cmt
-      if tag:
-        dummy.tag = tag
+      if tags:
+        dummy.tags = tags.split(',')
       if color:
         dummy.color = color
       yield dummy
@@ -162,9 +162,9 @@ class PlasoStorageUnitTest(unittest.TestCase):
 
       # Add tagging.
       tag_mock.AddEntry(store_index=0, comment='My comment', color='blue')
-      tag_mock.AddEntry(store_index=1, tag='Malware', color='red')
+      tag_mock.AddEntry(store_index=1, tags='Malware', color='red')
       tag_mock.AddEntry(store_index=2, comment='This is interesting',
-                        tag='Malware', color='red')
+                        tags='Malware,Benign', color='red')
 
       store.StoreTagging(tag_mock)
 
@@ -213,11 +213,12 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(tags[0].tag.color, u'blue')
     self.assertEquals(tags[0].description_long[0:10], u'This is a ')
 
-    self.assertEquals(tags[1].tag.tag, 'Malware')
+    self.assertEquals(tags[1].tag.tags[0].value, 'Malware')
     self.assertEquals(tags[1].description_long[0:15], u'[\\HKCU\\Windows\\')
 
     self.assertEquals(tags[2].tag.comment, u'This is interesting')
-    self.assertEquals(tags[2].tag.tag, 'Malware')
+    self.assertEquals(tags[2].tag.tags[0].value, 'Malware')
+    self.assertEquals(tags[2].tag.tags[1].value, 'Benign')
 
     attributes = dict((a.key, a.value) for a in tags[2].attributes)
     self.assertEquals(attributes['parser'], 'UNKNOWN')
