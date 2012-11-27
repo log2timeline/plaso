@@ -78,7 +78,7 @@ class L2R(output.LogOutputFormatter):
            'host TEXT, short TEXT, desc TEXT, version TEXT, filename '
            'TEXT, inode TEXT, notes TEXT, format TEXT, extra TEXT, datetime '
            'datetime, reportnotes TEXT, inreport TEXT, key rowid, tag TEXT,'
-           'color TEXT, store_number INT, store_index INT)'))
+           'color TEXT, offset INT, store_number INT, store_index INT)'))
 
     self.count = 0
 
@@ -153,15 +153,16 @@ class L2R(output.LogOutputFormatter):
             self.count,
             '',
             '',
+            proto_read.offset,
             proto_read.store_number,
             proto_read.store_index)
     self.curs.execute(
         ('INSERT INTO log2timeline(date, time, timezone, MACB, source, '
          'sourcetype, type, user, host, short, desc, version, filename, '
          'inode, notes, format, extra, datetime, reportnotes, inreport,'
-         'key, tag, color, store_number, store_index) VALUES (?, ?, ?, ?'
+         'key, tag, color, offset, store_number, store_index) VALUES (?, ?, ?, ?'
          ', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-         '?, ?, ?, ?, ?, ?, ?, ?)'), row)
+         '?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
 
     self.count += 1
 
