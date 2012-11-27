@@ -12,7 +12,7 @@ import plaso.proto.transmission_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='plaso/proto/plaso_storage.proto',
   package='plaso_storage',
-  serialized_pb='\n\x1fplaso/proto/plaso_storage.proto\x12\rplaso_storage\x1a\x1eplaso/proto/transmission.proto\"\'\n\tAttribute\x12\x0b\n\x03key\x18\x01 \x02(\t\x12\r\n\x05value\x18\x02 \x01(\t\"\xd1\x04\n\x0b\x45ventObject\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x16\n\x0etimestamp_desc\x18\x02 \x01(\t\x12<\n\x0csource_short\x18\x03 \x02(\x0e\x32&.plaso_storage.EventObject.SourceShort\x12\x13\n\x0bsource_long\x18\x04 \x02(\t\x12\x18\n\x10\x64\x65scription_long\x18\x05 \x02(\t\x12\x19\n\x11\x64\x65scription_short\x18\x06 \x02(\t\x12,\n\nattributes\x18\x08 \x03(\x0b\x32\x18.plaso_storage.Attribute\x12\x10\n\x08timezone\x18\t \x01(\t\x12\x10\n\x08\x66ilename\x18\n \x01(\t\x12\x14\n\x0c\x64isplay_name\x18\x0b \x01(\t\x12(\n\x08pathspec\x18\x0c \x01(\x0b\x32\x16.transmission.PathSpec\x12\x0e\n\x06offset\x18\r \x01(\x03\x12\x14\n\x0cstore_number\x18\x0e \x01(\x03\x12\x13\n\x0bstore_index\x18\x0f \x01(\x03\x12(\n\x03tag\x18\x10 \x01(\x0b\x32\x1b.plaso_storage.EventTagging\"\x97\x01\n\x0bSourceShort\x12\x06\n\x02\x41V\x10\x01\x12\x08\n\x04\x42\x41\x43K\x10\x02\x12\x07\n\x03\x45VT\x10\x03\x12\x08\n\x04\x45XIF\x10\x04\x12\x08\n\x04\x46ILE\x10\x05\x12\x07\n\x03LOG\x10\x06\x12\x07\n\x03LNK\x10\x07\x12\x07\n\x03LSO\x10\x08\x12\x08\n\x04META\x10\t\x12\t\n\x05PLIST\x10\n\x12\x07\n\x03RAM\x10\x0b\x12\n\n\x06RECBIN\x10\x0c\x12\x07\n\x03REG\x10\r\x12\x0b\n\x07WEBHIST\x10\x0e\"f\n\x0c\x45ventTagging\x12\x14\n\x0cstore_number\x18\x01 \x02(\x03\x12\x13\n\x0bstore_index\x18\x02 \x02(\x03\x12\x0f\n\x07\x63omment\x18\x03 \x01(\t\x12\r\n\x05\x63olor\x18\x04 \x01(\t\x12\x0b\n\x03tag\x18\x05 \x01(\t\"\xfc\x01\n\nEventGroup\x12\x0c\n\x04name\x18\x01 \x02(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x17\n\x0f\x66irst_timestamp\x18\x03 \x01(\x03\x12\x16\n\x0elast_timestamp\x18\x04 \x01(\x03\x12\r\n\x05\x63olor\x18\x05 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x06 \x01(\t\x12:\n\x06\x65vents\x18\x07 \x03(\x0b\x32*.plaso_storage.EventGroup.EventDescription\x1a=\n\x10\x45ventDescription\x12\x14\n\x0cstore_number\x18\x01 \x02(\x03\x12\x13\n\x0bstore_index\x18\x02 \x02(\x03\"\xc4\x01\n\x0e\x45ventContainer\x12\x12\n\nfirst_time\x18\x01 \x02(\x03\x12\x11\n\tlast_time\x18\x02 \x02(\x03\x12\x31\n\ncontainers\x18\x04 \x03(\x0b\x32\x1d.plaso_storage.EventContainer\x12*\n\x06\x65vents\x18\x06 \x03(\x0b\x32\x1a.plaso_storage.EventObject\x12,\n\nattributes\x18\x08 \x03(\x0b\x32\x18.plaso_storage.Attribute')
+  serialized_pb='\n\x1fplaso/proto/plaso_storage.proto\x12\rplaso_storage\x1a\x1eplaso/proto/transmission.proto\"\'\n\tAttribute\x12\x0b\n\x03key\x18\x01 \x02(\t\x12\r\n\x05value\x18\x02 \x01(\t\"\xd1\x04\n\x0b\x45ventObject\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x16\n\x0etimestamp_desc\x18\x02 \x01(\t\x12<\n\x0csource_short\x18\x03 \x02(\x0e\x32&.plaso_storage.EventObject.SourceShort\x12\x13\n\x0bsource_long\x18\x04 \x02(\t\x12\x18\n\x10\x64\x65scription_long\x18\x05 \x02(\t\x12\x19\n\x11\x64\x65scription_short\x18\x06 \x02(\t\x12,\n\nattributes\x18\x08 \x03(\x0b\x32\x18.plaso_storage.Attribute\x12\x10\n\x08timezone\x18\t \x01(\t\x12\x10\n\x08\x66ilename\x18\n \x01(\t\x12\x14\n\x0c\x64isplay_name\x18\x0b \x01(\t\x12(\n\x08pathspec\x18\x0c \x01(\x0b\x32\x16.transmission.PathSpec\x12\x0e\n\x06offset\x18\r \x01(\x03\x12\x14\n\x0cstore_number\x18\x0e \x01(\x03\x12\x13\n\x0bstore_index\x18\x0f \x01(\x03\x12(\n\x03tag\x18\x10 \x01(\x0b\x32\x1b.plaso_storage.EventTagging\"\x97\x01\n\x0bSourceShort\x12\x06\n\x02\x41V\x10\x01\x12\x08\n\x04\x42\x41\x43K\x10\x02\x12\x07\n\x03\x45VT\x10\x03\x12\x08\n\x04\x45XIF\x10\x04\x12\x08\n\x04\x46ILE\x10\x05\x12\x07\n\x03LOG\x10\x06\x12\x07\n\x03LNK\x10\x07\x12\x07\n\x03LSO\x10\x08\x12\x08\n\x04META\x10\t\x12\t\n\x05PLIST\x10\n\x12\x07\n\x03RAM\x10\x0b\x12\n\n\x06RECBIN\x10\x0c\x12\x07\n\x03REG\x10\r\x12\x0b\n\x07WEBHIST\x10\x0e\"\x9e\x01\n\x0c\x45ventTagging\x12\x14\n\x0cstore_number\x18\x01 \x02(\x03\x12\x13\n\x0bstore_index\x18\x02 \x02(\x03\x12\x0f\n\x07\x63omment\x18\x03 \x01(\t\x12\r\n\x05\x63olor\x18\x04 \x01(\t\x12-\n\x04tags\x18\x05 \x03(\x0b\x32\x1f.plaso_storage.EventTagging.Tag\x1a\x14\n\x03Tag\x12\r\n\x05value\x18\x01 \x02(\t\"\xfc\x01\n\nEventGroup\x12\x0c\n\x04name\x18\x01 \x02(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x17\n\x0f\x66irst_timestamp\x18\x03 \x01(\x03\x12\x16\n\x0elast_timestamp\x18\x04 \x01(\x03\x12\r\n\x05\x63olor\x18\x05 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x06 \x01(\t\x12:\n\x06\x65vents\x18\x07 \x03(\x0b\x32*.plaso_storage.EventGroup.EventDescription\x1a=\n\x10\x45ventDescription\x12\x14\n\x0cstore_number\x18\x01 \x02(\x03\x12\x13\n\x0bstore_index\x18\x02 \x02(\x03\"\xc4\x01\n\x0e\x45ventContainer\x12\x12\n\nfirst_time\x18\x01 \x02(\x03\x12\x11\n\tlast_time\x18\x02 \x02(\x03\x12\x31\n\ncontainers\x18\x04 \x03(\x0b\x32\x1d.plaso_storage.EventContainer\x12*\n\x06\x65vents\x18\x06 \x03(\x0b\x32\x1a.plaso_storage.EventObject\x12,\n\nattributes\x18\x08 \x03(\x0b\x32\x18.plaso_storage.Attribute')
 
 
 
@@ -248,6 +248,33 @@ _EVENTOBJECT = descriptor.Descriptor(
 )
 
 
+_EVENTTAGGING_TAG = descriptor.Descriptor(
+  name='Tag',
+  full_name='plaso_storage.EventTagging.Tag',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    descriptor.FieldDescriptor(
+      name='value', full_name='plaso_storage.EventTagging.Tag.value', index=0,
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=858,
+  serialized_end=878,
+)
+
 _EVENTTAGGING = descriptor.Descriptor(
   name='EventTagging',
   full_name='plaso_storage.EventTagging',
@@ -284,23 +311,23 @@ _EVENTTAGGING = descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     descriptor.FieldDescriptor(
-      name='tag', full_name='plaso_storage.EventTagging.tag', index=4,
-      number=5, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=unicode("", "utf-8"),
+      name='tags', full_name='plaso_storage.EventTagging.tags', index=4,
+      number=5, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_EVENTTAGGING_TAG, ],
   enum_types=[
   ],
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=719,
-  serialized_end=821,
+  serialized_start=720,
+  serialized_end=878,
 )
 
 
@@ -334,8 +361,8 @@ _EVENTGROUP_EVENTDESCRIPTION = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1015,
-  serialized_end=1076,
+  serialized_start=1072,
+  serialized_end=1133,
 )
 
 _EVENTGROUP = descriptor.Descriptor(
@@ -403,8 +430,8 @@ _EVENTGROUP = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=824,
-  serialized_end=1076,
+  serialized_start=881,
+  serialized_end=1133,
 )
 
 
@@ -459,8 +486,8 @@ _EVENTCONTAINER = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1079,
-  serialized_end=1275,
+  serialized_start=1136,
+  serialized_end=1332,
 )
 
 _EVENTOBJECT.fields_by_name['source_short'].enum_type = _EVENTOBJECT_SOURCESHORT
@@ -468,6 +495,8 @@ _EVENTOBJECT.fields_by_name['attributes'].message_type = _ATTRIBUTE
 _EVENTOBJECT.fields_by_name['pathspec'].message_type = plaso.proto.transmission_pb2._PATHSPEC
 _EVENTOBJECT.fields_by_name['tag'].message_type = _EVENTTAGGING
 _EVENTOBJECT_SOURCESHORT.containing_type = _EVENTOBJECT;
+_EVENTTAGGING_TAG.containing_type = _EVENTTAGGING;
+_EVENTTAGGING.fields_by_name['tags'].message_type = _EVENTTAGGING_TAG
 _EVENTGROUP_EVENTDESCRIPTION.containing_type = _EVENTGROUP;
 _EVENTGROUP.fields_by_name['events'].message_type = _EVENTGROUP_EVENTDESCRIPTION
 _EVENTCONTAINER.fields_by_name['containers'].message_type = _EVENTCONTAINER
@@ -493,6 +522,12 @@ class EventObject(message.Message):
 
 class EventTagging(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
+  
+  class Tag(message.Message):
+    __metaclass__ = reflection.GeneratedProtocolMessageType
+    DESCRIPTOR = _EVENTTAGGING_TAG
+    
+    # @@protoc_insertion_point(class_scope:plaso_storage.EventTagging.Tag)
   DESCRIPTOR = _EVENTTAGGING
   
   # @@protoc_insertion_point(class_scope:plaso_storage.EventTagging)

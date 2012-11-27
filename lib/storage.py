@@ -516,7 +516,8 @@ class PlasoStorage(object):
       store_number - The plaso store number.
       store_index - The index into the store where the EventObject lies.
       [comment] - A comment that has been made about the event.
-      [tag] - A tag, describing the event.
+      [tag] - A single tag (string).
+      [tags] - A list of tags, list of strings, that contain the tags.
       [color] - To highlight this particular group with a HTML color tag.
 
     Args:
@@ -533,6 +534,7 @@ class PlasoStorage(object):
             tag_number = int(number) + 1
 
     tag_packed = []
+    tag_index = []
     size = 0
     for row in rows:
       tag = plaso_storage_pb2.EventTagging()
@@ -543,13 +545,24 @@ class PlasoStorage(object):
       if hasattr(row, 'color'):
         tag.color = pfile.GetUnicodeString(row.color)
       if hasattr(row, 'tag'):
-        tag.tag = pfile.GetUnicodeString(row.tag)
+        tag_attr = tag.tags.add()
+        tag_attr.value = pfile.GetUnicodeString(row.tag)
+      if hasattr(row, 'tags'):
+        for tag_str in row.tags:
+          tag_attr = tag.tags.add()
+          tag_attr.value = pfile.GetUnicodeString(tag_str)
 
       tag_str = tag.SerializeToString()
       packed = struct.pack('<I', len(tag_str)) + tag_str
+      ofs = struct.pack('<I', size)
+      sn = struct.pack('<I', row.store_number)
+      si = struct.pack('<I', row.store_index)
+      tag_index.append('%s%s%s' % (ofs, sn, si))
       size += len(packed)
       tag_packed.append(packed)
 
+    self.zipfile.writestr('plaso_tag_index.%06d' % tag_number,
+                          ''.join(tag_index))
     self.zipfile.writestr('plaso_tagging.%06d' % tag_number,
                           ''.join(tag_packed))
 
@@ -582,6 +595,56 @@ class PlasoStorage(object):
 
     proto.ParseFromString(proto_serialized)
     return proto
+
+  def GetTag(self, store_number, store_index):
+    """Return a EventTagging proto if it exists from a store number and index.
+
+    Args:
+      store_number: The EventObject store number.
+      store_index: The EventObject store index.
+
+    Returns:
+      An EventTagging protobuf, if one exists.
+    """
+    for name in self.zipfile.namelist():
+      if 'plaso_tag_index.' in name:
+        fh = self.zipfile.open(name, 'r')
+        number = int(name.split('.')[-1])
+
+        tag_ofs = self._GetTagFromIndex(fh, store_number, store_index)
+        if tag_ofs:
+          tag_fh = self.zipfile.open('plaso_tagging.%06d' % number, 'r')
+          _  = tag_fh.read(tag_ofs)
+          tag = self._GetTagEntry(tag_fh)
+
+          if tag:
+            return tag
+
+  def _GetTagFromIndex(self, fh, store_number, store_index):
+    """Return an offset into a tag store for a given store number and index.
+
+    Search through an index file that maintains information about where
+    tag information lies in the plaso_tagging. files that store the actual
+    EventTagging protobuf.
+
+    Args:
+      fh: The filehandle to the tag index file.
+      store_number: The store number of the EventObject we are looking for.
+      store_index: The index into that store.
+
+    Returns:
+      An offset into where the EventTagging protobuf is stored.
+    """
+    while 1:
+      raw = fh.read(12)
+      if not raw:
+        break
+      ofs, sn, si = struct.unpack('<III', raw)
+      if store_number != sn:
+        continue
+
+      if store_index == si:
+        return ofs
 
   def GetTagging(self):
     """Return a generator that reads all tagging information from storage.
