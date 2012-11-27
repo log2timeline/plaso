@@ -157,8 +157,13 @@ class Engine(object):
       try:
         pre_obj.zone = pytz.timezone(pre_obj.time_zone_str)
       except pytz.exceptions.UnknownTimeZoneError:
-        logging.warning('TimeZone was not properly set, defaults to UTC')
-        pre_obj.zone = pytz.UTC
+        if hasattr(self.config, 'zone'):
+          logging.warning(
+              'TimeZone was not properly set using user supplied one.')
+          pre_obj.zone = self.config.zone
+        else:
+          logging.warning('TimeZone was not properly set, defaults to UTC')
+          pre_obj.zone = pytz.UTC
     else:
       pre_obj.zone = self.config.zone
 

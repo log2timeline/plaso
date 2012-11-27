@@ -154,7 +154,11 @@ message EventTagging {
   // A short string or a tag that describes that can be used to
   // group together events that are related to one another, eg
   // "Malware", "Entry Point", "Event of Interest", etc.
-  optional string tag = 5;
+  message Tag {
+    required string value = 1;
+  };
+
+  repeated Tag tags = 5;
 };
 
 // The EventGroup is a simple mechanism to describe a group of
