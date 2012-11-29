@@ -159,6 +159,7 @@ class PlasoWorker(object):
     # to a key in the self._parsers dict. If the results are
     # inconclusive the "all" key is used, or the key is not found.
     # key = self._parsers.get(classification, 'all')
+    stat_obj = filehandle.Stat()
     for parsing_object in self._parsers['all']:
       logging.debug('Checking [%s] against: %s', filehandle.name,
                     parsing_object.NAME)
@@ -175,7 +176,6 @@ class PlasoWorker(object):
             event.filename = filehandle.name
             event.pathspec = filehandle.pathspec_root.SerializeToString()
             event.parser = parsing_object.parser_name
-            stat_obj = filehandle.Stat()
             if hasattr(self._pre_obj, 'hostname'):
               event.hostname = self._pre_obj.hostname
             if hasattr(stat_obj, 'ino'):
