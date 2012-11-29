@@ -54,7 +54,7 @@ Otherwise the structure of a proto file is:
 +------+---------------------------------+------+------...+
 
 For further details about the storage design see:
-https://sites.google.com/a/kiddaland.net/plaso/developer/libraries/storage
+http://plaso.kiddaland.net/developer/libraries/storage
 """
 import collections
 import heapq

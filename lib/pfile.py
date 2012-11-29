@@ -281,6 +281,9 @@ class TskFile(PlasoFile):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
+    if hasattr(self, '_stat'):
+      return self._stat
+
     ret = Stats()
     if not self.fh:
       return ret
@@ -322,6 +325,7 @@ class TskFile(PlasoFile):
     else:
       ret.os_type = fs_type
 
+    self._stat = ret
     return ret
 
   def Open(self, filehandle=None):

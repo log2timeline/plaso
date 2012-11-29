@@ -19,6 +19,8 @@ import logging
 import os
 import re
 
+import pytsk3
+
 from plaso.lib import errors
 from plaso.lib import lexer
 from plaso.lib import pfile
@@ -70,6 +72,7 @@ class PreprocessPlugin(object):
   ATTRIBUTE = ''
 
   def __init__(self, obj_store, collector):
+    """Set up the preprocessing plugin."""
     self._obj_store = obj_store
     self._collector = collector
 
@@ -82,6 +85,7 @@ class PreprocessPlugin(object):
 
   @abc.abstractmethod
   def GetValue(self):
+    """Return the value for the attribute."""
     raise NotImplementedError
 
 
@@ -110,10 +114,23 @@ class WinRegistryPreprocess(PreprocessPlugin):
   def GetValue(self):
     """Return the value gathered from a registry key for preprocessing."""
     sys_dir = self._collector.FindPath(self.REG_PATH)
-    hive_fh = self._collector.OpenFile(u'%s/%s' % (sys_dir, self.REG_FILE))
+    file_name = self._collector.GetFilePaths(sys_dir, self.REG_FILE)
+    if not file_name:
+      raise errors.PreProcessFail(
+          u'Unable to find file name: %s/%s', sys_dir, self.REG_FILE)
+
+    try:
+      hive_fh = self._collector.OpenFile(file_name[0])
+    except IOError as e:
+      raise errors.PreProcessFail(
+          u'Unable to open file: %s [%s]', file_name[0], e)
 
     codepage = getattr(self._obj_store, 'code_page', 'cp1252')
-    reg = win_registry.WinRegistry(hive_fh, codepage)
+    try:
+      reg = win_registry.WinRegistry(hive_fh, codepage)
+    except IOError as e:
+      raise errors.PreProcessFail(
+          u'Unable to open the registry file: %s [%s]', file_name[0], e)
     key_path = self.ExpandKeyPath()
     key = reg.GetKey(key_path)
 
@@ -142,6 +159,7 @@ class PreprocessGetPath(PreprocessPlugin):
   PATH = 'doesnotexist'
 
   def GetValue(self):
+    """Return the path as found by the collector."""
     return self._collector.FindPath(self.PATH)
 
 
@@ -169,9 +187,11 @@ class PathReplacer(lexer.Lexer):
     return u''.join(self._path)
 
   def ParseString(self, match, **_):
+    """Append a string to the path."""
     self._path.append(match.group(1))
 
   def ReplaceString(self, match, **_):
+    """Replace a variable with a given attribute."""
     replace = getattr(self._pre_obj, match.group(1), None)
 
     if replace:
@@ -244,6 +264,19 @@ class Collector(object):
     return path.GetPath()
 
   @abc.abstractmethod
+  def GetFilePaths(self, path, file_name):
+    """Return a filepath to a file given a name pattern and a path.
+
+    Args:
+      path: The correct path to the file, perhaps gathered from GetPath
+      or FindPath.
+      file_name: The filename to the file (may be a regular expression).
+
+    Returns:
+      A list of all files found that fit the pattern.
+  """
+
+  @abc.abstractmethod
   def OpenFile(self, path):
     """Return a PFile object from a real existing path."""
 
@@ -252,6 +285,7 @@ class FileSystemCollector(Collector):
   """A wrapper around collecting files from mount points."""
 
   def __init__(self, pre_obj, mount_point):
+    """Initalize the filesystem collector."""
     super(FileSystemCollector, self).__init__(pre_obj)
     self._mount_point = mount_point
 
@@ -282,7 +316,19 @@ class FileSystemCollector(Collector):
 
     return real_path
 
+  def GetFilePaths(self, path, file_name):
+    """Return a list of files given a path and a pattern."""
+    ret = []
+    file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
+    for entry in os.listdir(path):
+      m = file_re.match(entry)
+      if m:
+        if os.path.isfile(os.path.join(path, m.group(0))):
+          ret.append(os.path.join(path, m.group(0)))
+    return ret
+
   def OpenFile(self, path):
+    """Open a file given a path and return a filehandle."""
     return putils.OpenOSFile(os.path.join(self._mount_point, path))
 
 
@@ -290,6 +336,7 @@ class TSKFileCollector(Collector):
   """A wrapper around collecting files from TSK images."""
 
   def __init__(self, pre_obj, image_path, offset=0):
+    """Set up the TSK file collector."""
     super(TSKFileCollector, self).__init__(pre_obj)
     self._image_path = image_path
     self._image_offset = offset
@@ -330,7 +377,31 @@ class TSKFileCollector(Collector):
 
     return real_path
 
+  def GetFilePaths(self, path, file_name):
+    """Return a list of files given a path and a pattern."""
+    ret = []
+    file_re = re.compile(r'%s' % file_name, re.I | re.S)
+    try:
+      directory = self._fs_obj.fs.open_dir(path)
+    except IOError as e:
+      raise errors.PreProcessFail(
+          u'Unable to open directory: %s [%s]' % (path, e))
+
+    for tsk_file in directory:
+      try:
+        f_type = tsk_file.info.meta.type
+        name = tsk_file.info.name.name
+      except AttributeError:
+        continue
+      if f_type == pytsk3.TSK_FS_META_TYPE_REG:
+        m = file_re.match(name)
+        if m:
+          ret.append(u'%s/%s' % (path, name))
+
+    return ret
+
   def OpenFile(self, path):
+    """Open a file given a path and return a filehandle."""
     return putils.OpenTskFile(
         path, self._image_path, int(self._image_offset / 512))
 
@@ -339,12 +410,14 @@ class VSSFileCollector(TSKFileCollector):
   """A wrapper around collecting files from a VSS store from an image file."""
 
   def __init__(self, pre_obj, image_path, store_nr, offset=0):
+    """Constructor for the VSS File collector."""
     super(VSSFileCollector, self).__init__(pre_obj, image_path, offset)
     self._store_nr = store_nr
     self._fs_obj = pfile.FilesystemCache.Open(
         image_path, offset, store_nr)
 
   def OpenFile(self, path):
+    """Open a file given a path and return a filehandle."""
     return putils.OpenVssFile(path, self._image_path, self._store_nr,
                               int(self._image_offset / 512))
 
