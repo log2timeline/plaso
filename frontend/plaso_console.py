@@ -20,6 +20,7 @@ __pychecker__ = 'unusednames=pyvshadow'
 
 import datetime
 import os
+import pytz
 import logging
 import tempfile
 
@@ -84,6 +85,8 @@ if __name__ == '__main__':
   namespace = {}
 
   fscache = pfile.FilesystemCache()
+  pre_obj = preprocess.PlasoPreprocess()
+  pre_obj.zone = pytz.UTC
 
   namespace.update(globals())
   banner = ('--------------------------------------------------------------\n'

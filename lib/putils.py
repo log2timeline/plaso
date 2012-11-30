@@ -46,14 +46,11 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
     image_offset: Offset in sectors if this is a disk image.
     store_nr: Applicaple only in the VSS sense, indicates the
     store number.
-    fscache: A Filesystemcache object that stores cache of fs objects.
+    fscache: A FilesystemCache object that stores cached fs objects.
 
   Returns:
     A PFile object.
   """
-  if not fscache:
-    fscache = pfile.FilesystemCache()
-
   if not os.path.isfile(image_path):
     logging.error(
         u'The image path is wrong, file does not exist: %s',
@@ -89,11 +86,13 @@ def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None):
     file_to_open: A path or an inode number to the file in question.
     image_path: Full path to the image itself.
     image_offset: Offset in sectors if this is a disk image.
+    fscache: A FilesystemCache object that stores cached fs objects.
 
   Returns:
     A PFile object.
   """
-  return _OpenImageFile(file_to_open, image_path, 'tsk', image_offset, fscache)
+  return _OpenImageFile(file_to_open, image_path, 'tsk', image_offset,
+                        fscache=fscache)
 
 
 def OpenOSFile(path):
