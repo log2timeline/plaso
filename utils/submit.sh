@@ -67,7 +67,7 @@ then
   exit 4
 fi
 
-python utils/upload.py -y -i $CHANGELIST -t "Submitted." -m "Code Submitted."
+python utils/upload.py -y -i $CHANGELIST -t "Submitted." -m "Code Submitted." --send_mail
 
 git commit -a -m "Code review: $CHANGELIST: $text"
 git push
