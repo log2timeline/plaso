@@ -67,9 +67,7 @@ class PlasoWorker(object):
   # This is only used temporary until files can be classified.
   magic_max_length = 0
 
-  _lock = None
-
-  def __init__(self, proc_queue, stor_queue, config, pre_obj, lock):
+  def __init__(self, proc_queue, stor_queue, config, pre_obj):
     """Constructor for the class.
 
     Args:
@@ -78,14 +76,14 @@ class PlasoWorker(object):
       config: A config object that contains all the tool's configuration.
       pre_obj: A PlasoPreprocess object containing information collected from
       image.
-      lock: A thread-lock
     """
     self._proc_queue = proc_queue
     self._stor_queue = stor_queue
     self.config = config
     self._pre_obj = pre_obj
-    self._lock = lock
     self._parsers = self.FindAllParsers()
+    if hasattr(config, 'image') and config.image:
+      self._fscache = pfile.FilesystemCache()
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
@@ -101,7 +99,8 @@ class PlasoWorker(object):
 
       # Either parse this file and all extracted files, or just the file.
       try:
-        with pfile.OpenPFile(proto, lock=self._lock) as fh:
+        with pfile.OpenPFile(proto,
+                             fscache=getattr(self, '_fscache', None)) as fh:
           self.ParseFile(fh)
           if self.config.open_files:
             self.ParseAllFiles(fh)
@@ -117,7 +116,8 @@ class PlasoWorker(object):
       filehandle: A PFile object.
     """
     try:
-      for fh in self.SmartOpenFiles(filehandle):
+      for fh in self.SmartOpenFiles(filehandle,
+                                    getattr(self, '_fscache', None)):
         self.ParseFile(fh)
     except IOError as e:
       logging.debug(('Unable to open file: {%s}, not sure if we can extract '
@@ -209,7 +209,7 @@ class PlasoWorker(object):
     logging.debug('[ParseFile] Parsing DONE: %s', filehandle.display_name)
 
   @classmethod
-  def SmartOpenFiles(cls, fh):
+  def SmartOpenFiles(cls, fh, fscache=None):
     """Generate a list of all available PathSpecs extracted from a file.
 
     Args:
@@ -222,13 +222,13 @@ class PlasoWorker(object):
       proto = transmission_pb2.PathSpec()
       proto.CopyFrom(p)
       try:
-        new_fh = pfile.OpenPFile(spec=p, orig=proto, lock=cls._lock)
+        new_fh = pfile.OpenPFile(spec=p, orig=proto, fscache=fscache)
         yield new_fh
       except IOError as e:
         logging.debug(('Unable to open file: {%s}, not sure if we can extract '
                        'further files from it. Msg: %s'), fh.display_name, e)
         continue
-      for new_filehandle in cls.SmartOpenFiles(new_fh):
+      for new_filehandle in cls.SmartOpenFiles(new_fh, fscache):
         yield new_filehandle
 
   @classmethod

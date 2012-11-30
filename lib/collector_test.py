@@ -29,11 +29,13 @@ class TempDirectory(object):
   """A self cleaning temporary directory."""
 
   def __enter__(self):
+    """Make this work with the 'with' statement."""
     self.name = tempfile.mkdtemp()
 
     return self.name
 
   def __exit__(self, exc_type, exc_value, traceback):
+    """Make this work with the 'with' statement."""
     _ = exc_type
     _ = exc_value
     _ = traceback
@@ -48,6 +50,7 @@ class PlasoCollectorUnitTest(unittest.TestCase):
     self.base_path = os.path.join('plaso/test_data')
 
   def GetEvents(self, collector_queue):
+    """Return all events."""
     events = []
     for evt in collector_queue.PopItems():
       proto = transmission_pb2.PathSpec()
@@ -79,10 +82,9 @@ class PlasoCollectorUnitTest(unittest.TestCase):
     path = os.path.join(self.base_path, 'syslog_image.dd')
 
     # Start with a collector without opening files.
-    lock = sleuthkit.FakeLock()
     my_queue = queue.SingleThreadedQueue()
     my_collect = collector.PCollector(my_queue)
-    my_collect.CollectFromImage(path, lock, 0)
+    my_collect.CollectFromImage(path, 0)
     events = self.GetEvents(my_queue)
 
     self.assertEquals(len(events), 2)

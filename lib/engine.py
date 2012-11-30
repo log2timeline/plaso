@@ -220,9 +220,6 @@ class Engine(object):
     collection_queue = queue.SingleThreadedQueue()
     storage_queue = queue.SingleThreadedQueue()
 
-    # Since we are running this single-threaded we don't need a real lock.
-    lock = sleuthkit.FakeLock()
-
     # Save some information about the run time into the pre-processing object.
     self._StoreCollectionInformation(pre_obj)
 
@@ -231,7 +228,7 @@ class Engine(object):
     with collector.PCollector(collection_queue) as my_collector:
       if self.config.image:
         ofs = self.config.image_offset_bytes or self.config.image_offset * 512
-        my_collector.CollectFromImage(self.config.filename, lock, ofs)
+        my_collector.CollectFromImage(self.config.filename, ofs)
         if self.config.parse_vss:
           logging.debug('Parsing VSS from image.')
           volume = pyvshadow.volume()
@@ -244,7 +241,7 @@ class Engine(object):
             logging.warning('Error while trying to read VSS: %s', e)
           for store_nr in range(0, vss_numbers):
             my_collector.CollectFromVss(
-                self.config.filename, store_nr, lock, ofs)
+                self.config.filename, store_nr, ofs)
       elif self.config.recursive:
         my_collector.CollectFromDir(self.config.filename)
       else:
@@ -258,7 +255,7 @@ class Engine(object):
     logging.debug('Starting worker.')
     # Start processing entries.
     my_worker = worker.PlasoWorker(
-        collection_queue, storage_queue, self.config, pre_obj, lock)
+        collection_queue, storage_queue, self.config, pre_obj)
     my_worker.Run()
     logging.debug('Worker process done.')
 
@@ -277,12 +274,10 @@ class Engine(object):
     The local implementation uses the muliprocessing library to
     start up new threads or processes.
     """
-    logging.info('Starting to extract events.')
 
     pre_obj = preprocess.PlasoPreprocess()
     # Run pre-processing if necessary.
     if self.config.preprocess:
-      logging.info('Starting to preprocess.')
       try:
         self._PreProcess(pre_obj)
       except IOError as e:
@@ -296,9 +291,6 @@ class Engine(object):
     # Save some information about the run time into the pre-processing object.
     self._StoreCollectionInformation(pre_obj)
 
-    # Create a lock
-    lock = multiprocessing.Lock()
-
     # Start the collector.
     start_collection_thread = True
     if self.config.image:
@@ -306,7 +298,7 @@ class Engine(object):
       my_collector = collector.SimpleImageCollector(
           self.config.filename, offset=self.config.image_offset,
           offset_bytes=self.config.image_offset_bytes,
-          parse_vss=self.config.parse_vss, lock=lock)
+          parse_vss=self.config.parse_vss)
     elif self.config.recursive:
       logging.debug('Collection started from a directory.')
       my_collector = collector.SimpleFileCollector(self.config.filename)
@@ -334,13 +326,13 @@ class Engine(object):
     self.queues = [my_collector, my_storage]
 
     # Start the storage.
-    logging.debug('Starting storage.')
+    logging.info('Starting storage thread.')
     self.storage_thread = multiprocessing.Process(
         name='StorageThread',
         target=my_storage.Run)
     self.storage_thread.start()
 
-    logging.debug('Starting collection.')
+    logging.info('Starting to collect files for processing.')
     if start_collection_thread:
       self.collection_thread = multiprocessing.Process(
           name='Collection',
@@ -349,10 +341,11 @@ class Engine(object):
 
     # Start workers.
     logging.debug('Starting workers.')
+    logging.info('Starting to extract events.')
     for worker_nr in range(self.config.workers):
       logging.debug('Starting worker: %d', worker_nr)
       my_worker = worker.PlasoWorker(
-          my_collector, my_storage, self.config, pre_obj, lock)
+          my_collector, my_storage, self.config, pre_obj)
       self.worker_threads.append(multiprocessing.Process(
           name='Worker_%d' % worker_nr,
           target=my_worker.Run))
@@ -362,16 +355,16 @@ class Engine(object):
     logging.debug('Waiting for collection to complete.')
     if start_collection_thread:
       self.collection_thread.join()
-    logging.debug('Collection is hereby DONE')
+    logging.info('Collection is hereby DONE')
 
-    logging.debug('Waiting until all workers complete their work.')
+    logging.info('Waiting until all processing is done.')
     for thread in self.worker_threads:
       thread.join()
 
-    logging.debug('Workers are done, waiting for storage.')
+    logging.info('Processing done, waiting for storage.')
     my_storage.Close()
     self.storage_thread.join()
-    logging.debug('Storage process is done.')
+    logging.info('Storage process is done.')
 
   def _StoreCollectionInformation(self, obj):
     """Store information about collection into an object."""

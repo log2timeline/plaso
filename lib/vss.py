@@ -18,6 +18,8 @@ import os
 
 import pytsk3
 
+__pychecker__ = 'no-funcdoc'
+
 
 class VShadowImgInfo(pytsk3.Img_Info):
   """Extending the TSK Img_Info to allow VSS images to be read in."""
@@ -55,6 +57,7 @@ class VShadowVolume(object):
     """
     self._block_size = 0
     self._offset_start = 0
+    self._orig_offset = offset
 
     ofs = int(offset / self.SECTOR_SIZE)
     self._block_size, self._image_size = self.GetImageSize(file_path, ofs)
@@ -70,6 +73,9 @@ class VShadowVolume(object):
 
   def GetImageSize(self, file_path, offset):
     """Read the partition information to gather volume size."""
+    if not offset:
+      return 0, 0
+
     __pychecker__ = 'unusednames=self'
     img = pytsk3.Img_Info(file_path)
     try:
@@ -89,6 +95,9 @@ class VShadowVolume(object):
 
   def read(self, size=None):  # pylint: disable=C6409
     """"Return read bytes from volume as denoted by the size parameter."""
+    if not self._orig_offset:
+      return self._fh.read(size)
+
     # Check upper bounds, we need to return empty values for above bounds.
     if size + self.tell() > self._offset_start + self._image_size:
       size = self._offset_start + self._image_size - self.tell()
@@ -112,6 +121,7 @@ class VShadowVolume(object):
     """Seek into the volume."""
     if not self._block_size:
       self._fh.seek(offset, whence)
+      return
 
     ofs = 0
     abs_ofs = 0

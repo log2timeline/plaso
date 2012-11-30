@@ -40,6 +40,7 @@ class PCollector(object):
       proc_queue: A Plaso queue like object to store PathSpec protobufs in.
     """
     self._queue = proc_queue
+    self._fscache = pfile.FilesystemCache()
 
   def CollectFromDir(self, directory):
     """Recursive traversal of a directory.
@@ -57,42 +58,40 @@ class PCollector(object):
         except IOError as e:
           logging.warning('Unable to further process %s:%s', filename, e)
 
-  def CollectFromVss(self, image_path, store_nr, lock, offset=0):
+  def CollectFromVss(self, image_path, store_nr, offset=0):
     """Collect files from a VSS image.
 
     Args:
       image_path: The path to the TSK image in the filesystem.
       store_nr: The store number for the VSS store.
-      lock: A thread lock, if applicable to prevent TSK to fail.
       offset: An offset into the disk image to where the volume
       lies (sector size, not byte).
     """
     logging.debug('Collecting from VSS store %d', store_nr)
 
-    fs = pfile.FilesystemCache.Open(image_path, offset, store_nr)
+    fs = self._fscache.Open(image_path, offset, store_nr)
 
-    self.ParseImageDir(fs, fs.fs.info.root_inum, '/', lock)
+    self.ParseImageDir(fs, fs.fs.info.root_inum, '/')
     logging.debug('Collection from VSS store: %d COMPLETED.', store_nr)
 
-  def CollectFromImage(self, image, lock, offset=0):
+  def CollectFromImage(self, image, offset=0):
     """Start the collector as an image collector.
 
     This collector goes over an image using pytsk.
 
     Args:
       image: The path to the image that needs to be opened.
-      lock: A thread lock, if applicable to prevent TSK to fail.
       offset: An integer, a byte offset into the partition.
     """
 
     logging.debug(u'Collecting from an image file [%s]', image)
 
-    fs = pfile.FilesystemCache.Open(image, offset)
+    fs = self._fscache.Open(image, offset)
 
     # read the root dir, and move from there
-    self.ParseImageDir(fs, fs.fs.info.root_inum, os.path.sep, lock)
+    self.ParseImageDir(fs, fs.fs.info.root_inum, os.path.sep)
 
-  def ParseImageDir(self, fs, cur_inode, path, lock, retry=False):
+  def ParseImageDir(self, fs, cur_inode, path, retry=False):
     """A recursive traversal of a directory inside an image file.
 
     Recursive traversal through a directory that injects every file
@@ -103,60 +102,57 @@ class PCollector(object):
       filesystem being used to collect from.
       cur_inode: The inode number in which the directory begins.
       path: The full path name of the directory (string).
-      lock: A thread lock, if applicable to prevent TSK to fail.
       retry: Boolean indicating this is the second attempt at parsing
       a directory.
     """
     try:
-      with lock:
-        directory = fs.fs.open_dir(inode=cur_inode)
+      directory = fs.fs.open_dir(inode=cur_inode)
     except IOError:
       logging.error(u'IOError while trying to open a directory: %s [%d]',
                     path, cur_inode)
       if not retry:
         logging.info(u'Reopening directory due to an IOError: %s', path)
-        self.ParseImageDir(fs, cur_inode, path, lock, True)
+        self.ParseImageDir(fs, cur_inode, path, True)
       return
 
     directories = []
-    with lock:
-      for f in directory:
-        try:
-          name = f.info.name.name
-          if not f.info.meta:
-            continue
-          inode_addr = f.info.meta.addr
-          f_type = f.info.meta.type
-        except AttributeError as e:
-          logging.error('[ParseImage] Problem reading file [%s], error: %s',
-                        name, e)
+    for f in directory:
+      try:
+        name = f.info.name.name
+        if not f.info.meta:
           continue
+        inode_addr = f.info.meta.addr
+        f_type = f.info.meta.type
+      except AttributeError as e:
+        logging.error('[ParseImage] Problem reading file [%s], error: %s',
+                      name, e)
+        continue
 
-        # List of files we do not want to process further.
-        if name in ['$OrphanFiles', '.', '..']:
-          continue
+      # List of files we do not want to process further.
+      if name in ['$OrphanFiles', '.', '..']:
+        continue
 
-        # We only care about regular files and directories
-        if f_type == pytsk3.TSK_FS_META_TYPE_DIR:
-          directories.append((inode_addr, os.path.join(path, name)))
-        elif f_type == pytsk3.TSK_FS_META_TYPE_REG:
-          transfer_proto = transmission_pb2.PathSpec()
-          if fs.store_nr >= 0:
-            transfer_proto.type = transmission_pb2.PathSpec.VSS
-            transfer_proto.vss_store_number = fs.store_nr
-          else:
-            transfer_proto.type = transmission_pb2.PathSpec.TSK
-          transfer_proto.container_path = fs.path
-          transfer_proto.image_offset = fs.offset
-          transfer_proto.image_inode = inode_addr
-          file_path = os.path.join(path, name)
-          transfer_proto.file_path = pfile.GetUnicodeString(file_path)
+      # We only care about regular files and directories
+      if f_type == pytsk3.TSK_FS_META_TYPE_DIR:
+        directories.append((inode_addr, os.path.join(path, name)))
+      elif f_type == pytsk3.TSK_FS_META_TYPE_REG:
+        transfer_proto = transmission_pb2.PathSpec()
+        if fs.store_nr >= 0:
+          transfer_proto.type = transmission_pb2.PathSpec.VSS
+          transfer_proto.vss_store_number = fs.store_nr
+        else:
+          transfer_proto.type = transmission_pb2.PathSpec.TSK
+        transfer_proto.container_path = fs.path
+        transfer_proto.image_offset = fs.offset
+        transfer_proto.image_inode = inode_addr
+        file_path = os.path.join(path, name)
+        transfer_proto.file_path = pfile.GetUnicodeString(file_path)
 
-          self._queue.Queue(transfer_proto.SerializeToString())
+        self._queue.Queue(transfer_proto.SerializeToString())
 
 
     for inode_addr, path in directories:
-      self.ParseImageDir(fs, inode_addr, path, lock)
+      self.ParseImageDir(fs, inode_addr, path)
 
   def ProcessFile(self, filename, my_queue):
     """Finds all files available inside a file and inserts into queue."""
@@ -201,12 +197,11 @@ class SimpleImageCollector(queue.SimpleQueue):
 
   SECTOR_SIZE = 512
 
-  def __init__(self, image, lock, offset=0, offset_bytes=0, parse_vss=False):
+  def __init__(self, image, offset=0, offset_bytes=0, parse_vss=False):
     """Initialize the image collector.
 
     Args:
       image: A full path to the image file.
-      lock: A lock that is used to control access to TSK resources.
       offset: An offset into the image file if this is a disk image (in sector
       size, not byte size).
       offset_bytes: A bytes offset into the image file if this is a disk image.
@@ -218,13 +213,12 @@ class SimpleImageCollector(queue.SimpleQueue):
     self._offset = offset
     self._offset_bytes = offset_bytes
     self._vss = parse_vss
-    self._lock = lock
 
   def Run(self):
     """Start the collection."""
     with PCollector(self) as my_collector:
       offset = self._offset_bytes or self._offset * self.SECTOR_SIZE
-      my_collector.CollectFromImage(self._image, self._lock, offset)
+      my_collector.CollectFromImage(self._image, offset)
 
       if self._vss:
         logging.debug('Searching for VSS')
@@ -236,7 +230,10 @@ class SimpleImageCollector(queue.SimpleQueue):
           vss_numbers = volume.number_of_stores
         except IOError as e:
           logging.warning('Error while trying to read VSS information: %s', e)
+        logging.info('Collecting from VSS.')
         for store_nr in range(0, vss_numbers):
-          my_collector.CollectFromVss(self._image, store_nr, self._lock, offset)
+          logging.info('Collecting from VSS store number: %d/%d', store_nr,
+                       vss_numbers)
+          my_collector.CollectFromVss(self._image, store_nr, offset)
 
     logging.debug('Simple Image Collector - Done.')
