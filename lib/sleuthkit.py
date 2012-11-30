@@ -22,37 +22,24 @@ import logging
 import pytsk3
 
 
-class FakeLock(object):
-  """A fake lock object, used when no locks are in place."""
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make usable with "with" statement."""
-    pass
-
-  def __enter__(self):
-    """Make usable with "with" statement."""
-    return self
-
-
-def Open(fs, inode, name, lock=None):
+def Open(fs, inode, name):
   """Shorthand for TSKFile(fs, inode, path).
 
   Args:
     fs: An FS_Info object from PyTSK3
     inode: The inode number of the file needed to be read.
     name: The full path to the file inside the image.
-    lock: A threading lock, in case this is used in a threaded application.
   Returns:
     A filehandle that can be used by Python.
   """
-  return TSKFile(fs, inode, name, lock)
+  return TSKFile(fs, inode, name)
 
 
 class TSKFile(object):
   """Class that simulates most of the methods of a read-only file object."""
   MIN_READSIZE = 1024 * 1024
 
-  def __init__(self, filesystem, inode, path, lock=None):
+  def __init__(self, filesystem, inode, path):
     """Constructor for the TSKFile class.
 
     This class assumes that a filesystem using pytsk3.FS_Info has already been
@@ -67,7 +54,6 @@ class TSKFile(object):
       filesystem: A pytsk3.FS_Info filesystem object.
       inode: An inode number for the the file.
       path: Full name (with path) of the file being opened.
-      lock: A threading lock, in case this is used in a threaded application.
 
     Raises:
       IOError: if the file opened does not have a metadata structure available
@@ -76,16 +62,11 @@ class TSKFile(object):
     self.inode = inode
     self.fs = filesystem
 
-    if not lock:
-      lock = FakeLock()
-
     # We prefer opening up a file by it's inode number.
     if inode:
-      with lock:
-        self.fileobj = self.fs.open_meta(inode=inode)
+      self.fileobj = self.fs.open_meta(inode=inode)
     else:
-      with lock:
-        self.fileobj = self.fs.open(path)
+      self.fileobj = self.fs.open(path)
 
     self.size = self.fileobj.info.meta.size
     self.name = path
@@ -99,7 +80,6 @@ class TSKFile(object):
 
     self.readahead = ''
     self.next_read_offset = 0
-    self._lock = lock
 
   # Deviate from the naming convention since we are implementing an interface.
   # pylint: disable=C6409
@@ -138,8 +118,7 @@ class TSKFile(object):
       if read_now_size < 0:
         return data
       try:
-        with self._lock:
-          buf = self.fileobj.read_random(self.next_read_offset, read_now_size)
+        buf = self.fileobj.read_random(self.next_read_offset, read_now_size)
         self.next_read_offset += len(buf)
         self.readahead = buf[read_size:]
         data += buf[:read_size]
@@ -151,12 +130,11 @@ class TSKFile(object):
   def IsAllocated(self):
     """Return a boolean indicating if the file is allocated or not."""
     ret = False
-    with self._lock:
-      flags = self.fileobj.info.meta.flags
+    flags = self.fileobj.info.meta.flags
 
-      if flags:
-        if int(flags) & int(pytsk3.TSK_FS_META_FLAG_UNALLOC):
-          ret = True
+    if flags:
+      if int(flags) & int(pytsk3.TSK_FS_META_FLAG_UNALLOC):
+        ret = True
 
     return ret
 

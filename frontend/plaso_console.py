@@ -83,6 +83,8 @@ if __name__ == '__main__':
 
   namespace = {}
 
+  fscache = pfile.FilesystemCache()
+
   namespace.update(globals())
   banner = ('--------------------------------------------------------------\n'
             ' Welcome to Plaso console - home of the Plaso adventure land.\n'

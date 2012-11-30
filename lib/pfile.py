@@ -67,10 +67,11 @@ class FilesystemContainer(object):
 class FilesystemCache(object):
   """A class to open and store filesystem objects in cache."""
 
-  cached_filesystems = {}
+  def __init__(self):
+    """Set up the filesystem cache."""
+    self.cached_filesystems = {}
 
-  @classmethod
-  def OpenTskImage(cls, path, offset=0):
+  def OpenTskImage(self, path, offset=0):
     """Open and store a regular TSK image in cache.
 
     Args:
@@ -80,13 +81,11 @@ class FilesystemCache(object):
     Returns:
       A FilesystemContainer object that stores a cache of the FS.
     """
-    __pychecker__ = 'unusednames=cls'
     img = pytsk3.Img_Info(path)
     fs = pytsk3.FS_Info(img, offset=offset)
     return FilesystemContainer(fs, img, path, offset)
 
-  @classmethod
-  def OpenVssImage(cls, path, store_nr, offset=0):
+  def OpenVssImage(self, path, store_nr, offset=0):
     """Open and store a VSS image in cache.
 
     Args:
@@ -97,7 +96,6 @@ class FilesystemCache(object):
     Returns:
       A FilesystemContainer object that stores a cache of the FS.
     """
-    __pychecker__ = 'unusednames=cls'
     volume = pyvshadow.volume()
     fh = vss.VShadowVolume(path, offset)
     volume.open_file_object(fh)
@@ -107,8 +105,7 @@ class FilesystemCache(object):
 
     return FilesystemContainer(fs, img, path, offset, volume, store_nr)
 
-  @classmethod
-  def Open(cls, path, offset=0, store_nr=-1):
+  def Open(self, path, offset=0, store_nr=-1):
     """Return a filesystem from the cache.
 
     Args:
@@ -122,15 +119,15 @@ class FilesystemCache(object):
     """
     fs_hash = u'%s:%d:%d' % (path, offset, store_nr)
 
-    if fs_hash in cls.cached_filesystems:
-      return cls.cached_filesystems[fs_hash]
+    if fs_hash in self.cached_filesystems:
+      return self.cached_filesystems[fs_hash]
 
     if store_nr >= 0:
-      fs = cls.OpenVssImage(path, store_nr, offset)
+      fs = self.OpenVssImage(path, store_nr, offset)
     else:
-      fs = cls.OpenTskImage(path, offset)
+      fs = self.OpenTskImage(path, offset)
 
-    cls.cached_filesystems[fs_hash] = fs
+    self.cached_filesystems[fs_hash] = fs
     return fs
 
 
@@ -142,13 +139,13 @@ class PlasoFile(object):
   TYPE = transmission_pb2.PathSpec.UNSET
   fh = None
 
-  def __init__(self, proto, root=None, lock=None):
+  def __init__(self, proto, root=None, fscache=None):
     """Constructor.
 
     Args:
       proto: The transmission_proto that describes the file.
       root: The root transmission_proto that describes the file if one exists.
-      lock: A thread lock object to control libraries that are not thread-safe.
+      fscache: A FilesystemCache object.
 
     Raises:
       IOError: If this class supports the wrong driver for this file.
@@ -159,10 +156,9 @@ class PlasoFile(object):
     else:
       self.pathspec_root = proto
     self.name = ''
-    if lock:
-      self._lock = lock
-    else:
-      self._lock = sleuthkit.FakeLock()
+
+    if fscache:
+      self._fscache = fscache
 
     if proto.type != self.TYPE:
       raise errors.UnableToOpenFile('Unable to handle this file type.')
@@ -275,7 +271,10 @@ class TskFile(PlasoFile):
       offset: If this is a disk partition an offset to the filesystem
       is needed.
     """
-    fs_obj = FilesystemCache.Open(path, offset)
+    if not hasattr(self, '_fscache'):
+      raise IOError('No FS cache provided, unable to open a file.')
+
+    fs_obj = self._fscache.Open(path, offset)
 
     self._fs = fs_obj.fs
 
@@ -289,9 +288,8 @@ class TskFile(PlasoFile):
       return ret
 
     try:
-      with self._lock:
-        info = self.fh.fileobj.info
-        meta = info.meta
+      info = self.fh.fileobj.info
+      meta = info.meta
     except IOError:
       return ret
 
@@ -299,26 +297,25 @@ class TskFile(PlasoFile):
       return ret
 
     fs_type = ''
-    with self._lock:
-      ret.mode = getattr(meta, 'mode', None)
-      ret.ino = getattr(meta, 'addr', None)
-      ret.nlink = getattr(meta, 'nlink', None)
-      ret.uid = getattr(meta, 'uid', None)
-      ret.gid = getattr(meta, 'gid', None)
-      ret.size = getattr(meta, 'size', None)
-      ret.atime = getattr(meta, 'atime', None)
-      ret.atime_nano = getattr(meta, 'atime_nano', None)
-      ret.crtime = getattr(meta, 'crtime', None)
-      ret.crtime_nano = getattr(meta, 'crtime_nano', None)
-      ret.mtime = getattr(meta, 'mtime', None)
-      ret.mtime_nano = getattr(meta, 'mtime_nano', None)
-      ret.ctime = getattr(meta, 'ctime', None)
-      ret.ctime_nano = getattr(meta, 'ctime_nano', None)
-      ret.dtime = getattr(meta, 'dtime', None)
-      ret.dtime_nano = getattr(meta, 'dtime_nano', None)
-      ret.bkup_time = getattr(meta, 'bktime', None)
-      ret.bkup_time_nano = getattr(meta, 'bktime_nano', None)
-      fs_type = str(self._fs.info.ftype)
+    ret.mode = getattr(meta, 'mode', None)
+    ret.ino = getattr(meta, 'addr', None)
+    ret.nlink = getattr(meta, 'nlink', None)
+    ret.uid = getattr(meta, 'uid', None)
+    ret.gid = getattr(meta, 'gid', None)
+    ret.size = getattr(meta, 'size', None)
+    ret.atime = getattr(meta, 'atime', None)
+    ret.atime_nano = getattr(meta, 'atime_nano', None)
+    ret.crtime = getattr(meta, 'crtime', None)
+    ret.crtime_nano = getattr(meta, 'crtime_nano', None)
+    ret.mtime = getattr(meta, 'mtime', None)
+    ret.mtime_nano = getattr(meta, 'mtime_nano', None)
+    ret.ctime = getattr(meta, 'ctime', None)
+    ret.ctime_nano = getattr(meta, 'ctime_nano', None)
+    ret.dtime = getattr(meta, 'dtime', None)
+    ret.dtime_nano = getattr(meta, 'dtime_nano', None)
+    ret.bkup_time = getattr(meta, 'bktime', None)
+    ret.bkup_time_nano = getattr(meta, 'bktime_nano', None)
+    fs_type = str(self._fs.info.ftype)
 
     if len(fs_type) > 12:
       ret.os_type = fs_type[12:]
@@ -352,7 +349,7 @@ class TskFile(PlasoFile):
       inode = self.pathspec.image_inode
 
     self.fh = sleuthkit.Open(
-        self._fs, inode, self.pathspec.file_path, self._lock)
+        self._fs, inode, self.pathspec.file_path)
 
     self.name = self.pathspec.file_path
     self.size = self.fh.size
@@ -807,7 +804,10 @@ class VssFile(TskFile):
       raise IOError((u'Unable to open VSS file: {%s} -> No VSS store number '
                      'defined.') % self.name)
 
-    self._fs_obj = FilesystemCache.Open(
+    if not hasattr(self, '_fscache'):
+      raise IOError('No FS cache provided, unable to contine.')
+
+    self._fs_obj = self._fscache.Open(
         path, offset, self.pathspec.vss_store_number)
 
     self._fs = self._fs_obj.fs
@@ -875,7 +875,7 @@ def InitPFile():
     PFILE_TYPES[value.number] = value.name
 
 
-def OpenPFile(spec, fh=None, orig=None, lock=None):
+def OpenPFile(spec, fh=None, orig=None, fscache=None):
   """Open up a PlasoFile object.
 
   The location and how to open the file is described in the PathSpec protobuf
@@ -911,7 +911,7 @@ def OpenPFile(spec, fh=None, orig=None, lock=None):
     spec: A PathSpec protobuf that describes the file that needs to be opened.
     fh: A PFile object that is used as base for extracting the needed file out.
     orig: A PathSpec protobuf that describes the root pathspec of the file.
-    lock: A thread lock to control access to the TSK library (not thread-safe)
+    fscache: A FilesystemCache object.
 
   Returns:
     A PFile object, that is a file like object.
@@ -925,7 +925,7 @@ def OpenPFile(spec, fh=None, orig=None, lock=None):
   handler_class = PFILE_HANDLERS.get(spec.type,
                                      transmission_pb2.PathSpec.UNSET)
   try:
-    handler = handler_class(spec, orig, lock)
+    handler = handler_class(spec, orig, fscache)
   except errors.UnableToOpenFile:
     raise IOError('Unable to open the file: %s using %s' % (
         spec.file_path, PFILE_TYPES[spec.type]))
@@ -941,7 +941,7 @@ def OpenPFile(spec, fh=None, orig=None, lock=None):
       orig_proto = orig
     else:
       orig_proto = spec
-    return OpenPFile(spec.nested_pathspec, handler, orig_proto, lock)
+    return OpenPFile(spec.nested_pathspec, handler, orig_proto, fscache)
   else:
     logging.debug('Opening file: %s [%s]', handler.name,
                   PFILE_TYPES[spec.type])

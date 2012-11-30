@@ -33,6 +33,7 @@ class FileStatTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     self.base_path = os.path.join('plaso/test_data')
     self.parser_obj = filestat.PfileStat(EmptyObject())
+    self.fscache = pfile.FilesystemCache()
 
   def testTSKFile(self):
     """Read a file within an image file and make few tests."""
@@ -45,7 +46,7 @@ class FileStatTest(unittest.TestCase):
     path.image_inode = 15
     path.file_path = 'passwords.txt'
 
-    fh = pfile.TskFile(path)
+    fh = pfile.TskFile(path, fscache=self.fscache)
     fh.Open()
 
     evts = list(self.parser_obj.Parse(fh))
@@ -144,7 +145,7 @@ class FileStatTest(unittest.TestCase):
 
     path.nested_pathspec.MergeFrom(host_path)
 
-    fh = pfile.OpenPFile(path)
+    fh = pfile.OpenPFile(path, fscache=self.fscache)
     evts = list(self.parser_obj.Parse(fh))
     # Zip only contains a single timestamp.
     self.assertEquals(len(evts), 1)

@@ -340,7 +340,8 @@ class TSKFileCollector(Collector):
     super(TSKFileCollector, self).__init__(pre_obj)
     self._image_path = image_path
     self._image_offset = offset
-    self._fs_obj = pfile.FilesystemCache.Open(image_path, offset)
+    self._fscache = pfile.FilesystemCache()
+    self._fs_obj = self._fscache.Open(image_path, offset)
 
   def GetPath(self, path_list):
     """Return a path."""
@@ -380,7 +381,7 @@ class TSKFileCollector(Collector):
   def GetFilePaths(self, path, file_name):
     """Return a list of files given a path and a pattern."""
     ret = []
-    file_re = re.compile(r'%s' % file_name, re.I | re.S)
+    file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
     try:
       directory = self._fs_obj.fs.open_dir(path)
     except IOError as e:
@@ -403,7 +404,7 @@ class TSKFileCollector(Collector):
   def OpenFile(self, path):
     """Open a file given a path and return a filehandle."""
     return putils.OpenTskFile(
-        path, self._image_path, int(self._image_offset / 512))
+        path, self._image_path, int(self._image_offset / 512), self._fscache)
 
 
 class VSSFileCollector(TSKFileCollector):
@@ -413,12 +414,13 @@ class VSSFileCollector(TSKFileCollector):
     """Constructor for the VSS File collector."""
     super(VSSFileCollector, self).__init__(pre_obj, image_path, offset)
     self._store_nr = store_nr
-    self._fs_obj = pfile.FilesystemCache.Open(
+    self._fscache = pfile.FilesystemCache()
+    self._fs_obj = self._fscache.Open(
         image_path, offset, store_nr)
 
   def OpenFile(self, path):
     """Open a file given a path and return a filehandle."""
     return putils.OpenVssFile(path, self._image_path, self._store_nr,
-                              int(self._image_offset / 512))
+                              int(self._image_offset / 512), self._fscache)
 
 

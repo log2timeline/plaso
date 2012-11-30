@@ -21,6 +21,9 @@ from plaso.lib import errors
 from plaso.lib import pfile
 from plaso.proto import transmission_pb2
 
+# Don't complain about lack of doc strings for functions.
+__pychecker__ = 'no-funcdoc'
+
 
 class PlasoPFileTest(unittest.TestCase):
   """The unit test for PFile implementation."""
@@ -28,6 +31,7 @@ class PlasoPFileTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self.base_path = os.path.join('plaso/test_data')
+    self._fscache = pfile.FilesystemCache()
 
   def PerformSyslogTests(self, fh):
     """Perform a series of tests against a known syslog file.
@@ -93,12 +97,12 @@ class PlasoPFileTest(unittest.TestCase):
     path.image_inode = 15
     path.file_path = 'passwords.txt'
 
-    fh = pfile.TskFile(path)
+    fh = pfile.TskFile(path, fscache=self._fscache)
     fh.Open()
 
     # Test fs cache.
     fs_hash = u'%s:0:-1' % image_path
-    self.assertTrue(fs_hash in pfile.FilesystemCache.cached_filesystems)
+    self.assertTrue(fs_hash in self._fscache.cached_filesystems)
 
     # Read lines.
     self.assertEquals(fh.readline(), 'place,user,password\n')
@@ -239,7 +243,7 @@ class PlasoPFileTest(unittest.TestCase):
 
     path.nested_pathspec.MergeFrom(host_path)
 
-    with pfile.OpenPFile(path) as fh:
+    with pfile.OpenPFile(path, fscache=self._fscache) as fh:
       self.PerformSyslogTests(fh)
 
   def testTarReadline(self):

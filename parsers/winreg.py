@@ -41,6 +41,7 @@ class WinRegistry(parser.PlasoParser):
   PARSER_TYPE = 'REG'
 
   def __init__(self, pre_obj):
+    """Default constructor for the Windows registry."""
     super(WinRegistry, self).__init__(pre_obj)
     self._plugins = win_registry_interface.GetRegistryPlugins()
 
@@ -109,6 +110,7 @@ class WinRegistry(parser.PlasoParser):
           if call_back:
             parsed = True
             for evt in self.GetEvents(call_back, key):
+              evt.plugin = plugin.plugin_name
               yield evt
             break
 
@@ -122,5 +124,6 @@ class WinRegistry(parser.PlasoParser):
         evt.source_long += '%s' % evt.source_append
       if getattr(call_back, 'URLS', None):
         evt.url = ' - '.join(call_back.URLS)
+
       yield evt
 
