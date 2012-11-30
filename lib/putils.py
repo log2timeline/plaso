@@ -35,7 +35,7 @@ class Options(object):
 
 
 def _OpenImageFile(file_to_open, image_path, image_type='tsk',
-                   image_offset=0, store_nr=0):
+                   image_offset=0, store_nr=0, fscache=None):
   """Return a PFile like object for a file in a raw disk image.
 
   Args:
@@ -46,10 +46,14 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
     image_offset: Offset in sectors if this is a disk image.
     store_nr: Applicaple only in the VSS sense, indicates the
     store number.
+    fscache: A Filesystemcache object that stores cache of fs objects.
 
   Returns:
     A PFile object.
   """
+  if not fscache:
+    fscache = pfile.FilesystemCache()
+
   if not os.path.isfile(image_path):
     logging.error(
         u'The image path is wrong, file does not exist: %s',
@@ -75,10 +79,10 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
       file_to_open = file_to_open.replace('\\', '/')
     proto.file_path = file_to_open
 
-  return pfile.OpenPFile(proto)
+  return pfile.OpenPFile(proto, fscache=fscache)
 
 
-def OpenTskFile(file_to_open, image_path, image_offset=0):
+def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None):
   """Return a PFile like object for a file in a raw disk image.
 
   Args:
@@ -89,7 +93,7 @@ def OpenTskFile(file_to_open, image_path, image_offset=0):
   Returns:
     A PFile object.
   """
-  return _OpenImageFile(file_to_open, image_path, 'tsk', image_offset)
+  return _OpenImageFile(file_to_open, image_path, 'tsk', image_offset, fscache)
 
 
 def OpenOSFile(path):
@@ -208,7 +212,7 @@ def PrintTimestamp(timestamp):
   return my_date.isoformat()
 
 
-def GetEventData(event_proto, before=0):
+def GetEventData(event_proto, before=0, fscache=None):
   """Return a hexdump like string of data surrounding event.
 
   This function takes an event object protobuf, opens the file
@@ -220,6 +224,7 @@ def GetEventData(event_proto, before=0):
     event_proto: The EventObject protobuf.
     before: Number of bytes before the event that are included
     in the printout.
+    fscache: A FilesystemCache object that stores cached fs objects.
 
   Returns:
     A string containing a hexdump of the data surrounding the event.
@@ -228,7 +233,7 @@ def GetEventData(event_proto, before=0):
     return u''
 
   try:
-    fh = pfile.OpenPFile(event_proto.pathspec)
+    fh = pfile.OpenPFile(event_proto.pathspec, fscache=fscache)
   except IOError as e:
     return u'Error opening file: %s' % e
 

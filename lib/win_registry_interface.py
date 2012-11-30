@@ -65,13 +65,21 @@ class RegistryPlugin(object):
     self._hive = hive
     self._config = config or {}
 
+  @property
+  def plugin_name(self):
+    """Return the name of the plugin."""
+    return self.__class__.__name__
+
   @abc.abstractmethod
   def GetEntries(self):
     """Extract and return EventObjects from the registry key."""
 
   def __iter__(self):
-    for entry in self.GetEntries():
-      yield entry
+    """Return all EventObjects from the object."""
+    if hasattr(self, '_key'):
+      for entry in self.GetEntries():
+        yield entry
+    yield None
 
   @abc.abstractmethod
   def Process(self, key):
@@ -94,6 +102,7 @@ class KeyPlugin(RegistryPlugin):
   WEIGHT = 1
 
   def Process(self, key):
+    """Process the key based plugin."""
     if key.path != self.REG_KEY:
       return None
 
@@ -112,6 +121,7 @@ class ValuePlugin(RegistryPlugin):
   WEIGHT = 2
 
   def Process(self, key):
+    """Process the value based plugin."""
     values = frozenset([val.name for val in key.GetValues()])
     if self.REG_VALUES.issubset(values):
       self._key = key
@@ -185,6 +195,7 @@ class WinRegValue(object):
   }
 
   def __init__(self):
+    """Default constructor for the registry value."""
     self.offset = 0
     self.name = u''
     self._type = 0
@@ -279,6 +290,7 @@ class PluginList(object):
   """A simple class that stores information about registry plugins."""
 
   def __init__(self):
+    """Default constructor for the plugin list."""
     self._key_plugins = {}
     self._value_plugins = {}
 

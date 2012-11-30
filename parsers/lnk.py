@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for the Stat object of a PFile."""
+import logging
 import pylnk
 
 from plaso.lib import event
@@ -76,6 +77,11 @@ class WinLnk(parser.PlasoParser):
     text_long = u' '.join(texts)
     cont.description_short = u'[{0}] {1} {2}'.format(
       desc, path, cli)
+
+    if not text_long:
+      logging.warning(
+          u'Unable to extract information from: %s', filehandle.name)
+      return cont
 
     if len(cont.description_short) > 80:
       cont.description_short = cont.description_short[0:79]
