@@ -40,8 +40,10 @@ folder()
 
 install_tool()
 {
+  echo -n "Installing $1..."
   folder "$1"
   link "$1"
+  echo " [DONE]"
 }
 
 if [ ! -d "$FOLDER" ]
@@ -49,11 +51,13 @@ then
   sudo mkdir -p $FOLDER
 fi
 
-
+echo "Installing tools."
 install_tool log2timeline
 install_tool plaso_information
 install_tool plaso_console
 install_tool psort
 
+echo "Installing missing dylibs."
 sudo mv libregf.1.dylib /usr/lib/
 sudo mv libvshadow.1.dylib /usr/lib/
+sudo mv liblnk.1.dylib /usr/lib/

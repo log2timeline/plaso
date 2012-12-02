@@ -232,7 +232,7 @@ class SimpleImageCollector(queue.SimpleQueue):
           logging.warning('Error while trying to read VSS information: %s', e)
         logging.info('Collecting from VSS.')
         for store_nr in range(0, vss_numbers):
-          logging.info('Collecting from VSS store number: %d/%d', store_nr,
+          logging.info('Collecting from VSS store number: %d/%d', store_nr + 1,
                        vss_numbers)
           my_collector.CollectFromVss(self._image, store_nr, offset)
 
