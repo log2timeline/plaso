@@ -130,19 +130,19 @@ if __name__ == '__main__':
 
   options.recursive = os.path.isdir(options.filename)
 
-  if not options.output:
-    print 'Wrong usage: need to define an output.'
-    arg_parser.print_help()
-    sys.exit(1)
-
-  if options.image_offset or options.image_offset_bytes:
-    options.image = True
-
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   if options.debug:
     logging.basicConfig(level=logging.DEBUG, format=format_str)
   else:
     logging.basicConfig(level=logging.INFO, format=format_str)
+
+  if not options.output:
+    arg_parser.print_help()
+    logging.error('Wrong usage: need to define an output.')
+    sys.exit(1)
+
+  if options.image_offset or options.image_offset_bytes:
+    options.image = True
 
   if options.image:
     options.preprocess = True
