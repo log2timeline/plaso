@@ -45,6 +45,7 @@ import pytz
 from plaso import output  # pylint: disable=W0611
 from plaso.lib import output as output_lib
 from plaso.lib import objectfilter
+from plaso.lib import pfilter
 from plaso.lib import storage
 
 MAX_64INT = 2**64-1
@@ -195,9 +196,13 @@ def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output,
   parser = None
   filter_count = 0
   if my_filter:
-    parser = objectfilter.Parser(my_filter).Parse()
-    matcher = parser.Compile(
-        objectfilter.LowercaseAttributeFilterImplementation)
+    try:
+      parser = pfilter.PlasoParser(my_filter).Parse()
+      matcher = parser.Compile(
+          pfilter.PlasoAttributeFilterImplementation)
+    except objectfilter.ParseError as e:
+      logging.error('Filter malformed: %s', e)
+      sys.exit(1)
 
   for proto_file_number in range_checked_nums:
     timestamp, storage_proto = ReadPbCheckTime(store, proto_file_number,
@@ -320,8 +325,11 @@ if __name__ == '__main__':
                       help='Show the current version of psort.')
 
   parser.add_argument(
-      '-f', '--filter', dest='filter', action='store', metavar='FILTER',
-      default=None, help='The filter, nuff said.')
+      'filter', nargs='?', action='store', metavar='FILTER', default=None,
+      help=('A filter that can be used to filter the dataset before it '
+            'is written into storage. More information about the filters'
+            ' and it\'s usage can be found here: http://plaso.kiddaland.'
+            'net/usage/filters'))
 
   my_args = parser.parse_args()
 

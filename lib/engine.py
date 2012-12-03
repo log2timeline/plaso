@@ -391,6 +391,9 @@ class Engine(object):
     obj.collection_information['vss parsing'] = str(
         bool(self.config.parse_vss))
 
+    if hasattr(self.config, 'filter') and self.config.filter:
+      obj.collection_information['filter'] = self.config.filter
+
     obj.collection_information['os_detected'] = getattr(
         self.config, 'os', 'N/A')
 

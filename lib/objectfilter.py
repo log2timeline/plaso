@@ -105,9 +105,6 @@ filter is easy. Three basic filter implementations are given:
   to the given object. So "a.b" expands the object obj to obj["a"]["b"]
 """
 
-
-
-
 import abc
 import binascii
 import logging
@@ -115,6 +112,8 @@ import re
 
 from plaso.lib import lexer
 from plaso.lib import pfile
+
+__pychecker__ = 'no-funcdoc'
 
 
 class Error(Exception):
@@ -240,6 +239,14 @@ class BinaryOperator(Operator):
 class GenericBinaryOperator(BinaryOperator):
   """Allows easy implementations of operators."""
 
+  def __init__(self, **kwargs):
+    super(GenericBinaryOperator, self).__init__(**kwargs)
+    self.bool_value = True
+
+  def FlipBool(self):
+    logging.debug('Negative matching.')
+    self.bool_value = not self.bool_value
+
   def Operation(self, x, y):
     """Performs the operation between two values."""
 
@@ -261,8 +268,8 @@ class GenericBinaryOperator(BinaryOperator):
     key = self.left_operand
     values = self.value_expander.Expand(obj, key)
     if values and self.Operate(values):
-      return True
-    return False
+      return self.bool_value
+    return not self.bool_value
 
 
 class Equals(GenericBinaryOperator):
@@ -272,12 +279,12 @@ class Equals(GenericBinaryOperator):
     return x == y
 
 
-class NotEquals(GenericBinaryOperator):
+class NotEquals(Equals):
   """Matches when the right operand isn't equal to the expanded value."""
 
-  def Operate(self, values):
-    return not Equals(arguments=self.args,
-                      value_expander=self.value_expander_cls).Operate(values)
+  def __init__(self, **kwargs):
+    super(NotEquals, self).__init__(**kwargs)
+    self.bool_value = False
 
 
 class Less(GenericBinaryOperator):
@@ -312,15 +319,10 @@ class Contains(GenericBinaryOperator):
   """Whether the right operand is contained in the value."""
 
   def Operation(self, x, y):
+    if type(x) in (str, unicode):
+      return y.lower() in x.lower()
+
     return y in x
-
-
-class NotContains(GenericBinaryOperator):
-  """Whether the right operand is not contained in the values."""
-
-  def Operate(self, values):
-    return not Contains(arguments=self.args,
-                        value_expander=self.value_expander_cls).Operate(values)
 
 
 # TODO(user): Change to an N-ary Operator?
@@ -347,14 +349,6 @@ class InSet(GenericBinaryOperator):
       return False
 
 
-class NotInSet(GenericBinaryOperator):
-  """Whether at least a value is not present in the right operand."""
-
-  def Operate(self, values):
-    return not InSet(arguments=self.args,
-                     value_expander=self.value_expander_cls).Operate(values)
-
-
 class Regexp(GenericBinaryOperator):
   """Whether the value matches the regexp in the right operand."""
 
@@ -367,12 +361,26 @@ class Regexp(GenericBinaryOperator):
       raise ValueError("Regular expression \"%s\" is malformed." %
                        self.right_operand)
 
-  def Operation(self, x, y):
+  def Operation(self, x, unused_y):
     try:
       if self.compiled_re.search(pfile.GetUnicodeString(x)):
         return True
     except TypeError:
       return False
+
+
+class RegexpInsensitive(Regexp):
+  """Whether the value matches the regexp in the right operand."""
+
+  def __init__(self, *children, **kwargs):
+    super(RegexpInsensitive, self).__init__(*children, **kwargs)
+    logging.debug("Compiled: %s", self.right_operand)
+    try:
+      self.compiled_re = re.compile(pfile.GetUnicodeString(self.right_operand),
+                                    re.I)
+    except re.error:
+      raise ValueError("Regular expression \"%s\" is malformed." %
+                       self.right_operand)
 
 
 class Context(Operator):
@@ -453,18 +461,15 @@ class Context(Operator):
 OP2FN = {"equals": Equals,
          "is": Equals,
          "==": Equals,
-         "notequals": NotEquals,
-         "isnot": NotEquals,
          "!=": NotEquals,
          "contains": Contains,
-         "notcontains": NotContains,
          ">": Greater,
          ">=": GreaterEqual,
          "<": Less,
          "<=": LessEqual,
          "inset": InSet,
-         "notinset": NotInSet,
          "regexp": Regexp,
+         "iregexp": RegexpInsensitive,
         }
 
 
@@ -481,7 +486,7 @@ class ValueExpander(object):
     """Returns the attribute name to fetch given a path."""
     return path[0]
 
-  def _GetValue(self, obj, attr_name):
+  def _GetValue(self, unused_obj, unused_attr_name):
     """Returns the value of tha attribute attr_name."""
     raise NotImplementedError()
 
@@ -562,15 +567,31 @@ class DictValueExpander(ValueExpander):
 
 ### PARSER DEFINITION
 class BasicExpression(lexer.Expression):
+  """Basic Expression."""
+
+  def __init__(self):
+    super(BasicExpression, self).__init__()
+    self.bool_value = True
+
+  def FlipBool(self):
+    self.bool_value = not self.bool_value
+
   def Compile(self, filter_implementation):
     arguments = [self.attribute]
     op_str = self.operator.lower()
     operator = filter_implementation.OPS.get(op_str, None)
+
     if not operator:
       raise ParseError("Unknown operator %s provided." % self.operator)
+
     arguments.extend(self.args)
     expander = filter_implementation.FILTERS["ValueExpander"]
-    return operator(arguments=arguments, value_expander=expander)
+    ops = operator(arguments=arguments, value_expander=expander)
+    if not self.bool_value:
+      if hasattr(ops, 'FlipBool'):
+        ops.FlipBool()
+
+    return ops
 
 
 class ContextExpression(lexer.Expression):
@@ -587,12 +608,14 @@ class ContextExpression(lexer.Expression):
         self.attribute, [str(x) for x in self.args])
 
   def SetExpression(self, expression):
+    """Set the expression."""
     if isinstance(expression, lexer.Expression):
       self.args = [expression]
     else:
       raise ParseError("Expected expression, got %s" % expression)
 
   def Compile(self, filter_implementation):
+    """Compile the expression."""
     arguments = [self.attribute]
     for arg in self.args:
       arguments.append(arg.Compile(filter_implementation))
@@ -654,7 +677,11 @@ class Parser(lexer.SearchParser):
 
       # Basic expression
       lexer.Token("ATTRIBUTE", r"[\w._0-9]+", "StoreAttribute", "OPERATOR"),
-      lexer.Token("OPERATOR", r"(\w+|[<>!=]=?)", "StoreOperator", "ARG"),
+      lexer.Token("OPERATOR", r"not ", "FlipLogic", None),
+      lexer.Token("OPERATOR", r"(\w+|[<>!=]=?)", "StoreOperator", "CHECKNOT"),
+      lexer.Token("CHECKNOT", r"not", "FlipLogic", "ARG"),
+      lexer.Token("CHECKNOT", r"\s+", None, None),
+      lexer.Token("CHECKNOT", r"([^not])", "PushBack", "ARG"),
       lexer.Token("ARG", r"(\d+\.\d+)", "InsertFloatArg", "ARG"),
       lexer.Token("ARG", r"(0x\d+)", "InsertInt16Arg", "ARG"),
       lexer.Token("ARG", r"(\d+)", "InsertIntArg", "ARG"),
@@ -674,9 +701,54 @@ class Parser(lexer.SearchParser):
       lexer.Token(".", r"\s+", None, None),
       ]
 
+  def StoreAttribute(self, string="", **_):
+    self.flipped = False
+    super(Parser, self).StoreAttribute(string, **_)
+
+  def FlipAllowed(self):
+    """Raise an error if the not keyword is used where it is not allowed."""
+    if not hasattr(self, 'flipped'):
+      raise ParseError('Not defined.')
+
+    if not self.flipped:
+      return
+
+    if self.current_expression.operator:
+      if not self.current_expression.operator in ("is", "contains", "inset",
+                                                  "equals"):
+        raise ParseError(("Keyword 'not' does not work against operator: "
+                          "%s" % self.current_expression.operator))
+
+  def FlipLogic(self, **_):
+    """Flip the boolean logic of the expression.
+
+    If an expression is configured to return True when the condition
+    is met this logic will flip that to False, and vice versa.
+    """
+    if hasattr(self, "flipped") and self.flipped:
+      raise ParseError("The operator 'not' can only be expressed once.")
+
+    if self.current_expression.args:
+      raise ParseError("Unable to place the keyword 'not' after an argument.")
+
+    self.flipped = True
+
+    # Check if this flip operation should be allowed.
+    self.FlipAllowed()
+
+    if hasattr(self.current_expression, "FlipBool"):
+      self.current_expression.FlipBool()
+      logging.debug("Negative matching [flipping boolean logic].")
+    else:
+      logging.warning(
+          'Unable to perform a negative match, issuing a positive one.')
+
   def InsertArg(self, string="", **_):
     """Insert an arg to the current expression."""
     logging.debug("Storing Argument %s", string)
+
+    # Check if this flip operation should be allowed.
+    self.FlipAllowed()
 
     # This expression is complete
     if self.current_expression.AddArg(string):
@@ -719,7 +791,8 @@ class Parser(lexer.SearchParser):
   def StringEscape(self, string, match, **_):
     """Escape backslashes found inside a string quote.
 
-    Backslashes followed by anything other than [\'"rnbt] will raise an Error.
+    Backslashes followed by anything other than [\'"rnbt.ws] will raise
+    an Error.
 
     Args:
       string: The string that matched.
@@ -728,7 +801,7 @@ class Parser(lexer.SearchParser):
     Raises:
       ParseError: When the escaped string is not one of [\'"rnbt]
     """
-    if match.group(1) in "\\'\"rnbt":
+    if match.group(1) in "\\'\"rnbt\.ws":
       self.string += string.decode("string_escape")
     else:
       raise ParseError("Invalid escape character %s." % string)
@@ -838,3 +911,5 @@ class DictFilterImplementation(BaseFilterImplementation):
   FILTERS = {}
   FILTERS.update(BaseFilterImplementation.FILTERS)
   FILTERS.update({"ValueExpander": DictValueExpander})
+
+
