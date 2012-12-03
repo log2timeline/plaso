@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for plaso.lib.objectfilter."""
-
-
 import unittest
+
 from plaso.lib import objectfilter
+
+__pychecker__ = 'no-funcdoc'
 
 attr1 = "Backup"
 attr2 = "Archive"
@@ -159,11 +160,6 @@ class ObjectFilterTest(unittest.TestCase):
           # But not with numbers
           (False, ["size", 12]),
           ],
-      objectfilter.NotContains: [
-          (False, ["name", "boot.ini"]),
-          (False, ["name", "boot"]),
-          (True, ["name", "meh"]),
-          ],
       objectfilter.Equals: [
           (True, ["name", "boot.ini"]),
           (False, ["name", "foobar"]),
@@ -182,11 +178,6 @@ class ObjectFilterTest(unittest.TestCase):
           (True, ["attributes", ["Archive", "Backup", "Nonexisting"]]),
           # Not all values of attributes are within these
           (False, ["attributes", ["Executable", "Sparse"]]),
-          ],
-      objectfilter.NotInSet: [
-          (False, ["name", ["boot.ini", "autoexec.bat"]]),
-          (False, ["name", "boot.ini"]),
-          (True, ["name", "NOPE"]),
           ],
       objectfilter.Regexp: [
           (True, ["name", "^boot.ini$"]),
@@ -207,7 +198,12 @@ class ObjectFilterTest(unittest.TestCase):
             operator, test_unit[0], test_unit[1]))
         kwargs = {"arguments": test_unit[1],
                   "value_expander": self.value_expander}
-        self.assertEqual(test_unit[0], operator(**kwargs).Matches(self.file))
+        ops = operator(**kwargs)
+        self.assertEqual(test_unit[0], ops.Matches(self.file))
+        if hasattr(ops, 'FlipBool'):
+          ops.FlipBool()
+          print "Testing negative matching."
+          self.assertEqual(not test_unit[0], ops.Matches(self.file))
 
   def testExpand(self):
     # Case insensitivity
@@ -274,6 +270,7 @@ class ObjectFilterTest(unittest.TestCase):
       values = list()
 
       def Operation(self, x, _):
+        __pychecker__ = 'missingattrs=values'
         return self.values.append(x)
 
     # Test a common binary operator
@@ -305,20 +302,24 @@ class ObjectFilterTest(unittest.TestCase):
     # "One imported_dll imports 2 functions AND one imported_dll imports
     # function RegQueryValueEx"
     arguments = [
-        objectfilter.Equals(["imported_dlls.num_imported_functions", 1],
-                            value_expander=self.value_expander),
-        objectfilter.Contains(["imported_dlls.imported_functions",
-                               "RegQueryValueEx"],
-                              value_expander=self.value_expander)]
+        objectfilter.Equals(
+            arguments=["imported_dlls.num_imported_functions", 1],
+            value_expander=self.value_expander),
+        objectfilter.Contains(
+            arguments=["imported_dlls.imported_functions",
+                       "RegQueryValueEx"],
+            value_expander=self.value_expander)]
     condition = objectfilter.AndFilter(arguments=arguments)
     # Without context, it matches because both filters match separately
     self.assertEqual(True, condition.Matches(self.file))
 
     arguments = [
-        objectfilter.Equals(["num_imported_functions", 2],
-                            value_expander=self.value_expander),
-        objectfilter.Contains(["imported_functions", "RegQueryValueEx"],
-                              value_expander=self.value_expander)]
+        objectfilter.Equals(
+            arguments=["num_imported_functions", 2],
+            value_expander=self.value_expander),
+        objectfilter.Contains(
+            arguments=["imported_functions", "RegQueryValueEx"],
+            value_expander=self.value_expander)]
     condition = objectfilter.AndFilter(arguments=arguments)
     # "The same DLL imports 2 functions AND one of these is RegQueryValueEx"
     context = objectfilter.Context(arguments=["imported_dlls", condition],
@@ -329,10 +330,12 @@ class ObjectFilterTest(unittest.TestCase):
     # "One imported_dll imports only 1 function AND one imported_dll imports
     # function RegQueryValueEx"
     condition = objectfilter.AndFilter(arguments=[
-        objectfilter.Equals(arguments=["num_imported_functions", 1],
-                            value_expander=self.value_expander),
-        objectfilter.Contains(["imported_functions", "RegQueryValueEx"],
-                              value_expander=self.value_expander)])
+        objectfilter.Equals(
+            arguments=["num_imported_functions", 1],
+            value_expander=self.value_expander),
+        objectfilter.Contains(
+            arguments=["imported_functions", "RegQueryValueEx"],
+            value_expander=self.value_expander)])
     # "The same DLL imports 1 function AND it"s RegQueryValueEx"
     context = objectfilter.Context(["imported_dlls", condition],
                                    value_expander=self.value_expander)
@@ -396,6 +399,16 @@ class ObjectFilterTest(unittest.TestCase):
 
     # Can't start with AND
     parser = objectfilter.Parser("and something is 'Blue'")
+    self.assertRaises(objectfilter.ParseError, parser.Parse)
+
+    # Test negative filters.
+    parser = objectfilter.Parser("attribute not == 'dancer'")
+    self.assertRaises(objectfilter.ParseError, parser.Parse)
+    parser = objectfilter.Parser("attribute == not 'dancer'")
+    self.assertRaises(objectfilter.ParseError, parser.Parse)
+    parser = objectfilter.Parser("attribute not not equals 'dancer'")
+    self.assertRaises(objectfilter.ParseError, parser.Parse)
+    parser = objectfilter.Parser("attribute not > 23")
     self.assertRaises(objectfilter.ParseError, parser.Parse)
 
     # Need to close braces
@@ -484,7 +497,7 @@ AND @exported_symbols(name is 'inject')
     parser = objectfilter.Parser("size == 4").Parse()
     filter_ = parser.Compile(self.filter_imp)
     self.assertEqual(filter_.Matches(obj), True)
-    query = "something is 'Blue' and size notcontains 3"
+    query = "something is 'Blue' and size not contains 3"
     parser = objectfilter.Parser(query).Parse()
     filter_ = parser.Compile(self.filter_imp)
     self.assertEqual(filter_.Matches(obj), False)
