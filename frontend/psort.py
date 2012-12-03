@@ -352,7 +352,8 @@ if __name__ == '__main__':
     sys.exit(0)
 
   if not my_args.protofile:
-    print '-s STORAGEFILE required! or -h for HELP'
+    parser.print_help()
+    logging.error('-s STORAGEFILE required! or -h for HELP')
     sys.exit(0)
 
   first, last = GetTimes(my_args)
