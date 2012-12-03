@@ -100,6 +100,14 @@ if __name__ == '__main__':
       help='The output file (needs to be defined).')
 
   arg_parser.add_argument(
+      '-f', '--filter', dest='filter', action='store', metavar='FILTER',
+      default=None,
+      help=('A filter that can be used to filter the dataset before it '
+            'is written into storage. More information about the filters'
+            ' and it\'s usage can be found here: http://plaso.kiddaland.'
+            'net/usage/filters'))
+
+  arg_parser.add_argument(
       'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT',
       default=None, help=(
           'The path to the file, directory, image file or mount point that the'

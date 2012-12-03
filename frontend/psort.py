@@ -44,6 +44,8 @@ import pytz
 
 from plaso import output  # pylint: disable=W0611
 from plaso.lib import output as output_lib
+from plaso.lib import objectfilter
+from plaso.lib import pfilter
 from plaso.lib import storage
 
 MAX_64INT = 2**64-1
@@ -176,7 +178,8 @@ def ReadPbCheckTime(store, number, bound_first, bound_last):
       return proto_read.timestamp, proto_read
 
 
-def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output):
+def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output,
+              my_filter=None):
   """Performs an external merge sort of the events and sends them to output.
 
   Args:
@@ -185,9 +188,21 @@ def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output):
     bound_first: Earliest microsecond considered in bounds.
     bound_last: Latest microsecond considered in bounds.
     my_output: OutputRenderer object.
+    my_filter: A filter string.
 
   """
   read_list = []
+
+  parser = None
+  filter_count = 0
+  if my_filter:
+    try:
+      parser = pfilter.PlasoParser(my_filter).Parse()
+      matcher = parser.Compile(
+          pfilter.PlasoAttributeFilterImplementation)
+    except objectfilter.ParseError as e:
+      logging.error('Filter malformed: %s', e)
+      sys.exit(1)
 
   for proto_file_number in range_checked_nums:
     timestamp, storage_proto = ReadPbCheckTime(store, proto_file_number,
@@ -198,7 +213,13 @@ def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output):
     timestamp, file_number, storage_proto = heapq.heappop(read_list)
     if not storage_proto:
       continue
-    my_output.Append(storage_proto)
+    if not parser:
+      my_output.Append(storage_proto)
+    else:
+      if matcher.Matches(storage_proto):
+        my_output.Append(storage_proto)
+      else:
+        filter_count += 1
     new_timestamp, new_storage_proto = ReadPbCheckTime(store, file_number,
                                                        bound_first, bound_last)
     if new_storage_proto:
@@ -206,6 +227,8 @@ def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output):
 
   my_output.Flush()
   my_output.End()
+  if filter_count:
+    logging.info('Events filtered out: %d', filter_count)
 
 
 class OutputRenderer(object):
@@ -281,7 +304,7 @@ if __name__ == '__main__':
   parser.add_argument('-T', '--last_time', metavar='ENDDATE', dest='last_time',
                       help='Last time as "YYYY-MM-DD HH:MM:SS"')
 
-  parser.add_argument('-Tus', '--last_time_microsec', 
+  parser.add_argument('-Tus', '--last_time_microsec',
                       metavar='LASTIMESTAMP_USEC',
                       dest='last_time_microsec', default=MAX_64INT, type=int,
                       help='Latest time as microsecond.')
@@ -300,6 +323,13 @@ if __name__ == '__main__':
   parser.add_argument('-v', '--version', dest='version', action='version',
                       version='log2timeline - psort version %s' % __version__,
                       help='Show the current version of psort.')
+
+  parser.add_argument(
+      'filter', nargs='?', action='store', metavar='FILTER', default=None,
+      help=('A filter that can be used to filter the dataset before it '
+            'is written into storage. More information about the filters'
+            ' and it\'s usage can be found here: http://plaso.kiddaland.'
+            'net/usage/filters'))
 
   my_args = parser.parse_args()
 
@@ -347,7 +377,8 @@ if __name__ == '__main__':
       output_fd = sys.stdout
       try:
         MergeSort(store, range_checked_pb_nums, first, last,
-                  OutputRenderer(my_args.output_format, output_fd))
+                  OutputRenderer(my_args.output_format, output_fd),
+                  my_args.filter)
       except Exception:  # pylint: disable=W0703
         if not my_args.debug:
           raise
