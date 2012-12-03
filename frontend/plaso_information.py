@@ -114,6 +114,7 @@ collected, what information was gained from the image, etc.
   options = arg_parser.parse_args()
 
   if not options.storage_file:
+    arg_parser.print_help()
     logging.error('Not able to run without a storage file being indicated.')
     sys.exit(1)
 
