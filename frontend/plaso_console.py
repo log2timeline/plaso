@@ -41,9 +41,11 @@ from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
+from plaso.lib import objectfilter
 from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfile
+from plaso.lib import pfilter
 from plaso.lib import preprocess
 from plaso.lib import queue
 from plaso.lib import registry as class_registry

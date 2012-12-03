@@ -31,8 +31,10 @@ import zlib
 
 from plaso import parsers    # pylint: disable=W0611
 from plaso.lib import errors
+from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfile
+from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.proto import transmission_pb2
 
@@ -82,8 +84,19 @@ class PlasoWorker(object):
     self.config = config
     self._pre_obj = pre_obj
     self._parsers = self.FindAllParsers()
+
     if hasattr(config, 'image') and config.image:
       self._fscache = pfile.FilesystemCache()
+
+    self._filter = None
+    if hasattr(config, 'filter') and config.filter:
+      try:
+        parser = pfilter.PlasoParser(config.filter).Parse()
+        self._filter = parser.Compile(
+            pfilter.PlasoAttributeFilterImplementation)
+      except objectfilter.ParseError as e:
+        logging.error('Filter malformed: %s', e)
+        self._filter = None
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
@@ -180,8 +193,13 @@ class PlasoWorker(object):
               event.hostname = self._pre_obj.hostname
             if hasattr(stat_obj, 'ino'):
               event.inode = stat_obj.ino
-            serialized = storage.PlasoStorage.SerializeEvent(event)
-            self._stor_queue.AddEvent(serialized)
+            if not self._filter:
+              serialized = storage.PlasoStorage.SerializeEvent(event)
+              self._stor_queue.AddEvent(serialized)
+            else:
+              if self._filter.Matches(event):
+                serialized = storage.PlasoStorage.SerializeEvent(event)
+                self._stor_queue.AddEvent(serialized)
 
       except errors.UnableToParseFile as e:
         logging.debug('Not a %s file (%s) - %s', parsing_object.NAME,
