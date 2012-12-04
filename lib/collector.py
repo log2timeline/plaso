@@ -24,6 +24,7 @@ import os
 import pytsk3
 import pyvshadow
 
+from plaso.lib import errors
 from plaso.lib import pfile
 from plaso.lib import queue
 from plaso.lib import vss
@@ -69,9 +70,12 @@ class PCollector(object):
     """
     logging.debug('Collecting from VSS store %d', store_nr)
 
-    fs = self._fscache.Open(image_path, offset, store_nr)
+    try:
+      fs = self._fscache.Open(image_path, offset, store_nr)
+      self.ParseImageDir(fs, fs.fs.info.root_inum, '/')
+    except errors.UnableToOpenFilesystem as e:
+      logging.error('Unable to read filesystem: %s.', e)
 
-    self.ParseImageDir(fs, fs.fs.info.root_inum, '/')
     logging.debug('Collection from VSS store: %d COMPLETED.', store_nr)
 
   def CollectFromImage(self, image, offset=0):
@@ -86,10 +90,12 @@ class PCollector(object):
 
     logging.debug(u'Collecting from an image file [%s]', image)
 
-    fs = self._fscache.Open(image, offset)
-
-    # read the root dir, and move from there
-    self.ParseImageDir(fs, fs.fs.info.root_inum, os.path.sep)
+    try:
+      fs = self._fscache.Open(image, offset)
+      # read the root dir, and move from there
+      self.ParseImageDir(fs, fs.fs.info.root_inum, os.path.sep)
+    except errors.UnableToOpenFilesystem as e:
+      logging.error('Unable to read image [no collection] - %s.', e)
 
   def ParseImageDir(self, fs, cur_inode, path, retry=False):
     """A recursive traversal of a directory inside an image file.
