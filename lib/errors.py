@@ -54,3 +54,7 @@ class PreProcessFail(Error):
 
 class PathNotFound(Error):
   """Raised when a preprocessor fails to fill in a path variable."""
+
+
+class UnableToOpenFilesystem(Error):
+  """Raised when unable to open filesystem."""

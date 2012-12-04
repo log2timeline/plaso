@@ -103,6 +103,9 @@ collected, what information was gained from the image, etc.
   """
   arg_parser = argparse.ArgumentParser(description=usage)
 
+  format_str = '[%(levelname)s] %(message)s'
+  logging.basicConfig(level=logging.INFO, format=format_str)
+
   arg_parser.add_argument(
       '-v', '--verbose', dest='verbose', action='store_true', default=False,
       help='Be extra verbose in the information printed out.')
@@ -115,6 +118,9 @@ collected, what information was gained from the image, etc.
 
   if not options.storage_file:
     arg_parser.print_help()
+    print ''
+    arg_parser.print_usage()
+    print ''
     logging.error('Not able to run without a storage file being indicated.')
     sys.exit(1)
 

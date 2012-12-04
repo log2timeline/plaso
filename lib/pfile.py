@@ -80,9 +80,17 @@ class FilesystemCache(object):
 
     Returns:
       A FilesystemContainer object that stores a cache of the FS.
+
+    Raises:
+      errors.UnableToOpenFilesystem: If it is not able to open the filesystem.
     """
     img = pytsk3.Img_Info(path)
-    fs = pytsk3.FS_Info(img, offset=offset)
+    try:
+      fs = pytsk3.FS_Info(img, offset=offset)
+    except IOError as e:
+      raise errors.UnableToOpenFilesystem(
+          'Unable to mount image, wrong offset? [%s]' % e)
+
     return FilesystemContainer(fs, img, path, offset)
 
   def OpenVssImage(self, path, store_nr, offset=0):
