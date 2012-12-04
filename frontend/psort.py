@@ -321,7 +321,7 @@ if __name__ == '__main__':
                       version='log2timeline - psort version %s' % __version__,
                       help='Show the current version of psort.')
 
-  parser.add_argument('protofile', metavar='PLASOFILE', default=None,
+  parser.add_argument('storagefile', metavar='PLASOFILE', default=None,
                       nargs='?', help='Path to the Plaso storage file')
 
   parser.add_argument(
@@ -354,17 +354,17 @@ if __name__ == '__main__':
     print '=' * 40
     sys.exit(0)
 
-  if not my_args.protofile:
+  if not my_args.storagefile:
     parser.print_help()
     print ''
     parser.print_usage()
     print ''
-    logging.error('-s STORAGEFILE required! or -h for HELP')
+    logging.error('STORAGEFILE required! or -h for HELP')
     sys.exit(0)
 
   first, last = GetTimes(my_args)
 
-  with SetupStorage(my_args.protofile) as store:
+  with SetupStorage(my_args.storagefile) as store:
     # Identify Files
     range_checked_pb_nums = ReadMeta(store, first, last)
     if my_args.write:  # writing to file.
