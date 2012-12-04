@@ -45,7 +45,7 @@ from plaso.lib import vss
 from plaso.lib import worker
 
 
-__version__ = '1.0b'
+__version__ = '1.0alpha'
 
 
 def GetTimeZoneList():
@@ -213,7 +213,16 @@ class Engine(object):
     pre_obj = preprocess.PlasoPreprocess()
 
     if self.config.preprocess:
-      self._PreProcess(pre_obj)
+      try:
+        self._PreProcess(pre_obj)
+      except errors.UnableToOpenFilesystem as e:
+        logging.error(u'Unable to open the filesystem: %s', e)
+        return
+      except IOError as e:
+        logging.error(
+            (u'An IOError occurred while trying to pre-process, bailing out.'
+             'The error given is: %s'), e)
+        return
     else:
       pre_obj.zone = self.config.zone
 
@@ -280,6 +289,9 @@ class Engine(object):
     if self.config.preprocess:
       try:
         self._PreProcess(pre_obj)
+      except errors.UnableToOpenFilesystem as e:
+        logging.error(u'Unable to open the filesystem: %s', e)
+        return
       except IOError as e:
         logging.error(
             (u'An IOError occurred while trying to pre-process, bailing out.'

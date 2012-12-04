@@ -115,6 +115,7 @@ class PlasoStorage(object):
     self._max_buffer_size = buffer_size or self.MAX_BUFFER_SIZE
     self._write_counter = 0
     self._pre_obj = pre_obj
+    self._read_only = read_only
 
     if read_only:
       mode = 'r'
@@ -721,8 +722,9 @@ class PlasoStorage(object):
       self.FlushBuffer()
       self.zipfile.close()
       self._file_open = False
-      logging.info(('[Storage] Closing the storage, nr. of events processed:'
-                    ' %d'), self._write_counter)
+      if not self._read_only:
+        logging.info(('[Storage] Closing the storage, nr. of events processed:'
+                      ' %d'), self._write_counter)
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""

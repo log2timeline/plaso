@@ -289,9 +289,6 @@ if __name__ == '__main__':
   parser.add_argument('-d', '--debug', action='store_true',
                       help='Fall back to debug shell if psort fails.')
 
-  parser.add_argument('-s', '--storagefile', metavar='PLASOFILE', default=None,
-                      dest='protofile', help='Path to the Plaso container file')
-
   parser.add_argument('-t', '--first_time', metavar='STARTDATE',
                       dest='first_time', help='Earliest time as "YYYY-MM-DD'
                       'HH:MM:SS"')
@@ -324,6 +321,9 @@ if __name__ == '__main__':
                       version='log2timeline - psort version %s' % __version__,
                       help='Show the current version of psort.')
 
+  parser.add_argument('protofile', metavar='PLASOFILE', default=None,
+                      nargs='?', help='Path to the Plaso storage file')
+
   parser.add_argument(
       'filter', nargs='?', action='store', metavar='FILTER', default=None,
       help=('A filter that can be used to filter the dataset before it '
@@ -332,6 +332,9 @@ if __name__ == '__main__':
             'net/usage/filters'))
 
   my_args = parser.parse_args()
+
+  format_str = '[%(levelname)s] %(message)s'
+  logging.basicConfig(level=logging.INFO, format=format_str)
 
   if my_args.timezone == 'list':
     print '=' * 40
@@ -353,6 +356,9 @@ if __name__ == '__main__':
 
   if not my_args.protofile:
     parser.print_help()
+    print ''
+    parser.print_usage()
+    print ''
     logging.error('-s STORAGEFILE required! or -h for HELP')
     sys.exit(0)
 

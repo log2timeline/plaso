@@ -17,6 +17,7 @@
 
 import argparse
 import os
+import multiprocessing
 import logging
 import sys
 
@@ -28,6 +29,7 @@ BYTES_IN_A_MIB = 1024 * 1024
 
 
 if __name__ == '__main__':
+  multiprocessing.freeze_support()
   arg_parser = argparse.ArgumentParser(
       description=('log2timeline is the main frontend to the plaso backend, us'
                    'ed to collect and correlate events extracted from the file'
@@ -100,19 +102,18 @@ if __name__ == '__main__':
       help='The output file (needs to be defined).')
 
   arg_parser.add_argument(
-      '-f', '--filter', dest='filter', action='store', metavar='FILTER',
-      default=None,
-      help=('A filter that can be used to filter the dataset before it '
-            'is written into storage. More information about the filters'
-            ' and it\'s usage can be found here: http://plaso.kiddaland.'
-            'net/usage/filters'))
-
-  arg_parser.add_argument(
       'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT',
       default=None, help=(
           'The path to the file, directory, image file or mount point that the'
           ' tool should parse. If this is a directory it will recursively go '
           'through it, same with an image file.'))
+
+  arg_parser.add_argument(
+      'filter', action='store', metavar='FILTER', nargs='?', default=None,
+      help=('A filter that can be used to filter the dataset before it '
+            'is written into storage. More information about the filters'
+            ' and it\'s usage can be found here: http://plaso.kiddaland.'
+            'net/usage/filters'))
 
   options = arg_parser.parse_args()
 
@@ -138,7 +139,11 @@ if __name__ == '__main__':
 
   if not options.output:
     arg_parser.print_help()
-    logging.error('Wrong usage: need to define an output.')
+    print ''
+    arg_parser.print_usage()
+    print ''
+    logging.error(
+        'Wrong usage: need to define an output (using -w parameter).')
     sys.exit(1)
 
   if options.image_offset or options.image_offset_bytes:
