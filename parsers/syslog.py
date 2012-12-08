@@ -15,9 +15,12 @@
 # limitations under the License.
 """This file contains a syslog parser in plaso."""
 import datetime
+import logging
 
 from plaso.lib import lexer
 from plaso.lib import parser
+
+__pychecker__ = 'no-funcdoc'
 
 
 class Syslog(parser.TextParser):
@@ -61,9 +64,18 @@ class Syslog(parser.TextParser):
       time = stat.attributes.get('ctime', 0)
 
     if not time:
-      return 0
+      logging.error(
+          ('Unable to determine correct year of syslog file, using current '
+           'year'))
+      return datetime.datetime.now().year
 
-    timestamp = datetime.datetime.fromtimestamp(time, zone)
+    try:
+      timestamp = datetime.datetime.fromtimestamp(time, zone)
+    except ValueError as e:
+      logging.error(
+          ('Unable to determine correct year of syslog file, using current '
+           'one, error msg: %s', e))
+      return datetime.datetime.now().year
 
     return timestamp.year
 
