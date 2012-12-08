@@ -1333,8 +1333,9 @@ class GitVCS(VersionControlSystem):
             + extra_args,
         env=env, silent_ok=True)
     diff += RunShell(
-        cmd + ["--no-renames", "--diff-filter=D", "--cached"] + extra_args,
+        cmd + ["--no-renames", "--diff-filter=D"] + extra_args,
         env=env, silent_ok=True)
+    diff += RunShell(cmd + ["--cached"], env=env, silent_ok=True)
 
     # The CL could be only file deletion or not. So accept silent diff for both
     # commands then check for an empty diff manually.

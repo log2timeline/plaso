@@ -19,7 +19,7 @@ linter()
 {
   # First find all files that need linter
   echo "Run through pychecker."
-  git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | while read lint_file
+  git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep -v "utils/upload.py" | grep "\.py$" | while read lint_file
   do
     echo "  -- Checking ${lint_file} --"
     if [ "${lint_file}" == "setup.py" ]
