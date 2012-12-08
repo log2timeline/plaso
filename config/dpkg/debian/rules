@@ -1,0 +1,71 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+# export DH_VERBOSE=1
+
+%:
+	dh $@ --buildsystem=makefile
+
+override_dh_auto_clean:
+
+override_dh_auto_test:
+
+override_dh_installinit:
+	mkdir -p debian/plaso-static/usr/lib/plaso
+	mkdir -p debian/plaso-static/usr/lib/plaso/IPython/config/profile
+	install -D -p -m755 debian/tmp/usr/lib/plaso/*.* debian/plaso-static/usr/lib/plaso
+	install -D -p -m755 debian/tmp/usr/lib/plaso/log2timeline debian/plaso-static/usr/lib/plaso
+	install -D -p -m755 debian/tmp/usr/lib/plaso/plaso_console debian/plaso-static/usr/lib/plaso
+	install -D -p -m755 debian/tmp/usr/lib/plaso/plaso_information debian/plaso-static/usr/lib/plaso
+	install -D -p -m755 debian/tmp/usr/lib/plaso/psort debian/plaso-static/usr/lib/plaso
+	install -D -p -m755 debian/tmp/usr/lib/plaso/IPython/config/profile/README_STARTUP debian/plaso-static/usr/lib/plaso/IPython/config/profile
+
+override_dh_installmenu:
+
+override_dh_installmime:
+
+override_dh_installmodules:
+
+override_dh_installlogcheck:
+
+override_dh_installlogrotate:
+
+override_dh_installpam:
+
+override_dh_installppp:
+
+override_dh_installudev:
+
+override_dh_installwm:
+
+override_dh_installxfonts:
+
+override_dh_link:
+	dh_link "/usr/lib/plaso/log2timeline" "/usr/bin/log2timeline"
+	dh_link "/usr/lib/plaso/plaso_console" "/usr/bin/plaso_console"
+	dh_link "/usr/lib/plaso/plaso_information" "/usr/bin/plaso_information"
+	dh_link "/usr/lib/plaso/psort" "/usr/bin/psort"
+
+override_dh_gconf:
+
+override_dh_icons:
+
+override_dh_perl:
+
+override_dh_strip:
+	# Necessary otherwise the PyInstaller build executables will not run
+
+override_dh_makeshlibs:
+	# Prevent useless call to ldconfig
+	dh_makeshlibs -n
+
+override_dh_shlibdeps:
+	# Point debhelper to the locally included shared libraries
+	dh_shlibdeps -l${PWD}/debian/tmp/usr/lib/plaso
+
