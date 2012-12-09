@@ -25,8 +25,8 @@ from plaso.proto import plaso_storage_pb2
 from plaso.lib import output
 
 
-class L2R(output.LogOutputFormatter):
-  """Contains functions for outputing as l2t_R sqlite database."""
+class sql4n6(output.LogOutputFormatter):
+  """Contains functions for outputing as 4n6time sqlite database."""
 
   SKIP = frozenset(['username', 'inode', 'hostname', 'body', 'parser'])
 
@@ -54,7 +54,7 @@ class L2R(output.LogOutputFormatter):
 
   def Usage(self):
     """Return a quick help message that describes the output provided."""
-    return ('l2t_R sqlite database format. database with one table, which'
+    return ('4n6time sqlite database format. database with one table, which'
             'has 17 fields e.g. user, host, date, etc.')
 
   # Override LogOutputFormatter methods so it won't write to the file
@@ -78,7 +78,8 @@ class L2R(output.LogOutputFormatter):
            'host TEXT, short TEXT, desc TEXT, version TEXT, filename '
            'TEXT, inode TEXT, notes TEXT, format TEXT, extra TEXT, datetime '
            'datetime, reportnotes TEXT, inreport TEXT, key rowid, tag TEXT,'
-           'color TEXT, offset INT, store_number INT, store_index INT)'))
+           'color TEXT, offset INT, store_number INT, store_index INT,'
+           'vss_store_number INT)'))
 
     self.count = 0
 
@@ -103,7 +104,7 @@ class L2R(output.LogOutputFormatter):
     pass
 
   def EventBody(self, proto_read):
-    """Formats data as l2t_R database table format and writes to the db.
+    """Formats data as 4n6time database table format and writes to the db.
 
     Args:
       proto_read: Protobuf to format.
@@ -155,14 +156,15 @@ class L2R(output.LogOutputFormatter):
             '',
             proto_read.offset,
             proto_read.store_number,
-            proto_read.store_index)
+            proto_read.store_index,
+            self.GetVSSNumber(proto_read))
     self.curs.execute(
         ('INSERT INTO log2timeline(date, time, timezone, MACB, source, '
          'sourcetype, type, user, host, short, desc, version, filename, '
          'inode, notes, format, extra, datetime, reportnotes, inreport,'
-         'key, tag, color, offset, store_number, store_index) VALUES (?, ?, ?, ?'
-         ', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-         '?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
+         'key, tag, color, offset, store_number, store_index, vss_store_number)'
+         ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
+         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
 
     self.count += 1
 
@@ -212,3 +214,10 @@ class L2R(output.LogOutputFormatter):
     letters.append('.')
 
     return ''.join(letters)
+
+  def GetVSSNumber(self, proto_read):
+    """Return the vss_store_number of the event."""
+    if proto_read.pathspec.HasField('vss_store_number'):
+      return proto_read.pathspec.vss_store_number
+    else:
+      return -1
