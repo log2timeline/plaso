@@ -410,9 +410,12 @@ class OsFile(PlasoFile):
     ret.uid = stat.st_uid
     ret.gid = stat.st_gid
     ret.size = stat.st_size
-    ret.atime = stat.st_atime
-    ret.mtime = stat.st_mtime
-    ret.ctime = stat.st_ctime
+    if stat.st_atime > 0:
+      ret.atime = stat.st_atime
+    if stat.st_mtime > 0:
+      ret.mtime = stat.st_mtime
+    if stat.st_ctime > 0:
+      ret.ctime = stat.st_ctime
     ret.os_type = 'Unknown'
 
     return ret
