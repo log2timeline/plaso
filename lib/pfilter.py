@@ -187,3 +187,100 @@ class PlasoParser(objectfilter.Parser):
   expression_cls = PlasoExpression
 
 
+class TrueObject(object):
+  """A simple object that always returns true for all comparison.
+
+  This object is used for testing certain conditions inside filter queries.
+  By returning true for all comparisons this object can be used to evaluate
+  specific portions of a filter query.
+  """
+
+  def __init__(self, txt=''):
+    """Save the text object so it can be used when comparing text."""
+    self.txt = txt
+
+  def __eq__(self, unused_x):
+    """Return true for tests of equality."""
+    return True
+
+  def __gt__(self, unused_x):
+    """Return true for checks for greater."""
+    return True
+
+  def __ge__(self, unused_x):
+    """Return true for checks for greater or equal."""
+    return True
+
+  def __lt__(self, unused_x):
+    """Return true for checks of less."""
+    return True
+
+  def __le__(self, unused_x):
+    """Return true for checks of less or equal."""
+    return True
+
+  def __ne__(self, unused_x):
+    """Return true for all not equal comparisons."""
+    return True
+
+  def __iter__(self):
+    """Return a generator so a test for the in keyword can be used."""
+    yield self
+
+  def __str__(self):
+    """Return a string to make regular expression searches possible.
+
+    Returns:
+      A string that containes the original query with some of the matches
+      expanded, perhaps several times.
+    """
+    # Regular expressions in pfilter may include the following escapes:
+    #     "\\'\"rnbt\.ws":
+    txt = self.txt
+    if '\.' in self.txt:
+      txt += self.txt.replace('\.', ' _ text _ ')
+
+    if '\b' in self.txt:
+      txt += self.txt.replace('\b', ' ')
+
+    if '\s' in self.txt:
+      txt += self.txt.replace('\s', ' ')
+
+    return txt
+
+
+class MockTestFilter(object):
+  """A mock test filter object used to test certain portion of test queries.
+
+  The logic behind this object is that a single attribute can be isolated
+  for comparison. That is to say all calls to attributes will lead to a TRUE
+  response, except those attributes that are specifically stated in the
+  constructor. This way it is simple to test for instance whether or not
+  to include a parser at all, before actually running the tool. The same applies
+  to filtering out certain filenames, etc.
+  """
+
+  def __init__(self, query, **kwargs):
+    """Constructor, only valid attribute is the parser one."""
+    self.attributes = kwargs
+    self.txt = query
+
+  def __getattr__(self, attr):
+    """Return TrueObject for all requests except for stored attributes."""
+    if attr in self.attributes:
+      return self.attributes.get(attr, None)
+
+    return TrueObject(self.txt)
+
+
+def GetMatcher(query):
+  """Return a filter match object for a given query."""
+  matcher = None
+  try:
+    parser = PlasoParser(query).Parse()
+    matcher = parser.Compile(
+        PlasoAttributeFilterImplementation)
+  except objectfilter.ParseError as e:
+    logging.error('Filter <%s> malformed: %s', query, e)
+
+  return matcher

@@ -13,11 +13,14 @@
 # limitations under the License.
 """Tests for plaso.lib.pfilter."""
 import unittest
+import pytz
 
 from plaso.lib import event
 from plaso.lib import objectfilter
+from plaso.lib import parser
 from plaso.lib import pfile
 from plaso.lib import pfilter
+from plaso.lib import putils
 from plaso.lib import storage
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
@@ -25,8 +28,55 @@ from plaso.proto import transmission_pb2
 __pychecker__ = 'no-funcdoc'
 
 
+class Empty(object):
+  """An empty object."""
+
+
+class FakeParser(parser.PlasoParser):
+  """A fake parser that does not parse anything, but registers."""
+
+  MY_SOURCE = 'Fake Parsing Source'
+  PARSER_TYPE = 'NONE'
+
+  def Parse(self, unused_filehandle):
+    """A parse method yields a single event."""
+    evt = event.EventObject()
+    # 2015-11-18T01:15:43
+    evt.timestamp = 1447809343000000
+    evt.timestamp_desc = 'Last Written'
+    evt.description_short = 'This description is different than the long one.'
+    evt.description_long = (
+        u'User did a very bad thing, bad, bad thing that awoke Dr. Evil.')
+    evt.filename = '/My Documents/goodfella/Documents/Hideout/myfile.txt'
+    evt.hostname = 'Agrabah'
+    evt.parser = 'Weirdo'
+    evt.inode = '1245'
+    evt.display_name = u'unknown:%s' % evt.filename
+    evt.source_short = 'REG'
+    evt.source_long = self.MY_SOURCE
+
+    yield evt
+
+
+class AnotherParser(FakeParser):
+  """Another fake parser that does nothing but register as a parser."""
+
+  MY_SOURCE = 'Another Fake Source'
+
+
+class AllEvilParser(FakeParser):
+  """A class that does nothing but has a fancy name."""
+
+  MY_SOURCE = 'A Truly Evil'
+
+
 class PFilterTest(unittest.TestCase):
   """Simple plaso specific tests to the pfilter implementation."""
+
+  def setUp(self):
+    """Set up the necessary variables used in tests."""
+    self._pre = Empty()
+    self._pre.zone = pytz.UTC
 
   def testPlasoEvents(self):
     """Test plaso EventObjects, both Python and Protobuf version.
@@ -134,6 +184,34 @@ class PFilterTest(unittest.TestCase):
 
     self.assertEqual(result, matcher.Matches(obj))
     self.assertEqual(result, matcher.Matches(obj_proto))
+
+  def testParserFilter(self):
+    query = 'source is "REG" AND description_long CONTAINS "is"'
+    parsers = putils.FindAllParsers(self._pre, query)['all']
+    self.assertEquals(len(parsers), 3)
+
+    query = 'source is "REG" and parser is not "FakeParser"'
+    parsers = putils.FindAllParsers(self._pre, query)['all']
+    self.assertEquals(len(parsers), 2)
+
+    query = 'parser contains "fake" and date > 0'
+    parsers = putils.FindAllParsers(self._pre, query)['all']
+    self.assertEquals(len(parsers), 1)
+
+    query = ('date > 0 AND description_long regexp "\sW\sW" AND parser '
+             'is not "FakeParser"')
+    parsers = putils.FindAllParsers(self._pre, query)['all']
+    self.assertEquals(len(parsers), 2)
+
+    query = ('(date > 0 AND description_long regexp "\sW\sW") OR parser '
+             'is not "FakeParser"')
+    parsers = putils.FindAllParsers(self._pre, query)['all']
+    self.assertEquals(len(parsers), 3)
+
+    query = ('(parser contains "fake" or date < "2015-06-12") AND '
+             'description_long CONTAINS "weird"')
+    parsers = putils.FindAllParsers(self._pre, query)['all']
+    self.assertEquals(len(parsers), 3)
 
 
 if __name__ == "__main__":
