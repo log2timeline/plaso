@@ -52,4 +52,27 @@ then
 fi
 
 echo "Tests all came up clean. Send for review."
-python utils/upload.py -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER --send_mail
+
+MISSING_TESTS=""
+FILES=`git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep "\.py$" | grep -v "_test.py$"`
+for file_change in $FILES
+do
+  FILE=`echo ${file_change} | sed -e 's/\.py//g'`
+  if [ ! -f "${FILE}_test.py" ]
+  then
+    MISSING_TESTS="$MISSING_TESTS + ${file_change}"
+  fi
+done
+
+if [ "x$MISSING_TESTS" == "x" ]
+then
+  M="."
+else
+  M="These files are missing unit tests:
+$MISSING_TESTS
+  "
+fi
+
+echo -n "Short description of code review request: "
+read DESC
+python utils/upload.py -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER -m "$M" -t "$DESC" --send_mail
