@@ -54,10 +54,16 @@ clean:
 
 install:
 	@mkdir -p $(prefix)/lib/plaso
-	@install -m 0755 dist/log2timeline/* $(prefix)/lib/plaso
-	@install -m 0755 dist/plaso_console/* $(prefix)/lib/plaso
-	@install -m 0755 dist/plaso_information/* $(prefix)/lib/plaso
-	@install -m 0755 dist/psort/* $(prefix)/lib/plaso
+	@mkdir -p $(prefix)/lib/plaso/IPython/config/profile/
+	@install -m 0755 dist/log2timeline/*.* $(prefix)/lib/plaso
+	@install -m 0755 dist/log2timeline/log2timeline $(prefix)/lib/plaso
+	@install -m 0755 dist/plaso_console/*.* $(prefix)/lib/plaso
+	@install -m 0755 dist/plaso_console/plaso_console $(prefix)/lib/plaso
+	@install -m 0755 dist/plaso_console/IPython/config/profile/README_STARTUP $(prefix)/lib/plaso/IPython/config/profile/
+	@install -m 0755 dist/plaso_information/*.* $(prefix)/lib/plaso
+	@install -m 0755 dist/plaso_information/plaso_information $(prefix)/lib/plaso
+	@install -m 0755 dist/psort/*.* $(prefix)/lib/plaso
+	@install -m 0755 dist/psort/psort $(prefix)/lib/plaso
 
 .py:
 
