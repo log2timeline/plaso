@@ -356,7 +356,8 @@ class Regexp(GenericBinaryOperator):
     super(Regexp, self).__init__(*children, **kwargs)
     logging.debug("Compiled: %s", self.right_operand)
     try:
-      self.compiled_re = re.compile(pfile.GetUnicodeString(self.right_operand))
+      self.compiled_re = re.compile(
+          pfile.GetUnicodeString(self.right_operand), re.DOTALL)
     except re.error:
       raise ValueError("Regular expression \"%s\" is malformed." %
                        self.right_operand)
@@ -377,7 +378,7 @@ class RegexpInsensitive(Regexp):
     logging.debug("Compiled: %s", self.right_operand)
     try:
       self.compiled_re = re.compile(pfile.GetUnicodeString(self.right_operand),
-                                    re.I)
+                                    re.I | re.DOTALL)
     except re.error:
       raise ValueError("Regular expression \"%s\" is malformed." %
                        self.right_operand)

@@ -388,8 +388,9 @@ class Engine(object):
     obj.collection_information['output_file'] = self.config.output
     obj.collection_information['protobuf_size'] = self.config.buffer_size
     obj.collection_information['time_of_run'] = time.time()
+    filter_query = getattr(self.config, 'filter', None)
     obj.collection_information['parsers'] = [
-        x.parser_name for x in putils.FindAllParsers()['all']]
+        x.parser_name for x in putils.FindAllParsers(obj, filter_query)['all']]
 
     obj.collection_information['preprocess'] = str(
         bool(self.config.preprocess))

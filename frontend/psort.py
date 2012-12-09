@@ -44,7 +44,6 @@ import pytz
 
 from plaso import output  # pylint: disable=W0611
 from plaso.lib import output as output_lib
-from plaso.lib import objectfilter
 from plaso.lib import pfilter
 from plaso.lib import storage
 
@@ -193,15 +192,12 @@ def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output,
   """
   read_list = []
 
-  parser = None
+  matcher = None
   filter_count = 0
   if my_filter:
-    try:
-      parser = pfilter.PlasoParser(my_filter).Parse()
-      matcher = parser.Compile(
-          pfilter.PlasoAttributeFilterImplementation)
-    except objectfilter.ParseError as e:
-      logging.error('Filter malformed: %s', e)
+    matcher = pfilter.GetMatcher(my_filter)
+    if not matcher:
+      logging.error('Filter malformed, exiting.')
       sys.exit(1)
 
   for proto_file_number in range_checked_nums:
@@ -213,7 +209,7 @@ def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output,
     timestamp, file_number, storage_proto = heapq.heappop(read_list)
     if not storage_proto:
       continue
-    if not parser:
+    if not matcher:
       my_output.Append(storage_proto)
     else:
       if matcher.Matches(storage_proto):
