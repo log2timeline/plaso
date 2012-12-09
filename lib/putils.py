@@ -23,6 +23,7 @@ import tempfile
 from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfile
+from plaso.lib import pfilter
 from plaso.proto import transmission_pb2
 
 # TODO: Refactor the putils library so it does not end up being a trash can
@@ -147,7 +148,7 @@ def Pfile2File(fh_in, path=None):
   return path
 
 
-def FindAllParsers(pre_obj=None, filters=None):
+def FindAllParsers(pre_obj=None, filter_query=None):
   """Find all available parser objects.
 
   A parser is defined as an object that implements the PlasoParser
@@ -156,7 +157,7 @@ def FindAllParsers(pre_obj=None, filters=None):
   Args:
     pre_obj: A PlasoPreprocess object containing information collected from
              image.
-    filters: A Plaso Filter object.
+    filter_query: A filter query.
 
   Returns:
     A set of objects that implement the LogParser object.
@@ -164,16 +165,22 @@ def FindAllParsers(pre_obj=None, filters=None):
   if not pre_obj:
     pre_obj = Options()
 
-  # TODO: Add filter support.
-  _ = filters
+  matcher = None
+  if filter_query:
+    matcher = pfilter.GetMatcher(filter_query)
 
   results = {}
   results['all'] = []
-  parser_objs = _FindClasses(parser.PlasoParser, pre_obj)
-  for parser_obj in parser_objs:
-    results['all'].append(parser_obj)
-    parser_type = parser_obj.PARSER_TYPE
-    results.setdefault(parser_type, []).append(parser_obj)
+  for parser_obj in _FindClasses(parser.PlasoParser, pre_obj):
+    add = True
+    if matcher:
+      obj = pfilter.MockTestFilter(filter_query, parser=parser_obj.parser_name)
+      add = matcher.Matches(obj)
+
+    if add:
+      results['all'].append(parser_obj)
+      parser_type = parser_obj.PARSER_TYPE
+      results.setdefault(parser_type, []).append(parser_obj)
 
   return results
 
@@ -192,7 +199,7 @@ def _FindClasses(class_object, *args):
   """
   results = []
   for cl in class_object.classes:
-    results.append(class_object.classes[cl](args))
+    results.append(class_object.classes[cl](*args))
 
   return results
 

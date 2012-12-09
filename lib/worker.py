@@ -35,6 +35,7 @@ from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfile
 from plaso.lib import pfilter
+from plaso.lib import putils
 from plaso.lib import storage
 from plaso.proto import transmission_pb2
 
@@ -83,20 +84,15 @@ class PlasoWorker(object):
     self._stor_queue = stor_queue
     self.config = config
     self._pre_obj = pre_obj
-    self._parsers = self.FindAllParsers()
+    filter_query = getattr(config, 'filter', None)
+    self._parsers = putils.FindAllParsers(pre_obj, filter_query)
 
     if hasattr(config, 'image') and config.image:
       self._fscache = pfile.FilesystemCache()
 
     self._filter = None
-    if hasattr(config, 'filter') and config.filter:
-      try:
-        parser = pfilter.PlasoParser(config.filter).Parse()
-        self._filter = parser.Compile(
-            pfilter.PlasoAttributeFilterImplementation)
-      except objectfilter.ParseError as e:
-        logging.error('Filter malformed: %s', e)
-        self._filter = None
+    if filter_query:
+      self._filter = pfilter.GetMatcher(filter_query)
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
@@ -136,26 +132,6 @@ class PlasoWorker(object):
       logging.debug(('Unable to open file: {%s}, not sure if we can extract '
                      'further files from it. Msg: %s'),
                     filehandle.display_name, e)
-
-  def FindAllParsers(self):
-    """Find all available parser objects.
-
-    A parser is defined as an object that implements the PlasoParser
-    class and does not have the __abstract attribute set.
-
-    Returns:
-      A set of objects that implement the LogParser object.
-    """
-    results = {}
-    results['all'] = []
-    for cl in parser.PlasoParser.classes:
-      parser_obj = parser.PlasoParser.classes[cl](self._pre_obj)
-      parser_type = parser_obj.PARSER_TYPE
-      results['all'].append(parser_obj)
-
-      results.setdefault(parser_type, []).append(parser_obj)
-
-    return results
 
   def ParseFile(self, filehandle):
     """Run through classifier and appropriate parsers.
