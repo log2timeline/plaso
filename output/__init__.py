@@ -15,6 +15,6 @@
 # limitations under the License.
 """This file contains an import statement for each output plugin."""
 
-from plaso.output import sqlite_4n6
+from plaso.output import l2t_csv
 from plaso.output import raw
-from plaso.output import l2t_sqlite
+from plaso.output import sqlite_4n6
