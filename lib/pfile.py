@@ -938,13 +938,13 @@ def OpenPFile(spec, fh=None, orig=None, fscache=None):
   try:
     handler = handler_class(spec, orig, fscache)
   except errors.UnableToOpenFile:
-    raise IOError('Unable to open the file: %s using %s' % (
+    raise IOError(u'Unable to open the file: %s using %s' % (
         spec.file_path, PFILE_TYPES[spec.type]))
 
   try:
     handler.Open(fh)
   except IOError as e:
-    raise IOError('[%s] Unable to open the file: %s, error: %s' % (
+    raise IOError(u'[%s] Unable to open the file: %s, error: %s' % (
         handler.__class__.__name__, spec.file_path, e))
 
   if spec.HasField('nested_pathspec'):
@@ -954,7 +954,7 @@ def OpenPFile(spec, fh=None, orig=None, fscache=None):
       orig_proto = spec
     return OpenPFile(spec.nested_pathspec, handler, orig_proto, fscache)
   else:
-    logging.debug('Opening file: %s [%s]', handler.name,
+    logging.debug(u'Opening file: %s [%s]', handler.name,
                   PFILE_TYPES[spec.type])
     return handler
 
