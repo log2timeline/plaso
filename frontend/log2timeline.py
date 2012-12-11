@@ -23,6 +23,7 @@ import sys
 
 from plaso.lib import errors
 from plaso.lib import engine
+from plaso.lib import pfilter
 
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024
@@ -144,6 +145,12 @@ if __name__ == '__main__':
     print ''
     logging.error(
         'Wrong usage: need to define an output (using -w parameter).')
+    sys.exit(1)
+
+  if options.filter and not pfilter.GetMatcher(options.filter):
+    logging.error(
+        (u'Filter error, unable to proceed. There is a problem with your '
+         'filter: %s'), options.filter)
     sys.exit(1)
 
   if options.image_offset or options.image_offset_bytes:
