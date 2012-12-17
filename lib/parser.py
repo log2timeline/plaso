@@ -23,6 +23,7 @@ import abc
 import calendar
 import datetime
 import logging
+import os
 import pytz
 import tempfile
 
@@ -190,12 +191,15 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
         timelib.MONTH_DICT.get(match.group(1).lower(), 1))
 
   def SetDay(self, match, **_):
+    """Set the day attribute."""
     self.attributes['iday'] = int(match.group(1))
 
   def SetTime(self, match, **_):
+    """Set the time attribute."""
     self.attributes['time'] = match.group(1)
 
   def SetYear(self, match, **_):
+    """Set the year."""
     self.attributes['iyear'] = int(match.group(1))
 
   def Parse(self, filehandle):
@@ -248,6 +252,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
                                                             self.NAME))
 
   def ParseString(self, match, **_):
+    """Add a string to the body attribute."""
     try:
       self.attributes['body'] += match.group(1).strip('\n')
     except IndexError:
@@ -329,6 +334,7 @@ class SQLiteParser(PlasoParser):
   PARSER_TYPE = 'sqlite'
 
   def __init__(self, pre_obj, local_zone=False):
+    """Constructor for the SQLite parser."""
     super(SQLiteParser, self).__init__(pre_obj)
     self._local_zone = local_zone
 
@@ -361,55 +367,64 @@ class SQLiteParser(PlasoParser):
     # Info: http://apidoc.apsw.googlecode.com/hg/vfs.html#vfs and
     # http://apidoc.apsw.googlecode.com/hg/example.html#example-vfs
     # Until then, just copy the file into a tempfile and parse it.
-    with tempfile.NamedTemporaryFile(delete=True) as fh:
+    name = ''
+    with tempfile.NamedTemporaryFile(delete=False) as fh:
       name = fh.name
       while data:
         fh.write(data)
-        data = filehandle.read(32768)
+        data = filehandle.read(65536)
 
-      try:
-        with sqlite3.connect(name) as self.db:
-          self.db.row_factory = sqlite3.Row
-          cursor = self.db.cursor()
+    try:
+      with sqlite3.connect(name) as self.db:
+        self.db.row_factory = sqlite3.Row
+        cursor = self.db.cursor()
 
-          # Verify the table by reading in all table names and compare it to
-          # the list of required tables.
-          sql_results = cursor.execute(('SELECT name FROM sqlite_master WHERE '
-                                        'type="table"'))
-          tables = []
-          for row in sql_results:
-            tables.append(row[0])
+        # Verify the table by reading in all table names and compare it to
+        # the list of required tables.
+        sql_results = cursor.execute(('SELECT name FROM sqlite_master WHERE '
+                                      'type="table"'))
+        tables = []
+        for row in sql_results:
+          tables.append(row[0])
 
-          if not set(tables) >= set(self.REQUIRED_TABLES):
-            raise errors.UnableToParseFile(
-                'File %s not a %s (wrong tables).' % (filehandle.name,
-                                                      self.NAME))
+        if not set(tables) >= set(self.REQUIRED_TABLES):
+          raise errors.UnableToParseFile(
+              'File %s not a %s (wrong tables).' % (filehandle.name,
+                                                    self.NAME))
 
-          for query, action in self.QUERIES:
-            call_back = getattr(self, action, self.Default)
-            sql_results = cursor.execute(query)
+        for query, action in self.QUERIES:
+          call_back = getattr(self, action, self.Default)
+          sql_results = cursor.execute(query)
+          row = sql_results.fetchone()
+          while row:
+            evt_gen = call_back(row=row, zone=self._pre_obj.zone)
+            if evt_gen:
+              for evt in evt_gen:
+                if evt.timestamp < 0:
+                  # TODO: For now we dependend on the timestamp to be
+                  # set, change this soon so the timestamp does not need to
+                  # be set.
+                  evt.timestamp = 0
+                evt.query = query
+                if not hasattr(evt, 'offset'):
+                  if 'id' in row.keys():
+                    evt.offset = row['id']
+                  else:
+                    evt.offset = 0
+                yield evt
             row = sql_results.fetchone()
-            while row:
-              evt_gen = call_back(row=row, zone=self._pre_obj.zone)
-              if evt_gen:
-                for evt in evt_gen:
-                  if evt.timestamp < 0:
-                    # TODO: For now we dependend on the timestamp to be
-                    # set, change this soon so the timestamp does not need to
-                    # be set.
-                    evt.timestamp = 0
-                  evt.query = query
-                  if not hasattr(evt, 'offset'):
-                    if 'id' in row.keys():
-                      evt.offset = row['id']
-                    else:
-                      evt.offset = 0
-                  yield evt
-              row = sql_results.fetchone()
-      except sqlite3.DatabaseError as e:
-        logging.debug('SQLite error occured: %s', e)
+    except sqlite3.DatabaseError as e:
+      logging.debug('SQLite error occured: %s', e)
+
+    try:
+      os.remove(name)
+    except (OSError, IOError) as e:
+      logging.warning(
+          u'Unable to remove temporary file: %s [derived from %s] due to: %s',
+          name, filehandle.name, e)
 
   def Default(self, **kwarg):
+    """Default callback method for SQLite events, does nothing."""
     __pychecker__ = 'unusednames=self'
     logging.debug('Default handler: %s', kwarg)
 
