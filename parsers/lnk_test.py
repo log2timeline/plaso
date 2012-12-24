@@ -43,7 +43,7 @@ class LnkTest(unittest.TestCase):
     event_dict = {
         'Modification Time': 1247535558220000,
         'Creation Time': 1247527742849132,
-        'Last Access': 1247527742849132,
+        'Last Access Time': 1247527742849132,
     }
     with open(lnk_path, 'rb') as fh:
       events = list(self.parser_obj.Parse(fh))
