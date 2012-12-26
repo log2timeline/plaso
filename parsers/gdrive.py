@@ -32,11 +32,11 @@ class GoogleDrive(parser.SQLiteParser):
                'checksum, size '
                'FROM local_entry WHERE modified IS NOT NULL;'),
               'ParseLocalEntry')]
-  
+
   # The required tables.
-  REQUIRED_TABLES = ('cloud_entry','cloud_relations', \
-                     'local_entry','local_relations','mapping', \
-                     'overlay_status')
+  REQUIRED_TABLES = (
+      'cloud_entry', 'cloud_relations', 'local_entry', 'local_relations',
+      'mapping', 'overlay_status')
 
   # The following definition for values can be found on Patrick Olson's blog:
   # http://www.sysforensics.org/2012/05/google-drive-forensics-notes.html
@@ -52,26 +52,43 @@ class GoogleDrive(parser.SQLiteParser):
   }
 
   DATE_MULTIPLIER = 1000000
-  
+
   def GetLocalPath(self, inode, path):
-    """Return local path."""
+    """Return local path for a given inode.
+
+    Args:
+      inode: The inode number for the file.
+      path: A list containing the current path discovered so far,
+            for the initial run, this should be an empty list.
+
+    Returns:
+      A full path, including the filename of the given inode value.
+    """
     cursor = self.db.cursor()
     sql = ('SELECT e.filename, r.parent_inode_number FROM local_relations AS r'
            ', local_entry AS e WHERE r.child_inode_number = ? AND r.child_in'
            'ode_number = e.inode_number')
     results = cursor.execute(sql, (inode,))
-    
+
     try:
       new_path, new_inode = results.fetchone()
       path.append(new_path)
       return self.GetLocalPath(new_inode, path)
-    
     except TypeError:
       path.reverse()
       return u'/' + u'/'.join(path)
 
   def GetCloudPath(self, resource_id, path):
-    """Return cloud path."""
+    """Return cloud path given a resource id.
+
+    Args:
+      resource_id: The resource_id for the file.
+      path: A list containing the current path discovered so far,
+            for the initial run, this should be an empty list.
+
+    Returns:
+      A full path, including the filename of the given resource value.
+    """
     cursor = self.db.cursor()
     sql = ('SELECT e.filename, r.parent_resource_id FROM cloud_relations AS r'
            ', cloud_entry AS e WHERE r.child_resource_id = ? AND r.child_res'
@@ -85,55 +102,52 @@ class GoogleDrive(parser.SQLiteParser):
       return u'/' + u'/'.join(path)
 
     return self.GetCloudPath(new_resource_id, path)
-    
+
   def ParseLocalEntry(self, row, **_):
     """Return an EventObject from a local record."""
     path = self.GetLocalPath(row['inode_number'], [])
-    source = 'Google Drive'
-    source_type = 'Google Drive (local entry)'  
-    text_long = u'File Path and Name: {0} Size: {1}'.format(path,
-                                                   row['size'])
+    source_type = 'Google Drive (local entry)'
+    text_long = u'File Path: {0} Size: {1}'.format(path, row['size'])
     text_short = u'%s' % row['filename']
     date = int(row['modified']) * self.DATE_MULTIPLIER
     descripton = 'mtime'
-    evt = event.SQLiteEvent(date, descripton, text_long, text_short, \
-                            'GoogleDrive', 'Google Drive (local entry)')
+
+    evt = event.SQLiteEvent(date, descripton, text_long, text_short,
+                            'LOG', source_type)
     evt.downloaded_file = u'%s' % path
-    evt.file_size = str(row['size'])
-    
+    evt.size = str(row['size'])
+
     yield evt
-    
+
   def ParseCloudEntry(self, row, **_):
     """Return an EventObject from a cloud record."""
     path = self.GetCloudPath(row['resource_id'], [])
-    source = 'Google Drive'
     source_type = 'Google Drive (cloud entry)'
     doc_type = str(row['doc_type'])
-    doc_types = self.DOC_TYPES.get(doc_type, 'UNKNOWN')   
-    text_long = (u'File Path and Name: {0} Size: {1} URL: {2} Shared: {3} '
-                'doc_type: {4}'.format(path,
-                                       row['size'],
-                                       row['url'],
-                                       row['shared'],
-                                       doc_types))
+    doc_types = self.DOC_TYPES.get(doc_type, 'UNKNOWN')
+    shared = 'Private'
+    if row['shared']:
+      shared = 'Shared'
+    text_long = (
+        u'File Path: {0} [{3}] Size: {1} URL: {2} doc_type: {4}'.format(
+            path, row['size'], row['url'], shared, doc_types))
     text_short = u'%s' % row['filename']
     date = int(row['modified']) * self.DATE_MULTIPLIER
     descripton = 'mtime'
+
     evt = event.SQLiteEvent(date, descripton, text_long, text_short,
-                            'GoogleDrive', 'Google Drive (cloud entry)')
+                            'LOG', source_type)
     evt.downloaded_file = u'%s' % path
-    evt.file_size = str(row['size'])
+    evt.size = str(row['size'])
     evt.url_path = u'%s' % row['url']
-    
-    if row['created'] == '':
-      pass
-    else:
+
+    if row['created']:
       date = int(row['created']) * self.DATE_MULTIPLIER
       descripton = 'ctime'
       evt = event.SQLiteEvent(date, descripton, text_long, text_short,
-                              'GoogleDrive', 'Google Drive (cloud entry)')
+                              'LOG', source_type)
       evt.downloaded_file = u'%s' % row['filename']
-      evt.file_size = str(row['size'])
+      evt.size = str(row['size'])
       evt.url_path = u'%s' % row['url']
-      
+
       yield evt
