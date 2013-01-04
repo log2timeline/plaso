@@ -23,6 +23,7 @@ import heapq
 import re
 
 from plaso.lib import errors
+from plaso.lib import timelib
 
 # Regular expression used for attribute filtering
 UPPER_CASE = re.compile('[A-Z]')
@@ -60,6 +61,7 @@ class EventContainer(object):
   attributes = None
 
   def __init__(self):
+    """Initializes the event container."""
     # A placeholder for all EventObjects directly stored.
     self.events = []
 
@@ -105,6 +107,7 @@ class EventContainer(object):
           self.__class__.__name__, attr))
 
   def __len__(self):
+    """Retrieves the number of items in the containter and its sub items."""
     counter = len(self.events)
     for container in self.containers:
       counter += len(container)
@@ -187,9 +190,8 @@ class EventContainer(object):
     except AttributeError:
       pass
     except NotImplementedError:
-      raise errors.NotAnEventContainerOrObject(('Unable to add an object that'
-                                                ' has not implemented'
-                                                ' description_long'))
+      raise errors.NotAnEventContainerOrObject(
+          'Unable to add an object that has not implemented description_long')
     try:
       if item.events and item.Append:
         self._Append(item, self.containers, item.first_timestamp,
@@ -260,6 +262,7 @@ class EventObject(object):
   attributes = None
 
   def __init__(self):
+    """Initializes the event object."""
     self.attributes = {}
 
   def __setattr__(self, attr, value):
@@ -338,8 +341,37 @@ class EventObject(object):
     return u'[{0}] {1}/{2} - {3}'.format(time, short, s_long, desc)
 
 
+class FiletimeEvent(EventObject):
+  """Convenience class for a FILETIME timestamp-based event."""
+
+  def __init__(self, timestamp, description, description_long):
+    """Initializes a FILETIME timestamp-based event object.
+
+    Args:
+      timestamp: the FILETIME timestamp value.
+      description: the description of the usage of the timestamp.
+      description_long: the long description (LEGACY).
+    """
+    super(FiletimeEvent, self).__init__()
+    self.timestamp = timelib.WinFiletime2Unix(timestamp)
+    self.timestamp_desc = description
+    self.text_long = description_long
+    self.text_short = description_long
+
+  @property
+  def description_long(self):
+    return u'%s' % self.text_long
+
+  @property
+  def description_short(self):
+    if len(self.text_short) > 80:
+      return u'%s...' % self.text_short[0:77]
+
+    return u'%s' % self.text_short
+
+
 class RegistryEvent(EventObject):
-  """This EventObject describes an event inside the Windows Registry."""
+  """Convenience class for a Windows Registry-based event."""
 
   # Add few class variables so they don't get defined as special attributes.
   keyname = u''
@@ -347,7 +379,7 @@ class RegistryEvent(EventObject):
   source_append = u''
 
   def __init__(self, key, value_dict, timestamp=None, desc=None):
-    """The constructor for the RegistryEvent.
+    """Initializes a Windows registry event.
 
     Args:
       key: Name of the registry key being parsed.
@@ -384,16 +416,17 @@ class RegistryEvent(EventObject):
 
 
 class TextEvent(EventObject):
-  """This EventObject describes an event inside a text based log file."""
+  """Convenience class for a text log file-based event."""
 
   # Define attributes outside of attribute store.
   body = None
 
   def __init__(self, date, body, source, host=None, user=None):
-    """The constructor for the TextEvent.
+    """Initializes a text event.
 
     Args:
-      date: An integer, representing the time in UTC Epoch (64 bits).
+      date: An integer, representing the time in microseconds since
+            Jan 1, 1970 00:00:00 UTC.
       body: The text, processesed as it should be presented.
       source: The source_long description of the event.
       host: An optional host name if one is available within the log file.
@@ -423,17 +456,18 @@ class TextEvent(EventObject):
 
 
 class SQLiteEvent(EventObject):
-  """An EventObject for SQLite related events."""
+  """Convenience class for a SQLite-based event."""
 
   text_long = ''
   text_short = ''
 
   def __init__(self, date, description, description_long, description_short,
                source_short, source_long):
-    """The constructor for the SQLiteEvent.
+    """Initializes the SQLite-based event.
 
     Args:
-      date: An integer, representing the time in UTC Epoch (64 bits).
+      date: An integer, representing the time in microseconds since
+            Jan 1, 1970 00:00:00 UTC.
       description: The timestamp description of the event.
       description_long: A string, the content of the description_long.
       description_short: A string, the content of the description_short.

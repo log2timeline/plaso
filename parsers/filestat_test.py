@@ -18,12 +18,9 @@ import os
 import unittest
 
 from plaso.lib import pfile
+from plaso.lib import preprocess
 from plaso.parsers import filestat
 from plaso.proto import transmission_pb2
-
-
-class EmptyObject(object):
-  """Empty object used to store pre-processing information."""
 
 
 class FileStatTest(unittest.TestCase):
@@ -31,8 +28,9 @@ class FileStatTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    pre_obj = preprocess.PlasoPreprocess()
     self.base_path = os.path.join('plaso/test_data')
-    self.parser_obj = filestat.PfileStat(EmptyObject())
+    self.parser_obj = filestat.PfileStat(pre_obj)
     self.fscache = pfile.FilesystemCache()
 
   def testTSKFile(self):

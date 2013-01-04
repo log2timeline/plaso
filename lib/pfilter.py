@@ -114,7 +114,8 @@ class DateCompareObject(object):
 
   This object takes a date representation, whether that is a direct integer
   datetime object or a string presenting the date, and uses that for comparing
-  against timestamps stored in microseconds in UTC Epoch (as used by Plaso).
+  against timestamps stored in microseconds in in microseconds since
+  Jan 1, 1970 00:00:00 UTC.
 
   This makes it possible to use regular comparison operators for date,
   irrelevant of the format the date comes in, since plaso stores all timestamps

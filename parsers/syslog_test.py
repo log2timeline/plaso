@@ -18,12 +18,9 @@ import os
 import unittest
 import pytz
 
+from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.parsers import syslog
-
-
-class EmptyObject(object):
-  """An empty object to store preprocessing information."""
 
 
 class SyslogUnitTest(unittest.TestCase):
@@ -37,9 +34,10 @@ class SyslogUnitTest(unittest.TestCase):
 
   def testParsing(self):
     """Test parsing of a syslog file."""
-    pre = EmptyObject()
-    pre.zone = pytz.UTC
-    sl = syslog.Syslog(pre)
+    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj.year = 2012
+    pre_obj.zone = pytz.UTC
+    sl = syslog.Syslog(pre_obj)
 
     self.filehandle.seek(0)
     sl_generator = sl.Parse(self.filehandle)
@@ -47,17 +45,18 @@ class SyslogUnitTest(unittest.TestCase):
     events = list(sl_generator)
     first = events[0]
 
+    # TODO let's add code to convert Jan 22 2012 07:52:33 into the
+    # corresponding timestamp, I think that will be more readable
     self.assertEquals(first.timestamp, 1327218753000000)
     self.assertEquals(first.hostname, 'myhostname.myhost.com')
-    self.assertEquals(first.description_long, (('[client, pid: 30840] : '
-                                                'INFO No new content.')))
+    self.assertEquals(first.description_long, (
+        '[client, pid: 30840] : INFO No new content.'))
 
     self.assertEquals(len(events), 12)
 
-    self.assertEquals(events[10].description_long, ('[aprocess, pid: 101001] '
-                                                    ': This is a multi-line '
-                                                    'message that screws up'
-                                                    'many syslog parsers.'))
+    self.assertEquals(events[10].description_long, (
+        '[aprocess, pid: 101001] : This is a multi-line message that screws up'
+        'many syslog parsers.'))
 
 if __name__ == '__main__':
   unittest.main()
