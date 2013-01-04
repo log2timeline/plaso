@@ -65,6 +65,12 @@ if __name__ == '__main__':
             'eed to be included in the analysis.'))
 
   arg_parser.add_argument(
+      '--vss-stores', dest='vss_stores', action='store', type=str, default=None,
+      help=('List of stores to parse, format is X..Y where X and Y are intege'
+            'rs, or a list of entries separated with a comma, eg: X,Y,Z or a '
+            'list of ranges and entries, eg: X,Y-Z,G,H-J.'))
+
+  arg_parser.add_argument(
       '--single-thread', dest='single_thread', action='store_true',
       default=False,
       help='Indicate that the tool should run in a single thread.')
@@ -169,6 +175,31 @@ if __name__ == '__main__':
         logging.error(('Wrong usage: Buffer size needs to be an integer or'
                        ' end with M'))
         sys.exit(1)
+
+  if options.vss_stores:
+    options.parse_vss = True
+    stores = []
+    try:
+      for store in options.vss_stores.split(','):
+        if '..' in store:
+          begin, end = store.split('..')
+          for nr in range(int(begin), int(end)):
+            if nr not in stores:
+              stores.append(nr)
+        else:
+          if int(store) not in stores:
+            stores.append(int(store))
+    except ValueError:
+      arg_parser.print_help()
+      print ''
+      logging.error('VSS store range is wrongly formed.')
+      sys.exit(1)
+
+    options.vss_stores = sorted(stores)
+
+  if options.parse_vss:
+    options.image = True
+    options.preprocess = True
 
   try:
     l2t = engine.Engine(options)
