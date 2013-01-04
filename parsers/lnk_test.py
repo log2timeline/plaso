@@ -13,26 +13,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the lnk parsing in Plaso."""
+"""Tests for the Windows Shortcut (LNK) parser."""
 import os
 import unittest
 
+from plaso.lib import preprocess
 from plaso.parsers import lnk
 
 
-class EmptyObject(object):
-  """Empty object used to store pre-processing information."""
-
-
-class LnkTest(unittest.TestCase):
-  """The unit test for lnk parser."""
+class WinLnkTest(unittest.TestCase):
+  """Tests for the Windows Shortcut (LNK) parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    pre_obj = preprocess.PlasoPreprocess()
     self.base_path = os.path.join('plaso/test_data')
-    self.parser_obj = lnk.WinLnk(EmptyObject())
+    self.parser_obj = lnk.WinLnk(pre_obj)
 
-  def testLnkFile(self):
+  def testWinLnkFile(self):
     """Read a LNK file and make few tests."""
     lnk_path = os.path.join(self.base_path, 'example.lnk')
 

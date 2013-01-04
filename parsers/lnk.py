@@ -13,13 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a parser for Windows Shortcut (LNK) files."""
+"""Parser for Windows Shortcut (LNK) files."""
 import logging
 import pylnk
 
 from plaso.lib import event
 from plaso.lib import parser
-from plaso.lib import timelib
 
 # TODO: description_long and description_short are there for legacy
 # reasons, they currently mess up the flow of the code. Remove them
@@ -29,7 +28,7 @@ from plaso.lib import timelib
 # e.g. the text list could be moved into the class. Leaving as-is
 # but refactor it to lib/event.py after implementing the EVT/EVTX
 # parsers.
-class LnkEventContainer(event.EventContainer):
+class WinLnkEventContainer(event.EventContainer):
   """Container for Windows Shortcut (LNK) event data."""
 
   def __init__(self, source_long, source_short, description_short):
@@ -40,7 +39,7 @@ class LnkEventContainer(event.EventContainer):
       source_short: A string containing the short source.
       description_short: A string containing the short description (LEGACY).
     """
-    super(LnkEventContainer, self).__init__()
+    super(WinLnkEventContainer, self).__init__()
 
     self.offset = 0
     self.source_long = source_long
@@ -59,12 +58,8 @@ class LnkEventContainer(event.EventContainer):
       timestamp: the FILETIME timestamp value.
       description_long: the long description (LEGACY).
     """
-    event_object = event.EventObject()
-    event_object.timestamp_desc = description
-    event_object.timestamp = timelib.WinFiletime2Unix(timestamp)
-    event_object.description_long = description_long
-
-    self.Append(event_object)
+    self.Append(event.FiletimeEvent(
+        timestamp, description, description_long))
 
 
 class WinLnk(parser.PlasoParser):
@@ -128,7 +123,7 @@ class WinLnk(parser.PlasoParser):
     description_short = u'[{0}] {1} {2}'.format(
       description, linked_path, cli)
 
-    event_container = LnkEventContainer(
+    event_container = WinLnkEventContainer(
         self.NAME, self.PARSER_TYPE, description_short)
 
     if not description_long:

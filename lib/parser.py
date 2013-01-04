@@ -57,7 +57,7 @@ class PlasoParser(object):
     """Parser constructor.
 
     Args:
-      pre_obj: An PlasoPreprocess object that may contain information gathered
+      pre_obj: A PlasoPreprocess object that may contain information gathered
       from a preprocessing process.
     """
     self._pre_obj = pre_obj
@@ -142,7 +142,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
     """Constructor for the TextParser.
 
     Args:
-      pre_obj: An PlasoPreprocess object that may contain information gathered
+      pre_obj: A PlasoPreprocess object that may contain information gathered
       from a preprocessing process.
       local_zone: A boolean value that determines if the entries
                   in the log file are stored in the local time

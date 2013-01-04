@@ -15,43 +15,57 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+EXIT_FAILURE=1;
+EXIT_MISSING_ARGS=2;
+EXIT_SUCCESS=0;
+
+SCRIPTNAME=`basename $0`;
+
+# Check usage
 if [ $# -ne 1 ]
 then
-  echo "Wrong USAGE: `basename $0` CHANGELIST_NUMBER"
-  exit 2
+  echo "Usage: ./${SCRIPTNAME} CL#";
+  echo "";
+  echo " CL#: the change list number that is to be submitted.";
+  echo "";
+
+  exit ${EXIT_MISSING_ARGS};
 fi
 
-CHANGELIST=$1
+CL_NUMBER=$1;
 
-if [ ! -f "utils/common.sh" ]
+if [ ! -f "utils/common.sh" ];
 then
-  echo "Missing common functions, are you in the wrong directory?"
-  exit 1
+  echo "Missing common functions, are you in the wrong directory?";
+
+  exit ${EXIT_FAILURE};
 fi
 
 . utils/common.sh
 
 # First find all files that need linter
-echo "Run through pychecker."
+echo "Run through pychecker.";
 linter
 
-if [ $? -ne 0 ]
+if [ $? -ne 0 ];
 then
-  exit 1
+  exit ${EXIT_FAILURE};
 fi
 
-echo "Linter clear."
+echo "Linter clear.";
 
-echo "Run tests."
+echo "Run tests.";
 ./utils/run_tests.sh
 
-if [ $? -ne 0 ]
+if [ $? -ne 0 ];
 then
-  echo "Tests failed, not submitting."
-  exit 2
+  echo "Tests failed, not submitting.";
+
+  exit ${EXIT_FAILURE};
 fi
 
-echo "All came out clean, let's submit the code."
+echo "All came out clean, let's submit the code.";
 
-python utils/upload.py -y -i $CHANGELIST -t "." -m "."
+python utils/upload.py -y -i ${CL_NUMBER} -t "." -m ".";
 
+exit ${EXIT_SUCCESS};
