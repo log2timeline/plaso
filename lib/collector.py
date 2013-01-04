@@ -18,6 +18,7 @@
 The classes here are used to fill a queue of PathSpec protobufs that need
 to be further processed by the tool.
 """
+import hashlib
 import logging
 import os
 
@@ -42,6 +43,7 @@ class PCollector(object):
     """
     self._queue = proc_queue
     self._fscache = pfile.FilesystemCache()
+    self.parse_vss = False
 
   def CollectFromDir(self, directory):
     """Recursive traversal of a directory.
@@ -89,6 +91,10 @@ class PCollector(object):
     """
 
     logging.debug(u'Collecting from an image file [%s]', image)
+
+    # Check if we will in the future collect from VSS
+    if self.parse_vss:
+      self._hashlist = {}
 
     try:
       fs = self._fscache.Open(image, offset)
@@ -154,11 +160,54 @@ class PCollector(object):
         file_path = os.path.join(path, name)
         transfer_proto.file_path = pfile.GetUnicodeString(file_path)
 
-        self._queue.Queue(transfer_proto.SerializeToString())
+        # If we are dealing with a VSS we want to calculate a hash
+        # value based on available timestamps and compare that to previously
+        # calculated hash values, and only include the file into the queue if
+        # the hash does not match.
+        if self.parse_vss:
+          hash_value = self.CalculateNTFSTimeHash(f.info.meta)
 
+          if inode_addr in self._hashlist:
+            if hash_value in self._hashlist[inode_addr]:
+              continue
+
+          self._hashlist.setdefault(inode_addr, []).append(hash_value)
+          self._queue.Queue(transfer_proto.SerializeToString())
+        else:
+          self._queue.Queue(transfer_proto.SerializeToString())
 
     for inode_addr, path in directories:
       self.ParseImageDir(fs, inode_addr, path)
+
+  def CalculateNTFSTimeHash(self, meta):
+    """Return a hash value calculated from a NTFS file's metadata.
+
+    Args:
+      meta: A file system metadata (TSK_FS_META) object.
+
+    Returns:
+      A hash value (string) that can be used to determine if a file's timestamp
+      value has changed.
+    """
+    ret_hash = hashlib.md5()
+
+    ret_hash.update('atime:{0}.{1}'.format(
+      getattr(meta, 'atime', 0),
+      getattr(meta, 'atime_nano', 0)))
+
+    ret_hash.update('crtime:{0}.{1}'.format(
+      getattr(meta, 'crtime', 0),
+      getattr(meta, 'crtime_nano', 0)))
+
+    ret_hash.update('mtime:{0}.{1}'.format(
+      getattr(meta, 'mtime', 0),
+      getattr(meta, 'mtime_nano', 0)))
+
+    ret_hash.update('ctime:{0}.{1}'.format(
+      getattr(meta, 'ctime', 0),
+      getattr(meta, 'ctime_nano', 0)))
+
+    return ret_hash.hexdigest()
 
   def ProcessFile(self, filename, my_queue):
     """Finds all files available inside a file and inserts into queue."""
@@ -203,7 +252,8 @@ class SimpleImageCollector(queue.SimpleQueue):
 
   SECTOR_SIZE = 512
 
-  def __init__(self, image, offset=0, offset_bytes=0, parse_vss=False):
+  def __init__(self, image, offset=0, offset_bytes=0, parse_vss=False,
+               vss_stores=None):
     """Initialize the image collector.
 
     Args:
@@ -213,17 +263,20 @@ class SimpleImageCollector(queue.SimpleQueue):
       offset_bytes: A bytes offset into the image file if this is a disk image.
       parse_vss: Boolean determining if we should collect from VSS as well
       (only applicaple in Windows with Volume Shadow Snapshot).
+      vss_stores: If defined a range of VSS stores to include in vss parsing.
     """
     super(SimpleImageCollector, self).__init__()
     self._image = image
     self._offset = offset
     self._offset_bytes = offset_bytes
     self._vss = parse_vss
+    self._vss_stores = vss_stores
 
   def Run(self):
     """Start the collection."""
     with PCollector(self) as my_collector:
       offset = self._offset_bytes or self._offset * self.SECTOR_SIZE
+      my_collector.parse_vss = self._vss
       my_collector.CollectFromImage(self._image, offset)
 
       if self._vss:
@@ -237,7 +290,15 @@ class SimpleImageCollector(queue.SimpleQueue):
         except IOError as e:
           logging.warning('Error while trying to read VSS information: %s', e)
         logging.info('Collecting from VSS.')
-        for store_nr in range(0, vss_numbers):
+        stores = []
+        if self._vss_stores:
+          for nr in self._vss_stores:
+            if nr > 0 and nr <= vss_numbers:
+              stores.append(nr)
+        else:
+          stores = range(0, vss_numbers)
+
+        for store_nr in stores:
           logging.info('Collecting from VSS store number: %d/%d', store_nr + 1,
                        vss_numbers)
           my_collector.CollectFromVss(self._image, store_nr, offset)

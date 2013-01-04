@@ -101,6 +101,9 @@ class Engine(object):
 
     self.config.zone = pytz.timezone(config.tzone)
 
+    if not hasattr(self.config, 'vss_stores'):
+      self.config.vss_stores = None
+
     if self.config.image:
       self.config.preprocess = True
 
@@ -310,7 +313,7 @@ class Engine(object):
       my_collector = collector.SimpleImageCollector(
           self.config.filename, offset=self.config.image_offset,
           offset_bytes=self.config.image_offset_bytes,
-          parse_vss=self.config.parse_vss)
+          parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
     elif self.config.recursive:
       logging.debug('Collection started from a directory.')
       my_collector = collector.SimpleFileCollector(self.config.filename)
