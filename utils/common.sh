@@ -17,9 +17,12 @@
 
 linter()
 {
+  # TODO fix this for newly added files
+  AWK_SCRIPT="if ($1 == 'M') { print $2; } else if ($1 == 'RM') { print $4; }";
+
   # First find all files that need linter
   echo "Run through pychecker."
-  git status -s | grep -v "^?" | awk '{if ($1 != 'D') { print $2;}}' | grep -v "utils/upload.py" | grep "\.py$" | while read lint_file
+  git status -s | grep -v "^?" | awk "{ ${AWK_SCRIPT} }" | grep -v "utils/upload.py" | grep "\.py$" | while read lint_file
   do
     echo "  -- Checking ${lint_file} --"
     if [ "${lint_file}" == "setup.py" ]

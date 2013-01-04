@@ -50,7 +50,8 @@ class Syslog(parser.TextParser):
   def __init__(self, pre_obj):
     super(Syslog, self).__init__(pre_obj, True)
     # Set the initial year to 0 (fixed in the actual Parse method)
-    self._year_use = 0
+    # TODO this is a HACK to get the tests working let's discuss this
+    self._year_use = getattr(pre_obj, 'year', 0)
     self._last_month = 0
     self.source_long = 'Syslog Log File'
 
