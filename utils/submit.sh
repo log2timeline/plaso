@@ -15,61 +15,100 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+EXIT_FAILURE=1;
+EXIT_MISSING_ARGS=2;
+EXIT_SUCCESS=0;
+
+SCRIPTNAME=`basename $0`;
+
 # Check usage
-if [ $# -ne 1 ]
+if [ $# -ne 1 ];
 then
-  echo "Wrong USAGE: `basename $0` CHANGELIST_NUMBER"
-  exit 2
+  echo "Usage: ./${SCRIPTNAME} CL#";
+  echo "";
+  echo "       CL#: the change list number that is to be submitted.";
+  echo "";
+
+  exit ${EXIT_MISSING_ARGS};
 fi
 
-CHANGELIST=$1
+CL_NUMBER=$1;
 
-if [ ! -f "utils/common.sh" ]
+if [ ! -f "utils/common.sh" ];
 then
-  echo "Missing common functions, are you in the wrong directory?"
-  exit 1
+  echo "Unable to find common functions, are you in the wrong directory?";
+
+  exit ${EXIT_FAILURE};
 fi
 
 # Source the common library.
 . utils/common.sh
 
-linter
-
-if [ $? -ne 0 ]
+if ! linter;
 then
-  exit 1
+  echo "Sumbit aborted - fix the issues reported by the linter.";
+
+  exit ${EXIT_FAILURE};
 fi
 
-echo "Linter clear."
-
-echo "Run tests."
+echo "Running tests."
 ./utils/run_tests.sh
 
 if [ $? -ne 0 ]
 then
-  echo "Tests failed, not submitting."
-  exit 2
+  echo "Sumbit aborted - fix the issues reported by the failing test.";
+
+  exit ${EXIT_FAILURE};
 fi
 
 echo "All came out clean, let's submit the code."
 
-# Get the proper text:
-if [ "x`which json_xs`" != "x" ]
+URL_CODEREVIEW="https://codereview.appspot.com";
+
+# Get the description of the change list
+if [ "x`which json_xs`" != "x" ];
 then
-  text=`curl -s https://codereview.appspot.com/api/$CHANGELIST | json_xs | grep '"description"' | awk -F ':' '{print $2}' | cut -c3- | rev | cut -c3- | rev`
+  DESCRIPTION=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER} | json_xs | grep '"description"' | awk -F ':' '{print $2}' | cut -c3- | rev | cut -c3- | rev`;
 else
-  text=`curl https://codereview.appspot.com/$CHANGELIST/ -s | grep "Issue $CHANGELIST" | awk -F ':' '{print $2}' | tail -1`
+  DESCRIPTION=`curl ${URL_CODEREVIEW}/${CL_NUMBER}/ -s | grep "Issue ${CL_NUMBER}" | awk -F ':' '{print $2}' | tail -1`;
 fi
 
-if [ "x$text" == "x" ]
+if [ "x${DESCRIPTION}" == "x" ]
 then
-  echo "Wrong changelist? ($CHANGELIST)"
-  exit 4
+  echo "Submit aborted - unable to find change list with number: ${CL_NUMBER}.";
+
+  exit ${EXIT_FAILURE};
 fi
 
-python utils/upload.py -y -i $CHANGELIST -t "Submitted." -m "Code Submitted." --send_mail
+# Check if the local repo is in sync with the origin
+git fetch
 
-git commit -a -m "Code review: $CHANGELIST: $text"
+if [ $? -ne 0 ]
+then
+  echo "Sumbit aborted - unable to fetch updates from origin repo";
+
+  exit ${EXIT_FAILURE};
+fi
+
+NUMBER_OF_CHANGES=`git log HEAD..origin/master --oneline | wc -l`;
+
+if [ $? -ne 0 ]
+then
+  echo "Sumbit aborted - unable to determine if local repo is in sync with origin";
+
+  exit ${EXIT_FAILURE};
+fi
+
+if [ ${NUMBER_OF_CHANGES} -ne 0 ];
+then
+  echo "Sumbit aborted - local repo out of sync with origin, run: 'git stash && git pull && git stash pop' before sumbit.";
+
+  exit ${EXIT_FAILURE};
+fi
+
+python utils/upload.py -y -i ${CL_NUMBER} -t "Submitted." -m "Code Submitted." --send_mail
+
+git commit -a -m "Code review: ${CL_NUMBER}: ${DESCRIPTION}";
 git push
 
-#curl -s https://codereview.appspot.com/api/$CHANGELIST/close
+#curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER}/close
