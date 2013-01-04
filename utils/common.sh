@@ -15,48 +15,66 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+EXIT_FAILURE=1;
+EXIT_SUCCESS=0;
+
 linter()
 {
-  # TODO fix this for newly added files
-  AWK_SCRIPT="if ($1 == 'M') { print $2; } else if ($1 == 'RM') { print $4; }";
+  # Examples of the output of "git status -s"
+  # If a file is added:
+  # A utils/common.sh
+  # If a file is modified:
+  # M utils/common.sh
+  # If a file is renamed:
+  # R utils/common.sh -> utils/uncommon.sh
+  # If a file is modified and renamed:
+  # RM utils/common.sh -> utils/uncommon.sh
+  AWK_SCRIPT="if (\$1 == \"A\" || \$1 == \"M\") { print \$2; } else if (\$1 == \"R\" || \$1 == \"RM\") { print \$4; }";
 
   # First find all files that need linter
-  echo "Run through pychecker."
-  git status -s | grep -v "^?" | awk "{ ${AWK_SCRIPT} }" | grep -v "utils/upload.py" | grep "\.py$" | while read lint_file
+  FILES=`git status -s | grep -v "^?" | awk "{ ${AWK_SCRIPT} }" | grep "\.py$"`;
+
+  echo "Run through pychecker.";
+
+  for FILE in ${FILES};
   do
-    echo "  -- Checking ${lint_file} --"
-    if [ "${lint_file}" == "setup.py" ]
+    if [ "${FILE}" == "setup.py" || "${FILE}" == "utils/upload.py"]
     then
-      echo "Skipping setup.py"
+      echo "  -- Skipping: ${FILE} --"
       continue
     fi
 
-    if [ `echo ${lint_file} | tail -c8` == "_pb2.py" ]
+    if [ `echo ${FILE} | tail -c8` == "_pb2.py" ]
     then
-      echo "Skipping compiled protobufs: ${lint_file}"
+      echo "Skipping compiled protobufs: ${FILE}"
       continue
     fi
 
-    pychecker -Q -f --only -6  "$lint_file"
+    echo "  -- Checking: ${FILE} --"
+    pychecker -Q -f --only -6  "${FILE}"
 
     if [ $? -ne 0 ]
     then
       echo "Fix linter errors before proceeding."
-      exit 1
+      return ${EXIT_FAILURE};
     fi
 
     # Run through "line width" checker since that is not covered by the linter.
-    python utils/linecheck.py "$lint_file"
+    python utils/linecheck.py "${FILE}"
 
     if [ $? -ne 0 ]
     then
       echo "Fix line width errors before proceeding."
-      exit 1
+      return ${EXIT_FAILURE};
     fi
   done
 
   if [ $? -ne 0 ]
   then
-    exit 1
+    return ${EXIT_FAILURE};
   fi
+
+  echo "Linter clear.";
+
+  return ${EXIT_SUCCESS};
 }
