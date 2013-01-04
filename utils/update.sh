@@ -43,16 +43,12 @@ fi
 
 . utils/common.sh
 
-# First find all files that need linter
-echo "Run through pychecker.";
-linter
-
-if [ $? -ne 0 ];
+if ! linter;
 then
+  echo "Update aborted - fix the issues reported by the linter.";
+
   exit ${EXIT_FAILURE};
 fi
-
-echo "Linter clear.";
 
 echo "Run tests.";
 ./utils/run_tests.sh
