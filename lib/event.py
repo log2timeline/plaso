@@ -173,6 +173,8 @@ class EventContainer(object):
     for _ in range(len(all_events)):
       yield heapq.heappop(all_events)[1]
 
+  # TODO: simplify this function, it is currently not clear why something
+  # is considered a container or an event.
   def Append(self, item):
     """Append either an EventContainer or an EventObject to the container.
 
@@ -344,30 +346,18 @@ class EventObject(object):
 class FiletimeEvent(EventObject):
   """Convenience class for a FILETIME timestamp-based event."""
 
-  def __init__(self, timestamp, description, description_long):
+  def __init__(self, timestamp, usage, description_long):
     """Initializes a FILETIME timestamp-based event object.
 
     Args:
       timestamp: the FILETIME timestamp value.
-      description: the description of the usage of the timestamp.
-      description_long: the long description (LEGACY).
+      usage: the description of the usage of the timestamp.
+      description_long: long description of the event (LEGACY).
     """
     super(FiletimeEvent, self).__init__()
     self.timestamp = timelib.WinFiletime2Unix(timestamp)
-    self.timestamp_desc = description
-    self.text_long = description_long
-    self.text_short = description_long
-
-  @property
-  def description_long(self):
-    return u'%s' % self.text_long
-
-  @property
-  def description_short(self):
-    if len(self.text_short) > 80:
-      return u'%s...' % self.text_short[0:77]
-
-    return u'%s' % self.text_short
+    self.timestamp_desc = usage
+    self.description_long = description_long
 
 
 class RegistryEvent(EventObject):
