@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a Windows registry parser in plaso."""
+"""Parser for Windows NT Registry (REGF) files."""
 import logging
 
 from plaso.lib import errors
@@ -23,7 +23,7 @@ from plaso.lib import win_registry_interface
 
 
 class WinRegistry(parser.PlasoParser):
-  """A Windows Registry assistance parser for Plaso."""
+  """Parses Windows NT Registry (REGF) files."""
 
   # List of types registry types and required keys to identify each of these
   # types.
