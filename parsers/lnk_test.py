@@ -21,16 +21,16 @@ from plaso.lib import preprocess
 from plaso.parsers import lnk
 
 
-class WinLnkTest(unittest.TestCase):
+class WinLnkParserTest(unittest.TestCase):
   """Tests for the Windows Shortcut (LNK) parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     self.base_path = os.path.join('plaso/test_data')
-    self.parser_obj = lnk.WinLnk(pre_obj)
+    self.parser_obj = lnk.WinLnkParser(pre_obj)
 
-  def testWinLnkFile(self):
+  def testWinLnkParserFile(self):
     """Read a LNK file and make few tests."""
     lnk_path = os.path.join(self.base_path, 'example.lnk')
 

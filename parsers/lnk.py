@@ -14,69 +14,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows Shortcut (LNK) files."""
-import logging
 import pylnk
 
+from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import parser
 
-# TODO: description_long and description_short are there for legacy
-# reasons, they currently mess up the flow of the code. Remove them
-# if we have a good alternative.
 
-# TODO: this class can likely be replaced by a more generic container
-# e.g. the text list could be moved into the class. Leaving as-is
-# but refactor it to lib/event.py after implementing the EVT/EVTX
-# parsers.
-class WinLnkEventContainer(event.EventContainer):
-  """Container for Windows Shortcut (LNK) event data."""
+# TODO: description_long and description_short are there for legacy reasons.
+class WinLnkEventData(object):
+  """The Windows Shortcut (LNK) event data."""
 
-  def __init__(self, source_long, source_short, description_short):
-    """Initializes the LNK event container.
+  def __init__(self, lnk_file):
+    """Initializes the event data.
+
+    Keeps a local copy of the required data so the file object can be
+    dereferenced.
 
     Args:
-      source_long: A string containing the long source.
-      source_short: A string containing the short source.
-      description_short: A string containing the short description (LEGACY).
+      lnk_file: the Windows Shortcut (LNK) file object (pylnk.file).
     """
-    super(WinLnkEventContainer, self).__init__()
+    super(WinLnkEventData, self).__init__()
 
-    self.offset = 0
-    self.source_long = source_long
-    self.source_short = source_short
+    self._description_long = u''
+    self._description_short = u''
 
-    if len(description_short) > 80:
-      self.description_short = description_short[:79]
-    else:
-      self.description_short = description_short
+    self.description = lnk_file.get_description()
+    self.local_path = lnk_file.get_local_path()
+    self.network_path = lnk_file.get_network_path()
+    self.command_line_arguments = lnk_file.get_command_line_arguments()
+    self.env_variables_location = lnk_file.get_environment_variables_location()
+    self.relative_path = lnk_file.get_relative_path()
+    self.working_directory = lnk_file.get_working_directory()
+    self.icon_location = lnk_file.get_icon_location()
 
-  def AddFiletimeEvent(self, description, timestamp, description_long):
-    """Adds a FILETIME timestamp as an event object.
+  @property
+  def linked_path(self):
+    if not self.local_path:
+      return self.network_path
+    return self.local_path
 
-    Args:
-      description: the description of the usage of the timestamp.
-      timestamp: the FILETIME timestamp value.
-      description_long: the long description (LEGACY).
-    """
-    self.Append(event.FiletimeEvent(
-        timestamp, description, description_long))
-
-
-class WinLnk(parser.PlasoParser):
-  """Parses Windows Shortcut (LNK) files."""
-
-  NAME = 'Shortcut File'
-  PARSER_TYPE = 'LNK'
-
-  def Parse(self, file_object):
-    """Extract link data from a Windows Shortcut file.
-
-    Args:
-      file_object: a file-like object to read data from.
-
-    Returns:
-      an instance of EventContainer, which contains the parsed attributes.
-    """
+  @property
+  def description_long(self):
     class TextList(list):
       """List with support to add description, value pairs."""
       def AppendValue(self, description, value):
@@ -85,64 +64,88 @@ class WinLnk(parser.PlasoParser):
            super(TextList, self).append(
                u'{0}: {1}'.format(description, value))
 
+    if not self._description_long:
+      text_list = TextList()
+
+      text_list.append(u'[{0}] '.format(self.description))
+
+      text_list.AppendValue('Local path', self.local_path)
+      text_list.AppendValue('Network path', self.network_path)
+      text_list.AppendValue('cmd arguments', self.command_line_arguments)
+      text_list.AppendValue('env location', self.env_variables_location)
+      text_list.AppendValue('Relative path', self.relative_path)
+      text_list.AppendValue('Working dir', self.working_directory)
+      text_list.AppendValue('Icon location', self.icon_location)
+
+      self._description_long = u' '.join(text_list)
+
+    return self._description_long
+
+  @property
+  def description_short(self):
+    if not self._description_short:
+      self._description_short = u'[{0}] {1} {2}'.format(
+          getattr(self, 'description', u'Empty Description'),
+          self.linked_path,
+          getattr(self, 'command_line_arguments', u''))
+
+      if len(self._description_short) > 80:
+        self._description_short = self._description_short[:79]
+    return self._description_short
+
+
+class WinLnkParser(parser.PlasoParser):
+  """Parses Windows Shortcut (LNK) files."""
+
+  NAME = 'WinLnkParser'
+  PARSER_TYPE = 'LNK'
+
+  def Parse(self, file_object):
+    """Extract data from a Windows Shortcut (LNK) file.
+
+    Args:
+      file_object: a file-like object to read data from.
+
+    Returns:
+      an event container (WinLnkEventContainer) that contains the parsed
+      attributes.
+    """
     lnk_file = pylnk.file()
-    lnk_file.open_file_object(file_object)
+    lnk_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
 
-    text_list = TextList()
+    try:
+      lnk_file.open_file_object(file_object)
+    except IOError as exception:
+      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
+          self.NAME, file_object.name, exception))
 
-    text_list.append(u'[{0}] '.format(lnk_file.description))
+    event_container = event.EventContainer()
 
-    text_list.AppendValue('Local path', lnk_file.local_path)
-    text_list.AppendValue('Network path', lnk_file.network_path)
-    text_list.AppendValue(
-        'cmd arguments', lnk_file.command_line_arguments)
-    text_list.AppendValue(
-        'env location', lnk_file.get_environment_variables_location())
-    text_list.AppendValue('Relative path', lnk_file.relative_path)
-    text_list.AppendValue('Working dir', lnk_file.working_directory)
-    text_list.AppendValue('Icon location', lnk_file.get_icon_location())
+    event_container.offset = 0
+    event_container.source_long = self.NAME
+    event_container.source_short = self.PARSER_TYPE
 
-    # TODO: description_long and description_short are there for legacy
-    # reasons, they currently mess up the flow of the code. Remove them
-    # if we have a good alternative.
-    if lnk_file.description:
-      description = lnk_file.description
-    else:
-      description = u'Empty Description'
+    event_data = WinLnkEventData(lnk_file)
 
-    if lnk_file.command_line_arguments:
-      cli = lnk_file.command_line_arguments
-    else:
-      cli = u''
+    # TODO: description_long and description_short are there for legacy reasons.
+    event_container.description_long = event_data.description_long
+    event_container.description_short = event_data.description_short
 
-    linked_path = lnk_file.local_path
-    if not linked_path:
-      linked_path = lnk_file.network_path
+    # TODO: change description_long in each sub event when container design
+    # has been simplified.
+    event_container.Append(event.FiletimeEvent(
+        lnk_file.get_file_access_time_as_integer(),
+        'Last Access Time', event_data.description_long))
 
-    description_long = u' '.join(text_list)
-    description_short = u'[{0}] {1} {2}'.format(
-      description, linked_path, cli)
+    event_container.Append(event.FiletimeEvent(
+        lnk_file.get_file_creation_time_as_integer(),
+        'Creation Time', event_data.description_long))
 
-    event_container = WinLnkEventContainer(
-        self.NAME, self.PARSER_TYPE, description_short)
+    event_container.Append(event.FiletimeEvent(
+        lnk_file.get_file_modification_time_as_integer(),
+        'Modification Time', event_data.description_long))
 
-    if not description_long:
-      logging.warning(
-          u'Unable to extract information from: %s', file_object.name)
-    else:
-      timestamp = lnk_file.get_file_access_time_as_integer()
-      event_container.AddFiletimeEvent(
-          'Last Access Time', timestamp, description_long)
-
-      timestamp = lnk_file.get_file_creation_time_as_integer()
-      event_container.AddFiletimeEvent(
-          'Creation Time', timestamp, description_long)
-
-      timestamp = lnk_file.get_file_modification_time_as_integer()
-      event_container.AddFiletimeEvent(
-          'Modification Time', timestamp, description_long)
-
-      # TODO: add support for the shell item?
+    # TODO: add support for the distributed link tracker
+    # TODO: add support for the shell item
 
     return event_container
-
