@@ -16,11 +16,12 @@
 """This file contains a test for MRUx registry parsing in Plaso."""
 import unittest
 
+from plaso.lib import eventdata
 from plaso.registry import mrux
 from plaso.registry import test_lib
 
 
-class TestMRURegistry(unittest.TestCase):
+class TestMRUxRegistry(unittest.TestCase):
   """The unit test for MRU registry parsing."""
 
   def setUp(self):
@@ -41,7 +42,8 @@ class TestMRURegistry(unittest.TestCase):
         '\\Microsoft\\Some Windows\\InterestingApp\\MRUlist', 1346145829002031,
         values, 1456)
 
-  def testWinVer(self):
+  def testMRUX(self):
+    """Test the MRUexPlugin."""
     plugin = mrux.MRUexPlugin(None)
     entries = list(plugin.Process(self.regkey))
 
@@ -56,9 +58,14 @@ class TestMRURegistry(unittest.TestCase):
     self.assertEquals(entries[0].timestamp, 1346145829002031)
     self.assertEquals(entries[1].timestamp, 0)
     self.assertEquals(entries[2].timestamp, 0)
-    self.assertEquals(entries[0].description_long, line2)
-    self.assertEquals(entries[1].description_long, line0)
-    self.assertEquals(entries[2].description_long, line1)
+
+    msg1, _ = eventdata.GetMessageStrings(entries[0])
+    msg2, _ = eventdata.GetMessageStrings(entries[1])
+    msg3, _ = eventdata.GetMessageStrings(entries[2])
+
+    self.assertEquals(msg1, line2)
+    self.assertEquals(msg2, line0)
+    self.assertEquals(msg3, line1)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a Chrome history parser in plaso."""
+import re
+
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import parser
 
 
@@ -76,23 +79,18 @@ class Chrome(parser.SQLiteParser):
   def ParseDownloadRecord(self, row, **_):
     """Return an EventObject from a download record."""
     source = 'File Downloaded'
-    text_long = u'{0} ({1}). Total bytes received: {2} (total: {3})'.format(
-        row['url'], row['full_path'], row['received_bytes'],
-        row['total_bytes'])
 
-    text_short = u'{0} downloaded ({1} bytes)'.format(row['full_path'],
-                                                      row['received_bytes'])
     date = int(row['start_time'] * 1e6)
+    evt = event.SQLiteEvent(date, source, 'WEBHIST', self.NAME)
+    evt.url = row['url']
+    evt.full_path = row['full_path']
 
-    evt = event.SQLiteEvent(date, source, text_long, text_short, 'WEBHIST',
-                            self.NAME)
-    evt.downloaded_file = u'%s' % row['full_path']
-    evt.url_path = u'%s' % row['url']
-    evt.offset = row['id']
     #TODO: Change this again to using the int value when the
     # plaso_storage_proto has been extended to allow int values for
     # attributes.
-    evt.download_size = str(row['received_bytes'])
+    evt.received_bytes = row['received_bytes']
+    evt.total_bytes = row['total_bytes']
+    evt.offset = row['id']
 
     yield evt
 
@@ -101,43 +99,42 @@ class Chrome(parser.SQLiteParser):
     source = 'Page Visited'
     date = int(row['visit_time']) - self.DATE_OFFSET
     hostname = self._GetHostname(row['url'])
+    extras = []
+
     if row['from_visit']:
-      from_site = u'Visit from: %s ' % self._GetUrl(row['from_visit'])
-    else:
-      from_site = ''
+      url = self._GetUrl(row['from_visit'])
+      if url:
+        extras.append(u'Visit from: %s ' % url)
 
     transition_nr = row['transition'] & self.CORE_MASK
     page_transition = self.PAGE_TRANSITION.get(transition_nr, '')
     if page_transition:
-      transition = ' type: [{0} - {1}]'.format(
-          page_transition, self.TRANSITION_LONGER.get(transition_nr, ''))
-    else:
-      transition = ''
+      extras.append(u'Type: [{0} - {1}]'.format(
+          page_transition, self.TRANSITION_LONGER.get(transition_nr, '')))
 
     if row['hidden'] == '1':
-      hidden = ' (url hidden)'
-    else:
-      hidden = ''
+      extras.append(u'(url hidden)')
 
     if int(row['typed_count']) >= 1:
       count = int(row['typed_count'])
 
-      typed = ' (typed count: %d time' % count
       if count > 1:
-        typed += 's'
-      typed += ' - not an indication of directly typed count)'
+        multi = u's'
+      else:
+        multi = u''
+
+      extras.append(
+          (u'(typed %d time{0} {1} - not indicating directly typed '
+           'count)').format(multi, count))
     else:
-      typed = '(URL not typed directly - no typed count)'
+      extras.append(u'(URL not typed directly - no typed count)')
 
-    text_long = u'{0} ({1}) [count: {2}] Host: {3}{4}{5}{6}{7}'.format(
-        row['url'], row['title'], row['typed_count'], hostname,
-        from_site, transition, hidden, typed)
-
-    text_short = u'%s (%s)' % (row['url'], row['title'])
-
-    evt = event.SQLiteEvent(date, source, text_long, text_short, 'WEBHIST',
-                            self.NAME)
+    evt = event.SQLiteEvent(date, source, 'WEBHIST', self.NAME)
     evt.url = row['url']
+    evt.title = row['title']
+    evt.typed_count = row['typed_count']
+    evt.hostname = hostname
+    evt.extra = u' '.join(extras)
     evt.offset = row['id']
 
     yield evt
@@ -155,8 +152,8 @@ class Chrome(parser.SQLiteParser):
 
   def _GetUrl(self, url):
     """Return an URL from a reference to an entry in the from_visit table."""
-    query = ('SELECT urls.url,urls.title,visits.visit_time FROM urls, visits '
-             'WHERE urls.id = visits.url AND urls.id=:id')
+    query = ('SELECT urls.url, urls.title, visits.visit_time FROM visits, urls'
+             ' WHERE urls.id = visits.url AND visits.id=:id')
 
     cursor = self.db.cursor()
     result_set = cursor.execute(query, {'id': url})
@@ -167,3 +164,26 @@ class Chrome(parser.SQLiteParser):
 
     return u''
 
+
+class ChromePageVisitedFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Chrome history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('Chrome:Chrome History:Page Visited', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = (u'{url} ({title}) [count: {typed_count}] Host: '
+                   '{hostname} {extra}')
+  FORMAT_STRING_SHORT = u'{url} ({title})'
+
+
+class ChromeFileDownloadFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Chrome history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('Chrome:Chrome History:File Downloaded', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = (u'{url} ({full_path}). Total bytes received:{received_byt'
+                   'es} (total:{total_bytes})')
+  FORMAT_STRING_SHORT = u'{full_path} downloaded ({received_bytes} bytes)'

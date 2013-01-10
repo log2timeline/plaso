@@ -16,6 +16,7 @@
 """This file contains a test for MRU registry parsing in Plaso."""
 import unittest
 
+from plaso.lib import eventdata
 from plaso.registry import mru
 from plaso.registry import test_lib
 
@@ -57,9 +58,14 @@ class TestMRURegistry(unittest.TestCase):
     self.assertEquals(entries[0].timestamp, 1346145829002031)
     self.assertEquals(entries[1].timestamp, 0)
     self.assertEquals(entries[2].timestamp, 0)
-    self.assertEquals(entries[0].description_long, line1)
-    self.assertEquals(entries[1].description_long, line2)
-    self.assertEquals(entries[2].description_long, line3)
+
+    msg1, _ = eventdata.GetMessageStrings(entries[0])
+    msg2, _ = eventdata.GetMessageStrings(entries[1])
+    msg3, _ = eventdata.GetMessageStrings(entries[2])
+
+    self.assertEquals(msg1, line1)
+    self.assertEquals(msg2, line2)
+    self.assertEquals(msg3, line3)
 
 
 if __name__ == '__main__':

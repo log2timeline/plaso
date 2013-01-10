@@ -40,6 +40,7 @@ from plaso.lib import collector
 from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import objectfilter
 from plaso.lib import output
@@ -56,6 +57,8 @@ from plaso.lib import vss
 from plaso.lib import win_registry
 from plaso.lib import win_registry_interface
 from plaso.lib import worker
+
+from plaso.output import helper
 
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2

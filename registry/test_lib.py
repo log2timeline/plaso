@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a simple abstraction of registry keys for testing."""
+import re
 
+from plaso.lib import eventdata
 from plaso.lib import win_registry_interface
 
 
@@ -67,6 +69,7 @@ class TestRegKey(win_registry_interface.WinRegKey):
     return len(self._subkeys)
 
   def GetValueCount(self):
+    """Return the number of values stored."""
     return len(self._values)
 
 
@@ -74,6 +77,7 @@ class TestRegValue(win_registry_interface.WinRegValue):
   """WinRegValue is an object describing a registry value."""
 
   def __init__(self, name, value, value_type=1, offset=0):
+    """Set up the test reg value object."""
     super(TestRegValue, self).__init__()
     self.offset = offset
     self.name = name
@@ -82,7 +86,14 @@ class TestRegValue(win_registry_interface.WinRegValue):
     self._type_str = self.GetTypeStr()
 
   def GetStringData(self):
+    """Return a string data."""
     if self._type_str == 'SZ' or self._type_str == 'EXPAND_SZ':
       return self._raw_value.decode('utf_16_le', 'ignore')
 
     return u''
+
+
+class DummyFormatter(eventdata.RegistryFormatter):
+  """Implement a dummy registry formatter."""
+  ID_RE = re.compile('.', re.DOTALL)
+

@@ -15,7 +15,10 @@
 # limitations under the License.
 
 """This file contains a Google Drive parser in plaso."""
+import re
+
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import parser
 
 class GoogleDrive(parser.SQLiteParser):
@@ -105,49 +108,61 @@ class GoogleDrive(parser.SQLiteParser):
 
   def ParseLocalEntry(self, row, **_):
     """Return an EventObject from a local record."""
-    path = self.GetLocalPath(row['inode_number'], [])
     source_type = 'Google Drive (local entry)'
-    text_long = u'File Path: {0} Size: {1}'.format(path, row['size'])
-    text_short = u'%s' % row['filename']
     date = int(row['modified']) * self.DATE_MULTIPLIER
     descripton = 'mtime'
 
-    evt = event.SQLiteEvent(date, descripton, text_long, text_short,
-                            'LOG', source_type)
-    evt.downloaded_file = u'%s' % path
+    evt = event.SQLiteEvent(date, descripton, 'LOG', source_type)
+    evt.path = self.GetLocalPath(row['inode_number'], [])
     evt.size = str(row['size'])
 
     yield evt
 
   def ParseCloudEntry(self, row, **_):
     """Return an EventObject from a cloud record."""
-    path = self.GetCloudPath(row['resource_id'], [])
     source_type = 'Google Drive (cloud entry)'
-    doc_type = str(row['doc_type'])
-    doc_types = self.DOC_TYPES.get(doc_type, 'UNKNOWN')
-    shared = 'Private'
-    if row['shared']:
-      shared = 'Shared'
-    text_long = (
-        u'File Path: {0} [{3}] Size: {1} URL: {2} doc_type: {4}'.format(
-            path, row['size'], row['url'], shared, doc_types))
-    text_short = u'%s' % row['filename']
-    date = int(row['modified']) * self.DATE_MULTIPLIER
-    descripton = 'mtime'
 
-    evt = event.SQLiteEvent(date, descripton, text_long, text_short,
-                            'LOG', source_type)
-    evt.downloaded_file = u'%s' % path
-    evt.size = str(row['size'])
-    evt.url_path = u'%s' % row['url']
+    container = event.EventContainer()
+    container.path = self.GetCloudPath(row['resource_id'], [])
+    container.size = row['size']
+    container.url = row['url']
+
+    doc_type_int = str(row['doc_type'])
+    container.doc_type = self.DOC_TYPES.get(doc_type_int, 'UNKNOWN')
+
+    container.shared = 'Private'
+    if row['shared']:
+      container.shared = 'Shared'
+
+    date = int(row['modified']) * self.DATE_MULTIPLIER
+    container.Append(event.SQLiteEvent(date, 'mtime', 'LOG', source_type))
 
     if row['created']:
       date = int(row['created']) * self.DATE_MULTIPLIER
       descripton = 'ctime'
-      evt = event.SQLiteEvent(date, descripton, text_long, text_short,
-                              'LOG', source_type)
-      evt.downloaded_file = u'%s' % row['filename']
-      evt.size = str(row['size'])
-      evt.url_path = u'%s' % row['url']
+      container.Append(event.SQLiteEvent(date, descripton, 'LOG', source_type))
 
-      yield evt
+    return container
+
+class GDriveLocalEntryFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Google Drive history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('GoogleDrive:Google Drive \(local', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = u'File Path: {path} Size: {size}'
+  FORMAT_STRING_SHORT = u'{path}'
+
+
+class GDriveCloudEntryFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Google Drive history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('GoogleDrive:Google Drive \(cloud', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = (u'File Path: {path} [{shared}] Size:{size} URL:{url} doc_'
+                   'type:{doc_type}')
+  FORMAT_STRING_SHORT = u'{path}'
+

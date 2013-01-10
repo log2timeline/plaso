@@ -58,3 +58,11 @@ class PathNotFound(Error):
 
 class UnableToOpenFilesystem(Error):
   """Raised when unable to open filesystem."""
+
+
+class WrongFormatter(Error):
+  """Raised when the formatter is not applicable for a particular event."""
+
+
+class NoFormatterFound(Error):
+  """Raised when no formatter is found for a particular event."""

@@ -44,8 +44,8 @@ class FakeParser(parser.PlasoParser):
     # 2015-11-18T01:15:43
     evt.timestamp = 1447809343000000
     evt.timestamp_desc = 'Last Written'
-    evt.description_short = 'This description is different than the long one.'
-    evt.description_long = (
+    evt.format_string_short = 'This description is different than the long one.'
+    evt.format_string = (
         u'User did a very bad thing, bad, bad thing that awoke Dr. Evil.')
     evt.filename = '/My Documents/goodfella/Documents/Hideout/myfile.txt'
     evt.hostname = 'Agrabah'
@@ -96,8 +96,8 @@ class PFilterTest(unittest.TestCase):
     # 2015-11-18T01:15:43
     evt.timestamp = 1447809343000000
     evt.timestamp_desc = 'Last Written'
-    evt.description_short = 'This description is different than the long one.'
-    evt.description_long = (
+    evt.format_string_short = 'This description is different than the long one.'
+    evt.format_string = (
         u'User did a very bad thing, bad, bad thing that awoke Dr. Evil.')
     evt.filename = '/My Documents/goodfella/Documents/Hideout/myfile.txt'
     evt.hostname = 'Agrabah'
@@ -147,7 +147,7 @@ class PFilterTest(unittest.TestCase):
     self.RunPlasoTest(evt, evt_proto, query, True)
 
     query = ("timestamp_desc CONTAINS 'written' AND date > '2015-11-18' AND "
-             "date < '2015-11-25 12:56:21' AND (source_sort contains 'LOG' or"
+             "date < '2015-11-25 12:56:21' AND (source_short contains 'LOG' or"
              " source_short CONTAINS 'REG')")
     self.RunPlasoTest(evt, evt_proto, query, True)
 
@@ -172,7 +172,7 @@ class PFilterTest(unittest.TestCase):
              "'bad, bad thing [\sa-zA-Z\.]+ evil'")
     self.RunPlasoTest(evt, evt_proto, query, False)
 
-    query = ("source_long is 'Made up Source' AND description_long iregexp "
+    query = ("source_long is 'Made up Source' AND message iregexp "
              "'bad, bad thing [\sa-zA-Z\.]+ evil'")
     self.RunPlasoTest(evt, evt_proto, query, True)
 
@@ -186,7 +186,7 @@ class PFilterTest(unittest.TestCase):
     self.assertEqual(result, matcher.Matches(obj_proto))
 
   def testParserFilter(self):
-    query = 'source is "REG" AND description_long CONTAINS "is"'
+    query = 'source is "REG" AND message CONTAINS "is"'
     parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 3)
 
@@ -198,18 +198,18 @@ class PFilterTest(unittest.TestCase):
     parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 1)
 
-    query = ('date > 0 AND description_long regexp "\sW\sW" AND parser '
+    query = ('date > 0 AND message regexp "\sW\sW" AND parser '
              'is not "FakeParser"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 2)
 
-    query = ('(date > 0 AND description_long regexp "\sW\sW") OR parser '
+    query = ('(date > 0 AND message regexp "\sW\sW") OR parser '
              'is not "FakeParser"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 3)
 
     query = ('(parser contains "fake" or date < "2015-06-12") AND '
-             'description_long CONTAINS "weird"')
+             'message CONTAINS "weird"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 3)
 
