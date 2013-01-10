@@ -16,15 +16,26 @@
 """This file contains the unit tests for the parser library in plaso."""
 import os
 import pytz
+import re
 import unittest
 
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
+
+__pychecker__ = 'no-funcdoc'
 
 
 class EmtpyObject(object):
   """An empty object."""
+
+
+class FakeFileFormatter(eventdata.TextFormatter):
+  """Implement a formatter for the FakeFile."""
+
+  # Catch all.
+  ID_RE = re.compile('.', re.DOTALL)
 
 
 class FakeFile(object):
@@ -179,13 +190,15 @@ class ParserUnitTest(unittest.TestCase):
     first_entry = text_generator.next()
     second_entry = text_generator.next()
 
+    msg1, _ = eventdata.GetMessageStrings(first_entry)
     self.assertEquals(first_entry.timestamp, 1293859395000000)
-    self.assertEquals(first_entry.description_long, 'first line.')
+    self.assertEquals(msg1, 'first line.')
     self.assertEquals(first_entry.hostname, 'myhost')
     self.assertEquals(first_entry.username, 'myuser')
 
+    msg2, _ = eventdata.GetMessageStrings(second_entry)
     self.assertEquals(second_entry.timestamp, 693604686000000)
-    self.assertEquals(second_entry.description_long, 'second line.')
+    self.assertEquals(msg2, 'second line.')
     self.assertEquals(second_entry.hostname, 'myhost')
     self.assertEquals(second_entry.username, 'myuser')
 

@@ -15,12 +15,19 @@
 # limitations under the License.
 """This file contains a unit test for the syslog parser in plaso."""
 import os
-import unittest
 import pytz
+import re
+import unittest
 
+from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.parsers import syslog
+
+
+class DummySyslogFormatter(syslog.SyslogFormatter):
+  """Simple dummy extension on the formatter."""
+  ID_RE = re.compile('None:Syslog Log', re.DOTALL)
 
 
 class SyslogUnitTest(unittest.TestCase):
@@ -49,12 +56,14 @@ class SyslogUnitTest(unittest.TestCase):
     # corresponding timestamp, I think that will be more readable
     self.assertEquals(first.timestamp, 1327218753000000)
     self.assertEquals(first.hostname, 'myhostname.myhost.com')
-    self.assertEquals(first.description_long, (
-        '[client, pid: 30840] : INFO No new content.'))
+    msg, _ = eventdata.GetMessageStrings(first)
+    self.assertEquals(
+        msg, '[client, pid: 30840] : INFO No new content.')
 
     self.assertEquals(len(events), 12)
 
-    self.assertEquals(events[10].description_long, (
+    msg, _ = eventdata.GetMessageStrings(events[10])
+    self.assertEquals(msg, (
         '[aprocess, pid: 101001] : This is a multi-line message that screws up'
         'many syslog parsers.'))
 

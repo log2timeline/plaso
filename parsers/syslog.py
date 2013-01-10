@@ -16,7 +16,9 @@
 """This file contains a syslog parser in plaso."""
 import datetime
 import logging
+import re
 
+from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 
@@ -150,4 +152,10 @@ class Syslog(parser.TextParser):
     self.attributes['iyear'] = 2012
     return super(Syslog, self).PrintLine()
 
+
+class SyslogFormatter(eventdata.TextFormatter):
+  """Define the formatting for syslog files."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('Syslog:', re.DOTALL)
 

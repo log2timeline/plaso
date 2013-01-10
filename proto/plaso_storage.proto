@@ -86,13 +86,14 @@ message EventObject {
   //    Sophos AV Log
   required string source_long = 4;
 
-  // This is the meat of the storage. This field stores most of the
-  // extracted information from the event, something that should be
-  // fully descriptive of the event in question without containing
-  // information that is stored in other events, such as hostname,
-  // username or timestamps.
-  required string description_long = 5;
+  // This is the old meat of the storage and kept here for both
+  // legacy and compatability reasons.
+  // All description has now been moved to the formatting string
+  // and attributes.
+  optional string description_long = 5;
 
+  // This is a shorter version of the description long field that
+  // is also only kept for legacy and compatability reasons.
   // The description_long field can be too long to present in visual
   // tools. The shorter version of that string is the description_short.
   // This field should contain the bare amount of information extracted
@@ -101,7 +102,7 @@ message EventObject {
   // This compressed information is the information that visual tools
   // use to present the information to the investigator, with the option
   // of showing the full description described in description_long.
-  required string description_short = 6;
+  optional string description_short = 6;
 
   // A list of all the stored attributes within the EventObject.
   repeated Attribute attributes = 8;

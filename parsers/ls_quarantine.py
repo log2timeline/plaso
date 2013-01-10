@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for application usage in plaso."""
+import re
+
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import parser
 
 
@@ -41,15 +44,25 @@ class LsQuarantine(parser.SQLiteParser):
 
   def ParseLSQuarantine(self, row, **_):
     """Return an EventObject from Parse LS QuarantineEvent record."""
-    text_long = u'[{0}] Downloaded: {1} <{2}>'.format(
-        row['Agent'], row['URL'], row['Data'])
-
-    text_short = u'{0}'.format(row['URL'])
-
     date = int(row['Epoch'] * self.DATE_MULTIPLIER)
 
-    evt = event.SQLiteEvent(date, 'File Downloaded', text_long, text_short,
-                            'HIST', u'%s Download Event' % self.NAME)
+    evt = event.SQLiteEvent(date, 'File Downloaded', 'HIST',
+                            u'%s Download Event' % self.NAME)
+
+    evt.agent = row['Agent']
+    evt.url = row['URL']
+    evt.data = row['Data']
 
     yield evt
+
+
+class LSQuarantineFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for LS Quarantine history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('LS Qurantine:', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = u'[{agent}] Downloaded: {url} <{data}>'
+  FORMAT_STRING_SHORT = u'{url}'
 

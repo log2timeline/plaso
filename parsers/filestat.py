@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for the Stat object of a PFile."""
+import re
 
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import sleuthkit
 
@@ -40,11 +42,16 @@ class PfileStat(parser.PlasoParser):
       if item[-4:] == 'time':
         times.append(item)
 
-    append = u''
+    event_container = event.EventContainer()
+
+    event_container.offset = 0
+    event_container.source_short = self.PARSER_TYPE
+    event_container.allocation = u''
+
     # Check if file is allocated (only applicable for TSK).
     check_allocated = getattr(filehandle, 'IsAllocated', None)
     if check_allocated and check_allocated():
-      append = u' (unallocated)'
+      event_container.allocation = u' (unallocated)'
 
     for time in times:
       evt = event.EventObject()
@@ -55,14 +62,19 @@ class PfileStat(parser.PlasoParser):
         continue
 
       evt.timestamp_desc = time
-
-      evt.source_short = 'FILE'
       evt.source_long = u'%s Time' % getattr(stat, 'os_type', 'N/A')
 
-      evt.description_short = filehandle.name
-      evt.description_long = u'{0}{1}'.format(
-          filehandle.display_name, append)
-      evt.offset = 0
+      event_container.Append(evt)
 
-      yield evt
+    return event_container
 
+
+class PfileStatFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for PFileStat."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('PfileStat:', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = u'{display_name}{allocation}'
+  FORMAT_STRING_SHORT = u'{filename}'

@@ -15,8 +15,10 @@
 # limitations under the License.
 """Parser for Windows NT Registry (REGF) files."""
 import logging
+import re
 
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import win_registry
 from plaso.lib import win_registry_interface
@@ -127,3 +129,18 @@ class WinRegistry(parser.PlasoParser):
 
       yield evt
 
+
+class WinRegistryGenericFormatter(eventdata.RegistryFormatter):
+  """Define the generic registry formatter."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('WinRegistry:.+key.*:Last Written', re.DOTALL)
+
+  def GetMessages(self):
+    """Return the messages."""
+    if 'keyname' in self.extra_attributes:
+      self.format_string = self.FORMAT_STRING
+    else:
+      self.format_string = self.FORMAT_STRING_ALTERNATIVE
+
+    return super(WinRegistryGenericFormatter, self).GetMessages()

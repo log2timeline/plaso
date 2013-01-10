@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a firefox history parser in plaso."""
+import re
+
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import parser
 
 
@@ -68,41 +71,60 @@ class Firefox(parser.SQLiteParser):
       '3': 'Separator'
   }
 
+  def GetFormatStrings(self):
+    """Return all format strings."""
+    ret = []
+
+    ret.append((
+        '%s:BookmarkAnnotationAdded' % self.NAME,
+        u'Bookmark Annotation: [{content}] to bookmark [{title}] ({url})',
+        u'Bookmark Annotation: {title}'))
+    ret.append((
+        '%s:BookmarkAnnotationModified' % self.NAME,
+        u'Bookmark Annotation: [{content}] to bookmark [{title}] ({url})',
+        u'Bookmark Annotation: {title}'))
+
+    ret.append(('%s:BookmarkFolderAdded' % self.NAME, '{title}'))
+    ret.append(('%s:BookmarkFolderModified' % self.NAME, '{title}'))
+    return ret
+
   def ParseAnnotations(self, row, **_):
     """Return an EventObject from the bookmark annotation table."""
-    text_long = u'Bookmark Annotation: [{0}] to bookmark [{1}] ({2})'.format(
-        row['content'], row['title'], row['url'])
-    text_short = u'Bookmark Annotation: {0}'.format(row['title'])
+    container = event.EventContainer()
+    container.url = row['url']
+    container.content = row['content']
+    container.title = row['title']
+    container.offset = row['id']
 
     evt = event.SQLiteEvent(
-        row['dateAdded'], 'Bookmark Annotation Added', text_long, text_short,
-        'WEBHIST', self.NAME)
-    evt.url = row['url']
-    evt.offset = row['id']
-    yield evt
+        row['dateAdded'], 'Bookmark Annotation Added', 'WEBHIST',
+        self.NAME)
+    container.Append(evt)
 
     evt = event.SQLiteEvent(
-        row['lastModified'], 'Bookmark Annotation Modifed', text_long,
-        text_short, 'WEBHIST', self.NAME)
-    evt.offset = row['id']
-    evt.url = row['url']
-    yield evt
+        row['lastModified'], 'Bookmark Annotation Modifed', 'WEBHIST',
+        self.NAME)
+    container.Append(evt)
+
+    return container
 
   def ParseBookmarkFolder(self, row, **_):
     """Return an EventObject from a bookmark folder."""
     date = row['dateAdded']
+    container = event.EventContainer()
+    container.offset = row['id']
+    container.title = row['title']
+
     evt = event.SQLiteEvent(
-        date, 'Bookmark Folder Added', row['title'], row['title'], 'WEBHIST',
-        self.NAME)
-    evt.offset = row['id']
-    yield evt
+        date, 'Bookmark Folder Added', 'WEBHIST', self.NAME)
+    container.Append(evt)
 
     date = row['lastModified']
     evt = event.SQLiteEvent(
-        date, 'Bookmark Folder Modifed', row['title'], row['title'],
-        'WEBHIST', self.NAME)
-    evt.offset = row['id']
-    yield evt
+        date, 'Bookmark Folder Modifed', 'WEBHIST', self.NAME)
+    container.Append(evt)
+
+    return container
 
   def ParseBookmarkRecord(self, row, **_):
     """Return an EventObject from a bookmark record."""
@@ -110,65 +132,51 @@ class Firefox(parser.SQLiteParser):
     if not hostname:
       hostname = 'N/A'
 
-    bookmark_type = self.BOOKMARK_TYPES.get(str(row['type']), 'N/A')
-
-    text_long = u'Bookmark {0} {1} ({2}) [{3}] count {4}'.format(
-        bookmark_type, row['bookmark_title'], row['url'], row['places_title'],
-        row['visit_count'])
-
-    text_short = u'Bookmarked {0} ({1})'.format(row['bookmark_title'],
-                                                row['url'])
-
-    evt = event.SQLiteEvent(
-        row['dateAdded'], 'URL Bookmark Added', text_long,
-        text_short, 'WEBHIST', self.NAME)
-    evt.url = row['url']
-    evt.hostname = hostname
-    evt.offset = row['id']
-    yield evt
+    container = event.EventContainer()
+    container.bookmark_title = row['bookmark_title']
+    container.url = row['url']
+    container.places_title = row['places_title']
+    container.count = row['visit_count']
+    container.hostname = hostname
+    container.offset = row['id']
+    container.bookmark_type = self.BOOKMARK_TYPES.get(str(row['type']), 'N/A')
 
     evt = event.SQLiteEvent(
-        row['lastModified'], 'URL Bookmark Modifed',
-        text_long, text_short, 'WEBHIST', self.NAME)
-    evt.url = row['url']
-    evt.hostname = hostname
-    evt.offset = row['id']
-    yield evt
+        row['dateAdded'], 'URL Bookmark Added', 'WEBHIST', self.NAME)
+    container.Append(evt)
+
+    evt = event.SQLiteEvent(
+        row['lastModified'], 'URL Bookmark Modifed', 'WEBHIST', self.NAME)
+    container.Append(evt)
+
+    return container
 
   def ParseVisitRecord(self, row, **_):
     """Return an EventObject from a visit record."""
     source = 'Page Visited'
-    hostname = self._GetHostname(row['rev_host'])
-    if row['from_visit']:
-      from_site = u' visited from: {0}'.format(
-          self._GetUrl(row['from_visit']))
-    else:
-      from_site = ''
-
-    if row['hidden'] == '1':
-      hidden = ' (url hidden)'
-    else:
-      hidden = ''
-
-    if row['typed'] == '1':
-      typed = ' (directly typed)'
-    else:
-      typed = ' (URL not typed directly)'
-
-    url_type = self.URL_TYPES.get(row['visit_type'], 'N/A')
-
-    text_long = u'{0} ({1}) [count: {2}] Host: {3}{4}{5}{6}{7}'.format(
-        row['url'], row['title'], row['visit_count'], hostname,
-        from_site, hidden, typed, url_type)
-
-    text_short = u'URL: %s' % row['url']
-
     evt = event.SQLiteEvent(
-        row['visit_date'], source, text_long, text_short,
-        'WEBHIST', self.NAME)
+        row['visit_date'], source, 'WEBHIST', self.NAME)
+
+    evt.hostname = self._GetHostname(row['rev_host'])
     evt.url = row['url']
     evt.offset = row['id']
-    evt.hostname = hostname
+
+    extras = []
+    if row['from_visit']:
+      extras.append(u'visited from: {0}'.format(
+          self._GetUrl(row['from_visit'])))
+
+    if row['hidden'] == '1':
+      extras.append('(url hidden)')
+
+    if row['typed'] == '1':
+      extras.append('(directly typed)')
+    else:
+      extras.append('(URL not typed directly)')
+
+    extras.append(self.URL_TYPES.get(row['visit_type'], 'N/A'))
+
+    evt.extra = u' '.join(extras)
 
     yield evt
 
@@ -206,3 +214,47 @@ class Firefox(parser.SQLiteParser):
       return u'%s (%s)' % (row['url'], hostname)
     return u''
 
+
+class FirefoxBookmarkAnnotationFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Firefox history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('Firefox:Firefox History:Bookmark Annotation', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = (u'Bookmark Annotation: [{content}] to bookmark [{title}]'
+                   ' ({url})')
+  FORMAT_STRING_SHORT = u'Bookmark Annotation: {title}'
+
+
+class FirefoxBookmarkFolderFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Firefox history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('Firefox:Firefox History:Bookmark Folder', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = '{title}'
+
+
+class FirefoxUrlBookmarkFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Firefox history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('Firefox:Firefox History:URL Bookmark', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = (u'Bookmark {bookmark_type} {bookmark_title} ({url}) [{place'
+                   's_title}] count {count}')
+  FORMAT_STRING_SHORT = u'Bookmarked {bookmark_title} ({url})'
+
+
+class FirefoxPageVisitFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Firefox history."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('Firefox:Firefox History:Page Visited', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = u'{url} ({title}) [count: {count}] Host: {hostname}{extra}'
+  FORMAT_STRING_SHORT = u'URL: {url}'

@@ -367,8 +367,9 @@ class Regexp(GenericBinaryOperator):
       if self.compiled_re.search(pfile.GetUnicodeString(x)):
         return True
     except TypeError:
-      return False
+      pass
 
+    return False
 
 class RegexpInsensitive(Regexp):
   """Whether the value matches the regexp in the right operand."""

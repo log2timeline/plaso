@@ -14,14 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for plaso.output.l2t_csv."""
-
+import re
 import StringIO
 import unittest
 
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.output import l2t_csv
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
+
+__pychecker__ = 'no-funcdoc'
+
+
+class DummyEventFormatter(eventdata.PlasoFormatter):
+  """Implement a simple formatter for the events defined."""
+
+  ID_RE = re.compile('None:Syslog:Entry', re.DOTALL)
+
+  FORMAT_STRING = u'{text}'
 
 
 class L2tCsvTest(unittest.TestCase):
@@ -71,15 +82,14 @@ class L2tCsvTest(unittest.TestCase):
     evt.source_long = 'Syslog'
     evt.hostname = 'ubuntu'
     evt.filename = 'log/syslog.1'
-    evt.description_short = ('Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
-                             ': session\n closed for user root)')
-    evt.description_long = ('Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
-                            ':session closed for user root)')
+    evt.text = (u'Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
+                ': session\n closed for user root)')
+    evt.format_string = u'{text}'
     self.formatter.EventBody(self.CreateProto(evt))
     correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
                '(pam_unix(cron:session): session closed for user '
-               'root),Reporter <CRON> PID: 8442 (pam_unix(cron:session):'
+               'root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
                'session closed for user root),2,log/syslog.1,-,-,-,\n')
     self.assertEquals(self.output.getvalue(), correct)
 
@@ -92,15 +102,14 @@ class L2tCsvTest(unittest.TestCase):
     evt.source_long = 'Syslog'
     evt.hostname = 'ubuntu'
     evt.filename = 'log/syslog.1'
-    evt.description_short = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
-                             ': session closed for user root)')
-    evt.description_long = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
-                            ':session closed for user root)')
+    evt.text = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
+                ': session closed for user root)')
+    evt.format_string = u'{text}'
     self.formatter.EventBody(self.CreateProto(evt))
     correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
                '(pam_unix(cron:session): session closed for user '
-               'root),Reporter <CRON> PID: 8442 (pam_unix(cron:session):'
+               'root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
                'session closed for user root),2,log/syslog.1,-,-,-,\n')
     self.assertEquals(self.output.getvalue(), correct)
 
