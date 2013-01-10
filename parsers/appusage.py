@@ -14,7 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for application usage in plaso."""
+
+import re
+
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import parser
 
 
@@ -47,19 +51,27 @@ class ApplicationUsage(parser.SQLiteParser):
 
   def ParseApplicationUsage(self, row, **_):
     """Return an EventObject from an application usage record."""
-    source = 'Application %s' % row['event']
+    source = u'Application %s' % row['event']
 
-    text_long = u'{0} v.{1} (bundle: {2}). Launched: {3} time(s) '.format(
-        row['app_path'], row['app_version'], row['bundle_id'],
-        row['number_times'])
-
-    text_short = u'{0} ({1} time(s))'.format(row['app_path'],
-                                             row['number_times'])
     date = row['last_time'] * self.DATE_MULTIPLIER
 
-    evt = event.SQLiteEvent(date, source, text_long, text_short, 'LOG',
-                            self.NAME)
+    evt = event.SQLiteEvent(date, source, 'LOG', self.NAME)
     evt.application = u'%s' % row['app_path']
+    evt.app_version = row['app_version']
+    evt.bundle_id = row['bundle_id']
+    evt.count = row['number_times']
 
     yield evt
+
+
+class ApplicationUsageFormatter(eventdata.PlasoFormatter):
+  """Define the formatting for Application Usage information."""
+
+  # The indentifier for the formatter (a regular expression)
+  ID_RE = re.compile('ApplicationUsage:Application Usage', re.DOTALL)
+
+  # The format string.
+  FORMAT_STRING = (u'{application} v.{app_version} (bundle: {bundle_id}).'
+                   ' Launched: {count} time(s)')
+  FORMAT_STRING_SHORT = u'{application} ({count} time(s))'
 

@@ -26,6 +26,7 @@ import dateutil.parser
 import logging
 import pytz
 
+from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import lexer
 from plaso.lib import pfile
@@ -35,6 +36,17 @@ __pychecker__ = 'no-funcdoc'
 
 class PlasoValueExpander(objectfilter.AttributeValueExpander):
   """An expander that gives values based on object attribute names."""
+
+  def _GetMessage(self, obj, attributes):
+    """Return a properly formatted message string."""
+    ret = u''
+
+    try:
+      ret = obj.format_string.format(**attributes)
+    except KeyError as e:
+      logging.warning(u'Unable to correctly assemble event: %s', e)
+
+    return ret
 
   def _GetValue(self, obj, attr_name):
     ret = getattr(obj, attr_name, None)
@@ -50,7 +62,15 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     # Check if this is an attribute inside the EventObject protobuf.
     if hasattr(obj, 'attributes') and hasattr(obj.attributes, 'MergeFrom'):
       attributes = dict((a.key, a.value) for a in obj.attributes)
+
+      if attr_name == 'message':
+        return self._GetMessage(obj, attributes)
+
       return attributes.get(attr_name, None)
+
+    # Check if this is a message request and we have a regular EventObject.
+    if attr_name == 'message' and not hasattr(obj.attributes, 'MergeForm'):
+      return self._GetMessage(obj, obj.attributes)
 
   def _GetAttributeName(self, path):
     return path[0].lower()
@@ -64,6 +84,9 @@ class PlasoExpression(objectfilter.BasicExpression):
   swap_source = {
     'date': 'timestamp',
     'source': 'source_short',
+    'description_long': 'message',
+    'description': 'message',
+    'description_short': 'message_short',
   }
 
   def Compile(self, filter_implementation):

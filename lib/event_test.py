@@ -29,40 +29,45 @@ The tests involve:
 
 Error handling. The following tests are performed for error handling:
  + Access attributes that are not set.
- + Not implement description_long and call it (except an error).
 """
+import re
 import unittest
 
 from plaso.lib import errors
 from plaso.lib import event
+from plaso.lib import eventdata
 
 container = event.EventContainer()
+
+
+class TestRegistryFormatter(eventdata.RegistryFormatter):
+  """A simple formatter for registry data."""
+
+  ID_RE = re.compile('.+(Registry|UNKNOWN):', re.DOTALL)
+
+
+class TestTextFormatter(eventdata.PlasoFormatter):
+  """A simple formatter for registry data."""
+
+  ID_RE = re.compile('None:(Some|Weird)', re.DOTALL)
+
+  FORMAT_STRING = u'{text}'
 
 
 class TestEvent(event.EventObject):
   """A test EventObject, contains minimum configuration."""
 
   def __init__(self):
+    """Construct the test event."""
     super(TestEvent, self).__init__()
     self.source_short = 'TLOG'
     self.testkey = 'This is a test key.'
-
-  @property
-  def description_long(self):
-    if self.text:
-      return self.text
-    else:
-      return 'Nothing to see, move along'
-
-  @property
-  def description_short(self):
-    return self.decription_long
 
 
 # Not implementing methods is done intentionally, disable lint warnings.
 # pylint: disable=W0223
 class FailEvent(event.EventObject):
-  """An EventObject that does not define description_long."""
+  """An EventObject that does not define format_string."""
 
 
 class PlasoEventUnitTest(unittest.TestCase):
@@ -104,6 +109,7 @@ class PlasoEventUnitTest(unittest.TestCase):
                                's the accepted 80 chars it will be '
                                'shortened.'), 'Some random text file',
                               'nomachine', 'johndoe')
+    event_7.text = event_7.body
 
     event_4.text = 'This log line reads ohh so much.'
     event_4.timestamp = 1335781787929596
@@ -128,12 +134,18 @@ class PlasoEventUnitTest(unittest.TestCase):
 
   def GetCSVLine(self, e):
     """Takes an EventObject and prints out a simple CSV line from it."""
+    try:
+      msg, _ = eventdata.GetMessageStrings(e)
+    except KeyError:
+      print e.attributes
+      print e.__dict__
     return '%s,%s,%s,%s' % (e.timestamp,
                             e.source_short,
                             e.source_long,
-                            e.description_long)
+                            msg)
 
   def testAllCount(self):
+    """Test if we have all the events inside the container."""
     self.assertEquals(len(container), 7)
 
   def testAttributes(self):
@@ -210,9 +222,9 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertRaises(AttributeError, getattr, event, 'doesnotexist')
 
   def testFailEvent(self):
-    """Calls to description_long that has not been defined."""
+    """Calls to format_string that has not been defined."""
     e = FailEvent()
-    self.assertRaises(AttributeError, getattr, e, 'description_short')
+    self.assertRaises(AttributeError, getattr, e, 'format_string_short')
 
   def testFailAddContainerEvent(self):
     """Add an EventContainer that is isn't an EventContainer."""
@@ -222,15 +234,17 @@ class PlasoEventUnitTest(unittest.TestCase):
                       container.Append, FailEvent())
 
   def testTextBasedEvent(self):
+    """Test a text based event."""
     for e in container:
       if e.source_short == 'LOG':
-        self.assertEquals(e.description_long,
-                          ('This is a line by someone not reading the log line'
-                           ' properly. And since this log line exceeds the '
-                           'accepted 80 chars it will be shortened.'))
-        self.assertEquals(e.description_short, ('This is a line by someone not'
-                                                ' reading the log line properl'
-                                                'y. And since this l...'))
+        msg, msg_short = eventdata.GetMessageStrings(e)
+        self.assertEquals(msg, (
+            'This is a line by someone not reading the log line properly. An'
+            'd since this log line exceeds the accepted 80 chars it will be '
+            'shortened.'))
+        self.assertEquals(msg_short, (
+            'This is a line by someone not reading the log line properl'
+            'y. And since this l...'))
 
   def testGetAttributes(self):
     """Test the GetAttributes function."""
@@ -242,9 +256,8 @@ class PlasoEventUnitTest(unittest.TestCase):
 
     self.assertEquals(len(attr), 9)
 
-    self.assertEquals(sorted(attr), ['description_long',
-                                     'description_short', 'filename',
-                                     'hostname', 'source_long', 'source_short',
+    self.assertEquals(sorted(attr), ['body', 'filename', 'hostname',
+                                     'source_long', 'source_short', 'text',
                                      'timestamp', 'timestamp_desc', 'username'])
 
 if __name__ == '__main__':

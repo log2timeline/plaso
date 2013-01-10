@@ -22,7 +22,10 @@ import logging
 import pytz
 import re
 
+from plaso.output import helper
 from plaso.proto import plaso_storage_pb2
+from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import output
 
 
@@ -32,10 +35,7 @@ class L2tCsv(output.LogOutputFormatter):
   SKIP = frozenset(['username', 'inode', 'hostname', 'body', 'parser'])
   MICROSEC = int(1e6)  # 1,000,000
 
-  # Few regular expressions.
-  MODIFIED_RE = re.compile(r'modif', re.I)
-  ACCESS_RE = re.compile(r'visit', re.I)
-  CREATE_RE = re.compile(r'(create|written)', re.I)
+  FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
   def Usage(self):
     """Returns a short descrition of what this formatter outputs."""
@@ -47,28 +47,43 @@ class L2tCsv(output.LogOutputFormatter):
                            'r,host,short,desc,version,filename,inode,notes,for'
                            'mat,extra\n'))
 
+  def WriteEvent(self, proto):
+    """Write a single event."""
+    try:
+      self.EventBody(proto)
+    except errors.NoFormatterFound:
+      logging.error('Unable to output line, no formatter found.')
+      logging.error(proto)
+
   def EventBody(self, proto_read):
     """Formats data as l2t_csv and writes to the filehandle from OutputFormater.
 
     Args:
       proto_read: Protobuf to format.
     """
+    formatter = eventdata.GetFormatter(proto_read)
+    if not formatter:
+      raise errors.NoFormatterFound(
+          'Unable to output event, no formatter found.')
+
+    msg, msg_short = formatter.GetMessages()
 
     try:
       mydate = datetime.datetime.utcfromtimestamp(
           proto_read.timestamp / self.MICROSEC)
     except ValueError as e:
        logging.error(
-           u'Unable to print: %s - %d: %s', proto_read.description_short,
+           u'Unable to print: %s - %d: %s', msg_short,
            proto_read.timestamp, e)
        return
     date_use = mydate.replace(tzinfo=pytz.utc).astimezone(self.zone)
 
-    attributes = {}
-    attributes = dict((a.key, a.value) for a in proto_read.attributes)
+    attributes = formatter.base_attributes
     extra = []
+    format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
+        formatter.FORMAT_STRING)
     for key, value in attributes.iteritems():
-      if key in self.SKIP:
+      if key in self.SKIP or key in format_variables:
         continue
       extra.append('%s: %s ' % (key, value))
     extra = ' '.join(extra)
@@ -83,15 +98,15 @@ class L2tCsv(output.LogOutputFormatter):
     row = (date_use.strftime('%m/%d/%Y'),
            date_use.strftime('%H:%M:%S'),
            self.zone,
-           self.GetLegacy(proto_read),
+           helper.GetLegacy(proto_read),
            proto_read.DESCRIPTOR.enum_types_by_name[
              'SourceShort'].values_by_number[proto_read.source_short].name,
            proto_read.source_long,
            proto_read.timestamp_desc,
            attributes.get('username', '-'),
            attributes.get('hostname', '-'),
-           proto_read.description_short.replace('\r', '').replace('\n', ''),
-           proto_read.description_long.replace('\r', '').replace('\n', ''),
+           msg_short,
+           msg,
            '2',
            proto_read.filename,
            inode,
@@ -103,46 +118,3 @@ class L2tCsv(output.LogOutputFormatter):
         u','.join(unicode(x).replace(',', ' ') for x in row))
     self.filehandle.write(out_write.encode('utf-8'))
 
-  def GetLegacy(self, event_proto):
-    """Return a legacy MACB representation of the event."""
-    # TODO: Fix this function when the MFT parser has been implemented.
-    # The filestat parser is somewhat limited.
-    # Also fix this when duplicate entries have been implemented so that
-    # the function actually returns more than a single entry (as in combined).
-    if event_proto.source_short == plaso_storage_pb2.EventObject.FILE:
-      letter = event_proto.timestamp_desc[0]
-
-      if letter == 'm':
-        return 'M...'
-      elif letter == 'a':
-        return '.A..'
-      elif letter == 'c':
-        return '..C.'
-      else:
-        return '....'
-
-    letters = []
-    m = self.MODIFIED_RE.search(event_proto.timestamp_desc)
-
-    if m:
-      letters.append('M')
-    else:
-      letters.append('.')
-
-    m = self.ACCESS_RE.search(event_proto.timestamp_desc)
-
-    if m:
-      letters.append('A')
-    else:
-      letters.append('.')
-
-    m = self.CREATE_RE.search(event_proto.timestamp_desc)
-
-    if m:
-      letters.append('C')
-    else:
-      letters.append('.')
-
-    letters.append('.')
-
-    return ''.join(letters)

@@ -14,11 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for the storage mechanism of Plaso."""
+import re
 import tempfile
 import unittest
 import zipfile
 
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import storage
 from plaso.proto import plaso_storage_pb2
 
@@ -81,6 +83,18 @@ class GroupMock(object):
         dummy.category = cat
 
       yield dummy
+
+
+class DummyRegistryFormatter(eventdata.RegistryFormatter):
+  """Implement a simple registry formatter."""
+  # Catch all.
+  ID_RE = re.compile('UNKNOWN:NTUSER.DAT', re.DOTALL)
+
+
+class DummyTextFormatter(eventdata.TextFormatter):
+  """Implement a simple text event formatter."""
+
+  ID_RE = re.compile('UNKNOWN:Some random text file', re.DOTALL)
 
 
 class PlasoStorageUnitTest(unittest.TestCase):
@@ -211,10 +225,12 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(tags[0].store_index, 0)
     self.assertEquals(tags[0].tag.comment, u'My comment')
     self.assertEquals(tags[0].tag.color, u'blue')
-    self.assertEquals(tags[0].description_long[0:10], u'This is a ')
+    msg, _ = eventdata.GetMessageStrings(tags[0])
+    self.assertEquals(msg[0:10], u'This is a ')
 
     self.assertEquals(tags[1].tag.tags[0].value, 'Malware')
-    self.assertEquals(tags[1].description_long[0:15], u'[\\HKCU\\Windows\\')
+    msg, _ = eventdata.GetMessageStrings(tags[1])
+    self.assertEquals(msg[0:15], u'[\\HKCU\\Windows\\')
 
     self.assertEquals(tags[2].tag.comment, u'This is interesting')
     self.assertEquals(tags[2].tag.tags[0].value, 'Malware')

@@ -23,6 +23,7 @@ import heapq
 import re
 
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import timelib
 
 # Regular expression used for attribute filtering
@@ -186,19 +187,13 @@ class EventContainer(object):
       function that is not an EventObject or an EventContainer.
     """
     try:
-      if item.description_long:
-        self._Append(item, self.events, item.timestamp)
-        return
-    except AttributeError:
-      pass
-    except NotImplementedError:
-      raise errors.NotAnEventContainerOrObject(
-          'Unable to add an object that has not implemented description_long')
-    try:
-      if item.events and item.Append:
-        self._Append(item, self.containers, item.first_timestamp,
-                     item.last_timestamp)
-        return
+     if isinstance(item, EventObject):
+       self._Append(item, self.events, item.timestamp)
+       return
+     elif isinstance(item, EventContainer):
+       self._Append(item, self.containers, item.first_timestamp,
+                    item.last_timestamp)
+       return
     except (AttributeError, TypeError):
       pass
 
@@ -297,16 +292,11 @@ class EventObject(object):
         raise AttributeError('%s\' object has no attribute \'%s\'.' % (
             self.__class__.__name__, attr))
 
-    raise AttributeError('Attribute not defined')
+    raise AttributeError('Attribute [%s] not defined' % attr)
 
   def GetAttributes(self):
     """Return a list of all defined attributes."""
     res = set(self.attributes.keys())
-
-    # Description field is defined as a property, and therefore
-    # needs to be included in the set.
-    res.add('description_long')
-    res.add('description_short')
 
     if self.parent_container:
       res |= self.parent_container.GetAttributes()
@@ -315,13 +305,17 @@ class EventObject(object):
 
   def __str__(self):
     """Print a human readable string from the EventObject."""
+
+    message, _ = eventdata.GetMessageStrings(self)
+    if not message:
+      return 'Unable to print event, no formatter defined.'
+
     time = 0
     short = u''
     s_long = u''
-    desc = u''
 
     __pychecker__ = ('missingattrs=timestamp,source_short,sou'
-                     'rce_long,description_long')
+                     'rce_long')
     try:
       time = self.timestamp
     except AttributeError:
@@ -335,36 +329,29 @@ class EventObject(object):
       s_long = self.source_long
     except AttributeError:
       pass
-    try:
-      desc = self.description_long
-    except AttributeError:
-      pass
 
-    return u'[{0}] {1}/{2} - {3}'.format(time, short, s_long, desc)
+    return u'[{0}] {1}/{2} - {3}'.format(time, short, s_long, message)
 
 
 class FiletimeEvent(EventObject):
   """Convenience class for a FILETIME timestamp-based event."""
 
-  def __init__(self, timestamp, usage, description_long):
+  def __init__(self, timestamp, usage):
     """Initializes a FILETIME timestamp-based event object.
 
     Args:
       timestamp: the FILETIME timestamp value.
       usage: the description of the usage of the timestamp.
-      description_long: long description of the event (LEGACY).
     """
     super(FiletimeEvent, self).__init__()
     self.timestamp = timelib.WinFiletime2Unix(timestamp)
     self.timestamp_desc = usage
-    self.description_long = description_long
 
 
 class RegistryEvent(EventObject):
   """Convenience class for a Windows Registry-based event."""
 
   # Add few class variables so they don't get defined as special attributes.
-  keyname = u''
   keyvalue_dict = u''
   source_append = u''
 
@@ -380,36 +367,17 @@ class RegistryEvent(EventObject):
     """
     super(RegistryEvent, self).__init__()
     self.source_short = 'REG'
-    self.keyname = key
+    if key:
+      self.keyname = key
     self.keyvalue_dict = value_dict
     self.timestamp = timestamp
     self.timestamp_desc = desc or 'Last Written'
-
-  @property
-  def description_long(self):
-    text = u' '.join([u'%s: %s' % (key, value) for (
+    self.text = u' '.join([u'%s: %s' % (key, value) for (
         key, value) in sorted(self.keyvalue_dict.items())])
-    if self.keyname:
-      return u'[%s] %s' % (self.keyname, text)
-
-    return text
-
-  @property
-  def description_short(self):
-    text = self.keyname or u' '.join([u'%s: %s' % (key, value) for (
-        key, value) in sorted(self.keyvalue_dict.items())])
-
-    if len(text) > 80:
-      return u'[%s...]' % text[0:77]
-
-    return u'[%s]' % text
 
 
 class TextEvent(EventObject):
   """Convenience class for a text log file-based event."""
-
-  # Define attributes outside of attribute store.
-  body = None
 
   def __init__(self, date, body, source, host=None, user=None):
     """Initializes a text event.
@@ -433,34 +401,17 @@ class TextEvent(EventObject):
     if user:
       self.username = user
 
-  @property
-  def description_long(self):
-    return '%s' % self.body
-
-  @property
-  def description_short(self):
-    if len(self.body) > 80:
-      return '%s...' % self.body[0:77]
-    else:
-      return '%s' % self.body
-
 
 class SQLiteEvent(EventObject):
   """Convenience class for a SQLite-based event."""
 
-  text_long = ''
-  text_short = ''
-
-  def __init__(self, date, description, description_long, description_short,
-               source_short, source_long):
+  def __init__(self, date, description, source_short, source_long):
     """Initializes the SQLite-based event.
 
     Args:
       date: An integer, representing the time in microseconds since
             Jan 1, 1970 00:00:00 UTC.
       description: The timestamp description of the event.
-      description_long: A string, the content of the description_long.
-      description_short: A string, the content of the description_short.
       source_short: A string, the content of source_short.
       source_long: A string, the content of source_long.
     """
@@ -469,17 +420,4 @@ class SQLiteEvent(EventObject):
     self.timestamp_desc = description
     self.source_short = source_short
     self.source_long = source_long
-    self.text_long = description_long
-    self.text_short = description_short
-
-  @property
-  def description_long(self):
-    return u'%s' % self.text_long
-
-  @property
-  def description_short(self):
-    if len(self.text_short) > 80:
-      return u'%s...' % self.text_short[0:77]
-
-    return u'%s' % self.text_short
 

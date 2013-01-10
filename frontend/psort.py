@@ -41,14 +41,15 @@ import argparse
 import dateutil.parser
 import pytz
 
-
 from plaso import output  # pylint: disable=W0611
+from plaso import parsers  # pylint: disable=W0611
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
 from plaso.lib import storage
 
-MAX_64INT = 2**64-1
+MAX_INT64 = 2**64-1
 __version__ = '1.0'
+
 
 def GetMicroseconds(date_str, timezone):
   """Returns microseconds from epoch for a given date string and pytz timezone.
@@ -136,11 +137,11 @@ def ReadMeta(store, bound_first, bound_last):
     The number of a container when entries in it are within time boundries.
   """
   for number in store.GetProtoNumbers():
-    first, last = store.ReadMeta(number).get('range', (0, MAX_64INT))
+    first, last = store.ReadMeta(number).get('range', (0, MAX_INT64))
     if first == 0:
       logging.info('Assuming container %s starts from time 0.',
                    number)
-    if last == MAX_64INT:
+    if last == MAX_INT64:
       logging.info('Inserting default last timestamp for container %s.',
                    number)
     if last < first:
@@ -299,7 +300,7 @@ if __name__ == '__main__':
 
   parser.add_argument('-Tus', '--last_time_microsec',
                       metavar='LASTIMESTAMP_USEC',
-                      dest='last_time_microsec', default=MAX_64INT, type=int,
+                      dest='last_time_microsec', default=MAX_INT64, type=int,
                       help='Latest time as microsecond.')
 
   parser.add_argument('-o', '--output_format', metavar='FORMAT',

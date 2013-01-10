@@ -16,6 +16,7 @@
 """This file contains a test for WinVers registry parsing in Plaso."""
 import unittest
 
+from plaso.lib import eventdata
 from plaso.registry import test_lib
 from plaso.registry import winver
 
@@ -39,6 +40,7 @@ class TestWinVerRegistry(unittest.TestCase):
         153)
 
   def testWinVer(self):
+    """Test the WinVer plugin."""
     plugin = winver.WinVerPlugin(None)
     entries = list(plugin.Process(self.regkey))
 
@@ -47,7 +49,8 @@ class TestWinVerRegistry(unittest.TestCase):
 
     self.assertEquals(len(entries), 1)
     self.assertEquals(entries[0].timestamp, int(1346443795 * 1e6))
-    self.assertEquals(entries[0].description_long, line)
+    msg, _ = eventdata.GetMessageStrings(entries[0])
+    self.assertEquals(msg, line)
 
 
 if __name__ == '__main__':

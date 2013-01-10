@@ -17,23 +17,20 @@
 
 import datetime
 import pytz
-import re
 import sys
 import sqlite3
 
-from plaso.proto import plaso_storage_pb2
+from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import output
+from plaso.output import helper
+from plaso.proto import plaso_storage_pb2
 
 
 class sql4n6(output.LogOutputFormatter):
   """Contains functions for outputing as 4n6time sqlite database."""
 
   SKIP = frozenset(['username', 'inode', 'hostname', 'body', 'parser'])
-
-  # Few regular expressions.
-  MODIFIED_RE = re.compile(r'modif', re.I)
-  ACCESS_RE = re.compile(r'visit', re.I)
-  CREATE_RE = re.compile(r'(create|written)', re.I)
 
   def __init__(self, filehandle=sys.stdout, zone=pytz.utc,
                fields=['host','user','source','sourcetype',
@@ -113,8 +110,14 @@ class sql4n6(output.LogOutputFormatter):
     mydate = datetime.datetime.utcfromtimestamp(proto_read.timestamp / 1e6)
     date_use = mydate.replace(tzinfo=pytz.utc).astimezone(self.zone)
 
-    attributes = {}
-    attributes = dict((a.key, a.value) for a in proto_read.attributes)
+    formatter = eventdata.GetFormatter(proto_read)
+    if not formatter:
+      raise errors.NoFormatterFound(
+          'Unable to output event, no formatter found.')
+
+    msg, msg_short = formatter.GetMessages()
+    attributes = formatter.base_attributes
+
     extra = []
     for key, value in attributes.iteritems():
       if key in self.SKIP:
@@ -132,7 +135,7 @@ class sql4n6(output.LogOutputFormatter):
     row = ( date_use.strftime('%Y-%m-%d'),
             date_use.strftime('%H:%M:%S'),
             str(self.zone),
-            self.GetLegacy(proto_read),
+            helper.GetLegacy(proto_read),
             proto_read.DESCRIPTOR.enum_types_by_name[
               'SourceShort'].values_by_number[
                 proto_read.source_short].name,
@@ -140,8 +143,8 @@ class sql4n6(output.LogOutputFormatter):
             proto_read.timestamp_desc,
             attributes.get('username', '-'),
             attributes.get('hostname', '-'),
-            proto_read.description_short.replace('\r', '').replace('\n', ''),
-            proto_read.description_long.replace('\r', '').replace('\n', ''),
+            msg_short,
+            msg,
             '2',
             proto_read.filename,
             inode,
@@ -171,49 +174,6 @@ class sql4n6(output.LogOutputFormatter):
     # Commit the current transaction every 10000 inserts.
     if self.count % 10000 == 0:
       self.conn.commit()
-
-  def GetLegacy(self, event_proto):
-    """Return a legacy MACB representation of the event."""
-    # TODO: Fix this function when the MFT parser has been implemented.
-    # The filestat parser is somewhat limited.
-    # Also fix this when duplicate entries have been implemented so that
-    # the function actually returns more than a single entry (as in combined).
-    if event_proto.source_short == plaso_storage_pb2.EventObject.FILE:
-      letter = event_proto.timestamp_desc[0]
-
-      if letter == 'm':
-        return 'M...'
-      elif letter == 'a':
-        return '.A..'
-      elif letter == 'c':
-        return '..C.'
-      else:
-        return '....'
-
-    letters = []
-    m = self.MODIFIED_RE.search(event_proto.timestamp_desc)
-    if m:
-      letters.append('M')
-    else:
-      letters.append('.')
-
-    m = self.ACCESS_RE.search(event_proto.timestamp_desc)
-
-    if m:
-      letters.append('A')
-    else:
-      letters.append('.')
-
-    m = self.CREATE_RE.search(event_proto.timestamp_desc)
-
-    if m:
-      letters.append('C')
-    else:
-      letters.append('.')
-
-    letters.append('.')
-
-    return ''.join(letters)
 
   def GetVSSNumber(self, proto_read):
     """Return the vss_store_number of the event."""

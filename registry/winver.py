@@ -28,10 +28,8 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
   REG_TYPE = 'SOFTWARE'
   URLS = []
 
-  def __init__(self, key):
-    self._key = key
-
   def GetText(self, value):
+    """Return the text value from the registry key."""
     val = self._key.GetValue(value)
     if val:
       return val.GetStringData()
@@ -54,7 +52,7 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
 
     evt = event.RegistryEvent(self._key.path, text_dict, int(install))
     evt.prodname = text_dict[u'Product name']
-    evt.source_long = 'SOFTWARE WinVersion'
+    evt.source_long = 'SOFTWARE WinVersion key'
     if text_dict[u'Owner']:
       evt.owner = text_dict[u'Owner']
     yield evt
