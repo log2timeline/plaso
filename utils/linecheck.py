@@ -46,10 +46,30 @@ if __name__ == '__main__':
   error_counter = 0
   with open(filename, 'rb') as fh:
     line_counter = 1
+    empty_line = 0
     for line in fh:
+      if line == '\n':
+        empty_line += 1
+
+      if line[0:5] == 'class':
+        if empty_line != 2:
+          print (u'Line nr %d [class declaration]: Need two empty lines before'
+                 ' class declaration.') % line_counter
+          error_counter += 1
+
+      if line[0:3] == 'def':
+        if empty_line != 2:
+          print (u'Line nr %d [function declaration]: Need two empty lines befo'
+                 're top level function declaration.') % line_counter
+          error_counter += 1
+
+      if line != '\n':
+        empty_line = 0
+
       if len(line) > 81:
         print u'Line nr %d [%d]: %s' % (line_counter, len(line), line),
         error_counter += 1
+
       if len(line) > 1 and line[-2] == ' ':
         print u'Line nr %d [whitespace in end]: "%s"' % (
             line_counter, line[:-1])
