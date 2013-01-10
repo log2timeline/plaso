@@ -26,6 +26,9 @@ import dateutil.parser
 import logging
 import pytz
 
+# TODO: Changes this so it becomes an attribute instead of having backend
+# load a front-end library.
+from plaso.frontend import presets
 from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import lexer
@@ -76,9 +79,8 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     return path[0].lower()
 
 
-### PARSER DEFINITION
 class PlasoExpression(objectfilter.BasicExpression):
-
+  """A Plaso specific expression."""
   # A simple dictionary used to swap attributes so other names can be used
   # to reference some core attributes (implementation specific).
   swap_source = {
@@ -97,7 +99,7 @@ class PlasoExpression(objectfilter.BasicExpression):
 
     if not operator:
       raise objectfilter.ParseError(
-          "Unknown operator %s provided." % self.operator)
+          'Unknown operator %s provided.' % self.operator)
 
     # Plaso specific implementation - if we are comparing a timestamp
     # to a value, we use our specific implementation that compares
@@ -109,13 +111,34 @@ class PlasoExpression(objectfilter.BasicExpression):
       self.args = args
 
     arguments.extend(self.args)
-    expander = filter_implementation.FILTERS["ValueExpander"]
+    expander = filter_implementation.FILTERS['ValueExpander']
     ops = operator(arguments=arguments, value_expander=expander)
     if not self.bool_value:
       if hasattr(ops, 'FlipBool'):
         ops.FlipBool()
 
     return ops
+
+
+class ParserList(objectfilter.GenericBinaryOperator):
+  """Matches when a parser is inside a predefined list of parsers."""
+
+  def __init__(self, *children, **kwargs):
+    """Construct the parser list and retrieve a list of available parsers."""
+    super(ParserList, self).__init__(*children, **kwargs)
+    self.compiled_list = presets.categories.get(
+        self.right_operand, [])
+
+  def Operation(self, x, unused_y):
+    """Return a bool depending on the parser list contains the parser."""
+    if self.left_operand != 'parser':
+      raise objectfilter.MalformedQueryError(
+        u'Unable to use keyword "inlist" for other than parser.')
+
+    if x in self.compiled_list:
+      return True
+
+    return False
 
 
 class PlasoAttributeFilterImplementation(objectfilter.BaseFilterImplementation):
@@ -127,10 +150,10 @@ class PlasoAttributeFilterImplementation(objectfilter.BaseFilterImplementation):
 
   FILTERS = {}
   FILTERS.update(objectfilter.BaseFilterImplementation.FILTERS)
-  FILTERS.update({"ValueExpander": PlasoValueExpander})
+  FILTERS.update({'ValueExpander': PlasoValueExpander})
+  OPS = objectfilter.OP2FN
+  OPS.update({'inlist': ParserList,})
 
-
-### Plaso Specific
 
 class DateCompareObject(object):
   """A specific class created for date comparison.
@@ -167,7 +190,7 @@ class DateCompareObject(object):
         self.data = calendar.timegm(utc_dt.timetuple()) * int(1e6)
         self.data += utc_dt.microsecond
       except ValueError as e:
-        raise ValueError("Date string is wrongly formatted (%s) - %s",
+        raise ValueError('Date string is wrongly formatted (%s) - %s',
                          data, e)
     elif type(data) == datetime.datetime:
       self.data = calendar.timegm(data.timetuple()) * int(1e6)
