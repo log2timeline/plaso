@@ -25,12 +25,13 @@ from plaso.lib import win_registry_interface
 class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
   """A registry plugin that parses XP UserAssist entries."""
 
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Use'
-             'rAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}\\Count')
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}\\Count')
   REG_TYPE = 'NTUSER'
   URLS = [u'http://blog.didierstevens.com/programs/userassist/']
 
   def GetEntries(self):
+    """Retrieves the values in the UserAssist Registry key."""
     for value in self._key.GetValues():
       data = value.GetRawData()
       name_raw = value.name
@@ -38,8 +39,8 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
       if len(data) != 16:
         logging.debug('[UserAssist] Value entry is not of correct length.')
         continue
-      _, count, time_raw = struct.unpack('<LLQ', data)
-      time = timelib.WinFiletime2Unix(time_raw)
+      _, count, filetime = struct.unpack('<LLQ', data)
+      time = timelib.Timestamp.FromFiletime(filetime)
       if count > 5:
         count -= 5
 

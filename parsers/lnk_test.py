@@ -35,13 +35,16 @@ class WinLnkParserTest(unittest.TestCase):
     lnk_path = os.path.join(self.base_path, 'example.lnk')
 
     events = []
-    # Create Time: Mon Jul 13 2009 16:29:02
-    # Last Accessed time: Mon Jul 13 2009 16:29:02
-    # Last Modified Time: Mon Jul 13 2009 18:39:18
+    # Creation time:     Jul 13, 2009 23:29:02.849131000 UTC
+    # Modification time: Jul 14, 2009 01:39:18.220000000 UTC
+    # Last Access time:  Jul 13, 2009 23:29:02.849131000 UTC
+
+    # date -u -d"Jul 13, 2009 23:29:02.849131000" +"%s.%N"
+    # date -u -d"Jul 14, 2009 01:39:18.220000000" +"%s.%N"
     event_dict = {
-        'Modification Time': 1247535558220000,
-        'Creation Time': 1247527742849132,
-        'Last Access Time': 1247527742849132,
+        'Creation Time': (1247527742 * 1000000) + int(849131000 / 1000),
+        'Modification Time': (1247535558 * 1000000) + int(220000000 / 1000),
+        'Last Access Time': (1247527742 * 1000000) + int(849131000 / 1000),
     }
     with open(lnk_path, 'rb') as fh:
       events = list(self.parser_obj.Parse(fh))
@@ -50,7 +53,7 @@ class WinLnkParserTest(unittest.TestCase):
 
     for event in events:
       self.assertEquals(
-          event.timestamp,event_dict.get(event.timestamp_desc, 0))
+          event.timestamp, event_dict.get(event.timestamp_desc, 0))
 
     times = [x.timestamp for x in events]
     times_compare = [x for _, x in event_dict.items()]
