@@ -36,7 +36,7 @@ class WinLnkParser(parser.PlasoParser):
       file_object: a file-like object to read data from.
 
     Returns:
-      an event container (WinLnkEventContainer) that contains the parsed
+      an event container (EventContainer) that contains the parsed
       attributes.
     """
     class NoneEmptyDict(dict):
@@ -94,9 +94,9 @@ class WinLnkParser(parser.PlasoParser):
     return event_container
 
 
-#TODO: Change this into a more generic formatter that can be easily extended
-# for similar parsers.
 class WinLnkFormatter(eventdata.PlasoFormatter):
+  #TODO: Change this into a more generic formatter that can be easily extended
+  # for similar parsers.
   """Define the formatting for Windows shortcut."""
 
   ID_RE = re.compile('WinLnkParser:', re.DOTALL)
