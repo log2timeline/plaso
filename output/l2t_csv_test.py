@@ -70,7 +70,7 @@ class L2tCsvTest(unittest.TestCase):
       else:
         a = proto.attributes.add()
         a.key = attr
-        a.value = getattr(an_event, attr)
+        a.string = getattr(an_event, attr)
     return proto
 
   def testEventBody(self):
@@ -84,7 +84,6 @@ class L2tCsvTest(unittest.TestCase):
     evt.filename = 'log/syslog.1'
     evt.text = (u'Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
                 ': session\n closed for user root)')
-    evt.format_string = u'{text}'
     self.formatter.EventBody(self.CreateProto(evt))
     correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
@@ -104,7 +103,6 @@ class L2tCsvTest(unittest.TestCase):
     evt.filename = 'log/syslog.1'
     evt.text = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
                 ': session closed for user root)')
-    evt.format_string = u'{text}'
     self.formatter.EventBody(self.CreateProto(evt))
     correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '

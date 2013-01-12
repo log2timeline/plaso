@@ -36,11 +36,12 @@ import unittest
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.parsers import winreg
 
 container = event.EventContainer()
 
 
-class TestRegistryFormatter(eventdata.RegistryFormatter):
+class TestRegistryFormatter(winreg.WinRegistryGenericFormatter):
   """A simple formatter for registry data."""
 
   ID_RE = re.compile('.+(Registry|UNKNOWN):', re.DOTALL)
@@ -64,10 +65,8 @@ class TestEvent(event.EventObject):
     self.testkey = 'This is a test key.'
 
 
-# Not implementing methods is done intentionally, disable lint warnings.
-# pylint: disable=W0223
 class FailEvent(event.EventObject):
-  """An EventObject that does not define format_string."""
+  """An EventObject that does not define anything."""
 
 
 class PlasoEventUnitTest(unittest.TestCase):
@@ -222,7 +221,7 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertRaises(AttributeError, getattr, event, 'doesnotexist')
 
   def testFailEvent(self):
-    """Calls to format_string that has not been defined."""
+    """Calls to format_string_short that has not been defined."""
     e = FailEvent()
     self.assertRaises(AttributeError, getattr, e, 'format_string_short')
 

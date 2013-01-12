@@ -14,8 +14,10 @@
 """Tests for plaso.lib.pfilter."""
 import unittest
 import pytz
+import re
 
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfile
@@ -32,6 +34,14 @@ class Empty(object):
   """An empty object."""
 
 
+class FakeFormatter(eventdata.PlasoFormatter):
+  """A formatter for this fake class."""
+  ID_RE = re.compile('Weirdo:Made up Source:Last Written', re.DOTALL)
+
+  FORMAT_STRING = '{text}'
+  FORMAT_STRING_SHORT = '{text_short}'
+
+
 class FakeParser(parser.PlasoParser):
   """A fake parser that does not parse anything, but registers."""
 
@@ -44,8 +54,8 @@ class FakeParser(parser.PlasoParser):
     # 2015-11-18T01:15:43
     evt.timestamp = 1447809343000000
     evt.timestamp_desc = 'Last Written'
-    evt.format_string_short = 'This description is different than the long one.'
-    evt.format_string = (
+    evt.text_short = 'This description is different than the long one.'
+    evt.text = (
         u'User did a very bad thing, bad, bad thing that awoke Dr. Evil.')
     evt.filename = '/My Documents/goodfella/Documents/Hideout/myfile.txt'
     evt.hostname = 'Agrabah'
@@ -96,8 +106,8 @@ class PFilterTest(unittest.TestCase):
     # 2015-11-18T01:15:43
     evt.timestamp = 1447809343000000
     evt.timestamp_desc = 'Last Written'
-    evt.format_string_short = 'This description is different than the long one.'
-    evt.format_string = (
+    evt.text_short = 'This description is different than the long one.'
+    evt.text = (
         u'User did a very bad thing, bad, bad thing that awoke Dr. Evil.')
     evt.filename = '/My Documents/goodfella/Documents/Hideout/myfile.txt'
     evt.hostname = 'Agrabah'

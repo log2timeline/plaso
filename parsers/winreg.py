@@ -138,6 +138,10 @@ class WinRegistryGenericFormatter(eventdata.RegistryFormatter):
 
   def GetMessages(self):
     """Return the messages."""
+    text = u' '.join([u'%s: %s' % (key, value) for (
+        key, value) in sorted(self.extra_attributes['regvalue'].items())])
+
+    self.extra_attributes['text'] = text
     if 'keyname' in self.extra_attributes:
       self.format_string = self.FORMAT_STRING
     else:
