@@ -30,8 +30,6 @@ from plaso.proto import plaso_storage_pb2
 class sql4n6(output.LogOutputFormatter):
   """Contains functions for outputing as 4n6time sqlite database."""
 
-  SKIP = frozenset(['username', 'inode', 'hostname', 'body', 'parser'])
-
   def __init__(self, filehandle=sys.stdout, zone=pytz.utc,
                fields=['host','user','source','sourcetype',
                        'type','datetime','key','color'],
@@ -120,7 +118,7 @@ class sql4n6(output.LogOutputFormatter):
 
     extra = []
     for key, value in attributes.iteritems():
-      if key in self.SKIP:
+      if key in helper.RESERVED_VARIABLES:
         continue
       extra.append('%s: %s ' % (key, value))
     extra = ' '.join(extra)

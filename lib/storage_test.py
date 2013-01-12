@@ -22,6 +22,7 @@ import zipfile
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import storage
+from plaso.parsers import winreg
 from plaso.proto import plaso_storage_pb2
 
 __pychecker__ = 'no-funcdoc'
@@ -85,7 +86,7 @@ class GroupMock(object):
       yield dummy
 
 
-class DummyRegistryFormatter(eventdata.RegistryFormatter):
+class DummyRegistryFormatter(winreg.WinRegistryGenericFormatter):
   """Implement a simple registry formatter."""
   # Catch all.
   ID_RE = re.compile('UNKNOWN:NTUSER.DAT', re.DOTALL)
@@ -236,7 +237,7 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(tags[2].tag.tags[0].value, 'Malware')
     self.assertEquals(tags[2].tag.tags[1].value, 'Benign')
 
-    attributes = dict((a.key, a.value) for a in tags[2].attributes)
+    attributes = dict(storage.GetAttributeValue(a) for a in tags[2].attributes)
     self.assertEquals(attributes['parser'], 'UNKNOWN')
 
     self.assertEquals(timestamps, [12389344590000000, 13349402860000000,
@@ -255,6 +256,37 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(group_events[1].timestamp, 13349615269295969L)
 
     self.assertEquals(same_events, group_events)
+
+  def testSerialization(self):
+    """Test serialize event and attribute saving."""
+    evt = event.EventObject()
+    evt.timestamp = 1234124
+    evt.timestamp_desc = 'Written'
+    evt.source_short = 'LOG'
+    evt.source_long = 'Some Source Long'
+    # Should not get stored.
+    evt.empty_attribute = u''
+    # Is stored.
+    evt.zero_integer = 0
+    evt.integer = 34
+    evt.string = 'Normal string'
+    evt.unicode_string = u'And I\'m a unicorn.'
+    evt.my_list = ['asf', 4234, 2, 54, 'asf']
+    evt.my_dict = {'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': (234, 32)}
+    # Should not get stored.
+    evt.null_value = None
+
+    proto = plaso_storage_pb2.EventObject()
+    proto_ser = storage.PlasoStorage.SerializeEvent(evt)
+    proto.ParseFromString(proto_ser)
+
+    self.assertEquals(len(list(proto.attributes)), 6)
+    attributes = dict(
+        storage.GetAttributeValue(a) for a in proto.attributes)
+    self.assertFalse('empty_attribute' in attributes)
+    self.assertTrue('zero_integer' in attributes)
+    self.assertEquals(len(attributes.get('my_list', [])), 5)
+    self.assertEquals(attributes.get('string'), 'Normal string')
 
 
 if __name__ == '__main__':

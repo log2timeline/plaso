@@ -32,7 +32,6 @@ from plaso.lib import output
 class L2tCsv(output.LogOutputFormatter):
   """Contains functions for outputting as l2t_csv."""
 
-  SKIP = frozenset(['username', 'inode', 'hostname', 'body', 'parser'])
   MICROSEC = int(1e6)  # 1,000,000
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
@@ -83,7 +82,7 @@ class L2tCsv(output.LogOutputFormatter):
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         formatter.FORMAT_STRING)
     for key, value in attributes.iteritems():
-      if key in self.SKIP or key in format_variables:
+      if key in helper.RESERVED_VARIABLES or key in format_variables:
         continue
       extra.append('%s: %s ' % (key, value))
     extra = ' '.join(extra)

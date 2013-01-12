@@ -25,11 +25,6 @@ from plaso.registry import test_lib
 from plaso.registry import xpuserassist
 
 
-class TestFormatter(winreg.WinRegistryGenericFormatter):
-  """Provide a formatter to the test unit."""
-  ID_RE = re.compile('.+', re.DOTALL)
-
-
 class RegistryXPUserAssistTest(unittest.TestCase):
   """The unit test for XP UserAssist parsing."""
 
@@ -49,8 +44,10 @@ class RegistryXPUserAssistTest(unittest.TestCase):
     entries = list(plugin.Process(key))
 
     self.assertEquals(entries[0].timestamp, 1249398682811067)
-    self.assertEquals(
-        entries[0].text, u'UEME_RUNPIDL:%csidl2%\\MSN.lnk: [Count: 14]')
+    self.assertTrue(
+        u'UEME_RUNPIDL:%csidl2%\\MSN.lnk' in entries[0].regvalue)
+    self.assertEquals(entries[0].regvalue[u'UEME_RUNPIDL:%csidl2%\\MSN.lnk'],
+                      u'[Count: 14]')
     msg, _ = eventdata.GetMessageStrings(entries[0])
     self.assertEquals(
         msg, u'UEME_RUNPIDL:%csidl2%\\MSN.lnk: [Count: 14]')

@@ -323,7 +323,7 @@ class PlasoStorage(object):
 
     event = plaso_storage_pb2.EventObject()
     event.ParseFromString(event_str)
-    attributes = dict((a.key, a.value) for a in event.attributes)
+    attributes = dict(GetAttributeValue(a) for a in event.attributes)
 
     if event.timestamp > self._buffer_last_timestamp:
       self._buffer_last_timestamp = event.timestamp
@@ -368,15 +368,56 @@ class PlasoStorage(object):
           attribute_value = pfile.GetUnicodeString(attribute_value)
         setattr(proto, attr, attribute_value)
       else:
-        a = proto.attributes.add()
-        a.key = attr
-        a.value = pfile.GetUnicodeString(getattr(an_event, attr))
+        value = getattr(an_event, attr)
+        if isinstance(value, (int, long)) or value:
+          a = proto.attributes.add()
+          cls.AddAttribute(a, attr, value)
     try:
       return proto.SerializeToString()
     except message.EncodeError as e:
       logging.warning('Unable to serialize event (skip), error msg: %s', e)
 
     return ''
+
+  @classmethod
+  def AddAttribute(cls, attribute, key, value):
+    """Add an attribute to an EventObject protobuf.
+
+    An Attribute message inside the EventObject protobuf is an attribute
+    that can store almost any arbitrary data, at least int, str, list and dict.
+
+    This method takes care of identifying the type of data that is being
+    stored inside the protobuf and assigning it properly to an Attribute.
+
+    Args:
+      attribute: An Attribute message that the value should be assigned to.
+      key: A key value for this attribute.
+      value: The native Python object that should be stored in the attribute.
+    """
+    attribute.key = key
+    if isinstance(value, (str, unicode)):
+      attribute.string = pfile.GetUnicodeString(value)
+    elif isinstance(value, (int, long)):
+      attribute.integer = value
+    elif isinstance(value, bool):
+      attribute.boolean = value
+    elif isinstance(value, dict):
+      my_dict = plaso_storage_pb2.Dict()
+      for dict_key, dict_value in value.items():
+        m = my_dict.attributes.add()
+        cls.AddAttribute(m, dict_key, dict_value)
+      attribute.dict.MergeFrom(my_dict)
+    elif isinstance(value, (list, tuple)):
+      my_list = plaso_storage_pb2.Array()
+      for v in value:
+        item = my_list.values.add()
+        if isinstance(v, int):
+          item.integer = v
+        else:
+          item.string = pfile.GetUnicodeString(v)
+      attribute.array.MergeFrom(my_list)
+    else:
+      attribute.data = value
 
   def FlushBuffer(self):
     """Flush a buffer to disk."""
@@ -766,3 +807,41 @@ class SimpleStorageDumper(object):
   def Close(self):
     """Close the queue, indicating to the storage to flush and close."""
     self._queue.Close()
+
+
+def GetAttributeValue(attribute):
+  """Method to retrieve a Python friendly value from the Attribute protobuf."""
+  key = None
+
+  if not isinstance(attribute, plaso_storage_pb2.Attribute):
+    return key, None
+
+  key = attribute.key
+
+  if attribute.HasField('string'):
+    return key, attribute.string
+
+  if attribute.HasField('integer'):
+    return key, attribute.integer
+
+  if attribute.HasField('boolean'):
+    return key, attribute.boolean
+
+  if attribute.HasField('array'):
+    ret = []
+    for entry in attribute.array.values:
+      if entry.HasField('integer'):
+        ret.append(entry.integer)
+      elif entry.HasField('string'):
+        ret.append(entry.string)
+
+    return key, ret
+
+  if attribute.HasField('dict'):
+    ret = {}
+    for entry in attribute.dict.attributes:
+      _, ret[entry.key] = GetAttributeValue(entry)
+
+    return key, ret
+
+  return key, None

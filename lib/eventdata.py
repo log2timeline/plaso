@@ -19,6 +19,7 @@ import re
 
 from plaso.lib import errors
 from plaso.lib import registry
+from plaso.lib import storage
 
 
 class PlasoFormatter(object):
@@ -41,7 +42,7 @@ class PlasoFormatter(object):
     if hasattr(event_object, 'attributes') and hasattr(
         event_object.attributes, 'MergeFrom'):
       self.base_attributes = dict(
-          (a.key, a.value) for a in event_object.attributes)
+          storage.GetAttributeValue(a) for a in event_object.attributes)
       for attr, value in event_object.ListFields():
         # Don't want to include attributes that are themselves a message.
         if attr.type != 11:

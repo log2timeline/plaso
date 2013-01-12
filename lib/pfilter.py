@@ -29,10 +29,12 @@ import pytz
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
 from plaso.frontend import presets
+
 from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import lexer
 from plaso.lib import pfile
+from plaso.lib import storage
 
 __pychecker__ = 'no-funcdoc'
 
@@ -40,12 +42,12 @@ __pychecker__ = 'no-funcdoc'
 class PlasoValueExpander(objectfilter.AttributeValueExpander):
   """An expander that gives values based on object attribute names."""
 
-  def _GetMessage(self, obj, attributes):
+  def _GetMessage(self, obj):
     """Return a properly formatted message string."""
     ret = u''
 
     try:
-      ret = obj.format_string.format(**attributes)
+      ret, _ = eventdata.GetMessageStrings(obj)
     except KeyError as e:
       logging.warning(u'Unable to correctly assemble event: %s', e)
 
@@ -64,16 +66,15 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
 
     # Check if this is an attribute inside the EventObject protobuf.
     if hasattr(obj, 'attributes') and hasattr(obj.attributes, 'MergeFrom'):
-      attributes = dict((a.key, a.value) for a in obj.attributes)
-
       if attr_name == 'message':
-        return self._GetMessage(obj, attributes)
+        return self._GetMessage(obj)
 
+      attributes = dict(storage.GetAttributeValue(a) for a in obj.attributes)
       return attributes.get(attr_name, None)
 
     # Check if this is a message request and we have a regular EventObject.
     if attr_name == 'message' and not hasattr(obj.attributes, 'MergeForm'):
-      return self._GetMessage(obj, obj.attributes)
+      return self._GetMessage(obj)
 
   def _GetAttributeName(self, path):
     return path[0].lower()

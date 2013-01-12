@@ -402,8 +402,7 @@ class RegistryEvent(EventObject):
     self.keyvalue_dict = value_dict
     self.timestamp = timestamp
     self.timestamp_desc = usage or 'Last Written'
-    self.text = u' '.join([u'%s: %s' % (key, value) for (
-        key, value) in sorted(self.keyvalue_dict.items())])
+    self.regvalue = value_dict
 
 
 class TextEvent(EventObject):
