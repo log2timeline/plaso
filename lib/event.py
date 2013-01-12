@@ -340,8 +340,8 @@ class FatDateTimeEvent(EventObject):
     """Initializes a FAT date time-based event object.
 
     Args:
-      fat_dat_time: the FAT date time value.
-      usage: the description of the usage of the time value.
+      fat_dat_time: The FAT date time value.
+      usage: The description of the usage of the time value.
     """
     super(FatDateTimeEvent, self).__init__()
     self.timestamp = timelib.Timestamp.FromFatDateTime(fat_date_time)
@@ -355,8 +355,8 @@ class FiletimeEvent(EventObject):
     """Initializes a FILETIME timestamp-based event object.
 
     Args:
-      filetime: the FILETIME timestamp value.
-      usage: the description of the usage of the time value.
+      filetime: The FILETIME timestamp value.
+      usage: The description of the usage of the time value.
     """
     super(FiletimeEvent, self).__init__()
     self.timestamp = timelib.Timestamp.FromFiletime(filetime)
@@ -370,8 +370,8 @@ class PosixTimeEvent(EventObject):
     """Initializes a POSIX times-based event object.
 
     Args:
-      posix_time: the POSIX time value.
-      usage: the description of the usage of the time value.
+      posix_time: The POSIX time value.
+      usage: The description of the usage of the time value.
     """
     super(PosixTimeEvent, self).__init__()
     self.timestamp = timelib.Timestamp.FromPosixTime(posix_time)
@@ -385,15 +385,15 @@ class RegistryEvent(EventObject):
   keyvalue_dict = u''
   source_append = u''
 
-  def __init__(self, key, value_dict, timestamp=None, desc=None):
+  def __init__(self, key, value_dict, timestamp=None, usage=None):
     """Initializes a Windows registry event.
 
     Args:
       key: Name of the registry key being parsed.
       value_dict: The interpreted value of the key, stored as a dictionary.
-      timestamp: If a timestamp is associated to the event, it's stored
-      in a micro second value since Jan 1 1970 UTC.
-      desc: Description of the timestamp.
+      timestamp: Optional timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      usage: The description of the usage of the time value.
     """
     super(RegistryEvent, self).__init__()
     self.source_short = 'REG'
@@ -401,7 +401,7 @@ class RegistryEvent(EventObject):
       self.keyname = key
     self.keyvalue_dict = value_dict
     self.timestamp = timestamp
-    self.timestamp_desc = desc or 'Last Written'
+    self.timestamp_desc = usage or 'Last Written'
     self.text = u' '.join([u'%s: %s' % (key, value) for (
         key, value) in sorted(self.keyvalue_dict.items())])
 
@@ -409,19 +409,19 @@ class RegistryEvent(EventObject):
 class TextEvent(EventObject):
   """Convenience class for a text log file-based event."""
 
-  def __init__(self, date, body, source, host=None, user=None):
+  def __init__(self, timestamp, body, source, host=None, user=None):
     """Initializes a text event.
 
     Args:
-      date: An integer, representing the time in microseconds since
-            Jan 1, 1970 00:00:00 UTC.
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
       body: The text, processesed as it should be presented.
       source: The source_long description of the event.
       host: An optional host name if one is available within the log file.
       user: An optional user name if one is available within the log file.
     """
     super(TextEvent, self).__init__()
-    self.timestamp = date
+    self.timestamp = timestamp
     self.timestamp_desc = 'Entry Written'
     self.source_short = 'LOG'
     self.source_long = source
@@ -435,19 +435,19 @@ class TextEvent(EventObject):
 class SQLiteEvent(EventObject):
   """Convenience class for a SQLite-based event."""
 
-  def __init__(self, date, description, source_short, source_long):
+  def __init__(self, timestamp, usage, source_short, source_long):
     """Initializes the SQLite-based event.
 
     Args:
-      date: An integer, representing the time in microseconds since
-            Jan 1, 1970 00:00:00 UTC.
-      description: The timestamp description of the event.
-      source_short: A string, the content of source_short.
-      source_long: A string, the content of source_long.
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      usage: The description of the usage of the time value.
+      source_short: A string containing a long description of the source.
+      source_long: A string containing a short description of the source.
     """
     super(SQLiteEvent, self).__init__()
-    self.timestamp = date
-    self.timestamp_desc = description
+    self.timestamp = timestamp
+    self.timestamp_desc = usage
     self.source_short = source_short
     self.source_long = source_long
 
