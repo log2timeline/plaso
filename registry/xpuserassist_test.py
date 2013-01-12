@@ -42,13 +42,13 @@ class RegistryXPUserAssistTest(unittest.TestCase):
 
   def testUserAssist(self):
     """Test the user assist plugin."""
-    key = self.registry.GetKey(('\\Software\\Microsoft\\Windows\\CurrentVersio'
-                                'n\\Explorer\\UserAssist\\{75048700-EF1F-11D0-'
-                                '9888-006097DEACF9}\\Count'))
+    key = self.registry.GetKey(
+        '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
+        '\\{75048700-EF1F-11D0-9888-006097DEACF9}\\Count')
     plugin = xpuserassist.XPUserAssistPlugin(None)
     entries = list(plugin.Process(key))
 
-    self.assertEquals(entries[0].timestamp, 1249398682811068)
+    self.assertEquals(entries[0].timestamp, 1249398682811067)
     self.assertEquals(
         entries[0].text, u'UEME_RUNPIDL:%csidl2%\\MSN.lnk: [Count: 14]')
     msg, _ = eventdata.GetMessageStrings(entries[0])

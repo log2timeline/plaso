@@ -333,18 +333,48 @@ class EventObject(object):
     return u'[{0}] {1}/{2} - {3}'.format(time, short, s_long, message)
 
 
+class FatDateTimeEvent(EventObject):
+  """Convenience class for a FAT date time-based event."""
+
+  def __init__(self, fat_date_time, usage):
+    """Initializes a FAT date time-based event object.
+
+    Args:
+      fat_dat_time: the FAT date time value.
+      usage: the description of the usage of the time value.
+    """
+    super(FatDateTimeEvent, self).__init__()
+    self.timestamp = timelib.Timestamp.FromFatDateTime(fat_date_time)
+    self.timestamp_desc = usage
+
+
 class FiletimeEvent(EventObject):
   """Convenience class for a FILETIME timestamp-based event."""
 
-  def __init__(self, timestamp, usage):
+  def __init__(self, filetime, usage):
     """Initializes a FILETIME timestamp-based event object.
 
     Args:
-      timestamp: the FILETIME timestamp value.
-      usage: the description of the usage of the timestamp.
+      filetime: the FILETIME timestamp value.
+      usage: the description of the usage of the time value.
     """
     super(FiletimeEvent, self).__init__()
-    self.timestamp = timelib.WinFiletime2Unix(timestamp)
+    self.timestamp = timelib.Timestamp.FromFiletime(filetime)
+    self.timestamp_desc = usage
+
+
+class PosixTimeEvent(EventObject):
+  """Convenience class for a POSIX time-based event."""
+
+  def __init__(self, posix_time, usage):
+    """Initializes a POSIX times-based event object.
+
+    Args:
+      posix_time: the POSIX time value.
+      usage: the description of the usage of the time value.
+    """
+    super(PosixTimeEvent, self).__init__()
+    self.timestamp = timelib.Timestamp.FromPosixTime(posix_time)
     self.timestamp_desc = usage
 
 
