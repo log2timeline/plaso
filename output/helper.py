@@ -23,6 +23,10 @@ MODIFIED_RE = re.compile(r'modif', re.I)
 ACCESS_RE = re.compile(r'visit', re.I)
 CREATE_RE = re.compile(r'(create|written)', re.I)
 
+RESERVED_VARIABLES = frozenset(
+    ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue'])
+
+
 def GetLegacy(event_proto):
   """Return a legacy MACB representation of the event."""
   # TODO: Fix this function when the MFT parser has been implemented.

@@ -46,12 +46,12 @@ class PfileStat(parser.PlasoParser):
 
     event_container.offset = 0
     event_container.source_short = self.PARSER_TYPE
-    event_container.allocation = u''
+    event_container.allocated = True
 
     # Check if file is allocated (only applicable for TSK).
     check_allocated = getattr(filehandle, 'IsAllocated', None)
     if check_allocated and check_allocated():
-      event_container.allocation = u' (unallocated)'
+      event_container.allocated = False
 
     for time in times:
       evt = event.EventObject()
@@ -76,5 +76,14 @@ class PfileStatFormatter(eventdata.PlasoFormatter):
   ID_RE = re.compile('PfileStat:', re.DOTALL)
 
   # The format string.
-  FORMAT_STRING = u'{display_name}{allocation}'
+  FORMAT_STRING = u'{display_name}{append}'
   FORMAT_STRING_SHORT = u'{filename}'
+
+  def GetMessages(self):
+    """Return the formatted message string."""
+    self.extra_attributes['append'] = u''
+
+    if not self.extra_attributes['allocated']:
+      self.extra_attributes['append'] = u' (unallocated)'
+
+    return super(PfileStatFormatter, self).GetMessages()

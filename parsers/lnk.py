@@ -39,13 +39,6 @@ class WinLnkParser(parser.PlasoParser):
       an event container (EventContainer) that contains the parsed
       attributes.
     """
-    class NoneEmptyDict(dict):
-      """Dict that does not get appended to except when a value is present."""
-      def Append(self, key, value):
-        """Appends a non-empty value."""
-        if value:
-           super(NoneEmptyDict, self).update({key: value})
-
     lnk_file = pylnk.file()
     lnk_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
 
@@ -55,49 +48,45 @@ class WinLnkParser(parser.PlasoParser):
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
           self.NAME, file_object.name, exception))
 
-    event_container = event.EventContainer()
+    container = event.EventContainer()
 
-    event_container.offset = 0
-    event_container.source_long = self.NAME
-    event_container.source_short = self.PARSER_TYPE
+    container.offset = 0
+    container.source_long = self.NAME
+    container.source_short = self.PARSER_TYPE
 
-    entries = NoneEmptyDict()
-    entries.Append('description', lnk_file.get_description())
-    entries.Append('local_path', lnk_file.get_local_path())
-    entries.Append('network_path', lnk_file.get_network_path())
-    entries.Append(
-        'command_line_arguments', lnk_file.get_command_line_arguments())
-    entries.Append(
-        'env_variables_location', lnk_file.get_environment_variables_location())
-    entries.Append('relative_path', lnk_file.get_relative_path())
-    entries.Append('working_directory', lnk_file.get_working_directory())
-    entries.Append('icon_location', lnk_file.get_icon_location())
+    container.description = lnk_file.get_description()
+    container.local_path = lnk_file.get_local_path()
+    container.network_path = lnk_file.get_network_path()
+    container.command_line_arguments = lnk_file.get_command_line_arguments()
+    container.env_var_location = lnk_file.get_environment_variables_location()
+    container.relative_path = lnk_file.get_relative_path()
+    container.working_directory = lnk_file.get_working_directory()
+    container.icon_location = lnk_file.get_icon_location()
 
-    for key, value in entries.items():
-      setattr(event_container, key, value)
-
-    event_container.Append(event.FiletimeEvent(
+    container.Append(event.FiletimeEvent(
         lnk_file.get_file_access_time_as_integer(),
         'Last Access Time'))
 
-    event_container.Append(event.FiletimeEvent(
+    container.Append(event.FiletimeEvent(
         lnk_file.get_file_creation_time_as_integer(),
         'Creation Time'))
 
-    event_container.Append(event.FiletimeEvent(
+    container.Append(event.FiletimeEvent(
         lnk_file.get_file_modification_time_as_integer(),
         'Modification Time'))
 
     # TODO: add support for the distributed link tracker
     # TODO: add support for the shell item
 
-    return event_container
+    return container
 
 
 class WinLnkFormatter(eventdata.PlasoFormatter):
   #TODO: Change this into a more generic formatter that can be easily extended
   # for similar parsers.
   """Define the formatting for Windows shortcut."""
+  #TODO: Change this into a more generic formatter that can be easily extended
+  # for similar parsers.
 
   ID_RE = re.compile('WinLnkParser:', re.DOTALL)
 
@@ -160,7 +149,7 @@ class WinLnkFormatter(eventdata.PlasoFormatter):
       format_long.AppendValue('Local path', 'local_path')
       format_long.AppendValue('Network path', 'network_path')
       format_long.AppendValue('cmd arguments', 'command_line_arguments')
-      format_long.AppendValue('env location', 'env_variables_location')
+      format_long.AppendValue('env location', 'env_var_location')
       format_long.AppendValue('Relative path', 'relative_path')
       format_long.AppendValue('Working dir', 'working_directory')
       format_long.AppendValue('Icon location', 'icon_location')

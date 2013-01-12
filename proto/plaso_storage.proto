@@ -23,15 +23,42 @@ package plaso_storage;
 import "plaso/proto/transmission.proto";
 
 // Each EventObject/EventContainer can contain any attribute
-// as long as it can be expressed in a string value.
+// as long as it can be expressed in any of the supported
+// formats (eg, string, int, array, dict).
 // This can be looked as a hash or a dict object, with a key
 // and a value values.
 message Attribute {
   // The key to the dict object, something like 'username'.
   required string key = 1;
 
-  // The value of the key, something like 'johndoe'.
-  optional string value = 2;
+  // If the value is a string.
+  optional string string = 2;
+  // If the value is an integer.
+  optional int64 integer = 3;
+  // If the value is an array.
+  optional Array array = 4;
+  // If the value is a dictionary.
+  optional Dict dict = 5;
+  // If the value is a boolean value.
+  optional bool boolean = 6;
+  // If we have a "raw" byte value.
+  optional bytes data = 7;
+};
+
+// A list of of Attributes, to build up a dictionary.
+message Dict {
+  repeated Attribute attributes = 1;
+};
+
+// A value, used for lists or arrays.
+message Value {
+  optional int64 integer = 1;
+  optional string string = 2;
+};
+
+// A list of values, either integers or strings, to make up an array.
+message Array {
+  repeated Value values = 1;
 };
 
 // Each event read by the tool is stored as an EventObject,

@@ -18,6 +18,7 @@ import re
 
 from plaso.lib import eventdata
 from plaso.lib import win_registry_interface
+from plaso.parsers import winreg
 
 
 class TestRegKey(win_registry_interface.WinRegKey):
@@ -93,7 +94,7 @@ class TestRegValue(win_registry_interface.WinRegValue):
     return u''
 
 
-class DummyFormatter(eventdata.RegistryFormatter):
+class DummyFormatter(winreg.WinRegistryGenericFormatter):
   """Implement a dummy registry formatter."""
   ID_RE = re.compile('.', re.DOTALL)
 
