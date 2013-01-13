@@ -156,7 +156,7 @@ class PlasoStorage(object):
     if current_object:
       current_object.append(pre_obj)
     else:
-      current_object = [pre_obj, ]  # pylint: disable=g-illegal-space
+      current_object = [pre_obj, ]
 
     self.zipfile.writestr('information.yaml', yaml.dump(current_object))
 
