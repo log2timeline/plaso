@@ -69,6 +69,7 @@ from google.protobuf import message
 from plaso.lib import errors
 from plaso.lib import pfile
 from plaso.lib import queue
+from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
@@ -203,6 +204,7 @@ class PlasoStorage(object):
       index_fh = self.zipfile.open('plaso_index.%06d' % number, 'r')
       ofs = entry_index * 4
 
+      __pychecker__ = 'unusednames=_'
       # Since seek is not supported we need to read and ignore the data.
       _ = index_fh.read(ofs)
       size_byte_stream = index_fh.read(4)
@@ -353,71 +355,19 @@ class PlasoStorage(object):
   @classmethod
   def SerializeEvent(cls, an_event):
     """Return a serialized event."""
-    proto = plaso_storage_pb2.EventObject()
-    for attr in an_event.GetAttributes():
-      if attr == 'source_short':
-        proto.source_short = cls.source_short_map.get(
-            an_event.source_short, 6)
-      elif attr == 'pathspec':
-        path = transmission_pb2.PathSpec()
-        path.ParseFromString(an_event.pathspec)
-        proto.pathspec.MergeFrom(path)
-      elif hasattr(proto, attr):
-        attribute_value = getattr(an_event, attr)
-        if type(attribute_value) == str:
-          attribute_value = pfile.GetUnicodeString(attribute_value)
-        setattr(proto, attr, attribute_value)
-      else:
-        value = getattr(an_event, attr)
-        if isinstance(value, (int, long)) or value:
-          a = proto.attributes.add()
-          cls.AddAttribute(a, attr, value)
+    # TODO: due to some issue with pychecker unusednames=cls does not work.
+    # Since the idea is to refactor this function anyway remove this workaround
+    # afterwards.
+    __pychecker__ = 'unusednames=_'
+    _ = cls
+    proto = an_event.ToProto()
+
     try:
       return proto.SerializeToString()
     except message.EncodeError as e:
       logging.warning('Unable to serialize event (skip), error msg: %s', e)
 
     return ''
-
-  @classmethod
-  def AddAttribute(cls, attribute, key, value):
-    """Add an attribute to an EventObject protobuf.
-
-    An Attribute message inside the EventObject protobuf is an attribute
-    that can store almost any arbitrary data, at least int, str, list and dict.
-
-    This method takes care of identifying the type of data that is being
-    stored inside the protobuf and assigning it properly to an Attribute.
-
-    Args:
-      attribute: An Attribute message that the value should be assigned to.
-      key: A key value for this attribute.
-      value: The native Python object that should be stored in the attribute.
-    """
-    attribute.key = key
-    if isinstance(value, (str, unicode)):
-      attribute.string = pfile.GetUnicodeString(value)
-    elif isinstance(value, (int, long)):
-      attribute.integer = value
-    elif isinstance(value, bool):
-      attribute.boolean = value
-    elif isinstance(value, dict):
-      my_dict = plaso_storage_pb2.Dict()
-      for dict_key, dict_value in value.items():
-        m = my_dict.attributes.add()
-        cls.AddAttribute(m, dict_key, dict_value)
-      attribute.dict.MergeFrom(my_dict)
-    elif isinstance(value, (list, tuple)):
-      my_list = plaso_storage_pb2.Array()
-      for v in value:
-        item = my_list.values.add()
-        if isinstance(v, int):
-          item.integer = v
-        else:
-          item.string = pfile.GetUnicodeString(v)
-      attribute.array.MergeFrom(my_list)
-    else:
-      attribute.data = value
 
   def FlushBuffer(self):
     """Flush a buffer to disk."""
@@ -445,6 +395,7 @@ class PlasoStorage(object):
     ofs = 0
     proto_str = []
     index_str = []
+    __pychecker__ = 'unusednames=_'
     for _ in range(len(self._buffer)):
       _, entry = heapq.heappop(self._buffer)
       # TODO: Instead of appending to an array
@@ -521,11 +472,11 @@ class PlasoStorage(object):
       group = plaso_storage_pb2.EventGroup()
       group.name = row.name
       if hasattr(row, 'description'):
-        group.description = pfile.GetUnicodeString(row.description)
+        group.description = utils.GetUnicodeString(row.description)
       if hasattr(row, 'category'):
-        group.category = pfile.GetUnicodeString(row.category)
+        group.category = utils.GetUnicodeString(row.category)
       if hasattr(row, 'color'):
-        group.color = pfile.GetUnicodeString(row.color)
+        group.color = utils.GetUnicodeString(row.color)
 
       for number, index in row.events:
         evt = group.events.add()
@@ -583,16 +534,16 @@ class PlasoStorage(object):
       tag.store_number = int(row.store_number)
       tag.store_index = int(row.store_index)
       if hasattr(row, 'comment'):
-        tag.comment = pfile.GetUnicodeString(row.comment)
+        tag.comment = utils.GetUnicodeString(row.comment)
       if hasattr(row, 'color'):
-        tag.color = pfile.GetUnicodeString(row.color)
+        tag.color = utils.GetUnicodeString(row.color)
       if hasattr(row, 'tag'):
         tag_attr = tag.tags.add()
-        tag_attr.value = pfile.GetUnicodeString(row.tag)
+        tag_attr.value = utils.GetUnicodeString(row.tag)
       if hasattr(row, 'tags'):
         for tag_str in row.tags:
           tag_attr = tag.tags.add()
-          tag_attr.value = pfile.GetUnicodeString(tag_str)
+          tag_attr.value = utils.GetUnicodeString(tag_str)
 
       tag_str = tag.SerializeToString()
       packed = struct.pack('<I', len(tag_str)) + tag_str
@@ -656,6 +607,7 @@ class PlasoStorage(object):
         tag_ofs = self._GetTagFromIndex(fh, store_number, store_index)
         if tag_ofs:
           tag_fh = self.zipfile.open('plaso_tagging.%06d' % number, 'r')
+          __pychecker__ = 'unusednames=_'
           _  = tag_fh.read(tag_ofs)
           tag = self._GetTagEntry(tag_fh)
 
@@ -767,6 +719,7 @@ class PlasoStorage(object):
         logging.info(('[Storage] Closing the storage, nr. of events processed:'
                       ' %d'), self._write_counter)
 
+  __pychecker__ = 'unusednames=unused_type,unused_value,unused_traceback'
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
     self.CloseStorage()
@@ -810,6 +763,7 @@ class SimpleStorageDumper(object):
 
 
 def GetAttributeValue(attribute):
+  # TODO: refactor now duplicate with FromProto functions in EventObject.
   """Method to retrieve a Python friendly value from the Attribute protobuf."""
   key = None
 

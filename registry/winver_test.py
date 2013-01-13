@@ -49,7 +49,7 @@ class TestWinVerRegistry(unittest.TestCase):
 
     self.assertEquals(len(entries), 1)
     self.assertEquals(entries[0].timestamp, int(1346443795 * 1e6))
-    msg, _ = eventdata.GetMessageStrings(entries[0])
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
 
 

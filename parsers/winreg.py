@@ -136,15 +136,25 @@ class WinRegistryGenericFormatter(eventdata.RegistryFormatter):
   # The indentifier for the formatter (a regular expression)
   ID_RE = re.compile('WinRegistry:.+key.*:Last Written', re.DOTALL)
 
-  def GetMessages(self):
-    """Return the messages."""
-    text = u' '.join([u'%s: %s' % (key, value) for (
-        key, value) in sorted(self.extra_attributes['regvalue'].items())])
+  def GetMessages(self, event_object):
+    """Returns a list of messages extracted from an event object.
 
-    self.extra_attributes['text'] = text
-    if 'keyname' in self.extra_attributes:
+    Args:
+      event_object: The event object (EventObject) containing the event
+                    specific data.
+
+    Returns:
+      A list that contains both the longer and shorter version of the message
+      string.
+    """
+    regvalue = getattr(event_object, "regvalue", {})
+    text = u' '.join([u'%s: %s' % (key, value) for (key, value)
+                      in sorted(regvalue.items())])
+
+    event_object.text = text
+    if hasattr(event_object, 'keyname'):
       self.format_string = self.FORMAT_STRING
     else:
       self.format_string = self.FORMAT_STRING_ALTERNATIVE
 
-    return super(WinRegistryGenericFormatter, self).GetMessages()
+    return super(WinRegistryGenericFormatter, self).GetMessages(event_object)

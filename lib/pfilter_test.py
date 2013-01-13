@@ -20,10 +20,10 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import parser
-from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import storage
+from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
@@ -34,7 +34,7 @@ class Empty(object):
   """An empty object."""
 
 
-class FakeFormatter(eventdata.PlasoFormatter):
+class FakeFormatter(eventdata.EventFormatter):
   """A formatter for this fake class."""
   ID_RE = re.compile('Weirdo:Made up Source:Last Written', re.DOTALL)
 
@@ -115,20 +115,11 @@ class PFilterTest(unittest.TestCase):
     evt.inode = '1245'
     evt.display_name = u'unknown:%s' % evt.filename
 
-    transfer_proto = transmission_pb2.PathSpec()
-    transfer_proto.type = transmission_pb2.PathSpec.OS
-    transfer_proto.file_path = pfile.GetUnicodeString(evt.filename)
-
-    evt.pathspec = transfer_proto.SerializeToString()
     container.Append(evt)
-
-    evt_proto_str = storage.PlasoStorage.SerializeEvent(evt)
-    evt_proto = plaso_storage_pb2.EventObject()
-    evt_proto.ParseFromString(evt_proto_str)
 
     # Series of tests.
     query = "filename contains 'GoodFella'"
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     # Double negative matching -> should be the same
     # as a positive one.
@@ -140,60 +131,59 @@ class PFilterTest(unittest.TestCase):
 
     # Test date filtering.
     query = "date >= '2015-11-18'"
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     query = "date < '2015-11-19'"
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     # 2015-11-18T01:15:43
     query = "date < '2015-11-18T01:15:44.341' and date > '2015-11-18 01:15:42'"
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     query = "date > '2015-11-19'"
-    self.RunPlasoTest(evt, evt_proto, query, False)
+    self.RunPlasoTest(evt, query, False)
 
     # Perform few attribute tests.
     query = "filename not contains 'sometext'"
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     query = ("timestamp_desc CONTAINS 'written' AND date > '2015-11-18' AND "
              "date < '2015-11-25 12:56:21' AND (source_short contains 'LOG' or"
              " source_short CONTAINS 'REG')")
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     query = "parser is not 'Made'"
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     query = "parser is not 'Weirdo'"
-    self.RunPlasoTest(evt, evt_proto, query, False)
+    self.RunPlasoTest(evt, query, False)
 
     # Test atttributes stored in the container.
     query = "source_long not contains 'Made'"
-    self.RunPlasoTest(evt, evt_proto, query, False)
+    self.RunPlasoTest(evt, query, False)
 
     query = "source is 'REG'"
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     query = "source is not 'FILE'"
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
     # Multiple attributes.
     query = ("source_long is 'Made up Source' AND description_long regexp "
              "'bad, bad thing [\sa-zA-Z\.]+ evil'")
-    self.RunPlasoTest(evt, evt_proto, query, False)
+    self.RunPlasoTest(evt, query, False)
 
     query = ("source_long is 'Made up Source' AND message iregexp "
              "'bad, bad thing [\sa-zA-Z\.]+ evil'")
-    self.RunPlasoTest(evt, evt_proto, query, True)
+    self.RunPlasoTest(evt, query, True)
 
-  def RunPlasoTest(self, obj, obj_proto, query, result):
+  def RunPlasoTest(self, obj, query, result):
     """Run a simple test against Plaso event object."""
     parser = pfilter.PlasoParser(query).Parse()
     matcher = parser.Compile(
         pfilter.PlasoAttributeFilterImplementation)
 
     self.assertEqual(result, matcher.Matches(obj))
-    self.assertEqual(result, matcher.Matches(obj_proto))
 
   def testParserFilter(self):
     query = 'source is "REG" AND message CONTAINS "is"'

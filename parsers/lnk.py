@@ -81,9 +81,7 @@ class WinLnkParser(parser.PlasoParser):
     return container
 
 
-class WinLnkFormatter(eventdata.PlasoFormatter):
-  #TODO: Change this into a more generic formatter that can be easily extended
-  # for similar parsers.
+class WinLnkFormatter(eventdata.EventFormatter):
   """Define the formatting for Windows shortcut."""
   #TODO: Change this into a more generic formatter that can be easily extended
   # for similar parsers.
@@ -94,26 +92,55 @@ class WinLnkFormatter(eventdata.PlasoFormatter):
   FORMAT_STRING = u''
   FORMAT_STRING_SHORT = u''
 
-  @property
-  def linked_path(self):
-    if 'local_path' in self.extra_attributes:
-      return self.extra_attributes.get('local_path')
+  # The format string.
+  # TODO: use as part of the conditional formatter.
+  FORMAT_STRING_PIECES = [
+      u'[{description}]',
+      u'Local path: {local_path}',
+      u'Network path: {network_path}',
+      u'cmd arguments: {command_line_arguments}',
+      u'env location: {env_variables_location}',
+      u'Relative path: {relative_path}',
+      u'Working dir: {working_directory}',
+      u'Icon location: {icon_location}']
 
-    if 'network_path' in self.extra_attributes:
-      return self.extra_attributes.get('network_path')
+  def GetLinkedPath(self, event_object):
+    """Determines the linked path.
 
-    if 'relative_path' in self.extra_attributes:
+    Args:
+      event_object: The event object (EventObject) containing the event
+                    specific data.
+
+    Returns:
+      A string containing the linked path.
+    """
+    if hasattr(event_object, 'local_path'):
+      return event_object['local_path']
+
+    if hasattr(event_object, 'network_path'):
+      return event_object['network_path']
+
+    if hasattr(event_object, 'relative_path'):
       paths = []
-      if 'working_directory' in self.extra_attributes:
-        paths.append(self.extra_attributes.get('working_directory'))
-      paths.append(self.extra_attributes.get('relative_path'))
+      if hasattr(event_object, 'working_directory'):
+        paths.append(event_object['working_directory'])
+      paths.append(event_object['relative_path'])
 
       return u'\\'.join(paths)
 
-    return 'Unknown path.'
+    return 'Unknown'
 
-  def GetMessages(self):
-    """Return a list of messages extracted from an EventObject."""
+  def GetMessages(self, event_object):
+    """Returns a list of messages extracted from an event object.
+
+    Args:
+      event_object: The event object (EventObject) containing the event
+                    specific data.
+
+    Returns:
+      A list that contains both the longer and shorter version of the message
+      string.
+    """
     class TextList(list):
       """List with support to add description, value pairs."""
 
@@ -133,15 +160,13 @@ class WinLnkFormatter(eventdata.PlasoFormatter):
             super(TextList, self).append(u'{{{0}}}'.format(value))
 
     # Update extended attributes with the linked path.
-    self.extra_attributes['linked_path'] = self.linked_path
-
-    if not 'description' in self.extra_attributes:
-      self.extra_attributes['description'] = u'Empty description'
+    if not hasattr(event_object, 'description'):
+      event_object.description = u'Empty description'
 
     # Check if we have "fixed" the format strings.
     if not self.format_string:
-      format_short = TextList(self.extra_attributes)
-      format_long = TextList(self.extra_attributes)
+      format_short = TextList(event_object.attributes)
+      format_long = TextList(event_object.attributes)
 
       format_long.append(u'[{description}]')
       format_short.append(u'[{description}]')
@@ -154,11 +179,11 @@ class WinLnkFormatter(eventdata.PlasoFormatter):
       format_long.AppendValue('Working dir', 'working_directory')
       format_long.AppendValue('Icon location', 'icon_location')
 
-      format_short.AppendValue('', 'linked_path')
+      format_short.AppendValue('', self.GetLinkedPath(event_object))
       format_short.AppendValue('', 'command_line_arguments')
 
       self.format_string = u' '.join(format_long)
       self.format_string_short = u' '.join(format_short)
 
-    return super(WinLnkFormatter, self).GetMessages()
+    return super(WinLnkFormatter, self).GetMessages(event_object)
 

@@ -69,21 +69,30 @@ class PfileStat(parser.PlasoParser):
     return event_container
 
 
-class PfileStatFormatter(eventdata.PlasoFormatter):
+class PfileStatFormatter(eventdata.EventFormatter):
   """Define the formatting for PFileStat."""
 
   # The indentifier for the formatter (a regular expression)
   ID_RE = re.compile('PfileStat:', re.DOTALL)
 
   # The format string.
-  FORMAT_STRING = u'{display_name}{append}'
+  FORMAT_STRING = u'{display_name}{text_append}'
   FORMAT_STRING_SHORT = u'{filename}'
 
-  def GetMessages(self):
-    """Return the formatted message string."""
-    self.extra_attributes['append'] = u''
+  def GetMessages(self, event_object):
+    """Returns a list of messages extracted from an event object.
 
-    if not self.extra_attributes['allocated']:
-      self.extra_attributes['append'] = u' (unallocated)'
+    Args:
+      event_object: The event object (EventObject) containing the event
+                    specific data.
 
-    return super(PfileStatFormatter, self).GetMessages()
+    Returns:
+      A list that contains both the longer and shorter version of the message
+      string.
+    """
+    event_object.text_append = u''
+
+    if not hasattr(event_object, 'allocated'):
+      event_object.text_append = u' (unallocated)'
+
+    return super(PfileStatFormatter, self).GetMessages(event_object)

@@ -122,12 +122,10 @@ class PlasoStorageUnitTest(unittest.TestCase):
     event_3.source_long = 'NTUSER.DAT Registry File'
     event_3.parser = 'UNKNOWN'
 
-    event_4 = event.TextEvent(12389344590000000,
-                              ('This is a line by someone not reading the log'
-                               ' line properly. And since this log line exceed'
-                               's the accepted 80 chars it will be '
-                               'shortened.'), 'Some random text file',
-                              'nomachine', 'johndoe')
+    event_4 = event.TextEvent(12389344590000000, (
+        'This is a line by someone not reading the log line properly. And '
+        'since this log line exceeds the accepted 80 chars it will be '
+        'shortened.'), 'Some random text file', 'nomachine', 'johndoe')
     event_4.parser = 'UNKNOWN'
 
     self.events.append(event_1)
@@ -226,11 +224,16 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(tags[0].store_index, 0)
     self.assertEquals(tags[0].tag.comment, u'My comment')
     self.assertEquals(tags[0].tag.color, u'blue')
-    msg, _ = eventdata.GetMessageStrings(tags[0])
+
+    event_object = event.EventObject()
+    event_object.FromProto(tags[0])
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
     self.assertEquals(msg[0:10], u'This is a ')
 
     self.assertEquals(tags[1].tag.tags[0].value, 'Malware')
-    msg, _ = eventdata.GetMessageStrings(tags[1])
+    event_object = event.EventObject()
+    event_object.FromProto(tags[1])
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
     self.assertEquals(msg[0:15], u'[\\HKCU\\Windows\\')
 
     self.assertEquals(tags[2].tag.comment, u'This is interesting')

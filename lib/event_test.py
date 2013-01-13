@@ -47,10 +47,10 @@ class TestRegistryFormatter(winreg.WinRegistryGenericFormatter):
   ID_RE = re.compile('.+(Registry|UNKNOWN):', re.DOTALL)
 
 
-class TestTextFormatter(eventdata.PlasoFormatter):
+class TestTextFormatter(eventdata.TextFormatter):
   """A simple formatter for registry data."""
 
-  ID_RE = re.compile('None:(Some|Weird)', re.DOTALL)
+  ID_RE = re.compile('UNKNOWN:(Some|Weird)', re.DOTALL)
 
   FORMAT_STRING = u'{text}'
 
@@ -102,12 +102,10 @@ class PlasoEventUnitTest(unittest.TestCase):
     event_5 = TestEvent()
     event_6 = TestEvent()
 
-    event_7 = event.TextEvent(1338934459000000,
-                              ('This is a line by someone not reading the log'
-                               ' line properly. And since this log line exceed'
-                               's the accepted 80 chars it will be '
-                               'shortened.'), 'Some random text file',
-                              'nomachine', 'johndoe')
+    event_7 = event.TextEvent(1338934459000000, (
+        'This is a line by someone not reading the log line properly. And '
+        'since this log line exceeds the accepted 80 chars it will be '
+        'shortened.'), 'Some random text file', 'nomachine', 'johndoe')
     event_7.text = event_7.body
 
     event_4.text = 'This log line reads ohh so much.'
@@ -134,7 +132,7 @@ class PlasoEventUnitTest(unittest.TestCase):
   def GetCSVLine(self, e):
     """Takes an EventObject and prints out a simple CSV line from it."""
     try:
-      msg, _ = eventdata.GetMessageStrings(e)
+      msg, _ = eventdata.EventFormatterManager.GetMessageStrings(e)
     except KeyError:
       print e.attributes
       print e.__dict__
@@ -236,7 +234,7 @@ class PlasoEventUnitTest(unittest.TestCase):
     """Test a text based event."""
     for e in container:
       if e.source_short == 'LOG':
-        msg, msg_short = eventdata.GetMessageStrings(e)
+        msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(e)
         self.assertEquals(msg, (
             'This is a line by someone not reading the log line properly. An'
             'd since this log line exceeds the accepted 80 chars it will be '
@@ -255,9 +253,11 @@ class PlasoEventUnitTest(unittest.TestCase):
 
     self.assertEquals(len(attr), 9)
 
-    self.assertEquals(sorted(attr), ['body', 'filename', 'hostname',
-                                     'source_long', 'source_short', 'text',
-                                     'timestamp', 'timestamp_desc', 'username'])
+    self.assertEquals(sorted(attr), [
+        'body', 'filename', 'hostname', 'source_long', 'source_short', 'text',
+        'timestamp', 'timestamp_desc', 'username'])
+
+# TODO: add to and from proto tests.
 
 if __name__ == '__main__':
   unittest.main()

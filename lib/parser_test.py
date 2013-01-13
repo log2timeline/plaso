@@ -190,13 +190,13 @@ class ParserUnitTest(unittest.TestCase):
     first_entry = text_generator.next()
     second_entry = text_generator.next()
 
-    msg1, _ = eventdata.GetMessageStrings(first_entry)
+    msg1, _ = eventdata.EventFormatterManager.GetMessageStrings(first_entry)
     self.assertEquals(first_entry.timestamp, 1293859395000000)
     self.assertEquals(msg1, 'first line.')
     self.assertEquals(first_entry.hostname, 'myhost')
     self.assertEquals(first_entry.username, 'myuser')
 
-    msg2, _ = eventdata.GetMessageStrings(second_entry)
+    msg2, _ = eventdata.EventFormatterManager.GetMessageStrings(second_entry)
     self.assertEquals(second_entry.timestamp, 693604686000000)
     self.assertEquals(msg2, 'second line.')
     self.assertEquals(second_entry.hostname, 'myhost')

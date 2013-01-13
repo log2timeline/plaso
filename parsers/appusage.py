@@ -64,7 +64,7 @@ class ApplicationUsage(parser.SQLiteParser):
     yield evt
 
 
-class ApplicationUsageFormatter(eventdata.PlasoFormatter):
+class ApplicationUsageFormatter(eventdata.EventFormatter):
   """Define the formatting for Application Usage information."""
 
   # The indentifier for the formatter (a regular expression)

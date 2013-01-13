@@ -59,9 +59,9 @@ class TestMRURegistry(unittest.TestCase):
     self.assertEquals(entries[1].timestamp, 0)
     self.assertEquals(entries[2].timestamp, 0)
 
-    msg1, _ = eventdata.GetMessageStrings(entries[0])
-    msg2, _ = eventdata.GetMessageStrings(entries[1])
-    msg3, _ = eventdata.GetMessageStrings(entries[2])
+    msg1, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
+    msg2, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
+    msg3, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[2])
 
     self.assertEquals(msg1, line1)
     self.assertEquals(msg2, line2)

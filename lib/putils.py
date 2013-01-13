@@ -24,6 +24,7 @@ from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfile
 from plaso.lib import pfilter
+from plaso.lib import utils
 from plaso.proto import transmission_pb2
 
 # TODO: Refactor the putils library so it does not end up being a trash can
@@ -68,7 +69,7 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
     logging.error('The currently supported types are: tsk or vss.')
     return
 
-  proto.container_path = pfile.GetUnicodeString(image_path)
+  proto.container_path = utils.GetUnicodeString(image_path)
   proto.image_offset = image_offset * 512
   if isinstance(file_to_open, (int, long)):
     proto.image_inode = file_to_open
@@ -100,7 +101,7 @@ def OpenOSFile(path):
   """Return a PFile like object for a file in the OS."""
   proto = transmission_pb2.PathSpec()
   proto.type = transmission_pb2.PathSpec.OS
-  proto.file_path = pfile.GetUnicodeString(path)
+  proto.file_path = utils.GetUnicodeString(path)
 
   return pfile.OpenPFile(proto)
 
@@ -251,6 +252,7 @@ def GetEventData(event_proto, before=0, fscache=None):
     offset -= before
 
   return GetHexDump(fh, offset)
+
 
 def GetHexDump(fh, offset):
   """Return a hex dump from a filehandle and an offset."""
