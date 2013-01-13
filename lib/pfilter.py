@@ -35,6 +35,7 @@ from plaso.lib import objectfilter
 from plaso.lib import lexer
 from plaso.lib import pfile
 from plaso.lib import storage
+from plaso.lib import utils
 
 __pychecker__ = 'no-funcdoc'
 
@@ -47,7 +48,7 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     ret = u''
 
     try:
-      ret, _ = eventdata.GetMessageStrings(obj)
+      ret, _ = eventdata.EventFormatterManager.GetMessageStrings(obj)
     except KeyError as e:
       logging.warning(u'Unable to correctly assemble event: %s', e)
 
@@ -179,14 +180,14 @@ class DateCompareObject(object):
       as microseconds since UTC in Epoch format.
 
     """
-    self.text = pfile.GetUnicodeString(data)
+    self.text = utils.GetUnicodeString(data)
     if type(data) in (int, long):
       self.data = data
     elif type(data) == float:
       self.data = long(data)
     elif type(data) in (str, unicode):
       try:
-        dt = dateutil.parser.parse(pfile.GetUnicodeString(data))
+        dt = dateutil.parser.parse(utils.GetUnicodeString(data))
         utc_dt = pytz.UTC.localize(dt)
         self.data = calendar.timegm(utc_dt.timetuple()) * int(1e6)
         self.data += utc_dt.microsecond

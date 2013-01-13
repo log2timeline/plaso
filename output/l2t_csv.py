@@ -25,6 +25,7 @@ import re
 from plaso.output import helper
 from plaso.proto import plaso_storage_pb2
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import output
 
@@ -42,9 +43,9 @@ class L2tCsv(output.LogOutputFormatter):
 
   def Start(self):
     """Returns a header for the output."""
-    self.filehandle.write(('date,time,timezone,MACB,source,sourcetype,type,use'
-                           'r,host,short,desc,version,filename,inode,notes,for'
-                           'mat,extra\n'))
+    self.filehandle.write(('date,time,timezone,MACB,source,sourcetype,type,'
+                           'user,host,short,desc,version,filename,inode,notes,'
+                           'format,extra\n'))
 
   def WriteEvent(self, proto):
     """Write a single event."""
@@ -60,12 +61,14 @@ class L2tCsv(output.LogOutputFormatter):
     Args:
       proto_read: Protobuf to format.
     """
-    formatter = eventdata.GetFormatter(proto_read)
-    if not formatter:
+    event_object = event.EventObject()
+    event_object.FromProto(proto_read)
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    if not event_formatter:
       raise errors.NoFormatterFound(
-          'Unable to output event, no formatter found.')
+          'Unable to output event, no event formatter found.')
 
-    msg, msg_short = formatter.GetMessages()
+    msg, msg_short = event_formatter.GetMessages(event_object)
 
     try:
       mydate = datetime.datetime.utcfromtimestamp(
@@ -77,10 +80,11 @@ class L2tCsv(output.LogOutputFormatter):
        return
     date_use = mydate.replace(tzinfo=pytz.utc).astimezone(self.zone)
 
-    attributes = formatter.base_attributes
+    # TODO: refactor marker, was event_formatter.base_attributes.
+    attributes = event_object.attributes
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
-        formatter.FORMAT_STRING)
+        event_formatter.FORMAT_STRING)
     for key, value in attributes.iteritems():
       if key in helper.RESERVED_VARIABLES or key in format_variables:
         continue
@@ -94,6 +98,10 @@ class L2tCsv(output.LogOutputFormatter):
       else:
         inode = '-'
 
+    # TODO: refactor marker.
+    # Since event also deals with proto_read.DESCRIPTOR.
+    # enum_types_by_name['SourceShort'].values_by_number let's
+    # create some functions that deal with the mapping
     row = (date_use.strftime('%m/%d/%Y'),
            date_use.strftime('%H:%M:%S'),
            self.zone,

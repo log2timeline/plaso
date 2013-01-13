@@ -37,6 +37,7 @@ from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import storage
+from plaso.lib import utils
 from plaso.proto import transmission_pb2
 
 
@@ -300,8 +301,8 @@ class PlasoWorker(object):
             proto.CopyFrom(fh.pathspec_root)
             transfer_zip = transmission_pb2.PathSpec()
             transfer_zip.type = transmission_pb2.PathSpec.ZIP
-            transfer_zip.file_path = pfile.GetUnicodeString(info.filename)
-            transfer_zip.container_path = pfile.GetUnicodeString(
+            transfer_zip.file_path = utils.GetUnicodeString(info.filename)
+            transfer_zip.container_path = utils.GetUnicodeString(
                 fh.pathspec.file_path)
             cls.SetNestedContainer(proto, transfer_zip)
             yield proto
@@ -320,7 +321,7 @@ class PlasoWorker(object):
         logging.debug('Including: %s from GZIP into process queue.', fh.name)
         transfer_gzip = transmission_pb2.PathSpec()
         transfer_gzip.type = transmission_pb2.PathSpec.GZIP
-        transfer_gzip.file_path = pfile.GetUnicodeString(fh.pathspec.file_path)
+        transfer_gzip.file_path = utils.GetUnicodeString(fh.pathspec.file_path)
         cls.SetNestedContainer(fh.pathspec_root, transfer_gzip)
         yield fh.pathspec_root
         return
@@ -341,8 +342,8 @@ class PlasoWorker(object):
           proto.CopyFrom(fh.pathspec_root)
           transfer_tar = transmission_pb2.PathSpec()
           transfer_tar.type = transmission_pb2.PathSpec.TAR
-          transfer_tar.file_path = pfile.GetUnicodeString(name)
-          transfer_tar.container_path = pfile.GetUnicodeString(
+          transfer_tar.file_path = utils.GetUnicodeString(name)
+          transfer_tar.container_path = utils.GetUnicodeString(
               fh.pathspec.file_path)
           cls.SetNestedContainer(proto, transfer_tar)
           yield proto

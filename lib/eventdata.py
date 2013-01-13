@@ -22,8 +22,69 @@ from plaso.lib import registry
 from plaso.lib import storage
 
 
-class PlasoFormatter(object):
-  """A formatter class that defines a format string for an event type."""
+class EventFormatterManager(object):
+  """Class to manage the event formatters."""
+
+  __pychecker__ = 'unusednames=cls'
+  @classmethod
+  def GetFormatterIdentifier(cls, event_object):
+    """Retrieves the formatter identifier fo the event object.
+
+    Args:
+      event_object: The event object (EventObject).
+
+    Returns:
+      A Unicode string containing the formatter identifier.
+    """
+    # TODO: this implementation will break if multiple event data object
+    # from the same parser with the same timestamp description are used.
+    # There is also no need to keep this parser specific.
+    # after refactoring change this to a "source_short:data_type"
+    return u'%s:%s:%s' % (
+        getattr(event_object, 'parser', 'UNKNOWN'),
+        getattr(event_object, 'source_long', 'NO SOURCE'),
+        getattr(event_object, 'timestamp_desc', 'NO TIMEDESC'))
+
+  __pychecker__ = 'unusednames=cls'
+  @classmethod
+  def GetFormatter(cls, event_object):
+    """Retrieves the formatter for a specific event object.
+
+    Args:
+      event_object: The event object (EventObject) which is used to identify
+                    the formatter.
+
+    Returns:
+      The corresponding formatter (EventFormatter) if available or None.
+    """
+    # TODO: this should be changed into a dict lookup based on the id.
+    for cl in EventFormatter.classes:
+      try:
+        formatter = EventFormatter.classes[cl](event_object)
+        return formatter
+      except errors.WrongFormatter:
+        pass
+
+  @classmethod
+  def GetMessageStrings(cls, event_object):
+    """Retrieves the formatted message strings for a specific event object.
+
+    Args:
+      event_object: The event object (EventObject) which is used to identify
+                    the formatter.
+
+    Returns:
+      A list that contains both the longer and shorter version of the message
+      string.
+    """
+    formatter = cls.GetFormatter(event_object)
+    if not formatter:
+      return u'', u''
+    return formatter.GetMessages(event_object)
+
+
+class EventFormatter(object):
+  """Base class to format event type specific data using a format string."""
 
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
@@ -37,37 +98,17 @@ class PlasoFormatter(object):
 
   def __init__(self, event_object):
     """Set up the formatter and determine if this is the right formatter."""
-    self.extra_attributes = {}
-    # Check if it is a protobuf or a regular python object.
-    if hasattr(event_object, 'attributes') and hasattr(
-        event_object.attributes, 'MergeFrom'):
-      self.base_attributes = dict(
-          storage.GetAttributeValue(a) for a in event_object.attributes)
-      for attr, value in event_object.ListFields():
-        # Don't want to include attributes that are themselves a message.
-        if attr.type != 11:
-          self.extra_attributes[attr.name] = value
-    else:
-      self.base_attributes = event_object.attributes
-
-    self.parser = self.base_attributes.get('parser', None)
-    source = getattr(event_object, 'source_long', 'NO SOURCE')
-    time_desc = getattr(event_object, 'timestamp_desc', 'NO TIMEDESC')
-    self.signature = u'%s:%s:%s' % (self.parser, source, time_desc)
-
-    if not self.ID_RE.match(self.signature):
-      raise errors.WrongFormatter('Unable to handle this file type.')
-
-    self.event_object = event_object
-
-    # Extend the basic attribute dict with other fields/attributes too.
-    self.extra_attributes.update(self.base_attributes)
+    # TODO: remove this once the EventFormatterManager can do a dict based
+    # lookup.
+    signature = EventFormatterManager.GetFormatterIdentifier(event_object)
+    if not self.ID_RE.match(signature):
+      raise errors.WrongFormatter('Required formatter: %s.' % signature)
 
     self.format_string = self.FORMAT_STRING
     self.format_string_short = self.FORMAT_STRING_SHORT
 
-  def GetMessages(self):
-    """Return a list of messages extracted from an EventObject.
+  def GetMessages(self, event_object):
+    """Return a list of messages extracted from an event object.
 
     The l2t_csv and other formats are dependent on a message field,
     referred to as description_long and description_short in l2t_csv.
@@ -78,17 +119,36 @@ class PlasoFormatter(object):
     This method takes the format string and converts that back into a
     formatted string that can be used for display.
 
+    Args:
+      event_object: The event object (EventObject) containing the event
+                    specific data.
+
     Returns:
       A list that contains both the longer and shorter version of the message
       string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
+    signature = EventFormatterManager.GetFormatterIdentifier(event_object)
+
+    if not self.ID_RE.match(signature):
+      raise errors.WrongFormatter('Required formatter: %s.' % signature)
+
+    # TODO: refactor.
+    base_attributes = {}
+    base_attributes.update(event_object.attributes)
+
+    extra_attributes = {}
+    extra_attributes.update(event_object.attributes)
+
     try:
-      msg = self.format_string.format(**self.extra_attributes)
+      msg = self.format_string.format(**extra_attributes)
     except KeyError as e:
       msgs = []
       msgs.append(u'Error in format string [%s]' % e)
       msgs.append(u'<%s>' % self.format_string)
-      for attr, value in self.base_attributes.items():
+      for attr, value in base_attributes.items():
         msgs.append(u'{0}: {1}'.format(attr, value))
 
       msg = u' '.join(msgs)
@@ -99,7 +159,7 @@ class PlasoFormatter(object):
     if self.format_string_short:
       try:
         msg_short = self.format_string_short.format(
-            **self.extra_attributes).replace('\r', '').replace('\n', '')
+            **extra_attributes).replace('\r', '').replace('\n', '')
       except KeyError:
         msg_short = (
             u'Unable to format string: %s') % self.format_string_short
@@ -112,36 +172,23 @@ class PlasoFormatter(object):
     return msg, msg_short
 
 
-class TextFormatter(PlasoFormatter):
-  """A simple implementation of a text based formatter."""
+class ConditionalEventFormatter(object):
+  """Base class to conditionally format event data."""
+  __abstract = True
+
+  FORMAT_STRING_PIECES = []
+
+
+class TextFormatter(EventFormatter):
+  """Base class to format text-based event data."""
   __abstract = True
 
   FORMAT_STRING = u'{body}'
 
 
-class RegistryFormatter(PlasoFormatter):
+class RegistryFormatter(EventFormatter):
   """A simple implementation of a text based formatter."""
   __abstract = True
 
   FORMAT_STRING = u'[{keyname}] {text}'
   FORMAT_STRING_ALTERNATIVE = u'{text}'
-
-
-def GetFormatter(event_object):
-  """A simple helper to return the formatter for a given EventObject."""
-  for cl in PlasoFormatter.classes:
-    try:
-      formatter = PlasoFormatter.classes[cl](event_object)
-      return formatter
-    except errors.WrongFormatter:
-      pass
-
-
-def GetMessageStrings(event_object):
-  """A simple helper that returns message strings from a given event object."""
-  formatter = GetFormatter(event_object)
-
-  if not formatter:
-    return u'', u''
-
-  return formatter.GetMessages()

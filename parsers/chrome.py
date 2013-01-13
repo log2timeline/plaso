@@ -165,7 +165,7 @@ class Chrome(parser.SQLiteParser):
     return u''
 
 
-class ChromePageVisitedFormatter(eventdata.PlasoFormatter):
+class ChromePageVisitedFormatter(eventdata.EventFormatter):
   """Define the formatting for Chrome history."""
 
   # The indentifier for the formatter (a regular expression)
@@ -177,7 +177,7 @@ class ChromePageVisitedFormatter(eventdata.PlasoFormatter):
   FORMAT_STRING_SHORT = u'{url} ({title})'
 
 
-class ChromeFileDownloadFormatter(eventdata.PlasoFormatter):
+class ChromeFileDownloadFormatter(eventdata.EventFormatter):
   """Define the formatting for Chrome history."""
 
   # The indentifier for the formatter (a regular expression)

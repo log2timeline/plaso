@@ -959,11 +959,3 @@ def OpenPFile(spec, fh=None, orig=None, fscache=None):
     return handler
 
   raise IOError('Unable to open the file.')
-
-
-def GetUnicodeString(string):
-  """Returns a unicode object."""
-  if type(string) != unicode:
-    return str(string).decode('utf8', 'ignore')
-
-  return string

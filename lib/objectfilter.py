@@ -33,6 +33,7 @@ result is always a class supporting the Filter interface.
 
 If we define a class called Car such as:
 
+
 class Car(object):
   def __init__(self, code, color="white", doors=3):
     self.code = code
@@ -76,10 +77,12 @@ members by separating each by a dot. Let's see an example:
 
 Let's add a more complex Car class with default tyre data:
 
+
 class CarWithTyres(Car):
   def __init__(self, code, tyres=None, color="white", doors=3):
     super(self, CarWithTyres).__init__(code, color, doors)
     tyres = tyres or Tyre("Pirelli", "PZERO")
+
 
 class Tyre(object):
   def __init__(self, brand, code):
@@ -111,7 +114,7 @@ import logging
 import re
 
 from plaso.lib import lexer
-from plaso.lib import pfile
+from plaso.lib import utils
 
 __pychecker__ = 'no-funcdoc'
 
@@ -236,6 +239,7 @@ class BinaryOperator(Operator):
     self.left_operand = self.args[0]
     self.right_operand = self.args[1]
 
+
 class GenericBinaryOperator(BinaryOperator):
   """Allows easy implementations of operators."""
 
@@ -325,8 +329,8 @@ class Contains(GenericBinaryOperator):
     return y in x
 
 
-# TODO(user): Change to an N-ary Operator?
 class InSet(GenericBinaryOperator):
+  # TODO(user): Change to an N-ary Operator?
   """Whether all values are contained within the right operand."""
 
   def Operation(self, x, y):
@@ -357,19 +361,20 @@ class Regexp(GenericBinaryOperator):
     logging.debug("Compiled: %s", self.right_operand)
     try:
       self.compiled_re = re.compile(
-          pfile.GetUnicodeString(self.right_operand), re.DOTALL)
+          utils.GetUnicodeString(self.right_operand), re.DOTALL)
     except re.error:
       raise ValueError("Regular expression \"%s\" is malformed." %
                        self.right_operand)
 
   def Operation(self, x, unused_y):
     try:
-      if self.compiled_re.search(pfile.GetUnicodeString(x)):
+      if self.compiled_re.search(utils.GetUnicodeString(x)):
         return True
     except TypeError:
       pass
 
     return False
+
 
 class RegexpInsensitive(Regexp):
   """Whether the value matches the regexp in the right operand."""
@@ -378,7 +383,7 @@ class RegexpInsensitive(Regexp):
     super(RegexpInsensitive, self).__init__(*children, **kwargs)
     logging.debug("Compiled: %s", self.right_operand)
     try:
-      self.compiled_re = re.compile(pfile.GetUnicodeString(self.right_operand),
+      self.compiled_re = re.compile(utils.GetUnicodeString(self.right_operand),
                                     re.I | re.DOTALL)
     except re.error:
       raise ValueError("Regular expression \"%s\" is malformed." %
@@ -567,7 +572,6 @@ class DictValueExpander(ValueExpander):
     return obj.get(attr_name, None)
 
 
-### PARSER DEFINITION
 class BasicExpression(lexer.Expression):
   """Basic Expression."""
 

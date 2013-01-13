@@ -25,6 +25,9 @@ import re
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.lib import utils
+from plaso.proto import plaso_storage_pb2
+from plaso.proto import transmission_pb2
 
 # Regular expression used for attribute filtering
 UPPER_CASE = re.compile('[A-Z]')
@@ -174,13 +177,12 @@ class EventContainer(object):
     for _ in range(len(all_events)):
       yield heapq.heappop(all_events)[1]
 
-  # TODO: simplify this function, it is currently not clear why something
-  # is considered a container or an event.
   def Append(self, item):
-    """Append either an EventContainer or an EventObject to the container.
+    """Appends an event container or object to the container.
 
     Args:
-      item: The EventContainer or the EventObject to add to the container.
+      item: The event containter (EventContainer) or object (EventObject)
+            to append.
 
     Raises:
       errors.NotAnEventContainerOrObject: When an object is passed to the
@@ -255,6 +257,17 @@ class EventObject(object):
   using the method SetValue(attribute, value).
   """
 
+  # Lists of the mappings between the source short values of the event object
+  # and those used in the protobuf.
+  _SOURCE_SHORT_FROM_PROTO_MAP = {}
+  _SOURCE_SHORT_TO_PROTO_MAP = {}
+  for value in plaso_storage_pb2.EventObject.DESCRIPTOR.enum_types_by_name[
+      'SourceShort'].values:
+    _SOURCE_SHORT_FROM_PROTO_MAP[value.number] = value.name
+    _SOURCE_SHORT_TO_PROTO_MAP[value.name] = value.number
+  _SOURCE_SHORT_FROM_PROTO_MAP.setdefault(6)
+  _SOURCE_SHORT_TO_PROTO_MAP.setdefault('LOG')
+
   parent_container = None
   attributes = None
 
@@ -306,7 +319,7 @@ class EventObject(object):
   def __str__(self):
     """Print a human readable string from the EventObject."""
 
-    message, _ = eventdata.GetMessageStrings(self)
+    message, _ = eventdata.EventFormatterManager.GetMessageStrings(self)
     if not message:
       return 'Unable to print event, no formatter defined.'
 
@@ -314,8 +327,8 @@ class EventObject(object):
     short = u''
     s_long = u''
 
-    __pychecker__ = ('missingattrs=timestamp,source_short,sou'
-                     'rce_long')
+    __pychecker__ = ('missingattrs=timestamp,source_short,'
+                     'source_long')
     try:
       time = self.timestamp
     except AttributeError:
@@ -331,6 +344,168 @@ class EventObject(object):
       pass
 
     return u'[{0}] {1}/{2} - {3}'.format(time, short, s_long, message)
+
+  def _AttributeFromProto(self, proto):
+    """Unserializes an event object attribute from a protobuf.
+
+    Args:
+      proto: The attribute protobuf (plaso_storage_pb2.Attribute).
+
+    Returns:
+      A list containing the name and value of the attribute.
+
+    Raises:
+      RuntimeError: when the protobuf is not of type:
+                    plaso_storage_pb2.Attribute or if the attribute
+                    cannot be unserialized.
+    """
+    if not isinstance(proto, plaso_storage_pb2.Attribute):
+      raise RuntimeError("Unsupported proto")
+
+    if proto.HasField('string'):
+      return proto.key, proto.string
+
+    elif proto.HasField('integer'):
+      return proto.key, proto.integer
+
+    elif proto.HasField('boolean'):
+      return proto.key, proto.boolean
+
+    elif proto.HasField('dict'):
+      value = {}
+
+      for proto_dict in proto.dict.attributes:
+        dict_key, dict_value = self._AttributeFromProto(proto_dict)
+        value[dict_key] = dict_value
+      return proto.key, value
+
+    elif proto.HasField('array'):
+      value = []
+
+      for proto_array in proto.array.values:
+        _, list_value = self._AttributeFromProto(proto_array)
+        value.append(list_value)
+      return proto.key, value
+
+    elif proto.HasField('data'):
+      return proto.key, proto.data
+
+    # TODO: deal with float.
+    else:
+      raise RuntimeError("Unsupported proto attribute type.")
+
+  def FromProto(self, proto):
+    """Unserializes the event object from a protobuf.
+
+    Args:
+      proto: The protobuf (plaso_storage_pb2.EventObject).
+
+    Raises:
+      RuntimeError: when the protobuf is not of type:
+                    plaso_storage_pb2.EventObject or when an unsupported
+                    attribute value type is encountered
+    """
+    if not isinstance(proto, plaso_storage_pb2.EventObject):
+      raise RuntimeError("Unsupported proto")
+
+    for proto_attribute, value in proto.ListFields():
+      if proto_attribute.name == 'source_short':
+        self.source_short = self._SOURCE_SHORT_FROM_PROTO_MAP[value]
+
+      elif proto_attribute.name == 'pathspec':
+        self.pathspec = proto.pathspec.SerializeToString()
+
+      else:
+        # Need to invoke the object here to bypass behavior of __setattr__.
+        object.__setattr__(self, proto_attribute.name, value)
+
+    # Make sure the old attributes are removed.
+    self.attributes = dict(self._AttributeFromProto(proto_attribute) for
+                           proto_attribute in proto.attributes)
+
+  def _AttributeToProto(self, proto, name, value):
+    """Serializes an event object attribute to a protobuf.
+
+    The attribute in an event object can store almost any arbitrary data, so
+    the corresponding protobuf storage must deal with the various data types.
+    This method identifies the data type and assigns it properly to the
+    attribute protobuf.
+
+    Args:
+      proto: The attribute protobuf (plaso_storage_pb2.Attribute).
+      name: The name of the attribute.
+      value: The value of the attribute.
+    """
+    if name:
+      proto.key = name
+
+    if isinstance(value, (str, unicode)):
+      proto.string = utils.GetUnicodeString(value)
+
+    elif isinstance(value, (int, long)):
+      # TODO: add some bounds checking.
+      proto.integer = value
+
+    elif isinstance(value, bool):
+      proto.boolean = value
+
+    elif isinstance(value, dict):
+      proto_dict = plaso_storage_pb2.Dict()
+
+      for dict_key, dict_value in value.items():
+        sub_proto = proto_dict.attributes.add()
+        self._AttributeToProto(sub_proto, dict_key, dict_value)
+      proto.dict.MergeFrom(proto_dict)
+
+    elif isinstance(value, (list, tuple)):
+      proto_array = plaso_storage_pb2.Array()
+
+      for list_value in value:
+        sub_proto = proto_array.values.add()
+        self._AttributeToProto(sub_proto, '', list_value)
+      proto.array.MergeFrom(proto_array)
+
+    # TODO: deal with float.
+    else:
+      proto.data = value
+
+  def ToProto(self):
+    """Serializes the event object into a protobuf.
+
+    Returns:
+      A protobuf (plaso_storage_pb2.EventObject).
+    """
+    proto = plaso_storage_pb2.EventObject()
+
+    for attribute_name in self.GetAttributes():
+      if attribute_name == 'source_short':
+        proto.source_short = self._SOURCE_SHORT_TO_PROTO_MAP[self.source_short]
+
+      elif attribute_name == 'pathspec':
+        proto_path = transmission_pb2.PathSpec()
+        proto_path.ParseFromString(self.pathspec)
+        proto.pathspec.MergeFrom(proto_path)
+
+      elif hasattr(proto, attribute_name):
+        attribute_value = getattr(self, attribute_name)
+
+        if isinstance(attribute_value, (str, unicode)):
+          attribute_value = utils.GetUnicodeString(attribute_value)
+        setattr(proto, attribute_name, attribute_value)
+
+      else:
+        attribute_value = getattr(self, attribute_name)
+
+        # TODO: deal with float.
+        # Serialize the attribute value only if it is an integer type
+        # (int or long) or if it has a value.
+        # TODO: fix logic.
+        if isinstance(attribute_value, (bool, int, long)) or attribute_value:
+          proto_attribute = proto.attributes.add()
+          self._AttributeToProto(
+              proto_attribute, attribute_name, attribute_value)
+
+    return proto
 
 
 class FatDateTimeEvent(EventObject):
