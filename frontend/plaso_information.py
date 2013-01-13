@@ -21,7 +21,6 @@ import pprint
 import sys
 
 # To make YAML loading work.
-# pylint: disable=W0611
 __pychecker__ = 'no-import'
 import argparse
 import collections
@@ -29,7 +28,6 @@ import pytz
 
 from plaso.lib import preprocess
 from plaso.lib import storage
-# pylint: enable=W0611
 
 
 def GetInformation(params):

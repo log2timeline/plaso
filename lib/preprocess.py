@@ -61,7 +61,7 @@ class PreprocessPlugin(object):
   """
 
   __metaclass__ = registry.MetaclassRegistry
-  __abstract = True   # pylint: disable=C6409
+  __abstract = True
 
   # Defines the OS that this plugin supports.
   SUPPORTED_OS = []
@@ -102,7 +102,7 @@ class WinRegistryPreprocess(PreprocessPlugin):
   is running, information that is collected during priority 2.
   """
 
-  __abstract = True   # pylint: disable=C6409
+  __abstract = True
 
   SUPPORTED_OS = ['Windows']
   WEIGHT = 2
@@ -152,7 +152,7 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
 class PreprocessGetPath(PreprocessPlugin):
   """Return a simple path."""
-  __abstract = True   # pylint: disable=C6409
+  __abstract = True
 
   WEIGHT = 1
   ATTRIBUTE = 'nopath'

@@ -142,7 +142,7 @@ class FilesystemCache(object):
 class PlasoFile(object):
   """Base class for a file like object."""
   __metaclass__ = registry.MetaclassRegistry
-  __abstract = True  # pylint: disable=C6409
+  __abstract = True
 
   TYPE = transmission_pb2.PathSpec.UNSET
   fh = None
@@ -192,7 +192,7 @@ class PlasoFile(object):
       return 'Unknown File'
 
   # Implementing an interface.
-  def seek(self, offset, whence=0):   # pylint: disable=C6409
+  def seek(self, offset, whence=0):
     """Seek to an offset in the file."""
     if self.fh:
       self.fh.seek(offset, whence)
@@ -200,7 +200,7 @@ class PlasoFile(object):
       raise RuntimeError('Unable to seek into a file that is not open.')
 
   # Implementing an interface.
-  def read(self, size=None):   # pylint: disable=C6409
+  def read(self, size=None):
     """Read size bytes from file and return them."""
     if self.fh:
       # Some internal implementations require unbound read operations
@@ -213,7 +213,7 @@ class PlasoFile(object):
       return ''
 
   # Implementing an interface.
-  def tell(self):   # pylint: disable=C6409
+  def tell(self):
     """Return the current offset into the file."""
     if self.fh:
       return self.fh.tell()
@@ -221,14 +221,14 @@ class PlasoFile(object):
       return 0
 
   # Implementing an interface.
-  def close(self):    # pylint: disable=C6409
+  def close(self):
     """Close the file."""
     if self.fh:
       self.fh.close()
       self.fh = None
 
   # Implementing an interface.
-  def readline(self, size=None):    # pylint: disable=C6409
+  def readline(self, size=None):
     """Read a line from the file.
 
     Args:
@@ -602,7 +602,7 @@ class GzipFile(PlasoFile):
     else:
       self.fh.seek(offset, whence)
 
-  def read(self, size=-1):   # pylint: disable=C6409
+  def read(self, size=-1):
     """Read size bytes from file and return them."""
     if self.fh:
       return self.fh.read(size)

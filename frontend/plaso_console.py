@@ -26,7 +26,6 @@ import tempfile
 
 from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
-# pylint: disable=W0611
 import pyvshadow
 
 from plaso import output
@@ -62,7 +61,6 @@ from plaso.output import helper
 
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
-# pylint: enable=W0611
 
 
 if __name__ == '__main__':

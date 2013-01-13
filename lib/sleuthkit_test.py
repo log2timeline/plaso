@@ -21,6 +21,8 @@ import unittest
 
 from plaso.lib import sleuthkit
 
+__pychecker__ = 'no-funcdoc'
+
 
 class SleuthkitUnitTest(unittest.TestCase):
   """The unit test for TSK integration into plaso."""
@@ -87,7 +89,7 @@ class SleuthkitUnitTest(unittest.TestCase):
 
     # I'm trying to test readlines specifically, hence not using the
     # default iterator.
-    for line in f.readlines():        # pylint: disable=C6401
+    for line in f.readlines():
       lines.append(line)
 
     self.assertEquals(len(lines), 5)

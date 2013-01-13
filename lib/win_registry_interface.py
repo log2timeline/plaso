@@ -36,7 +36,7 @@ class RegistryPlugin(object):
   """
 
   __metaclass__ = registry.MetaclassRegistry
-  __abstract = True   # pylint: disable=C6409
+  __abstract = True
 
   # Indicate the type of hive this plugin belongs to (eg. NTUSER, SOFTWARE).
   REG_TYPE = 'any'

@@ -48,7 +48,7 @@ class PlasoParser(object):
     parsing. (eg. TXT, EVTX)
   """
   __metaclass__ = registry.MetaclassRegistry
-  __abstract = True   # pylint: disable=C6409
+  __abstract = True
 
   NAME = 'General Log Parser'
   PARSER_TYPE = 'all'
