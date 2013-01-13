@@ -53,8 +53,8 @@ class TestDefaultRegistry(unittest.TestCase):
 
     self.assertEquals(len(entries), 1)
     self.assertEquals(entries[0].timestamp, 1346145829002031)
-    msg, _ = eventdata.GetMessageStrings(entries[0])
-    eventdata.GetFormatter(entries[0])
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
+    eventdata.EventFormatterManager.GetFormatter(entries[0])
     self.assertEquals(msg, line)
 
 

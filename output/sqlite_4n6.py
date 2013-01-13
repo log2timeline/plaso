@@ -21,6 +21,7 @@ import sys
 import sqlite3
 
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.output import helper
@@ -108,12 +109,14 @@ class sql4n6(output.LogOutputFormatter):
     mydate = datetime.datetime.utcfromtimestamp(proto_read.timestamp / 1e6)
     date_use = mydate.replace(tzinfo=pytz.utc).astimezone(self.zone)
 
-    formatter = eventdata.GetFormatter(proto_read)
+    event_object = event.EventObject()
+    event_object.FromProto(proto_read)
+    formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not formatter:
       raise errors.NoFormatterFound(
           'Unable to output event, no formatter found.')
 
-    msg, msg_short = formatter.GetMessages()
+    msg, msg_short = formatter.GetMessages(event_object)
     attributes = formatter.base_attributes
 
     extra = []
@@ -130,6 +133,7 @@ class sql4n6(output.LogOutputFormatter):
       else:
         inode = '-'
 
+    # TODO: refactor proto_read.DESCRIPTOR into function
     row = ( date_use.strftime('%Y-%m-%d'),
             date_use.strftime('%H:%M:%S'),
             str(self.zone),

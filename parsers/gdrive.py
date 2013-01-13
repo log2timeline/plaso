@@ -21,6 +21,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 
+
 class GoogleDrive(parser.SQLiteParser):
   """Parse Google Drive history snapshot.db files."""
 
@@ -144,7 +145,8 @@ class GoogleDrive(parser.SQLiteParser):
 
     return container
 
-class GDriveLocalEntryFormatter(eventdata.PlasoFormatter):
+
+class GDriveLocalEntryFormatter(eventdata.EventFormatter):
   """Define the formatting for Google Drive history."""
 
   # The indentifier for the formatter (a regular expression)
@@ -155,7 +157,7 @@ class GDriveLocalEntryFormatter(eventdata.PlasoFormatter):
   FORMAT_STRING_SHORT = u'{path}'
 
 
-class GDriveCloudEntryFormatter(eventdata.PlasoFormatter):
+class GDriveCloudEntryFormatter(eventdata.EventFormatter):
   """Define the formatting for Google Drive history."""
 
   # The indentifier for the formatter (a regular expression)

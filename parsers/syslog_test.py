@@ -27,7 +27,7 @@ from plaso.parsers import syslog
 
 class DummySyslogFormatter(syslog.SyslogFormatter):
   """Simple dummy extension on the formatter."""
-  ID_RE = re.compile('None:Syslog Log', re.DOTALL)
+  ID_RE = re.compile('UNKNOWN:Syslog Log', re.DOTALL)
 
 
 class SyslogUnitTest(unittest.TestCase):
@@ -56,13 +56,13 @@ class SyslogUnitTest(unittest.TestCase):
     # corresponding timestamp, I think that will be more readable
     self.assertEquals(first.timestamp, 1327218753000000)
     self.assertEquals(first.hostname, 'myhostname.myhost.com')
-    msg, _ = eventdata.GetMessageStrings(first)
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(first)
     self.assertEquals(
         msg, '[client, pid: 30840] : INFO No new content.')
 
     self.assertEquals(len(events), 12)
 
-    msg, _ = eventdata.GetMessageStrings(events[10])
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(events[10])
     self.assertEquals(msg, (
         '[aprocess, pid: 101001] : This is a multi-line message that screws up'
         'many syslog parsers.'))

@@ -56,7 +56,7 @@ class LsQuarantine(parser.SQLiteParser):
     yield evt
 
 
-class LSQuarantineFormatter(eventdata.PlasoFormatter):
+class LSQuarantineFormatter(eventdata.EventFormatter):
   """Define the formatting for LS Quarantine history."""
 
   # The indentifier for the formatter (a regular expression)

@@ -27,20 +27,15 @@ from plaso.proto import transmission_pb2
 __pychecker__ = 'no-funcdoc'
 
 
-class DummyEventFormatter(eventdata.PlasoFormatter):
+class DummyEventFormatter(eventdata.EventFormatter):
   """Implement a simple formatter for the events defined."""
 
-  ID_RE = re.compile('None:Syslog:Entry', re.DOTALL)
+  ID_RE = re.compile('UNKNOWN:Syslog:Entry', re.DOTALL)
 
   FORMAT_STRING = u'{text}'
 
 
 class L2tCsvTest(unittest.TestCase):
-  source_short_map = {}
-  for value in plaso_storage_pb2.EventObject.DESCRIPTOR.enum_types_by_name[
-      'SourceShort'].values:
-    source_short_map[value.name] = value.number
-
   def setUp(self):
     self.output = StringIO.StringIO()
     self.formatter = l2t_csv.L2tCsv(self.output)
@@ -52,39 +47,19 @@ class L2tCsvTest(unittest.TestCase):
     self.formatter.Start()
     self.assertEquals(self.output.getvalue(), correct_line)
 
-  def CreateProto(self, an_event):
-    """Return a protobuf object."""
-    proto = plaso_storage_pb2.EventObject()
-    for attr in an_event.GetAttributes():
-      if attr == 'source_short':
-        proto.source_short = self.source_short_map.get(an_event.source_short, 6)
-      elif attr == 'pathspec':
-        path = transmission_pb2.PathSpec()
-        path.ParseFromString(an_event.pathspec)
-        proto.pathspec.MergeFrom(path)
-      elif hasattr(proto, attr):
-        attribute_value = getattr(an_event, attr)
-        if type(attribute_value) == str:
-          attribute_value = attribute_value.decode('utf8', 'ignore')
-        setattr(proto, attr, attribute_value)
-      else:
-        a = proto.attributes.add()
-        a.key = attr
-        a.string = getattr(an_event, attr)
-    return proto
-
   def testEventBody(self):
     """Test ensures that returned lines returned are fmt CSV as expected."""
     evt = event.EventObject()
     evt.timestamp = 1340821021000000
     evt.timestamp_desc = 'Entry Written'
-    evt.source_short = 6
+    evt.source_short = 'LOG'
     evt.source_long = 'Syslog'
     evt.hostname = 'ubuntu'
     evt.filename = 'log/syslog.1'
     evt.text = (u'Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
                 ': session\n closed for user root)')
-    self.formatter.EventBody(self.CreateProto(evt))
+
+    self.formatter.EventBody(evt.ToProto())
     correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
                '(pam_unix(cron:session): session closed for user '
@@ -97,13 +72,14 @@ class L2tCsvTest(unittest.TestCase):
     evt = event.EventObject()
     evt.timestamp = 1340821021000000
     evt.timestamp_desc = 'Entry,Written'
-    evt.source_short = 6
+    evt.source_short = 'LOG'
     evt.source_long = 'Syslog'
     evt.hostname = 'ubuntu'
     evt.filename = 'log/syslog.1'
     evt.text = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
                 ': session closed for user root)')
-    self.formatter.EventBody(self.CreateProto(evt))
+
+    self.formatter.EventBody(evt.ToProto())
     correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
                '(pam_unix(cron:session): session closed for user '

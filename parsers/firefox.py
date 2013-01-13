@@ -215,7 +215,7 @@ class Firefox(parser.SQLiteParser):
     return u''
 
 
-class FirefoxBookmarkAnnotationFormatter(eventdata.PlasoFormatter):
+class FirefoxBookmarkAnnotationFormatter(eventdata.EventFormatter):
   """Define the formatting for Firefox history."""
 
   # The indentifier for the formatter (a regular expression)
@@ -227,7 +227,7 @@ class FirefoxBookmarkAnnotationFormatter(eventdata.PlasoFormatter):
   FORMAT_STRING_SHORT = u'Bookmark Annotation: {title}'
 
 
-class FirefoxBookmarkFolderFormatter(eventdata.PlasoFormatter):
+class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
   """Define the formatting for Firefox history."""
 
   # The indentifier for the formatter (a regular expression)
@@ -237,7 +237,7 @@ class FirefoxBookmarkFolderFormatter(eventdata.PlasoFormatter):
   FORMAT_STRING = '{title}'
 
 
-class FirefoxUrlBookmarkFormatter(eventdata.PlasoFormatter):
+class FirefoxUrlBookmarkFormatter(eventdata.EventFormatter):
   """Define the formatting for Firefox history."""
 
   # The indentifier for the formatter (a regular expression)
@@ -249,7 +249,7 @@ class FirefoxUrlBookmarkFormatter(eventdata.PlasoFormatter):
   FORMAT_STRING_SHORT = u'Bookmarked {bookmark_title} ({url})'
 
 
-class FirefoxPageVisitFormatter(eventdata.PlasoFormatter):
+class FirefoxPageVisitFormatter(eventdata.EventFormatter):
   """Define the formatting for Firefox history."""
 
   # The indentifier for the formatter (a regular expression)

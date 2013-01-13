@@ -28,6 +28,7 @@ import pyvshadow
 from plaso.lib import errors
 from plaso.lib import pfile
 from plaso.lib import queue
+from plaso.lib import utils
 from plaso.lib import vss
 from plaso.proto import transmission_pb2
 
@@ -158,7 +159,7 @@ class PCollector(object):
         transfer_proto.image_offset = fs.offset
         transfer_proto.image_inode = inode_addr
         file_path = os.path.join(path, name)
-        transfer_proto.file_path = pfile.GetUnicodeString(file_path)
+        transfer_proto.file_path = utils.GetUnicodeString(file_path)
 
         # If we are dealing with a VSS we want to calculate a hash
         # value based on available timestamps and compare that to previously
@@ -213,7 +214,7 @@ class PCollector(object):
     """Finds all files available inside a file and inserts into queue."""
     transfer_proto = transmission_pb2.PathSpec()
     transfer_proto.type = transmission_pb2.PathSpec.OS
-    transfer_proto.file_path = pfile.GetUnicodeString(filename)
+    transfer_proto.file_path = utils.GetUnicodeString(filename)
     my_queue.Queue(transfer_proto.SerializeToString())
 
   def Close(self):

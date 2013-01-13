@@ -48,7 +48,8 @@ class RegistryXPUserAssistTest(unittest.TestCase):
         u'UEME_RUNPIDL:%csidl2%\\MSN.lnk' in entries[0].regvalue)
     self.assertEquals(entries[0].regvalue[u'UEME_RUNPIDL:%csidl2%\\MSN.lnk'],
                       u'[Count: 14]')
-    msg, _ = eventdata.GetMessageStrings(entries[0])
+    msg, _ = msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
+        entries[0])
     self.assertEquals(
         msg, u'UEME_RUNPIDL:%csidl2%\\MSN.lnk: [Count: 14]')
 
