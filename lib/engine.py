@@ -159,7 +159,7 @@ class Engine(object):
       logging.info(u'Timezone set to: %s', pre_obj.time_zone_str)
       try:
         pre_obj.zone = pytz.timezone(pre_obj.time_zone_str)
-      except pytz.exceptions.UnknownTimeZoneError:
+      except pytz.UnknownTimeZoneError:
         if hasattr(self.config, 'zone'):
           logging.warning(
               'TimeZone was not properly set using user supplied one.')
@@ -177,7 +177,7 @@ class Engine(object):
       logging.info('Starting the tool in a single thread.')
       try:
         self._StartSingleThread()
-      except Exception as e:    # pylint: disable=W0703
+      except Exception as e:
         # The tool should generally not be run in single threaded mode
         # for other reasons than to debug. Hence the general error
         # catching.

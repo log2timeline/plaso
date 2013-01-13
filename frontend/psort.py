@@ -41,8 +41,8 @@ import argparse
 import dateutil.parser
 import pytz
 
-from plaso import output  # pylint: disable=W0611
-from plaso import parsers  # pylint: disable=W0611
+from plaso import output
+from plaso import parsers
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
 from plaso.lib import storage
@@ -373,7 +373,7 @@ if __name__ == '__main__':
 
         # Catching a very generic error in case we would like to debug
         # a potential crash in the tool.
-        except Exception:  # pylint: disable=W0703
+        except Exception:
           if not my_args.debug:
             raise
           pdb.post_mortem()
@@ -383,7 +383,7 @@ if __name__ == '__main__':
         MergeSort(store, range_checked_pb_nums, first, last,
                   OutputRenderer(my_args.output_format, output_fd),
                   my_args.filter)
-      except Exception:  # pylint: disable=W0703
+      except Exception:
         if not my_args.debug:
           raise
         pdb.post_mortem()

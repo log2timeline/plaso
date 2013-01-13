@@ -82,7 +82,6 @@ class TSKFile(object):
     self.next_read_offset = 0
 
   # Deviate from the naming convention since we are implementing an interface.
-  # pylint: disable=C6409
   def read(self, read_size=None):
     """Provide a read method for the file object.
 

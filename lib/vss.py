@@ -29,12 +29,12 @@ class VShadowImgInfo(pytsk3.Img_Info):
     super(VShadowImgInfo, self).__init__()
 
   # Implementing an interface
-  def read(self, offset, size):  # pylint: disable=C6409
+  def read(self, offset, size):
     self._store.seek(offset)
     return self._store.read(size)
 
   # Implementing an interface
-  def get_size(self):  # pylint: disable=C6409
+  def get_size(self):
     return self._store.get_size()
 
 
@@ -93,7 +93,7 @@ class VShadowVolume(object):
     size *= volume.info.block_size
     return volume.info.block_size, size
 
-  def read(self, size=None):  # pylint: disable=C6409
+  def read(self, size=None):
     """"Return read bytes from volume as denoted by the size parameter."""
     if not self._orig_offset:
       return self._fh.read(size)
@@ -107,17 +107,17 @@ class VShadowVolume(object):
 
     return self._fh.read(size)
 
-  def get_size(self):  # pylint: disable=C6409
+  def get_size(self):
     """Return the size in bytes of the volume."""
     if self._block_size:
       return self._block_size * self._image_size
 
     return self._fh_size
 
-  def close(self):  # pylint: disable=C6409
+  def close(self):
     self._fh.close()
 
-  def seek(self, offset, whence=os.SEEK_SET):  # pylint: disable=C6409
+  def seek(self, offset, whence=os.SEEK_SET):
     """Seek into the volume."""
     if not self._block_size:
       self._fh.seek(offset, whence)
@@ -144,11 +144,11 @@ class VShadowVolume(object):
 
     self._fh.seek(ofs, whence)
 
-  def tell(self):  # pylint: disable=C6409
+  def tell(self):
     if not self._block_size:
       return self._fh.tell()
 
     return self._fh.tell() - self._offset_start
 
-  def get_offset(self):  # pylint: disable=C6409
+  def get_offset(self):
     return self.tell()

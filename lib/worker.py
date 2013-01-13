@@ -29,7 +29,7 @@ import tarfile
 import zipfile
 import zlib
 
-from plaso import parsers    # pylint: disable=W0611
+from plaso import parsers
 from plaso.lib import errors
 from plaso.lib import objectfilter
 from plaso.lib import parser

@@ -54,7 +54,7 @@ class FakeFile(object):
       self.size += len(line)
 
   # We are implementing an interface.
-  def readline(self):        # pylint: disable=C6409
+  def readline(self):
     """Provides a "fake" readline function."""
     ret = ''
     if self.index < len(self.LINES):
@@ -65,7 +65,7 @@ class FakeFile(object):
     return ret
 
   # We are implementing an interface.
-  def read(self, read_size):    # pylint: disable=C6409
+  def read(self, read_size):
     if len(self.buffer) > read_size:
       ret = self.buffer[:read_size]
       self.buffer = self.buffer[read_size:]
@@ -84,7 +84,7 @@ class FakeFile(object):
     return ret
 
   # We are implementing an interface.
-  def seek(self, offset, whence=0):   # pylint: disable=C6409
+  def seek(self, offset, whence=0):
     if whence == 0:
       self.index = 0
       self.buffer = ''
@@ -107,7 +107,7 @@ class FakeFile(object):
       raise RuntimeError('Illegal whence value %s' % whence)
 
   # We are implementing an interface.
-  def tell(self):   # pylint: disable=C6409
+  def tell(self):
     return self.offset
 
   def __iter__(self):

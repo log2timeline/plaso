@@ -40,7 +40,7 @@ class LogOutputFormatter(object):
   """
 
   __metaclass__ = registry.MetaclassRegistry
-  __abstract = True   # pylint: disable=C6409
+  __abstract = True
 
   def __init__(self, filehandle=sys.stdout, zone=pytz.utc):
     """Constructor for the output module.
