@@ -143,7 +143,7 @@ class PlasoStorageUnitTest(unittest.TestCase):
       # all has been queued up.
       dumper = storage.SimpleStorageDumper(fh)
       for e in self.events:
-        serial = storage.PlasoStorage.SerializeEvent(e)
+        serial = e.ToProtoString()
         dumper.AddEvent(serial)
       dumper.Close()
       dumper.Run()
@@ -157,7 +157,7 @@ class PlasoStorageUnitTest(unittest.TestCase):
 
   def testStorage(self):
     """Test the storage object."""
-    protos = []
+    evts = []
     timestamps = []
     tag_mock = TagMock()
     group_mock = GroupMock()
@@ -170,7 +170,7 @@ class PlasoStorageUnitTest(unittest.TestCase):
       store = storage.PlasoStorage(fh)
 
       for my_event in self.events:
-        serial = storage.PlasoStorage.SerializeEvent(my_event)
+        serial = my_event.ToProtoString()
         store.AddEntry(serial)
 
       # Add tagging.
@@ -193,19 +193,19 @@ class PlasoStorageUnitTest(unittest.TestCase):
       self.assertTrue(read_store.HasTagging())
       self.assertTrue(read_store.HasGrouping())
 
-      for proto in read_store.GetEntries(1):
-        protos.append(proto)
-        timestamps.append(proto.timestamp)
-        if proto.source_short == plaso_storage_pb2.EventObject.REG:
-          self.assertEquals(proto.source_long, 'NTUSER.DAT Registry File')
-          self.assertEquals(proto.timestamp_desc, 'Last Written')
+      for evt in read_store.GetEntries(1):
+        evts.append(evt)
+        timestamps.append(evt.timestamp)
+        if evt.source_short == 'REG':
+          self.assertEquals(evt.source_long, 'NTUSER.DAT Registry File')
+          self.assertEquals(evt.timestamp_desc, 'Last Written')
         else:
-          self.assertEquals(proto.source_long, 'Some random text file')
-          self.assertEquals(proto.timestamp_desc, 'Entry Written')
+          self.assertEquals(evt.source_long, 'Some random text file')
+          self.assertEquals(evt.timestamp_desc, 'Entry Written')
 
       for tag in read_store.GetTagging():
-        proto = read_store.GetTaggedEvent(tag)
-        tags.append(proto)
+        evt = read_store.GetTaggedEvent(tag)
+        tags.append(evt)
 
       groups = list(read_store.GetGrouping())
       self.assertEquals(len(groups), 1)
@@ -213,35 +213,30 @@ class PlasoStorageUnitTest(unittest.TestCase):
 
       # Read the same events that were put in the group, just to compare
       # against.
-      same_events.append(read_store.GetEntry(1, 1))
-      same_events.append(read_store.GetEntry(1, 2))
+      same_events.append(read_store.GetEntry(1, 1).ToProtoString())
+      same_events.append(read_store.GetEntry(1, 2).ToProtoString())
 
-    self.assertEquals(len(protos), 4)
+    self.assertEquals(len(evts), 4)
     self.assertEquals(len(tags), 3)
 
     self.assertEquals(tags[0].timestamp, 12389344590000000)
     self.assertEquals(tags[0].store_number, 1)
     self.assertEquals(tags[0].store_index, 0)
-    self.assertEquals(tags[0].tag.comment, u'My comment')
-    self.assertEquals(tags[0].tag.color, u'blue')
+    self.assertEquals(tags[0].tag.get('comment'), u'My comment')
+    self.assertEquals(tags[0].tag.get('color'), u'blue')
 
-    event_object = event.EventObject()
-    event_object.FromProto(tags[0])
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(tags[0])
     self.assertEquals(msg[0:10], u'This is a ')
 
-    self.assertEquals(tags[1].tag.tags[0].value, 'Malware')
-    event_object = event.EventObject()
-    event_object.FromProto(tags[1])
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
+    self.assertEquals(tags[1].tag['tags'][0], 'Malware')
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(tags[1])
     self.assertEquals(msg[0:15], u'[\\HKCU\\Windows\\')
 
-    self.assertEquals(tags[2].tag.comment, u'This is interesting')
-    self.assertEquals(tags[2].tag.tags[0].value, 'Malware')
-    self.assertEquals(tags[2].tag.tags[1].value, 'Benign')
+    self.assertEquals(tags[2].tag['comment'], u'This is interesting')
+    self.assertEquals(tags[2].tag['tags'][0], 'Malware')
+    self.assertEquals(tags[2].tag['tags'][1], 'Benign')
 
-    attributes = dict(storage.GetAttributeValue(a) for a in tags[2].attributes)
-    self.assertEquals(attributes['parser'], 'UNKNOWN')
+    self.assertEquals(tags[2].parser, 'UNKNOWN')
 
     self.assertEquals(timestamps, [12389344590000000, 13349402860000000,
                                    13349615269295969, 13359662069295961])
@@ -258,38 +253,8 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(group_events[0].source_long, u'NTUSER.DAT Registry File')
     self.assertEquals(group_events[1].timestamp, 13349615269295969L)
 
-    self.assertEquals(same_events, group_events)
-
-  def testSerialization(self):
-    """Test serialize event and attribute saving."""
-    evt = event.EventObject()
-    evt.timestamp = 1234124
-    evt.timestamp_desc = 'Written'
-    evt.source_short = 'LOG'
-    evt.source_long = 'Some Source Long'
-    # Should not get stored.
-    evt.empty_attribute = u''
-    # Is stored.
-    evt.zero_integer = 0
-    evt.integer = 34
-    evt.string = 'Normal string'
-    evt.unicode_string = u'And I\'m a unicorn.'
-    evt.my_list = ['asf', 4234, 2, 54, 'asf']
-    evt.my_dict = {'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': (234, 32)}
-    # Should not get stored.
-    evt.null_value = None
-
-    proto = plaso_storage_pb2.EventObject()
-    proto_ser = storage.PlasoStorage.SerializeEvent(evt)
-    proto.ParseFromString(proto_ser)
-
-    self.assertEquals(len(list(proto.attributes)), 6)
-    attributes = dict(
-        storage.GetAttributeValue(a) for a in proto.attributes)
-    self.assertFalse('empty_attribute' in attributes)
-    self.assertTrue('zero_integer' in attributes)
-    self.assertEquals(len(attributes.get('my_list', [])), 5)
-    self.assertEquals(attributes.get('string'), 'Normal string')
+    self.assertEquals(same_events, list(a.ToProtoString() for a in
+                                        group_events))
 
 
 if __name__ == '__main__':

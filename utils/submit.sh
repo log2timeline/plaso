@@ -111,4 +111,10 @@ python utils/upload.py -y -i ${CL_NUMBER} -t "Submitted." -m "Code Submitted." -
 git commit -a -m "Code review: ${CL_NUMBER}: ${DESCRIPTION}";
 git push
 
-#curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER}/close
+if [ -f "~/codereview_upload_cookies" ]
+then
+  curl -b ~/.codereview_upload_cookies ${URL_CODEREVIEW}/${CL_NUMBER}/close -d  ''
+else
+  echo "Could not find an authenticated session to codereview. You need to"
+  echo "manually close the ticket on the code review site."
+fi

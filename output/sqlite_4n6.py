@@ -15,8 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
+import logging
 import pytz
+import re
 import sys
 import sqlite3
 
@@ -24,12 +25,16 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import output
+from plaso.lib import timelib
 from plaso.output import helper
-from plaso.proto import plaso_storage_pb2
+
+from plaso.proto import transmission_pb2
 
 
-class sql4n6(output.LogOutputFormatter):
+class Sql4n6(output.LogOutputFormatter):
   """Contains functions for outputing as 4n6time sqlite database."""
+
+  FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
   def __init__(self, filehandle=sys.stdout, zone=pytz.utc,
                fields=['host','user','source','sourcetype',
@@ -99,59 +104,61 @@ class sql4n6(output.LogOutputFormatter):
     """Do nothing, just override the parent's EndEvent method"""
     pass
 
-  def EventBody(self, proto_read):
+  def EventBody(self, evt):
     """Formats data as 4n6time database table format and writes to the db.
 
     Args:
-      proto_read: Protobuf to format.
+      evt: An EventObject that contains the event data.
     """
 
-    mydate = datetime.datetime.utcfromtimestamp(proto_read.timestamp / 1e6)
-    date_use = mydate.replace(tzinfo=pytz.utc).astimezone(self.zone)
+    if 'timestamp' not in evt.GetAttributes():
+      return
 
-    event_object = event.EventObject()
-    event_object.FromProto(proto_read)
-    formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    formatter = eventdata.EventFormatterManager.GetFormatter(evt)
     if not formatter:
       raise errors.NoFormatterFound(
           'Unable to output event, no formatter found.')
 
-    msg, msg_short = formatter.GetMessages(event_object)
-    attributes = formatter.base_attributes
+    msg, msg_short = formatter.GetMessages(evt)
+
+    date_use = timelib.DateTimeFromTimestamp(evt.timestamp, self.zone)
+    if not date_use:
+      logging.error(u'Unable to process date for entry: %s', msg)
+      return
 
     extra = []
-    for key, value in attributes.iteritems():
-      if key in helper.RESERVED_VARIABLES:
+    format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
+        formatter.format_string)
+    for key in evt.GetAttributes():
+      if key in helper.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append('%s: %s ' % (key, value))
+      extra.append('%s: %s ' % (key, getattr(evt, key, None)))
     extra = ' '.join(extra)
 
-    inode = attributes.get('inode', '')
-    if not inode:
-      if proto_read.pathspec.HasField('image_inode'):
-        inode = proto_read.pathspec.image_inode
-      else:
-        inode = '-'
+    inode = getattr(evt, 'inode', '-')
+    if inode == '-':
+      if hasattr(evt, 'pathspec'):
+        pathspec = transmission_pb2.PathSpec()
+        pathspec.ParseFromString(evt.pathspec)
+        if pathspec.HasField('image_inode'):
+          inode = pathspec.image_inode
 
-    # TODO: refactor proto_read.DESCRIPTOR into function
     row = ( date_use.strftime('%Y-%m-%d'),
             date_use.strftime('%H:%M:%S'),
             str(self.zone),
-            helper.GetLegacy(proto_read),
-            proto_read.DESCRIPTOR.enum_types_by_name[
-              'SourceShort'].values_by_number[
-                proto_read.source_short].name,
-            proto_read.source_long,
-            proto_read.timestamp_desc,
-            attributes.get('username', '-'),
-            attributes.get('hostname', '-'),
+            helper.GetLegacy(evt),
+            getattr(evt, 'source_short', 'LOG'),
+            evt.source_long,
+            evt.timestamp_desc,
+            getattr(evt, 'username', '-'),
+            getattr(evt, 'hostname', '-'),
             msg_short,
             msg,
             '2',
-            proto_read.filename,
+            getattr(evt, 'filename', '-'),
             inode,
-            attributes.get('notes', '-'),  # Notes field placeholder.
-            attributes.get('parser', '-'),
+            getattr(evt, 'notes', '-'),
+            getattr(evt, 'parser', '-'),
             extra,
             date_use.strftime('%Y-%m-%d %H:%M:%S'),
             '',
@@ -159,10 +166,10 @@ class sql4n6(output.LogOutputFormatter):
             self.count,
             '',
             '',
-            proto_read.offset,
-            proto_read.store_number,
-            proto_read.store_index,
-            self.GetVSSNumber(proto_read))
+            evt.offset,
+            evt.store_number,
+            evt.store_index,
+            self.GetVSSNumber(evt))
     self.curs.execute(
         ('INSERT INTO log2timeline(date, time, timezone, MACB, source, '
          'sourcetype, type, user, host, short, desc, version, filename, '
@@ -177,9 +184,14 @@ class sql4n6(output.LogOutputFormatter):
     if self.count % 10000 == 0:
       self.conn.commit()
 
-  def GetVSSNumber(self, proto_read):
+  def GetVSSNumber(self, evt):
     """Return the vss_store_number of the event."""
-    if proto_read.pathspec.HasField('vss_store_number'):
-      return proto_read.pathspec.vss_store_number
+    if not hasattr(evt, 'pathspec'):
+      return -1
+
+    pathspec = transmission_pb2.PathSpec()
+    pathspec.ParseFromString(evt.pathspec)
+    if pathspec.HasField('vss_store_number'):
+      return pathspec.vss_store_number
     else:
       return -1

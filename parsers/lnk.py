@@ -115,16 +115,16 @@ class WinLnkFormatter(eventdata.EventFormatter):
       A string containing the linked path.
     """
     if hasattr(event_object, 'local_path'):
-      return event_object['local_path']
+      return event_object.local_path
 
     if hasattr(event_object, 'network_path'):
-      return event_object['network_path']
+      return event_object.network_path
 
     if hasattr(event_object, 'relative_path'):
       paths = []
       if hasattr(event_object, 'working_directory'):
-        paths.append(event_object['working_directory'])
-      paths.append(event_object['relative_path'])
+        paths.append(event_object.working_directory)
+      paths.append(event_object.relative_path)
 
       return u'\\'.join(paths)
 

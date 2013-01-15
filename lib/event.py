@@ -359,17 +359,25 @@ class EventObject(object):
                     plaso_storage_pb2.Attribute or if the attribute
                     cannot be unserialized.
     """
-    if not isinstance(proto, plaso_storage_pb2.Attribute):
+    key = u''
+    try:
+      if proto.HasField('key'):
+        key = proto.key
+    except ValueError:
+      pass
+
+    if not isinstance(proto, (
+        plaso_storage_pb2.Attribute, plaso_storage_pb2.Value)):
       raise RuntimeError("Unsupported proto")
 
     if proto.HasField('string'):
-      return proto.key, proto.string
+      return key, proto.string
 
     elif proto.HasField('integer'):
-      return proto.key, proto.integer
+      return key, proto.integer
 
     elif proto.HasField('boolean'):
-      return proto.key, proto.boolean
+      return key, proto.boolean
 
     elif proto.HasField('dict'):
       value = {}
@@ -377,7 +385,7 @@ class EventObject(object):
       for proto_dict in proto.dict.attributes:
         dict_key, dict_value = self._AttributeFromProto(proto_dict)
         value[dict_key] = dict_value
-      return proto.key, value
+      return key, value
 
     elif proto.HasField('array'):
       value = []
@@ -385,10 +393,10 @@ class EventObject(object):
       for proto_array in proto.array.values:
         _, list_value = self._AttributeFromProto(proto_array)
         value.append(list_value)
-      return proto.key, value
+      return key, value
 
     elif proto.HasField('data'):
-      return proto.key, proto.data
+      return key, proto.data
 
     # TODO: deal with float.
     else:
@@ -410,18 +418,34 @@ class EventObject(object):
 
     for proto_attribute, value in proto.ListFields():
       if proto_attribute.name == 'source_short':
-        self.source_short = self._SOURCE_SHORT_FROM_PROTO_MAP[value]
+        self.attributes.__setitem__(
+            'source_short', self._SOURCE_SHORT_FROM_PROTO_MAP[value])
 
       elif proto_attribute.name == 'pathspec':
-        self.pathspec = proto.pathspec.SerializeToString()
+        self.attributes.__setitem__(
+            'pathspec', proto.pathspec.SerializeToString())
 
+      elif proto_attribute.name == 'attributes':
+        continue
       else:
-        # Need to invoke the object here to bypass behavior of __setattr__.
-        object.__setattr__(self, proto_attribute.name, value)
+        # Register the attribute correctly.
+        self.attributes.__setitem__(proto_attribute.name, value)
 
     # Make sure the old attributes are removed.
-    self.attributes = dict(self._AttributeFromProto(proto_attribute) for
-                           proto_attribute in proto.attributes)
+    self.attributes.update(dict(self._AttributeFromProto(a) for a in
+                                proto.attributes))
+
+  def ToProtoString(self):
+    """Serialize an event object into a string value."""
+    proto = self.ToProto()
+
+    return proto.SerializeToString()
+
+  def FromProtoString(self, proto_string):
+    """Unserializes the event object from a serialized protobuf."""
+    proto = plaso_storage_pb2.EventObject()
+    proto.ParseFromString(proto_string)
+    self.FromProto(proto)
 
   def _AttributeToProto(self, proto, name, value):
     """Serializes an event object attribute to a protobuf.
@@ -479,6 +503,7 @@ class EventObject(object):
 
     for attribute_name in self.GetAttributes():
       if attribute_name == 'source_short':
+        __pychecker__ = ('missingattrs=source_short,pathspec')
         proto.source_short = self._SOURCE_SHORT_TO_PROTO_MAP[self.source_short]
 
       elif attribute_name == 'pathspec':
