@@ -59,7 +59,7 @@ class L2tCsvTest(unittest.TestCase):
     evt.text = (u'Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
                 ': session\n closed for user root)')
 
-    self.formatter.EventBody(evt.ToProto())
+    self.formatter.EventBody(evt)
     correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
                '(pam_unix(cron:session): session closed for user '
@@ -79,7 +79,7 @@ class L2tCsvTest(unittest.TestCase):
     evt.text = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
                 ': session closed for user root)')
 
-    self.formatter.EventBody(evt.ToProto())
+    self.formatter.EventBody(evt)
     correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
                'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
                '(pam_unix(cron:session): session closed for user '

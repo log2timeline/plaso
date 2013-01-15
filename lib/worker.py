@@ -171,7 +171,7 @@ class PlasoWorker(object):
             if hasattr(stat_obj, 'ino'):
               event.inode = stat_obj.ino
             if not self._filter:
-              serialized = storage.PlasoStorage.SerializeEvent(event)
+              serialized = event.ToProtoString()
               self._stor_queue.AddEvent(serialized)
             else:
               if self._filter.Matches(event):

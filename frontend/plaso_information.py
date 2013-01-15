@@ -94,7 +94,8 @@ def DisplayInformation(info, params):
       header, information, preprocessing, '-+' * 40)
 
 
-if __name__ == '__main__':
+def Main():
+  """Start the tool."""
   usage = """
 Gives you information about the storage file, how it was
 collected, what information was gained from the image, etc.
@@ -135,3 +136,7 @@ collected, what information was gained from the image, etc.
 
   if nothing:
     print u'No Plaso storage information found.'
+
+
+if __name__ == '__main__':
+  Main()

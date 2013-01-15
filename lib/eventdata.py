@@ -19,7 +19,6 @@ import re
 
 from plaso.lib import errors
 from plaso.lib import registry
-from plaso.lib import storage
 
 
 class EventFormatterManager(object):

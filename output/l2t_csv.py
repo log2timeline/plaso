@@ -17,23 +17,21 @@
 
 Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
 """
-import datetime
 import logging
-import pytz
 import re
 
 from plaso.output import helper
-from plaso.proto import plaso_storage_pb2
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import output
+from plaso.lib import timelib
+
+from plaso.proto import transmission_pb2
 
 
 class L2tCsv(output.LogOutputFormatter):
   """Contains functions for outputting as l2t_csv."""
-
-  MICROSEC = int(1e6)  # 1,000,000
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -47,78 +45,68 @@ class L2tCsv(output.LogOutputFormatter):
                            'user,host,short,desc,version,filename,inode,notes,'
                            'format,extra\n'))
 
-  def WriteEvent(self, proto):
+  def WriteEvent(self, evt):
     """Write a single event."""
     try:
-      self.EventBody(proto)
+      self.EventBody(evt)
     except errors.NoFormatterFound:
       logging.error('Unable to output line, no formatter found.')
-      logging.error(proto)
+      logging.error(evt)
 
-  def EventBody(self, proto_read):
+  def EventBody(self, evt):
     """Formats data as l2t_csv and writes to the filehandle from OutputFormater.
 
     Args:
-      proto_read: Protobuf to format.
+      evt: The event object (EventObject).
     """
-    event_object = event.EventObject()
-    event_object.FromProto(proto_read)
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(evt)
     if not event_formatter:
       raise errors.NoFormatterFound(
           'Unable to output event, no event formatter found.')
 
-    msg, msg_short = event_formatter.GetMessages(event_object)
+    msg, msg_short = event_formatter.GetMessages(evt)
 
-    try:
-      mydate = datetime.datetime.utcfromtimestamp(
-          proto_read.timestamp / self.MICROSEC)
-    except ValueError as e:
-       logging.error(
-           u'Unable to print: %s - %d: %s', msg_short,
-           proto_read.timestamp, e)
-       return
-    date_use = mydate.replace(tzinfo=pytz.utc).astimezone(self.zone)
+    if not hasattr(evt, 'timestamp'):
+      return
 
-    # TODO: refactor marker, was event_formatter.base_attributes.
-    attributes = event_object.attributes
+    date_use = timelib.DateTimeFromTimestamp(evt.timestamp, self.zone)
+    if not date_use:
+      logging.error(u'Unable to process date for entry: %s', msg)
+      return
+
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
-        event_formatter.FORMAT_STRING)
-    for key, value in attributes.iteritems():
+        event_formatter.format_string)
+    for key in evt.GetAttributes():
       if key in helper.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append('%s: %s ' % (key, value))
+      extra.append('%s: %s ' % (key, getattr(evt, key)))
     extra = ' '.join(extra)
 
-    inode = attributes.get('inode', '')
-    if not inode:
-      if proto_read.pathspec.HasField('image_inode'):
-        inode = proto_read.pathspec.image_inode
-      else:
-        inode = '-'
+    inode = getattr(evt, 'inode', '-')
+    if inode == '-':
+      if hasattr(evt, 'pathspec'):
+        pathspec = transmission_pb2.PathSpec()
+        pathspec.ParseFromString(evt.pathspec)
+        if pathspec.HasField('image_inode'):
+          inode = pathspec.image_inode
 
-    # TODO: refactor marker.
-    # Since event also deals with proto_read.DESCRIPTOR.
-    # enum_types_by_name['SourceShort'].values_by_number let's
-    # create some functions that deal with the mapping
     row = (date_use.strftime('%m/%d/%Y'),
            date_use.strftime('%H:%M:%S'),
            self.zone,
-           helper.GetLegacy(proto_read),
-           proto_read.DESCRIPTOR.enum_types_by_name[
-             'SourceShort'].values_by_number[proto_read.source_short].name,
-           proto_read.source_long,
-           proto_read.timestamp_desc,
-           attributes.get('username', '-'),
-           attributes.get('hostname', '-'),
+           helper.GetLegacy(evt),
+           evt.source_short,
+           evt.source_long,
+           evt.timestamp_desc,
+           getattr(evt, 'username', '-'),
+           getattr(evt, 'hostname', '-'),
            msg_short,
            msg,
            '2',
-           proto_read.filename,
+           evt.filename,
            inode,
-           attributes.get('notes', '-'),  # Notes field placeholder.
-           attributes.get('parser', '-'),
+           getattr(evt, 'notes', '-'),  # Notes field placeholder.
+           getattr(evt, 'parser', '-'),
            extra)
 
     out_write = u'{0}\n'.format(

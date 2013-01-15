@@ -22,8 +22,9 @@ Epoch UTC time that is used internally to store timestamps in Plaso.
 The file can also contain common functions to change the default timestamp into
 a more human readable one.
 """
-
 import calendar
+import datetime
+import pytz
 
 MONTH_DICT = {
     'jan': 1,
@@ -239,3 +240,13 @@ def Timetuple2Timestamp(time_tuple):
 
   return int(calendar.timegm(time_tuple))
 
+
+def DateTimeFromTimestamp(timestamp, zone):
+  """Return a datetime object from a given timestamp."""
+  try:
+    mydate = datetime.datetime.utcfromtimestamp(
+        timestamp / 1e6)
+  except ValueError:
+     return None
+
+  return mydate.replace(tzinfo=pytz.utc).astimezone(zone)

@@ -219,7 +219,7 @@ def PrintTimestamp(timestamp):
   return my_date.isoformat()
 
 
-def GetEventData(event_proto, before=0, fscache=None):
+def GetEventData(evt, before=0, fscache=None):
   """Return a hexdump like string of data surrounding event.
 
   This function takes an event object protobuf, opens the file
@@ -228,7 +228,7 @@ def GetEventData(event_proto, before=0, fscache=None):
   characters printed out on the screen.
 
   Args:
-    event_proto: The EventObject protobuf.
+    evt: The EventObject.
     before: Number of bytes before the event that are included
     in the printout.
     fscache: A FilesystemCache object that stores cached fs objects.
@@ -236,18 +236,20 @@ def GetEventData(event_proto, before=0, fscache=None):
   Returns:
     A string containing a hexdump of the data surrounding the event.
   """
-  if not event_proto:
+  if not evt:
+    return u''
+
+  if not hasattr(evt, 'pathspec'):
     return u''
 
   try:
-    fh = pfile.OpenPFile(event_proto.pathspec, fscache=fscache)
+    pathspec = transmission_pb2.PathSpec()
+    pathspec.ParseFromString(evt.pathspec)
+    fh = pfile.OpenPFile(pathspec, fscache=fscache)
   except IOError as e:
     return u'Error opening file: %s' % e
 
-  offset = 0
-  if event_proto.HasField('offset'):
-    offset = event_proto.offset
-
+  offset = getattr(evt, 'offset', 0)
   if offset - before > 0:
     offset -= before
 
