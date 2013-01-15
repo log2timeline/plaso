@@ -257,7 +257,50 @@ class PlasoEventUnitTest(unittest.TestCase):
         'body', 'filename', 'hostname', 'source_long', 'source_short', 'text',
         'timestamp', 'timestamp_desc', 'username'])
 
-# TODO: add to and from proto tests.
+  def testSerialization(self):
+    """Test serialize event and attribute saving."""
+    evt = event.EventObject()
+    evt.timestamp = 1234124
+    evt.timestamp_desc = 'Written'
+    evt.source_short = 'LOG'
+    evt.source_long = 'Some Source Long'
+    # Should not get stored.
+    evt.empty_attribute = u''
+    # Is stored.
+    evt.zero_integer = 0
+    evt.integer = 34
+    evt.string = 'Normal string'
+    evt.unicode_string = u'And I\'m a unicorn.'
+    evt.my_list = ['asf', 4234, 2, 54, 'asf']
+    evt.my_dict = {'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
+    evt.a_tuple = ('some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35)
+    # Should not get stored.
+    evt.null_value = None
+
+    proto = evt.ToProto()
+    proto_ser = evt.ToProtoString()
+
+    self.assertEquals(len(list(proto.attributes)), 7)
+    evt_throw = event.EventObject()
+    attributes = dict(
+        evt_throw._AttributeFromProto(a) for a in proto.attributes)
+    self.assertFalse('empty_attribute' in attributes)
+    self.assertTrue('zero_integer' in attributes)
+    self.assertEquals(len(attributes.get('my_list', [])), 5)
+    self.assertEquals(attributes.get('string'), 'Normal string')
+    self.assertEquals(len(attributes.get('a_tuple')), 4)
+
+    # Go back
+    evt2 = event.EventObject()
+    evt2.FromProtoString(proto_ser)
+
+    self.assertEquals(evt2.timestamp, evt.timestamp)
+    self.assertEquals(evt2.source_short, evt.source_short)
+    self.assertEquals(evt.my_dict, evt2.my_dict)
+    self.assertEquals(evt.my_list, evt2.my_list)
+    self.assertEquals(evt.string, evt2.string)
+    self.assertFalse('empty_attribute' in evt2.attributes)
+
 
 if __name__ == '__main__':
   unittest.main()

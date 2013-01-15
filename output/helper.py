@@ -16,25 +16,29 @@
 """Contains helper functions for output modules."""
 import re
 
-from plaso.proto import plaso_storage_pb2
-
 # Few regular expressions.
+# TODO: Remove these regular expressions in favor of a more clearly defined
+# ontology that strictly enforces certain keywords, perhaps changing the field
+# to an enum.
 MODIFIED_RE = re.compile(r'modif', re.I)
 ACCESS_RE = re.compile(r'visit', re.I)
 CREATE_RE = re.compile(r'(create|written)', re.I)
 
 RESERVED_VARIABLES = frozenset(
-    ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue'])
+    ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue', 'timestamp',
+     'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
+     'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
+     'tag'])
 
 
-def GetLegacy(event_proto):
+def GetLegacy(evt):
   """Return a legacy MACB representation of the event."""
   # TODO: Fix this function when the MFT parser has been implemented.
   # The filestat parser is somewhat limited.
   # Also fix this when duplicate entries have been implemented so that
   # the function actually returns more than a single entry (as in combined).
-  if event_proto.source_short == plaso_storage_pb2.EventObject.FILE:
-    letter = event_proto.timestamp_desc[0]
+  if evt.source_short == 'FILE':
+    letter = evt.timestamp_desc[0]
 
     if letter == 'm':
       return 'M...'
@@ -46,21 +50,21 @@ def GetLegacy(event_proto):
       return '....'
 
   letters = []
-  m = MODIFIED_RE.search(event_proto.timestamp_desc)
+  m = MODIFIED_RE.search(evt.timestamp_desc)
 
   if m:
     letters.append('M')
   else:
     letters.append('.')
 
-  m = ACCESS_RE.search(event_proto.timestamp_desc)
+  m = ACCESS_RE.search(evt.timestamp_desc)
 
   if m:
     letters.append('A')
   else:
     letters.append('.')
 
-  m = CREATE_RE.search(event_proto.timestamp_desc)
+  m = CREATE_RE.search(evt.timestamp_desc)
 
   if m:
     letters.append('C')

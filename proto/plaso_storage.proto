@@ -54,6 +54,10 @@ message Dict {
 message Value {
   optional int64 integer = 1;
   optional string string = 2;
+  optional bytes data = 3;
+  optional Array array = 4;
+  optional Dict dict = 5;
+  optional bool boolean = 6;
 };
 
 // A list of values, either integers or strings, to make up an array.

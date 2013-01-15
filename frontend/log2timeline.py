@@ -29,7 +29,8 @@ from plaso.lib import pfilter
 BYTES_IN_A_MIB = 1024 * 1024
 
 
-if __name__ == '__main__':
+def Main():
+  """Start the tool."""
   multiprocessing.freeze_support()
   arg_parser = argparse.ArgumentParser(
       description=('log2timeline is the main frontend to the plaso backend, us'
@@ -213,3 +214,7 @@ if __name__ == '__main__':
   except KeyboardInterrupt:
     logging.warning('Tool being killed.')
     l2t.StopThreads()
+
+
+if __name__ == '__main__':
+  Main()

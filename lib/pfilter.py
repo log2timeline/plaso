@@ -57,21 +57,8 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
   def _GetValue(self, obj, attr_name):
     ret = getattr(obj, attr_name, None)
 
-    # Check if this is source_short in a protobuf (an int)
-    if attr_name == 'source_short' and type(ret) == int:
-      ret = obj.DESCRIPTOR.enum_types_by_name[
-          'SourceShort'].values_by_number[obj.source_short].name
-
     if ret:
       return ret
-
-    # Check if this is an attribute inside the EventObject protobuf.
-    if hasattr(obj, 'attributes') and hasattr(obj.attributes, 'MergeFrom'):
-      if attr_name == 'message':
-        return self._GetMessage(obj)
-
-      attributes = dict(storage.GetAttributeValue(a) for a in obj.attributes)
-      return attributes.get(attr_name, None)
 
     # Check if this is a message request and we have a regular EventObject.
     if attr_name == 'message' and not hasattr(obj.attributes, 'MergeForm'):

@@ -14,24 +14,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Returns a PlasoStorage protobuf as a string."""
+import pprint
+
 from plaso.lib import output
 
 
 class Raw(output.LogOutputFormatter):
-  """Returns a PlasoStorage protobuf as a string."""
+  """Prints out a "raw" interpretation of the EventObject."""
+
+  def Start(self):
+    """Set up the pretty printer."""
+    self.printer = pprint.PrettyPrinter(indent=8)
 
   def Usage(self):
-    return 'Returns a proto formatted as string. Useful for debugging.'
+    """Return usage information."""
+    return ('Returns a raw representation of the EventObject. Useful for'
+            ' debugging.')
 
-  def EventBody(self, proto):
-    """String representation of a PlasoStorage proto object.
+  def EventBody(self, evt):
+    """String representation of an EventObject object.
 
     Args:
-      proto: PlasoStorage proto object
+      Evt: The EventObject.
 
     Returns:
-      String representation of a PlasoStorage Proto.
+      String representation of an EventObject.
     """
 
-    out_write = u'%s' % proto
-    self.filehandle.write(out_write.encode('utf-8'))
+    out_write = []
+    out_write.append('+-' * 80)
+    # TODO: There is no difference made between a "regular" attribute and an
+    # additional one. Perhaps look into the RESERVED_VARIABLES list and display
+    # them differently than others? As in indent others?
+    for attr_key in sorted(evt.GetAttributes()):
+      out_write.append(u'{key}: {value}'.format(
+          key=attr_key, value=self.printer.pformat(
+              getattr(evt, attr_key, None))))
+    out_write.append('')
+
+    self.filehandle.write('\n'.join(out_write).encode('utf-8'))

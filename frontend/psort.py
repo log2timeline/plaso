@@ -234,21 +234,21 @@ class OutputRenderer(object):
      Currently only supports dumping basic to string formating of objects.
   """
 
-  def __init__(self, Format='L2tCsv', output_fd=None, timezone='UTC'):
+  def __init__(self, out_format='L2tCsv', output_fd=None, timezone='UTC'):
     """Initalizes the OutputRenderer.
 
     Args:
-      Format:  Name of output_lib formatter class to use.
+      out_format:  Name of output_lib formatter class to use.
       output_fd:  File descriptor to send output to.
       timezone: The timezone of the output
     """
     if output_fd is None:
       output_fd = sys.stdout
     self.buffer_list = []
-    # TODO: Format should check against loaded output modules and help the
+    # TODO: out_format should check against loaded output modules and help the
     # user find the right one with output_lib.ListOutputFormatters().
     self.formatter = (
-        output_lib.LogOutputFormatter.classes[Format](
+        output_lib.LogOutputFormatter.classes[out_format](
             output_fd, pytz.timezone(timezone)))
     self.formatter.Start()  # Write header
 
@@ -278,7 +278,8 @@ class OutputRenderer(object):
     self.formatter.End()
 
 
-if __name__ == '__main__':
+def Main():
+  """Start the tool."""
   parser = argparse.ArgumentParser(
       description='Psort (Plaso Síar Og Raðar Þessu) - Human-readable from'
       ' PlasoStorage files.')
@@ -387,3 +388,7 @@ if __name__ == '__main__':
         if not my_args.debug:
           raise
         pdb.post_mortem()
+
+
+if __name__ == '__main__':
+  Main()

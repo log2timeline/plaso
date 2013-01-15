@@ -52,7 +52,7 @@ class LogOutputFormatter(object):
     self.zone = zone
     self.filehandle = filehandle
 
-  def WriteEvent(self, proto):
+  def WriteEvent(self, evt):
     """Write the output of a single entry to the output filehandle.
 
     This method takes care of actually outputting each event in
@@ -61,17 +61,17 @@ class LogOutputFormatter(object):
     a potential end of event.
 
     Args:
-      proto: An EventObject protobuf, defined in the proto_storage.proto.
+      evt: An EventObject, defined in the event library.
     """
     self.StartEvent()
-    self.EventBody(proto)
+    self.EventBody(evt)
     self.EndEvent()
 
-  def EventBody(self, proto):
+  def EventBody(self, evt):
     """Writes the main body of an event to the output filehandle.
 
     Args:
-      proto: An EventObject protobuf, defined in the proto_storage.proto.
+      evt: An EventObject, defined in the event library.
 
     Raises:
       NotImplementedError: When not implemented.

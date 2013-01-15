@@ -63,7 +63,8 @@ from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
 
-if __name__ == '__main__':
+def Main():
+  """Start the tool."""
   temp_location = tempfile.gettempdir()
 
   options = Options()
@@ -83,6 +84,7 @@ if __name__ == '__main__':
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   logging.basicConfig(format=format_str)
 
+  __pychecker__ = 'unusednames=l2t,fscache'
   l2t = engine.Engine(options)
 
   namespace = {}
@@ -116,3 +118,7 @@ if __name__ == '__main__':
                                   exit_msg='')
   ipshell.confirm_exit = False
   ipshell()
+
+
+if __name__ == '__main__':
+  Main()

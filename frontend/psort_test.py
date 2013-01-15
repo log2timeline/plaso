@@ -15,12 +15,24 @@
 # limitations under the License.
 """Tests for plaso.frontend.psort."""
 import os
+import re
+import StringIO
+import tempfile
 
 import pytz
 import unittest
 
 from plaso.frontend import psort
+from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import storage
+
+
+class MyFormatter(eventdata.EventFormatter):
+  """A simple test event formatter."""
+  ID_RE = re.compile('FakeEvt', re.DOTALL)
+
+  FORMAT_STRING = 'My text goes along: {some} lines'
 
 
 class PsortTest(unittest.TestCase):
@@ -137,17 +149,77 @@ class PsortTest(unittest.TestCase):
   def testOutputRenderer_Flush(self):
     """Test to ensure we empty our buffers and sends to output properly."""
 
-    class Fakepb(object):
-      timestamp = 123456
+    class FakeEvt(event.EventObject):
+      """A "fake" EventObject, or a dummy one used for this test."""
+
+      def __init__(self):
+        super(FakeEvt, self).__init__()
+        self.timestamp = 123456
+        self.source_short = 'LOG'
+        self.source_long = 'NoSource'
 
     options = {}
     options['output_fd'] = open(os.devnull, 'a')
-    options['Format'] = 'Raw'
+    options['out_format'] = 'Raw'
     my_test_ob = psort.OutputRenderer(**options)
-    my_test_ob.Append(Fakepb)
-    #my_test_ob.Append((1340821021, Fakepb, 'test_filename'))
+    my_test_ob.Append(FakeEvt())
     my_test_ob.Flush()
     self.assertEquals(len(my_test_ob.buffer_list), 0)
+
+  def testOutput(self):
+    """Testing if psort can output data."""
+    class FakeEvt(event.EventObject):
+      """Simple EventObject."""
+
+      def __init__(self, timestamp):
+        """Build it up."""
+        super(FakeEvt, self).__init__()
+        self.source_short = 'LOG'
+        self.source_long = 'None in Particular'
+        self.some = u'My text dude.'
+        self.var = {'Issue': False, 'Closed': True}
+        self.timestamp_desc = 'Last Written'
+        self.timestamp = timestamp
+        self.filename = '/dev/none'
+        self.display_name = '/dev/none'
+        self.parser = 'FakeEvt'
+
+    events = []
+    events.append(FakeEvt(5134324321))
+    events.append(FakeEvt(2134324321))
+    events.append(FakeEvt(9134324321))
+    events.append(FakeEvt(15134324321))
+    events.append(FakeEvt(5134324322))
+    events.append(FakeEvt(5134024321))
+
+    output_fd = StringIO.StringIO()
+
+    with tempfile.NamedTemporaryFile() as fh:
+      store = storage.PlasoStorage(fh)
+
+      for my_event in events:
+        store.AddEntry(my_event.ToProtoString())
+      store.CloseStorage()
+
+      with psort.SetupStorage(fh.name) as store:
+        psort.MergeSort(
+            store, (1,), 0, 90000000000,
+            psort.OutputRenderer(output_fd=output_fd))
+
+    lines = []
+    for line in output_fd.getvalue().split('\n'):
+      if line:
+        lines.append(line)
+
+    # One more line than events (header row).
+    self.assertEquals(len(lines), 7)
+    self.assertTrue('My text goes along: My text dude. lines' in lines[2])
+    self.assertTrue(',LOG,' in lines[2])
+    self.assertTrue(',None in Particular,' in lines[2])
+    self.assertEquals(
+        lines[0], ('date,time,timezone,MACB,source,sourcetype,type,user,host,'
+                   'short,desc,version,filename,inode,notes,format,extra'))
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -67,6 +67,7 @@ import yaml
 from google.protobuf import message
 
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import pfile
 from plaso.lib import queue
 from plaso.lib import utils
@@ -178,7 +179,7 @@ class PlasoStorage(object):
       return None
 
   def GetEntry(self, number, entry_index=-1):
-    """Return a protobuf read from filehandle.
+    """Return an EventObject read from filehandle.
 
     By default the next entry in the appropriate proto file is read
     and returned, however any entry can be read using the index file.
@@ -188,7 +189,7 @@ class PlasoStorage(object):
       entry_index: Read a specific entry in the file, otherwise the next one.
 
     Returns:
-      A protobuf entry read from the file.
+      An event object (EventObject) entry read from the file.
 
     Raises:
       EOFError: When we reach the end of the protobuf file.
@@ -235,12 +236,12 @@ class PlasoStorage(object):
 
     self.protofiles[number] = (fh, last_index + 1)
     proto_serialized = fh.read(size)
-    proto = plaso_storage_pb2.EventObject()
-    proto.ParseFromString(proto_serialized)
-    proto.store_number = number
-    proto.store_index = last_index
+    event_object = event.EventObject()
+    event_object.FromProtoString(proto_serialized)
+    event_object.store_number = number
+    event_object.store_index = last_index
 
-    return proto
+    return event_object
 
   def GetEntries(self, number):
     """A generator to read all plaso_storage protobufs from a filehandle.
@@ -323,51 +324,31 @@ class PlasoStorage(object):
     if not self._file_open:
       raise IOError('Trying to add an entry to a closed storage file.')
 
-    event = plaso_storage_pb2.EventObject()
-    event.ParseFromString(event_str)
-    attributes = dict(GetAttributeValue(a) for a in event.attributes)
+    evt = event.EventObject()
+    evt.FromProtoString(event_str)
 
-    if event.timestamp > self._buffer_last_timestamp:
-      self._buffer_last_timestamp = event.timestamp
+    if evt.timestamp > self._buffer_last_timestamp:
+      self._buffer_last_timestamp = evt.timestamp
 
-    if event.timestamp < self._buffer_first_timestamp and event.timestamp > 0:
-      self._buffer_first_timestamp = event.timestamp
+    if evt.timestamp < self._buffer_first_timestamp and evt.timestamp > 0:
+      self._buffer_first_timestamp = evt.timestamp
 
     # Add values to counters.
     if self._pre_obj:
       self._pre_obj.counter['total'] += 1
-      self._pre_obj.counter[attributes.get('parser', 'N/A')] += 1
+      self._pre_obj.counter[evt.attributes.get('parser', 'N/A')] += 1
 
     # Add to temporary counter.
-    self._count_evt_long[event.source_long] += 1
-    source = event.DESCRIPTOR.enum_types_by_name[
-        'SourceShort'].values_by_number[event.source_short].name
-    self._count_evt_short[source] += 1
-    self._count_parser[attributes.get('parser', 'unknown_parser')] += 1
+    self._count_evt_long[evt.source_long] += 1
+    self._count_evt_short[evt.source_short] += 1
+    self._count_parser[evt.attributes.get('parser', 'unknown_parser')] += 1
 
-    heapq.heappush(self._buffer, (event.timestamp, event_str))
+    heapq.heappush(self._buffer, (evt.timestamp, event_str))
     self._buffer_size += len(event_str)
     self._write_counter += 1
 
     if self._buffer_size > self._max_buffer_size:
       self.FlushBuffer()
-
-  @classmethod
-  def SerializeEvent(cls, an_event):
-    """Return a serialized event."""
-    # TODO: due to some issue with pychecker unusednames=cls does not work.
-    # Since the idea is to refactor this function anyway remove this workaround
-    # afterwards.
-    __pychecker__ = 'unusednames=_'
-    _ = cls
-    proto = an_event.ToProto()
-
-    try:
-      return proto.SerializeToString()
-    except message.EncodeError as e:
-      logging.warning('Unable to serialize event (skip), error msg: %s', e)
-
-    return ''
 
   def FlushBuffer(self):
     """Flush a buffer to disk."""
@@ -686,7 +667,14 @@ class PlasoStorage(object):
     if not evt:
       return None
 
-    evt.tag.MergeFrom(tag_proto)
+    # TODO: Instead of saving it in a dict create an object for tags.
+    tag = {}
+    for field, value in tag_proto.ListFields():
+      if field.name == 'tags':
+        tag[field.name] = list(a.value for a in tag_proto.tags)
+      else:
+        tag[field.name] = value
+    evt.tag = tag
 
     return evt
 
@@ -762,40 +750,3 @@ class SimpleStorageDumper(object):
     self._queue.Close()
 
 
-def GetAttributeValue(attribute):
-  # TODO: refactor now duplicate with FromProto functions in EventObject.
-  """Method to retrieve a Python friendly value from the Attribute protobuf."""
-  key = None
-
-  if not isinstance(attribute, plaso_storage_pb2.Attribute):
-    return key, None
-
-  key = attribute.key
-
-  if attribute.HasField('string'):
-    return key, attribute.string
-
-  if attribute.HasField('integer'):
-    return key, attribute.integer
-
-  if attribute.HasField('boolean'):
-    return key, attribute.boolean
-
-  if attribute.HasField('array'):
-    ret = []
-    for entry in attribute.array.values:
-      if entry.HasField('integer'):
-        ret.append(entry.integer)
-      elif entry.HasField('string'):
-        ret.append(entry.string)
-
-    return key, ret
-
-  if attribute.HasField('dict'):
-    ret = {}
-    for entry in attribute.dict.attributes:
-      _, ret[entry.key] = GetAttributeValue(entry)
-
-    return key, ret
-
-  return key, None
