@@ -19,8 +19,11 @@ import pprint
 from plaso.lib import output
 
 
-class Raw(output.LogOutputFormatter):
+class Raw(output.FileLogOutputFormatter):
   """Prints out a "raw" interpretation of the EventObject."""
+  # TODO: Revisit the name of this class, perhaps rename it to
+  # something more closely similar to what it is doing now, as in
+  # "native" or something else.
 
   def Start(self):
     """Set up the pretty printer."""
