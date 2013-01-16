@@ -98,10 +98,12 @@ class TestEventContainer(event.EventContainer):
     container.Append(TestEvent(1335791207939596, {
         'text': 'Mr. Evil just logged into the machine and got root.'}))
 
-    event_object = event.TextEvent(1338934459000000, (
+    text_dict = {'body': (
         'This is a line by someone not reading the log line properly. And '
         'since this log line exceeds the accepted 80 chars it will be '
-        'shortened.'), 'Some random text file', 'nomachine', 'johndoe')
+        'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
+    event_object = event.TextEvent(1338934459000000, text_dict,
+                                   'Some random text file')
     event_object.text = event_object.body
     container.Append(event_object)
 
