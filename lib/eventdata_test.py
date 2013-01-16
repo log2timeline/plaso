@@ -46,7 +46,7 @@ class TestRegistryFormatter(winreg.WinRegistryGenericFormatter):
   ID_RE = re.compile('.+(Registry|UNKNOWN):', re.DOTALL)
 
 
-class TestTextFormatter(eventdata.TextFormatter):
+class TestTextFormatter(eventdata.EventFormatter):
   """A simple formatter for registry data."""
 
   ID_RE = re.compile('UNKNOWN:(Some|Weird)', re.DOTALL)

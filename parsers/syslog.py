@@ -55,7 +55,7 @@ class Syslog(parser.TextParser):
     # TODO this is a HACK to get the tests working let's discuss this
     self._year_use = getattr(pre_obj, 'year', 0)
     self._last_month = 0
-    self.source_long = 'Syslog Log File'
+    self.source_long = 'Log File'
 
     # Set some additional attributes.
     self.attributes['reporter'] = ''
@@ -112,16 +112,6 @@ class Syslog(parser.TextParser):
 
     self.attributes['iyear'] = self._year_use
 
-    if self.attributes['pid']:
-      line = '[%s, pid: %d] %s' % (self.attributes['reporter'],
-                                   self.attributes['pid'],
-                                   self.attributes['body'])
-    elif self.attributes['reporter']:
-      line = '[%s] %s' % (self.attributes['reporter'], self.attributes['body'])
-    else:
-      line = self.attributes['body']
-
-    self.attributes['body'] = line
     return super(Syslog, self).ParseLine(zone)
 
   def ParseHost(self, match, **_):
@@ -153,9 +143,11 @@ class Syslog(parser.TextParser):
     return super(Syslog, self).PrintLine()
 
 
-class SyslogFormatter(eventdata.TextFormatter):
+class SyslogFormatter(eventdata.ConditionalEventFormatter):
   """Define the formatting for syslog files."""
 
   # The indentifier for the formatter (a regular expression)
   ID_RE = re.compile('Syslog:', re.DOTALL)
+  FORMAT_STRING_SEPARATOR = u''
 
+  FORMAT_STRING_PIECES = [u'[', u'{reporter}', u', pid: {pid}', u'] {body}']

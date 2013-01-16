@@ -308,10 +308,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
     epoch += timestamp.microsecond
 
     __pychecker__ = ('missingattrs=source_long')
-    evt = event.TextEvent(epoch, self.attributes['body'], self.source_long,
-                          self.attributes['hostname'],
-                          self.attributes['username'])
-
+    evt = event.TextEvent(epoch, self.attributes, self.source_long)
     evt.offset = getattr(self, 'entry_offset', 0)
     return evt
 
