@@ -152,7 +152,11 @@ class Engine(object):
 
     for weight in plugin_list.GetWeightList(self.config.os):
       for plugin in plugin_list.GetWeight(self.config.os, weight):
-        plugin.Run()
+        try:
+          plugin.Run()
+        except errors.PreProcessFail as e:
+          logging.warning('Unable to run preprocessor: %s, reason: %s',
+                          plugin.__class__.__name__, e)
 
     # Set the timezone.
     if hasattr(pre_obj, 'time_zone_str'):
