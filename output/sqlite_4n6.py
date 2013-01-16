@@ -16,6 +16,7 @@
 
 import logging
 import pytz
+import os
 import re
 import sys
 import sqlite3
@@ -28,7 +29,6 @@ from plaso.output import helper
 from plaso.proto import transmission_pb2
 
 __author__ = 'David Nides (david.nides@gmail.com)'
-
 
 
 class Sql4n6(output.LogOutputFormatter):
@@ -51,9 +51,9 @@ class Sql4n6(output.LogOutputFormatter):
       fields: The fields to create index for.
       append: Whether to create a new db or appending to an existing one.
     """
-    output.LogOutputFormatter.__init__(self, filehandle, zone)
+    super(Sql4n6, self).__init__(filehandle, zone)
     self.fields = fields
-    self.dbname = filehandle.name
+    self.dbname = filehandle
     self.append = append
 
   def Usage(self):
@@ -68,7 +68,11 @@ class Sql4n6(output.LogOutputFormatter):
     if self.filehandle == sys.stdout:
       raise IOError('Can\'t connect to stdout as database, '
                     'please specify a file.')
-    self.filehandle.close()
+
+    if os.path.isfile(self.filehandle):
+      raise IOError(
+          (u'Unable to use an already existing file for output '
+           '[%s]' % self.filehandle))
 
     self.conn = sqlite3.connect(self.dbname)
     self.conn.text_factory = str
@@ -85,10 +89,10 @@ class Sql4n6(output.LogOutputFormatter):
            'color TEXT, offset INT, store_number INT, store_index INT,'
            'vss_store_number INT)'))
       for field in self.META_FIELDS:
-        self.curs.execute("CREATE TABLE l2t_%ss (%ss TEXT, frequency INT)"
-                          % (field, field))
-      self.curs.execute("CREATE TABLE l2t_tags (tag TEXT)")
-    
+        self.curs.execute(
+            'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
+      self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
+
     self.count = 0
 
   def End(self):
@@ -105,8 +109,9 @@ class Sql4n6(output.LogOutputFormatter):
       vals = self._GetDistinctValues(field)
       self.curs.execute('DELETE FROM l2t_%ss' % field)
       for name, freq in vals.items():
-        self.curs.execute('INSERT INTO l2t_%ss (%ss, frequency) VALUES'
-                          "('%s', %s) " % (field, field, name, freq))   
+        self.curs.execute(
+            'INSERT INTO l2t_%ss (%ss, frequency) VALUES("%s", %s) ' % (
+                field, field, name, freq))
     self.curs.execute('DELETE FROM l2t_tags')
     for tag in self._ListTags():
       self.curs.execute('INSERT INTO l2t_tags (tag) VALUES (?)', tag)
