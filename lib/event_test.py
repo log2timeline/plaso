@@ -38,15 +38,14 @@ from plaso.lib import event
 
 
 class TestEvent(event.EventObject):
-  """A test event object with the minimal required initialization."""
+  """A test event object."""
 
-  def __init__(self, timestamp, text):
+  def __init__(self, timestamp, attributes):
     """Initializes the test event object."""
     super(TestEvent, self).__init__()
-    self.source_short = 'TLOG'
-    self.testkey = 'This is a test key.'
     self.timestamp = timestamp
-    self.text = text
+    self.source_short = 'TEST'
+    self.attributes.update(attributes)
 
 
 class FailEvent(event.EventObject):
@@ -90,14 +89,14 @@ class TestEventContainer(event.EventContainer):
     container.filename = 'c:/Temp/evil.exe'
     container.source_long = 'Weird Log File'
 
-    container.Append(TestEvent(
-        1335781787929596, 'This log line reads ohh so much.'))
+    container.Append(TestEvent(1335781787929596, {
+        'text': 'This log line reads ohh so much.'}))
 
-    container.Append(TestEvent(
-        1335781787929596, 'Nothing of interest here, move on.'))
+    container.Append(TestEvent(1335781787929596, {
+        'text': 'Nothing of interest here, move on.'}))
 
-    container.Append(TestEvent(1335791207939596,
-        'Mr. Evil just logged into the machine and got root.'))
+    container.Append(TestEvent(1335791207939596, {
+        'text': 'Mr. Evil just logged into the machine and got root.'}))
 
     event_object = event.TextEvent(1338934459000000, (
         'This is a line by someone not reading the log line properly. And '
@@ -168,7 +167,7 @@ class PlasoEventUnitTest(unittest.TestCase):
 
   def testNotInEventAndNoParent(self):
     """Call to an attribute that does not exist and no parent container ."""
-    event = TestEvent(0, u'bogus')
+    event = TestEvent(0, {})
 
     self.assertRaises(AttributeError, getattr, event, 'doesnotexist')
 
