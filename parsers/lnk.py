@@ -54,29 +54,30 @@ class WinLnkParser(parser.PlasoParser):
     container.source_long = self.NAME
     container.source_short = self.PARSER_TYPE
 
-    container.description = lnk_file.get_description()
-    container.local_path = lnk_file.get_local_path()
-    container.network_path = lnk_file.get_network_path()
-    container.command_line_arguments = lnk_file.get_command_line_arguments()
+    container.description = lnk_file.description
+    container.local_path = lnk_file.local_path
+    container.network_path = lnk_file.network_path
+    container.command_line_arguments = lnk_file.command_line_arguments
+    # TODO: update pylnk.
     container.env_var_location = lnk_file.get_environment_variables_location()
-    container.relative_path = lnk_file.get_relative_path()
-    container.working_directory = lnk_file.get_working_directory()
-    container.icon_location = lnk_file.get_icon_location()
+    container.relative_path = lnk_file.relative_path
+    container.working_directory = lnk_file.working_directory
+    container.icon_location = lnk_file.icon_location
 
     container.Append(event.FiletimeEvent(
         lnk_file.get_file_access_time_as_integer(),
-        'Last Access Time'))
+        eventdata.EventTimestamp.ACCESS_TIME))
 
     container.Append(event.FiletimeEvent(
         lnk_file.get_file_creation_time_as_integer(),
-        'Creation Time'))
+        eventdata.EventTimestamp.CREATION_TIME))
 
     container.Append(event.FiletimeEvent(
         lnk_file.get_file_modification_time_as_integer(),
-        'Modification Time'))
+        eventdata.EventTimestamp.MODIFICATION_TIME))
 
-    # TODO: add support for the distributed link tracker
-    # TODO: add support for the shell item
+    # TODO: add support for the distributed link tracker.
+    # TODO: add support for the shell item.
 
     return container
 
