@@ -38,7 +38,7 @@ class DummyEventFormatter(eventdata.EventFormatter):
 class L2tCsvTest(unittest.TestCase):
   def setUp(self):
     self.output = StringIO.StringIO()
-    self.formatter = l2t_csv.L2tCsv(self.output)
+    self.formatter = l2t_csv.L2tcsv(self.output)
 
   def testStart(self):
     correct_line = ('date,time,timezone,MACB,source,sourcetype,type,user,host,'

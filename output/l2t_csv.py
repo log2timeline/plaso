@@ -30,7 +30,7 @@ from plaso.lib import timelib
 from plaso.proto import transmission_pb2
 
 
-class L2tCsv(output.LogOutputFormatter):
+class L2tcsv(output.FileLogOutputFormatter):
   """Contains functions for outputting as l2t_csv."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')

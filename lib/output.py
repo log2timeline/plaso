@@ -27,6 +27,7 @@ a human readable format for easy human consumption/analysis.
 """
 
 import sys
+import StringIO
 import pytz
 
 from plaso.lib import registry
@@ -115,6 +116,23 @@ class LogOutputFormatter(object):
   def Usage(self):
     """Return a quick help message that describes the output provided."""
     return 'This is a generic output module that provides no context.'
+
+
+class FileLogOutputFormatter(LogOutputFormatter):
+  """A simple file based output formatter."""
+
+  __abstract = True
+
+  def __init__(self, filehandle=sys.stdout, zone=pytz.utc):
+    """Set up the formatter."""
+    super(FileLogOutputFormatter, self).__init__(filehandle, zone)
+    if not isinstance(filehandle, (file, StringIO.StringIO)):
+      self.filehandle = open(filehandle, 'w')
+
+  def End(self):
+    """Close the open filehandle after the last output."""
+    super(FileLogOutputFormatter, self).End()
+    self.filehandle.close()
 
 
 def ListOutputFormatters():

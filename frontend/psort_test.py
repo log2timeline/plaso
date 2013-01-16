@@ -159,7 +159,7 @@ class PsortTest(unittest.TestCase):
         self.source_long = 'NoSource'
 
     options = {}
-    options['output_fd'] = open(os.devnull, 'a')
+    options['file_descriptor'] = open(os.devnull, 'a')
     options['out_format'] = 'Raw'
     my_test_ob = psort.OutputRenderer(**options)
     my_test_ob.Append(FakeEvt())
@@ -204,7 +204,7 @@ class PsortTest(unittest.TestCase):
       with psort.SetupStorage(fh.name) as store:
         psort.MergeSort(
             store, (1,), 0, 90000000000,
-            psort.OutputRenderer(output_fd=output_fd))
+            psort.OutputRenderer(file_descriptor=output_fd))
 
     lines = []
     for line in output_fd.getvalue().split('\n'):
