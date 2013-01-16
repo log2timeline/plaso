@@ -81,30 +81,27 @@ class WinLnkParser(parser.PlasoParser):
     return container
 
 
-class WinLnkFormatter(eventdata.EventFormatter):
-  """Define the formatting for Windows shortcut."""
-  #TODO: Change this into a more generic formatter that can be easily extended
-  # for similar parsers.
-
+class WinLnkFormatter(eventdata.ConditionalEventFormatter):
+  """Class that formats Windows Shortcut (LNK) events."""
   ID_RE = re.compile('WinLnkParser:', re.DOTALL)
 
   # The format string.
-  FORMAT_STRING = u''
-  FORMAT_STRING_SHORT = u''
-
-  # The format string.
-  # TODO: use as part of the conditional formatter.
   FORMAT_STRING_PIECES = [
       u'[{description}]',
       u'Local path: {local_path}',
       u'Network path: {network_path}',
       u'cmd arguments: {command_line_arguments}',
-      u'env location: {env_variables_location}',
+      u'env location: {env_var_location}',
       u'Relative path: {relative_path}',
       u'Working dir: {working_directory}',
       u'Icon location: {icon_location}']
 
-  def GetLinkedPath(self, event_object):
+  FORMAT_STRING_SHORT_PIECES = [
+      u'[{description}]',
+      u'{linked_path}',
+      u'{command_line_arguments}']
+
+  def _GetLinkedPath(self, event_object):
     """Determines the linked path.
 
     Args:
@@ -141,49 +138,11 @@ class WinLnkFormatter(eventdata.EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
-    class TextList(list):
-      """List with support to add description, value pairs."""
-
-      def __init__(self, attributes):
-        """Store the attributes for future lookups."""
-        super(TextList, self).__init__()
-        self._attributes = attributes
-
-      def AppendValue(self, description, value):
-        """Appends a non-empty value and its description to the list."""
-        __pychecker__ = 'missingattrs=_attributes'
-        if value in self._attributes:
-          if description:
-            super(TextList, self).append(
-                u'{0}: {{{1}}}'.format(description, value))
-          else:
-            super(TextList, self).append(u'{{{0}}}'.format(value))
-
-    # Update extended attributes with the linked path.
+    # Update event object with a description if necessary.
     if not hasattr(event_object, 'description'):
       event_object.description = u'Empty description'
 
-    # Check if we have "fixed" the format strings.
-    if not self.format_string:
-      format_short = TextList(event_object.attributes)
-      format_long = TextList(event_object.attributes)
-
-      format_long.append(u'[{description}]')
-      format_short.append(u'[{description}]')
-
-      format_long.AppendValue('Local path', 'local_path')
-      format_long.AppendValue('Network path', 'network_path')
-      format_long.AppendValue('cmd arguments', 'command_line_arguments')
-      format_long.AppendValue('env location', 'env_var_location')
-      format_long.AppendValue('Relative path', 'relative_path')
-      format_long.AppendValue('Working dir', 'working_directory')
-      format_long.AppendValue('Icon location', 'icon_location')
-
-      format_short.AppendValue('', self.GetLinkedPath(event_object))
-      format_short.AppendValue('', 'command_line_arguments')
-
-      self.format_string = u' '.join(format_long)
-      self.format_string_short = u' '.join(format_short)
+    # Update event object with the linked path.
+    event_object.linked_path = self._GetLinkedPath(event_object)
 
     return super(WinLnkFormatter, self).GetMessages(event_object)
-
