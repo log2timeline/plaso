@@ -223,7 +223,6 @@ def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output,
       heapq.heappush(read_list, (new_timestamp, file_number, new_storage_proto))
 
   my_output.Flush()
-  my_output.End()
   if filter_count:
     logging.info('Events filtered out: %d', filter_count)
 
@@ -234,23 +233,28 @@ class OutputRenderer(object):
      Currently only supports dumping basic to string formating of objects.
   """
 
-  def __init__(self, out_format='L2tCsv', output_fd=None, timezone='UTC'):
+  def __init__(self, out_format='L2tcsv', timezone='UTC',
+               file_descriptor=sys.stdout):
     """Initalizes the OutputRenderer.
 
     Args:
       out_format:  Name of output_lib formatter class to use.
-      output_fd:  File descriptor to send output to.
       timezone: The timezone of the output
+      file_descriptor:  File descriptor to send output to.
     """
-    if output_fd is None:
-      output_fd = sys.stdout
     self.buffer_list = []
+    format_str = '%s%s' % (out_format[0].upper(), out_format[1:].lower())
+
     # TODO: out_format should check against loaded output modules and help the
     # user find the right one with output_lib.ListOutputFormatters().
-    self.formatter = (
-        output_lib.LogOutputFormatter.classes[out_format](
-            output_fd, pytz.timezone(timezone)))
-    self.formatter.Start()  # Write header
+    try:
+      self.formatter = (
+          output_lib.LogOutputFormatter.classes[format_str](
+              file_descriptor, pytz.timezone(timezone)))
+      self.formatter.Start()  # Write header
+    except IOError as e:
+      logging.error('Error occured during output processing: %s', e)
+      self.formatter = None
 
   def Append(self, mblog):
     """Adds a record to the output buffer.
@@ -275,7 +279,16 @@ class OutputRenderer(object):
 
   def End(self):
     """Call the formatter to produce the closing line."""
-    self.formatter.End()
+    if self.formatter:
+      self.formatter.End()
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    self.End()
+
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
 
 
 def Main():
@@ -362,32 +375,24 @@ def Main():
 
   first, last = GetTimes(my_args)
 
+  if not my_args.write:
+    my_args.write = sys.stdout
+
   with SetupStorage(my_args.storagefile) as store:
     # Identify Files
     range_checked_pb_nums = ReadMeta(store, first, last)
-    if my_args.write:  # writing to file.
-      with open(my_args.write, 'a') as output_fd:
+    with OutputRenderer(my_args.output_format, my_args.timezone,
+                        my_args.write) as output_render:
+      if output_render.formatter:
         try:
           MergeSort(store, range_checked_pb_nums, first, last,
-                    OutputRenderer(my_args.output_format, output_fd,
-                                   my_args.timezone))
-
+                    output_render)
         # Catching a very generic error in case we would like to debug
         # a potential crash in the tool.
         except Exception:
           if not my_args.debug:
             raise
           pdb.post_mortem()
-    else:  # output file not specified.  Default to sys.stdout.
-      output_fd = sys.stdout
-      try:
-        MergeSort(store, range_checked_pb_nums, first, last,
-                  OutputRenderer(my_args.output_format, output_fd),
-                  my_args.filter)
-      except Exception:
-        if not my_args.debug:
-          raise
-        pdb.post_mortem()
 
 
 if __name__ == '__main__':
