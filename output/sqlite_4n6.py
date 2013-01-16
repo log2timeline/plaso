@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright David Nides (davnads.blogspot.com). All Rights Reserved.
-# Thank you Eric Wong for assistance.
+# Copyright 2012 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,19 +16,19 @@
 
 import logging
 import pytz
-import os
 import re
 import sys
 import sqlite3
 
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
-
 from plaso.proto import transmission_pb2
+
+__author__ = 'David Nides (david.nides@gmail.com)'
+
 
 
 class Sql4n6(output.LogOutputFormatter):
@@ -37,9 +36,12 @@ class Sql4n6(output.LogOutputFormatter):
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
+  META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
+                 'color', 'type']
+
   def __init__(self, filehandle=sys.stdout, zone=pytz.utc,
                fields=['host','user','source','sourcetype',
-                       'type','datetime','key','color'],
+                       'type','datetime','color'],
                append=False):
     """Constructor for the output module.
 
@@ -49,15 +51,15 @@ class Sql4n6(output.LogOutputFormatter):
       fields: The fields to create index for.
       append: Whether to create a new db or appending to an existing one.
     """
-    super(Sql4n6, self).__init__(filehandle, zone)
+    output.LogOutputFormatter.__init__(self, filehandle, zone)
     self.fields = fields
-    self.dbname = filehandle
+    self.dbname = filehandle.name
     self.append = append
 
   def Usage(self):
     """Return a quick help message that describes the output provided."""
     return ('4n6time sqlite database format. database with one table, which'
-            'has 17 fields e.g. user, host, date, etc.')
+            'has 15 fields e.g. user, host, date, etc.')
 
   # Override LogOutputFormatter methods so it won't write to the file
   # handle any more.
@@ -66,11 +68,7 @@ class Sql4n6(output.LogOutputFormatter):
     if self.filehandle == sys.stdout:
       raise IOError('Can\'t connect to stdout as database, '
                     'please specify a file.')
-
-    if os.path.isfile(self.filehandle):
-      raise IOError(
-          (u'Unable to use an already existing file for output '
-           '[%s]' % self.filehandle))
+    self.filehandle.close()
 
     self.conn = sqlite3.connect(self.dbname)
     self.conn.text_factory = str
@@ -79,14 +77,18 @@ class Sql4n6(output.LogOutputFormatter):
     # Create table in database.
     if not self.append:
       self.curs.execute(
-          ('CREATE TABLE log2timeline (date date, time time, timezone TEXT, '
+          ('CREATE TABLE log2timeline (timezone TEXT, '
            'MACB TEXT, source TEXT, sourcetype TEXT, type TEXT, user TEXT, '
            'host TEXT, short TEXT, desc TEXT, version TEXT, filename '
            'TEXT, inode TEXT, notes TEXT, format TEXT, extra TEXT, datetime '
-           'datetime, reportnotes TEXT, inreport TEXT, key rowid, tag TEXT,'
+           'datetime, reportnotes TEXT, inreport TEXT, tag TEXT,'
            'color TEXT, offset INT, store_number INT, store_index INT,'
            'vss_store_number INT)'))
-
+      for field in self.META_FIELDS:
+        self.curs.execute("CREATE TABLE l2t_%ss (%ss TEXT, frequency INT)"
+                          % (field, field))
+      self.curs.execute("CREATE TABLE l2t_tags (tag TEXT)")
+    
     self.count = 0
 
   def End(self):
@@ -97,9 +99,48 @@ class Sql4n6(output.LogOutputFormatter):
       for fn in self.fields:
         ciSQL = 'CREATE INDEX %s_idx ON log2timeline (%s)' % (fn, fn)
         self.curs.execute(ciSQL)
+
+    # Get meta info and save into their tables.
+    for field in self.META_FIELDS:
+      vals = self._GetDistinctValues(field)
+      self.curs.execute('DELETE FROM l2t_%ss' % field)
+      for name, freq in vals.items():
+        self.curs.execute('INSERT INTO l2t_%ss (%ss, frequency) VALUES'
+                          "('%s', %s) " % (field, field, name, freq))   
+    self.curs.execute('DELETE FROM l2t_tags')
+    for tag in self._ListTags():
+      self.curs.execute('INSERT INTO l2t_tags (tag) VALUES (?)', tag)
+
     self.conn.commit()
     self.curs.close()
     self.conn.close()
+
+  def _GetDistinctValues(self, field_name):
+    """Query database for unique field types"""
+    self.curs.execute(u'SELECT :field, COUNT(:field) FROM \
+                      log2timeline GROUP BY :field', {'field': field_name})
+    a = self.curs.fetchall()
+    res = {}
+    for i in a:
+      if i[0] != '':
+        res[i[0]] = int(i[1])
+    return res
+
+  def _ListTags(self):
+    """Query database for unique tag types"""
+    all_tags = []
+    self.curs.execute('SELECT DISTINCT tag \
+                      FROM log2timeline')
+
+    # This cleans up the messy SQL return.
+    for tag_row in self.curs.fetchall():
+      tag_string = tag_row[0]
+      if tag_string:
+        tags = tag_string.split(',')
+        for tag in tags:
+          if tag not in all_tags:
+            all_tags.append(tag)
+    return all_tags
 
   def StartEvent(self):
     """Do nothing, just override the parent's StartEvent method."""
@@ -130,7 +171,6 @@ class Sql4n6(output.LogOutputFormatter):
     if not date_use:
       logging.error(u'Unable to process date for entry: %s', msg)
       return
-
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         formatter.format_string)
@@ -148,40 +188,38 @@ class Sql4n6(output.LogOutputFormatter):
         if pathspec.HasField('image_inode'):
           inode = pathspec.image_inode
 
-    row = ( date_use.strftime('%Y-%m-%d'),
-            date_use.strftime('%H:%M:%S'),
-            str(self.zone),
-            helper.GetLegacy(evt),
-            getattr(evt, 'source_short', 'LOG'),
-            evt.source_long,
-            evt.timestamp_desc,
-            getattr(evt, 'username', '-'),
-            getattr(evt, 'hostname', '-'),
-            msg_short,
-            msg,
-            '2',
-            getattr(evt, 'filename', '-'),
-            inode,
-            getattr(evt, 'notes', '-'),
-            getattr(evt, 'parser', '-'),
-            extra,
-            date_use.strftime('%Y-%m-%d %H:%M:%S'),
-            '',
-            '',
-            self.count,
-            '',
-            '',
-            evt.offset,
-            evt.store_number,
-            evt.store_index,
-            self.GetVSSNumber(evt))
+    row = (str(self.zone),
+           helper.GetLegacy(evt),
+           getattr(evt, 'source_short', 'LOG'),
+           evt.source_long,
+           evt.timestamp_desc,
+           getattr(evt, 'username', '-'),
+           getattr(evt, 'hostname', '-'),
+           msg_short,
+           msg,
+           '2',
+           getattr(evt, 'filename', '-'),
+           inode,
+           getattr(evt, 'notes', '-'),
+           getattr(evt, 'parser', '-'),
+           extra,
+           date_use.strftime('%Y-%m-%d %H:%M:%S'),
+           '',
+           '',
+           '',
+           '',
+           evt.offset,
+           evt.store_number,
+           evt.store_index,
+           self.GetVSSNumber(evt))
+
     self.curs.execute(
-        ('INSERT INTO log2timeline(date, time, timezone, MACB, source, '
+        ('INSERT INTO log2timeline(timezone, MACB, source, '
          'sourcetype, type, user, host, short, desc, version, filename, '
          'inode, notes, format, extra, datetime, reportnotes, inreport,'
-         'key, tag, color, offset, store_number, store_index, vss_store_number)'
-         ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
+         'tag, color, offset, store_number, store_index, vss_store_number)'
+         ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
+         '?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
 
     self.count += 1
 
