@@ -21,6 +21,16 @@ from plaso.lib import errors
 from plaso.lib import registry
 
 
+class EventTimestamp(object):
+  """Class to manage event data."""
+  # The timestamp_desc values.
+  ACCESS_TIME = u'Last Access Time'
+  CREATION_TIME = u'Creation Time'
+  MODIFICATION_TIME = u'Modification Time'
+  # Written time and Modification time are considered the same.
+  WRITTEN_TIME = u'Modification Time'
+
+
 class EventFormatterManager(object):
   """Class to manage the event formatters."""
 
