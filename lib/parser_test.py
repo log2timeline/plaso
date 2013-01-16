@@ -31,11 +31,12 @@ class EmtpyObject(object):
   """An empty object."""
 
 
-class FakeFileFormatter(eventdata.TextFormatter):
+class FakeFileFormatter(eventdata.EventFormatter):
   """Implement a formatter for the FakeFile."""
 
   # Catch all.
   ID_RE = re.compile('.', re.DOTALL)
+  FORMAT_STRING = u'{body}'
 
 
 class FakeFile(object):

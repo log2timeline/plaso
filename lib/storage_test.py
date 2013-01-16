@@ -92,10 +92,11 @@ class DummyRegistryFormatter(winreg.WinRegistryGenericFormatter):
   ID_RE = re.compile('UNKNOWN:NTUSER.DAT', re.DOTALL)
 
 
-class DummyTextFormatter(eventdata.TextFormatter):
+class DummyTextFormatter(eventdata.EventFormatter):
   """Implement a simple text event formatter."""
 
   ID_RE = re.compile('UNKNOWN:Some random text file', re.DOTALL)
+  FORMAT_STRING = u'{body}'
 
 
 class PlasoStorageUnitTest(unittest.TestCase):
@@ -122,10 +123,12 @@ class PlasoStorageUnitTest(unittest.TestCase):
     event_3.source_long = 'NTUSER.DAT Registry File'
     event_3.parser = 'UNKNOWN'
 
-    event_4 = event.TextEvent(12389344590000000, (
+    text_dict = {'body': (
         'This is a line by someone not reading the log line properly. And '
         'since this log line exceeds the accepted 80 chars it will be '
-        'shortened.'), 'Some random text file', 'nomachine', 'johndoe')
+        'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
+    event_4 = event.TextEvent(12389344590000000, text_dict,
+                              'Some random text file')
     event_4.parser = 'UNKNOWN'
 
     self.events.append(event_1)

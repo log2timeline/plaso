@@ -199,6 +199,8 @@ class ConditionalEventFormatter(EventFormatter):
   # The format string pieces.
   FORMAT_STRING_PIECES = [u'']
   FORMAT_STRING_SHORT_PIECES = [u'']
+  # The separator used to separate pieces together.
+  FORMAT_STRING_SEPARATOR = u' '
 
   def __init__(self, event_object):
     """Initializes the conditional formatter.
@@ -270,23 +272,16 @@ class ConditionalEventFormatter(EventFormatter):
     for map_index, attribute_name in enumerate(self._format_string_pieces_map):
       if not attribute_name or hasattr(event_object, attribute_name):
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
-    self.format_string = u' '.join(string_pieces)
+    self.format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     string_pieces = []
     for map_index, attribute_name in enumerate(
         self._format_string_short_pieces_map):
       if not attribute_name or hasattr(event_object, attribute_name):
         string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
-    self.format_string_short = u' '.join(string_pieces)
+    self.format_string_short = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     return super(ConditionalEventFormatter, self).GetMessages(event_object)
-
-
-class TextFormatter(EventFormatter):
-  """Base class to format text-based event data."""
-  __abstract = True
-
-  FORMAT_STRING = u'{body}'
 
 
 class RegistryFormatter(EventFormatter):

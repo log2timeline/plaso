@@ -507,9 +507,7 @@ class EventObject(object):
         proto.source_short = self._SOURCE_SHORT_TO_PROTO_MAP[self.source_short]
 
       elif attribute_name == 'pathspec':
-        proto_path = transmission_pb2.PathSpec()
-        proto_path.ParseFromString(self.pathspec)
-        proto.pathspec.MergeFrom(proto_path)
+        proto.pathspec.MergeFromString(self.pathspec)
 
       elif hasattr(proto, attribute_name):
         attribute_value = getattr(self, attribute_name)
@@ -608,27 +606,26 @@ class RegistryEvent(EventObject):
 class TextEvent(EventObject):
   """Convenience class for a text log file-based event."""
 
-  def __init__(self, timestamp, body, source, host=None, user=None):
+  def __init__(self, timestamp, attributes, source):
     """Initializes a text event.
 
     Args:
       timestamp: The timestamp time value. The timestamp contains the
                  number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      body: The text, processesed as it should be presented.
+      attributes: A dict that contains the events attributes.
       source: The source_long description of the event.
-      host: An optional host name if one is available within the log file.
-      user: An optional user name if one is available within the log file.
     """
     super(TextEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = 'Entry Written'
     self.source_short = 'LOG'
     self.source_long = source
-    self.body = body
-    if host:
-      self.hostname = host
-    if user:
-      self.username = user
+    for name, value in attributes.items():
+      # TODO: Revisit this constraints and see if we can implement
+      # it using a more sane solution.
+      if isinstance(value, (str, unicode)) and not value:
+        continue
+      self.attributes.__setitem__(name, value)
 
 
 class SQLiteEvent(EventObject):

@@ -27,7 +27,7 @@ from plaso.parsers import syslog
 
 class DummySyslogFormatter(syslog.SyslogFormatter):
   """Simple dummy extension on the formatter."""
-  ID_RE = re.compile('UNKNOWN:Syslog Log', re.DOTALL)
+  ID_RE = re.compile('UNKNOWN:Log File:', re.DOTALL)
 
 
 class SyslogUnitTest(unittest.TestCase):
