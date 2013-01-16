@@ -83,7 +83,13 @@ class EventFormatterManager(object):
 
 
 class EventFormatter(object):
-  """Base class to format event type specific data using a format string."""
+  """Base class to format event type specific data using a format string.
+
+     Define the (long) format string and the short format string by defining
+     FORMAT_STRING and FORMAT_STRING_SHORT. The syntax of the format strings
+     is similar to that of format() where the place holder for a certain
+     event object attribute is defined as {attribute_name}.
+  """
 
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
@@ -96,7 +102,12 @@ class EventFormatter(object):
   FORMAT_STRING_SHORT = u''
 
   def __init__(self, event_object):
-    """Set up the formatter and determine if this is the right formatter."""
+    """Set up the formatter and determine if this is the right formatter.
+
+    Args:
+      event_object: The event object (EventObject) which is used to identify
+                    the formatter.
+    """
     # TODO: remove this once the EventFormatterManager can do a dict based
     # lookup.
     signature = EventFormatterManager.GetFormatterIdentifier(event_object)
@@ -134,31 +145,24 @@ class EventFormatter(object):
     if not self.ID_RE.match(signature):
       raise errors.WrongFormatter('Required formatter: %s.' % signature)
 
-    # TODO: refactor.
-    base_attributes = {}
-    base_attributes.update(event_object.attributes)
-
-    extra_attributes = {}
-    extra_attributes.update(event_object.attributes)
-
     try:
-      msg = self.format_string.format(**extra_attributes)
-    except KeyError as e:
+      msg = self.format_string.format(**event_object.attributes)
+    except KeyError as error:
       msgs = []
-      msgs.append(u'Error in format string [%s]' % e)
-      msgs.append(u'<%s>' % self.format_string)
-      for attr, value in base_attributes.items():
+      msgs.append(u'Format error: [%s] for: <%s>' % (
+          error, self.format_string))
+      for attr, value in event_object.attributes.items():
         msgs.append(u'{0}: {1}'.format(attr, value))
 
       msg = u' '.join(msgs)
 
-    # Adjust the message string.
+    # Strip carriage return and linefeed form the message string.
     msg = msg.replace('\r', '').replace('\n', '')
 
     if self.format_string_short:
       try:
         msg_short = self.format_string_short.format(
-            **extra_attributes).replace('\r', '').replace('\n', '')
+            **event_object.attributes).replace('\r', '').replace('\n', '')
       except KeyError:
         msg_short = (
             u'Unable to format string: %s') % self.format_string_short
@@ -171,11 +175,101 @@ class EventFormatter(object):
     return msg, msg_short
 
 
-class ConditionalEventFormatter(object):
-  """Base class to conditionally format event data."""
+class ConditionalEventFormatter(EventFormatter):
+  """Base class to conditionally format event data using format string pieces.
+
+     Define the (long) format string and the short format string by defining
+     FORMAT_STRING_PIECES and FORMAT_STRING_SHORT_PIECES. The syntax of the
+     format strings pieces is similar to of the event formatter
+     (EventFormatter). Every format string piece should contain a single
+     attribute name or none.
+  """
   __abstract = True
 
-  FORMAT_STRING_PIECES = []
+  # The format string pieces.
+  FORMAT_STRING_PIECES = [u'']
+  FORMAT_STRING_SHORT_PIECES = [u'']
+
+  def __init__(self, event_object):
+    """Initializes the conditional formatter.
+
+       A map is build of the string pieces and their corresponding attribute
+       name to optimize conditional string formatting.
+
+    Args:
+      event_object: The event object (EventObject) which is used to identify
+                    the formatter.
+
+    Raises:
+      RuntimeError: when an invalid format string piece is encountered.
+    """
+    # TODO: remove event_object once EventFormatter has been changed
+    # accordingly.
+    super(ConditionalEventFormatter, self).__init__(event_object)
+
+    regexp = re.compile('{[a-z][a-zA-Z0-9_]*}')
+
+    # The format string pieces map is a list containing the attribute name
+    # per format string piece. E.g. ["Description: {description}"] would be
+    # mapped to: [0] = "description". If the string piece does not contain
+    # an attribute name it is treated as text that does not needs formatting.
+    self._format_string_pieces_map = []
+    for format_string_piece in self.FORMAT_STRING_PIECES:
+      result = regexp.findall(format_string_piece)
+      if not result:
+        # The text format string piece is stored as an empty map entry to
+        # keep the index in the map equal to the format string pieces.
+        self._format_string_pieces_map.append('')
+      elif len(result) == 1:
+        # Strip the bounding { } from the attribute name.
+        attribute_name = result[0][1:-1]
+        self._format_string_pieces_map.append(attribute_name)
+      else:
+        raise RuntimeError(
+            "Invalid format string piece: [%s] contains more than 1 attribute "
+            "name.", format_string_piece)
+
+    self._format_string_short_pieces_map = []
+    for format_string_piece in self.FORMAT_STRING_SHORT_PIECES:
+      result = regexp.findall(format_string_piece)
+      if not result:
+        # The text format string piece is stored as an empty map entry to
+        # keep the index in the map equal to the format string pieces.
+        self._format_string_short_pieces_map.append('')
+      elif len(result) == 1:
+        # Strip the bounding { } from the attribute name.
+        attribute_name = result[0][1:-1]
+        self._format_string_short_pieces_map.append(attribute_name)
+      else:
+        raise RuntimeError(
+            "Invalid short format string piece: [%s] contains more than 1 "
+            "attribute name.", format_string_piece)
+
+  def GetMessages(self, event_object):
+    """Returns a list of messages extracted from an event object.
+
+    Args:
+      event_object: The event object (EventObject) containing the event
+                    specific data.
+
+    Returns:
+      A list that contains both the longer and shorter version of the message
+      string.
+    """
+    string_pieces = []
+    for map_index, attribute_name in enumerate(self._format_string_pieces_map):
+      if not attribute_name or hasattr(event_object, attribute_name):
+        string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
+    self.format_string = u' '.join(string_pieces)
+
+    string_pieces = []
+    for map_index, attribute_name in enumerate(
+        self._format_string_short_pieces_map):
+      if not attribute_name or hasattr(event_object, attribute_name):
+        string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
+    self.format_string_short = u' '.join(string_pieces)
+
+    return super(ConditionalEventFormatter, self).GetMessages(event_object)
 
 
 class TextFormatter(EventFormatter):
