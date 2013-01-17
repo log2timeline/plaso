@@ -422,8 +422,10 @@ class EventObject(object):
             'source_short', self._SOURCE_SHORT_FROM_PROTO_MAP[value])
 
       elif proto_attribute.name == 'pathspec':
+        pathspec_evt = EventPathSpec()
+        pathspec_evt.FromProto(proto.pathspec)
         self.attributes.__setitem__(
-            'pathspec', proto.pathspec.SerializeToString())
+            'pathspec', pathspec_evt)
 
       elif proto_attribute.name == 'attributes':
         continue
@@ -507,7 +509,8 @@ class EventObject(object):
         proto.source_short = self._SOURCE_SHORT_TO_PROTO_MAP[self.source_short]
 
       elif attribute_name == 'pathspec':
-        proto.pathspec.MergeFromString(self.pathspec)
+        pathspec_str = self.pathspec.ToProtoString()
+        proto.pathspec.MergeFromString(pathspec_str)
 
       elif hasattr(proto, attribute_name):
         attribute_value = getattr(self, attribute_name)
@@ -529,6 +532,73 @@ class EventObject(object):
               proto_attribute, attribute_name, attribute_value)
 
     return proto
+
+
+class EventPathSpec(object):
+  """A native Python object for the pathspec definition."""
+
+  _TYPE_FROM_PROTO_MAP = {}
+  _TYPE_TO_PROTO_MAP = {}
+  for value in transmission_pb2.PathSpec.DESCRIPTOR.enum_types_by_name[
+      'FileType'].values:
+    _TYPE_FROM_PROTO_MAP[value.number] = value.name
+    _TYPE_TO_PROTO_MAP[value.name] = value.number
+  _TYPE_FROM_PROTO_MAP.setdefault(-1)
+
+  def ToProto(self):
+    """Serialize an EventPathSpec to PathSpec protobuf."""
+    proto = transmission_pb2.PathSpec()
+
+    for attr in self.__dict__:
+      if attr == 'type':
+        proto.type = self._TYPE_TO_PROTO_MAP.get(self.type, -1)
+      elif attr == 'nested_pathspec':
+        evt_nested = getattr(self, attr)
+        proto_nested = evt_nested.ToProto()
+        proto.nested_pathspec.MergeFrom(proto_nested)
+      else:
+        attribute_value = getattr(self, attr, None)
+        if attribute_value != None:
+          setattr(proto, attr, attribute_value)
+
+    return proto
+
+  def FromProto(self, proto):
+    """Unserializes the EventObject from a PathSpec protobuf.
+
+    Args:
+      proto: The protobuf (transmission_pb2.PathSpec).
+
+    Raises:
+      RuntimeError: when the protobuf is not of type:
+                    transmission_pb2.PathSpec or when an unsupported
+                    attribute value type is encountered
+    """
+    if not isinstance(proto, transmission_pb2.PathSpec):
+      raise RuntimeError("Unsupported proto")
+
+    for proto_attribute, value in proto.ListFields():
+      if proto_attribute.name == 'type':
+        self.type = self._TYPE_FROM_PROTO_MAP[value]
+
+      elif proto_attribute.name == 'nested_pathspec':
+        nested_evt = EventPathSpec()
+        nested_evt.FromProto(proto.nested_pathspec)
+        setattr(self, proto_attribute.name, nested_evt)
+      else:
+        setattr(self, proto_attribute.name, value)
+
+  def FromProtoString(self, proto_string):
+    """Unserializes the EventObject from a serialized PathSpec."""
+    proto = transmission_pb2.PathSpec()
+    proto.ParseFromString(proto_string)
+    self.FromProto(proto)
+
+  def ToProtoString(self):
+    """Serialize the object into a string."""
+    proto = self.ToProto()
+
+    return proto.SerializeToString()
 
 
 class FatDateTimeEvent(EventObject):
