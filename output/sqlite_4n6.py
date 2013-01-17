@@ -122,8 +122,9 @@ class Sql4n6(output.LogOutputFormatter):
 
   def _GetDistinctValues(self, field_name):
     """Query database for unique field types"""
-    self.curs.execute(u'SELECT {0}, COUNT({0}) FROM \
-                      log2timeline GROUP BY {0}'.format(field_name))
+    self.curs.execute(
+        u'SELECT {0}, COUNT({0}) FROM log2timeline GROUP BY {0}'.format(
+            field_name))
     a = self.curs.fetchall()
     res = {}
     for i in a:
@@ -237,9 +238,4 @@ class Sql4n6(output.LogOutputFormatter):
     if not hasattr(evt, 'pathspec'):
       return -1
 
-    pathspec = transmission_pb2.PathSpec()
-    pathspec.ParseFromString(evt.pathspec)
-    if pathspec.HasField('vss_store_number'):
-      return pathspec.vss_store_number
-    else:
-      return -1
+    return getattr(evt.pathspec, 'vss_store_number', -1)
