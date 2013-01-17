@@ -109,6 +109,10 @@ class Engine(object):
 
   def _GuessOS(self, col_obj):
     """Return a guess for the OS we are pre-processing."""
+    # TODO: Add error handling for WindowsError, a builtin
+    # error in Windows, but not found otherwise (so no global error exists).
+    # This causes the tool to crash on Windows if preprocessor is unable to
+    # guess the OS, like when accidentally run against a directory.
     try:
       if col_obj.FindPath('/(Windows|WINNT)/System32'):
         return 'Windows'

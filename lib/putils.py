@@ -243,9 +243,7 @@ def GetEventData(evt, before=0, fscache=None):
     return u''
 
   try:
-    pathspec = transmission_pb2.PathSpec()
-    pathspec.ParseFromString(evt.pathspec)
-    fh = pfile.OpenPFile(pathspec, fscache=fscache)
+    fh = pfile.OpenPFile(evt.pathspec.ToProto(), fscache=fscache)
   except IOError as e:
     return u'Error opening file: %s' % e
 

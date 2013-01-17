@@ -933,6 +933,11 @@ def OpenPFile(spec, fh=None, orig=None, fscache=None):
   if not PFILE_HANDLERS:
     InitPFile()
 
+  if not isinstance(spec, transmission_pb2.PathSpec):
+    if not hasattr(spec, 'ToProto'):
+      raise IOError(u'Unable to open file, need a PathSpec protobuf')
+    spec = spec.ToProto()
+
   handler_class = PFILE_HANDLERS.get(spec.type,
                                      transmission_pb2.PathSpec.UNSET)
   try:
