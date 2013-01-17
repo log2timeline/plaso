@@ -31,6 +31,7 @@ import zlib
 
 from plaso import parsers
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfile
@@ -155,27 +156,29 @@ class PlasoWorker(object):
                     parsing_object.NAME)
       try:
         filehandle.seek(0)
-        for event in parsing_object.Parse(filehandle):
-          if event:
+        for evt in parsing_object.Parse(filehandle):
+          if evt:
             # TODO: Make some more adjustments to the event object.
             # Need to apply time skew, and other information extracted from
             # the configuration of the tool.
-            if not hasattr(event, 'offset'):
-              event.offset = filehandle.tell()
-            event.display_name = filehandle.display_name
-            event.filename = filehandle.name
-            event.pathspec = filehandle.pathspec_root.SerializeToString()
-            event.parser = parsing_object.parser_name
+            if not hasattr(evt, 'offset'):
+              evt.offset = filehandle.tell()
+            evt.display_name = filehandle.display_name
+            evt.filename = filehandle.name
+            pathspec_evt = event.EventPathSpec()
+            pathspec_evt.FromProto(filehandle.pathspec_root)
+            evt.pathspec = pathspec_evt
+            evt.parser = parsing_object.parser_name
             if hasattr(self._pre_obj, 'hostname'):
-              event.hostname = self._pre_obj.hostname
+              evt.hostname = self._pre_obj.hostname
             if hasattr(stat_obj, 'ino'):
-              event.inode = stat_obj.ino
+              evt.inode = stat_obj.ino
             if not self._filter:
-              serialized = event.ToProtoString()
+              serialized = evt.ToProtoString()
               self._stor_queue.AddEvent(serialized)
             else:
-              if self._filter.Matches(event):
-                serialized = storage.PlasoStorage.SerializeEvent(event)
+              if self._filter.Matches(evt):
+                serialized = storage.PlasoStorage.SerializeEvent(evt)
                 self._stor_queue.AddEvent(serialized)
 
       except errors.UnableToParseFile as e:

@@ -35,6 +35,7 @@ import unittest
 
 from plaso.lib import errors
 from plaso.lib import event
+from plaso.proto import transmission_pb2
 
 
 class TestEvent(event.EventObject):
@@ -242,6 +243,46 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertEquals(evt.my_list, evt2.my_list)
     self.assertEquals(evt.string, evt2.string)
     self.assertFalse('empty_attribute' in evt2.attributes)
+
+
+class EventPathSpecUnitTest(unittest.TestCase):
+  """The unit test for the PathSpec object."""
+
+  def testEventPathSpec(self):
+    """Test serialize/deserialize EventPathSpec event."""
+    proto = transmission_pb2.PathSpec()
+    proto.file_path = '/tmp/nowhere'
+    proto.type = 0
+
+    evt = event.EventPathSpec()
+    evt.FromProto(proto)
+
+    self.assertEquals(evt.type, 'OS')
+
+    nested_proto = transmission_pb2.PathSpec()
+    nested_proto.container_path = 'SomeFilePath'
+    nested_proto.type = 2
+    nested_proto.file_path = 'My.zip'
+    nested_proto.image_offset = 35
+    nested_proto.image_inode = 6124543
+
+    proto.nested_pathspec.MergeFrom(nested_proto)
+    proto_str = proto.SerializeToString()
+
+    evt2 = event.EventPathSpec()
+    evt2.FromProtoString(proto_str)
+
+    self.assertEquals(evt2.file_path, '/tmp/nowhere')
+    self.assertTrue(hasattr(evt2, 'nested_pathspec'))
+    nested_evt = evt2.nested_pathspec
+
+    self.assertEquals(nested_evt.image_offset, 35)
+    self.assertEquals(nested_evt.image_inode, 6124543)
+    self.assertEquals(nested_evt.type, 'ZIP')
+
+    proto_evt2 = evt2.ToProto()
+
+    self.assertEquals(proto_evt2.file_path, '/tmp/nowhere')
 
 
 if __name__ == '__main__':
