@@ -122,8 +122,8 @@ class Sql4n6(output.LogOutputFormatter):
 
   def _GetDistinctValues(self, field_name):
     """Query database for unique field types"""
-    self.curs.execute(u'SELECT :field, COUNT(:field) FROM \
-                      log2timeline GROUP BY :field', {'field': field_name})
+    self.curs.execute(u'SELECT {0}, COUNT({0}) FROM \
+                      log2timeline GROUP BY {0}'.format(field_name))
     a = self.curs.fetchall()
     res = {}
     for i in a:
