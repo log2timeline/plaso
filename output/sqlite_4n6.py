@@ -125,11 +125,10 @@ class Sql4n6(output.LogOutputFormatter):
     self.curs.execute(
         u'SELECT {0}, COUNT({0}) FROM log2timeline GROUP BY {0}'.format(
             field_name))
-    a = self.curs.fetchall()
     res = {}
-    for i in a:
-      if i[0] != '':
-        res[i[0]] = int(i[1])
+    for row in self.curs.fetchall():
+      if row[0]:
+        res[row[0]] = int(row[1])
     return res
 
   def _ListTags(self):
