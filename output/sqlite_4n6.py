@@ -92,6 +92,7 @@ class Sql4n6(output.LogOutputFormatter):
         self.curs.execute(
             'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
       self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
+      self.curs.execute('CREATE TABLE l2t_saved_query (name TEXT, query TEXT)')
 
     self.count = 0
 
