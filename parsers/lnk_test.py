@@ -50,17 +50,16 @@ class WinLnkParserTest(unittest.TestCase):
 
     self.assertEquals(len(event_container), 3)
 
-    # TODO: fix pylnk remove \x00
-    expected_string = u'@%windir%\system32\migwiz\wet.dll,-590\x00'
+    expected_string = u'@%windir%\system32\migwiz\wet.dll,-590'
     self.assertEquals(event_container.description, expected_string)
 
-    expected_string = u'.\migwiz\migwiz.exe\x00'
+    expected_string = u'.\migwiz\migwiz.exe'
     self.assertEquals(event_container.relative_path, expected_string)
 
-    expected_string = u'%windir%\system32\migwiz\x00'
+    expected_string = u'%windir%\system32\migwiz'
     self.assertEquals(event_container.working_directory, expected_string)
 
-    expected_string = u'%windir%\system32\migwiz\migwiz.exe\x00'
+    expected_string = u'%windir%\system32\migwiz\migwiz.exe'
     self.assertEquals(event_container.icon_location, expected_string)
     self.assertEquals(event_container.env_var_location, expected_string)
 
