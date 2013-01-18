@@ -23,6 +23,10 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 
 
+if pylnk.get_version() < "20130117":
+  raise ImportWarning("WinLnkParser requires at least pylnk 20130117.")
+
+
 class WinLnkParser(parser.PlasoParser):
   """Parses Windows Shortcut (LNK) files."""
 
@@ -58,8 +62,7 @@ class WinLnkParser(parser.PlasoParser):
     container.local_path = lnk_file.local_path
     container.network_path = lnk_file.network_path
     container.command_line_arguments = lnk_file.command_line_arguments
-    # TODO: update pylnk.
-    container.env_var_location = lnk_file.get_environment_variables_location()
+    container.env_var_location = lnk_file.environment_variables_location
     container.relative_path = lnk_file.relative_path
     container.working_directory = lnk_file.working_directory
     container.icon_location = lnk_file.icon_location
