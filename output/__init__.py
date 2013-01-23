@@ -17,4 +17,5 @@
 
 from plaso.output import l2t_csv
 from plaso.output import raw
+from plaso.output import rawpy
 from plaso.output import sqlite_4n6

@@ -43,9 +43,11 @@ import pytz
 
 from plaso import output
 from plaso import parsers
+from plaso.lib import event
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
 from plaso.lib import storage
+from plaso.proto import plaso_storage_pb2
 
 MAX_INT64 = 2**64-1
 __version__ = '1.0'
@@ -152,14 +154,14 @@ def ReadMeta(store, bound_first, bound_last):
       yield number
 
 
-def ReadPbCheckTime(store, number, bound_first, bound_last):
+def ReadPbCheckTime(number, bound_first, bound_last, output_renderer):
   """Returns a plaso storage PB object whose timestamp is within time bounds.
 
   Args:
-    store: A storage.PlasoStorage object.
     number: Container number.
     bound_first: Earliest microsecond considered in bounds.
     bound_last: Latest microsecond considered in bounds.
+    output_renderer: The output renderer used.
 
   Returns:
     If in bound (storage object item timestamp, full storage proto object).
@@ -170,7 +172,7 @@ def ReadPbCheckTime(store, number, bound_first, bound_last):
   """
 
   while True:
-    proto_read = store.GetEntry(number)
+    proto_read = output_renderer.FetchEntry(number)
     if not proto_read:
       return None, None
 
@@ -178,12 +180,11 @@ def ReadPbCheckTime(store, number, bound_first, bound_last):
       return proto_read.timestamp, proto_read
 
 
-def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output,
+def MergeSort(range_checked_nums, bound_first, bound_last, my_output,
               my_filter=None):
   """Performs an external merge sort of the events and sends them to output.
 
   Args:
-    store: A storage.PlasoStorage object.
     range_checked_nums: Container numbers with relevant entries.
     bound_first: Earliest microsecond considered in bounds.
     bound_last: Latest microsecond considered in bounds.
@@ -202,25 +203,30 @@ def MergeSort(store, range_checked_nums, bound_first, bound_last, my_output,
       sys.exit(1)
 
   for proto_file_number in range_checked_nums:
-    timestamp, storage_proto = ReadPbCheckTime(store, proto_file_number,
-                                               bound_first, bound_last)
+    timestamp, storage_proto = ReadPbCheckTime(
+        proto_file_number, bound_first, bound_last, my_output)
     heapq.heappush(read_list, (timestamp, proto_file_number, storage_proto))
 
   while read_list:
-    timestamp, file_number, storage_proto = heapq.heappop(read_list)
-    if not storage_proto:
+    timestamp, file_number, event_read = heapq.heappop(read_list)
+    if not event_read:
       continue
     if not matcher:
-      my_output.Append(storage_proto)
+      my_output.Append(event_read)
     else:
-      if matcher.Matches(storage_proto):
-        my_output.Append(storage_proto)
+      event_match = event_read
+      if isinstance(event_read, plaso_storage_pb2.EventObject):
+        event_match = event.EventObject()
+        event_match.FromProto(event_read)
+
+      if matcher.Matches(event_match):
+        my_output.Append(event_read)
       else:
         filter_count += 1
-    new_timestamp, new_storage_proto = ReadPbCheckTime(store, file_number,
-                                                       bound_first, bound_last)
-    if new_storage_proto:
-      heapq.heappush(read_list, (new_timestamp, file_number, new_storage_proto))
+    new_timestamp, new_event_read = ReadPbCheckTime(
+        file_number, bound_first, bound_last, my_output)
+    if new_event_read:
+      heapq.heappush(read_list, (new_timestamp, file_number, new_event_read))
 
   my_output.Flush()
   if filter_count:
@@ -233,11 +239,12 @@ class OutputRenderer(object):
      Currently only supports dumping basic to string formating of objects.
   """
 
-  def __init__(self, out_format='L2tcsv', timezone='UTC',
+  def __init__(self, store, out_format='L2tcsv', timezone='UTC',
                file_descriptor=sys.stdout):
     """Initalizes the OutputRenderer.
 
     Args:
+      store: The storage object (PlasoStorage).
       out_format:  Name of output_lib formatter class to use.
       timezone: The timezone of the output
       file_descriptor:  File descriptor to send output to.
@@ -250,7 +257,7 @@ class OutputRenderer(object):
     try:
       self.formatter = (
           output_lib.LogOutputFormatter.classes[format_str](
-              file_descriptor, pytz.timezone(timezone)))
+              store, file_descriptor, pytz.timezone(timezone)))
       self.formatter.Start()  # Write header
     except IOError as e:
       logging.error('Error occured during output processing: %s', e)
@@ -271,6 +278,10 @@ class OutputRenderer(object):
 
     self.buffer_list.append(mblog)
     self.Flush()
+
+  def FetchEntry(self, store_number):
+    """Fetch an entry from the store."""
+    return self.formatter.FetchEntry(store_number)
 
   def Flush(self):
     """Flushes the buffer by sending records to a formatter and prints."""
@@ -381,12 +392,12 @@ def Main():
   with SetupStorage(my_args.storagefile) as store:
     # Identify Files
     range_checked_pb_nums = ReadMeta(store, first, last)
-    with OutputRenderer(my_args.output_format, my_args.timezone,
+    with OutputRenderer(store, my_args.output_format, my_args.timezone,
                         my_args.write) as output_render:
       if output_render.formatter:
         try:
-          MergeSort(store, range_checked_pb_nums, first, last,
-                    output_render)
+          MergeSort(range_checked_pb_nums, first, last,
+                    output_render, my_args.filter)
         # Catching a very generic error in case we would like to debug
         # a potential crash in the tool.
         except Exception:
