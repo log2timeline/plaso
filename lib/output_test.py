@@ -19,6 +19,8 @@ import unittest
 
 from plaso.lib import output
 
+__pychecker__ = 'no-funcdoc'
+
 
 class DummyEvent(object):
   """Simple class that defines a dummy event."""
@@ -35,6 +37,10 @@ class DummyEvent(object):
 class TestOutput(output.LogOutputFormatter):
   """A very simple implementation of the output formatter."""
 
+  def __init__(self, filehandle):
+    """Fake the store."""
+    super(TestOutput, self).__init__(store=None, filehandle=filehandle)
+
   def StartEvent(self):
     self.filehandle.write('<Event>\n')
 
@@ -47,6 +53,9 @@ class TestOutput(output.LogOutputFormatter):
 
   def EndEvent(self):
     self.filehandle.write('</Event>\n')
+
+  def FetchEntry(self, unused_number, unused_index):
+    pass
 
   def Start(self):
     self.filehandle.write('<EventFile>\n')
