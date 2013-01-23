@@ -178,8 +178,8 @@ class PlasoStorage(object):
     except KeyError:
       return None
 
-  def GetEntry(self, number, entry_index=-1):
-    """Return an EventObject read from filehandle.
+  def _GetEntry(self, number, entry_index=-1):
+    """Return a serialized EventObject protobuf read from filehandle.
 
     By default the next entry in the appropriate proto file is read
     and returned, however any entry can be read using the index file.
@@ -189,7 +189,8 @@ class PlasoStorage(object):
       entry_index: Read a specific entry in the file, otherwise the next one.
 
     Returns:
-      An event object (EventObject) entry read from the file.
+      A list with two entries: the raw serialized EventObject protobuf and
+      an integer indicating the index that protobuf has in the storage file.
 
     Raises:
       EOFError: When we reach the end of the protobuf file.
@@ -213,7 +214,7 @@ class PlasoStorage(object):
       if len(size_byte_stream) != 4:
         logging.error('Unable to read entry number: %d from store %d',
                       entry_index, number)
-        return None
+        return None, None
 
       ofs = struct.unpack('<I', size_byte_stream)[0]
 
@@ -227,7 +228,7 @@ class PlasoStorage(object):
     unpacked = fh.read(4)
 
     if len(unpacked) != 4:
-      return None
+      return None, None
 
     size = struct.unpack('<I', unpacked)[0]
 
@@ -235,9 +236,49 @@ class PlasoStorage(object):
       raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
 
     self.protofiles[number] = (fh, last_index + 1)
-    proto_serialized = fh.read(size)
+    return fh.read(size), last_index
+
+  def GetProtoEntry(self, number, entry_index=-1):
+    """Return an EventObject protobuf from a filehandle.
+
+    By default the next entry in the appropriate proto file is read
+    and returned, however any entry can be read using the index file.
+
+    Args:
+      number: The proto file number.
+      entry_index: Read a specific entry in the file, otherwise the next one.
+
+    Returns:
+      An event protobuf (EventObject) entry read from the file.
+    """
+    proto = plaso_storage_pb2.EventObject()
+    proto_str, last_index = self._GetEntry(number, entry_index)
+    if not proto_str:
+      return None
+    proto.ParseFromString(proto_str)
+    proto.store_number = number
+    proto.store_index = last_index
+
+    return proto
+
+  def GetEntry(self, number, entry_index=-1):
+    """Return an EventObject read from a filehandle.
+
+    By default the next entry in the appropriate proto file is read
+    and returned, however any entry can be read using the index file.
+
+    Args:
+      number: The proto file number.
+      entry_index: Read a specific entry in the file, otherwise the next one.
+
+    Returns:
+      An event object (EventObject) entry read from the file.
+    """
     event_object = event.EventObject()
-    event_object.FromProtoString(proto_serialized)
+    proto_str, last_index = self._GetEntry(number, entry_index)
+    if not proto_str:
+      return None
+    event_object.FromProtoString(proto_str)
     event_object.store_number = number
     event_object.store_index = last_index
 

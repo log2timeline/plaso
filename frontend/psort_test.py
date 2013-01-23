@@ -27,12 +27,37 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import storage
 
+__pychecker__ = 'no-funcdoc'
+
 
 class MyFormatter(eventdata.EventFormatter):
   """A simple test event formatter."""
   ID_RE = re.compile('FakeEvt', re.DOTALL)
 
   FORMAT_STRING = 'My text goes along: {some} lines'
+
+
+class TestOutputRenderer(object):
+  """A dummy renderer."""
+  def __init__(self, store):
+    self.buffer_list = []
+    self.record_count = 0
+    self.store = store
+
+  def Append(self, item):
+    __pychecker__ = 'missingattrs=buffer_list,record_count'
+    self.buffer_list.append(item)
+    self.record_count += 1
+
+  def FetchEntry(self, store_index):
+    """Fake a fetch entry."""
+    return self.store.GetEntry(store_index)
+
+  def Flush(self):
+    pass
+
+  def End(self):
+    pass
 
 
 class PsortTest(unittest.TestCase):
@@ -79,8 +104,8 @@ class PsortTest(unittest.TestCase):
     timestamp_list = []
     number = 4
     while not success:
-      returned_timestamp, _ = psort.ReadPbCheckTime(store, number, self.first,
-                                                   self.last)
+      returned_timestamp, _ = psort.ReadPbCheckTime(
+          number, self.first, self.last, TestOutputRenderer(store))
       if returned_timestamp:
         timestamp_list.append(returned_timestamp)
       else:
@@ -99,29 +124,13 @@ class PsortTest(unittest.TestCase):
     matches the known good sort order.
     """
 
-    class OutputRenderer(object):
-      def __init__(self):
-        self.buffer_list = []
-        self.record_count = 0
-
-      def Append(self, item):
-        __pychecker__ = 'missingattrs=buffer_list,record_count'
-        self.buffer_list.append(item)
-        self.record_count += 1
-
-      def Flush(self):
-        pass
-
-      def End(self):
-        pass
-
     def MockReadMetaOutput():
       yield 5
       yield 4
 
-    test_object = OutputRenderer()
     store = storage.PlasoStorage(self.path, read_only=True)
-    psort.MergeSort(store, MockReadMetaOutput(), self.first,
+    test_object = TestOutputRenderer(store)
+    psort.MergeSort(MockReadMetaOutput(), self.first,
                     self.last, test_object)
     returned_list = []
     for item in test_object.buffer_list:
@@ -161,6 +170,7 @@ class PsortTest(unittest.TestCase):
     options = {}
     options['file_descriptor'] = open(os.devnull, 'a')
     options['out_format'] = 'Raw'
+    options['store'] = None
     my_test_ob = psort.OutputRenderer(**options)
     my_test_ob.Append(FakeEvt())
     my_test_ob.Flush()
@@ -203,8 +213,8 @@ class PsortTest(unittest.TestCase):
 
       with psort.SetupStorage(fh.name) as store:
         psort.MergeSort(
-            store, (1,), 0, 90000000000,
-            psort.OutputRenderer(file_descriptor=output_fd))
+            (1,), 0, 90000000000,
+            psort.OutputRenderer(store, file_descriptor=output_fd))
 
     lines = []
     for line in output_fd.getvalue().split('\n'):

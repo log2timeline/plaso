@@ -43,15 +43,21 @@ class LogOutputFormatter(object):
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
-  def __init__(self, filehandle=sys.stdout, zone=pytz.utc):
+  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc):
     """Constructor for the output module.
 
     Args:
+      store: A PlasoStorage object that defines the storage.
       filehandle: A file-like object that can be written to.
       zone: The output time zone (a pytz object).
     """
     self.zone = zone
     self.filehandle = filehandle
+    self.store = store
+
+  def FetchEntry(self, number, entry_index=-1):
+    """Fetches an entry from the storage."""
+    return self.store.GetEntry(number, entry_index)
 
   def WriteEvent(self, evt):
     """Write the output of a single entry to the output filehandle.
@@ -123,9 +129,9 @@ class FileLogOutputFormatter(LogOutputFormatter):
 
   __abstract = True
 
-  def __init__(self, filehandle=sys.stdout, zone=pytz.utc):
+  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc):
     """Set up the formatter."""
-    super(FileLogOutputFormatter, self).__init__(filehandle, zone)
+    super(FileLogOutputFormatter, self).__init__(store, filehandle, zone)
     if not isinstance(filehandle, (file, StringIO.StringIO)):
       self.filehandle = open(filehandle, 'w')
 
@@ -135,7 +141,25 @@ class FileLogOutputFormatter(LogOutputFormatter):
     self.filehandle.close()
 
 
+class ProtoLogOutputFormatter(LogOutputFormatter):
+  """A simple formatter that processes EventObject protobufs."""
+  __abstract = True
+
+  def FetchEntry(self, number, entry_index=-1):
+    """Fetches an entry from the storage."""
+    return self.store.GetProtoEntry(number, entry_index)
+
+
+class FileProtoLogOutputFormatter(FileLogOutputFormatter):
+  """A sipmle file based output formatter that processes raw protobufs."""
+  __abstract = True
+
+  def FetchEntry(self, number, entry_index=-1):
+    """Fetches an entry from the storage."""
+    return self.store.GetProtoEntry(number, entry_index)
+
+
 def ListOutputFormatters():
   """Generate a list of all available output formatters."""
   for cl in LogOutputFormatter.classes:
-    yield cl, LogOutputFormatter.classes[cl]().Usage()
+    yield cl, LogOutputFormatter.classes[cl](None).Usage()
