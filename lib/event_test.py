@@ -35,6 +35,7 @@ import unittest
 
 from plaso.lib import errors
 from plaso.lib import event
+from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
 
@@ -243,6 +244,43 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertEquals(evt.my_list, evt2.my_list)
     self.assertEquals(evt.string, evt2.string)
     self.assertFalse('empty_attribute' in evt2.attributes)
+
+
+class EventTaggingUnitTest(unittest.TestCase):
+  """The unit test for the EventTag object."""
+
+  def testEventTag(self):
+    """Test the serialization and deserialization of EventTagging."""
+    proto = plaso_storage_pb2.EventTagging()
+    proto.store_number = 234
+    proto.store_index = 18
+    proto.comment = 'My first comment.'
+    proto.color = 'Red'
+    tag1 = proto.tags.add()
+    tag1.value = 'Malware'
+    tag2 = proto.tags.add()
+    tag2.value = 'Common'
+
+    event_tag = event.EventTag()
+    event_tag.FromProto(proto)
+
+    self.assertEquals(event_tag.color, 'Red')
+    self.assertEquals(event_tag.comment, 'My first comment.')
+    self.assertEquals(event_tag.store_index, 18)
+    self.assertEquals(len(event_tag.tags), 2)
+
+    serialized1 = proto.SerializeToString()
+    serialized2 = event_tag.ToProtoString()
+
+    self.assertEquals(serialized1, serialized2)
+
+    event_tag_2 = event.EventTag()
+    event_tag_2.FromProtoString(serialized2)
+    self.assertEquals(event_tag.tags, event_tag_2.tags)
+
+    # Test setting an 'illegal' attribute.
+    self.assertRaises(
+        AttributeError, setattr, event_tag_2, 'notdefined', 'Value')
 
 
 class EventPathSpecUnitTest(unittest.TestCase):

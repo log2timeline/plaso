@@ -161,6 +161,8 @@ class PlasoWorker(object):
             # TODO: Make some more adjustments to the event object.
             # Need to apply time skew, and other information extracted from
             # the configuration of the tool.
+            # TODO: Check if this is a container and recurse through that.
+            # Move this logic to a different function to make that easier.
             if not hasattr(evt, 'offset'):
               evt.offset = filehandle.tell()
             evt.display_name = filehandle.display_name

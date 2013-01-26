@@ -518,27 +518,19 @@ class PlasoStorage(object):
     self.zipfile.writestr('plaso_grouping.%06d' % group_number,
                           ''.join(group_packed))
 
-  def StoreTagging(self, rows):
+  def StoreTagging(self, tags):
     """Store tag information into the storage file.
 
     Each EventObject can be tagged either manually or automatically
     to make analysis simpler, by providing more context to certain
     events or to highlight events for later viewing.
 
-    The object that is passed in needs to have an iterator implemented
-    and has to implement the following attributes (optional names within
-    bracket):
-      store_number - The plaso store number.
-      store_index - The index into the store where the EventObject lies.
-      [comment] - A comment that has been made about the event.
-      [tag] - A single tag (string).
-      [tags] - A list of tags, list of strings, that contain the tags.
-      [color] - To highlight this particular group with a HTML color tag.
+    The object passed in needs to be a list (or otherwise an iterator)
+    that contains EventTag objects (event.EventTag).
 
     Args:
-      rows: A generator object (or an object providing an iterator)
-      that contains each attribute of the EventTagging protobuf as
-      an attribute.
+      tags: A list or an object providing an iterator that contains
+      EventTag objects.
     """
     tag_number = 1
     if self.HasTagging():
@@ -551,27 +543,12 @@ class PlasoStorage(object):
     tag_packed = []
     tag_index = []
     size = 0
-    for row in rows:
-      tag = plaso_storage_pb2.EventTagging()
-      tag.store_number = int(row.store_number)
-      tag.store_index = int(row.store_index)
-      if hasattr(row, 'comment'):
-        tag.comment = utils.GetUnicodeString(row.comment)
-      if hasattr(row, 'color'):
-        tag.color = utils.GetUnicodeString(row.color)
-      if hasattr(row, 'tag'):
-        tag_attr = tag.tags.add()
-        tag_attr.value = utils.GetUnicodeString(row.tag)
-      if hasattr(row, 'tags'):
-        for tag_str in row.tags:
-          tag_attr = tag.tags.add()
-          tag_attr.value = utils.GetUnicodeString(tag_str)
-
-      tag_str = tag.SerializeToString()
+    for tag in tags:
+      tag_str = tag.ToProtoString()
       packed = struct.pack('<I', len(tag_str)) + tag_str
       ofs = struct.pack('<I', size)
-      sn = struct.pack('<I', row.store_number)
-      si = struct.pack('<I', row.store_index)
+      sn = struct.pack('<I', tag.store_number)
+      si = struct.pack('<I', tag.store_index)
       tag_index.append('%s%s%s' % (ofs, sn, si))
       size += len(packed)
       tag_packed.append(packed)
@@ -672,7 +649,7 @@ class PlasoStorage(object):
     the GetTaggedEvent and pass the EventTagging protobuf to it.
 
     Yields:
-      All EventTagging protobufs stored inside the storage container.
+      All EventTag objects stored inside the storage container.
     """
     if not self.HasTagging():
       return
@@ -691,31 +668,24 @@ class PlasoStorage(object):
     for group_event in group_proto.events:
       yield self.GetEntry(group_event.store_number, group_event.store_index)
 
-  def GetTaggedEvent(self, tag_proto):
-    """Read in an EventObject protobuf from a tag and return it.
+  def GetTaggedEvent(self, tag_event):
+    """Read in an EventTag object from a tag and return an EventObject.
 
-    This function uses the information inside the EventTagging proto
+    This function uses the information inside the EventTag object
     to open the EventObject that was tagged and returns it, with the
     tag information attached to it.
 
     Args:
-      tag_proto: An EventTagging protobuf.
+      tag_event: An EventTag object.
 
     Returns:
-      An EventObject protobuf with the EventTagging protobuf attached.
+      An EventObject with the EventTag object attached.
     """
-    evt = self.GetEntry(tag_proto.store_number, tag_proto.store_index)
+    evt = self.GetEntry(tag_event.store_number, tag_event.store_index)
     if not evt:
       return None
 
-    # TODO: Instead of saving it in a dict create an object for tags.
-    tag = {}
-    for field, value in tag_proto.ListFields():
-      if field.name == 'tags':
-        tag[field.name] = list(a.value for a in tag_proto.tags)
-      else:
-        tag[field.name] = value
-    evt.tag = tag
+    evt.tag = tag_event
 
     return evt
 
@@ -731,10 +701,9 @@ class PlasoStorage(object):
       raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
 
     proto_serialized = fh.read(size)
-    proto = plaso_storage_pb2.EventTagging()
-
-    proto.ParseFromString(proto_serialized)
-    return proto
+    event_tag = event.EventTag()
+    event_tag.FromProtoString(proto_serialized)
+    return event_tag
 
   def CloseStorage(self):
     """Closes the storage, flush the last buffer and closes the ZIP file."""
