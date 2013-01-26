@@ -32,30 +32,6 @@ class DummyObject(object):
   """Dummy object."""
 
 
-class TagMock(object):
-  """Mock a class for tagging events."""
-
-  def __init__(self):
-    self.items = []
-
-  def AddEntry(self, store_number=1, store_index=0, comment=None, tags=None,
-               color=None):
-    self.items.append((store_number, store_index, comment, tags, color))
-
-  def __iter__(self):
-    for nr, index, cmt, tags, color in self.items:
-      dummy = DummyObject()
-      dummy.store_number = nr
-      dummy.store_index = index
-      if cmt:
-        dummy.comment = cmt
-      if tags:
-        dummy.tags = tags.split(',')
-      if color:
-        dummy.color = color
-      yield dummy
-
-
 class GroupMock(object):
   """Mock a class for grouping events together."""
   def __init__(self):
@@ -162,9 +138,9 @@ class PlasoStorageUnitTest(unittest.TestCase):
     """Test the storage object."""
     evts = []
     timestamps = []
-    tag_mock = TagMock()
     group_mock = GroupMock()
     tags = []
+    tags_mock = []
     groups = []
     group_events = []
     same_events = []
@@ -177,12 +153,29 @@ class PlasoStorageUnitTest(unittest.TestCase):
         store.AddEntry(serial)
 
       # Add tagging.
-      tag_mock.AddEntry(store_index=0, comment='My comment', color='blue')
-      tag_mock.AddEntry(store_index=1, tags='Malware', color='red')
-      tag_mock.AddEntry(store_index=2, comment='This is interesting',
-                        tags='Malware,Benign', color='red')
+      tag_1 = event.EventTag()
+      tag_1.store_index = 0
+      tag_1.store_number = 1
+      tag_1.comment = 'My comment'
+      tag_1.color = 'blue'
+      tags_mock.append(tag_1)
 
-      store.StoreTagging(tag_mock)
+      tag_2 = event.EventTag()
+      tag_2.store_index = 1
+      tag_2.store_number = 1
+      tag_2.tags = ('Malware',)
+      tag_2.color = 'red'
+      tags_mock.append(tag_2)
+
+      tag_3 = event.EventTag()
+      tag_3.store_number = 1
+      tag_3.store_index = 2
+      tag_3.comment = 'This is interesting'
+      tag_3.tags = ('Malware', 'Benign')
+      tag_3.color = 'red'
+      tags_mock.append(tag_3)
+
+      store.StoreTagging(tags_mock)
 
       group_mock.AddGroup(
           'Malicious', [(1, 1), (1, 2)], desc='Events that are malicious',
@@ -225,19 +218,19 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(tags[0].timestamp, 12389344590000000)
     self.assertEquals(tags[0].store_number, 1)
     self.assertEquals(tags[0].store_index, 0)
-    self.assertEquals(tags[0].tag.get('comment'), u'My comment')
-    self.assertEquals(tags[0].tag.get('color'), u'blue')
+    self.assertEquals(tags[0].tag.comment, u'My comment')
+    self.assertEquals(tags[0].tag.color, u'blue')
 
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(tags[0])
     self.assertEquals(msg[0:10], u'This is a ')
 
-    self.assertEquals(tags[1].tag['tags'][0], 'Malware')
+    self.assertEquals(tags[1].tag.tags[0], 'Malware')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(tags[1])
     self.assertEquals(msg[0:15], u'[\\HKCU\\Windows\\')
 
-    self.assertEquals(tags[2].tag['comment'], u'This is interesting')
-    self.assertEquals(tags[2].tag['tags'][0], 'Malware')
-    self.assertEquals(tags[2].tag['tags'][1], 'Benign')
+    self.assertEquals(tags[2].tag.comment, u'This is interesting')
+    self.assertEquals(tags[2].tag.tags[0], 'Malware')
+    self.assertEquals(tags[2].tag.tags[1], 'Benign')
 
     self.assertEquals(tags[2].parser, 'UNKNOWN')
 
