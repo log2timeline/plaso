@@ -427,6 +427,12 @@ class EventObject(object):
         self.attributes.__setitem__(
             'pathspec', pathspec_evt)
 
+      elif proto_attribute.name == 'tag':
+        tag_event = EventTag()
+        tag_event.FromProto(proto.tag)
+        self.attributes.__setitem__(
+            'tag', tag_event)
+
       elif proto_attribute.name == 'attributes':
         continue
       else:
@@ -505,12 +511,16 @@ class EventObject(object):
 
     for attribute_name in self.GetAttributes():
       if attribute_name == 'source_short':
-        __pychecker__ = ('missingattrs=source_short,pathspec')
+        __pychecker__ = ('missingattrs=source_short,pathspec,tag')
         proto.source_short = self._SOURCE_SHORT_TO_PROTO_MAP[self.source_short]
 
       elif attribute_name == 'pathspec':
         pathspec_str = self.pathspec.ToProtoString()
         proto.pathspec.MergeFromString(pathspec_str)
+
+      elif attribute_name == 'tag':
+        tag_str = self.tag.ToProtoString()
+        proto.tag.MergeFromString(tag_str)
 
       elif hasattr(proto, attribute_name):
         attribute_value = getattr(self, attribute_name)
@@ -591,6 +601,95 @@ class EventPathSpec(object):
   def FromProtoString(self, proto_string):
     """Unserializes the EventObject from a serialized PathSpec."""
     proto = transmission_pb2.PathSpec()
+    proto.ParseFromString(proto_string)
+    self.FromProto(proto)
+
+  def ToProtoString(self):
+    """Serialize the object into a string."""
+    proto = self.ToProto()
+
+    return proto.SerializeToString()
+
+
+class EventTag(object):
+  """A native Python object for the EventTagging protobuf.
+
+  The EventTag object should have the following attributes:
+  (optional attributes surrounded with brackets)
+    + store_number: An integer, pointing to the store the EventObject is.
+    + store_index: An index into the store where the EventObject is.
+    + [comment]: An arbitrary string containing comments about the event.
+    + [color]: A string containing color information.
+    + [tags]: A list of strings with tags, eg: 'Malware', 'Entry Point'.
+  """
+
+  def __setattr__(self, attr, value):
+    """Overwrite the set attribute function to limit it to right attributes."""
+    if attr in ('store_number', 'store_index', 'comment', 'color', 'tags'):
+      if attr == 'tags' and not isinstance(value, (list, tuple)):
+        raise AttributeError(u'Tags needs to be a list.')
+      object.__setattr__(self, attr, value)
+    else:
+      raise AttributeError(u'Not allowed attribute: {}'.format(attr))
+
+  def __str__(self):
+    """Define a string representation of the event."""
+    ret = []
+    ret.append('-' * 50)
+    __pychecker__ = (
+        'missingattrs=store_number,store_index,comment,color,tags')
+    ret.append('{0:>7}:\n\tNumber: {1}\n\tIndex: {2}'.format(
+        'Store', self.store_number, self.store_index))
+    if hasattr(self, 'comment'):
+      ret.append('{:>7}: {}'.format('Comment', self.comment))
+    if hasattr(self, 'color'):
+      ret.append('{:>7}: {}'.format('Color', self.color))
+    if hasattr(self, 'tags'):
+      ret.append('{:>7}: {}'.format('Tags', u','.join(self.tags)))
+
+    return u'\n'.join(ret)
+
+  def ToProto(self):
+    """Serialize an EventTag to EventTagging protobuf."""
+    proto = plaso_storage_pb2.EventTagging()
+
+    for attr in self.__dict__:
+      if attr == 'tags':
+        for tag in self.tags:
+          tag_add = proto.tags.add()
+          tag_add.value = tag
+      else:
+        attribute_value = getattr(self, attr, None)
+        if attribute_value != None:
+          setattr(proto, attr, attribute_value)
+
+    return proto
+
+  def FromProto(self, proto):
+    """Unserializes the EventTagging from a protobuf.
+
+    Args:
+      proto: The protobuf (plaso_storage_pb2.EventTagging).
+
+    Raises:
+      RuntimeError: when the protobuf is not of type:
+                    plaso_storage_pb2.EventTagging or when an unsupported
+                    attribute value type is encountered
+    """
+    if not isinstance(proto, plaso_storage_pb2.EventTagging):
+      raise RuntimeError("Unsupported proto")
+
+    for proto_attribute, value in proto.ListFields():
+      if proto_attribute.name == 'tags':
+        self.tags = []
+        for tag in proto.tags:
+          self.tags.append(tag.value)
+      else:
+        setattr(self, proto_attribute.name, value)
+
+  def FromProtoString(self, proto_string):
+    """Unserializes the EventTagging from a serialized protobuf."""
+    proto = plaso_storage_pb2.EventTagging()
     proto.ParseFromString(proto_string)
     self.FromProto(proto)
 
