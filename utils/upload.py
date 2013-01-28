@@ -586,6 +586,15 @@ group.add_option("--vcs", action="store", dest="vcs",
 group.add_option("--emulate_svn_auto_props", action="store_true",
                  dest="emulate_svn_auto_props", default=False,
                  help=("Emulate Subversion's auto properties feature."))
+# Git-specific
+group = parser.add_option_group("Git-specific options")
+group.add_option("--git_similarity", action="store", dest="git_similarity",
+                 metavar="SIM", type="int", default=50,
+                 help=("Set the minimum similarity index for detecting renames "
+                       "and copies. See `git diff -C`. (default 50)."))
+group.add_option("--git_no_find_copies", action="store_false", default=True,
+                 dest="git_find_copies",
+                 help=("Prevents git from looking for copies (default off)."))
 # Perforce-specific
 group = parser.add_option_group("Perforce-specific options "
                                 "(overrides P4 environment variables)")
@@ -682,7 +691,8 @@ def GetRpcServer(server, email=None, host_override=None, save_cookies=True,
   return HttpRpcServer(server,
                        KeyringCreds(server, host, email).GetUserCredentials,
                        host_override=host_override,
-                       save_cookies=save_cookies)
+                       save_cookies=save_cookies,
+                       account_type=account_type)
 
 
 def EncodeMultipartFormData(fields, files):
@@ -1328,13 +1338,16 @@ class GitVCS(VersionControlSystem):
     diff = RunShell(
         cmd + ["--no-renames", "--diff-filter=D"] + extra_args,
         env=env, silent_ok=True)
+    if self.options.git_find_copies:
+      similarity_options = ["--find-copies-harder", "-l100000",
+                            "-C%s" % self.options.git_similarity ]
+    else:
+      similarity_options = ["-M%s" % self.options.git_similarity ]
     diff += RunShell(
-        cmd + ["--find-copies-harder", "-l100000", "--diff-filter=AMCRT"]
-            + extra_args,
+        cmd + ["--diff-filter=AMCRT"] + similarity_options + extra_args,
         env=env, silent_ok=True)
-    diff += RunShell(
-        cmd + ["--no-renames", "--diff-filter=D"] + extra_args,
-        env=env, silent_ok=True)
+
+    # Added by Kristinn to handle new files.
     diff += RunShell(cmd + ["--cached"], env=env, silent_ok=True)
 
     # The CL could be only file deletion or not. So accept silent diff for both
