@@ -135,6 +135,30 @@ class PlasoWorker(object):
                      'further files from it. Msg: %s'),
                     filehandle.display_name, e)
 
+  def _ParseEvent(self, event_object, filehandle, parser_name, stat_obj):
+    """Adjust value of an extracted EventObject before storing it."""
+    # TODO: Make some more adjustments to the event object.
+    # Need to apply time skew, and other information extracted from
+    # the configuration of the tool.
+    if not hasattr(event_object, 'offset'):
+      event_object.offset = filehandle.tell()
+    event_object.display_name = filehandle.display_name
+    event_object.filename = filehandle.name
+    pathspec_evt = event.EventPathSpec()
+    pathspec_evt.FromProto(filehandle.pathspec_root)
+    event_object.pathspec = pathspec_evt
+    event_object.parser = parser_name
+    if hasattr(self._pre_obj, 'hostname'):
+      event_object.hostname = self._pre_obj.hostname
+    if not hasattr(event_object, 'inode') and hasattr(stat_obj, 'ino'):
+      event_object.inode = stat_obj.ino
+
+    if not self._filter:
+      self._stor_queue.AddEvent(event_object.ToProtoString())
+    else:
+      if self._filter.Matches(evt):
+        self._stor_queue.AddEvent(event_object.ToProtoString())
+
   def ParseFile(self, filehandle):
     """Run through classifier and appropriate parsers.
 
@@ -158,30 +182,13 @@ class PlasoWorker(object):
         filehandle.seek(0)
         for evt in parsing_object.Parse(filehandle):
           if evt:
-            # TODO: Make some more adjustments to the event object.
-            # Need to apply time skew, and other information extracted from
-            # the configuration of the tool.
-            # TODO: Check if this is a container and recurse through that.
-            # Move this logic to a different function to make that easier.
-            if not hasattr(evt, 'offset'):
-              evt.offset = filehandle.tell()
-            evt.display_name = filehandle.display_name
-            evt.filename = filehandle.name
-            pathspec_evt = event.EventPathSpec()
-            pathspec_evt.FromProto(filehandle.pathspec_root)
-            evt.pathspec = pathspec_evt
-            evt.parser = parsing_object.parser_name
-            if hasattr(self._pre_obj, 'hostname'):
-              evt.hostname = self._pre_obj.hostname
-            if not hasattr(evt, 'inode') and hasattr(stat_obj, 'ino'):
-              evt.inode = stat_obj.ino
-            if not self._filter:
-              serialized = evt.ToProtoString()
-              self._stor_queue.AddEvent(serialized)
-            else:
-              if self._filter.Matches(evt):
-                serialized = storage.PlasoStorage.SerializeEvent(evt)
-                self._stor_queue.AddEvent(serialized)
+            if isinstance(evt, event.EventObject):
+              self._ParseEvent(evt, filehandle, parsing_object.parser_name,
+                               stat_obj)
+            elif isinstance(evt, event.EventContainer):
+              for event_object in evt:
+                self._ParseEvent(event_object, filehandle,
+                                 parsing_object.parser_name, stat_obj)
 
       except errors.UnableToParseFile as e:
         logging.debug('Not a %s file (%s) - %s', parsing_object.NAME,

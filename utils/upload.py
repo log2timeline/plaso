@@ -1347,9 +1347,6 @@ class GitVCS(VersionControlSystem):
         cmd + ["--diff-filter=AMCRT"] + similarity_options + extra_args,
         env=env, silent_ok=True)
 
-    # Added by Kristinn to handle new files.
-    # diff += RunShell(cmd + ["--cached"], env=env, silent_ok=True)
-
     # The CL could be only file deletion or not. So accept silent diff for both
     # commands then check for an empty diff manually.
     if not diff:
