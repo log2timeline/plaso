@@ -135,7 +135,7 @@ message EventObject {
   // of showing the full description described in description_long.
   optional string description_short = 6;
 
-  // A list of all the stored attributes within the EventObject.
+  // A list of all the stored attributes within the event.
   repeated Attribute attributes = 8;
 
   // The timezone of the source where the timestamp came from.
@@ -160,6 +160,9 @@ message EventObject {
   // EventTagging is a message that can be added that include information
   // about coloring, tagging or comments that this object contains.
   optional EventTagging tag = 16;
+
+  // The type of the event data stored in the attributes.
+  required string data_type = 17;
 };
 
 // The EventTagging is a simple message that describes comments,

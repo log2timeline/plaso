@@ -39,15 +39,41 @@ from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
 
-class TestEvent(event.EventObject):
+class TestEvent1(event.EventObject):
   """A test event object."""
+  DATA_TYPE = 'test:event1'
 
   def __init__(self, timestamp, attributes):
     """Initializes the test event object."""
-    super(TestEvent, self).__init__()
+    super(TestEvent1, self).__init__()
     self.timestamp = timestamp
     self.source_short = 'TEST'
     self.attributes.update(attributes)
+
+
+class TestEvent2(event.EventObject):
+  """A test event object."""
+  DATA_TYPE = 'test:event2'
+
+  def __init__(self):
+    """Initializes the test event object."""
+    super(TestEvent2, self).__init__()
+    self.timestamp = 1234124
+    self.timestamp_desc = 'Written'
+
+    self.source_short = 'LOG'
+    self.source_long = 'Some Source Long'
+
+    self.empty_string = u''
+    self.zero_integer = 0
+    self.integer = 34
+    self.string = 'Normal string'
+    self.unicode_string = u'And I\'m a unicorn.'
+    self.my_list = ['asf', 4234, 2, 54, 'asf']
+    self.my_dict = {'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
+    self.a_tuple = ('some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'},
+                    35)
+    self.null_value = None
 
 
 class FailEvent(event.EventObject):
@@ -67,18 +93,18 @@ class TestEventContainer(event.EventContainer):
     container.filename = 'c:/Users/joesmith/NTUSER.DAT'
     container.source_long = 'NTUSER.DAT Registry'
 
-    event_object = event.RegistryEvent(
+    event_object = event.WinRegistryEvent(
         u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'}, 1334961526929596)
     event_object.source_long = 'UNKNOWN'
     container.Append(event_object)
 
-    event_object = event.RegistryEvent(
+    event_object = event.WinRegistryEvent(
         u'//HKCU/Secret/EvilEmpire/Malicious_key',
         {u'Value': u'send all the exes to the other world'}, 1334966206929596)
     event_object.source_long = 'UNKNOWN'
     container.Append(event_object)
 
-    event_object = event.RegistryEvent(
+    event_object = event.WinRegistryEvent(
         u'//HKCU/Windows/Normal', {u'Value': u'run all the benign stuff'},
         1334940286000000)
     event_object.source_long = 'UNKNOWN'
@@ -91,13 +117,13 @@ class TestEventContainer(event.EventContainer):
     container.filename = 'c:/Temp/evil.exe'
     container.source_long = 'Weird Log File'
 
-    container.Append(TestEvent(1335781787929596, {
+    container.Append(TestEvent1(1335781787929596, {
         'text': 'This log line reads ohh so much.'}))
 
-    container.Append(TestEvent(1335781787929596, {
+    container.Append(TestEvent1(1335781787929596, {
         'text': 'Nothing of interest here, move on.'}))
 
-    container.Append(TestEvent(1335791207939596, {
+    container.Append(TestEvent1(1335791207939596, {
         'text': 'Mr. Evil just logged into the machine and got root.'}))
 
     text_dict = {'body': (
@@ -171,7 +197,7 @@ class PlasoEventUnitTest(unittest.TestCase):
 
   def testNotInEventAndNoParent(self):
     """Call to an attribute that does not exist and no parent container ."""
-    event = TestEvent(0, {})
+    event = TestEvent1(0, {})
 
     self.assertRaises(AttributeError, getattr, event, 'doesnotexist')
 
@@ -203,23 +229,7 @@ class PlasoEventUnitTest(unittest.TestCase):
 
   def testSerialization(self):
     """Test serialize event and attribute saving."""
-    evt = event.EventObject()
-    evt.timestamp = 1234124
-    evt.timestamp_desc = 'Written'
-    evt.source_short = 'LOG'
-    evt.source_long = 'Some Source Long'
-    # Should not get stored.
-    evt.empty_attribute = u''
-    # Is stored.
-    evt.zero_integer = 0
-    evt.integer = 34
-    evt.string = 'Normal string'
-    evt.unicode_string = u'And I\'m a unicorn.'
-    evt.my_list = ['asf', 4234, 2, 54, 'asf']
-    evt.my_dict = {'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
-    evt.a_tuple = ('some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'}, 35)
-    # Should not get stored.
-    evt.null_value = None
+    evt = TestEvent2()
 
     proto = evt.ToProto()
     proto_ser = evt.ToProtoString()
@@ -228,11 +238,19 @@ class PlasoEventUnitTest(unittest.TestCase):
     evt_throw = event.EventObject()
     attributes = dict(
         evt_throw._AttributeFromProto(a) for a in proto.attributes)
-    self.assertFalse('empty_attribute' in attributes)
+
+    # An empty string should not get stored.
+    self.assertFalse('empty_string' in attributes)
+
+    # An integer value containing 0 should get stored.
     self.assertTrue('zero_integer' in attributes)
+
     self.assertEquals(len(attributes.get('my_list', [])), 5)
     self.assertEquals(attributes.get('string'), 'Normal string')
     self.assertEquals(len(attributes.get('a_tuple')), 4)
+
+    # A None (or Null) value should not get stored.
+    self.assertFalse('null_value' in attributes)
 
     # Go back
     evt2 = event.EventObject()
@@ -243,7 +261,8 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertEquals(evt.my_dict, evt2.my_dict)
     self.assertEquals(evt.my_list, evt2.my_list)
     self.assertEquals(evt.string, evt2.string)
-    self.assertFalse('empty_attribute' in evt2.attributes)
+    self.assertFalse('empty_string' in evt2.attributes)
+    self.assertFalse('null_value' in evt2.attributes)
 
 
 class EventTaggingUnitTest(unittest.TestCase):

@@ -30,10 +30,9 @@ class RegistryXPUserAssistTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.base_path = os.path.join('plaso/test_data')
-    self.registry_file = os.path.join(self.base_path, 'NTUSER.DAT')
-    fh = open(self.registry_file, 'rb')
-    self.registry = win_registry.WinRegistry(fh)
+    test_file = os.path.join('test_data', 'NTUSER.DAT')
+    file_object = open(test_file, 'rb')
+    self.registry = win_registry.WinRegistry(file_object)
 
   def testUserAssist(self):
     """Test the user assist plugin."""

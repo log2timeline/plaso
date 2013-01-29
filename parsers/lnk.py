@@ -15,7 +15,6 @@
 # limitations under the License.
 """Parser for Windows Shortcut (LNK) files."""
 import pylnk
-import re
 
 from plaso.lib import errors
 from plaso.lib import event
@@ -25,6 +24,35 @@ from plaso.lib import parser
 
 if pylnk.get_version() < "20130117":
   raise ImportWarning("WinLnkParser requires at least pylnk 20130117.")
+
+
+class WinLnkLinkEventContainer(event.EventContainer):
+  """Convenience class for a Windows Shortcut (LNK) link event container."""
+
+  def __init__(self, lnk_file):
+    """Initializes the event container.
+
+    Args:
+      lnk_file: The LNK file (pylnk.file).
+    """
+    super(WinLnkLinkEventContainer, self).__init__()
+
+    self.data_type = 'windows:lnk:link'
+
+    # TODO: refactor to formatter.
+    self.source_long = 'WinLnkParser'
+    self.source_short = 'LNK'
+
+    self.offset = 0
+
+    self.description = lnk_file.description
+    self.local_path = lnk_file.local_path
+    self.network_path = lnk_file.network_path
+    self.command_line_arguments = lnk_file.command_line_arguments
+    self.env_var_location = lnk_file.environment_variables_location
+    self.relative_path = lnk_file.relative_path
+    self.working_directory = lnk_file.working_directory
+    self.icon_location = lnk_file.icon_location
 
 
 class WinLnkParser(parser.PlasoParser):
@@ -52,32 +80,22 @@ class WinLnkParser(parser.PlasoParser):
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
           self.NAME, file_object.name, exception))
 
-    container = event.EventContainer()
-
-    container.offset = 0
-    container.source_long = self.NAME
-    container.source_short = self.PARSER_TYPE
-
-    container.description = lnk_file.description
-    container.local_path = lnk_file.local_path
-    container.network_path = lnk_file.network_path
-    container.command_line_arguments = lnk_file.command_line_arguments
-    container.env_var_location = lnk_file.environment_variables_location
-    container.relative_path = lnk_file.relative_path
-    container.working_directory = lnk_file.working_directory
-    container.icon_location = lnk_file.icon_location
+    container = WinLnkLinkEventContainer(lnk_file)
 
     container.Append(event.FiletimeEvent(
         lnk_file.get_file_access_time_as_integer(),
-        eventdata.EventTimestamp.ACCESS_TIME))
+        eventdata.EventTimestamp.ACCESS_TIME,
+        container.data_type))
 
     container.Append(event.FiletimeEvent(
         lnk_file.get_file_creation_time_as_integer(),
-        eventdata.EventTimestamp.CREATION_TIME))
+        eventdata.EventTimestamp.CREATION_TIME,
+        container.data_type))
 
     container.Append(event.FiletimeEvent(
         lnk_file.get_file_modification_time_as_integer(),
-        eventdata.EventTimestamp.MODIFICATION_TIME))
+        eventdata.EventTimestamp.MODIFICATION_TIME,
+        container.data_type))
 
     # TODO: add support for the distributed link tracker.
     # TODO: add support for the shell item.
@@ -85,11 +103,10 @@ class WinLnkParser(parser.PlasoParser):
     return container
 
 
-class WinLnkFormatter(eventdata.ConditionalEventFormatter):
-  """Class that formats Windows Shortcut (LNK) events."""
-  ID_RE = re.compile('WinLnkParser:', re.DOTALL)
+class WinLnkLinkFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for a Windows Shortcut (LNK) link event."""
+  DATA_TYPE = 'windows:lnk:link'
 
-  # The format string.
   FORMAT_STRING_PIECES = [
       u'[{description}]',
       u'Local path: {local_path}',
@@ -149,4 +166,4 @@ class WinLnkFormatter(eventdata.ConditionalEventFormatter):
     # Update event object with the linked path.
     event_object.linked_path = self._GetLinkedPath(event_object)
 
-    return super(WinLnkFormatter, self).GetMessages(event_object)
+    return super(WinLnkLinkFormatter, self).GetMessages(event_object)

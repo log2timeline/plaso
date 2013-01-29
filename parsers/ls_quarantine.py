@@ -13,56 +13,77 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a parser for application usage in plaso."""
-import re
-
+"""Parser for the Mac OS X launch services quarantine events."""
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
+from plaso.lib import timelib
 
 
-class LsQuarantine(parser.SQLiteParser):
-  """Parse the LaunchServices.QuarantineEvents databse on Mac OS X.
+class LsQuarantineEvent(event.EventObject):
+  """Convenience class for a Mac OS X launch services quarantine event."""
+  DATA_TYPE = 'macosx:lsquarantine'
 
-  File can be found here:
-    /Users/<username>/Library/Preferences/com.apple.LaunchServices.\
-        QuarantineEvents
+  # TODO: describe more clearly what the data value contains.
+  def __init__(self, timestamp, url, user_agent, data):
+    """Initializes the event object.
+
+    Args:
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of seconds since Jan 1, 1970 00:00:00 UTC.
+      url: The original URL of the file.
+      user_agent: The user agent that was used to download the file.
+      data: The data.
+    """
+    super(LsQuarantineEvent, self).__init__()
+
+    self.timestamp = timelib.TimeStamp.FromPosixTime(timestamp)
+    self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
+    self.source_short = 'HIST'
+    self.source_long = 'LS Quarantine Event'
+
+    self.url = url
+    self.agent = user_agent
+    self.data = data
+
+
+class LsQuarantineParser(parser.SQLiteParser):
+  """Parses the launch services quarantine events database.
+
+     The LS quarantine events are stored in SQLite database files named
+     /Users/<username>/Library/Preferences/\
+         QuarantineEvents.com.apple.LaunchServices
   """
-
   NAME = 'LS Quarantine'
 
   # Define the needed queries.
+  # TODO: move the timestamp adjustment into code and make sure to change
+  # the corresponding docstring of LsQuarantineEvent.
   QUERIES = [(('SELECT LSQuarantineTimestamp+978328800 AS Epoch, LSQuarantine'
-               'AgentName AS Agent, LSQuarantineOriginURLString AS URL, LSQua'
-               'rantineDataURLString AS Data FROM LSQuarantineEvent ORDER BY '
-               'Epoch'), 'ParseLSQuarantine')]
+               'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
+               'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
+               'ORDER BY Epoch'), 'ParseLSQuarantineRow')]
 
   # The required tables.
   REQUIRED_TABLES = ('LSQuarantineEvent',)
 
-  DATE_MULTIPLIER = 1000000
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseLSQuarantineRow(self, row, **kwargs):
+    """Parses a launch services quarantine event row.
 
-  def ParseLSQuarantine(self, row, **_):
-    """Return an EventObject from Parse LS QuarantineEvent record."""
-    date = int(row['Epoch'] * self.DATE_MULTIPLIER)
+    Args:
+      row: The row resulting from the query.
 
-    evt = event.SQLiteEvent(date, 'File Downloaded', 'HIST',
-                            u'%s Download Event' % self.NAME)
-
-    evt.agent = row['Agent']
-    evt.url = row['URL']
-    evt.data = row['Data']
-
-    yield evt
+    Yields:
+      An event object (LsQuarantineEvent) containing the event data.
+    """
+    yield LsQuarantineEvent(
+       row['Epoch'], row['URL'], row['Agent'], row['Data'])
 
 
 class LSQuarantineFormatter(eventdata.EventFormatter):
-  """Define the formatting for LS Quarantine history."""
+  """Formatter for a LS Quarantine history event."""
+  DATA_TYPE = 'macosx:lsquarantine'
 
-  # The indentifier for the formatter (a regular expression)
-  ID_RE = re.compile('LS Qurantine:', re.DOTALL)
-
-  # The format string.
   FORMAT_STRING = u'[{agent}] Downloaded: {url} <{data}>'
   FORMAT_STRING_SHORT = u'{url}'
-

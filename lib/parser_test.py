@@ -14,12 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for the parser library in plaso."""
-import os
 import pytz
-import re
 import unittest
 
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
@@ -29,14 +28,6 @@ __pychecker__ = 'no-funcdoc'
 
 class EmtpyObject(object):
   """An empty object."""
-
-
-class FakeFileFormatter(eventdata.EventFormatter):
-  """Implement a formatter for the FakeFile."""
-
-  # Catch all.
-  ID_RE = re.compile('.', re.DOTALL)
-  FORMAT_STRING = u'{body}'
 
 
 class FakeFile(object):
@@ -127,14 +118,25 @@ class FakeBetterFile(FakeFile):
            '06/01/1945 08:20:00 myuser:myhost- third line.\n')
 
 
-class FakeTextParser(parser.TextParser):
+class TestTextEvent(event.TextEvent):
+  """Test text event."""
+  DATA_TYPE = 'test:parser:text'
+
+
+class TestTextEventFormatter(eventdata.EventFormatter):
+  """Test text event formatter."""
+  DATA_TYPE = 'test:parser:text'
+  FORMAT_STRING = u'{body}'
+
+
+class TestTextParser(parser.TextParser):
   """Implement a text parser object that can successfully parse a text file.
 
   To be able to achieve that one function has to be implemented, the ParseDate
   one.
   """
-  NAME = 'FakeTextFile'
-  source_long = 'Fake File Parser'
+  NAME = 'TestTextParser'
+  source_long = 'Test Text Parser'
 
   tokens = [
       lexer.Token('INITIAL',
@@ -159,23 +161,30 @@ class FakeTextParser(parser.TextParser):
   def Scan(self, filehandle):
     pass
 
+  def CreateEvent(self, timestamp, offset, attributes):
+    event_object = TestTextEvent(timestamp, attributes, self.source_long)
+    event_object.offset = offset
+    return event_object
 
-class ParserUnitTest(unittest.TestCase):
+
+class PlasoParserTest(unittest.TestCase):
   """An unit test for the plaso parser library."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self.base_path = os.path.join('plaso/test_data')
-    self._pre_obj = EmtpyObject()
-    self._pre_obj.zone = pytz.UTC
 
   def testParserNotImplemented(self):
     """Test the base class Parse function."""
     self.assertRaises(TypeError, parser.PlasoParser)
 
+
+class TextParserTest(unittest.TestCase):
+  """An unit test for the plaso parser library."""
+
+  def setUp(self):
+    self._pre_obj = EmtpyObject()
+    self._pre_obj.zone = pytz.UTC
+
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
-    text_parser = FakeTextParser(self._pre_obj)
+    text_parser = TestTextParser(self._pre_obj)
     fn = FakeFile()
 
     text_generator = text_parser.Parse(fn)
@@ -183,7 +192,7 @@ class ParserUnitTest(unittest.TestCase):
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
-    text_parser = FakeTextParser(self._pre_obj)
+    text_parser = TestTextParser(self._pre_obj)
     fn = FakeBetterFile()
 
     text_generator = text_parser.Parse(fn)

@@ -57,7 +57,7 @@ class MRUPlugin(win_registry_interface.ValuePlugin):
     for nr, entry in enumerate(mru_list):
       text_dict = {}
       text_dict[u'MRUList Entry %d' % (nr + 1)] = self.GetText(entry)
-      evt = event.RegistryEvent(self._key.path, text_dict, event_timestamp)
+      evt = event.WinRegistryEvent(self._key.path, text_dict, event_timestamp)
       event_timestamp = 0
       evt.source_append = ': MRU List'
       yield evt

@@ -13,16 +13,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a simple WinVersion plugin for Plaso."""
+"""Plug-in to collect information about the Windows version."""
 
 import struct
 
 from plaso.lib import event
+from plaso.lib import timelib
 from plaso.lib import win_registry_interface
 
 
 class WinVerPlugin(win_registry_interface.KeyPlugin):
-  """Pulling information about the version of Windows."""
+  """Plug-in to collect information about the Windows version."""
 
   REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion'
   REG_TYPE = 'SOFTWARE'
@@ -44,16 +45,18 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
     text_dict[u'Product name'] = self.GetText('ProductName')
     text_dict[u' Windows Version Information'] = u''
     install_raw = self._key.GetValue('InstallDate').GetRawData()
+    # TODO: move this to a function in utils with a more descriptive name
+    # e.g. CopyByteStreamToInt32BigEndian.
     int_len = struct.calcsize('<I')
     if len(install_raw) < int_len:
       install = 0
     else:
-      install = struct.unpack('<I', install_raw[:int_len])[0] * 1e6
+      install = struct.unpack('<I', install_raw[:int_len])[0]
 
-    evt = event.RegistryEvent(self._key.path, text_dict, int(install))
-    evt.prodname = text_dict[u'Product name']
-    evt.source_long = 'SOFTWARE WinVersion key'
+    event_object = event.WinRegistryEvent(
+        self._key.path, text_dict, timelib.Timestamp.FromPosixTime(install))
+    event_object.prodname = text_dict[u'Product name']
+    event_object.source_long = 'SOFTWARE WinVersion key'
     if text_dict[u'Owner']:
-      evt.owner = text_dict[u'Owner']
-    yield evt
-
+      event_object.owner = text_dict[u'Owner']
+    yield event_object

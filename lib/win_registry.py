@@ -95,6 +95,7 @@ class WinPyregValue(win_registry_interface.WinRegValue):
   """An implementation of the WinRegValue based on pyregf."""
 
   def __init__(self, value):
+    """Initializes the Windows Registry value object."""
     super(WinPyregValue, self).__init__()
     self._value = value
     self.offset = value.get_offset()
@@ -182,5 +183,3 @@ class WinRegistry(object):
     root = self.GetRoot()
     for key in self.GetAllSubKeys(root):
       yield key
-
-

@@ -51,7 +51,7 @@ linter()
     fi
 
     echo "  -- Checking: ${FILE} --"
-    pychecker -Q -f --only -6  "${FILE}"
+    pychecker -Q -f --only -6 --unusednames "${FILE}"
 
     if [ $? -ne 0 ];
     then

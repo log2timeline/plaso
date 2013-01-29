@@ -41,35 +41,35 @@ class L2tcsv(output.FileLogOutputFormatter):
 
   def Start(self):
     """Returns a header for the output."""
-    self.filehandle.write(('date,time,timezone,MACB,source,sourcetype,type,'
-                           'user,host,short,desc,version,filename,inode,notes,'
-                           'format,extra\n'))
+    self.filehandle.write(
+        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        'version,filename,inode,notes,format,extra\n')
 
-  def WriteEvent(self, evt):
+  def WriteEvent(self, event_object):
     """Write a single event."""
     try:
-      self.EventBody(evt)
+      self.EventBody(event_object)
     except errors.NoFormatterFound:
       logging.error('Unable to output line, no formatter found.')
-      logging.error(evt)
+      logging.error(event_object)
 
-  def EventBody(self, evt):
+  def EventBody(self, event_object):
     """Formats data as l2t_csv and writes to the filehandle from OutputFormater.
 
     Args:
-      evt: The event object (EventObject).
+      event_object: The event object (EventObject).
     """
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(evt)
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
-          'Unable to output event, no event formatter found.')
+          'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
 
-    msg, msg_short = event_formatter.GetMessages(evt)
+    msg, msg_short = event_formatter.GetMessages(event_object)
 
-    if not hasattr(evt, 'timestamp'):
+    if not hasattr(event_object, 'timestamp'):
       return
 
-    date_use = timelib.DateTimeFromTimestamp(evt.timestamp, self.zone)
+    date_use = timelib.DateTimeFromTimestamp(event_object.timestamp, self.zone)
     if not date_use:
       logging.error(u'Unable to process date for entry: %s', msg)
       return
@@ -77,36 +77,36 @@ class L2tcsv(output.FileLogOutputFormatter):
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         event_formatter.format_string)
-    for key in evt.GetAttributes():
+    for key in event_object.GetAttributes():
       if key in helper.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append('%s: %s ' % (key, getattr(evt, key)))
+      extra.append('%s: %s ' % (key, getattr(event_object, key)))
     extra = ' '.join(extra)
 
-    inode = getattr(evt, 'inode', '-')
+    inode = getattr(event_object, 'inode', '-')
     if inode == '-':
-      if hasattr(evt, 'pathspec'):
+      if hasattr(event_object, 'pathspec'):
         pathspec = transmission_pb2.PathSpec()
-        pathspec.ParseFromString(evt.pathspec)
+        pathspec.ParseFromString(event_object.pathspec)
         if pathspec.HasField('image_inode'):
           inode = pathspec.image_inode
 
     row = (date_use.strftime('%m/%d/%Y'),
            date_use.strftime('%H:%M:%S'),
            self.zone,
-           helper.GetLegacy(evt),
-           evt.source_short,
-           evt.source_long,
-           evt.timestamp_desc,
-           getattr(evt, 'username', '-'),
-           getattr(evt, 'hostname', '-'),
+           helper.GetLegacy(event_object),
+           event_object.source_short,
+           event_object.source_long,
+           event_object.timestamp_desc,
+           getattr(event_object, 'username', '-'),
+           getattr(event_object, 'hostname', '-'),
            msg_short,
            msg,
            '2',
-           evt.filename,
+           event_object.filename,
            inode,
-           getattr(evt, 'notes', '-'),  # Notes field placeholder.
-           getattr(evt, 'parser', '-'),
+           getattr(event_object, 'notes', '-'),  # Notes field placeholder.
+           getattr(event_object, 'parser', '-'),
            extra)
 
     out_write = u'{0}\n'.format(

@@ -15,19 +15,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Export the python path
-export PYTHONPATH=.
+EXIT_FAILURE=1;
+EXIT_SUCCESS=0;
 
-cd ..
-find plaso -name "*_test.py" | grep -v "\/build\/" | while read test_file
+TEST_FILES=`find . -name "*_test.py" | grep -v "\/build\/"`;
+
+# TODO: add an ordering of tests, e.g. lib first.
+for TEST_FILE in ${TEST_FILES};
 do
-  echo "---+ $test_file +---"
-  PYTHONPATH=. /usr/bin/python ./${test_file}
+  # TODO: black listing this test for now.
+  if [ "${TEST_FILE}" = "./frontend/psort_test.py" ];
+  then
+    continue;
+  fi
+
+  echo "---+ ${TEST_FILE} +---"
+  PYTHONPATH=../ /usr/bin/python ${TEST_FILE}
+
   if [ $? -ne 0 ]
   then
-    echo "TEST FAILED (${test_file})."
-    echo "Stopping further testing."
-    exit 12
+    echo "TEST FAILED: ${TEST_FILE}.";
+    echo "";
+    echo "Stopping further testing.";
+    echo "";
+    exit ${EXIT_FAILURE};
   fi
-  echo " "
+  echo "";
 done
+
+exit ${EXIT_SUCCESS};
+

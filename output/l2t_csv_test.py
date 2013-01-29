@@ -27,11 +27,24 @@ from plaso.proto import transmission_pb2
 __pychecker__ = 'no-funcdoc'
 
 
-class DummyEventFormatter(eventdata.EventFormatter):
-  """Implement a simple formatter for the events defined."""
+class TestEvent(event.EventObject):
+  DATA_TYPE = 'test:l2t_csv'
 
-  ID_RE = re.compile('UNKNOWN:Syslog:Entry', re.DOTALL)
+  def __init__(self):
+    super(TestEvent, self).__init__()
+    self.timestamp = 1340821021000000
+    self.timestamp_desc = 'Entry Written'
+    self.source_short = 'LOG'
+    self.source_long = 'Syslog'
+    self.hostname = 'ubuntu'
+    self.filename = 'log/syslog.1'
+    self.text = (
+        u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+        u'closed for user root)')
 
+
+class TestEventFormatter(eventdata.EventFormatter):
+  DATA_TYPE = 'test:l2t_csv'
   FORMAT_STRING = u'{text}'
 
 
@@ -41,50 +54,35 @@ class L2tCsvTest(unittest.TestCase):
     self.formatter = l2t_csv.L2tcsv(None, self.output)
 
   def testStart(self):
-    correct_line = ('date,time,timezone,MACB,source,sourcetype,type,user,host,'
-                    'short,desc,version,filename,inode,notes,format,extra\n')
+    correct_line = (
+        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        'version,filename,inode,notes,format,extra\n')
 
     self.formatter.Start()
     self.assertEquals(self.output.getvalue(), correct_line)
 
   def testEventBody(self):
     """Test ensures that returned lines returned are fmt CSV as expected."""
-    evt = event.EventObject()
-    evt.timestamp = 1340821021000000
-    evt.timestamp_desc = 'Entry Written'
-    evt.source_short = 'LOG'
-    evt.source_long = 'Syslog'
-    evt.hostname = 'ubuntu'
-    evt.filename = 'log/syslog.1'
-    evt.text = (u'Reporter <CRON> PID: 8442 (pam_unix(cron:session)'
-                ': session\n closed for user root)')
+    event_object = TestEvent()
 
-    self.formatter.EventBody(evt)
-    correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
-               'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
-               '(pam_unix(cron:session): session closed for user '
-               'root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-               'session closed for user root),2,log/syslog.1,-,-,-,\n')
+    self.formatter.EventBody(event_object)
+    correct = (
+        '06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry Written,-,ubuntu,'
+        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
+        'for user root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
+        'session closed for user root),2,log/syslog.1,-,-,-,\n')
     self.assertEquals(self.output.getvalue(), correct)
 
   def testEventBodyNoCommas(self):
     """Test ensures that commas inside fields are replaced by space."""
-    evt = event.EventObject()
-    evt.timestamp = 1340821021000000
-    evt.timestamp_desc = 'Entry,Written'
-    evt.source_short = 'LOG'
-    evt.source_long = 'Syslog'
-    evt.hostname = 'ubuntu'
-    evt.filename = 'log/syslog.1'
-    evt.text = ('Reporter,<CRON>,PID:,8442 (pam_unix(cron:session)'
-                ': session closed for user root)')
+    event_object = TestEvent()
 
-    self.formatter.EventBody(evt)
-    correct = ('06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry '
-               'Written,-,ubuntu,Reporter <CRON> PID: 8442 '
-               '(pam_unix(cron:session): session closed for user '
-               'root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-               'session closed for user root),2,log/syslog.1,-,-,-,\n')
+    self.formatter.EventBody(event_object)
+    correct = (
+        '06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry Written,-,ubuntu,'
+        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
+        'for user root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
+        'session closed for user root),2,log/syslog.1,-,-,-,\n')
     self.assertEquals(self.output.getvalue(), correct)
 
 

@@ -29,10 +29,8 @@ class SleuthkitUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.base_path = os.path.join('plaso/test_data')
-
-    image_path = os.path.join(self.base_path, 'image.dd')
-    self.img = pytsk3.Img_Info(image_path)
+    test_file = os.path.join('test_data', 'image.dd')
+    self.img = pytsk3.Img_Info(test_file)
     self.fs = pytsk3.FS_Info(self.img, offset=0)
 
   def testReadFileName(self):

@@ -11,7 +11,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='plaso/proto/transmission.proto',
   package='transmission',
-  serialized_pb='\n\x1eplaso/proto/transmission.proto\x12\x0ctransmission\"\xf5\t\n\x08PathSpec\x12\x34\n\x04type\x18\x01 \x01(\x0e\x32\x1f.transmission.PathSpec.FileType:\x05UNSET\x12\x11\n\tfile_path\x18\x02 \x01(\t\x12\x16\n\x0e\x63ontainer_path\x18\x03 \x01(\t\x12\x14\n\x0cimage_offset\x18\x04 \x01(\x04\x12\x13\n\x0bimage_inode\x18\x05 \x01(\x04\x12/\n\x0fnested_pathspec\x18\x06 \x01(\x0b\x32\x16.transmission.PathSpec\x12\x13\n\x0b\x66ile_offset\x18\x07 \x01(\x04\x12\x11\n\tfile_size\x18\x08 \x01(\x04\x12\x46\n\x10transmit_options\x18\t \x01(\x0e\x32\x1e.transmission.PathSpec.Options:\x0c\x43\x41SE_LITERAL\x12Q\n\tntfs_type\x18\n \x01(\x0e\x32$.transmission.PathSpec.TskFsAttrType:\x18TSK_FS_ATTR_TYPE_DEFAULT\x12\x0f\n\x07ntfs_id\x18\x0b \x01(\x04\x12\x18\n\x10vss_store_number\x18\x0c \x01(\x04\"]\n\x08\x46ileType\x12\x12\n\x05UNSET\x10\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x06\n\x02OS\x10\x00\x12\x07\n\x03TSK\x10\x01\x12\x07\n\x03ZIP\x10\x02\x12\x08\n\x04GZIP\x10\x03\x12\x07\n\x03\x42Z2\x10\x04\x12\x07\n\x03TAR\x10\x05\x12\x07\n\x03VSS\x10\x06\"1\n\x07Options\x12\x14\n\x10\x43\x41SE_INSENSITIVE\x10\x00\x12\x10\n\x0c\x43\x41SE_LITERAL\x10\x01\"\xab\x05\n\rTskFsAttrType\x12\x1c\n\x18TSK_FS_ATTR_TYPE_DEFAULT\x10\x01\x12\x1c\n\x18TSK_FS_ATTR_TYPE_NTFS_SI\x10\x10\x12\"\n\x1eTSK_FS_ATTR_TYPE_NTFS_ATTRLIST\x10 \x12\x1f\n\x1bTSK_FS_ATTR_TYPE_NTFS_FNAME\x10\x30\x12\x1e\n\x1aTSK_FS_ATTR_TYPE_NTFS_VVER\x10@\x12\x1f\n\x1bTSK_FS_ATTR_TYPE_NTFS_OBJID\x10@\x12\x1d\n\x19TSK_FS_ATTR_TYPE_NTFS_SEC\x10P\x12\x1f\n\x1bTSK_FS_ATTR_TYPE_NTFS_VNAME\x10`\x12\x1f\n\x1bTSK_FS_ATTR_TYPE_NTFS_VINFO\x10p\x12\x1f\n\x1aTSK_FS_ATTR_TYPE_NTFS_DATA\x10\x80\x01\x12\"\n\x1dTSK_FS_ATTR_TYPE_NTFS_IDXROOT\x10\x90\x01\x12#\n\x1eTSK_FS_ATTR_TYPE_NTFS_IDXALLOC\x10\xa0\x01\x12!\n\x1cTSK_FS_ATTR_TYPE_NTFS_BITMAP\x10\xb0\x01\x12!\n\x1cTSK_FS_ATTR_TYPE_NTFS_SYMLNK\x10\xc0\x01\x12\"\n\x1dTSK_FS_ATTR_TYPE_NTFS_REPARSE\x10\xc0\x01\x12!\n\x1cTSK_FS_ATTR_TYPE_NTFS_EAINFO\x10\xd0\x01\x12\x1d\n\x18TSK_FS_ATTR_TYPE_NTFS_EA\x10\xe0\x01\x12\x1f\n\x1aTSK_FS_ATTR_TYPE_NTFS_PROP\x10\xf0\x01\x12\x1e\n\x19TSK_FS_ATTR_TYPE_NTFS_LOG\x10\x80\x02\x12 \n\x1bTSK_FS_ATTR_TYPE_UNIX_INDIR\x10\x81 ')
+  serialized_pb='\n\x1eplaso/proto/transmission.proto\x12\x0ctransmission\"\xb0\t\n\x08PathSpec\x12\x34\n\x04type\x18\x01 \x01(\x0e\x32\x1f.transmission.PathSpec.FileType:\x05UNSET\x12\x11\n\tfile_path\x18\x02 \x01(\t\x12\x16\n\x0e\x63ontainer_path\x18\x03 \x01(\t\x12\x14\n\x0cimage_offset\x18\x04 \x01(\x04\x12\x13\n\x0bimage_inode\x18\x05 \x01(\x04\x12/\n\x0fnested_pathspec\x18\x06 \x01(\x0b\x32\x16.transmission.PathSpec\x12\x13\n\x0b\x66ile_offset\x18\x07 \x01(\x04\x12\x11\n\tfile_size\x18\x08 \x01(\x04\x12\x46\n\x10transmit_options\x18\t \x01(\x0e\x32\x1e.transmission.PathSpec.Options:\x0c\x43\x41SE_LITERAL\x12Q\n\tntfs_type\x18\n \x01(\x0e\x32$.transmission.PathSpec.TskFsAttrType:\x18TSK_FS_ATTR_TYPE_DEFAULT\x12\x0f\n\x07ntfs_id\x18\x0b \x01(\x04\x12\x18\n\x10vss_store_number\x18\x0c \x01(\x04\"]\n\x08\x46ileType\x12\x12\n\x05UNSET\x10\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x06\n\x02OS\x10\x00\x12\x07\n\x03TSK\x10\x01\x12\x07\n\x03ZIP\x10\x02\x12\x08\n\x04GZIP\x10\x03\x12\x07\n\x03\x42Z2\x10\x04\x12\x07\n\x03TAR\x10\x05\x12\x07\n\x03VSS\x10\x06\"1\n\x07Options\x12\x14\n\x10\x43\x41SE_INSENSITIVE\x10\x00\x12\x10\n\x0c\x43\x41SE_LITERAL\x10\x01\"\xe6\x04\n\rTskFsAttrType\x12\x1c\n\x18TSK_FS_ATTR_TYPE_DEFAULT\x10\x01\x12\x1c\n\x18TSK_FS_ATTR_TYPE_NTFS_SI\x10\x10\x12\"\n\x1eTSK_FS_ATTR_TYPE_NTFS_ATTRLIST\x10 \x12\x1f\n\x1bTSK_FS_ATTR_TYPE_NTFS_FNAME\x10\x30\x12\x1e\n\x1aTSK_FS_ATTR_TYPE_NTFS_VVER\x10@\x12\x1d\n\x19TSK_FS_ATTR_TYPE_NTFS_SEC\x10P\x12\x1f\n\x1bTSK_FS_ATTR_TYPE_NTFS_VNAME\x10`\x12\x1f\n\x1bTSK_FS_ATTR_TYPE_NTFS_VINFO\x10p\x12\x1f\n\x1aTSK_FS_ATTR_TYPE_NTFS_DATA\x10\x80\x01\x12\"\n\x1dTSK_FS_ATTR_TYPE_NTFS_IDXROOT\x10\x90\x01\x12#\n\x1eTSK_FS_ATTR_TYPE_NTFS_IDXALLOC\x10\xa0\x01\x12!\n\x1cTSK_FS_ATTR_TYPE_NTFS_BITMAP\x10\xb0\x01\x12!\n\x1cTSK_FS_ATTR_TYPE_NTFS_SYMLNK\x10\xc0\x01\x12!\n\x1cTSK_FS_ATTR_TYPE_NTFS_EAINFO\x10\xd0\x01\x12\x1d\n\x18TSK_FS_ATTR_TYPE_NTFS_EA\x10\xe0\x01\x12\x1f\n\x1aTSK_FS_ATTR_TYPE_NTFS_PROP\x10\xf0\x01\x12\x1e\n\x19TSK_FS_ATTR_TYPE_NTFS_LOG\x10\x80\x02\x12 \n\x1bTSK_FS_ATTR_TYPE_UNIX_INDIR\x10\x81 ')
 
 
 
@@ -108,70 +108,62 @@ _PATHSPEC_TSKFSATTRTYPE = descriptor.EnumDescriptor(
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_OBJID', index=5, number=64,
+      name='TSK_FS_ATTR_TYPE_NTFS_SEC', index=5, number=80,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_SEC', index=6, number=80,
+      name='TSK_FS_ATTR_TYPE_NTFS_VNAME', index=6, number=96,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_VNAME', index=7, number=96,
+      name='TSK_FS_ATTR_TYPE_NTFS_VINFO', index=7, number=112,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_VINFO', index=8, number=112,
+      name='TSK_FS_ATTR_TYPE_NTFS_DATA', index=8, number=128,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_DATA', index=9, number=128,
+      name='TSK_FS_ATTR_TYPE_NTFS_IDXROOT', index=9, number=144,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_IDXROOT', index=10, number=144,
+      name='TSK_FS_ATTR_TYPE_NTFS_IDXALLOC', index=10, number=160,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_IDXALLOC', index=11, number=160,
+      name='TSK_FS_ATTR_TYPE_NTFS_BITMAP', index=11, number=176,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_BITMAP', index=12, number=176,
+      name='TSK_FS_ATTR_TYPE_NTFS_SYMLNK', index=12, number=192,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_SYMLNK', index=13, number=192,
+      name='TSK_FS_ATTR_TYPE_NTFS_EAINFO', index=13, number=208,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_REPARSE', index=14, number=192,
+      name='TSK_FS_ATTR_TYPE_NTFS_EA', index=14, number=224,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_EAINFO', index=15, number=208,
+      name='TSK_FS_ATTR_TYPE_NTFS_PROP', index=15, number=240,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_EA', index=16, number=224,
+      name='TSK_FS_ATTR_TYPE_NTFS_LOG', index=16, number=256,
       options=None,
       type=None),
     descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_PROP', index=17, number=240,
-      options=None,
-      type=None),
-    descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_NTFS_LOG', index=18, number=256,
-      options=None,
-      type=None),
-    descriptor.EnumValueDescriptor(
-      name='TSK_FS_ATTR_TYPE_UNIX_INDIR', index=19, number=4097,
+      name='TSK_FS_ATTR_TYPE_UNIX_INDIR', index=17, number=4097,
       options=None,
       type=None),
   ],
   containing_type=None,
   options=None,
   serialized_start=635,
-  serialized_end=1318,
+  serialized_end=1249,
 )
 
 
@@ -279,7 +271,7 @@ _PATHSPEC = descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=49,
-  serialized_end=1318,
+  serialized_end=1249,
 )
 
 _PATHSPEC.fields_by_name['type'].enum_type = _PATHSPEC_FILETYPE
