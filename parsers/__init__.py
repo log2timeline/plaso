@@ -22,5 +22,6 @@ from plaso.parsers import firefox
 from plaso.parsers import gdrive
 from plaso.parsers import lnk
 from plaso.parsers import ls_quarantine
+from plaso.parsers import mactime
 from plaso.parsers import syslog
 from plaso.parsers import winreg

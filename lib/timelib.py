@@ -24,6 +24,7 @@ a more human readable one.
 """
 import calendar
 import datetime
+import time
 import pytz
 
 MONTH_DICT = {
@@ -254,12 +255,12 @@ class Timestamp(object):
     if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
         posix_time > cls.TIMESTAMP_MAX_SECONDS):
       return 0
-    return posix_time * cls.MICRO_SECONDS_PER_SECOND
+    return int(posix_time * cls.MICRO_SECONDS_PER_SECOND)
 
 
 def Timetuple2Timestamp(time_tuple):
   """Return a micro second precision timestamp from a timetuple."""
-  if type(time_tuple) != tuple:
+  if not isinstance(time_tuple, (tuple, time.struct_time)):
     return 0
 
   return int(calendar.timegm(time_tuple))

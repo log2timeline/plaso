@@ -52,18 +52,17 @@ class RegistryPlugin(object):
   # prioritization to registry plugins.
   WEIGHT = 3
 
-  def __init__(self, hive, config=None):
+  def __init__(self, hive, pre_obj):
     """Constructor for a registry plugin.
 
     Args:
       hive: A WinRegistry value that stores the hive object, in case we need
       to get values from other keys in the hive.
-      config: A simple dict containing values for commonly use keys to
-      query, this value is usually populated with preprocessing the registry
-      hive.
+      pre_obj: The pre-processing object that contains information gathered
+      during preprocessing of data.
     """
     self._hive = hive
-    self._config = config or {}
+    self._config = pre_obj
 
   @property
   def plugin_name(self):
