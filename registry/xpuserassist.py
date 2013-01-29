@@ -40,6 +40,13 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
         logging.debug('[UserAssist] Value entry is not of correct length.')
         continue
       _, count, filetime = struct.unpack('<LLQ', data)
+
+      if not filetime:
+        logging.debug(
+            u'[UserAssist] Value entry without a timestamp value: %s (%d)',
+            name, count)
+        continue
+
       if count > 5:
         count -= 5
 

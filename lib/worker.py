@@ -173,7 +173,7 @@ class PlasoWorker(object):
             evt.parser = parsing_object.parser_name
             if hasattr(self._pre_obj, 'hostname'):
               evt.hostname = self._pre_obj.hostname
-            if hasattr(stat_obj, 'ino'):
+            if not hasattr(evt, 'inode') and hasattr(stat_obj, 'ino'):
               evt.inode = stat_obj.ino
             if not self._filter:
               serialized = evt.ToProtoString()

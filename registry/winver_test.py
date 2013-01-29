@@ -41,7 +41,7 @@ class TestWinVerRegistry(unittest.TestCase):
 
   def testWinVer(self):
     """Test the WinVer plugin."""
-    plugin = winver.WinVerPlugin(None)
+    plugin = winver.WinVerPlugin(None, None)
     entries = list(plugin.Process(self.regkey))
 
     line = (u'[\\Microsoft\\Windows NT\\CurrentVersion]  Windows Version Infor'

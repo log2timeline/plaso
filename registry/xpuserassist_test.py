@@ -39,7 +39,7 @@ class RegistryXPUserAssistTest(unittest.TestCase):
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         '\\{75048700-EF1F-11D0-9888-006097DEACF9}\\Count')
-    plugin = xpuserassist.XPUserAssistPlugin(None)
+    plugin = xpuserassist.XPUserAssistPlugin(None, None)
     entries = list(plugin.Process(key))
 
     self.assertEquals(entries[0].timestamp, 1249398682811067)

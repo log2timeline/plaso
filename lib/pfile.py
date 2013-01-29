@@ -265,6 +265,13 @@ class PlasoFile(object):
     """Check if the PathSpec defines a parent."""
     return self.pathspec.HasField('nested_pathspec')
 
+  def __iter__(self):
+    """Implement an iterator that reads each line."""
+    line = self.readline()
+    while line:
+      yield line
+      line = self.readline()
+
 
 class TskFile(PlasoFile):
   """Class to open up files using TSK."""
