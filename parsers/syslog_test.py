@@ -25,31 +25,23 @@ from plaso.lib import putils
 from plaso.parsers import syslog
 
 
-class DummySyslogFormatter(syslog.SyslogFormatter):
-  """Simple dummy extension on the formatter."""
-  ID_RE = re.compile('UNKNOWN:Log File:', re.DOTALL)
-
-
 class SyslogUnitTest(unittest.TestCase):
   """A unit test for the timelib."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.base_path = os.path.join('plaso/test_data')
-    file_path = os.path.join(self.base_path, 'syslog')
-    self.filehandle = putils.OpenOSFile(file_path)
+    test_file = os.path.join('test_data', 'syslog')
+    self.input_file = putils.OpenOSFile(test_file)
 
   def testParsing(self):
     """Test parsing of a syslog file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.year = 2012
     pre_obj.zone = pytz.UTC
-    sl = syslog.Syslog(pre_obj)
+    syslog_parser = syslog.SyslogParser(pre_obj)
 
-    self.filehandle.seek(0)
-    sl_generator = sl.Parse(self.filehandle)
-
-    events = list(sl_generator)
+    self.input_file.seek(0)
+    events = list(syslog_parser.Parse(self.input_file))
     first = events[0]
 
     # TODO let's add code to convert Jan 22 2012 07:52:33 into the

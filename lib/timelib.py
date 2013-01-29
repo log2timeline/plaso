@@ -53,6 +53,9 @@ class Timestamp(object):
   # The maximum timestamp in seconds
   TIMESTAMP_MAX_SECONDS = ((1 << 63L) - 1) / 1000000
 
+  # The minimum timestamp in micro seconds
+  TIMESTAMP_MIN_MICRO_SECONDS = -((1 << 63L) - 1)
+
   # The maximum timestamp in micro seconds
   TIMESTAMP_MAX_MICRO_SECONDS = (1 << 63L) - 1
 
@@ -67,6 +70,9 @@ class Timestamp(object):
 
   # The difference between Jan 1, 1980 and Jan 1, 1970 in seconds.
   FAT_DATE_TO_POSIX_BASE = 315532800
+
+  # The difference between Jan 1, 1601 and Jan 1, 1970 in micro seconds
+  WEBKIT_TIME_TO_POSIX_BASE = 11644473600L * 1000000
 
   # The difference between Jan 1, 1601 and Jan 1, 1970 in 100th of nano seconds.
   FILETIME_TO_POSIX_BASE = 11644473600L * 10000000
@@ -187,6 +193,24 @@ class Timestamp(object):
     number_of_seconds += number_of_days * cls.SECONDS_PER_DAY
 
     return number_of_seconds * cls.MICRO_SECONDS_PER_SECOND
+
+  @classmethod
+  def FromWebKitTime(cls, webkit_time):
+    """Converts a WebKit time into a timestamp.
+
+    The WebKit time is a 64-bit value containing:
+      micro seconds since 1601-01-01 00:00:00
+
+    Args:
+      webkit_time: The 64-bit WebKit time timestamp.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    if webkit_time < (cls.TIMESTAMP_MIN_MICRO_SECONDS +
+                      cls.WEBKIT_TIME_TO_POSIX_BASE):
+      return 0
+    return webkit_time - cls.WEBKIT_TIME_TO_POSIX_BASE
 
   @classmethod
   def FromFiletime(cls, filetime):

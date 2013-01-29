@@ -15,7 +15,6 @@
 # limitations under the License.
 """Parser for Windows NT Registry (REGF) files."""
 import logging
-import re
 
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -24,7 +23,7 @@ from plaso.lib import win_registry
 from plaso.lib import win_registry_interface
 
 
-class WinRegistry(parser.PlasoParser):
+class WinRegistryParser(parser.PlasoParser):
   """Parses Windows NT Registry (REGF) files."""
 
   # List of types registry types and required keys to identify each of these
@@ -39,12 +38,12 @@ class WinRegistry(parser.PlasoParser):
   }
 
   # Description of the log file.
-  NAME = 'WinRegistry'
+  NAME = 'WinRegistryParser'
   PARSER_TYPE = 'REG'
 
   def __init__(self, pre_obj):
     """Default constructor for the Windows registry."""
-    super(WinRegistry, self).__init__(pre_obj)
+    super(WinRegistryParser, self).__init__(pre_obj)
     self._plugins = win_registry_interface.GetRegistryPlugins()
 
   def Parse(self, filehandle):
@@ -130,11 +129,12 @@ class WinRegistry(parser.PlasoParser):
       yield evt
 
 
-class WinRegistryGenericFormatter(eventdata.RegistryFormatter):
-  """Define the generic registry formatter."""
+class WinRegistryGenericFormatter(eventdata.EventFormatter):
+  """Formatter for a generic Windows Registry key or value."""
+  DATA_TYPE = 'windows:registry:key_value'
 
-  # The indentifier for the formatter (a regular expression)
-  ID_RE = re.compile('WinRegistry:.+key.*:Last Written', re.DOTALL)
+  FORMAT_STRING = u'[{keyname}] {text}'
+  FORMAT_STRING_ALTERNATIVE = u'{text}'
 
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.

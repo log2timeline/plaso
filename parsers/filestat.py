@@ -20,15 +20,33 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import sleuthkit
+from plaso.lib import timelib
 
 
-class PfileStat(parser.PlasoParser):
+class PfileStatEventContainer(event.EventContainer):
+  """File system stat event container."""
+
+  def __init__(self, allocated):
+    """Initializes the event container.
+
+    Args:
+      allocated: Boolean value to indicate the file entry is allocated.
+    """
+    super(PfileStatEventContainer, self).__init__()
+
+    self.data_type = 'fs:stat'
+
+    # TODO: refactor to formatter.
+    self.source_short = 'FILE'
+
+    self.offset = 0
+    self.allocated = allocated
+
+
+class PfileStatParser(parser.PlasoParser):
   """Parse the PFile Stat object to extract filesystem timestamps.."""
-
   NAME = 'File Stat'
   PARSER_TYPE = 'FILE'
-
-  DATE_MULTIPLIER = 1000000
 
   def Parse(self, filehandle):
     """Extract the stat object and parse it."""
@@ -42,20 +60,20 @@ class PfileStat(parser.PlasoParser):
       if item[-4:] == 'time':
         times.append(item)
 
-    event_container = event.EventContainer()
-
-    event_container.offset = 0
-    event_container.source_short = self.PARSER_TYPE
-    event_container.allocated = True
-
     # Check if file is allocated (only applicable for TSK).
+    # TODO: the logic here is screwed, rename the function to
+    # IsUnAllocated() or change return. I opt to flag the unallocated
+    # files not allocted.
+    is_allocated = True
     check_allocated = getattr(filehandle, 'IsAllocated', None)
     if check_allocated and check_allocated():
-      event_container.allocated = False
+      is_allocated = False
+
+    event_container = PfileStatEventContainer(is_allocated)
 
     for time in times:
       evt = event.EventObject()
-      evt.timestamp = int(self.DATE_MULTIPLIER * getattr(stat, time, 0))
+      evt.timestamp = timelib.Timestamp.FromPosixTime(getattr(stat, time, 0))
       evt.timestamp += getattr(stat, '%s_nano' % time, 0)
 
       if not evt.timestamp:
@@ -69,15 +87,13 @@ class PfileStat(parser.PlasoParser):
     return event_container
 
 
-class PfileStatFormatter(eventdata.EventFormatter):
+class PfileStatFormatter(eventdata.ConditionalEventFormatter):
   """Define the formatting for PFileStat."""
+  DATA_TYPE = 'fs:stat'
 
-  # The indentifier for the formatter (a regular expression)
-  ID_RE = re.compile('PfileStat:', re.DOTALL)
-
-  # The format string.
-  FORMAT_STRING = u'{display_name}{text_append}'
-  FORMAT_STRING_SHORT = u'{filename}'
+  FORMAT_STRING_PIECES = [u'{display_name}',
+                          u'({unallocated})']
+  FORMAT_STRING_SHORT_PIECES = [u'{filename}']
 
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
@@ -90,9 +106,7 @@ class PfileStatFormatter(eventdata.EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
-    event_object.text_append = u''
-
-    if not hasattr(event_object, 'allocated'):
-      event_object.text_append = u' (unallocated)'
+    if event_object.allocated:
+      event_object.unallocated = u'unallocated'
 
     return super(PfileStatFormatter, self).GetMessages(event_object)

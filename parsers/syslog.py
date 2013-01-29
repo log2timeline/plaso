@@ -18,18 +18,37 @@ import datetime
 import logging
 import re
 
+from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 
-__pychecker__ = 'no-funcdoc'
+
+class SyslogLineEvent(event.TextEvent):
+  """Convenience class for a syslog line event."""
+  DATA_TYPE = 'syslog:line'
+
+  def __init__(self, timestamp, offset, attributes):
+    """Initializes the event object.
+
+    Args:
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      offset: The offset of the event.
+      attributes: A dict that contains the events attributes
+    """
+    super(SyslogLineEvent, self).__init__(
+        timestamp, attributes, 'Log File')
+    self.offset = offset
 
 
-class Syslog(parser.TextParser):
+class SyslogParser(parser.TextParser):
   """Parse syslog files using the TextParser."""
 
   NAME = 'Syslog'
 
+  # TODO: can we change this similar to SQLite where create an
+  # event specific object for different lines using a callback function.
   # Define the tokens that make up the structure of a syslog file.
   tokens = [
       lexer.Token('INITIAL',
@@ -37,8 +56,8 @@ class Syslog(parser.TextParser):
                   'SetMonth', 'DAY'),
       lexer.Token('DAY', r'\s?(\d{1,2})\s+', 'SetDay', 'TIME'),
       lexer.Token('TIME', r'([0-9:\.]+) ', 'SetTime', 'STRING_HOST'),
-      lexer.Token('STRING_HOST', r'^--(-)', 'ParseHost', 'STRING'),
-      lexer.Token('STRING_HOST', r'([^\s]+) ', 'ParseHost', 'STRING_PID'),
+      lexer.Token('STRING_HOST', r'^--(-)', 'ParseHostname', 'STRING'),
+      lexer.Token('STRING_HOST', r'([^\s]+) ', 'ParseHostname', 'STRING_PID'),
       lexer.Token('STRING_PID', r'([^\:\n]+)', 'ParsePid', 'STRING'),
       lexer.Token('STRING', r'([^\n]+)', 'ParseString', ''),
       lexer.Token('STRING', r'\n\t', None, ''),
@@ -50,11 +69,20 @@ class Syslog(parser.TextParser):
       ]
 
   def __init__(self, pre_obj):
-    super(Syslog, self).__init__(pre_obj, True)
+    """Initializes the syslog parser.
+
+    Args:
+      pre_obj: Preprocessor object. If the year cannot be determined
+               from the input the current year is assumed. The year
+               can be set to a specific value by defining it in the
+               preprocessor object, e.g. pre_obj.year = 2012.
+    """
+    super(SyslogParser, self).__init__(pre_obj, True)
     # Set the initial year to 0 (fixed in the actual Parse method)
-    # TODO this is a HACK to get the tests working let's discuss this
+    # TODO: this is a HACK to get the tests working let's discuss this
     self._year_use = getattr(pre_obj, 'year', 0)
     self._last_month = 0
+    # TODO: move to formatter.
     self.source_long = 'Log File'
 
     # Set some additional attributes.
@@ -62,6 +90,7 @@ class Syslog(parser.TextParser):
     self.attributes['pid'] = ''
 
   def GetYear(self, stat, zone):
+    """Retrieves the year either from the input file or from the settings."""
     time = stat.attributes.get('crtime', 0)
     if not time:
       time = stat.attributes.get('ctime', 0)
@@ -96,7 +125,7 @@ class Syslog(parser.TextParser):
       An EventObject that is constructed from the syslog entry.
     """
     if not self._year_use:
-      # TODO Find a decent way to actually calculate the correct year
+      # TODO: Find a decent way to actually calculate the correct year
       # from the syslog file, instead of relying on stats object.
       stat = self.fd.Stat()
       self._year_use = self.GetYear(stat, zone)
@@ -112,12 +141,32 @@ class Syslog(parser.TextParser):
 
     self.attributes['iyear'] = self._year_use
 
-    return super(Syslog, self).ParseLine(zone)
+    return super(SyslogParser, self).ParseLine(zone)
 
-  def ParseHost(self, match, **_):
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseHostname(self, match, **kwargs):
+    """Parses the hostname.
+
+       This is a callback function for the text parser (lexer) and is
+       called by the STRING_HOST lexer state.
+
+    Args:
+      match: A regular expression match group that contains the match
+             by the lexer.
+    """
     self.attributes['hostname'] = match.group(1)
 
-  def ParsePid(self, match, **_):
+  __pychecker__ = 'unusednames=kwargs'
+  def ParsePid(self, match, **kwargs):
+    """Parses the process identifier (PID).
+
+       This is a callback function for the text parser (lexer) and is
+       called by the STRING_PID lexer state.
+
+    Args:
+      match: A regular expression match group that contains the match
+             by the lexer.
+    """
     # TODO: Change this logic and rather add more Tokens that
     # fully cover all variations of the various PID stages.
     line = match.group(1)
@@ -135,19 +184,47 @@ class Syslog(parser.TextParser):
     else:
       self.attributes['reporter'] = line
 
-  def ParseString(self, match, **_):
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseString(self, match, **kwargs):
+    """Parses a (body text) string.
+
+       This is a callback function for the text parser (lexer) and is
+       called by the STRING lexer state.
+
+    Args:
+      match: A regular expression match group that contains the match
+             by the lexer.
+    """
     self.attributes['body'] += match.group(1)
 
   def PrintLine(self):
+    """Prints a log line."""
     self.attributes['iyear'] = 2012
-    return super(Syslog, self).PrintLine()
+    return super(SyslogParser, self).PrintLine()
+
+  # TODO: this is a rough initial implementation to get this working.
+  def CreateEvent(self, timestamp, offset, attributes):
+    """Creates a syslog line event.
+
+       This overrides the default function in TextParser to create
+       syslog line events instead of text events.
+
+    Args:
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      offset: The offset of the event.
+      attributes: A dict that contains the events attributes.
+
+    Returns:
+      A text event (SyslogLineEvent).
+    """
+    return SyslogLineEvent(timestamp, offset, attributes)
 
 
-class SyslogFormatter(eventdata.ConditionalEventFormatter):
-  """Define the formatting for syslog files."""
+class SyslogLineFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for syslog files."""
+  DATA_TYPE = 'syslog:line'
 
-  # The indentifier for the formatter (a regular expression)
-  ID_RE = re.compile('Syslog:', re.DOTALL)
   FORMAT_STRING_SEPARATOR = u''
 
   FORMAT_STRING_PIECES = [u'[', u'{reporter}', u', pid: {pid}', u'] {body}']

@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a simple abstraction of registry keys for testing."""
-import re
-
 from plaso.lib import eventdata
 from plaso.lib import win_registry_interface
 from plaso.parsers import winreg
@@ -92,9 +90,3 @@ class TestRegValue(win_registry_interface.WinRegValue):
       return self._raw_value.decode('utf_16_le', 'ignore')
 
     return u''
-
-
-class DummyFormatter(winreg.WinRegistryGenericFormatter):
-  """Implement a dummy registry formatter."""
-  ID_RE = re.compile('.', re.DOTALL)
-

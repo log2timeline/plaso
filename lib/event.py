@@ -20,7 +20,6 @@ which are core components of the storage mechanism of plaso.
 
 """
 import heapq
-import re
 
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -28,9 +27,6 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
-
-# Regular expression used for attribute filtering
-UPPER_CASE = re.compile('[A-Z]')
 
 
 class EventContainer(object):
@@ -55,13 +51,13 @@ class EventContainer(object):
   containers if they are outside the scope instead of going through each
   and every event.
   """
-
   # Define needed attributes
   events = None
   containers = None
   parent_container = None
   first_timestamp = None
   last_timestamp = None
+  data_type = None
   attributes = None
 
   def __init__(self):
@@ -141,7 +137,7 @@ class EventContainer(object):
     if self.parent_container:
       return self.parent_container.GetValue(attr)
 
-    raise AttributeError("'%s' object has no attribute '%s'." % (
+    raise AttributeError('\'%s\' object has no attribute \'%s\'.' % (
         self.__class__.__name__, attr))
 
   def GetAttributes(self):
@@ -256,7 +252,12 @@ class EventObject(object):
   constructor of the object while the optional ones are set
   using the method SetValue(attribute, value).
   """
+  # This is a convenience variable to define event object as
+  # simple value objects. Its runtime equivalent data_type
+  # should be used in code logic.
+  DATA_TYPE = 'event'
 
+  # TODO: remove this once source_short has been moved to event formatter.
   # Lists of the mappings between the source short values of the event object
   # and those used in the protobuf.
   _SOURCE_SHORT_FROM_PROTO_MAP = {}
@@ -269,10 +270,12 @@ class EventObject(object):
   _SOURCE_SHORT_TO_PROTO_MAP.setdefault('LOG')
 
   parent_container = None
+  data_type = None
   attributes = None
 
   def __init__(self):
     """Initializes the event object."""
+    self.data_type = self.DATA_TYPE
     self.attributes = {}
 
   def __setattr__(self, attr, value):
@@ -315,6 +318,13 @@ class EventObject(object):
       res |= self.parent_container.GetAttributes()
 
     return res
+
+  def GetValues(self):
+    """Returns a dictionary of all defined attributes and their values."""
+    values = {}
+    for attribute_name in self.GetAttributes():
+      values[attribute_name] = getattr(self, attribute_name)
+    return values
 
   def __str__(self):
     """Print a human readable string from the EventObject."""
@@ -368,7 +378,7 @@ class EventObject(object):
 
     if not isinstance(proto, (
         plaso_storage_pb2.Attribute, plaso_storage_pb2.Value)):
-      raise RuntimeError("Unsupported proto")
+      raise RuntimeError('Unsupported proto')
 
     if proto.HasField('string'):
       return key, proto.string
@@ -400,7 +410,7 @@ class EventObject(object):
 
     # TODO: deal with float.
     else:
-      raise RuntimeError("Unsupported proto attribute type.")
+      raise RuntimeError('Unsupported proto attribute type.')
 
   def FromProto(self, proto):
     """Unserializes the event object from a protobuf.
@@ -414,7 +424,9 @@ class EventObject(object):
                     attribute value type is encountered
     """
     if not isinstance(proto, plaso_storage_pb2.EventObject):
-      raise RuntimeError("Unsupported proto")
+      raise RuntimeError('Unsupported proto')
+
+    self.data_type = proto.data_type
 
     for proto_attribute, value in proto.ListFields():
       if proto_attribute.name == 'source_short':
@@ -509,6 +521,8 @@ class EventObject(object):
     """
     proto = plaso_storage_pb2.EventObject()
 
+    proto.data_type = self.data_type
+
     for attribute_name in self.GetAttributes():
       if attribute_name == 'source_short':
         __pychecker__ = ('missingattrs=source_short,pathspec,tag')
@@ -585,7 +599,7 @@ class EventPathSpec(object):
                     attribute value type is encountered
     """
     if not isinstance(proto, transmission_pb2.PathSpec):
-      raise RuntimeError("Unsupported proto")
+      raise RuntimeError('Unsupported proto')
 
     for proto_attribute, value in proto.ListFields():
       if proto_attribute.name == 'type':
@@ -677,7 +691,7 @@ class EventTag(object):
                     attribute value type is encountered
     """
     if not isinstance(proto, plaso_storage_pb2.EventTagging):
-      raise RuntimeError("Unsupported proto")
+      raise RuntimeError('Unsupported proto')
 
     for proto_attribute, value in proto.ListFields():
       if proto_attribute.name == 'tags':
@@ -700,53 +714,77 @@ class EventTag(object):
     return proto.SerializeToString()
 
 
-class FatDateTimeEvent(EventObject):
+class TimestampEvent(EventObject):
+  """Convenience class for a timestamp-based event."""
+
+  def __init__(self, timestamp, usage, data_type=None):
+    """Initializes a timestamp-based event object.
+
+    Args:
+      timestamp: The timestamp value.
+      usage: The description of the usage of the time value.
+      data_type: The event data type. If not set data_type is derived
+                 from DATA_TYPE.
+    """
+    super(TimestampEvent, self).__init__()
+    self.timestamp = timestamp
+    self.timestamp_desc = usage
+
+    if data_type:
+      self.data_type = data_type
+
+
+class FatDateTimeEvent(TimestampEvent):
   """Convenience class for a FAT date time-based event."""
 
-  def __init__(self, fat_date_time, usage):
+  def __init__(self, fat_date_time, usage, data_type=None):
     """Initializes a FAT date time-based event object.
 
     Args:
       fat_dat_time: The FAT date time value.
       usage: The description of the usage of the time value.
+      data_type: The event data type. If not set data_type is derived
+                 from DATA_TYPE.
     """
-    super(FatDateTimeEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromFatDateTime(fat_date_time)
-    self.timestamp_desc = usage
+    super(TimestampEvent, self).__init__(
+        timelib.Timestamp.FromFatDateTime(fat_date_time), usage, data_type)
 
 
-class FiletimeEvent(EventObject):
+class FiletimeEvent(TimestampEvent):
   """Convenience class for a FILETIME timestamp-based event."""
 
-  def __init__(self, filetime, usage):
+  def __init__(self, filetime, usage, data_type=None):
     """Initializes a FILETIME timestamp-based event object.
 
     Args:
       filetime: The FILETIME timestamp value.
       usage: The description of the usage of the time value.
+      data_type: The event data type. If not set data_type is derived
+                 from DATA_TYPE.
     """
-    super(FiletimeEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromFiletime(filetime)
-    self.timestamp_desc = usage
+    super(FiletimeEvent, self).__init__(
+        timelib.Timestamp.FromFiletime(filetime), usage, data_type)
 
 
-class PosixTimeEvent(EventObject):
+class PosixTimeEvent(TimestampEvent):
   """Convenience class for a POSIX time-based event."""
 
-  def __init__(self, posix_time, usage):
+  def __init__(self, posix_time, usage, data_type=None):
     """Initializes a POSIX times-based event object.
 
     Args:
       posix_time: The POSIX time value.
       usage: The description of the usage of the time value.
+      data_type: The event data type. If not set data_type is derived
+                 from DATA_TYPE.
     """
-    super(PosixTimeEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromPosixTime(posix_time)
-    self.timestamp_desc = usage
+    super(PosixTimeEvent, self).__init__(
+        timelib.Timestamp.FromPosixTime(posix_time), usage, data_type)
 
 
-class RegistryEvent(EventObject):
+class WinRegistryEvent(EventObject):
   """Convenience class for a Windows Registry-based event."""
+  DATA_TYPE = 'windows:registry:key_value'
 
   # Add few class variables so they don't get defined as special attributes.
   keyvalue_dict = u''
@@ -762,18 +800,20 @@ class RegistryEvent(EventObject):
                  number of microseconds since Jan 1, 1970 00:00:00 UTC.
       usage: The description of the usage of the time value.
     """
-    super(RegistryEvent, self).__init__()
+    super(WinRegistryEvent, self).__init__()
+    self.timestamp = timestamp
+    self.timestamp_desc = usage or 'Last Written'
     self.source_short = 'REG'
     if key:
       self.keyname = key
     self.keyvalue_dict = value_dict
-    self.timestamp = timestamp
-    self.timestamp_desc = usage or 'Last Written'
     self.regvalue = value_dict
 
 
 class TextEvent(EventObject):
   """Convenience class for a text log file-based event."""
+  # TODO: move this class to parsers/text.py
+  DATA_TYPE = 'text'
 
   def __init__(self, timestamp, attributes, source):
     """Initializes a text event.
@@ -786,7 +826,9 @@ class TextEvent(EventObject):
     """
     super(TextEvent, self).__init__()
     self.timestamp = timestamp
+    # TODO: use eventdata.EventTimestamp after class has moved.
     self.timestamp_desc = 'Entry Written'
+    # TODO: refactor to formatter.
     self.source_short = 'LOG'
     self.source_long = source
     for name, value in attributes.items():
@@ -795,24 +837,3 @@ class TextEvent(EventObject):
       if isinstance(value, (str, unicode)) and not value:
         continue
       self.attributes.__setitem__(name, value)
-
-
-class SQLiteEvent(EventObject):
-  """Convenience class for a SQLite-based event."""
-
-  def __init__(self, timestamp, usage, source_short, source_long):
-    """Initializes the SQLite-based event.
-
-    Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      usage: The description of the usage of the time value.
-      source_short: A string containing a long description of the source.
-      source_long: A string containing a short description of the source.
-    """
-    super(SQLiteEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = usage
-    self.source_short = source_short
-    self.source_long = source_long
-

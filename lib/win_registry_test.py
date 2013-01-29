@@ -19,18 +19,16 @@ import unittest
 
 from plaso.lib import win_registry
 
+__pychecker__ = 'no-funcdoc'
+
 
 class RegistryUnitTest(unittest.TestCase):
   """An unit test for the plaso win_registry library."""
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self.base_path = os.path.join('plaso/test_data')
-
-  def testDumpKeys(self):
-    hive = os.path.join(self.base_path, 'NTUSER.DAT')
-    fh = open(hive, 'rb')
-    reg = win_registry.WinRegistry(fh)
+  def testListKeys(self):
+    test_file = os.path.join('test_data', 'NTUSER.DAT')
+    file_object = open(test_file, 'rb')
+    reg = win_registry.WinRegistry(file_object)
     keys = list(reg)
 
     # Count the number of registry keys in the hive.
