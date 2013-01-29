@@ -24,4 +24,5 @@ from plaso.parsers import lnk
 from plaso.parsers import ls_quarantine
 from plaso.parsers import mactime
 from plaso.parsers import syslog
+from plaso.parsers import winevt
 from plaso.parsers import winreg

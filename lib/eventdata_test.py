@@ -104,6 +104,7 @@ class ConditionalTestEvent1Formatter(eventdata.ConditionalEventFormatter):
   DATA_TYPE = 'test:conditional_event1'
   FORMAT_STRING_PIECES = [u'Description: {description}',
                           u'Comment',
+                          u'Value: 0x{numeric:02x}',
                           u'Optional: {optional}',
                           u'Text: {text}']
 
@@ -120,7 +121,7 @@ class ConditionalEventFormatterUnitTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self.event_object = ConditionalTestEvent1(1335791207939596, {
-        'description': 'this is beyond words',
+        'numeric': 12, 'description': 'this is beyond words',
         'text': 'but we\'re still trying to say something about the event'})
 
   def testInitialization(self):
@@ -134,8 +135,9 @@ class ConditionalEventFormatterUnitTest(unittest.TestCase):
     event_formatter = ConditionalTestEvent1Formatter()
     msg, _ = event_formatter.GetMessages(self.event_object)
 
-    expected_msg = (u'Description: this is beyond words Comment Text: but '
-                    u'we\'re still trying to say something about the event')
+    expected_msg = (u'Description: this is beyond words Comment Value: 0x0c '
+                    u'Text: but we\'re still trying to say something about '
+                    u'the event')
     self.assertEquals(msg, expected_msg)
 
 
