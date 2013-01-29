@@ -213,7 +213,10 @@ class ConditionalEventFormatter(EventFormatter):
     """
     super(ConditionalEventFormatter, self).__init__()
 
-    regexp = re.compile('{[a-z][a-zA-Z0-9_]*}')
+    # The format string can be defined as:
+    # {name}, {name:format}, {name!conversion}, {name!conversion:format}
+    regexp = re.compile('{[a-z][a-zA-Z0-9_]*[!]?[^:}]*[:]?[^}]*}')
+    regexp_name = re.compile('[a-z][a-zA-Z0-9_]*')
 
     # The format string pieces map is a list containing the attribute name
     # per format string piece. E.g. ["Description: {description}"] would be
@@ -227,8 +230,8 @@ class ConditionalEventFormatter(EventFormatter):
         # keep the index in the map equal to the format string pieces.
         self._format_string_pieces_map.append('')
       elif len(result) == 1:
-        # Strip the bounding { } from the attribute name.
-        attribute_name = result[0][1:-1]
+        # Extract the attribute name.
+        attribute_name = regexp_name.findall(result[0])[0]
         self._format_string_pieces_map.append(attribute_name)
       else:
         raise RuntimeError(
