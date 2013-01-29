@@ -91,7 +91,7 @@ class WinRegistryParser(parser.PlasoParser):
       plist = self._plugins.GetWeightPlugins(weight, registry_type)
       plugins[weight] = []
       for plugin in plist:
-        plugins[weight].append(plugin(reg))
+        plugins[weight].append(plugin(reg, self._pre_obj))
         counter += 1
 
     logging.debug('Number of plugins for this registry file: %d', counter)
