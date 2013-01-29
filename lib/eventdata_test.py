@@ -24,37 +24,19 @@ from plaso.lib import eventdata
 from plaso.parsers import winreg
 
 
-class SimpleEventFormatter(eventdata.ConditionalEventFormatter):
-  """A simple event formatter."""
-
-  ID_RE = re.compile('UNKNOWN:NO SOURCE:NO TIMEDESC', re.DOTALL)
-
-  FORMAT_STRING = u'Description: {description} Comment Text: {text}'
-
-
-class WrongEventFormatter(eventdata.ConditionalEventFormatter):
-  """A simple event formatter."""
-
-  ID_RE = re.compile('BOGUS:SOURCE:TIMEDESC', re.DOTALL)
-
-  FORMAT_STRING = u'This format string does not match {body}.'
-
-
-class TestRegistryFormatter(winreg.WinRegistryGenericFormatter):
-  """A simple formatter for registry data."""
-
-  ID_RE = re.compile('.+(Registry|UNKNOWN):', re.DOTALL)
-
-
-class TestTextFormatter(eventdata.EventFormatter):
-  """A simple formatter for registry data."""
-
-  ID_RE = re.compile('UNKNOWN:(Some|Weird)', re.DOTALL)
-
+class TestEvent1Formatter(eventdata.EventFormatter):
+  """Test event 1 formatter."""
+  DATA_TYPE = 'test:event1'
   FORMAT_STRING = u'{text}'
 
 
-class EventFormattertUnitTest(unittest.TestCase):
+class WrongEventFormatter(eventdata.EventFormatter):
+  """A simple event formatter."""
+  DATA_TYPE = 'test:wrong'
+  FORMAT_STRING = u'This format string does not match {body}.'
+
+
+class EventFormatterUnitTest(unittest.TestCase):
   """The unit test for the event formatter."""
 
   def setUp(self):
@@ -74,14 +56,7 @@ class EventFormattertUnitTest(unittest.TestCase):
 
   def testInitialization(self):
     """Test the initialization."""
-    event_object = event_test.TestEvent(1335791207939596, {
-        'description': 'this is beyond words',
-        'text': 'but we\'re still trying to say something about the event'})
-
-    self.assertTrue(SimpleEventFormatter(event_object))
-    # TODO: change this after the event formatter identifier change.
-    with self.assertRaises(errors.WrongFormatter):
-        WrongEventFormatter(event_object)
+    self.assertTrue(TestEvent1Formatter())
 
   def testAttributes(self):
     """Test if we can read the event attributes correctly."""
@@ -120,11 +95,13 @@ class EventFormattertUnitTest(unittest.TestCase):
             'And since this l...'))
 
 
-class SimpleConditionalEventFormatter(eventdata.ConditionalEventFormatter):
-  """A simple conditional event formatter."""
+class ConditionalTestEvent1(event_test.TestEvent1):
+  DATA_TYPE = 'test:conditional_event1'
 
-  ID_RE = re.compile('UNKNOWN:NO SOURCE:NO TIMEDESC', re.DOTALL)
 
+class ConditionalTestEvent1Formatter(eventdata.ConditionalEventFormatter):
+  """Test event 1 conditional (event) formatter."""
+  DATA_TYPE = 'test:conditional_event1'
   FORMAT_STRING_PIECES = [u'Description: {description}',
                           u'Comment',
                           u'Optional: {optional}',
@@ -133,30 +110,28 @@ class SimpleConditionalEventFormatter(eventdata.ConditionalEventFormatter):
 
 class BrokenConditionalEventFormatter(eventdata.ConditionalEventFormatter):
   """A broken conditional event formatter."""
-
-  ID_RE = re.compile('UNKNOWN:NO SOURCE:NO TIMEDESC', re.DOTALL)
-
+  DATA_TYPE = 'test:broken_conditional'
   FORMAT_STRING_PIECES = [u'{too} {many} formatting placeholders']
 
 
-class ConditionalEventFormattertUnitTest(unittest.TestCase):
+class ConditionalEventFormatterUnitTest(unittest.TestCase):
   """The unit test for the conditional event formatter."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.event_object = event_test.TestEvent(1335791207939596, {
+    self.event_object = ConditionalTestEvent1(1335791207939596, {
         'description': 'this is beyond words',
         'text': 'but we\'re still trying to say something about the event'})
 
   def testInitialization(self):
     """Test the initialization."""
-    self.assertTrue(SimpleConditionalEventFormatter(self.event_object))
+    self.assertTrue(ConditionalTestEvent1Formatter())
     with self.assertRaises(RuntimeError):
-        BrokenConditionalEventFormatter(self.event_object)
+        BrokenConditionalEventFormatter()
 
   def testGetMessages(self):
     """Test get messages."""
-    event_formatter = SimpleConditionalEventFormatter(self.event_object)
+    event_formatter = ConditionalTestEvent1Formatter()
     msg, _ = event_formatter.GetMessages(self.event_object)
 
     expected_msg = (u'Description: this is beyond words Comment Text: but '

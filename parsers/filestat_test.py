@@ -29,75 +29,80 @@ class FileStatTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.base_path = os.path.join('plaso/test_data')
-    self.parser_obj = filestat.PfileStat(pre_obj)
+    self.parser = filestat.PfileStatParser(pre_obj)
     self.fscache = pfile.FilesystemCache()
 
   def testTSKFile(self):
     """Read a file within an image file and make few tests."""
-    image_path = os.path.join(self.base_path, 'image.dd')
+    test_file = os.path.join('test_data', 'image.dd')
 
+    # TODO: refactor to use EventPathSpec.
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.TSK
-    path.container_path = image_path
+    path.container_path = test_file
     path.image_offset = 0
     path.image_inode = 15
     path.file_path = 'passwords.txt'
 
-    fh = pfile.TskFile(path, fscache=self.fscache)
-    fh.Open()
+    file_object = pfile.TskFile(path, fscache=self.fscache)
+    file_object.Open()
 
-    evts = list(self.parser_obj.Parse(fh))
-    self.assertEquals(len(evts), 3)
+    events = list(self.parser.Parse(file_object))
+    # The TSK file entry has 3 timestamps.
+    self.assertEquals(len(events), 3)
 
   def testZipFile(self):
     """Test a ZIP file."""
-    image_path = os.path.join(self.base_path, 'syslog.zip')
+    test_file = os.path.join('test_data', 'syslog.zip')
 
+    # TODO: refactor to use EventPathSpec.
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.ZIP
-    path.container_path = image_path
+    path.container_path = test_file
     path.file_path = 'syslog'
 
-    fh = pfile.OpenPFile(path)
-    evts = list(self.parser_obj.Parse(fh))
-    # Only one timestamp from ZIP files.
-    self.assertEquals(len(evts), 1)
+    file_object = pfile.OpenPFile(path)
+    events = list(self.parser.Parse(file_object))
+    # The ZIP file has 1 timestamp.
+    self.assertEquals(len(events), 1)
 
   def testGzipFile(self):
     """Test a GZIP file."""
-    file_path = os.path.join(self.base_path, 'syslog.gz')
+    test_file = os.path.join('test_data', 'syslog.gz')
 
+    # TODO: refactor to use EventPathSpec.
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.GZIP
-    path.file_path = file_path
+    path.file_path = test_file
 
-    fh = pfile.OpenPFile(path)
-    evts = list(self.parser_obj.Parse(fh))
+    file_object = pfile.OpenPFile(path)
+    events = list(self.parser.Parse(file_object))
     # There are no timestamps associated to uncompressed GZIP files (yet).
-    self.assertEquals(len(evts), 0)
+    self.assertEquals(len(events), 0)
 
   def testTarFile(self):
     """Test a TAR file."""
-    image_path = os.path.join(self.base_path, 'syslog.tar')
+    test_file = os.path.join('test_data', 'syslog.tar')
 
+    # TODO: refactor to use EventPathSpec.
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.TAR
-    path.container_path = image_path
+    path.container_path = test_file
     path.file_path = 'syslog'
 
-    fh = pfile.OpenPFile(path)
-    evts = list(self.parser_obj.Parse(fh))
+    file_object = pfile.OpenPFile(path)
+    events = list(self.parser.Parse(file_object))
     # Nothing extracted from tar files yet.
-    self.assertEquals(len(evts), 0)
+    self.assertEquals(len(events), 0)
 
   def testNestedFile(self):
     """Test a nested file."""
-    file_path = os.path.join(self.base_path, 'syslog.tgz')
+    test_file = os.path.join('test_data', 'syslog.tgz')
 
+    # TODO: refactor to use EventPathSpec.
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.GZIP
-    path.file_path = file_path
+    path.file_path = test_file
 
     host_file = transmission_pb2.PathSpec()
     host_file.type = transmission_pb2.PathSpec.TAR
@@ -105,34 +110,35 @@ class FileStatTest(unittest.TestCase):
 
     path.nested_pathspec.MergeFrom(host_file)
 
-    fh = pfile.OpenPFile(path)
+    file_object = pfile.OpenPFile(path)
     # No stat available from a GZIP file.
-    evts = list(self.parser_obj.Parse(fh))
-    self.assertEquals(len(evts), 0)
+    events = list(self.parser.Parse(file_object))
+    self.assertEquals(len(events), 0)
 
-    file_path = os.path.join(self.base_path, 'syslog.gz')
+    test_file = os.path.join('test_data', 'syslog.gz')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.OS
-    path.file_path = file_path
+    path.file_path = test_file
 
     gzip = transmission_pb2.PathSpec()
     gzip.type = transmission_pb2.PathSpec.GZIP
-    gzip.file_path = file_path
+    gzip.file_path = test_file
 
     path.nested_pathspec.MergeFrom(gzip)
 
-    fh = pfile.OpenPFile(path)
-    evts = list(self.parser_obj.Parse(fh))
-    self.assertEquals(len(evts), 0)
+    file_object = pfile.OpenPFile(path)
+    events = list(self.parser.Parse(file_object))
+    self.assertEquals(len(events), 0)
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
-    image_path = os.path.join(self.base_path, 'syslog_image.dd')
+    test_file = os.path.join('test_data', 'syslog_image.dd')
 
+    # TODO: refactor to use EventPathSpec.
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.TSK
-    path.container_path = image_path
+    path.container_path = test_file
     path.image_offset = 0
     path.image_inode = 11
     path.file_path = 'logs/hidden.zip'
@@ -143,10 +149,10 @@ class FileStatTest(unittest.TestCase):
 
     path.nested_pathspec.MergeFrom(host_path)
 
-    fh = pfile.OpenPFile(path, fscache=self.fscache)
-    evts = list(self.parser_obj.Parse(fh))
-    # Zip only contains a single timestamp.
-    self.assertEquals(len(evts), 1)
+    file_object = pfile.OpenPFile(path, fscache=self.fscache)
+    events = list(self.parser.Parse(file_object))
+    # The ZIP file has 1 timestamp.
+    self.assertEquals(len(events), 1)
 
 
 if __name__ == '__main__':

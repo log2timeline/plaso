@@ -15,6 +15,7 @@
 # limitations under the License.
 """A place to store information about events, such as format strings, etc."""
 
+import logging
 import re
 
 from plaso.lib import errors
@@ -27,37 +28,24 @@ class EventTimestamp(object):
   ACCESS_TIME = u'Last Access Time'
   CREATION_TIME = u'Creation Time'
   MODIFICATION_TIME = u'Modification Time'
+  # Added time and Creation time are considered the same.
+  ADDED_TIME = u'Creation Time'
   # Written time and Modification time are considered the same.
   WRITTEN_TIME = u'Modification Time'
+
+  FILE_DOWNLOADED = u'File Downloaded'
+  PAGE_VISITED = u'Page Visited'
 
 
 class EventFormatterManager(object):
   """Class to manage the event formatters."""
-
-  __pychecker__ = 'unusednames=cls'
-  @classmethod
-  def GetFormatterIdentifier(cls, event_object):
-    """Retrieves the formatter identifier fo the event object.
-
-    Args:
-      event_object: The event object (EventObject).
-
-    Returns:
-      A Unicode string containing the formatter identifier.
-    """
-    # TODO: this implementation will break if multiple event data object
-    # from the same parser with the same timestamp description are used.
-    # There is also no need to keep this parser specific.
-    # after refactoring change this to a "source_short:data_type"
-    return u'%s:%s:%s' % (
-        getattr(event_object, 'parser', 'UNKNOWN'),
-        getattr(event_object, 'source_long', 'NO SOURCE'),
-        getattr(event_object, 'timestamp_desc', 'NO TIMEDESC'))
-
   __pychecker__ = 'unusednames=cls'
   @classmethod
   def GetFormatter(cls, event_object):
     """Retrieves the formatter for a specific event object.
+
+       This function builds a map of data types and the corresponding event
+       formatters. At the moment this map is only build once.
 
     Args:
       event_object: The event object (EventObject) which is used to identify
@@ -65,14 +53,31 @@ class EventFormatterManager(object):
 
     Returns:
       The corresponding formatter (EventFormatter) if available or None.
+
+    Raises:
+      RuntimeError if a duplicate event formatter is found while building
+      the map of event formatters.
     """
-    # TODO: this should be changed into a dict lookup based on the id.
-    for cl in EventFormatter.classes:
-      try:
-        formatter = EventFormatter.classes[cl](event_object)
-        return formatter
-      except errors.WrongFormatter:
-        pass
+    if not hasattr(cls, 'event_formatters'):
+      cls.event_formatters = {}
+      for cls_formatter in EventFormatter.classes:
+        try:
+          formatter = EventFormatter.classes[cls_formatter]()
+
+          # Raise on duplicate formatters.
+          if formatter.DATA_TYPE in cls.event_formatters:
+            raise RuntimeError(
+                'event formatter for data type: %s defined in: %s and %s.' %(
+                formatter.DATA_TYPE, cls_formatter,
+                cls.event_formatters[formatter.DATA_TYPE].__class__.__name__))
+          cls.event_formatters[formatter.DATA_TYPE] = formatter
+        except RuntimeError as exeception:
+          # Ignore broken formatters.
+          logging.warning('%s', exeception)
+          pass
+      cls.event_formatters.setdefault(None)
+
+    return cls.event_formatters[event_object.data_type]
 
   @classmethod
   def GetMessageStrings(cls, event_object):
@@ -100,30 +105,21 @@ class EventFormatter(object):
      is similar to that of format() where the place holder for a certain
      event object attribute is defined as {attribute_name}.
   """
-
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
-  # The indentifier for the formatter (a regular expression)
-  ID_RE = re.compile('None', re.DOTALL)
+  # The data type is a unique identifier for the event data. The current
+  # approach is to define it as human readable string in the format
+  # root:branch: ... :leaf, e.g. a page visited entry inside a Chrome History
+  # database is defined as: chrome:history:page_visited.
+  DATA_TYPE = 'internal'
 
   # The format string.
   FORMAT_STRING = u''
   FORMAT_STRING_SHORT = u''
 
-  def __init__(self, event_object):
-    """Set up the formatter and determine if this is the right formatter.
-
-    Args:
-      event_object: The event object (EventObject) which is used to identify
-                    the formatter.
-    """
-    # TODO: remove this once the EventFormatterManager can do a dict based
-    # lookup.
-    signature = EventFormatterManager.GetFormatterIdentifier(event_object)
-    if not self.ID_RE.match(signature):
-      raise errors.WrongFormatter('Required formatter: %s.' % signature)
-
+  def __init__(self):
+    """Set up the formatter and determine if this is the right formatter."""
     self.format_string = self.FORMAT_STRING
     self.format_string_short = self.FORMAT_STRING_SHORT
 
@@ -150,13 +146,13 @@ class EventFormatter(object):
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-    signature = EventFormatterManager.GetFormatterIdentifier(event_object)
-
-    if not self.ID_RE.match(signature):
-      raise errors.WrongFormatter('Required formatter: %s.' % signature)
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter('Unsupported data type: %s.' % (
+          event_object.data_type))
 
     try:
-      msg = self.format_string.format(**event_object.attributes)
+      values = event_object.GetValues()
+      msg = self.format_string.format(**values)
     except KeyError as error:
       msgs = []
       msgs.append(u'Format error: [%s] for: <%s>' % (
@@ -193,31 +189,29 @@ class ConditionalEventFormatter(EventFormatter):
      format strings pieces is similar to of the event formatter
      (EventFormatter). Every format string piece should contain a single
      attribute name or none.
+
+     FORMAT_STRING_SEPARATOR is used to control the string which the separate
+     string pieces should be joined. It contains a space by default.
   """
   __abstract = True
 
   # The format string pieces.
   FORMAT_STRING_PIECES = [u'']
   FORMAT_STRING_SHORT_PIECES = [u'']
-  # The separator used to separate pieces together.
+
+  # The separator used to join the string pieces.
   FORMAT_STRING_SEPARATOR = u' '
 
-  def __init__(self, event_object):
+  def __init__(self):
     """Initializes the conditional formatter.
 
        A map is build of the string pieces and their corresponding attribute
        name to optimize conditional string formatting.
 
-    Args:
-      event_object: The event object (EventObject) which is used to identify
-                    the formatter.
-
     Raises:
       RuntimeError: when an invalid format string piece is encountered.
     """
-    # TODO: remove event_object once EventFormatter has been changed
-    # accordingly.
-    super(ConditionalEventFormatter, self).__init__(event_object)
+    super(ConditionalEventFormatter, self).__init__()
 
     regexp = re.compile('{[a-z][a-zA-Z0-9_]*}')
 
@@ -268,25 +262,25 @@ class ConditionalEventFormatter(EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    # Using getattr here to make sure the attribute is not set to None.
+    # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
     string_pieces = []
     for map_index, attribute_name in enumerate(self._format_string_pieces_map):
-      if not attribute_name or hasattr(event_object, attribute_name):
+      if not attribute_name or getattr(event_object, attribute_name, None):
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
     self.format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     string_pieces = []
     for map_index, attribute_name in enumerate(
         self._format_string_short_pieces_map):
-      if not attribute_name or hasattr(event_object, attribute_name):
+      if not attribute_name or getattr(event_object, attribute_name, None):
         string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
     self.format_string_short = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     return super(ConditionalEventFormatter, self).GetMessages(event_object)
 
 
-class RegistryFormatter(EventFormatter):
-  """A simple implementation of a text based formatter."""
-  __abstract = True
-
-  FORMAT_STRING = u'[{keyname}] {text}'
-  FORMAT_STRING_ALTERNATIVE = u'{text}'
+class TextEventFormatter(EventFormatter):
+  """Text event formatter."""
+  DATA_TYPE = 'text'
+  FORMAT_STRING = u'{text}'

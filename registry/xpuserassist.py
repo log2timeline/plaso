@@ -40,12 +40,10 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
         logging.debug('[UserAssist] Value entry is not of correct length.')
         continue
       _, count, filetime = struct.unpack('<LLQ', data)
-      time = timelib.Timestamp.FromFiletime(filetime)
       if count > 5:
         count -= 5
 
       text_dict = {}
       text_dict[u'{0}'.format(name)] = u'[Count: {0}]'.format(count)
-      ua_evt = event.RegistryEvent(u'', text_dict, time)
-      yield ua_evt
-
+      yield event.WinRegistryEvent(
+          u'', text_dict, timelib.Timestamp.FromFiletime(filetime))

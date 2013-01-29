@@ -99,6 +99,7 @@ class PFilterTest(unittest.TestCase):
     Python object as well as the protobuf.
     """
     container = event.EventContainer()
+    container.data_type = 'test:pfilter'
     container.source_short = 'REG'
     container.source_long = 'Made up Source'
 
@@ -118,67 +119,68 @@ class PFilterTest(unittest.TestCase):
     container.Append(evt)
 
     # Series of tests.
-    query = "filename contains 'GoodFella'"
+    query = 'filename contains \'GoodFella\''
     self.RunPlasoTest(evt, query, True)
 
     # Double negative matching -> should be the same
     # as a positive one.
-    query = "filename not not contains 'GoodFella'"
+    query = 'filename not not contains \'GoodFella\''
     parser = pfilter.PlasoParser(query)
     self.assertRaises(
         objectfilter.ParseError,
         parser.Parse)
 
     # Test date filtering.
-    query = "date >= '2015-11-18'"
+    query = 'date >= \'2015-11-18\''
     self.RunPlasoTest(evt, query, True)
 
-    query = "date < '2015-11-19'"
+    query = 'date < \'2015-11-19\''
     self.RunPlasoTest(evt, query, True)
 
     # 2015-11-18T01:15:43
-    query = "date < '2015-11-18T01:15:44.341' and date > '2015-11-18 01:15:42'"
+    query = ('date < \'2015-11-18T01:15:44.341\' and '
+             'date > \'2015-11-18 01:15:42\'')
     self.RunPlasoTest(evt, query, True)
 
-    query = "date > '2015-11-19'"
+    query = 'date > \'2015-11-19\''
     self.RunPlasoTest(evt, query, False)
 
     # Perform few attribute tests.
-    query = "filename not contains 'sometext'"
+    query = 'filename not contains \'sometext\''
     self.RunPlasoTest(evt, query, True)
 
-    query = ("timestamp_desc CONTAINS 'written' AND date > '2015-11-18' AND "
-             "date < '2015-11-25 12:56:21' AND (source_short contains 'LOG' or"
-             " source_short CONTAINS 'REG')")
+    query = ('timestamp_desc CONTAINS \'written\' AND date > \'2015-11-18\' '
+             'AND date < \'2015-11-25 12:56:21\' AND (source_short contains '
+             '\'LOG\' or source_short CONTAINS \'REG\')')
     self.RunPlasoTest(evt, query, True)
 
-    query = "parser is not 'Made'"
+    query = 'parser is not \'Made\''
     self.RunPlasoTest(evt, query, True)
 
-    query = "parser is not 'Weirdo'"
+    query = 'parser is not \'Weirdo\''
     self.RunPlasoTest(evt, query, False)
 
     # Test atttributes stored in the container.
-    query = "source_long not contains 'Made'"
+    query = 'source_long not contains \'Made\''
     self.RunPlasoTest(evt, query, False)
 
-    query = "source is 'REG'"
+    query = 'source is \'REG\''
     self.RunPlasoTest(evt, query, True)
 
-    query = "source is not 'FILE'"
+    query = 'source is not \'FILE\''
     self.RunPlasoTest(evt, query, True)
 
     # Multiple attributes.
-    query = ("source_long is 'Made up Source' AND description_long regexp "
-             "'bad, bad thing [\sa-zA-Z\.]+ evil'")
+    query = ('source_long is \'Made up Source\' AND description_long regexp '
+             '\'bad, bad thing [\sa-zA-Z\.]+ evil\'')
     self.RunPlasoTest(evt, query, False)
 
-    query = ("source_long is 'Made up Source' AND message iregexp "
-             "'bad, bad thing [\sa-zA-Z\.]+ evil'")
+    query = ('source_long is \'Made up Source\' AND text iregexp '
+             '\'bad, bad thing [\sa-zA-Z\.]+ evil\'')
     self.RunPlasoTest(evt, query, True)
 
   def RunPlasoTest(self, obj, query, result):
-    """Run a simple test against Plaso event object."""
+    """Run a simple test against an event object."""
     parser = pfilter.PlasoParser(query).Parse()
     matcher = parser.Compile(
         pfilter.PlasoAttributeFilterImplementation)

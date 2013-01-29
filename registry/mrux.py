@@ -57,7 +57,7 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
       text_dict = {}
       value_text = u'MRUListEx Entry %s (nr. %d)' % (unicode(entry), nr + 1)
       text_dict[value_text] = self.GetText(unicode(entry))
-      evt = event.RegistryEvent(self._key.path, text_dict, event_timestamp)
+      evt = event.WinRegistryEvent(self._key.path, text_dict, event_timestamp)
       evt.source_append = ': MRUx List'
       event_timestamp = 0
       yield evt

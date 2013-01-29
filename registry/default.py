@@ -56,7 +56,8 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
     if not text_dict:
       text_dict[u'Value'] = u'No values stored in key.'
 
-    evt = event.RegistryEvent(self._key.path, text_dict, self._key.timestamp)
+    evt = event.WinRegistryEvent(
+        self._key.path, text_dict, self._key.timestamp)
     evt.offset = self._key.offset
     yield evt
 

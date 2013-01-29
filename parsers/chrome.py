@@ -13,17 +13,88 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a Chrome history parser in plaso."""
-import re
+"""This file contains a parser for the Google Chrome history.
 
+   The Chrome histroy is stored in SQLite database files named History
+   and Archived History.
+"""
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
+from plaso.lib import timelib
 
 
-class Chrome(parser.SQLiteParser):
+class ChromeHistoryFileDownloadedEvent(event.EventObject):
+  """Convenience class for a Chrome History file downloaded event."""
+  DATA_TYPE = 'chrome:history:file_downloaded'
+
+  def __init__(self, timestamp, row_id, url, full_path, received_bytes,
+               total_bytes):
+    """Initializes the event object.
+
+    Args:
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of seconds since Jan 1, 1970 00:00:00 UTC.
+      row_id: The identifier of the corresponding row.
+      url: The URL of the downloaded file.
+      full_path: The full path where the file was downloaded to.
+      received_bytes: The number of bytes received while downloading.
+      total_bytes: The total number of bytes to download.
+    """
+    super(ChromeHistoryFileDownloadedEvent, self).__init__()
+    self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
+    self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
+
+    # TODO: move into formatter.
+    self.source_short = 'WEBHIST'
+    self.source_long = 'Chrome History'
+
+    self.offset = row_id
+    self.url = url
+    self.full_path = full_path
+    self.received_bytes = received_bytes
+    self.total_bytes = total_bytes
+
+
+class ChromeHistoryPageVisitedEvent(event.EventObject):
+  """Convenience class for a Chrome History page visited event."""
+  DATA_TYPE = 'chrome:history:page_visited'
+
+  # TODO: refactor extra to be conditional arguments.
+  def __init__(self, timestamp, row_id, url, title, hostname, typed_count,
+               extra):
+    """Initializes the event object.
+
+    Args:
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      row_id: The identifier of the corresponding row.
+      url: The URL of the visited page.
+      title: The title of the visited page.
+      hostname: The visited hostname.
+      typed_count: The number of charcters of the URL that were typed.
+      extra: String containing extra event data.
+    """
+    super(ChromeHistoryPageVisitedEvent, self).__init__()
+    self.timestamp = timestamp
+    self.timestamp_desc = eventdata.EventTimestamp.PAGE_VISITED
+
+    # TODO: move into formatter.
+    self.source_short = 'WEBHIST'
+    self.source_long = 'Chrome History'
+
+    self.offset = row_id
+    self.url = url
+    self.title = title
+    self.hostname = hostname
+    self.typed_count = typed_count
+    self.extra = extra
+
+
+class ChromeHistoryParser(parser.SQLiteParser):
   """Parse Chrome history files."""
 
+  # TODO: is this still needed? If not remove or refactor to use parser_name.
   NAME = 'Chrome History'
 
   # Define the needed queries.
@@ -31,16 +102,16 @@ class Chrome(parser.SQLiteParser):
                'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'
                'visit_time, visits.from_visit, visits.transition FROM urls, '
                'visits WHERE urls.id = visits.url ORDER BY visits.visit_time'),
-              'ParseVisitRecord'),
+              'ParseLastVisitedRow'),
              (('SELECT id, full_path, url, start_time, received_bytes, '
-               'total_bytes,state FROM downloads'), 'ParseDownloadRecord')]
+               'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
 
   # The required tables.
   REQUIRED_TABLES = ('urls', 'visits', 'downloads')
 
   # The following definition for values can be found here:
-  # http://src.chromium.org/svn/trunk/src/content/public/common/\
-  # page_transition_types.h
+  # http://src.chromium.org/svn/trunk/src/content/public/common/ \
+  # page_transition_types_list.h
   PAGE_TRANSITION = {
       '0': 'LINK',
       '1': 'TYPED',
@@ -74,31 +145,32 @@ class Chrome(parser.SQLiteParser):
   }
 
   CORE_MASK = 0xff
-  DATE_OFFSET = 11644473600000000
 
-  def ParseDownloadRecord(self, row, **_):
-    """Return an EventObject from a download record."""
-    source = 'File Downloaded'
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseFileDownloadedRow(self, row, **kwargs):
+    """Parses a file downloaded row.
 
-    date = int(row['start_time'] * 1e6)
-    evt = event.SQLiteEvent(date, source, 'WEBHIST', self.NAME)
-    evt.url = row['url']
-    evt.full_path = row['full_path']
+    Args:
+      row: The row resulting from the query.
 
-    #TODO: Change this again to using the int value when the
-    # plaso_storage_proto has been extended to allow int values for
-    # attributes.
-    evt.received_bytes = row['received_bytes']
-    evt.total_bytes = row['total_bytes']
-    evt.offset = row['id']
+    Yields:
+      An event object (ChromeHistoryFileDownloadedEvent) containing the event
+      data.
+    """
+    yield ChromeHistoryFileDownloadedEvent(
+        row['start_time'], row['id'], row['url'], row['full_path'],
+        row['received_bytes'], row['total_bytes'])
 
-    yield evt
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseLastVisitedRow(self, row, **kwargs):
+    """Parses a last visited row.
 
-  def ParseVisitRecord(self, row, **_):
-    """Return an EventObject from a visit record."""
-    source = 'Page Visited'
-    date = int(row['visit_time']) - self.DATE_OFFSET
-    hostname = self._GetHostname(row['url'])
+    Args:
+      row: The row resulting from the query.
+
+    Yields:
+      An event object (ChromeHistoryPageVisitedEvent) containing the event data.
+    """
     extras = []
 
     if row['from_visit']:
@@ -129,15 +201,11 @@ class Chrome(parser.SQLiteParser):
     else:
       extras.append(u'(URL not typed directly - no typed count)')
 
-    evt = event.SQLiteEvent(date, source, 'WEBHIST', self.NAME)
-    evt.url = row['url']
-    evt.title = row['title']
-    evt.typed_count = row['typed_count']
-    evt.hostname = hostname
-    evt.extra = u' '.join(extras)
-    evt.offset = row['id']
-
-    yield evt
+    # TODO: replace extras by conditional formatting.
+    yield ChromeHistoryPageVisitedEvent(
+        timelib.Timestamp.FromWebKitTime(int(row['visit_time'])),
+        row['id'], row['url'], row['title'], self._GetHostname(row['url']),
+        row['typed_count'], u' '.join(extras))
 
   def _GetHostname(self, hostname):
     """Return a hostname from a full URL."""
@@ -166,24 +234,18 @@ class Chrome(parser.SQLiteParser):
 
 
 class ChromePageVisitedFormatter(eventdata.EventFormatter):
-  """Define the formatting for Chrome history."""
+  """The event formatter for page visited data in Chrome History."""
+  DATA_TYPE = 'chrome:history:page_visited'
 
-  # The indentifier for the formatter (a regular expression)
-  ID_RE = re.compile('Chrome:Chrome History:Page Visited', re.DOTALL)
-
-  # The format string.
   FORMAT_STRING = (u'{url} ({title}) [count: {typed_count}] Host: '
                    '{hostname} {extra}')
   FORMAT_STRING_SHORT = u'{url} ({title})'
 
 
 class ChromeFileDownloadFormatter(eventdata.EventFormatter):
-  """Define the formatting for Chrome history."""
+  """The event formatter for file downloaded data in Chrome History."""
+  DATA_TYPE = 'chrome:history:file_downloaded'
 
-  # The indentifier for the formatter (a regular expression)
-  ID_RE = re.compile('Chrome:Chrome History:File Downloaded', re.DOTALL)
-
-  # The format string.
-  FORMAT_STRING = (u'{url} ({full_path}). Total bytes received:{received_byt'
-                   'es} (total:{total_bytes})')
+  FORMAT_STRING = (u'{url} ({full_path}). Received: {received_bytes} bytes '
+                   u'out of: {total_bytes} bytes.')
   FORMAT_STRING_SHORT = u'{full_path} downloaded ({received_bytes} bytes)'

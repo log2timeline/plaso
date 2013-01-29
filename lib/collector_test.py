@@ -45,10 +45,6 @@ class TempDirectory(object):
 class PlasoCollectorUnitTest(unittest.TestCase):
   """The unit test for plaso storage."""
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self.base_path = os.path.join('plaso/test_data')
-
   def GetEvents(self, collector_queue):
     """Return all events."""
     events = []
@@ -79,7 +75,7 @@ class PlasoCollectorUnitTest(unittest.TestCase):
 
     This means that the collection script should collect 6 files in total.
     """
-    path = os.path.join(self.base_path, 'syslog_image.dd')
+    path = os.path.join('test_data', 'syslog_image.dd')
 
     # Start with a collector without opening files.
     my_queue = queue.SingleThreadedQueue()
@@ -92,10 +88,10 @@ class PlasoCollectorUnitTest(unittest.TestCase):
   def testFileCollector(self):
     """Test collection from a simple file."""
     files = []
-    files.append(os.path.join(self.base_path, 'syslog.tgz'))
-    files.append(os.path.join(self.base_path, 'syslog.zip'))
-    files.append(os.path.join(self.base_path, 'syslog.bz2'))
-    files.append(os.path.join(self.base_path, 'wtmp.1'))
+    files.append(os.path.join('test_data', 'syslog.tgz'))
+    files.append(os.path.join('test_data', 'syslog.zip'))
+    files.append(os.path.join('test_data', 'syslog.bz2'))
+    files.append(os.path.join('test_data', 'wtmp.1'))
 
     with TempDirectory() as dirname:
       for a_file in files:

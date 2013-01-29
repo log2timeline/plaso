@@ -30,7 +30,6 @@ class PlasoPFileTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.base_path = os.path.join('plaso/test_data')
     self._fscache = pfile.FilesystemCache()
 
   def PerformSyslogTests(self, fh):
@@ -88,11 +87,11 @@ class PlasoPFileTest(unittest.TestCase):
 
   def testTSKFile(self):
     """Read a file within an image file and make few tests."""
-    image_path = os.path.join(self.base_path, 'image.dd')
+    test_file = os.path.join('test_data', 'image.dd')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.TSK
-    path.container_path = image_path
+    path.container_path = test_file
     path.image_offset = 0
     path.image_inode = 15
     path.file_path = 'passwords.txt'
@@ -101,7 +100,7 @@ class PlasoPFileTest(unittest.TestCase):
     fh.Open()
 
     # Test fs cache.
-    fs_hash = u'%s:0:-1' % image_path
+    fs_hash = u'%s:0:-1' % test_file
     self.assertTrue(fs_hash in self._fscache.cached_filesystems)
 
     # Read lines.
@@ -141,67 +140,67 @@ class PlasoPFileTest(unittest.TestCase):
     self.assertEquals(stat.ino, 15)
 
   def testZipFile(self):
-    image_path = os.path.join(self.base_path, 'syslog.zip')
+    test_file = os.path.join('test_data', 'syslog.zip')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.ZIP
-    path.container_path = image_path
+    path.container_path = test_file
     path.file_path = 'syslog'
 
     self.RunTest(pfile.ZipFile, path)
 
   def testGzipFile(self):
-    file_path = os.path.join(self.base_path, 'syslog.gz')
+    test_file = os.path.join('test_data', 'syslog.gz')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.GZIP
-    path.file_path = file_path
+    path.file_path = test_file
 
     self.RunTest(pfile.GzipFile, path)
 
   def testTarFile(self):
-    image_path = os.path.join(self.base_path, 'syslog.tar')
+    test_file = os.path.join('test_data', 'syslog.tar')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.TAR
-    path.container_path = image_path
+    path.container_path = test_file
     path.file_path = 'syslog'
 
     self.RunTest(pfile.TarFile, path)
 
   def testOsFile(self):
-    file_path = os.path.join(self.base_path, 'syslog')
+    test_file = os.path.join('test_data', 'syslog')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.OS
-    path.file_path = file_path
+    path.file_path = test_file
 
     self.RunTest(pfile.OsFile, path)
 
   def testBz2File(self):
-    file_path = os.path.join(self.base_path, 'syslog.bz2')
+    test_file = os.path.join('test_data', 'syslog.bz2')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.BZ2
-    path.file_path = file_path
+    path.file_path = test_file
 
     self.RunTest(pfile.Bz2File, path)
 
   def testFaultyFile(self):
-    file_path = os.path.join(self.base_path, 'syslog.bz2')
+    test_file = os.path.join('test_data', 'syslog.bz2')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.TSK
-    path.file_path = file_path
+    path.file_path = test_file
 
     self.assertRaises(errors.UnableToOpenFile, pfile.Bz2File, path)
 
   def testNestedFile(self):
-    file_path = os.path.join(self.base_path, 'syslog.tgz')
+    test_file = os.path.join('test_data', 'syslog.tgz')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.GZIP
-    path.file_path = file_path
+    path.file_path = test_file
 
     host_file = transmission_pb2.PathSpec()
     host_file.type = transmission_pb2.PathSpec.TAR
@@ -212,15 +211,15 @@ class PlasoPFileTest(unittest.TestCase):
     with pfile.OpenPFile(path) as fh:
       self.PerformSyslogTests(fh)
 
-    file_path = os.path.join(self.base_path, 'syslog.gz')
+    test_file = os.path.join('test_data', 'syslog.gz')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.OS
-    path.file_path = file_path
+    path.file_path = test_file
 
     gzip = transmission_pb2.PathSpec()
     gzip.type = transmission_pb2.PathSpec.GZIP
-    gzip.file_path = file_path
+    gzip.file_path = test_file
 
     path.nested_pathspec.MergeFrom(gzip)
 
@@ -228,11 +227,11 @@ class PlasoPFileTest(unittest.TestCase):
       self.PerformSyslogTests(fh)
 
   def testNestedTSK(self):
-    image_path = os.path.join(self.base_path, 'syslog_image.dd')
+    test_file = os.path.join('test_data', 'syslog_image.dd')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.TSK
-    path.container_path = image_path
+    path.container_path = test_file
     path.image_offset = 0
     path.image_inode = 11
     path.file_path = 'logs/hidden.zip'
@@ -247,11 +246,11 @@ class PlasoPFileTest(unittest.TestCase):
       self.PerformSyslogTests(fh)
 
   def testTarReadline(self):
-    image_path = os.path.join(self.base_path, 'syslog.tar')
+    test_file = os.path.join('test_data', 'syslog.tar')
 
     path = transmission_pb2.PathSpec()
     path.type = transmission_pb2.PathSpec.TAR
-    path.container_path = image_path
+    path.container_path = test_file
     path.file_path = 'syslog'
 
     # First line is 74 chars, second is 93.

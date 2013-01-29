@@ -176,30 +176,60 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
       else:
         self.attributes[attr] = ''
 
-  def ParseIncomplete(self, match, **_):
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseIncomplete(self, match, **kwargs):
     """Indication that we've got a partial line to match against."""
     self.attributes['body'] += match.group(0)
     self.line_ready = True
 
-  def ParseMessage(self, **_):
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseMessage(self, **kwargs):
     """Signal that a line is ready to be parsed."""
     self.line_ready = True
 
-  def SetMonth(self, match, **_):
-    """Set the month value."""
+  __pychecker__ = 'unusednames=kwargs'
+  def SetMonth(self, match, **kwargs):
+    """Parses the month.
+
+       This is a callback function for the text parser (lexer) and is
+       called by the corresponding lexer state.
+
+    Args:
+      match: A regular expression match group that contains the match
+             by the lexer.
+    """
     self.attributes['imonth'] = int(
         timelib.MONTH_DICT.get(match.group(1).lower(), 1))
 
-  def SetDay(self, match, **_):
-    """Set the day attribute."""
+  __pychecker__ = 'unusednames=kwargs'
+  def SetDay(self, match, **kwargs):
+    """Parses the day of the month.
+
+       This is a callback function for the text parser (lexer) and is
+       called by the corresponding lexer state.
+
+    Args:
+      match: A regular expression match group that contains the match
+             by the lexer.
+    """
     self.attributes['iday'] = int(match.group(1))
 
-  def SetTime(self, match, **_):
+  __pychecker__ = 'unusednames=kwargs'
+  def SetTime(self, match, **kwargs):
     """Set the time attribute."""
     self.attributes['time'] = match.group(1)
 
-  def SetYear(self, match, **_):
-    """Set the year."""
+  __pychecker__ = 'unusednames=kwargs'
+  def SetYear(self, match, **kwargs):
+    """Parses the year.
+
+       This is a callback function for the text parser (lexer) and is
+       called by the corresponding lexer state.
+
+    Args:
+      match: A regular expression match group that contains the match
+             by the lexer.
+    """
     self.attributes['iyear'] = int(match.group(1))
 
   def Parse(self, filehandle):
@@ -223,7 +253,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
         logging.debug('Lexer error count: %d and current state %s', self.error,
                       self.state)
         name = '%s (%s)' % (self.fd.name, self.fd.display_name)
-        raise errors.UnableToParseFile('File %s not a %s.' % (name, self.NAME))
+        raise errors.UnableToParseFile(u'File %s not a %s.' % (name, self.NAME))
       if self.line_ready:
         try:
           yield self.ParseLine(self._pre_obj.zone)
@@ -239,7 +269,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
             logging.debug('[%s EVALUATING] Error count: %d and ERROR: %d',
                           filehandle.name, error_count, self.error)
             if error_count >= self.MAX_LINES:
-              raise errors.UnableToParseFile('File %s not a %s.' % (
+              raise errors.UnableToParseFile(u'File %s not a %s.' % (
                   self.fd.name, self.NAME))
 
         finally:
@@ -248,32 +278,40 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
         break
 
     if not file_verified:
-      raise errors.UnableToParseFile('File %s not a %s.' % (filehandle.name,
-                                                            self.NAME))
+      raise errors.UnableToParseFile(
+          u'File %s not a %s.' % (filehandle.name, self.NAME))
 
-  def ParseString(self, match, **_):
-    """Add a string to the body attribute."""
-    try:
-      self.attributes['body'] += match.group(1).strip('\n')
-    except IndexError:
-      self.attributes['body'] += match.group(0).strip('\n')
-
-  def PrintLine(self):
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseString(self, match, **kwargs):
     """Return a string with combined values from the lexer.
 
     Returns:
       A string that combines the values that are so far
       saved from the lexer.
     """
+    try:
+      self.attributes['body'] += match.group(1).strip('\n')
+    except IndexError:
+      self.attributes['body'] += match.group(0).strip('\n')
+
+  def PrintLine(self):
+    """"Return a string with combined values from the lexer."""
     month = int(self.attributes['imonth'])
     day = int(self.attributes['iday'])
     year = int(self.attributes['iyear'])
 
-    return '%02d/%02d/%04d %s [%s] %s => %s' % (month, day, year,
-                                                self.attributes['time'],
-                                                self.attributes['hostname'],
-                                                self.attributes['reporter'],
-                                                self.attributes['body'])
+    # TODO: this is a work in progress. The reason for the try-catch is that
+    # the text parser is handed a non-text file and must deal with converting
+    # arbitrary binary data.
+    try:
+      line = u'%04d-%02d-%02d %s [%s] %s => %s' % (
+          year, month, day, self.attributes['time'],
+          self.attributes['hostname'], self.attributes['reporter'],
+          self.attributes['body'])
+    except UnicodeError:
+      line = 'Unable to print line - due to encoding error.'
+      pass
+    return line
 
   def ParseLine(self, zone):
     """Return an EventObject extracted from the current line."""
@@ -284,9 +322,9 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
       time_zone = pytz.UTC
 
     if len(times) < 3:
-      raise errors.TimestampNotCorrectlyFormed(('Unable to parse timestamp, '
-                                                'not of the format HH:MM:SS '
-                                                '[%s]') % self.PrintLine())
+      raise errors.TimestampNotCorrectlyFormed(
+          u'Unable to parse timestamp, not of the format HH:MM:SS [%s]' % (
+          self.PrintLine()))
     try:
       secs = times[2].split('.')
       if len(secs) == 2:
@@ -295,22 +333,41 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
         sec = times[2]
         us = 0
 
-      timestamp = datetime.datetime(int(self.attributes['iyear']),
-                                    self.attributes['imonth'],
-                                    self.attributes['iday'], int(times[0]),
-                                    int(times[1]), int(sec), int(us),
-                                    time_zone)
+      timestamp = datetime.datetime(
+          int(self.attributes['iyear']), self.attributes['imonth'],
+          self.attributes['iday'], int(times[0]), int(times[1]),
+          int(sec), int(us), time_zone)
+
     except ValueError as e:
-      raise errors.TimestampNotCorrectlyFormed('Unable to parse: %s [er: %s]',
-                                               self.PrintLine(), e)
+      raise errors.TimestampNotCorrectlyFormed(
+          u'Unable to parse: %s [er: %s]', self.PrintLine(), e)
 
     epoch = int(calendar.timegm(timestamp.timetuple()) * 1e6)
     epoch += timestamp.microsecond
 
+    return self.CreateEvent(
+        epoch, getattr(self, 'entry_offset', 0), self.attributes)
+
+  # TODO: this is a rough initial implementation to get this working.
+  def CreateEvent(self, timestamp, offset, attributes):
+    """Creates an event.
+
+       This function should be overwritten by text parsers that require
+       to generate specific event object type, the default is TextEvent.
+
+    Args:
+      timestamp: The timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      offset: The offset of the event.
+      attributes: A dict that contains the events attributes.
+
+    Returns:
+      A text event (TextEvent).
+    """
     __pychecker__ = ('missingattrs=source_long')
-    evt = event.TextEvent(epoch, self.attributes, self.source_long)
-    evt.offset = getattr(self, 'entry_offset', 0)
-    return evt
+    event_object = event.TextEvent(timestamp, attributes, self.source_long)
+    event_object.offset = offset
+    return event_object
 
 
 class SQLiteParser(PlasoParser):
@@ -349,8 +406,9 @@ class SQLiteParser(PlasoParser):
 
     if data != magic:
       filehandle.seek(-len(magic), 1)
-      raise errors.UnableToParseFile('File %s not a %s. (wrong magic)' % (
-          filehandle.name, self.NAME))
+      raise errors.UnableToParseFile(
+          u'File %s not a %s. (invalid signature)' % (filehandle.name,
+          self.NAME))
 
     # TODO: Current design copies the entire file into a buffer
     # that is parsed by each SQLite parser. This is not very efficient,
@@ -378,16 +436,16 @@ class SQLiteParser(PlasoParser):
 
         # Verify the table by reading in all table names and compare it to
         # the list of required tables.
-        sql_results = cursor.execute(('SELECT name FROM sqlite_master WHERE '
-                                      'type="table"'))
+        sql_results = cursor.execute(
+            'SELECT name FROM sqlite_master WHERE type="table"')
         tables = []
         for row in sql_results:
           tables.append(row[0])
 
         if not set(tables) >= set(self.REQUIRED_TABLES):
           raise errors.UnableToParseFile(
-              'File %s not a %s (wrong tables).' % (filehandle.name,
-                                                    self.NAME))
+              u'File %s not a %s (wrong tables).' % (filehandle.name,
+              self.NAME))
 
         for query, action in self.QUERIES:
           call_back = getattr(self, action, self.Default)

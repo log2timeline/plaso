@@ -67,30 +67,48 @@ class TimeLibUnitTest(unittest.TestCase):
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), timestamp)
 
-    # Invalid number of seconds
+    # Invalid number of seconds.
     fat_date_time = (0x3d0ca8d0 & ~(0x1f)) | (30 & 0x1f)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
-    # Invalid number of minutes
+    # Invalid number of minutes.
     fat_date_time = (0x3d0ca8d0 & ~(0x3f << 5)) | ((60 & 0x3f) << 5)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
-    # Invalid number of hours
+    # Invalid number of hours.
     fat_date_time = (0x3d0ca8d0 & ~(0x1f << 11)) | ((24 & 0x1f) << 11)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
-    # Invalid day of month
+    # Invalid day of month.
     fat_date_time = (0x3d0ca8d0 & ~(0x1f << 16)) | ((32 & 0x1f) << 16)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
-    # Invalid month
+    # Invalid month.
     fat_date_time = (0x3d0ca8d0 & ~(0x0f << 21)) | ((13 & 0x0f) << 21)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
+
+  def testTimestampFromWebKitTime(self):
+    """Test the WebKit time conversion."""
+    # Aug 12, 2010 21:06:31.546875000
+    # date -u -d"Aug 12, 2010 21:06:31.546875000" +"%s.%N"
+    webkit_time = 0x2dec3d061a9bfb
+    timestamp = (1281647191 * 1000000) + int(546875000 / 1000)
+    self.assertEquals(timelib.Timestamp.FromWebKitTime(webkit_time), timestamp)
+
+    # Jan 2, 1601 00:00:00.000000000
+    # date -u -d"Jan 2, 1601 00:00:00.000000000" +"%s.%N"
+    webkit_time = 86400 * 1000000
+    timestamp = (-11644387200 * 1000000)
+    self.assertEquals(timelib.Timestamp.FromWebKitTime(webkit_time), timestamp)
+
+    # WebKit time that exceeds lower bound.
+    webkit_time = -((1 << 63L) - 1)
+    self.assertEquals(timelib.Timestamp.FromWebKitTime(webkit_time), 0)
 
   def testTimestampFromFiletime(self):
     """Test the FILETIME conversion."""
@@ -106,7 +124,7 @@ class TimeLibUnitTest(unittest.TestCase):
     timestamp = (-11644387200 * 1000000)
     self.assertEquals(timelib.Timestamp.FromFiletime(filetime), timestamp)
 
-    # FILETIME that exceeds lower bound
+    # FILETIME that exceeds lower bound.
     filetime = -1
     self.assertEquals(timelib.Timestamp.FromFiletime(filetime), 0)
 
@@ -124,11 +142,11 @@ class TimeLibUnitTest(unittest.TestCase):
     timestamp = -122557518 * 1000000
     self.assertEquals(timelib.Timestamp.FromPosixTime(posix_time), timestamp)
 
-    # POSIX time that exceeds upper bound
+    # POSIX time that exceeds upper bound.
     posix_time = 9223372036855
     self.assertEquals(timelib.Timestamp.FromPosixTime(posix_time), 0)
 
-    # POSIX time that exceeds lower bound
+    # POSIX time that exceeds lower bound.
     posix_time = -9223372036855
     self.assertEquals(timelib.Timestamp.FromPosixTime(posix_time), 0)
 

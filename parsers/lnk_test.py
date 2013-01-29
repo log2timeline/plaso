@@ -30,13 +30,13 @@ class WinLnkParserTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     self.test_parser = lnk.WinLnkParser(pre_obj)
 
-  def testWinLnkParserFile(self):
-    """Read a LNK file and make few tests."""
-    lnk_path = os.path.join('plaso', 'test_data', 'example.lnk')
+  def testParseFile(self):
+    """Read a LNK file and run a few tests."""
+    test_file = os.path.join('test_data', 'example.lnk')
 
-    event_container = None
-    with open(lnk_path, 'rb') as fh:
-      event_container = self.test_parser.Parse(fh)
+    events = None
+    with open(test_file, 'rb') as file_object:
+      events = list(self.test_parser.Parse(file_object))
 
     # Link information:
     # 	Creation time			: Jul 13, 2009 23:29:02.849131000 UTC
@@ -48,41 +48,55 @@ class WinLnkParserTest(unittest.TestCase):
     # 	Icon location			: %windir%\system32\migwiz\migwiz.exe
     # 	Environment variables location	: %windir%\system32\migwiz\migwiz.exe
 
-    self.assertEquals(len(event_container), 3)
+    self.assertEquals(len(events), 3)
+
+    event_object = events[0]
 
     expected_string = u'@%windir%\system32\migwiz\wet.dll,-590'
-    self.assertEquals(event_container.description, expected_string)
+    self.assertEquals(event_object.description, expected_string)
 
     expected_string = u'.\migwiz\migwiz.exe'
-    self.assertEquals(event_container.relative_path, expected_string)
+    self.assertEquals(event_object.relative_path, expected_string)
 
     expected_string = u'%windir%\system32\migwiz'
-    self.assertEquals(event_container.working_directory, expected_string)
+    self.assertEquals(event_object.working_directory, expected_string)
 
     expected_string = u'%windir%\system32\migwiz\migwiz.exe'
-    self.assertEquals(event_container.icon_location, expected_string)
-    self.assertEquals(event_container.env_var_location, expected_string)
+    self.assertEquals(event_object.icon_location, expected_string)
+    self.assertEquals(event_object.env_var_location, expected_string)
 
     # date -u -d"Jul 13, 2009 23:29:02.849131000" +"%s.%N"
-    event_object = event_container.events[0]
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEquals(event_object.timestamp,
                       (1247527742 * 1000000) + int(849131000 / 1000))
 
     # date -u -d"Jul 13, 2009 23:29:02.849131000" +"%s.%N"
-    event_object = event_container.events[1]
+    event_object = events[1]
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.CREATION_TIME)
     self.assertEquals(event_object.timestamp,
                       (1247527742 * 1000000) + int(849131000 / 1000))
 
     # date -u -d"Jul 14, 2009 01:39:18.220000000" +"%s.%N"
-    event_object = event_container.events[2]
+    event_object = events[2]
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.MODIFICATION_TIME)
     self.assertEquals(event_object.timestamp,
                       (1247535558 * 1000000) + int(220000000 / 1000))
+
+    # Test the event specific formatter.
+    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+         event_object)
+
+    expected_msg = (u'[@%windir%\\system32\\migwiz\\wet.dll,-590] '
+                    u'env location: %windir%\\system32\\migwiz\\migwiz.exe '
+                    u'Relative path: .\\migwiz\\migwiz.exe '
+                    u'Working dir: %windir%\\system32\\migwiz '
+                    u'Icon location: %windir%\\system32\\migwiz\\migwiz.exe')
+
+    self.assertEquals(msg, expected_msg)
+
 
 if __name__ == '__main__':
   unittest.main()

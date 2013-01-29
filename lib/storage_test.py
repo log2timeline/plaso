@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for the storage mechanism of Plaso."""
-import re
 import tempfile
 import unittest
 import zipfile
@@ -62,19 +61,6 @@ class GroupMock(object):
       yield dummy
 
 
-class DummyRegistryFormatter(winreg.WinRegistryGenericFormatter):
-  """Implement a simple registry formatter."""
-  # Catch all.
-  ID_RE = re.compile('UNKNOWN:NTUSER.DAT', re.DOTALL)
-
-
-class DummyTextFormatter(eventdata.EventFormatter):
-  """Implement a simple text event formatter."""
-
-  ID_RE = re.compile('UNKNOWN:Some random text file', re.DOTALL)
-  FORMAT_STRING = u'{body}'
-
-
 class PlasoStorageUnitTest(unittest.TestCase):
   """The unit test for plaso storage."""
 
@@ -82,24 +68,24 @@ class PlasoStorageUnitTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     self.events = []
 
-    event_1 = event.RegistryEvent(
+    event_1 = event.WinRegistryEvent(
         u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'}, 13349615269295969)
     event_1.source_long = 'NTUSER.DAT Registry File'
     event_1.parser = 'UNKNOWN'
 
-    event_2 = event.RegistryEvent(
+    event_2 = event.WinRegistryEvent(
         u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
         {u'Value': u'send all the exes to the other world'}, 13359662069295961)
     event_2.source_long = 'NTUSER.DAT Registry File'
     event_2.parser = 'UNKNOWN'
 
-    event_3 = event.RegistryEvent(
+    event_3 = event.WinRegistryEvent(
         u'\\HKCU\\Windows\\Normal', {u'Value': u'run all the benign stuff'},
         13349402860000000)
     event_3.source_long = 'NTUSER.DAT Registry File'
     event_3.parser = 'UNKNOWN'
 
-    text_dict = {'body': (
+    text_dict = {'text': (
         'This is a line by someone not reading the log line properly. And '
         'since this log line exceeds the accepted 80 chars it will be '
         'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
@@ -130,9 +116,8 @@ class PlasoStorageUnitTest(unittest.TestCase):
       z_file = zipfile.ZipFile(fh, 'r', zipfile.ZIP_DEFLATED)
       self.assertEquals(len(z_file.namelist()), 3)
 
-      self.assertEquals(sorted(z_file.namelist()), ['plaso_index.000001',
-                                                    'plaso_meta.000001',
-                                                    'plaso_proto.000001'])
+      self.assertEquals(sorted(z_file.namelist()), [
+          'plaso_index.000001', 'plaso_meta.000001', 'plaso_proto.000001'])
 
   def testStorage(self):
     """Test the storage object."""
@@ -148,8 +133,8 @@ class PlasoStorageUnitTest(unittest.TestCase):
     with tempfile.NamedTemporaryFile() as fh:
       store = storage.PlasoStorage(fh)
 
-      for my_event in self.events:
-        serial = my_event.ToProtoString()
+      for event_object in self.events:
+        serial = event_object.ToProtoString()
         store.AddEntry(serial)
 
       # Add tagging.
