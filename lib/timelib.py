@@ -255,7 +255,7 @@ class Timestamp(object):
     if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
         posix_time > cls.TIMESTAMP_MAX_SECONDS):
       return 0
-    return int(posix_time * cls.MICRO_SECONDS_PER_SECOND)
+    return int(posix_time) * cls.MICRO_SECONDS_PER_SECOND
 
 
 def Timetuple2Timestamp(time_tuple):
