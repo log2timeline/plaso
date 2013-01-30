@@ -72,11 +72,11 @@ class EventFormatterUnitTest(unittest.TestCase):
          'y] Value: send all the exes to the other world'), events)
     self.assertIn((u'1334940286000000,REG,UNKNOWN,[//HKCU/Windows'
                    '/Normal] Value: run all the benign stuff'), events)
-    self.assertIn(('1335781787929596,TEST,Weird Log File,This log line reads '
+    self.assertIn(('1335781787929596,FILE,Weird Log File,This log line reads '
                    'ohh so much.'), events)
-    self.assertIn(('1335781787929596,TEST,Weird Log File,Nothing of interest'
+    self.assertIn(('1335781787929596,FILE,Weird Log File,Nothing of interest'
                    ' here, move on.'), events)
-    self.assertIn(('1335791207939596,TEST,Weird Log File,Mr. Evil just logged'
+    self.assertIn(('1335791207939596,FILE,Weird Log File,Mr. Evil just logged'
                    ' into the machine and got root.'), events)
 
   def testTextBasedEvent(self):

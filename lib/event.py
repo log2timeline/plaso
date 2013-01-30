@@ -217,6 +217,78 @@ class EventContainer(object):
     if timestamp_first < self.first_timestamp:
       self.first_timestamp = timestamp_first
 
+  def ToProto(self):
+    """Serialize a container to a protobuf."""
+    proto = plaso_storage_pb2.EventContainer()
+
+    proto.first_time = self.first_timestamp
+    proto.last_time = self.last_timestamp
+
+    for container in self.containers:
+      container_str = container.ToProtoString()
+      container_add = proto.containers.add()
+      container_add.MergeFromString(container_str)
+
+    for event_object in self.events:
+      # TODO: Problem here is that when the EventObject
+      # is serialized it will "inherit" all the attributes
+      # from the container, thus repeat them. Fix that.
+      event_str = event_object.ToProtoString()
+      event_add = proto.events.add()
+      event_add.MergeFromString(event_str)
+
+    for attribute, value in self.attributes.items():
+      if isinstance(attribute, (bool, int, long)) or value:
+        proto_attribute = proto.attributes.add()
+        AttributeToProto(
+            proto_attribute, attribute, value)
+
+    return proto
+
+  def ToProtoString(self):
+    """Serialize an event container into a string value."""
+    proto = self.ToProto()
+
+    return proto.SerializeToString()
+
+  def FromProto(self, proto):
+    """Unserializes the event container from a protobuf.
+
+    Args:
+      proto: The protobuf (plaso_storage_pb2.EventContainer).
+
+    Raises:
+      RuntimeError: when the protobuf is not of type:
+                    plaso_storage_pb2.EventContainer or when an unsupported
+                    attribute value type is encountered
+    """
+    if not isinstance(proto, plaso_storage_pb2.EventContainer):
+      raise RuntimeError('Unsupported proto')
+
+    self.last_timestamp = proto.last_time
+    self.first_timestamp = proto.first_time
+
+    # Make sure the old attributes are removed.
+    self.attributes = {}
+    self.attributes.update(dict(AttributeFromProto(a) for a in
+                                proto.attributes))
+
+    for container in proto.containers:
+      container_object = EventContainer()
+      container_object.FromProto(container)
+      self.containers.append(container_object)
+
+    for event_proto in proto.events:
+      event_object = EventObject()
+      event_object.FromProto(event_proto)
+      self.events.append(event_object)
+
+  def FromProtoString(self, proto_string):
+    """Unserializes the event container from a serialized protobuf."""
+    proto = plaso_storage_pb2.EventContainer()
+    proto.ParseFromString(proto_string)
+    self.FromProto(proto)
+
 
 class EventObject(object):
   """An event object is the main datastore for an event in plaso.
@@ -355,63 +427,6 @@ class EventObject(object):
 
     return u'[{0}] {1}/{2} - {3}'.format(time, short, s_long, message)
 
-  def _AttributeFromProto(self, proto):
-    """Unserializes an event object attribute from a protobuf.
-
-    Args:
-      proto: The attribute protobuf (plaso_storage_pb2.Attribute).
-
-    Returns:
-      A list containing the name and value of the attribute.
-
-    Raises:
-      RuntimeError: when the protobuf is not of type:
-                    plaso_storage_pb2.Attribute or if the attribute
-                    cannot be unserialized.
-    """
-    key = u''
-    try:
-      if proto.HasField('key'):
-        key = proto.key
-    except ValueError:
-      pass
-
-    if not isinstance(proto, (
-        plaso_storage_pb2.Attribute, plaso_storage_pb2.Value)):
-      raise RuntimeError('Unsupported proto')
-
-    if proto.HasField('string'):
-      return key, proto.string
-
-    elif proto.HasField('integer'):
-      return key, proto.integer
-
-    elif proto.HasField('boolean'):
-      return key, proto.boolean
-
-    elif proto.HasField('dict'):
-      value = {}
-
-      for proto_dict in proto.dict.attributes:
-        dict_key, dict_value = self._AttributeFromProto(proto_dict)
-        value[dict_key] = dict_value
-      return key, value
-
-    elif proto.HasField('array'):
-      value = []
-
-      for proto_array in proto.array.values:
-        _, list_value = self._AttributeFromProto(proto_array)
-        value.append(list_value)
-      return key, value
-
-    elif proto.HasField('data'):
-      return key, proto.data
-
-    # TODO: deal with float.
-    else:
-      raise RuntimeError('Unsupported proto attribute type.')
-
   def FromProto(self, proto):
     """Unserializes the event object from a protobuf.
 
@@ -452,7 +467,7 @@ class EventObject(object):
         self.attributes.__setitem__(proto_attribute.name, value)
 
     # Make sure the old attributes are removed.
-    self.attributes.update(dict(self._AttributeFromProto(a) for a in
+    self.attributes.update(dict(AttributeFromProto(a) for a in
                                 proto.attributes))
 
   def ToProtoString(self):
@@ -466,52 +481,6 @@ class EventObject(object):
     proto = plaso_storage_pb2.EventObject()
     proto.ParseFromString(proto_string)
     self.FromProto(proto)
-
-  def _AttributeToProto(self, proto, name, value):
-    """Serializes an event object attribute to a protobuf.
-
-    The attribute in an event object can store almost any arbitrary data, so
-    the corresponding protobuf storage must deal with the various data types.
-    This method identifies the data type and assigns it properly to the
-    attribute protobuf.
-
-    Args:
-      proto: The attribute protobuf (plaso_storage_pb2.Attribute).
-      name: The name of the attribute.
-      value: The value of the attribute.
-    """
-    if name:
-      proto.key = name
-
-    if isinstance(value, (str, unicode)):
-      proto.string = utils.GetUnicodeString(value)
-
-    elif isinstance(value, (int, long)):
-      # TODO: add some bounds checking.
-      proto.integer = value
-
-    elif isinstance(value, bool):
-      proto.boolean = value
-
-    elif isinstance(value, dict):
-      proto_dict = plaso_storage_pb2.Dict()
-
-      for dict_key, dict_value in value.items():
-        sub_proto = proto_dict.attributes.add()
-        self._AttributeToProto(sub_proto, dict_key, dict_value)
-      proto.dict.MergeFrom(proto_dict)
-
-    elif isinstance(value, (list, tuple)):
-      proto_array = plaso_storage_pb2.Array()
-
-      for list_value in value:
-        sub_proto = proto_array.values.add()
-        self._AttributeToProto(sub_proto, '', list_value)
-      proto.array.MergeFrom(proto_array)
-
-    # TODO: deal with float.
-    else:
-      proto.data = value
 
   def ToProto(self):
     """Serializes the event object into a protobuf.
@@ -552,7 +521,7 @@ class EventObject(object):
         # TODO: fix logic.
         if isinstance(attribute_value, (bool, int, long)) or attribute_value:
           proto_attribute = proto.attributes.add()
-          self._AttributeToProto(
+          AttributeToProto(
               proto_attribute, attribute_name, attribute_value)
 
     return proto
@@ -837,3 +806,108 @@ class TextEvent(EventObject):
       if isinstance(value, (str, unicode)) and not value:
         continue
       self.attributes.__setitem__(name, value)
+
+
+def AttributeToProto(proto, name, value):
+  """Serializes an event object attribute to a protobuf.
+
+  The attribute in an event object can store almost any arbitrary data, so
+  the corresponding protobuf storage must deal with the various data types.
+  This method identifies the data type and assigns it properly to the
+  attribute protobuf.
+
+  Args:
+    proto: The attribute protobuf (plaso_storage_pb2.Attribute).
+    name: The name of the attribute.
+    value: The value of the attribute.
+  """
+  if name:
+    proto.key = name
+
+  if isinstance(value, (str, unicode)):
+    proto.string = utils.GetUnicodeString(value)
+
+  elif isinstance(value, (int, long)):
+    # TODO: add some bounds checking.
+    proto.integer = value
+
+  elif isinstance(value, bool):
+    proto.boolean = value
+
+  elif isinstance(value, dict):
+    proto_dict = plaso_storage_pb2.Dict()
+
+    for dict_key, dict_value in value.items():
+      sub_proto = proto_dict.attributes.add()
+      AttributeToProto(sub_proto, dict_key, dict_value)
+    proto.dict.MergeFrom(proto_dict)
+
+  elif isinstance(value, (list, tuple)):
+    proto_array = plaso_storage_pb2.Array()
+
+    for list_value in value:
+      sub_proto = proto_array.values.add()
+      AttributeToProto(sub_proto, '', list_value)
+    proto.array.MergeFrom(proto_array)
+
+  # TODO: deal with float.
+  else:
+    proto.data = value
+
+
+def AttributeFromProto(proto):
+  """Unserializes an event object attribute from a protobuf.
+
+  Args:
+    proto: The attribute protobuf (plaso_storage_pb2.Attribute).
+
+  Returns:
+    A list containing the name and value of the attribute.
+
+  Raises:
+    RuntimeError: when the protobuf is not of type:
+                  plaso_storage_pb2.Attribute or if the attribute
+                  cannot be unserialized.
+  """
+  key = u''
+  try:
+    if proto.HasField('key'):
+      key = proto.key
+  except ValueError:
+    pass
+
+  if not isinstance(proto, (
+      plaso_storage_pb2.Attribute, plaso_storage_pb2.Value)):
+    raise RuntimeError('Unsupported proto')
+
+  if proto.HasField('string'):
+    return key, proto.string
+
+  elif proto.HasField('integer'):
+    return key, proto.integer
+
+  elif proto.HasField('boolean'):
+    return key, proto.boolean
+
+  elif proto.HasField('dict'):
+    value = {}
+
+    for proto_dict in proto.dict.attributes:
+      dict_key, dict_value = AttributeFromProto(proto_dict)
+      value[dict_key] = dict_value
+    return key, value
+
+  elif proto.HasField('array'):
+    value = []
+
+    for proto_array in proto.array.values:
+      _, list_value = AttributeFromProto(proto_array)
+      value.append(list_value)
+    return key, value
+
+  elif proto.HasField('data'):
+    return key, proto.data
+
+  # TODO: deal with float.
+  else:
+    raise RuntimeError('Unsupported proto attribute type.')
