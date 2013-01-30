@@ -26,11 +26,11 @@ import pytsk3
 import pyvshadow
 
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import pfile
 from plaso.lib import queue
 from plaso.lib import utils
 from plaso.lib import vss
-from plaso.proto import transmission_pb2
 
 
 class PCollector(object):
@@ -149,12 +149,12 @@ class PCollector(object):
       if f_type == pytsk3.TSK_FS_META_TYPE_DIR:
         directories.append((inode_addr, os.path.join(path, name)))
       elif f_type == pytsk3.TSK_FS_META_TYPE_REG:
-        transfer_proto = transmission_pb2.PathSpec()
+        transfer_proto = event.EventPathSpec()
         if fs.store_nr >= 0:
-          transfer_proto.type = transmission_pb2.PathSpec.VSS
+          transfer_proto.type = 'VSS'
           transfer_proto.vss_store_number = fs.store_nr
         else:
-          transfer_proto.type = transmission_pb2.PathSpec.TSK
+          transfer_proto.type = 'TSK'
         transfer_proto.container_path = fs.path
         transfer_proto.image_offset = fs.offset
         transfer_proto.image_inode = inode_addr
@@ -173,9 +173,9 @@ class PCollector(object):
               continue
 
           self._hashlist.setdefault(inode_addr, []).append(hash_value)
-          self._queue.Queue(transfer_proto.SerializeToString())
+          self._queue.Queue(transfer_proto.ToProtoString())
         else:
-          self._queue.Queue(transfer_proto.SerializeToString())
+          self._queue.Queue(transfer_proto.ToProtoString())
 
     for inode_addr, path in directories:
       self.ParseImageDir(fs, inode_addr, path)
@@ -212,10 +212,10 @@ class PCollector(object):
 
   def ProcessFile(self, filename, my_queue):
     """Finds all files available inside a file and inserts into queue."""
-    transfer_proto = transmission_pb2.PathSpec()
-    transfer_proto.type = transmission_pb2.PathSpec.OS
+    transfer_proto = event.EventPathSpec()
+    transfer_proto.type = 'OS'
     transfer_proto.file_path = utils.GetUnicodeString(filename)
-    my_queue.Queue(transfer_proto.SerializeToString())
+    my_queue.Queue(transfer_proto.ToProtoString())
 
   def Close(self):
     """Close the queue."""

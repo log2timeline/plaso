@@ -20,12 +20,12 @@ import datetime
 import logging
 import tempfile
 
+from plaso.lib import event
 from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import utils
-from plaso.proto import transmission_pb2
 
 # TODO: Refactor the putils library so it does not end up being a trash can
 # for all things core/front-end. We don't want this to be end up being a
@@ -58,27 +58,27 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
         u'The image path is wrong, file does not exist: %s',
         image_path)
     return
-  proto = transmission_pb2.PathSpec()
+  pathspec = event.EventPathSpec()
   if image_type == 'vss':
-    proto.type = transmission_pb2.PathSpec.VSS
-    proto.vss_store_number = store_nr
+    pathspec.type = 'VSS'
+    pathspec.vss_store_number = store_nr
   elif image_type == 'tsk':
-    proto.type = transmission_pb2.PathSpec.TSK
+    pathspec.type = 'TSK'
 
   else:
     logging.error('The currently supported types are: tsk or vss.')
     return
 
-  proto.container_path = utils.GetUnicodeString(image_path)
-  proto.image_offset = image_offset * 512
+  pathspec.container_path = utils.GetUnicodeString(image_path)
+  pathspec.image_offset = image_offset * 512
   if isinstance(file_to_open, (int, long)):
-    proto.image_inode = file_to_open
+    pathspec.image_inode = file_to_open
   else:
     if '\\' in file_to_open:
       file_to_open = file_to_open.replace('\\', '/')
-    proto.file_path = file_to_open
+    pathspec.file_path = file_to_open
 
-  return pfile.OpenPFile(proto, fscache=fscache)
+  return pfile.OpenPFile(pathspec, fscache=fscache)
 
 
 def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None):
@@ -99,11 +99,11 @@ def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None):
 
 def OpenOSFile(path):
   """Return a PFile like object for a file in the OS."""
-  proto = transmission_pb2.PathSpec()
-  proto.type = transmission_pb2.PathSpec.OS
-  proto.file_path = utils.GetUnicodeString(path)
+  pathspec = event.EventPathSpec()
+  pathspec.type = 'OS'
+  pathspec.file_path = utils.GetUnicodeString(path)
 
-  return pfile.OpenPFile(proto)
+  return pfile.OpenPFile(pathspec)
 
 
 def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0):

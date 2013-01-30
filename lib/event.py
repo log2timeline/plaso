@@ -57,7 +57,6 @@ class EventContainer(object):
   parent_container = None
   first_timestamp = None
   last_timestamp = None
-  data_type = None
   attributes = None
 
   def __init__(self):
@@ -327,7 +326,7 @@ class EventObject(object):
   # This is a convenience variable to define event object as
   # simple value objects. Its runtime equivalent data_type
   # should be used in code logic.
-  DATA_TYPE = 'event'
+  DATA_TYPE = ''
 
   # TODO: remove this once source_short has been moved to event formatter.
   # Lists of the mappings between the source short values of the event object
@@ -342,13 +341,13 @@ class EventObject(object):
   _SOURCE_SHORT_TO_PROTO_MAP.setdefault('LOG')
 
   parent_container = None
-  data_type = None
   attributes = None
 
   def __init__(self):
     """Initializes the event object."""
-    self.data_type = self.DATA_TYPE
     self.attributes = {}
+    if self.DATA_TYPE:
+      self.data_type = self.DATA_TYPE
 
   def __setattr__(self, attr, value):
     """Sets the value to either the default or the attribute store."""
@@ -490,7 +489,7 @@ class EventObject(object):
     """
     proto = plaso_storage_pb2.EventObject()
 
-    proto.data_type = self.data_type
+    proto.data_type = getattr(self, 'data_type', 'event')
 
     for attribute_name in self.GetAttributes():
       if attribute_name == 'source_short':
@@ -537,6 +536,16 @@ class EventPathSpec(object):
     _TYPE_FROM_PROTO_MAP[value.number] = value.name
     _TYPE_TO_PROTO_MAP[value.name] = value.number
   _TYPE_FROM_PROTO_MAP.setdefault(-1)
+
+  def __setattr__(self, attr, value):
+    """Overwrite the set attribute function to limit it to right attributes."""
+    if attr in ('type', 'file_path', 'container_path', 'image_offset',
+                'image_offset', 'image_inode', 'nested_pathspec', 'file_offset',
+                'file_size', 'transmit_options', 'ntfs_type', 'ntfs_id',
+                'vss_store_number'):
+      object.__setattr__(self, attr, value)
+    else:
+      raise AttributeError(u'Not allowed attribute: {}'.format(attr))
 
   def ToProto(self):
     """Serialize an EventPathSpec to PathSpec protobuf."""
