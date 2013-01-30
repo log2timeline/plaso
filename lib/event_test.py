@@ -47,7 +47,7 @@ class TestEvent1(event.EventObject):
     """Initializes the test event object."""
     super(TestEvent1, self).__init__()
     self.timestamp = timestamp
-    self.source_short = 'TEST'
+    self.source_short = 'FILE'
     self.attributes.update(attributes)
 
 
@@ -155,6 +155,22 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertEquals(self.container.first_timestamp, 1334940286000000)
     self.assertEquals(self.container.last_timestamp, 1338934459000000)
 
+    serialized = self.container.ToProtoString()
+    container = event.EventContainer()
+    container.FromProtoString(serialized)
+
+    self.assertEquals(container.first_timestamp, 1334940286000000)
+    self.assertEquals(container.last_timestamp, 1338934459000000)
+    # The container should have two sub containers:
+    #   One with three events.
+    #   One with four events.
+    self.assertEquals(len(container), 7)
+    self.assertEquals(len(container.containers), 2)
+    # The parent container set one attribute, the hostname.
+    self.assertEquals(len(container.attributes), 1)
+    self.assertTrue('hostname' in container.attributes)
+    self.assertEquals(len(container.containers[0].attributes), 3)
+
     first_array = []
     last_array = []
     for c in self.container.containers:
@@ -237,7 +253,7 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertEquals(len(list(proto.attributes)), 7)
     evt_throw = event.EventObject()
     attributes = dict(
-        evt_throw._AttributeFromProto(a) for a in proto.attributes)
+        event.AttributeFromProto(a) for a in proto.attributes)
 
     # An empty string should not get stored.
     self.assertFalse('empty_string' in attributes)
