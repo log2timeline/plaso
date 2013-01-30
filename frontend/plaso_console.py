@@ -94,6 +94,8 @@ def Main():
   pre_obj.zone = pytz.UTC
 
   namespace.update(globals())
+  namespace.update({'l2t': l2t, 'fscache': fscache, 'pre_obj': pre_obj})
+
   banner = ('--------------------------------------------------------------\n'
             ' Welcome to Plaso console - home of the Plaso adventure land.\n'
             '--------------------------------------------------------------\n'
