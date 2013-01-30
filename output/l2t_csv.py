@@ -27,8 +27,6 @@ from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 
-from plaso.proto import transmission_pb2
-
 
 class L2tcsv(output.FileLogOutputFormatter):
   """Contains functions for outputting as l2t_csv."""
@@ -85,11 +83,9 @@ class L2tcsv(output.FileLogOutputFormatter):
 
     inode = getattr(event_object, 'inode', '-')
     if inode == '-':
-      if hasattr(event_object, 'pathspec'):
-        pathspec = transmission_pb2.PathSpec()
-        pathspec.ParseFromString(event_object.pathspec)
-        if pathspec.HasField('image_inode'):
-          inode = pathspec.image_inode
+      if hasattr(event_object, 'pathspec') and hasattr(
+          event_object.pathspec, 'image_inode'):
+        inode = event_object.pathspec.image_inode
 
     row = (date_use.strftime('%m/%d/%Y'),
            date_use.strftime('%H:%M:%S'),

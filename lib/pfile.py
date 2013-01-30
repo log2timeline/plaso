@@ -32,6 +32,7 @@ import pytsk3
 import pyvshadow
 
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import registry
 from plaso.lib import sleuthkit
 from plaso.lib import timelib
@@ -144,7 +145,7 @@ class PlasoFile(object):
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
-  TYPE = transmission_pb2.PathSpec.UNSET
+  TYPE = 'UNSET'
   fh = None
 
   def __init__(self, proto, root=None, fscache=None):
@@ -263,7 +264,7 @@ class PlasoFile(object):
 
   def HasParent(self):
     """Check if the PathSpec defines a parent."""
-    return self.pathspec.HasField('nested_pathspec')
+    return hasattr(pathspec, 'nested_pathspec')
 
   def __iter__(self):
     """Implement an iterator that reads each line."""
@@ -276,7 +277,7 @@ class PlasoFile(object):
 class TskFile(PlasoFile):
   """Class to open up files using TSK."""
 
-  TYPE = transmission_pb2.PathSpec.TSK
+  TYPE = 'TSK'
 
   def _OpenFileSystem(self, path, offset):
     """Open the filesystem object and store a copy of it for caching.
@@ -354,13 +355,13 @@ class TskFile(PlasoFile):
     else:
       path = self.pathspec.container_path
 
-    if self.pathspec.HasField('image_offset'):
+    if hasattr(self.pathspec, 'image_offset'):
       self._OpenFileSystem(path, self.pathspec.image_offset)
     else:
       self._OpenFileSystem(path, 0)
 
     inode = 0
-    if self.pathspec.HasField('image_inode'):
+    if hasattr(self.pathspec, 'image_inode'):
       inode = self.pathspec.image_inode
 
     self.fh = sleuthkit.Open(
@@ -377,7 +378,7 @@ class TskFile(PlasoFile):
 class OsFile(PlasoFile):
   """Class to provide a file-like object to a file stored on a filesystem."""
 
-  TYPE = transmission_pb2.PathSpec.OS
+  TYPE = 'OS'
 
   def Open(self, filehandle=None):
     """Open the file as it is described in the PathSpec protobuf."""
@@ -430,7 +431,7 @@ class OsFile(PlasoFile):
 
 class ZipFile(PlasoFile):
   """Provide a file-like object to a file stored inside a ZIP file."""
-  TYPE = transmission_pb2.PathSpec.ZIP
+  TYPE = 'ZIP'
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
@@ -566,7 +567,7 @@ class ZipFile(PlasoFile):
 
 class GzipFile(PlasoFile):
   """Provide a file-like object to a file compressed using GZIP."""
-  TYPE = transmission_pb2.PathSpec.GZIP
+  TYPE = 'GZIP'
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
@@ -648,7 +649,7 @@ class GzipFile(PlasoFile):
 
 class Bz2File(PlasoFile):
   """Provide a file-like object to a file compressed using BZ2."""
-  TYPE = transmission_pb2.PathSpec.BZ2
+  TYPE = 'BZ2'
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
@@ -695,7 +696,7 @@ class Bz2File(PlasoFile):
 
 class TarFile(PlasoFile):
   """Provide a file-like object to a file stored inside a TAR file."""
-  TYPE = transmission_pb2.PathSpec.TAR
+  TYPE = 'TAR'
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
@@ -814,11 +815,11 @@ class TarFile(PlasoFile):
 class VssFile(TskFile):
   """Class to open up files in Volume Shadow Copies."""
 
-  TYPE = transmission_pb2.PathSpec.VSS
+  TYPE = 'VSS'
 
   def _OpenFileSystem(self, path, offset):
     """Open a filesystem object for a VSS file."""
-    if not self.pathspec.HasField('vss_store_number'):
+    if not hasattr(self.pathspec, 'vss_store_number'):
       raise IOError((u'Unable to open VSS file: {%s} -> No VSS store number '
                      'defined.') % self.name)
 
@@ -880,17 +881,12 @@ class Stats(object):
 
 
 PFILE_HANDLERS = {}
-PFILE_TYPES = {}
 
 
 def InitPFile():
   """Creates a dict object with all PFile handlers."""
   for cl in PlasoFile.classes:
     PFILE_HANDLERS[PlasoFile.classes[cl].TYPE] = PlasoFile.classes[cl]
-
-  for value in transmission_pb2.PathSpec.DESCRIPTOR.enum_types_by_name[
-      'FileType'].values:
-    PFILE_TYPES[value.number] = value.name
 
 
 def OpenPFile(spec, fh=None, orig=None, fscache=None):
@@ -940,18 +936,21 @@ def OpenPFile(spec, fh=None, orig=None, fscache=None):
   if not PFILE_HANDLERS:
     InitPFile()
 
-  if not isinstance(spec, transmission_pb2.PathSpec):
-    if not hasattr(spec, 'ToProto'):
-      raise IOError(u'Unable to open file, need a PathSpec protobuf')
-    spec = spec.ToProto()
+  if isinstance(spec, (str, unicode)):
+    spec_str = spec
+    spec = event.EventPathSpec()
+    spec.FromProtoString(spec_str)
+  elif isinstance(spec, transmission_pb2.PathSpec):
+    spec_proto = spec
+    spec = event.EventPathSpec()
+    spec.FromProto(spec_proto)
 
-  handler_class = PFILE_HANDLERS.get(spec.type,
-                                     transmission_pb2.PathSpec.UNSET)
+  handler_class = PFILE_HANDLERS.get(spec.type, 'UNSET')
   try:
     handler = handler_class(spec, orig, fscache)
   except errors.UnableToOpenFile:
     raise IOError(u'Unable to open the file: %s using %s' % (
-        spec.file_path, PFILE_TYPES[spec.type]))
+        spec.file_path, spec.type))
 
   try:
     handler.Open(fh)
@@ -959,15 +958,14 @@ def OpenPFile(spec, fh=None, orig=None, fscache=None):
     raise IOError(u'[%s] Unable to open the file: %s, error: %s' % (
         handler.__class__.__name__, spec.file_path, e))
 
-  if spec.HasField('nested_pathspec'):
+  if hasattr(spec, 'nested_pathspec'):
     if orig:
       orig_proto = orig
     else:
       orig_proto = spec
     return OpenPFile(spec.nested_pathspec, handler, orig_proto, fscache)
   else:
-    logging.debug(u'Opening file: %s [%s]', handler.name,
-                  PFILE_TYPES[spec.type])
+    logging.debug(u'Opening file: %s [%s]', handler.name, spec.type)
     return handler
 
   raise IOError('Unable to open the file.')

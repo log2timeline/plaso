@@ -20,9 +20,9 @@ import tempfile
 import unittest
 
 from plaso.lib import collector
+from plaso.lib import event
 from plaso.lib import sleuthkit
 from plaso.lib import queue
-from plaso.proto import transmission_pb2
 
 
 class TempDirectory(object):
@@ -49,9 +49,9 @@ class PlasoCollectorUnitTest(unittest.TestCase):
     """Return all events."""
     events = []
     for evt in collector_queue.PopItems():
-      proto = transmission_pb2.PathSpec()
-      proto.ParseFromString(evt)
-      events.append(proto)
+      pathspec = event.EventPathSpec()
+      pathspec.FromProtoString(evt)
+      events.append(pathspec)
 
     return events
 
