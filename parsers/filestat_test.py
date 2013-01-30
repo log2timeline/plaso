@@ -17,10 +17,10 @@
 import os
 import unittest
 
+from plaso.lib import event
 from plaso.lib import pfile
 from plaso.lib import preprocess
 from plaso.parsers import filestat
-from plaso.proto import transmission_pb2
 
 
 class FileStatTest(unittest.TestCase):
@@ -36,9 +36,8 @@ class FileStatTest(unittest.TestCase):
     """Read a file within an image file and make few tests."""
     test_file = os.path.join('test_data', 'image.dd')
 
-    # TODO: refactor to use EventPathSpec.
-    path = transmission_pb2.PathSpec()
-    path.type = transmission_pb2.PathSpec.TSK
+    path = event.EventPathSpec()
+    path.type = 'TSK'
     path.container_path = test_file
     path.image_offset = 0
     path.image_inode = 15
@@ -55,9 +54,8 @@ class FileStatTest(unittest.TestCase):
     """Test a ZIP file."""
     test_file = os.path.join('test_data', 'syslog.zip')
 
-    # TODO: refactor to use EventPathSpec.
-    path = transmission_pb2.PathSpec()
-    path.type = transmission_pb2.PathSpec.ZIP
+    path = event.EventPathSpec()
+    path.type = 'ZIP'
     path.container_path = test_file
     path.file_path = 'syslog'
 
@@ -70,9 +68,8 @@ class FileStatTest(unittest.TestCase):
     """Test a GZIP file."""
     test_file = os.path.join('test_data', 'syslog.gz')
 
-    # TODO: refactor to use EventPathSpec.
-    path = transmission_pb2.PathSpec()
-    path.type = transmission_pb2.PathSpec.GZIP
+    path = event.EventPathSpec()
+    path.type = 'GZIP'
     path.file_path = test_file
 
     file_object = pfile.OpenPFile(path)
@@ -84,9 +81,8 @@ class FileStatTest(unittest.TestCase):
     """Test a TAR file."""
     test_file = os.path.join('test_data', 'syslog.tar')
 
-    # TODO: refactor to use EventPathSpec.
-    path = transmission_pb2.PathSpec()
-    path.type = transmission_pb2.PathSpec.TAR
+    path = event.EventPathSpec()
+    path.type = 'TAR'
     path.container_path = test_file
     path.file_path = 'syslog'
 
@@ -99,16 +95,15 @@ class FileStatTest(unittest.TestCase):
     """Test a nested file."""
     test_file = os.path.join('test_data', 'syslog.tgz')
 
-    # TODO: refactor to use EventPathSpec.
-    path = transmission_pb2.PathSpec()
-    path.type = transmission_pb2.PathSpec.GZIP
+    path = event.EventPathSpec()
+    path.type = 'GZIP'
     path.file_path = test_file
 
-    host_file = transmission_pb2.PathSpec()
-    host_file.type = transmission_pb2.PathSpec.TAR
+    host_file = event.EventPathSpec()
+    host_file.type = 'TAR'
     host_file.file_path = 'syslog'
 
-    path.nested_pathspec.MergeFrom(host_file)
+    path.nested_pathspec = host_file
 
     file_object = pfile.OpenPFile(path)
     # No stat available from a GZIP file.
@@ -117,15 +112,15 @@ class FileStatTest(unittest.TestCase):
 
     test_file = os.path.join('test_data', 'syslog.gz')
 
-    path = transmission_pb2.PathSpec()
-    path.type = transmission_pb2.PathSpec.OS
+    path = event.EventPathSpec()
+    path.type = 'OS'
     path.file_path = test_file
 
-    gzip = transmission_pb2.PathSpec()
-    gzip.type = transmission_pb2.PathSpec.GZIP
+    gzip = event.EventPathSpec()
+    gzip.type = 'GZIP'
     gzip.file_path = test_file
 
-    path.nested_pathspec.MergeFrom(gzip)
+    path.nested_pathspec = gzip
 
     file_object = pfile.OpenPFile(path)
     events = list(self.parser.Parse(file_object))
@@ -135,19 +130,18 @@ class FileStatTest(unittest.TestCase):
     """Test a nested TSK file."""
     test_file = os.path.join('test_data', 'syslog_image.dd')
 
-    # TODO: refactor to use EventPathSpec.
-    path = transmission_pb2.PathSpec()
-    path.type = transmission_pb2.PathSpec.TSK
+    path = event.EventPathSpec()
+    path.type = 'TSK'
     path.container_path = test_file
     path.image_offset = 0
     path.image_inode = 11
     path.file_path = 'logs/hidden.zip'
 
-    host_path = transmission_pb2.PathSpec()
-    host_path.type = transmission_pb2.PathSpec.ZIP
+    host_path = event.EventPathSpec()
+    host_path.type = 'ZIP'
     host_path.file_path = 'syslog'
 
-    path.nested_pathspec.MergeFrom(host_path)
+    path.nested_pathspec = host_path
 
     file_object = pfile.OpenPFile(path, fscache=self.fscache)
     events = list(self.parser.Parse(file_object))

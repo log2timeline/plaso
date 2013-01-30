@@ -39,7 +39,6 @@ from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import storage
 from plaso.lib import utils
-from plaso.proto import transmission_pb2
 
 
 class PlasoWorker(object):
@@ -100,9 +99,9 @@ class PlasoWorker(object):
     """Start the worker, monitor the queue and parse files."""
     logging.debug('Starting to monitor process queue.')
     for item in self._proc_queue.PopItems():
-      proto = transmission_pb2.PathSpec()
+      pathspec = event.EventPathSpec()
       try:
-        proto.ParseFromString(item)
+        pathspec.FromProtoString(item)
       except RuntimeError:
         logging.debug(('Error while trying to parse a PathSpec from the queue.'
                        'The PathSpec that caused the error:\n%s'), item)
@@ -110,14 +109,15 @@ class PlasoWorker(object):
 
       # Either parse this file and all extracted files, or just the file.
       try:
-        with pfile.OpenPFile(proto,
+        with pfile.OpenPFile(pathspec,
                              fscache=getattr(self, '_fscache', None)) as fh:
           self.ParseFile(fh)
           if self.config.open_files:
             self.ParseAllFiles(fh)
       except IOError as e:
-        logging.warning('Unable to parse file: %s (%s)', proto.file_path, e)
-        logging.warning('Proto\n%s\n%s\n%s', '-+' * 20, proto, '-+' * 20)
+        logging.warning(u'Unable to parse file: %s (%s)', pathspec.file_path, e)
+        logging.warning(
+            u'Proto\n%s\n%s\n%s', '-+' * 20, pathspec.ToProto(), '-+' * 20)
     logging.debug('Processing is completed.')
 
   def ParseAllFiles(self, filehandle):
@@ -144,9 +144,7 @@ class PlasoWorker(object):
       event_object.offset = filehandle.tell()
     event_object.display_name = filehandle.display_name
     event_object.filename = filehandle.name
-    pathspec_evt = event.EventPathSpec()
-    pathspec_evt.FromProto(filehandle.pathspec_root)
-    event_object.pathspec = pathspec_evt
+    event_object.pathspec = filehandle.pathspec_root
     event_object.parser = parser_name
     if hasattr(self._pre_obj, 'hostname'):
       event_object.hostname = self._pre_obj.hostname
@@ -225,11 +223,9 @@ class PlasoWorker(object):
     Yields:
       A Pfile file-like object.
     """
-    for p in cls.SmartOpenFile(fh):
-      proto = transmission_pb2.PathSpec()
-      proto.CopyFrom(p)
+    for pathspec in cls.SmartOpenFile(fh):
       try:
-        new_fh = pfile.OpenPFile(spec=p, orig=proto, fscache=fscache)
+        new_fh = pfile.OpenPFile(spec=pathspec, orig=proto, fscache=fscache)
         yield new_fh
       except IOError as e:
         logging.debug(('Unable to open file: {%s}, not sure if we can extract '
@@ -309,10 +305,9 @@ class PlasoWorker(object):
           if info.file_size > 0:
             logging.debug('Including: %s from ZIP into process queue.',
                           info.filename)
-            proto = transmission_pb2.PathSpec()
-            proto.CopyFrom(fh.pathspec_root)
-            transfer_zip = transmission_pb2.PathSpec()
-            transfer_zip.type = transmission_pb2.PathSpec.ZIP
+            pathspec = fh.pathspec_root
+            transfer_zip = event.EventPathSpec()
+            transfer_zip.type = 'ZIP'
             transfer_zip.file_path = utils.GetUnicodeString(info.filename)
             transfer_zip.container_path = utils.GetUnicodeString(
                 fh.pathspec.file_path)
@@ -325,14 +320,14 @@ class PlasoWorker(object):
     if file_classification == 'GZ':
       try:
         fh.seek(0)
-        if fh.pathspec.type == transmission_pb2.PathSpec.GZIP:
+        if fh.pathspec.type == 'GZIP':
           raise errors.SameFileType
         fh_gzip = gzip.GzipFile(fileobj=fh, mode='rb')
         _ = fh_gzip.read(4)
         fh_gzip.seek(0)
         logging.debug('Including: %s from GZIP into process queue.', fh.name)
-        transfer_gzip = transmission_pb2.PathSpec()
-        transfer_gzip.type = transmission_pb2.PathSpec.GZIP
+        transfer_gzip = event.EventPathSpec()
+        transfer_gzip.type = 'GZIP'
         transfer_gzip.file_path = utils.GetUnicodeString(fh.pathspec.file_path)
         cls.SetNestedContainer(fh.pathspec_root, transfer_gzip)
         yield fh.pathspec_root
@@ -350,10 +345,9 @@ class PlasoWorker(object):
         fh_tar = tarfile.open(fileobj=fh, mode='r')
         for name in fh_tar.getnames():
           logging.debug('Including: %s from TAR into process queue.', name)
-          proto = transmission_pb2.PathSpec()
-          proto.CopyFrom(fh.pathspec_root)
-          transfer_tar = transmission_pb2.PathSpec()
-          transfer_tar.type = transmission_pb2.PathSpec.TAR
+          proto = fh.pathspec_root
+          transfer_tar = event.EventPathSpec()
+          transfer_tar.type = 'TAR'
           transfer_tar.file_path = utils.GetUnicodeString(name)
           transfer_tar.container_path = utils.GetUnicodeString(
               fh.pathspec.file_path)
@@ -371,8 +365,8 @@ class PlasoWorker(object):
       proto_root: The root PathSpec of the chain.
       proto_append: The PathSpec protobuf that needs to be appended.
     """
-    if not proto_root.HasField('nested_pathspec'):
-      proto_root.nested_pathspec.MergeFrom(proto_append)
+    if not hasattr(proto_root, 'nested_pathspec'):
+      proto_root.nested_pathspec = proto_append
     else:
       cls.SetNestedContainer(proto_root.nested_pathspec, proto_append)
 

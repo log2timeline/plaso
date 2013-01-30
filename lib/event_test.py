@@ -237,11 +237,11 @@ class PlasoEventUnitTest(unittest.TestCase):
 
     attr = my_event.GetAttributes()
 
-    self.assertEquals(len(attr), 9)
+    self.assertEquals(len(attr), 10)
 
     self.assertEquals(sorted(attr), [
-        'body', 'filename', 'hostname', 'source_long', 'source_short', 'text',
-        'timestamp', 'timestamp_desc', 'username'])
+        'body', 'data_type', 'filename', 'hostname', 'source_long',
+        'source_short', 'text', 'timestamp', 'timestamp_desc', 'username'])
 
   def testSerialization(self):
     """Test serialize event and attribute saving."""

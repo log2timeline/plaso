@@ -26,7 +26,6 @@ from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
-from plaso.proto import transmission_pb2
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -188,11 +187,8 @@ class Sql4n6(output.LogOutputFormatter):
 
     inode = getattr(evt, 'inode', '-')
     if inode == '-':
-      if hasattr(evt, 'pathspec'):
-        pathspec = transmission_pb2.PathSpec()
-        pathspec.ParseFromString(evt.pathspec)
-        if pathspec.HasField('image_inode'):
-          inode = pathspec.image_inode
+      if hasattr(evt, 'pathspec') and hasattr(evt.pathspec, 'image_inode'):
+        inode = evt.pathspec.image_inode
 
     row = (str(self.zone),
            helper.GetLegacy(evt),
