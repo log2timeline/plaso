@@ -219,7 +219,7 @@ def PrintTimestamp(timestamp):
   return my_date.isoformat()
 
 
-def GetEventData(evt, before=0, fscache=None):
+def GetEventData(evt, fscache=None, before=0, length=20):
   """Return a hexdump like string of data surrounding event.
 
   This function takes an event object protobuf, opens the file
@@ -229,9 +229,10 @@ def GetEventData(evt, before=0, fscache=None):
 
   Args:
     evt: The EventObject.
+    fscache: A FilesystemCache object that stores cached fs objects.
     before: Number of bytes before the event that are included
     in the printout.
-    fscache: A FilesystemCache object that stores cached fs objects.
+    length: Number of lines to print out in the hex output.
 
   Returns:
     A string containing a hexdump of the data surrounding the event.
@@ -251,13 +252,24 @@ def GetEventData(evt, before=0, fscache=None):
   if offset - before > 0:
     offset -= before
 
-  return GetHexDump(fh, offset)
+  return GetHexDump(fh, offset, length)
 
 
-def GetHexDump(fh, offset):
-  """Return a hex dump from a filehandle and an offset."""
+def GetHexDump(fh, offset, length=20):
+  """Return a hex dump from a filehandle and an offset.
+
+  Args:
+    fh: A filehandle or a file like object.
+    offset: The offset into the file like object where the first
+    byte is read from.
+    length: Number of lines to print. A single line consists of 16 bytes,
+    making this variable a multiplier of 16 bytes.
+
+  Returns:
+    A string that contains the hex dump.
+  """
   fh.seek(offset)
-  data = fh.read(10 * 32)
+  data = fh.read(int(length) * 16)
   hexdata = binascii.hexlify(data)
   data_out = []
 
