@@ -21,7 +21,7 @@ import zipfile
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import storage
-from plaso.parsers import winreg
+from plaso.formatters import winreg
 from plaso.proto import plaso_storage_pb2
 
 __pychecker__ = 'no-funcdoc'

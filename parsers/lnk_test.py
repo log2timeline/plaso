@@ -17,6 +17,7 @@
 import os
 import unittest
 
+from plaso.formatters import lnk
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import lnk

@@ -232,20 +232,3 @@ class ChromeHistoryParser(parser.SQLiteParser):
 
     return u''
 
-
-class ChromePageVisitedFormatter(eventdata.EventFormatter):
-  """The event formatter for page visited data in Chrome History."""
-  DATA_TYPE = 'chrome:history:page_visited'
-
-  FORMAT_STRING = (u'{url} ({title}) [count: {typed_count}] Host: '
-                   '{hostname} {extra}')
-  FORMAT_STRING_SHORT = u'{url} ({title})'
-
-
-class ChromeFileDownloadFormatter(eventdata.EventFormatter):
-  """The event formatter for file downloaded data in Chrome History."""
-  DATA_TYPE = 'chrome:history:file_downloaded'
-
-  FORMAT_STRING = (u'{url} ({full_path}). Received: {received_bytes} bytes '
-                   u'out of: {total_bytes} bytes.')
-  FORMAT_STRING_SHORT = u'{full_path} downloaded ({received_bytes} bytes)'

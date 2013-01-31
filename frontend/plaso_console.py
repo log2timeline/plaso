@@ -28,6 +28,7 @@ from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 import pyvshadow
 
+from plaso import formatters
 from plaso import output
 from plaso import parsers
 from plaso import preprocessors
