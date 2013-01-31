@@ -19,6 +19,7 @@ import pytz
 import re
 import unittest
 
+from plaso.formatters import syslog
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.lib import putils

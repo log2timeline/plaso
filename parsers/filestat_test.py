@@ -17,6 +17,7 @@
 import os
 import unittest
 
+from plaso.formatters import filestat
 from plaso.lib import event
 from plaso.lib import pfile
 from plaso.lib import preprocess

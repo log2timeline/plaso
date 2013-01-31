@@ -17,6 +17,7 @@
 import os
 import unittest
 
+from plaso.formatters import winevt
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import winevt

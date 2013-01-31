@@ -16,7 +16,7 @@
 """This file contains a simple abstraction of registry keys for testing."""
 from plaso.lib import eventdata
 from plaso.lib import win_registry_interface
-from plaso.parsers import winreg
+from plaso.formatters import winreg
 
 
 class TestRegKey(win_registry_interface.WinRegKey):

@@ -560,6 +560,8 @@ group = parser.add_option_group("Patch options")
 group.add_option("-i", "--issue", type="int", action="store",
                  metavar="ISSUE", default=None,
                  help="Issue number to which to add. Defaults to new issue.")
+group.add_option("--cache", action="store_true", dest="add_cache",
+                 default=False, help="Add git cache parameter for new files.")
 group.add_option("--base_url", action="store", dest="base_url", default=None,
                  help="Base URL path for files (listed as \"Base URL\" when "
                  "viewing issue).  If omitted, will be guessed automatically "
@@ -1347,6 +1349,9 @@ class GitVCS(VersionControlSystem):
         cmd + ["--diff-filter=AMCRT"] + similarity_options + extra_args,
         env=env, silent_ok=True)
 
+    # Added by Kristinn.
+    if self.options.add_cache:
+      diff += RunShell(cmd + ["--cached"], env=env, silent_ok=True)
     # The CL could be only file deletion or not. So accept silent diff for both
     # commands then check for an empty diff manually.
     if not diff:

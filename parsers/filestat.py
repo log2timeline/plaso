@@ -17,7 +17,6 @@
 import re
 
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import sleuthkit
 from plaso.lib import timelib
@@ -86,27 +85,3 @@ class PfileStatParser(parser.PlasoParser):
 
     return event_container
 
-
-class PfileStatFormatter(eventdata.ConditionalEventFormatter):
-  """Define the formatting for PFileStat."""
-  DATA_TYPE = 'fs:stat'
-
-  FORMAT_STRING_PIECES = [u'{display_name}',
-                          u'({unallocated})']
-  FORMAT_STRING_SHORT_PIECES = [u'{filename}']
-
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
-
-    Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
-
-    Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
-    """
-    if event_object.allocated:
-      event_object.unallocated = u'unallocated'
-
-    return super(PfileStatFormatter, self).GetMessages(event_object)

@@ -17,7 +17,6 @@
 import logging
 
 from plaso.lib import errors
-from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import win_registry
 from plaso.lib import win_registry_interface
@@ -128,33 +127,3 @@ class WinRegistryParser(parser.PlasoParser):
 
       yield evt
 
-
-class WinRegistryGenericFormatter(eventdata.EventFormatter):
-  """Formatter for a generic Windows Registry key or value."""
-  DATA_TYPE = 'windows:registry:key_value'
-
-  FORMAT_STRING = u'[{keyname}] {text}'
-  FORMAT_STRING_ALTERNATIVE = u'{text}'
-
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
-
-    Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
-
-    Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
-    """
-    regvalue = getattr(event_object, "regvalue", {})
-    text = u' '.join([u'%s: %s' % (key, value) for (key, value)
-                      in sorted(regvalue.items())])
-
-    event_object.text = text
-    if hasattr(event_object, 'keyname'):
-      self.format_string = self.FORMAT_STRING
-    else:
-      self.format_string = self.FORMAT_STRING_ALTERNATIVE
-
-    return super(WinRegistryGenericFormatter, self).GetMessages(event_object)

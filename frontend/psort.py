@@ -41,8 +41,8 @@ import argparse
 import dateutil.parser
 import pytz
 
+from plaso import formatters
 from plaso import output
-from plaso import parsers
 from plaso.lib import event
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
