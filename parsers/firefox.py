@@ -335,37 +335,3 @@ class FirefoxHistoryParser(parser.SQLiteParser):
       return u'%s (%s)' % (row['url'], hostname)
     return u''
 
-
-class FirefoxBookmarkAnnotationFormatter(eventdata.EventFormatter):
-  """Formatter for a Firefox places.sqlite bookmark annotation."""
-  DATA_TYPE = 'firefox:places:bookmark_annotation'
-
-  FORMAT_STRING = (u'Bookmark Annotation: [{content}] to bookmark [{title}] '
-                   u'({url})')
-  FORMAT_STRING_SHORT = u'Bookmark Annotation: {title}'
-
-
-class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
-  """Formatter for a Firefox places.sqlite bookmark folder."""
-  DATA_TYPE = 'firefox:places:bookmark_folder'
-
-  FORMAT_STRING = '{title}'
-
-
-class FirefoxBookmarkFormatter(eventdata.EventFormatter):
-  """Formatter for a Firefox places.sqlite URL bookmark."""
-  DATA_TYPE = 'firefox:places:bookmark'
-
-  FORMAT_STRING = (u'Bookmark {type} {title} ({url}) '
-                   u'[{places_title}] visit count {visit_count}')
-  FORMAT_STRING_SHORT = u'Bookmarked {title} ({url})'
-
-
-class FirefoxPageVisitFormatter(eventdata.EventFormatter):
-  """Formatter for a Firefox places.sqlite page visited."""
-  DATA_TYPE = 'firefox:places:page_visited'
-
-  # TODO: make extra conditional formatting.
-  FORMAT_STRING = (u'{url} ({title}) [count: {visit_count}] '
-                   u'Host: {hostname}{extra}')
-  FORMAT_STRING_SHORT = u'URL: {url}'

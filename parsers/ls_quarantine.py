@@ -80,10 +80,3 @@ class LsQuarantineParser(parser.SQLiteParser):
     yield LsQuarantineEvent(
        row['Epoch'], row['URL'], row['Agent'], row['Data'])
 
-
-class LSQuarantineFormatter(eventdata.EventFormatter):
-  """Formatter for a LS Quarantine history event."""
-  DATA_TYPE = 'macosx:lsquarantine'
-
-  FORMAT_STRING = u'[{agent}] Downloaded: {url} <{data}>'
-  FORMAT_STRING_SHORT = u'{url}'

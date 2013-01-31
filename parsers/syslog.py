@@ -19,7 +19,6 @@ import logging
 import re
 
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 
@@ -220,11 +219,3 @@ class SyslogParser(parser.TextParser):
     """
     return SyslogLineEvent(timestamp, offset, attributes)
 
-
-class SyslogLineFormatter(eventdata.ConditionalEventFormatter):
-  """Formatter for syslog files."""
-  DATA_TYPE = 'syslog:line'
-
-  FORMAT_STRING_SEPARATOR = u''
-
-  FORMAT_STRING_PIECES = [u'[', u'{reporter}', u', pid: {pid}', u'] {body}']

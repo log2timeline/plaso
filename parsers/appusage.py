@@ -19,7 +19,6 @@
    /var/db/application_usage.sqlite
 """
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
@@ -97,13 +96,4 @@ class ApplicationUsageParser(parser.SQLiteParser):
         timelib.TimeStamp.FromPosixTime(row['last_time']),
         u'Application %s' % row['event'], u'%s' % row['app_path'],
         row['app_version'], row['bundle_id'], row['number_times'])
-
-
-class ApplicationUsageFormatter(eventdata.EventFormatter):
-  """Define the formatting for Application Usage information."""
-  DATA_TYPE = 'macosx:application_usage'
-
-  FORMAT_STRING = (u'{application} v.{app_version} (bundle: {bundle_id}).'
-                   ' Launched: {count} time(s)')
-  FORMAT_STRING_SHORT = u'{application} ({count} time(s))'
 

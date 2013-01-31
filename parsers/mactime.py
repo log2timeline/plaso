@@ -21,7 +21,6 @@ The format specifications can be read here:
 import re
 
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
@@ -94,10 +93,3 @@ class MactimeParser(parser.TextCSVParser):
     if len(container) > 0:
       return container
 
-
-class MactimeFormatter(eventdata.EventFormatter):
-  """Class that formats mactime bodyfile events."""
-  DATA_TYPE = 'mactime:line'
-
-  # The format string.
-  FORMAT_STRING = u'{name}'

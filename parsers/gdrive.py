@@ -217,19 +217,3 @@ class GoogleDriveParser(parser.SQLiteParser):
     yield GoogleDriveSnapshotLocalEntryEvent(
         row['modified'], local_path, row['size'])
 
-
-class GDriveCloudEntryFormatter(eventdata.EventFormatter):
-  """Formatter for Google Drive snapshot cloud entry."""
-  DATA_TYPE = 'gdrive:snapshot:cloud_entry'
-
-  FORMAT_STRING = (u'File Path: {path} [{shared}] Size:{size} URL:{url} '
-                   u'doc_type:{doc_type}')
-  FORMAT_STRING_SHORT = u'{path}'
-
-
-class GDriveLocalEntryFormatter(eventdata.EventFormatter):
-  """Formatter for Google Drive snapshot local entry."""
-  DATA_TYPE = 'gdrive:snapshot:local_entry'
-
-  FORMAT_STRING = u'File Path: {path} Size: {size}'
-  FORMAT_STRING_SHORT = u'{path}'

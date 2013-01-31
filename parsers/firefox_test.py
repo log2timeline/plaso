@@ -19,6 +19,7 @@ import unittest
 
 import pytz
 
+from plaso.formatters import firefox
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import firefox
