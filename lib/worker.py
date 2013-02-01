@@ -225,7 +225,9 @@ class PlasoWorker(object):
     """
     for pathspec in cls.SmartOpenFile(fh):
       try:
-        new_fh = pfile.OpenPFile(spec=pathspec, orig=proto, fscache=fscache)
+        pathspec_orig = copy.copy(pathspec)
+        new_fh = pfile.OpenPFile(
+            spec=pathspec, orig=pathspec_orig, fscache=fscache)
         yield new_fh
       except IOError as e:
         logging.debug(('Unable to open file: {%s}, not sure if we can extract '
@@ -245,7 +247,7 @@ class PlasoWorker(object):
       fh: The filehandle we are examining.
 
     Yields:
-      PathSpec protobufs describing how a file can be opened.
+      EventPathSpec objects describing how a file can be opened.
     """
     # TODO: Remove when classifier gets deployed. Then we
     # call the classifier here and use that for definition (and
@@ -311,8 +313,8 @@ class PlasoWorker(object):
             transfer_zip.file_path = utils.GetUnicodeString(info.filename)
             transfer_zip.container_path = utils.GetUnicodeString(
                 fh.pathspec.file_path)
-            cls.SetNestedContainer(proto, transfer_zip)
-            yield proto
+            pathspec.nested_pathsec = transfer_zip
+            yield pathspec
         return
       except zipfile.BadZipfile:
         pass
@@ -329,7 +331,7 @@ class PlasoWorker(object):
         transfer_gzip = event.EventPathSpec()
         transfer_gzip.type = 'GZIP'
         transfer_gzip.file_path = utils.GetUnicodeString(fh.pathspec.file_path)
-        cls.SetNestedContainer(fh.pathspec_root, transfer_gzip)
+        fh.pathspec_root.nested_pathspec = transfer_gzip
         yield fh.pathspec_root
         return
       except (IOError, zlib.error, errors.SameFileType):
@@ -345,30 +347,17 @@ class PlasoWorker(object):
         fh_tar = tarfile.open(fileobj=fh, mode='r')
         for name in fh_tar.getnames():
           logging.debug('Including: %s from TAR into process queue.', name)
-          proto = fh.pathspec_root
+          pathspec = fh.pathspec_root
           transfer_tar = event.EventPathSpec()
           transfer_tar.type = 'TAR'
           transfer_tar.file_path = utils.GetUnicodeString(name)
           transfer_tar.container_path = utils.GetUnicodeString(
               fh.pathspec.file_path)
-          cls.SetNestedContainer(proto, transfer_tar)
-          yield proto
+          pathspec.nested_pathspec = transfer_tar
+          yield pathspec
         return
       except tarfile.ReadError:
         pass
-
-  @classmethod
-  def SetNestedContainer(cls, proto_root, proto_append):
-    """Append a PathSpec protobuf to the end of a nested_pathspec chain.
-
-    Args:
-      proto_root: The root PathSpec of the chain.
-      proto_append: The PathSpec protobuf that needs to be appended.
-    """
-    if not hasattr(proto_root, 'nested_pathspec'):
-      proto_root.nested_pathspec = proto_append
-    else:
-      cls.SetNestedContainer(proto_root.nested_pathspec, proto_append)
 
 # TODO: Add a main function that can be used to execute the
 # worker directly, so it can be run independently.
