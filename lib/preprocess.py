@@ -19,14 +19,14 @@ import logging
 import os
 import re
 
-import pytsk3
-
 from plaso.lib import errors
 from plaso.lib import lexer
 from plaso.lib import pfile
 from plaso.lib import putils
 from plaso.lib import registry
 from plaso.lib import win_registry
+
+import pytsk3
 
 
 class PreprocessPlugin(object):
@@ -274,7 +274,7 @@ class Collector(object):
 
     Returns:
       A list of all files found that fit the pattern.
-  """
+    """
 
   @abc.abstractmethod
   def OpenFile(self, path):
