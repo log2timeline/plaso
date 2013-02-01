@@ -70,7 +70,7 @@ class DictObject(object):
   def _StripKey(self, key):
     """Return a stripped version of the dict key without symbols."""
     try:
-      return str(key).lower().lower().translate(None, ' (){}+_=-<>[]')
+      return str(key).lower().translate(None, ' (){}+_=-<>[]')
     except UnicodeEncodeError:
       pass
 
