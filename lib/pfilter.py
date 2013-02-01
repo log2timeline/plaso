@@ -19,23 +19,20 @@
 # limitations under the License.
 """An extension of the objectfilter to provide plaso specific options."""
 
-import binascii
 import calendar
 import datetime
-import dateutil.parser
 import logging
-import pytz
 
+import dateutil.parser
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
 from plaso.frontend import presets
 
 from plaso.lib import eventdata
 from plaso.lib import objectfilter
-from plaso.lib import lexer
-from plaso.lib import pfile
-from plaso.lib import storage
 from plaso.lib import utils
+
+import pytz
 
 __pychecker__ = 'no-funcdoc'
 

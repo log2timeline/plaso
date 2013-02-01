@@ -16,7 +16,6 @@
 """This file contains a syslog parser in plaso."""
 import datetime
 import logging
-import re
 
 from plaso.lib import event
 from plaso.lib import lexer

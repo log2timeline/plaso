@@ -62,16 +62,15 @@ import logging
 import struct
 import sys
 import zipfile
-import yaml
-
-from google.protobuf import message
 
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import pfile
 from plaso.lib import queue
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
+
+from google.protobuf import message
+import yaml
 
 __pychecker__ = 'no-abstract'
 
@@ -157,7 +156,7 @@ class PlasoStorage(object):
     if current_object:
       current_object.append(pre_obj)
     else:
-      current_object = [pre_obj, ]
+      current_object = [pre_obj,]
 
     self.zipfile.writestr('information.yaml', yaml.dump(current_object))
 
@@ -193,6 +192,7 @@ class PlasoStorage(object):
 
     Raises:
       EOFError: When we reach the end of the protobuf file.
+      errors.WrongProtobufEntry: If the probotuf size is too large for storage.
     """
     last_index = 0
     if number in self.protofiles:
@@ -356,7 +356,7 @@ class PlasoStorage(object):
     """Add an entry into the buffer.
 
     Args:
-      event: An EventObject to append to the buffer (serialized).
+      event_str: A serialized EventObject to append to the buffer.
 
     Raises:
       IOError: When trying to write to a closed storage file.

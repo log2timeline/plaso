@@ -14,20 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A simple dump information gathered from a plaso storage container."""
+# To make YAML loading work.
+__pychecker__ = 'no-import'
+import argparse
+import collections
 import datetime
 import logging
 import os
 import pprint
 import sys
 
-# To make YAML loading work.
-__pychecker__ = 'no-import'
-import argparse
-import collections
-import pytz
-
 from plaso.lib import preprocess
 from plaso.lib import storage
+import pytz
 
 
 def GetInformation(params):

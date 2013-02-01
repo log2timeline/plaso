@@ -20,12 +20,11 @@ Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
 import logging
 import re
 
-from plaso.output import helper
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
+from plaso.output import helper
 
 
 class L2tcsv(output.FileLogOutputFormatter):
@@ -56,6 +55,9 @@ class L2tcsv(output.FileLogOutputFormatter):
 
     Args:
       event_object: The event object (EventObject).
+
+    Raises:
+      errors.NoFormatterFound: If no formatter for that event is found.
     """
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:

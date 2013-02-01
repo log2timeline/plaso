@@ -16,9 +16,9 @@
 """This file contains log2timeline, the friendly front-end to plaso."""
 
 import argparse
-import os
-import multiprocessing
 import logging
+import multiprocessing
+import os
 import sys
 
 from plaso.lib import errors

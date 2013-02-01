@@ -35,7 +35,7 @@ class WinRegistryGenericFormatter(eventdata.EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
-    regvalue = getattr(event_object, "regvalue", {})
+    regvalue = getattr(event_object, 'regvalue', {})
     text = u' '.join([u'%s: %s' % (key, value) for (key, value)
                       in sorted(regvalue.items())])
 
