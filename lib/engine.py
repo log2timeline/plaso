@@ -28,21 +28,20 @@ import sys
 import time
 import traceback
 
-import pytz
-import pyvshadow
-
 from plaso import preprocessors
 from plaso import registry as reg_plugins
 
 from plaso.lib import collector
 from plaso.lib import errors
 from plaso.lib import preprocess
-from plaso.lib import queue
-from plaso.lib import sleuthkit
-from plaso.lib import storage
 from plaso.lib import putils
+from plaso.lib import queue
+from plaso.lib import storage
 from plaso.lib import vss
 from plaso.lib import worker
+
+import pytz
+import pyvshadow
 
 
 __version__ = '1.0alpha'
@@ -293,6 +292,9 @@ class Engine(object):
 
     The local implementation uses the muliprocessing library to
     start up new threads or processes.
+
+    Raises:
+      errors.BadConfigOption: If the file being parsed does not exist.
     """
 
     pre_obj = preprocess.PlasoPreprocess()

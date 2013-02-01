@@ -14,16 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows Shortcut (LNK) files."""
-import pylnk
-
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 
+import pylnk
 
-if pylnk.get_version() < "20130117":
-  raise ImportWarning("WinLnkParser requires at least pylnk 20130117.")
+
+if pylnk.get_version() < '20130117':
+  raise ImportWarning('WinLnkParser requires at least pylnk 20130117.')
 
 
 class WinLnkLinkEventContainer(event.EventContainer):

@@ -38,7 +38,7 @@ class Rawpy(output.FileLogOutputFormatter):
     """String representation of an EventObject object.
 
     Args:
-      Evt: The EventObject.
+      evt: The EventObject.
 
     Returns:
       String representation of an EventObject.

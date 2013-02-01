@@ -22,6 +22,7 @@ that determines the file type. Based on the file type from the classifier
 the worker then sends the file to the appropriate parsers that take care
 of extracting EventObjects from it.
 """
+import copy
 import gzip
 import logging
 import pdb
@@ -32,12 +33,9 @@ import zlib
 from plaso import parsers
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import objectfilter
-from plaso.lib import parser
 from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import putils
-from plaso.lib import storage
 from plaso.lib import utils
 
 
@@ -154,7 +152,7 @@ class PlasoWorker(object):
     if not self._filter:
       self._stor_queue.AddEvent(event_object.ToProtoString())
     else:
-      if self._filter.Matches(evt):
+      if self._filter.Matches(event_object):
         self._stor_queue.AddEvent(event_object.ToProtoString())
 
   def ParseFile(self, filehandle):
@@ -219,6 +217,7 @@ class PlasoWorker(object):
 
     Args:
       fh: A PFile object that is used to extract PathSpecs from.
+      fscache: A pfile.FilesystemCache object.
 
     Yields:
       A Pfile file-like object.
@@ -313,7 +312,7 @@ class PlasoWorker(object):
             transfer_zip.file_path = utils.GetUnicodeString(info.filename)
             transfer_zip.container_path = utils.GetUnicodeString(
                 fh.pathspec.file_path)
-            pathspec.nested_pathsec = transfer_zip
+            pathspec.nested_pathspec = transfer_zip
             yield pathspec
         return
       except zipfile.BadZipfile:

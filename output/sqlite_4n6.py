@@ -13,19 +13,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import logging
-import pytz
 import os
 import re
 import sys
-import sqlite3
 
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
+import pytz
+import sqlite3
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -38,9 +37,13 @@ class Sql4n6(output.LogOutputFormatter):
   META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
                  'color', 'type']
 
+  # TODO: Fix this 'dangerous' default value of fields passed in.
+  # Rather have some way of extending the class if this is really
+  # necessary.
+
   def __init__(self, filehandle=sys.stdout, zone=pytz.utc,
-               fields=['host','user','source','sourcetype',
-                       'type','datetime','color'],
+               fields=['host', 'user', 'source', 'sourcetype',
+                       'type', 'datetime', 'color'],
                append=False):
     """Constructor for the output module.
 
@@ -101,8 +104,8 @@ class Sql4n6(output.LogOutputFormatter):
     # It will commit the inserts automatically before creating index.
     if not self.append:
       for fn in self.fields:
-        ciSQL = 'CREATE INDEX %s_idx ON log2timeline (%s)' % (fn, fn)
-        self.curs.execute(ciSQL)
+        ci_sql = 'CREATE INDEX %s_idx ON log2timeline (%s)' % (fn, fn)
+        self.curs.execute(ci_sql)
 
     # Get meta info and save into their tables.
     for field in self.META_FIELDS:
@@ -121,7 +124,7 @@ class Sql4n6(output.LogOutputFormatter):
     self.conn.close()
 
   def _GetDistinctValues(self, field_name):
-    """Query database for unique field types"""
+    """Query database for unique field types."""
     self.curs.execute(
         u'SELECT {0}, COUNT({0}) FROM log2timeline GROUP BY {0}'.format(
             field_name))
@@ -132,10 +135,10 @@ class Sql4n6(output.LogOutputFormatter):
     return res
 
   def _ListTags(self):
-    """Query database for unique tag types"""
+    """Query database for unique tag types."""
     all_tags = []
-    self.curs.execute('SELECT DISTINCT tag \
-                      FROM log2timeline')
+    self.curs.execute(
+        'SELECT DISTINCT tag FROM log2timeline')
 
     # This cleans up the messy SQL return.
     for tag_row in self.curs.fetchall():
@@ -152,7 +155,7 @@ class Sql4n6(output.LogOutputFormatter):
     pass
 
   def EndEvent(self):
-    """Do nothing, just override the parent's EndEvent method"""
+    """Do nothing, just override the parent's EndEvent method."""
     pass
 
   def EventBody(self, evt):
@@ -160,6 +163,9 @@ class Sql4n6(output.LogOutputFormatter):
 
     Args:
       evt: An EventObject that contains the event data.
+
+    Raises:
+      raise errors.NoFormatterFound: If no formatter for this event is found.
     """
 
     if 'timestamp' not in evt.GetAttributes():

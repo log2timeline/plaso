@@ -68,13 +68,14 @@ class EventFormatterManager(object):
           if formatter.DATA_TYPE in cls.event_formatters:
             raise RuntimeError(
                 'event formatter for data type: %s defined in: %s and %s.' %(
-                formatter.DATA_TYPE, cls_formatter,
-                cls.event_formatters[formatter.DATA_TYPE].__class__.__name__))
+                    formatter.DATA_TYPE, cls_formatter,
+                    cls.event_formatters[
+                        formatter.DATA_TYPE].__class__.__name__))
           cls.event_formatters[formatter.DATA_TYPE] = formatter
         except RuntimeError as exeception:
           # Ignore broken formatters.
           logging.warning('%s', exeception)
-          pass
+
       cls.event_formatters.setdefault(None)
 
     return cls.event_formatters[event_object.data_type]
@@ -235,8 +236,8 @@ class ConditionalEventFormatter(EventFormatter):
         self._format_string_pieces_map.append(attribute_name)
       else:
         raise RuntimeError(
-            "Invalid format string piece: [%s] contains more than 1 attribute "
-            "name.", format_string_piece)
+            'Invalid format string piece: [%s] contains more than 1 attribute '
+            'name.', format_string_piece)
 
     self._format_string_short_pieces_map = []
     for format_string_piece in self.FORMAT_STRING_SHORT_PIECES:
@@ -251,8 +252,8 @@ class ConditionalEventFormatter(EventFormatter):
         self._format_string_short_pieces_map.append(attribute_name)
       else:
         raise RuntimeError(
-            "Invalid short format string piece: [%s] contains more than 1 "
-            "attribute name.", format_string_piece)
+            'Invalid short format string piece: [%s] contains more than 1 '
+            'attribute name.', format_string_piece)
 
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.

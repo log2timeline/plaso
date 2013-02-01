@@ -193,20 +193,20 @@ class PCollector(object):
     ret_hash = hashlib.md5()
 
     ret_hash.update('atime:{0}.{1}'.format(
-      getattr(meta, 'atime', 0),
-      getattr(meta, 'atime_nano', 0)))
+        getattr(meta, 'atime', 0),
+        getattr(meta, 'atime_nano', 0)))
 
     ret_hash.update('crtime:{0}.{1}'.format(
-      getattr(meta, 'crtime', 0),
-      getattr(meta, 'crtime_nano', 0)))
+        getattr(meta, 'crtime', 0),
+        getattr(meta, 'crtime_nano', 0)))
 
     ret_hash.update('mtime:{0}.{1}'.format(
-      getattr(meta, 'mtime', 0),
-      getattr(meta, 'mtime_nano', 0)))
+        getattr(meta, 'mtime', 0),
+        getattr(meta, 'mtime_nano', 0)))
 
     ret_hash.update('ctime:{0}.{1}'.format(
-      getattr(meta, 'ctime', 0),
-      getattr(meta, 'ctime_nano', 0)))
+        getattr(meta, 'ctime', 0),
+        getattr(meta, 'ctime_nano', 0)))
 
     return ret_hash.hexdigest()
 

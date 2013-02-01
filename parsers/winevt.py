@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows EventLog (EVT) files."""
-import pyevt
-
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
+
+import pyevt
 
 
 class WinEvtRecordEventContainer(event.EventContainer):
@@ -106,7 +106,7 @@ class WinEvtParser(parser.PlasoParser):
     try:
       evt_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile("[%s] unable to parse file %s: %s" % (
+      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
           self.NAME, file_object.name, exception))
 
     for evt_record in evt_file.records:

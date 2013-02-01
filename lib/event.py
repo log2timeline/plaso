@@ -184,13 +184,13 @@ class EventContainer(object):
       function that is not an EventObject or an EventContainer.
     """
     try:
-     if isinstance(item, EventObject):
-       self._Append(item, self.events, item.timestamp)
-       return
-     elif isinstance(item, EventContainer):
-       self._Append(item, self.containers, item.first_timestamp,
-                    item.last_timestamp)
-       return
+      if isinstance(item, EventObject):
+        self._Append(item, self.events, item.timestamp)
+        return
+      elif isinstance(item, EventContainer):
+        self._Append(item, self.containers, item.first_timestamp,
+                     item.last_timestamp)
+        return
     except (AttributeError, TypeError):
       pass
 
@@ -719,12 +719,12 @@ class FatDateTimeEvent(TimestampEvent):
     """Initializes a FAT date time-based event object.
 
     Args:
-      fat_dat_time: The FAT date time value.
+      fat_date_time: The FAT date time value.
       usage: The description of the usage of the time value.
       data_type: The event data type. If not set data_type is derived
                  from DATA_TYPE.
     """
-    super(TimestampEvent, self).__init__(
+    super(FatDateTimeEvent, self).__init__(
         timelib.Timestamp.FromFatDateTime(fat_date_time), usage, data_type)
 
 
