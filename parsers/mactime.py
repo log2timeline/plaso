@@ -82,7 +82,7 @@ class MactimeParser(parser.TextCSVParser):
           for user in self._pre_obj.users:
             if user.get('sid', '') == value:
               container.username = user.get('name', 'N/A')
-            if user.get('gid', '') == value:
+            if user.get('uid', '') == value:
               container.username = user.get('name', 'N/A')
 
     for key in ('atime', 'mtime', 'ctime', 'crtime'):
