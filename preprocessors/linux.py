@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains preprocessors for Linux."""
-
+import csv
 from plaso.lib import preprocess
 
 
@@ -26,5 +26,32 @@ class LinuxHostname(preprocess.PreprocessPlugin):
   ATTRIBUTE = 'hostname'
 
   def GetValue(self):
+    """Return the hostname."""
     fh = self._collector.OpenFile('/etc/hostname')
     return u'%s' % fh.read(512)
+
+
+class LinuxUsernames(preprocess.PreprocessPlugin):
+  """A preprocessing class that fetches usernames on Linux."""
+
+  SUPPORTED_OS = ['Linux']
+  WEIGHT = 1
+  ATTRIBUTE = 'users'
+
+  def GetValue(self):
+    """Return the user information."""
+    # TODO: Add passwd.cache, might be good if nss cache is enabled.
+    fh = self._collector.OpenFile('/etc/passwd')
+    users = []
+    reader = csv.reader(fh, delimiter=':')
+
+    for row in reader:
+      user = {}
+      user['uid'] = row[2]
+      user['gid'] = row[3]
+      user['name'] = row[0]
+      user['path'] = row[5]
+      user['shell'] = row[6]
+      users.append(user)
+
+    return users
