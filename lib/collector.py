@@ -131,23 +131,34 @@ class PCollector(object):
     directories = []
     for f in directory:
       try:
-        name = f.info.name.name
+        tsk_name = f.info.name
+        if not tsk_name:
+          continue
+        # TODO: Add a test that tests the reason for this. Why is this?
+        # If an inode/file gets reallocated yet is still listed inside
+        # a directory node there may be issues (reparsing a file, ending
+        # up in an endless loop, etc.).
+        if tsk_name.flags == pytsk3.TSK_FS_NAME_FLAG_UNALLOC:
+          # TODO: Perhaps add a direct parsing of timestamps here to include
+          # in the timeline.
+          continue
         if not f.info.meta:
           continue
+        name_str = tsk_name.name
         inode_addr = f.info.meta.addr
         f_type = f.info.meta.type
       except AttributeError as e:
         logging.error('[ParseImage] Problem reading file [%s], error: %s',
-                      name, e)
+                      name_str, e)
         continue
 
       # List of files we do not want to process further.
-      if name in ['$OrphanFiles', '.', '..']:
+      if name_str in ['$OrphanFiles', '.', '..']:
         continue
 
       # We only care about regular files and directories
       if f_type == pytsk3.TSK_FS_META_TYPE_DIR:
-        directories.append((inode_addr, os.path.join(path, name)))
+        directories.append((inode_addr, os.path.join(path, name_str)))
       elif f_type == pytsk3.TSK_FS_META_TYPE_REG:
         transfer_proto = event.EventPathSpec()
         if fs.store_nr >= 0:
@@ -158,7 +169,7 @@ class PCollector(object):
         transfer_proto.container_path = fs.path
         transfer_proto.image_offset = fs.offset
         transfer_proto.image_inode = inode_addr
-        file_path = os.path.join(path, name)
+        file_path = os.path.join(path, name_str)
         transfer_proto.file_path = utils.GetUnicodeString(file_path)
 
         # If we are dealing with a VSS we want to calculate a hash
