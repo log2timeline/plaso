@@ -38,6 +38,15 @@ class L2tcsv(output.FileLogOutputFormatter):
 
   def Start(self):
     """Returns a header for the output."""
+    # Build a hostname and username dict objects.
+    if self.store:
+      self._hostnames = helper.BuildHostDict(self.store)
+      self._preprocesses = {}
+      for info in self.store.GetStorageInformation():
+        if hasattr(info, 'store_range'):
+          for store_number in range(info.store_range[0], info.store_range[1]):
+            self._preprocesses[store_number] = info
+
     self.filehandle.write(
         'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         'version,filename,inode,notes,format,extra\n')
@@ -89,6 +98,19 @@ class L2tcsv(output.FileLogOutputFormatter):
           event_object.pathspec, 'image_inode'):
         inode = event_object.pathspec.image_inode
 
+    hostname = getattr(event_object, 'hostname', '')
+
+    username = getattr(event_object, 'username', '-')
+    if self.store:
+      if not hostname:
+        hostname = self._hostnames.get(event_object.store_number, '-')
+
+      check_user = helper.GetUsernameFromPreProcess(
+          self._preprocesses.get(event_object.store_number), username)
+
+      if check_user != '-':
+        username = check_user
+
     row = (date_use.strftime('%m/%d/%Y'),
            date_use.strftime('%H:%M:%S'),
            self.zone,
@@ -96,8 +118,8 @@ class L2tcsv(output.FileLogOutputFormatter):
            event_object.source_short,
            event_object.source_long,
            event_object.timestamp_desc,
-           getattr(event_object, 'username', '-'),
-           getattr(event_object, 'hostname', '-'),
+           username,
+           hostname,
            msg_short,
            msg,
            '2',
