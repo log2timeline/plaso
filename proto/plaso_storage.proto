@@ -43,6 +43,8 @@ message Attribute {
   optional bool boolean = 6;
   // If we have a "raw" byte value.
   optional bytes data = 7;
+  // If we have a "float" value.
+  optional float float = 8;
 };
 
 // A list of of Attributes, to build up a dictionary.
@@ -268,3 +270,21 @@ message EventContainer {
   repeated Attribute attributes = 8;
 };
 
+// The PreProcess protobuf is a simple message that stores information
+// gathered from the pre-processing stage of plaso.
+message PreProcess {
+  // Storing information about the runtime of the tool.
+  optional Dict collection_information = 1;
+
+  // A dict that contains information about counters stored within the
+  // the store.
+  optional Dict counter = 2;
+
+  // A list value that depicts the range of store numbers this particular
+  // PreProcess message applies to.
+  optional Array store_range = 3;
+
+  // All attributes that each preprocessing module produces gets stored
+  // inside this field.
+  repeated Attribute attributes = 4;
+};

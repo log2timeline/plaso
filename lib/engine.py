@@ -43,8 +43,7 @@ from plaso.lib import worker
 import pytz
 import pyvshadow
 
-
-__version__ = '1.0alpha'
+__version__ = '1.0.1alpha-pre'
 
 
 def GetTimeZoneList():
@@ -405,15 +404,15 @@ class Engine(object):
     obj.collection_information['parsers'] = [
         x.parser_name for x in putils.FindAllParsers(obj, filter_query)['all']]
 
-    obj.collection_information['preprocess'] = str(
-        bool(self.config.preprocess))
+    obj.collection_information['preprocess'] = bool(
+        self.config.preprocess)
 
-    obj.collection_information['recursive'] = str(
-        bool(self.config.recursive))
-    obj.collection_information['debug'] = str(
-        bool(self.config.debug))
-    obj.collection_information['vss parsing'] = str(
-        bool(self.config.parse_vss))
+    obj.collection_information['recursive'] = bool(
+        self.config.recursive)
+    obj.collection_information['debug'] = bool(
+        self.config.debug)
+    obj.collection_information['vss parsing'] = bool(
+        self.config.parse_vss)
 
     if hasattr(self.config, 'filter') and self.config.filter:
       obj.collection_information['filter'] = self.config.filter

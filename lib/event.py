@@ -514,11 +514,11 @@ class EventObject(object):
       else:
         attribute_value = getattr(self, attribute_name)
 
-        # TODO: deal with float.
         # Serialize the attribute value only if it is an integer type
         # (int or long) or if it has a value.
         # TODO: fix logic.
-        if isinstance(attribute_value, (bool, int, long)) or attribute_value:
+        if isinstance(
+            attribute_value, (bool, int, float, long)) or attribute_value:
           proto_attribute = proto.attributes.add()
           AttributeToProto(
               proto_attribute, attribute_name, attribute_value)
@@ -859,7 +859,9 @@ def AttributeToProto(proto, name, value):
       AttributeToProto(sub_proto, '', list_value)
     proto.array.MergeFrom(proto_array)
 
-  # TODO: deal with float.
+  elif isinstance(value, float):
+    proto.float = value
+
   else:
     proto.data = value
 
@@ -917,6 +919,8 @@ def AttributeFromProto(proto):
   elif proto.HasField('data'):
     return key, proto.data
 
-  # TODO: deal with float.
+  elif proto.HasField('float'):
+    return key, proto.float
+
   else:
     raise RuntimeError('Unsupported proto attribute type.')

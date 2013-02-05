@@ -15,18 +15,23 @@
 # limitations under the License.
 """This file contains classes used for preprocessing in plaso."""
 import abc
+import collections
 import logging
 import os
 import re
 
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import lexer
 from plaso.lib import pfile
 from plaso.lib import putils
 from plaso.lib import registry
 from plaso.lib import win_registry
 
+from plaso.proto import plaso_storage_pb2
+
 import pytsk3
+import pytz
 
 
 class PreprocessPlugin(object):
@@ -91,6 +96,108 @@ class PreprocessPlugin(object):
 
 class PlasoPreprocess(object):
   """Object used to store all information gained from preprocessing."""
+
+  def _DictToProto(self, dict_obj):
+    """Return a dict message to a protobuf from a dict object."""
+    proto_dict = plaso_storage_pb2.Dict()
+
+    for dict_key, dict_value in dict_obj.items():
+      sub_proto = proto_dict.attributes.add()
+      event.AttributeToProto(sub_proto, dict_key, dict_value)
+
+    return proto_dict
+
+  def _ProtoToDict(self, proto):
+    """Return a dict object from a Dict message."""
+    dict_obj = {}
+    for proto_dict in proto.attributes:
+      dict_key, dict_value = event.AttributeFromProto(proto_dict)
+      dict_obj[dict_key] = dict_value
+
+    return dict_obj
+
+  def FromProto(self, proto):
+    """Unserializes the PlasoPreprocess from a protobuf.
+
+    Args:
+      proto: The protobuf (plaso_storage_pb2.PreProcess).
+
+    Raises:
+      RuntimeError: when the protobuf is not of type:
+                    plaso_storage_pb2.PreProcess or when an unsupported
+                    attribute value type is encountered
+    """
+    if not isinstance(proto, plaso_storage_pb2.PreProcess):
+      raise RuntimeError('Unsupported proto')
+
+    # TODO: Clear values before setting them.
+    for attribute in proto.attributes:
+      key, value = event.AttributeFromProto(attribute)
+      if key == 'zone':
+        value = pytz.timezone(value)
+      setattr(self, key, value)
+
+    if proto.HasField('counter'):
+      self.counter = collections.Counter()
+      dict_obj = self._ProtoToDict(proto.counter)
+      for title, value in dict_obj.items():
+        self.counter[title] = value
+
+    if proto.HasField('store_range'):
+      range_list = []
+      for value in proto.store_range.values:
+        if value.HasField('integer'):
+          range_list.append(value.integer)
+      self.store_range = (range_list[0], range_list[-1])
+
+    if proto.HasField('collection_information'):
+      self.collection_information = self._ProtoToDict(
+          proto.collection_information)
+      zone = self.collection_information.get('configure_zone')
+      if zone:
+        self.collection_information['configured_zone'] = pytz.timezone(zone)
+
+  def ToProto(self):
+    """Return a PreProcess protobuf built from the object."""
+    proto = plaso_storage_pb2.PreProcess()
+
+    for attribute, value in self.__dict__.items():
+      if attribute == 'collection_information':
+        zone = value.get('configured_zone', '')
+        if zone and hasattr(zone, 'zone'):
+          value['configured_zone'] = zone.zone
+        proto.collection_information.MergeFrom(self._DictToProto(value))
+      elif attribute == 'counter':
+        value_dict = dict(value.items())
+        proto.counter.MergeFrom(self._DictToProto(value_dict))
+      elif attribute == 'store_range':
+        range_proto = plaso_storage_pb2.Array()
+        range_start = range_proto.values.add()
+        range_start.integer = int(value[0])
+        range_end = range_proto.values.add()
+        range_end.integer = int(value[-1])
+        proto.store_range.MergeFrom(range_proto)
+      else:
+        if attribute == 'zone':
+          value = value.zone
+        if isinstance(value, (bool, int, float, long)) or value:
+          proto_attribute = proto.attributes.add()
+          event.AttributeToProto(
+              proto_attribute, attribute, value)
+
+    return proto
+
+  def FromProtoString(self, proto_string):
+    """Unserializes the PlasoPreprocess from a serialized protobuf."""
+    proto = plaso_storage_pb2.PreProcess()
+    proto.ParseFromString(proto_string)
+    self.FromProto(proto)
+
+  def ToProtoString(self):
+    """Serialize a PlasoPreprocess into a string value."""
+    proto = self.ToProto()
+
+    return proto.SerializeToString()
 
 
 class WinRegistryPreprocess(PreprocessPlugin):

@@ -12,7 +12,7 @@ import plaso.proto.transmission_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='plaso/proto/plaso_storage.proto',
   package='plaso_storage',
-  serialized_pb='\n\x1fplaso/proto/plaso_storage.proto\x12\rplaso_storage\x1a\x1eplaso/proto/transmission.proto\"\xa0\x01\n\tAttribute\x12\x0b\n\x03key\x18\x01 \x02(\t\x12\x0e\n\x06string\x18\x02 \x01(\t\x12\x0f\n\x07integer\x18\x03 \x01(\x03\x12#\n\x05\x61rray\x18\x04 \x01(\x0b\x32\x14.plaso_storage.Array\x12!\n\x04\x64ict\x18\x05 \x01(\x0b\x32\x13.plaso_storage.Dict\x12\x0f\n\x07\x62oolean\x18\x06 \x01(\x08\x12\x0c\n\x04\x64\x61ta\x18\x07 \x01(\x0c\"4\n\x04\x44ict\x12,\n\nattributes\x18\x01 \x03(\x0b\x32\x18.plaso_storage.Attribute\"\x8f\x01\n\x05Value\x12\x0f\n\x07integer\x18\x01 \x01(\x03\x12\x0e\n\x06string\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\x12#\n\x05\x61rray\x18\x04 \x01(\x0b\x32\x14.plaso_storage.Array\x12!\n\x04\x64ict\x18\x05 \x01(\x0b\x32\x13.plaso_storage.Dict\x12\x0f\n\x07\x62oolean\x18\x06 \x01(\x08\"-\n\x05\x41rray\x12$\n\x06values\x18\x01 \x03(\x0b\x32\x14.plaso_storage.Value\"\xe4\x04\n\x0b\x45ventObject\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x16\n\x0etimestamp_desc\x18\x02 \x01(\t\x12<\n\x0csource_short\x18\x03 \x02(\x0e\x32&.plaso_storage.EventObject.SourceShort\x12\x13\n\x0bsource_long\x18\x04 \x02(\t\x12\x18\n\x10\x64\x65scription_long\x18\x05 \x01(\t\x12\x19\n\x11\x64\x65scription_short\x18\x06 \x01(\t\x12,\n\nattributes\x18\x08 \x03(\x0b\x32\x18.plaso_storage.Attribute\x12\x10\n\x08timezone\x18\t \x01(\t\x12\x10\n\x08\x66ilename\x18\n \x01(\t\x12\x14\n\x0c\x64isplay_name\x18\x0b \x01(\t\x12(\n\x08pathspec\x18\x0c \x01(\x0b\x32\x16.transmission.PathSpec\x12\x0e\n\x06offset\x18\r \x01(\x03\x12\x14\n\x0cstore_number\x18\x0e \x01(\x03\x12\x13\n\x0bstore_index\x18\x0f \x01(\x03\x12(\n\x03tag\x18\x10 \x01(\x0b\x32\x1b.plaso_storage.EventTagging\x12\x11\n\tdata_type\x18\x11 \x02(\t\"\x97\x01\n\x0bSourceShort\x12\x06\n\x02\x41V\x10\x01\x12\x08\n\x04\x42\x41\x43K\x10\x02\x12\x07\n\x03\x45VT\x10\x03\x12\x08\n\x04\x45XIF\x10\x04\x12\x08\n\x04\x46ILE\x10\x05\x12\x07\n\x03LOG\x10\x06\x12\x07\n\x03LNK\x10\x07\x12\x07\n\x03LSO\x10\x08\x12\x08\n\x04META\x10\t\x12\t\n\x05PLIST\x10\n\x12\x07\n\x03RAM\x10\x0b\x12\n\n\x06RECBIN\x10\x0c\x12\x07\n\x03REG\x10\r\x12\x0b\n\x07WEBHIST\x10\x0e\"\x9e\x01\n\x0c\x45ventTagging\x12\x14\n\x0cstore_number\x18\x01 \x02(\x03\x12\x13\n\x0bstore_index\x18\x02 \x02(\x03\x12\x0f\n\x07\x63omment\x18\x03 \x01(\t\x12\r\n\x05\x63olor\x18\x04 \x01(\t\x12-\n\x04tags\x18\x05 \x03(\x0b\x32\x1f.plaso_storage.EventTagging.Tag\x1a\x14\n\x03Tag\x12\r\n\x05value\x18\x01 \x02(\t\"\xfc\x01\n\nEventGroup\x12\x0c\n\x04name\x18\x01 \x02(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x17\n\x0f\x66irst_timestamp\x18\x03 \x01(\x03\x12\x16\n\x0elast_timestamp\x18\x04 \x01(\x03\x12\r\n\x05\x63olor\x18\x05 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x06 \x01(\t\x12:\n\x06\x65vents\x18\x07 \x03(\x0b\x32*.plaso_storage.EventGroup.EventDescription\x1a=\n\x10\x45ventDescription\x12\x14\n\x0cstore_number\x18\x01 \x02(\x03\x12\x13\n\x0bstore_index\x18\x02 \x02(\x03\"\xc4\x01\n\x0e\x45ventContainer\x12\x12\n\nfirst_time\x18\x01 \x02(\x03\x12\x11\n\tlast_time\x18\x02 \x02(\x03\x12\x31\n\ncontainers\x18\x04 \x03(\x0b\x32\x1d.plaso_storage.EventContainer\x12*\n\x06\x65vents\x18\x06 \x03(\x0b\x32\x1a.plaso_storage.EventObject\x12,\n\nattributes\x18\x08 \x03(\x0b\x32\x18.plaso_storage.Attribute')
+  serialized_pb='\n\x1fplaso/proto/plaso_storage.proto\x12\rplaso_storage\x1a\x1eplaso/proto/transmission.proto\"\xaf\x01\n\tAttribute\x12\x0b\n\x03key\x18\x01 \x02(\t\x12\x0e\n\x06string\x18\x02 \x01(\t\x12\x0f\n\x07integer\x18\x03 \x01(\x03\x12#\n\x05\x61rray\x18\x04 \x01(\x0b\x32\x14.plaso_storage.Array\x12!\n\x04\x64ict\x18\x05 \x01(\x0b\x32\x13.plaso_storage.Dict\x12\x0f\n\x07\x62oolean\x18\x06 \x01(\x08\x12\x0c\n\x04\x64\x61ta\x18\x07 \x01(\x0c\x12\r\n\x05\x66loat\x18\x08 \x01(\x02\"4\n\x04\x44ict\x12,\n\nattributes\x18\x01 \x03(\x0b\x32\x18.plaso_storage.Attribute\"\x8f\x01\n\x05Value\x12\x0f\n\x07integer\x18\x01 \x01(\x03\x12\x0e\n\x06string\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\x12#\n\x05\x61rray\x18\x04 \x01(\x0b\x32\x14.plaso_storage.Array\x12!\n\x04\x64ict\x18\x05 \x01(\x0b\x32\x13.plaso_storage.Dict\x12\x0f\n\x07\x62oolean\x18\x06 \x01(\x08\"-\n\x05\x41rray\x12$\n\x06values\x18\x01 \x03(\x0b\x32\x14.plaso_storage.Value\"\xe4\x04\n\x0b\x45ventObject\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x16\n\x0etimestamp_desc\x18\x02 \x01(\t\x12<\n\x0csource_short\x18\x03 \x02(\x0e\x32&.plaso_storage.EventObject.SourceShort\x12\x13\n\x0bsource_long\x18\x04 \x02(\t\x12\x18\n\x10\x64\x65scription_long\x18\x05 \x01(\t\x12\x19\n\x11\x64\x65scription_short\x18\x06 \x01(\t\x12,\n\nattributes\x18\x08 \x03(\x0b\x32\x18.plaso_storage.Attribute\x12\x10\n\x08timezone\x18\t \x01(\t\x12\x10\n\x08\x66ilename\x18\n \x01(\t\x12\x14\n\x0c\x64isplay_name\x18\x0b \x01(\t\x12(\n\x08pathspec\x18\x0c \x01(\x0b\x32\x16.transmission.PathSpec\x12\x0e\n\x06offset\x18\r \x01(\x03\x12\x14\n\x0cstore_number\x18\x0e \x01(\x03\x12\x13\n\x0bstore_index\x18\x0f \x01(\x03\x12(\n\x03tag\x18\x10 \x01(\x0b\x32\x1b.plaso_storage.EventTagging\x12\x11\n\tdata_type\x18\x11 \x02(\t\"\x97\x01\n\x0bSourceShort\x12\x06\n\x02\x41V\x10\x01\x12\x08\n\x04\x42\x41\x43K\x10\x02\x12\x07\n\x03\x45VT\x10\x03\x12\x08\n\x04\x45XIF\x10\x04\x12\x08\n\x04\x46ILE\x10\x05\x12\x07\n\x03LOG\x10\x06\x12\x07\n\x03LNK\x10\x07\x12\x07\n\x03LSO\x10\x08\x12\x08\n\x04META\x10\t\x12\t\n\x05PLIST\x10\n\x12\x07\n\x03RAM\x10\x0b\x12\n\n\x06RECBIN\x10\x0c\x12\x07\n\x03REG\x10\r\x12\x0b\n\x07WEBHIST\x10\x0e\"\x9e\x01\n\x0c\x45ventTagging\x12\x14\n\x0cstore_number\x18\x01 \x02(\x03\x12\x13\n\x0bstore_index\x18\x02 \x02(\x03\x12\x0f\n\x07\x63omment\x18\x03 \x01(\t\x12\r\n\x05\x63olor\x18\x04 \x01(\t\x12-\n\x04tags\x18\x05 \x03(\x0b\x32\x1f.plaso_storage.EventTagging.Tag\x1a\x14\n\x03Tag\x12\r\n\x05value\x18\x01 \x02(\t\"\xfc\x01\n\nEventGroup\x12\x0c\n\x04name\x18\x01 \x02(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x17\n\x0f\x66irst_timestamp\x18\x03 \x01(\x03\x12\x16\n\x0elast_timestamp\x18\x04 \x01(\x03\x12\r\n\x05\x63olor\x18\x05 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x06 \x01(\t\x12:\n\x06\x65vents\x18\x07 \x03(\x0b\x32*.plaso_storage.EventGroup.EventDescription\x1a=\n\x10\x45ventDescription\x12\x14\n\x0cstore_number\x18\x01 \x02(\x03\x12\x13\n\x0bstore_index\x18\x02 \x02(\x03\"\xc4\x01\n\x0e\x45ventContainer\x12\x12\n\nfirst_time\x18\x01 \x02(\x03\x12\x11\n\tlast_time\x18\x02 \x02(\x03\x12\x31\n\ncontainers\x18\x04 \x03(\x0b\x32\x1d.plaso_storage.EventContainer\x12*\n\x06\x65vents\x18\x06 \x03(\x0b\x32\x1a.plaso_storage.EventObject\x12,\n\nattributes\x18\x08 \x03(\x0b\x32\x18.plaso_storage.Attribute\"\xc0\x01\n\nPreProcess\x12\x33\n\x16\x63ollection_information\x18\x01 \x01(\x0b\x32\x13.plaso_storage.Dict\x12$\n\x07\x63ounter\x18\x02 \x01(\x0b\x32\x13.plaso_storage.Dict\x12)\n\x0bstore_range\x18\x03 \x01(\x0b\x32\x14.plaso_storage.Array\x12,\n\nattributes\x18\x04 \x03(\x0b\x32\x18.plaso_storage.Attribute')
 
 
 
@@ -81,8 +81,8 @@ _EVENTOBJECT_SOURCESHORT = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=954,
-  serialized_end=1105,
+  serialized_start=969,
+  serialized_end=1120,
 )
 
 
@@ -142,6 +142,13 @@ _ATTRIBUTE = descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    descriptor.FieldDescriptor(
+      name='float', full_name='plaso_storage.Attribute.float', index=7,
+      number=8, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -152,7 +159,7 @@ _ATTRIBUTE = descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=83,
-  serialized_end=243,
+  serialized_end=258,
 )
 
 
@@ -179,8 +186,8 @@ _DICT = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=245,
-  serialized_end=297,
+  serialized_start=260,
+  serialized_end=312,
 )
 
 
@@ -242,8 +249,8 @@ _VALUE = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=300,
-  serialized_end=443,
+  serialized_start=315,
+  serialized_end=458,
 )
 
 
@@ -270,8 +277,8 @@ _ARRAY = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=445,
-  serialized_end=490,
+  serialized_start=460,
+  serialized_end=505,
 )
 
 
@@ -404,8 +411,8 @@ _EVENTOBJECT = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=493,
-  serialized_end=1105,
+  serialized_start=508,
+  serialized_end=1120,
 )
 
 
@@ -432,8 +439,8 @@ _EVENTTAGGING_TAG = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1246,
-  serialized_end=1266,
+  serialized_start=1261,
+  serialized_end=1281,
 )
 
 _EVENTTAGGING = descriptor.Descriptor(
@@ -487,8 +494,8 @@ _EVENTTAGGING = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1108,
-  serialized_end=1266,
+  serialized_start=1123,
+  serialized_end=1281,
 )
 
 
@@ -522,8 +529,8 @@ _EVENTGROUP_EVENTDESCRIPTION = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1460,
-  serialized_end=1521,
+  serialized_start=1475,
+  serialized_end=1536,
 )
 
 _EVENTGROUP = descriptor.Descriptor(
@@ -591,8 +598,8 @@ _EVENTGROUP = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1269,
-  serialized_end=1521,
+  serialized_start=1284,
+  serialized_end=1536,
 )
 
 
@@ -647,8 +654,57 @@ _EVENTCONTAINER = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=1524,
-  serialized_end=1720,
+  serialized_start=1539,
+  serialized_end=1735,
+)
+
+
+_PREPROCESS = descriptor.Descriptor(
+  name='PreProcess',
+  full_name='plaso_storage.PreProcess',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    descriptor.FieldDescriptor(
+      name='collection_information', full_name='plaso_storage.PreProcess.collection_information', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    descriptor.FieldDescriptor(
+      name='counter', full_name='plaso_storage.PreProcess.counter', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    descriptor.FieldDescriptor(
+      name='store_range', full_name='plaso_storage.PreProcess.store_range', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    descriptor.FieldDescriptor(
+      name='attributes', full_name='plaso_storage.PreProcess.attributes', index=3,
+      number=4, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=1738,
+  serialized_end=1930,
 )
 
 _ATTRIBUTE.fields_by_name['array'].message_type = _ARRAY
@@ -669,6 +725,10 @@ _EVENTGROUP.fields_by_name['events'].message_type = _EVENTGROUP_EVENTDESCRIPTION
 _EVENTCONTAINER.fields_by_name['containers'].message_type = _EVENTCONTAINER
 _EVENTCONTAINER.fields_by_name['events'].message_type = _EVENTOBJECT
 _EVENTCONTAINER.fields_by_name['attributes'].message_type = _ATTRIBUTE
+_PREPROCESS.fields_by_name['collection_information'].message_type = _DICT
+_PREPROCESS.fields_by_name['counter'].message_type = _DICT
+_PREPROCESS.fields_by_name['store_range'].message_type = _ARRAY
+_PREPROCESS.fields_by_name['attributes'].message_type = _ATTRIBUTE
 DESCRIPTOR.message_types_by_name['Attribute'] = _ATTRIBUTE
 DESCRIPTOR.message_types_by_name['Dict'] = _DICT
 DESCRIPTOR.message_types_by_name['Value'] = _VALUE
@@ -677,6 +737,7 @@ DESCRIPTOR.message_types_by_name['EventObject'] = _EVENTOBJECT
 DESCRIPTOR.message_types_by_name['EventTagging'] = _EVENTTAGGING
 DESCRIPTOR.message_types_by_name['EventGroup'] = _EVENTGROUP
 DESCRIPTOR.message_types_by_name['EventContainer'] = _EVENTCONTAINER
+DESCRIPTOR.message_types_by_name['PreProcess'] = _PREPROCESS
 
 class Attribute(message.Message):
   __metaclass__ = reflection.GeneratedProtocolMessageType
@@ -737,5 +798,11 @@ class EventContainer(message.Message):
   DESCRIPTOR = _EVENTCONTAINER
   
   # @@protoc_insertion_point(class_scope:plaso_storage.EventContainer)
+
+class PreProcess(message.Message):
+  __metaclass__ = reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _PREPROCESS
+  
+  # @@protoc_insertion_point(class_scope:plaso_storage.PreProcess)
 
 # @@protoc_insertion_point(module_scope)
