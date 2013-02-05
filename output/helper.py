@@ -120,6 +120,9 @@ def BuildHostDict(storage_object):
     as the value to that key.
   """
   host_dict = {}
+  if not storage_object:
+    return host_dict
+
   for info in storage_object.GetStorageInformation():
     if hasattr(info, 'store_range') and hasattr(info, 'hostname'):
       for store_number in range(info.store_range[0], info.store_range[1]):

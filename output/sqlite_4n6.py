@@ -37,26 +37,26 @@ class Sql4n6(output.LogOutputFormatter):
   META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
                  'color', 'type']
 
-  # TODO: Fix this 'dangerous' default value of fields passed in.
-  # Rather have some way of extending the class if this is really
-  # necessary.
-
-  def __init__(self, filehandle=sys.stdout, zone=pytz.utc,
-               fields=['host', 'user', 'source', 'sourcetype',
-                       'type', 'datetime', 'color'],
-               append=False):
+  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc,
+               fields=None, append=False):
     """Constructor for the output module.
 
     Args:
+      store: The storage object.
       filehandle: A file-like object that can be written to.
       zone: The output time zone (a pytz object).
       fields: The fields to create index for.
       append: Whether to create a new db or appending to an existing one.
     """
-    super(Sql4n6, self).__init__(filehandle, zone)
-    self.fields = fields
+    # TODO: Add a unit test for this output module.
+    super(Sql4n6, self).__init__(store, filehandle, zone)
     self.dbname = filehandle
     self.append = append
+    if fields:
+      self.fields = fields
+    else:
+      self.fields = [
+          'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color']
 
   def Usage(self):
     """Return a quick help message that describes the output provided."""
@@ -104,8 +104,8 @@ class Sql4n6(output.LogOutputFormatter):
     # It will commit the inserts automatically before creating index.
     if not self.append:
       for fn in self.fields:
-        ci_sql = 'CREATE INDEX %s_idx ON log2timeline (%s)' % (fn, fn)
-        self.curs.execute(ci_sql)
+        sql = 'CREATE INDEX {0}_idx ON log2timeline ({0})'.format(fn)
+        self.curs.execute(sql)
 
     # Get meta info and save into their tables.
     for field in self.META_FIELDS:
