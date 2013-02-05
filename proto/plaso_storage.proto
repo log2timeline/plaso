@@ -82,8 +82,38 @@ message EventObject {
   // 'Page Visited', 'File Downloaded', or something like that.
   optional string timestamp_desc = 2;
 
+  // The type of the event data stored in the attributes.
+  required string data_type = 3;
+
+  // A list of all the stored attributes within the event.
+  repeated Attribute attributes = 4;
+
+  // The timezone of the source where the timestamp came from.
+  optional string timezone = 5;
+
+  // The filename from where the event was extracted from.
+  optional string filename = 6;
+  optional string display_name = 7;
+
+  // The full PathSpec where the file was extracted from.
+  optional transmission.PathSpec pathspec = 8;
+
+  // The offset into the original file from where the event came from.
+  optional int64 offset = 9;
+
+  // Information about where this object is stored, added by the storage
+  // library to make it easier to quickly recover the EventObject from
+  // the storage file.
+  optional int64 store_number = 10;
+  optional int64 store_index = 11;
+
+  // EventTagging is a message that can be added that include information
+  // about coloring, tagging or comments that this object contains.
+  optional EventTagging tag = 12;
+
   // Description of the origin of the event in generic terms that
   // mostly adhere to the definition of the TLN format.
+  // TODO: Remove this field from the EventObject message.
   enum SourceShort {
     AV = 1; // All Anti-Virus engine log files.
     BACK = 2; // Information from backup points, eg. restore points, VSS.
@@ -102,7 +132,8 @@ message EventObject {
   }
 
   // The category or short description of the source.
-  required SourceShort source_short = 3;
+  // TODO: Remove this field from the EventObject message.
+  optional SourceShort source_short = 13;
 
   // The short description is not sufficient to describe the source
   // of the event. A longer source field is therefore provided to add
@@ -117,54 +148,8 @@ message EventObject {
   //    Recycle Bin
   //    NTUSER.DAT Registry
   //    Sophos AV Log
-  required string source_long = 4;
-
-  // This is the old meat of the storage and kept here for both
-  // legacy and compatability reasons.
-  // All description has now been moved to the formatting string
-  // and attributes.
-  optional string description_long = 5;
-
-  // This is a shorter version of the description long field that
-  // is also only kept for legacy and compatability reasons.
-  // The description_long field can be too long to present in visual
-  // tools. The shorter version of that string is the description_short.
-  // This field should contain the bare amount of information extracted
-  // from the logfile to describe the event, stripped of all verbose
-  // information.
-  // This compressed information is the information that visual tools
-  // use to present the information to the investigator, with the option
-  // of showing the full description described in description_long.
-  optional string description_short = 6;
-
-  // A list of all the stored attributes within the event.
-  repeated Attribute attributes = 8;
-
-  // The timezone of the source where the timestamp came from.
-  optional string timezone = 9;
-
-  // The filename from where the event was extracted from.
-  optional string filename = 10;
-  optional string display_name = 11;
-
-  // The full PathSpec where the file was extracted from.
-  optional transmission.PathSpec pathspec = 12;
-
-  // The offset into the original file from where the event came from.
-  optional int64 offset = 13;
-
-  // Information about where this object is stored, added by the storage
-  // library to make it easier to quickly recover the EventObject from
-  // the storage file.
-  optional int64 store_number = 14;
-  optional int64 store_index = 15;
-
-  // EventTagging is a message that can be added that include information
-  // about coloring, tagging or comments that this object contains.
-  optional EventTagging tag = 16;
-
-  // The type of the event data stored in the attributes.
-  required string data_type = 17;
+  // TODO: Remove this field from the EventObject message.
+  optional string source_long = 14;
 };
 
 // The EventTagging is a simple message that describes comments,
