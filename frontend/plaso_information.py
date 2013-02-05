@@ -17,16 +17,13 @@
 # To make YAML loading work.
 __pychecker__ = 'no-import'
 import argparse
-import collections
 import datetime
 import logging
 import os
 import pprint
 import sys
 
-from plaso.lib import preprocess
 from plaso.lib import storage
-import pytz
 
 
 def GetInformation(params):
