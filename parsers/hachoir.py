@@ -29,8 +29,8 @@ import hachoir_parser
 import hachoir_metadata
 import hachoir_core
 
-
 __author__ = 'David Nides (david.nides@gmail.com)'
+
 
 class Hachoir(parser.PlasoParser):
   """Parse meta data from files"""
@@ -41,37 +41,38 @@ class Hachoir(parser.PlasoParser):
 
   def Parse(self, filehandle):
     """Extract EventObjects from a file."""
+    # TODO: Add a unit test for this parser.
     try:
       fstream = hachoir_core.stream.InputIOStream(filehandle, None, tags=[])
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, exception))
+          self.NAME, filehandle.name, exception))
 
     if not fstream:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, 'Not fstream'))
+          self.NAME, filehandle.name, 'Not fstream'))
 
     try:
       parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, exception))
+          self.NAME, filehandle.name, exception))
 
     if not parser:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, 'Not parser'))
+          self.NAME, filehandle.name, 'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(parser)
     except AttributeError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, exception))
+          self.NAME, filehandle.name, exception))
 
     try:
       metatext = metadata.exportPlaintext(human=False)
     except AttributeError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, exception))
+          self.NAME, filehandle.name, exception))
 
     container = event.EventContainer()
     container.offset = 0
@@ -104,7 +105,7 @@ class Hachoir(parser.PlasoParser):
     length = len(container)
     if not length:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, 'None'))
+          self.NAME, filehandle.name, 'None'))
 
     container.metadata = attributes
     return container
