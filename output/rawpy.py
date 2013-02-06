@@ -16,7 +16,9 @@
 """Represents an EventObject as a string."""
 import pprint
 
+from plaso.lib import eventdata
 from plaso.lib import output
+from plaso.lib import utils
 
 
 class Rawpy(output.FileLogOutputFormatter):
@@ -35,24 +37,45 @@ class Rawpy(output.FileLogOutputFormatter):
             ' debugging.')
 
   def EventBody(self, evt):
-    """String representation of an EventObject object.
+    """Prints out to a filehandle string representation of an EventObject.
+
+    Each EventObject contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
 
     Args:
       evt: The EventObject.
-
-    Returns:
-      String representation of an EventObject.
     """
 
     out_write = []
-    out_write.append('+-' * 80)
-    # TODO: There is no difference made between a "regular" attribute and an
-    # additional one. Perhaps look into the RESERVED_VARIABLES list and display
-    # them differently than others? As in indent others?
-    for attr_key in sorted(evt.GetAttributes()):
-      out_write.append(u'{key}: {value}'.format(
-          key=attr_key, value=self.printer.pformat(
-              getattr(evt, attr_key, None))))
-    out_write.append('')
+    out_reserved = []
+    out_reserved.append('+-' * 80)
+    out_reserved.append('[Reserved attributes]:')
+    out_write.append('[Additional attributes]:')
 
+    for attr_key, attr_value in sorted(evt.GetValues().items()):
+      if attr_key in utils.RESERVED_VARIABLES:
+        if attr_key == 'pathspec':
+          out_reserved.append(u'  {{{0}}}\n{2}\n{1}{2}'.format(
+              attr_key, attr_value.ToProto(), '-' * 30))
+        else:
+          out_reserved.append(u'  {{{key}}} {value}'.format(
+                key=attr_key, value=self.printer.pformat(attr_value)))
+      else:
+        out_write.append(u'  {{{key}}} {value}'.format(
+              key=attr_key, value=self.printer.pformat(attr_value)))
+    out_write.append('')
+    out_reserved.append('')
+    out_reserved.append('')
+
+    self.filehandle.write('\n'.join(out_reserved).encode('utf-8'))
     self.filehandle.write('\n'.join(out_write).encode('utf-8'))
+    self.filehandle.write('\n[Message strings]:\n')
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(evt)
+    if not event_formatter:
+      self.filehandle.write('None')
+    else:
+      msg, msg_short = event_formatter.GetMessages(evt)
+      self.filehandle.write(u'{2:>7}: {0}\n{3:>7}: {1}\n\n'.format(
+          msg_short, msg, 'Short', 'Long'))

@@ -15,6 +15,12 @@
 # limitations under the License.
 """This file contains utility functions."""
 
+RESERVED_VARIABLES = frozenset(
+    ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue', 'timestamp',
+     'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
+     'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
+     'tag', 'data_type'])
+
 
 def GetUnicodeString(string):
   """Converts the string to Unicode if necessary."""
