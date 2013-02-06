@@ -65,13 +65,18 @@ class L2tCsvTest(unittest.TestCase):
     """Test ensures that returned lines returned are fmt CSV as expected."""
     event_object = TestEvent()
 
+    self.formatter.Start()
+    header = (
+        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        'version,filename,inode,notes,format,extra\n')
+    self.assertEquals(self.output.getvalue(), header)
     self.formatter.EventBody(event_object)
     correct = (
         '06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry Written,-,ubuntu,'
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
         'for user root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
         'session closed for user root),2,log/syslog.1,-,-,-,\n')
-    self.assertEquals(self.output.getvalue(), correct)
+    self.assertEquals(self.output.getvalue(), header + correct)
 
   def testEventBodyNoCommas(self):
     """Test ensures that commas inside fields are replaced by space."""
