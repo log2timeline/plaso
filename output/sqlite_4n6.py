@@ -22,6 +22,7 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
+from plaso.lib import utils
 from plaso.output import helper
 import pytz
 import sqlite3
@@ -52,6 +53,9 @@ class Sql4n6(output.LogOutputFormatter):
     super(Sql4n6, self).__init__(store, filehandle, zone)
     self.dbname = filehandle
     self.append = append
+    if store:
+      self._hostnames = helper.BuildHostDict(store)
+
     if fields:
       self.fields = fields
     else:
@@ -186,7 +190,7 @@ class Sql4n6(output.LogOutputFormatter):
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         formatter.format_string)
     for key in evt.GetAttributes():
-      if key in helper.RESERVED_VARIABLES or key in format_variables:
+      if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
       extra.append('%s: %s ' % (key, getattr(evt, key, None)))
     extra = ' '.join(extra)
@@ -196,13 +200,17 @@ class Sql4n6(output.LogOutputFormatter):
       if hasattr(evt, 'pathspec') and hasattr(evt.pathspec, 'image_inode'):
         inode = evt.pathspec.image_inode
 
+    hostname = getattr(evt, 'hostname', '')
+    if self.store and not hostname:
+      hostname = self._hostnames.get(evt.store_number, '-')
+
     row = (str(self.zone),
            helper.GetLegacy(evt),
            getattr(evt, 'source_short', 'LOG'),
            evt.source_long,
            evt.timestamp_desc,
            getattr(evt, 'username', '-'),
-           getattr(evt, 'hostname', '-'),
+           hostname,
            msg_short,
            msg,
            '2',
