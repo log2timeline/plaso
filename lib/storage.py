@@ -182,12 +182,12 @@ class PlasoStorage(object):
 
   def GetStorageInformation(self):
     """Return gathered preprocessing information from a storage file."""
+    information = []
     try:
       pre_fh = self.zipfile.open('information.dump', 'r')
     except KeyError:
-      return None
+      return information
 
-    information = []
     while 1:
       unpacked = pre_fh.read(4)
       if len(unpacked) != 4:
