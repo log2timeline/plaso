@@ -20,6 +20,7 @@ import re
 
 from plaso.lib import errors
 from plaso.lib import registry
+from plaso.lib import utils
 
 
 class EventTimestamp(object):
@@ -60,6 +61,7 @@ class EventFormatterManager(object):
     """
     if not hasattr(cls, 'event_formatters'):
       cls.event_formatters = {}
+      cls.default_formatter = DefaultFormatter()
       for cls_formatter in EventFormatter.classes:
         try:
           formatter = EventFormatter.classes[cls_formatter]()
@@ -78,7 +80,12 @@ class EventFormatterManager(object):
 
       cls.event_formatters.setdefault(None)
 
-    return cls.event_formatters[event_object.data_type]
+    if event_object.data_type in cls.event_formatters:
+      return cls.event_formatters[event_object.data_type]
+    else:
+      logging.warning(
+          u'Using default formatter for data type: %s', event_object.data_type)
+      return cls.default_formatter
 
   @classmethod
   def GetMessageStrings(cls, event_object):
@@ -174,10 +181,10 @@ class EventFormatter(object):
         msg_short = (
             u'Unable to format string: %s') % self.format_string_short
     else:
-      if len(msg) > 80:
-        msg_short = u'%s...' % msg[0:77]
-      else:
-        msg_short = msg
+      msg_short = msg
+
+    if len(msg_short) > 80:
+      msg_short = u'%s...' % msg_short[0:77]
 
     return msg, msg_short
 
@@ -282,6 +289,28 @@ class ConditionalEventFormatter(EventFormatter):
     self.format_string_short = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     return super(ConditionalEventFormatter, self).GetMessages(event_object)
+
+
+class DefaultFormatter(EventFormatter):
+  """Default formatter for events that do not have any defined formatter."""
+
+  DATA_TYPE = 'event'
+  FORMAT_STRING = u'<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'
+  FORMAT_STRING_SHORT = u'<DEFAULT> {attribute_driven}'
+
+  def GetMessages(self, event_object):
+    """Return a list of messages extracted from an event object."""
+    text_pieces = []
+
+    for key, value in event_object.GetValues().items():
+      if key in utils.RESERVED_VARIABLES:
+        continue
+      text_pieces.append(u'{}: {}'.format(key, value))
+
+    event_object.attribute_driven = u' '.join(text_pieces)
+    # Make the formatter work.
+    event_object.data_type = self.DATA_TYPE
+    return super(DefaultFormatter, self).GetMessages(event_object)
 
 
 class TextEventFormatter(EventFormatter):

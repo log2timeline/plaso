@@ -24,12 +24,6 @@ MODIFIED_RE = re.compile(r'modif', re.I)
 ACCESS_RE = re.compile(r'visit', re.I)
 CREATE_RE = re.compile(r'(create|written)', re.I)
 
-RESERVED_VARIABLES = frozenset(
-    ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue', 'timestamp',
-     'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
-     'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
-     'tag', 'data_type'])
-
 
 def GetLegacy(evt):
   """Return a legacy MACB representation of the event."""
