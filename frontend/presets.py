@@ -17,9 +17,9 @@
 
 categories = {
     'winxp': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-              'WinLnkParser'],
+              'WinLnkParser', 'Hachoir'],
     'win7': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-             'WinLnkParser'],
+             'WinLnkParser', 'Hachoir'],
     'webhist': ['Chrome', 'Firefox'],
     'linux': ['Firefox', 'Chrome', 'Syslog', 'GoogleDrive', 'PfileStat'],
     'macosx': ['ApplicationUsage', 'Firefox', 'LsQuarantine', 'Chrome',
