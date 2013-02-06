@@ -20,6 +20,7 @@ from plaso.parsers import chrome
 from plaso.parsers import filestat
 from plaso.parsers import firefox
 from plaso.parsers import gdrive
+from plaso.parsers import hachoir
 from plaso.parsers import lnk
 from plaso.parsers import ls_quarantine
 from plaso.parsers import mactime

@@ -20,6 +20,7 @@ from plaso.formatters import chrome
 from plaso.formatters import filestat
 from plaso.formatters import firefox
 from plaso.formatters import gdrive
+from plaso.formatters import hachoir
 from plaso.formatters import lnk
 from plaso.formatters import ls_quarantine
 from plaso.formatters import mactime
