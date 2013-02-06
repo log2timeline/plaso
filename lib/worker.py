@@ -201,7 +201,8 @@ class PlasoWorker(object):
                          'g of file is is terminated.'), filehandle.name,
                         parsing_object.NAME, e)
         logging.debug('The PathSpec that caused the error:\n(root)\n%s\n%s',
-                      filehandle.pathspec_root, filehandle.pathspec)
+                      filehandle.pathspec_root.ToProto(),
+                      filehandle.pathspec.ToProto())
         logging.exception(e)
 
         # Check for debug mode and single-threaded, then we would like
@@ -312,7 +313,7 @@ class PlasoWorker(object):
             transfer_zip.file_path = utils.GetUnicodeString(info.filename)
             transfer_zip.container_path = utils.GetUnicodeString(
                 fh.pathspec.file_path)
-            pathspec.nested_pathspec = transfer_zip
+            cls.SetNestedContainer(pathspec, transfer_zip)
             yield pathspec
         return
       except zipfile.BadZipfile:
@@ -330,7 +331,7 @@ class PlasoWorker(object):
         transfer_gzip = event.EventPathSpec()
         transfer_gzip.type = 'GZIP'
         transfer_gzip.file_path = utils.GetUnicodeString(fh.pathspec.file_path)
-        fh.pathspec_root.nested_pathspec = transfer_gzip
+        cls.SetNestedContainer(fh.pathspec_root, transfer_gzip)
         yield fh.pathspec_root
         return
       except (IOError, zlib.error, errors.SameFileType):
@@ -352,11 +353,25 @@ class PlasoWorker(object):
           transfer_tar.file_path = utils.GetUnicodeString(name)
           transfer_tar.container_path = utils.GetUnicodeString(
               fh.pathspec.file_path)
-          pathspec.nested_pathspec = transfer_tar
+          cls.SetNestedContainer(pathspec, transfer_tar)
           yield pathspec
         return
       except tarfile.ReadError:
         pass
+
+  @classmethod
+  def SetNestedContainer(cls, pathspec_root, pathspec_append):
+    """Append an EventPathSpec to the end of a nested_pathspec chain.
+
+    Args:
+      pathspec_root: The root EventPathSpec of the chain.
+      pathspec_append: The EventPathSpec that needs to be appended.
+    """
+    if not hasattr(pathspec_root, 'nested_pathspec'):
+      pathspec_root.nested_pathspec = pathspec_append
+    else:
+      cls.SetNestedContainer(pathspec_root.nested_pathspec, pathspec_append)
+
 
 # TODO: Add a main function that can be used to execute the
 # worker directly, so it can be run independently.
