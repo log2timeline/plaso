@@ -19,11 +19,12 @@ from plaso.lib import eventdata
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
+
 class HachoirFormatter(eventdata.EventFormatter):
   """Formatter for Hachoir based events."""
   DATA_TYPE = 'metadata:hachoir'
   FORMAT_STRING = u'{data}'
-  
+
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
 
@@ -35,7 +36,8 @@ class HachoirFormatter(eventdata.EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
-    event_object.data = u' '.join([u'%s: %s' % (key, value) for (key, value)
-                      in sorted(event_object.metadata.items())])
-     
+    event_object.data = u' '.join(
+        [u'%s: %s' % (key, value) for (key, value) in sorted(
+            event_object.metadata.items())])
+
     return super(HachoirFormatter, self).GetMessages(event_object)
