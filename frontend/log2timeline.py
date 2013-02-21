@@ -77,6 +77,14 @@ def Main():
       help='Indicate that the tool should run in a single thread.')
 
   arg_parser.add_argument(
+      '-f', '--file_filter', dest='file_filter', action='store', type=str,
+      default=None, help=('List of files to include for targeted collection of'
+                          ' files to parse, one line per file path, setup is '
+                          '/path|file - where each element can contain either'
+                          ' a variable set in the preprocessing stage or a '
+                          'regular expression'))
+
+  arg_parser.add_argument(
       '--scan-archives', dest='open_files', action='store_true', default=False,
       help=('Indicate that the tool should try to open files to extract embedd'
             'ed files within them, for instance to extract files from compress'

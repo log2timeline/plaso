@@ -19,6 +19,7 @@ import collections
 import logging
 import os
 import re
+import sre_constants
 
 from plaso.lib import errors
 from plaso.lib import event
@@ -333,13 +334,22 @@ class Collector(object):
 
     Returns:
       The correct path as calculated from the source.
+
+    Raises:
+      errors.PathNotFound: If unable to compile any regular expression.
     """
     re_list = []
     for path_part in path_expression.split('/'):
       if '{' in path_part:
         re_list.append(self.GetExtendedPath(path_part))
       else:
-        re_list.append(re.compile(r'%s' % path_part, re.I | re.S))
+        try:
+          re_list.append(re.compile(r'%s' % path_part, re.I | re.S))
+        except sre_constants.error as e:
+          logging.warning(
+              u'Unable to append the following expression: %s due to %s',
+              path_part, e)
+          raise errors.PathNotFound(u'Unable to compile regex for path: %s', e)
 
     return self.GetPath(re_list)
 
@@ -427,10 +437,10 @@ class FileSystemCollector(Collector):
     """Return a list of files given a path and a pattern."""
     ret = []
     file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
-    for entry in os.listdir(path):
+    for entry in os.listdir(os.path.join(self._mount_point, path)):
       m = file_re.match(entry)
       if m:
-        if os.path.isfile(os.path.join(path, m.group(0))):
+        if os.path.isfile(os.path.join(self._mount_point, path, m.group(0))):
           ret.append(os.path.join(path, m.group(0)))
     return ret
 

@@ -317,32 +317,47 @@ class Engine(object):
 
     # Start the collector.
     start_collection_thread = True
-    if self.config.image:
-      logging.debug('Collection started from an image.')
-      my_collector = collector.SimpleImageCollector(
-          self.config.filename, offset=self.config.image_offset,
-          offset_bytes=self.config.image_offset_bytes,
-          parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
-    elif self.config.recursive:
-      logging.debug('Collection started from a directory.')
-      my_collector = collector.SimpleFileCollector(self.config.filename)
+
+    if self.config.file_filter:
+      # Start a targeted collection filter.
+      if self.config.image:
+        logging.debug('Starting a targeted image collection.')
+        my_collector = collector.TargetedImageCollector(
+            self.config.filename, self.config.file_filter, pre_obj,
+            sector_offset=self.config.image_offset,
+            byte_offset=self.config.image_offset_bytes,
+            parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
+      else:
+        logging.debug('Starting a targeted recursive collection.')
+        my_collector = collector.TargetedFileSystemCollector(
+            pre_obj, self.config.filename, self.config.file_filter)
     else:
-      # If we are parsing a single file we don't want to start a separate
-      # thread for the collection, hence this variable.
-      start_collection_thread = False
-      self.config.workers = 1
+      if self.config.image:
+        logging.debug('Collection started from an image.')
+        my_collector = collector.SimpleImageCollector(
+            self.config.filename, offset=self.config.image_offset,
+            offset_bytes=self.config.image_offset_bytes,
+            parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
+      elif self.config.recursive:
+        logging.debug('Collection started from a directory.')
+        my_collector = collector.SimpleFileCollector(self.config.filename)
+      else:
+        # If we are parsing a single file we don't want to start a separate
+        # thread for the collection, hence this variable.
+        start_collection_thread = False
+        self.config.workers = 1
 
-      # We need to make sure we are dealing with a file.
-      if not os.path.isfile(self.config.filename):
-        raise errors.BadConfigOption(
-            'Wrong usage: {%s} has to be a file.' % self.config.filename)
+        # We need to make sure we are dealing with a file.
+        if not os.path.isfile(self.config.filename):
+          raise errors.BadConfigOption(
+              'Wrong usage: {%s} has to be a file.' % self.config.filename)
 
-      # Need to manage my own queueing since we are not starting a formal
-      # collector.
-      my_collector = queue.SimpleQueue()
-      a_collector = collector.PCollector(my_collector)
-      a_collector.ProcessFile(self.config.filename, my_collector)
-      my_collector.Close()
+        # Need to manage my own queueing since we are not starting a formal
+        # collector.
+        my_collector = queue.SimpleQueue()
+        a_collector = collector.PCollector(my_collector)
+        a_collector.ProcessFile(self.config.filename, my_collector)
+        my_collector.Close()
 
     my_storage = storage.SimpleStorageDumper(
         self.config.output, self.config.buffer_size, pre_obj)
@@ -416,6 +431,14 @@ class Engine(object):
 
     if hasattr(self.config, 'filter') and self.config.filter:
       obj.collection_information['filter'] = self.config.filter
+
+    if hasattr(self.config, 'file_filter') and self.config.file_filter:
+      if os.path.isfile(self.config.file_filter):
+        filters = []
+        with open(self.config.file_filter, 'rb') as fh:
+          for line in fh:
+            filters.append(line.rstrip())
+        obj.collection_information['file_filter'] = ', '.join(filters)
 
     obj.collection_information['os_detected'] = getattr(
         self.config, 'os', 'N/A')

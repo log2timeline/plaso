@@ -36,7 +36,7 @@ class WinEvtRecordEventContainer(event.EventContainer):
     self.data_type = 'windows:evt:record'
 
     # TODO: refactor to formatter.
-    self.source_long = 'WinEvtParser'
+    self.source_long = 'WinEvt'
     self.source_short = 'EVT'
 
     self.recovered = recovered

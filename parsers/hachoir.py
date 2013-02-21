@@ -45,34 +45,39 @@ class Hachoir(parser.PlasoParser):
     try:
       fstream = hachoir_core.stream.InputIOStream(filehandle, None, tags=[])
     except hachoir_core.error.HachoirError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
+      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, exception))
 
     if not fstream:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
+      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, 'Not fstream'))
 
     try:
       parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
+      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, exception))
 
     if not parser:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
+      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, 'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(parser)
-    except AttributeError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
+    except (AssertionError, AttributeError) as exception:
+      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, exception))
 
     try:
       metatext = metadata.exportPlaintext(human=False)
     except AttributeError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
+      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, exception))
+
+    if not metatext:
+      raise errors.UnableToParseFile(
+          u'[%s] unable to parse file %s: No metadata' % (
+              self.NAME, filehandle.name))
 
     container = event.EventContainer()
     container.offset = 0
