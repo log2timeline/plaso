@@ -24,6 +24,7 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
+from plaso.lib import utils
 from plaso.output import helper
 
 
@@ -87,7 +88,7 @@ class L2tcsv(output.FileLogOutputFormatter):
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         event_formatter.format_string)
     for key in event_object.GetAttributes():
-      if key in helper.RESERVED_VARIABLES or key in format_variables:
+      if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
       extra.append('%s: %s ' % (key, getattr(event_object, key)))
     extra = ' '.join(extra)
