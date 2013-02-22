@@ -216,7 +216,7 @@ class Sql4n6(output.LogOutputFormatter):
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         formatter.format_string)
     for key in evt.GetAttributes():
-      if key in helper.RESERVED_VARIABLES or key in format_variables:
+      if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
       extra.append('%s: %s ' % (key, getattr(evt, key, None)))
     extra = ' '.join(extra)
