@@ -81,6 +81,7 @@ class TestStore(object):
 
 class TestOutputRenderer(object):
   """A dummy renderer."""
+
   def __init__(self, store):
     self.buffer_list = []
     self.record_count = 0
@@ -107,10 +108,11 @@ class PsortTest(unittest.TestCase):
 
   def setUp(self):
     """Setup sets parameters that will be reused throughout this test."""
+
     # TODO: have sample output generated from the test.
-    self.test_file  = os.path.join('test_data', 'sample_output')
-    self.first = 1349893007000000  # Wed, 10 Oct 2012 18:16:47 UTC+0
-    self.last = 1349893565000000  # Wed, 10 Oct 2012 18:26:05 UTC+0
+    self.test_file = os.path.join('test_data', 'psort_test.out')
+    self.first = 1342799054000000  # Fri, 20 Jul 2012 15:44:14 GMT
+    self.last = 1342824552000000  # Fri, 20 Jul 2012 22:49:12 GMT
 
   def testGetMicroseconds(self):
     """Tests GetMicroseconds returns the correct timestamp."""
@@ -132,7 +134,7 @@ class PsortTest(unittest.TestCase):
     store = storage.PlasoStorage(self.test_file, read_only=True)
     success = False
     timestamp_list = []
-    number = 4
+    number = 2
     while not success:
       returned_timestamp, _ = psort.ReadPbCheckTime(
           number, self.first, self.last, TestOutputRenderer(store))
@@ -156,8 +158,8 @@ class PsortTest(unittest.TestCase):
     """
 
     def MockReadMetaOutput():
+      yield 2
       yield 5
-      yield 4
 
     store = storage.PlasoStorage(self.test_file, read_only=True)
     output_renderer = TestOutputRenderer(store)
@@ -167,22 +169,14 @@ class PsortTest(unittest.TestCase):
     for item in output_renderer.buffer_list:
       returned_list.append(item.timestamp)
 
-    correct_order = [1349893007000000L,
-                     1349893007000000L,
-                     1349893007000000L,
-                     1349893007000000L,
-                     1349893007000000L,
-                     1349893449000000L,
-                     1349893564000000L,
-                     1349893564000000L,
-                     1349893564000000L,
-                     1349893564000000L,
-                     1349893564000000L,
-                     1349893564000000L,
-                     1349893564000000L,
-                     1349893565000000L,
-                     1349893565000000L,
-                     1349893565000000L]
+    correct_order = [1342799054000000L,
+                     1342824253000000L,
+                     1342824299000000L,
+                     1342824546000000L,
+                     1342824546000000L,
+                     1342824552000000L,
+                     1342824552000000L,
+                     1342824552000000L]
 
     self.assertEquals(returned_list, correct_order)
 
