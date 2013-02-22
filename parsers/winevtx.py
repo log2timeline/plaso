@@ -40,7 +40,8 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
 
     # TODO: refactor to formatter.
     self.source_long = 'WinEvtx'
-    self.source_short = 'EVTX'
+    # TODO: Change back to EVTX once this has been refactored to formatter.
+    self.source_short = 'EVT'
 
     self.recovered = recovered
     self.offset = evtx_record.offset
