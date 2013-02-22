@@ -32,6 +32,10 @@ import hachoir_core
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
+# Make hachoir parser "quiet" in it's otherwise excessive error reporting.
+hachoir_core.config.quiet = True
+
+
 class Hachoir(parser.PlasoParser):
   """Parse meta data from files"""
 
