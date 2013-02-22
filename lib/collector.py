@@ -405,7 +405,7 @@ class TargetedImageCollector(SimpleImageCollector):
           logging.info('Collecting from VSS store number: %d/%d', store_nr + 1,
                        vss_numbers)
           vss_collector = preprocess.VSSFileCollector(
-              self._pre_obj, self.image, store_nr, offset)
+              self._pre_obj, self._image, store_nr, offset)
 
           for pathspec_string in collector_filter.CollectionFilter(
               vss_collector, self._file_filter).GetPathSpecs():
