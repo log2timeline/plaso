@@ -31,7 +31,7 @@ class CollectionFilterTest(unittest.TestCase):
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as fh:
       filter_name = fh.name
-      fh.write('/lib/collector_.+\n')
+      fh.write('/lib/collector_.+.py\n')
       fh.write('/test_data/.+evtx\n')
       fh.write('/AUTHORS\n')
       fh.write('/does_not_exist/some_file_[0-9]+txt\n')
