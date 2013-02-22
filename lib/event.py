@@ -862,6 +862,9 @@ def AttributeToProto(proto, name, value):
   elif isinstance(value, float):
     proto.float = value
 
+  elif not value:
+    proto.none = True
+
   else:
     proto.data = value
 
@@ -921,6 +924,9 @@ def AttributeFromProto(proto):
 
   elif proto.HasField('float'):
     return key, proto.float
+
+  elif proto.HasField('none'):
+    return key, None
 
   else:
     raise RuntimeError('Unsupported proto attribute type.')
