@@ -25,15 +25,19 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
+import hachoir_core.config
+
+# This is necessary to do PRIOR to loading up other parts of hachoir
+# framework, otherwise console does not work and other "weird" behavior
+# is observed.
+hachoir_core.config.unicode_stdout = False
+hachoir_core.config.quiet = True
+
+import hachoir_core
 import hachoir_parser
 import hachoir_metadata
-import hachoir_core
 
 __author__ = 'David Nides (david.nides@gmail.com)'
-
-
-# Make hachoir parser "quiet" in it's otherwise excessive error reporting.
-hachoir_core.config.quiet = True
 
 
 class Hachoir(parser.PlasoParser):
