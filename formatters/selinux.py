@@ -13,17 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Helper file for filtering out parsers."""
+"""This file contains a selinux formatter in plaso."""
+from plaso.lib import eventdata
 
-categories = {
-    'winxp': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-              'WinLnkParser', 'Hachoir'],
-    'win7': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-             'WinLnkParser', 'Hachoir'],
-    'webhist': ['Chrome', 'Firefox'],
-    'linux': ['Firefox', 'Chrome', 'SELinux', 'Syslog', 'GoogleDrive',
-              'PfileStat'],
-    'macosx': ['ApplicationUsage', 'Firefox', 'LsQuarantine', 'Chrome',
-               'Syslog', 'GoogleDrive', 'PfileStat'],
-}
 
+class SELinuxFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for selinux files."""
+  DATA_TYPE = 'selinux:line'
+
+  FORMAT_STRING_SEPARATOR = u''
+
+  FORMAT_STRING_PIECES = [u'[', u'audit_type: {audit_type}',
+                          u', pid: {pid}', u'] {body}']
