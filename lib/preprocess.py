@@ -23,10 +23,10 @@ import sre_constants
 
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import lexer
 from plaso.lib import pfile
 from plaso.lib import putils
 from plaso.lib import registry
+from plaso.lib import utils
 from plaso.lib import win_registry
 
 from plaso.proto import plaso_storage_pb2
@@ -250,7 +250,7 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
   def ExpandKeyPath(self):
     """Expand the key path with key words."""
-    path = PathReplacer(self._obj_store, self.REG_KEY)
+    path = utils.PathReplacer(self._obj_store, self.REG_KEY)
     return path.GetPath()
 
   @abc.abstractmethod
@@ -269,44 +269,6 @@ class PreprocessGetPath(PreprocessPlugin):
   def GetValue(self):
     """Return the path as found by the collector."""
     return self._collector.FindPath(self.PATH)
-
-
-class PathReplacer(lexer.Lexer):
-  """Replace path variables with values gathered from earlier preprocessing."""
-
-  tokens = [
-      lexer.Token('.', '{([^}]+)}', 'ReplaceString', ''),
-      lexer.Token('.', '([^{])', 'ParseString', ''),
-      ]
-
-  def __init__(self, pre_obj, data=''):
-    """Constructor for a path replacer."""
-    super(PathReplacer, self).__init__(data)
-    self._path = []
-    self._pre_obj = pre_obj
-
-  def GetPath(self):
-    """Run the lexer and replace path."""
-    while 1:
-      _ = self.NextToken()
-      if self.Empty():
-        break
-
-    return u''.join(self._path)
-
-  def ParseString(self, match, **_):
-    """Append a string to the path."""
-    self._path.append(match.group(1))
-
-  def ReplaceString(self, match, **_):
-    """Replace a variable with a given attribute."""
-    replace = getattr(self._pre_obj, match.group(1), None)
-
-    if replace:
-      self._path.append(replace)
-    else:
-      raise errors.PathNotFound(
-          u'Path variable: %s not discovered yet.', match.group(1))
 
 
 class Collector(object):
@@ -377,7 +339,7 @@ class Collector(object):
     Returns:
       A string containing the extended path.
     """
-    path = PathReplacer(self._pre_obj, path)
+    path = utils.PathReplacer(self._pre_obj, path)
     return path.GetPath()
 
   @abc.abstractmethod
