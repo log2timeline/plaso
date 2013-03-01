@@ -18,6 +18,7 @@
 from plaso.registry import default
 from plaso.registry import mru
 from plaso.registry import mrux
+from plaso.registry import run
 from plaso.registry import winver
 from plaso.registry import xpuserassist
 
