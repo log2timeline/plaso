@@ -503,3 +503,40 @@ class VSSFileCollector(TSKFileCollector):
                               int(self._image_offset / 512), self._fscache)
 
 
+def GuessOS(col_obj):
+  """Return a string representing what we think the underlying OS is.
+
+  The available return strings are:
+    + Windows
+    + OSX
+    + Linux
+
+  Args:
+    col_obj: The collection object.
+
+  Returns:
+     A string indicating which OS we are dealing with.
+  """
+  # TODO: Add error handling for WindowsError, a builtin
+  # error in Windows, but not found otherwise (so no global error exists).
+  # This causes the tool to crash on Windows if preprocessor is unable to
+  # guess the OS, like when accidentally run against a directory.
+  try:
+    if col_obj.FindPath('/(Windows|WINNT)/System32'):
+      return 'Windows'
+  except errors.PathNotFound:
+    pass
+
+  try:
+    if col_obj.FindPath('/System/Library'):
+      return 'OSX'
+  except errors.PathNotFound:
+    pass
+
+  try:
+    if col_obj.FindPath('/etc'):
+      return 'Linux'
+  except errors.PathNotFound:
+    pass
+
+  return 'None'
