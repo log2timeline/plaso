@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows XML EventLog (EVTX) files."""
+import logging
+
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -83,8 +85,21 @@ class WinEvtxParser(parser.PlasoParser):
       raise errors.UnableToParseFile("[%s] unable to parse file %s: %s" % (
           self.NAME, file_object.name, exception))
 
-    for evtx_record in evtx_file.records:
-      yield WinEvtxRecordEvent(evtx_record)
+    for record_index in range(0, evtx_file.number_of_records):
+      try:
+        evtx_record = evtx_file.get_record(record_index)
+        yield WinEvtxRecordEvent(evtx_record)
+      except IOError as exception:
+        logging.warning("[%s] unable to parse event record: %d in file: %s" % (
+            self.NAME, record_index, file_object.name, exception))
+        pass
 
-    for evtx_record in evtx_file.recovered_records:
-      yield WinEvtxRecordEvent(evtx_record, recovered=True)
+    for record_index in range(0, evtx_file.number_of_recovered_records):
+      try:
+        evtx_record = evtx_file.get_recovered_record(record_index)
+        yield WinEvtxRecordEvent(evtx_record, recovered=True)
+      except IOError:
+        logging.info(
+            "[%s] unable to parse recovered event record: %d in file: %s" % (
+            self.NAME, record_index, file_object.name, exception))
+        pass
