@@ -23,7 +23,6 @@ import logging
 import os
 
 import pytsk3
-import pyvshadow
 
 from plaso.lib import collector_filter
 from plaso.lib import errors
@@ -295,14 +294,7 @@ class SimpleImageCollector(queue.SimpleQueue):
 
       if self._vss:
         logging.debug('Searching for VSS')
-        volume = pyvshadow.volume()
-        fh = vss.VShadowVolume(self._image, offset)
-        vss_numbers = 0
-        try:
-          volume.open_file_object(fh)
-          vss_numbers = volume.number_of_stores
-        except IOError as e:
-          logging.warning('Error while trying to read VSS information: %s', e)
+        vss_numbers = vss.GetVssStoreCount(self._image, offset)
         logging.info('Collecting from VSS.')
         stores = []
         if self._vss_stores:
@@ -396,7 +388,7 @@ class TargetedImageCollector(SimpleImageCollector):
         stores = []
         if self._vss_stores:
           for nr in self._vss_stores:
-            if nr > 0 and nr <= vss_numbers:
+            if nr >= 0 and nr <= vss_numbers:
               stores.append(nr)
         else:
           stores = range(0, vss_numbers)
