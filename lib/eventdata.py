@@ -27,12 +27,14 @@ class EventTimestamp(object):
   """Class to manage event data."""
   # The timestamp_desc values.
   ACCESS_TIME = u'Last Access Time'
+  CHANGE_TIME = u'Metadata Modification Time'
   CREATION_TIME = u'Creation Time'
-  MODIFICATION_TIME = u'Modification Time'
+  MODIFICATION_TIME = u'Content Modification Time'
+  ENTRY_MODIFICATION_TIME = u'Metadata Modification Time'
   # Added time and Creation time are considered the same.
   ADDED_TIME = u'Creation Time'
   # Written time and Modification time are considered the same.
-  WRITTEN_TIME = u'Modification Time'
+  WRITTEN_TIME = u'Content Modification Time'
 
   FILE_DOWNLOADED = u'File Downloaded'
   PAGE_VISITED = u'Page Visited'
