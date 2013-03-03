@@ -30,16 +30,14 @@ https://sites.google.com/a/kiddaland.net/plaso/developer/libraries/storage
 
 This utility should resemble the section entitiled 'External Merge'
 """
-
+import argparse
 import calendar
 import heapq
 import logging
 import pdb
 import sys
 
-import argparse
 import dateutil.parser
-import pytz
 
 from plaso import formatters
 from plaso import output
@@ -48,6 +46,7 @@ from plaso.lib import output as output_lib
 from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.proto import plaso_storage_pb2
+import pytz
 
 MAX_INT64 = 2**64-1
 __version__ = '1.0'
@@ -77,6 +76,9 @@ def GetTimes(my_args):
   There are two ways (microseconds and human readable YYYY-MM-DD HH:MM:SS) to
   define time on the input line.  This function determines which was used and
   returns the approriate pair.
+
+  Args:
+    my_args: An object that contains the configuration of the tool.
 
   Returns:
     (first, last): First and last timestamp as microseconds.

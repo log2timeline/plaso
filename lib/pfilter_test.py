@@ -112,6 +112,8 @@ class PFilterTest(unittest.TestCase):
     evt.hostname = 'Agrabah'
     evt.parser = 'Weirdo'
     evt.inode = '1245'
+    evt.mydict = {'value': 134, 'another': 'value',
+                  'A Key (with stuff)': 'Here'}
     evt.display_name = u'unknown:%s' % evt.filename
 
     container.Append(evt)
@@ -156,6 +158,24 @@ class PFilterTest(unittest.TestCase):
     self.RunPlasoTest(evt, query, True)
 
     query = 'parser is not \'Weirdo\''
+    self.RunPlasoTest(evt, query, False)
+
+    query = 'mydict.value is 123'
+    self.RunPlasoTest(evt, query, False)
+
+    query = 'mydict.akeywithstuff contains "ere"'
+    self.RunPlasoTest(evt, query, True)
+
+    query = 'mydict.value is 134'
+    self.RunPlasoTest(evt, query, True)
+
+    query = 'mydict.value < 200'
+    self.RunPlasoTest(evt, query, True)
+
+    query = 'mydict.another contains "val"'
+    self.RunPlasoTest(evt, query, True)
+
+    query = 'mydict.notthere is 123'
     self.RunPlasoTest(evt, query, False)
 
     # Test atttributes stored in the container.

@@ -184,13 +184,13 @@ class EventContainer(object):
       function that is not an EventObject or an EventContainer.
     """
     try:
-     if isinstance(item, EventObject):
-       self._Append(item, self.events, item.timestamp)
-       return
-     elif isinstance(item, EventContainer):
-       self._Append(item, self.containers, item.first_timestamp,
-                    item.last_timestamp)
-       return
+      if isinstance(item, EventObject):
+        self._Append(item, self.events, item.timestamp)
+        return
+      elif isinstance(item, EventContainer):
+        self._Append(item, self.containers, item.first_timestamp,
+                     item.last_timestamp)
+        return
     except (AttributeError, TypeError):
       pass
 
@@ -514,11 +514,11 @@ class EventObject(object):
       else:
         attribute_value = getattr(self, attribute_name)
 
-        # TODO: deal with float.
         # Serialize the attribute value only if it is an integer type
         # (int or long) or if it has a value.
         # TODO: fix logic.
-        if isinstance(attribute_value, (bool, int, long)) or attribute_value:
+        if isinstance(
+            attribute_value, (bool, int, float, long)) or attribute_value:
           proto_attribute = proto.attributes.add()
           AttributeToProto(
               proto_attribute, attribute_name, attribute_value)
@@ -719,12 +719,12 @@ class FatDateTimeEvent(TimestampEvent):
     """Initializes a FAT date time-based event object.
 
     Args:
-      fat_dat_time: The FAT date time value.
+      fat_date_time: The FAT date time value.
       usage: The description of the usage of the time value.
       data_type: The event data type. If not set data_type is derived
                  from DATA_TYPE.
     """
-    super(TimestampEvent, self).__init__(
+    super(FatDateTimeEvent, self).__init__(
         timelib.Timestamp.FromFatDateTime(fat_date_time), usage, data_type)
 
 
@@ -748,7 +748,7 @@ class PosixTimeEvent(TimestampEvent):
   """Convenience class for a POSIX time-based event."""
 
   def __init__(self, posix_time, usage, data_type=None):
-    """Initializes a POSIX times-based event object.
+    """Initializes a POSIX time-based event object.
 
     Args:
       posix_time: The POSIX time value.
@@ -859,7 +859,12 @@ def AttributeToProto(proto, name, value):
       AttributeToProto(sub_proto, '', list_value)
     proto.array.MergeFrom(proto_array)
 
-  # TODO: deal with float.
+  elif isinstance(value, float):
+    proto.float = value
+
+  elif not value:
+    proto.none = True
+
   else:
     proto.data = value
 
@@ -917,6 +922,11 @@ def AttributeFromProto(proto):
   elif proto.HasField('data'):
     return key, proto.data
 
-  # TODO: deal with float.
+  elif proto.HasField('float'):
+    return key, proto.float
+
+  elif proto.HasField('none'):
+    return key, None
+
   else:
     raise RuntimeError('Unsupported proto attribute type.')

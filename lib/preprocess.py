@@ -15,18 +15,24 @@
 # limitations under the License.
 """This file contains classes used for preprocessing in plaso."""
 import abc
+import collections
 import logging
 import os
 import re
-
-import pytsk3
+import sre_constants
 
 from plaso.lib import errors
-from plaso.lib import lexer
+from plaso.lib import event
 from plaso.lib import pfile
 from plaso.lib import putils
 from plaso.lib import registry
+from plaso.lib import utils
 from plaso.lib import win_registry
+
+from plaso.proto import plaso_storage_pb2
+
+import pytsk3
+import pytz
 
 
 class PreprocessPlugin(object):
@@ -92,6 +98,108 @@ class PreprocessPlugin(object):
 class PlasoPreprocess(object):
   """Object used to store all information gained from preprocessing."""
 
+  def _DictToProto(self, dict_obj):
+    """Return a dict message to a protobuf from a dict object."""
+    proto_dict = plaso_storage_pb2.Dict()
+
+    for dict_key, dict_value in dict_obj.items():
+      sub_proto = proto_dict.attributes.add()
+      event.AttributeToProto(sub_proto, dict_key, dict_value)
+
+    return proto_dict
+
+  def _ProtoToDict(self, proto):
+    """Return a dict object from a Dict message."""
+    dict_obj = {}
+    for proto_dict in proto.attributes:
+      dict_key, dict_value = event.AttributeFromProto(proto_dict)
+      dict_obj[dict_key] = dict_value
+
+    return dict_obj
+
+  def FromProto(self, proto):
+    """Unserializes the PlasoPreprocess from a protobuf.
+
+    Args:
+      proto: The protobuf (plaso_storage_pb2.PreProcess).
+
+    Raises:
+      RuntimeError: when the protobuf is not of type:
+                    plaso_storage_pb2.PreProcess or when an unsupported
+                    attribute value type is encountered
+    """
+    if not isinstance(proto, plaso_storage_pb2.PreProcess):
+      raise RuntimeError('Unsupported proto')
+
+    # TODO: Clear values before setting them.
+    for attribute in proto.attributes:
+      key, value = event.AttributeFromProto(attribute)
+      if key == 'zone':
+        value = pytz.timezone(value)
+      setattr(self, key, value)
+
+    if proto.HasField('counter'):
+      self.counter = collections.Counter()
+      dict_obj = self._ProtoToDict(proto.counter)
+      for title, value in dict_obj.items():
+        self.counter[title] = value
+
+    if proto.HasField('store_range'):
+      range_list = []
+      for value in proto.store_range.values:
+        if value.HasField('integer'):
+          range_list.append(value.integer)
+      self.store_range = (range_list[0], range_list[-1])
+
+    if proto.HasField('collection_information'):
+      self.collection_information = self._ProtoToDict(
+          proto.collection_information)
+      zone = self.collection_information.get('configure_zone')
+      if zone:
+        self.collection_information['configured_zone'] = pytz.timezone(zone)
+
+  def ToProto(self):
+    """Return a PreProcess protobuf built from the object."""
+    proto = plaso_storage_pb2.PreProcess()
+
+    for attribute, value in self.__dict__.items():
+      if attribute == 'collection_information':
+        zone = value.get('configured_zone', '')
+        if zone and hasattr(zone, 'zone'):
+          value['configured_zone'] = zone.zone
+        proto.collection_information.MergeFrom(self._DictToProto(value))
+      elif attribute == 'counter':
+        value_dict = dict(value.items())
+        proto.counter.MergeFrom(self._DictToProto(value_dict))
+      elif attribute == 'store_range':
+        range_proto = plaso_storage_pb2.Array()
+        range_start = range_proto.values.add()
+        range_start.integer = int(value[0])
+        range_end = range_proto.values.add()
+        range_end.integer = int(value[-1])
+        proto.store_range.MergeFrom(range_proto)
+      else:
+        if attribute == 'zone':
+          value = value.zone
+        if isinstance(value, (bool, int, float, long)) or value:
+          proto_attribute = proto.attributes.add()
+          event.AttributeToProto(
+              proto_attribute, attribute, value)
+
+    return proto
+
+  def FromProtoString(self, proto_string):
+    """Unserializes the PlasoPreprocess from a serialized protobuf."""
+    proto = plaso_storage_pb2.PreProcess()
+    proto.ParseFromString(proto_string)
+    self.FromProto(proto)
+
+  def ToProtoString(self):
+    """Serialize a PlasoPreprocess into a string value."""
+    proto = self.ToProto()
+
+    return proto.SerializeToString()
+
 
 class WinRegistryPreprocess(PreprocessPlugin):
   """A preprocessing class that extracts values from the Windows registry.
@@ -142,7 +250,7 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
   def ExpandKeyPath(self):
     """Expand the key path with key words."""
-    path = PathReplacer(self._obj_store, self.REG_KEY)
+    path = utils.PathReplacer(self._obj_store, self.REG_KEY)
     return path.GetPath()
 
   @abc.abstractmethod
@@ -161,44 +269,6 @@ class PreprocessGetPath(PreprocessPlugin):
   def GetValue(self):
     """Return the path as found by the collector."""
     return self._collector.FindPath(self.PATH)
-
-
-class PathReplacer(lexer.Lexer):
-  """Replace path variables with values gathered from earlier preprocessing."""
-
-  tokens = [
-      lexer.Token('.', '{([^}]+)}', 'ReplaceString', ''),
-      lexer.Token('.', '([^{])', 'ParseString', ''),
-      ]
-
-  def __init__(self, pre_obj, data=''):
-    """Constructor for a path replacer."""
-    super(PathReplacer, self).__init__(data)
-    self._path = []
-    self._pre_obj = pre_obj
-
-  def GetPath(self):
-    """Run the lexer and replace path."""
-    while 1:
-      _ = self.NextToken()
-      if self.Empty():
-        break
-
-    return u''.join(self._path)
-
-  def ParseString(self, match, **_):
-    """Append a string to the path."""
-    self._path.append(match.group(1))
-
-  def ReplaceString(self, match, **_):
-    """Replace a variable with a given attribute."""
-    replace = getattr(self._pre_obj, match.group(1), None)
-
-    if replace:
-      self._path.append(replace)
-    else:
-      raise errors.PathNotFound(
-          u'Path variable: %s not discovered yet.', match.group(1))
 
 
 class Collector(object):
@@ -226,13 +296,22 @@ class Collector(object):
 
     Returns:
       The correct path as calculated from the source.
+
+    Raises:
+      errors.PathNotFound: If unable to compile any regular expression.
     """
     re_list = []
     for path_part in path_expression.split('/'):
       if '{' in path_part:
         re_list.append(self.GetExtendedPath(path_part))
       else:
-        re_list.append(re.compile(r'%s' % path_part, re.I | re.S))
+        try:
+          re_list.append(re.compile(r'%s' % path_part, re.I | re.S))
+        except sre_constants.error as e:
+          logging.warning(
+              u'Unable to append the following expression: %s due to %s',
+              path_part, e)
+          raise errors.PathNotFound(u'Unable to compile regex for path: %s', e)
 
     return self.GetPath(re_list)
 
@@ -260,7 +339,7 @@ class Collector(object):
     Returns:
       A string containing the extended path.
     """
-    path = PathReplacer(self._pre_obj, path)
+    path = utils.PathReplacer(self._pre_obj, path)
     return path.GetPath()
 
   @abc.abstractmethod
@@ -274,7 +353,7 @@ class Collector(object):
 
     Returns:
       A list of all files found that fit the pattern.
-  """
+    """
 
   @abc.abstractmethod
   def OpenFile(self, path):
@@ -320,10 +399,10 @@ class FileSystemCollector(Collector):
     """Return a list of files given a path and a pattern."""
     ret = []
     file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
-    for entry in os.listdir(path):
+    for entry in os.listdir(os.path.join(self._mount_point, path)):
       m = file_re.match(entry)
       if m:
-        if os.path.isfile(os.path.join(path, m.group(0))):
+        if os.path.isfile(os.path.join(self._mount_point, path, m.group(0))):
           ret.append(os.path.join(path, m.group(0)))
     return ret
 
@@ -424,3 +503,40 @@ class VSSFileCollector(TSKFileCollector):
                               int(self._image_offset / 512), self._fscache)
 
 
+def GuessOS(col_obj):
+  """Return a string representing what we think the underlying OS is.
+
+  The available return strings are:
+    + Windows
+    + OSX
+    + Linux
+
+  Args:
+    col_obj: The collection object.
+
+  Returns:
+     A string indicating which OS we are dealing with.
+  """
+  # TODO: Add error handling for WindowsError, a builtin
+  # error in Windows, but not found otherwise (so no global error exists).
+  # This causes the tool to crash on Windows if preprocessor is unable to
+  # guess the OS, like when accidentally run against a directory.
+  try:
+    if col_obj.FindPath('/(Windows|WINNT)/System32'):
+      return 'Windows'
+  except errors.PathNotFound:
+    pass
+
+  try:
+    if col_obj.FindPath('/System/Library'):
+      return 'OSX'
+  except errors.PathNotFound:
+    pass
+
+  try:
+    if col_obj.FindPath('/etc'):
+      return 'Linux'
+  except errors.PathNotFound:
+    pass
+
+  return 'None'

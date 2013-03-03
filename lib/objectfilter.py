@@ -258,8 +258,6 @@ class GenericBinaryOperator(BinaryOperator):
     """Takes a list of values and if at least one matches, returns True."""
     for val in values:
       try:
-        logging.debug("Operating %s with x=%s and y=%s",
-                      self.__class__.__name__, val, self.right_operand)
         if self.Operation(val, self.right_operand):
           return True
         else:

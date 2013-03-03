@@ -91,9 +91,9 @@ class ApplicationUsageParser(parser.SQLiteParser):
     Yields:
       An event object (MacOSXApplicationUsageEvent) containing the event
       data.
-     """
+    """
     yield MacOSXApplicationUsageEvent(
-        timelib.TimeStamp.FromPosixTime(row['last_time']),
+        timelib.Timestamp.FromPosixTime(row['last_time']),
         u'Application %s' % row['event'], u'%s' % row['app_path'],
         row['app_version'], row['bundle_id'], row['number_times'])
 

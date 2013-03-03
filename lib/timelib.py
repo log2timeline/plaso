@@ -43,10 +43,12 @@ MONTH_DICT = {
 
 
 class Timestamp(object):
-  """The Plaso timestamp is a 64-bit signed timestamp value containing:
-     micro seconds since 1970-01-01 00:00:00.
+  """Class for converting timestamps to plaso timestamps.
 
-     The timestamp is not necessarily in UTC.
+    The Plaso timestamp is a 64-bit signed timestamp value containing:
+    micro seconds since 1970-01-01 00:00:00.
+
+    The timestamp is not necessarily in UTC.
   """
   # The minimum timestamp in seconds
   TIMESTAMP_MIN_SECONDS = -(((1 << 63L) - 1) / 1000000)
@@ -132,7 +134,7 @@ class Timestamp(object):
     """Determines the day of the year for a specific day of a month in a year.
 
     Args:
-      day_of_month: The day of the month where 0 represents the first day.
+      day: The day of the month where 0 represents the first day.
       month: The month where 0 represents January.
       year: The year as in 1970.
 
@@ -272,6 +274,6 @@ def DateTimeFromTimestamp(timestamp, zone):
     mydate = datetime.datetime.utcfromtimestamp(
         timestamp / 1e6)
   except ValueError:
-     return None
+    return None
 
   return mydate.replace(tzinfo=pytz.utc).astimezone(zone)

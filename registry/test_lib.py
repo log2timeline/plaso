@@ -14,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a simple abstraction of registry keys for testing."""
-from plaso.lib import eventdata
-from plaso.lib import win_registry_interface
 from plaso.formatters import winreg
+from plaso.lib import win_registry_interface
 
 
 class TestRegKey(win_registry_interface.WinRegKey):

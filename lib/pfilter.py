@@ -19,25 +19,66 @@
 # limitations under the License.
 """An extension of the objectfilter to provide plaso specific options."""
 
-import binascii
 import calendar
 import datetime
-import dateutil.parser
 import logging
-import pytz
 
+import dateutil.parser
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
 from plaso.frontend import presets
 
 from plaso.lib import eventdata
 from plaso.lib import objectfilter
-from plaso.lib import lexer
-from plaso.lib import pfile
-from plaso.lib import storage
 from plaso.lib import utils
 
+import pytz
+
 __pychecker__ = 'no-funcdoc'
+
+
+class DictObject(object):
+  """A simple object representing a dict object.
+
+  To filter against an object that is stored as a dictionary the dict
+  is converted into a simple object. Since keys can contain spaces
+  and/or other symbols they are stripped out to make filtering work
+  like it is another object.
+
+  Example dict:
+    {'A value': 234,
+     'this (my) key_': 'value',
+     'random': True,
+    }
+
+  This object would then allow access to object.thismykey that would access
+  the key 'this (my) key_' inside the dict.
+  """
+
+  def __init__(self, dict_object):
+    """Initialize the object and build a secondary dict."""
+    # TODO: Move some of this code to a more value typed system.
+    self._dict_object = dict_object
+
+    self._dict_translated = {}
+    for key, value in dict_object.items():
+      self._dict_translated[self._StripKey(key)] = value
+
+  def _StripKey(self, key):
+    """Return a stripped version of the dict key without symbols."""
+    try:
+      return str(key).lower().translate(None, ' (){}+_=-<>[]')
+    except UnicodeEncodeError:
+      pass
+
+  def __getattr__(self, attr):
+    """Return back entries from the dictionary."""
+    if attr in self._dict_object:
+      return self._dict_object.get(attr)
+
+    test = self._StripKey(attr)
+    if test in self._dict_translated:
+      return self._dict_translated.get(test)
 
 
 class PlasoValueExpander(objectfilter.AttributeValueExpander):
@@ -58,6 +99,8 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     ret = getattr(obj, attr_name, None)
 
     if ret:
+      if isinstance(ret, dict):
+        ret = DictObject(ret)
       return ret
 
     # Check if this is a message request and we have a regular EventObject.

@@ -23,6 +23,7 @@ from plaso.lib import parser
 
 class FirefoxPlacesBookmarkAnnotation(event.EventContainer):
   """Convenience class for a Firefox bookmark annotation event container."""
+
   def __init__(self, row_id, title, url, content):
     """Initializes the event object.
 
@@ -47,6 +48,7 @@ class FirefoxPlacesBookmarkAnnotation(event.EventContainer):
 
 class FirefoxPlacesBookmarkFolder(event.EventContainer):
   """Convenience class for a Firefox bookmark folder event container."""
+
   def __init__(self, row_id, title):
     """Initializes the event object.
 
@@ -67,6 +69,7 @@ class FirefoxPlacesBookmarkFolder(event.EventContainer):
 
 class FirefoxPlacesBookmark(event.EventContainer):
   """Convenience class for a Firefox bookmark event container."""
+
   # TODO: move to formatter.
   _TYPES = {
       1: 'URL',
@@ -158,25 +161,25 @@ class FirefoxHistoryParser(parser.SQLiteParser):
         'moz_places.hidden, moz_places.typed, moz_historyvisits.visit_type '
         'FROM moz_places, moz_historyvisits '
         'WHERE moz_places.id = moz_historyvisits.place_id'),
-      'ParsePageVisitedRow'),
+       'ParsePageVisitedRow'),
       (('SELECT moz_bookmarks.type, moz_bookmarks.title AS bookmark_title, '
         'moz_bookmarks.dateAdded, moz_bookmarks.lastModified, '
         'moz_places.url, moz_places.title AS places_title, '
         'moz_places.rev_host, moz_places.visit_count, moz_bookmarks.id '
         'FROM moz_places, moz_bookmarks WHERE moz_bookmarks.fk = moz_places.id '
         'AND moz_bookmarks.type <> 3'),
-      'ParseBookmarkRow'),
+       'ParseBookmarkRow'),
       (('SELECT moz_items_annos.content, moz_items_annos.dateAdded, '
         'moz_items_annos.lastModified, moz_bookmarks.title, '
         'moz_places.url, moz_places.rev_host, moz_items_annos.id '
         'FROM moz_items_annos, moz_bookmarks, moz_places '
         'WHERE moz_items_annos.item_id = moz_bookmarks.id '
         'AND moz_bookmarks.fk = moz_places.id'),
-      'ParseBookmarkAnnotationRow'),
+       'ParseBookmarkAnnotationRow'),
       (('SELECT moz_bookmarks.id, moz_bookmarks.title,'
         'moz_bookmarks.dateAdded, moz_bookmarks.lastModified '
         'FROM moz_bookmarks WHERE moz_bookmarks.type = 2'),
-      'ParseBookmarkFolderRow')]
+       'ParseBookmarkFolderRow')]
 
   # The required tables.
   REQUIRED_TABLES = ('moz_places', 'moz_historyvisits', 'moz_bookmarks',

@@ -25,16 +25,16 @@ import csv
 import datetime
 import logging
 import os
-import pytz
 import tempfile
-
-import sqlite3
 
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
 from plaso.lib import registry
 from plaso.lib import timelib
+
+import pytz
+import sqlite3
 
 
 class PlasoParser(object):
@@ -286,6 +286,9 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
   def ParseString(self, match, **kwargs):
     """Return a string with combined values from the lexer.
 
+    Args:
+      match: The matching object.
+
     Returns:
       A string that combines the values that are so far
       saved from the lexer.
@@ -311,7 +314,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
           self.attributes['body'])
     except UnicodeError:
       line = 'Unable to print line - due to encoding error.'
-      pass
+
     return line
 
   def ParseLine(self, zone):
@@ -325,7 +328,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
     if len(times) < 3:
       raise errors.TimestampNotCorrectlyFormed(
           u'Unable to parse timestamp, not of the format HH:MM:SS [%s]' % (
-          self.PrintLine()))
+              self.PrintLine()))
     try:
       secs = times[2].split('.')
       if len(secs) == 2:
@@ -509,8 +512,8 @@ class SQLiteParser(PlasoParser):
     if data != magic:
       filehandle.seek(-len(magic), 1)
       raise errors.UnableToParseFile(
-          u'File %s not a %s. (invalid signature)' % (filehandle.name,
-          self.NAME))
+          u'File %s not a %s. (invalid signature)' % (
+              filehandle.name, self.NAME))
 
     # TODO: Current design copies the entire file into a buffer
     # that is parsed by each SQLite parser. This is not very efficient,

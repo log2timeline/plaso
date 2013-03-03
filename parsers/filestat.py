@@ -14,11 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for the Stat object of a PFile."""
-import re
-
 from plaso.lib import event
 from plaso.lib import parser
-from plaso.lib import sleuthkit
 from plaso.lib import timelib
 
 

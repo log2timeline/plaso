@@ -26,6 +26,7 @@ import logging
 import struct
 
 from plaso.lib import registry
+from plaso.lib import utils
 
 
 class RegistryPlugin(object):
@@ -102,7 +103,8 @@ class KeyPlugin(RegistryPlugin):
 
   def Process(self, key):
     """Process the key based plugin."""
-    if key.path != self.REG_KEY:
+    key_fixed = utils.PathReplacer(self._config, self.REG_KEY).GetPath()
+    if key.path != key_fixed:
       return None
 
     self._key = key
