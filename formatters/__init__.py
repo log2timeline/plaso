@@ -24,5 +24,6 @@ from plaso.formatters import lnk
 from plaso.formatters import ls_quarantine
 from plaso.formatters import mactime
 from plaso.formatters import syslog
+from plaso.formatters import symantec
 from plaso.formatters import winevt
 from plaso.formatters import winreg
