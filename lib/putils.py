@@ -15,9 +15,9 @@
 # limitations under the License.
 """This file contains few methods for Plaso."""
 import binascii
-import os
 import datetime
 import logging
+import os
 import tempfile
 
 from plaso.lib import event
@@ -106,7 +106,8 @@ def OpenOSFile(path):
   return pfile.OpenPFile(pathspec)
 
 
-def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0):
+def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0,
+                fscache=None):
   """Return a PFile like object for a file in an image inside a VSS.
 
   Args:
@@ -114,12 +115,13 @@ def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0):
     image_path: Full path to the image itself.
     store_nr: The store number (VSS store).
     image_offset: Offset in sectors if this is a disk image.
+    fscache: A FilesystemCache object that stores cached fs objects.
 
   Returns:
     A PFile object.
   """
   return _OpenImageFile(
-      file_to_open, image_path, 'vss', image_offset, store_nr)
+      file_to_open, image_path, 'vss', image_offset, store_nr, fscache=fscache)
 
 
 def Pfile2File(fh_in, path=None):
@@ -281,7 +283,7 @@ def GetHexDump(fh, offset, length=20):
     for bit in range(0, 8):
       out.append('%s ' % line[bit * 4:bit * 4 + 4])
 
-    for bit in range(0,16):
+    for bit in range(0, 16):
       data = binascii.unhexlify(line[bit * 2: bit * 2 + 2])
       if ord(data) > 31 and ord(data) < 128:
         out.append(data)

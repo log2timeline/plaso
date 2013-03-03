@@ -85,7 +85,7 @@ class GoogleDriveSnapshotLocalEntryEvent(event.EventObject):
     """
     super(GoogleDriveSnapshotLocalEntryEvent, self).__init__()
 
-    self.timestamp = timelib.TimeStamp.FromPosixTime(timestamp)
+    self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
     self.timestamp_desc = eventdata.EventTimestamp.MODIFICATION_TIME
     self.source_short = 'LOG'
     self.source_long = 'Google Drive (local entry)'
@@ -194,7 +194,7 @@ class GoogleDriveParser(parser.SQLiteParser):
     if row['created']:
       container.Append(event.PosixTimeEvent(
           row['created'], eventdata.EventTimestamp.CREATION_TIME,
-        container.data_type))
+          container.data_type))
 
     # TODO: shouldn't this be yield?
     return container

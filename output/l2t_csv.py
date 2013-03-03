@@ -20,12 +20,12 @@ Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
 import logging
 import re
 
-from plaso.output import helper
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
+from plaso.lib import utils
+from plaso.output import helper
 
 
 class L2tcsv(output.FileLogOutputFormatter):
@@ -39,6 +39,15 @@ class L2tcsv(output.FileLogOutputFormatter):
 
   def Start(self):
     """Returns a header for the output."""
+    # Build a hostname and username dict objects.
+    if self.store:
+      self._hostnames = helper.BuildHostDict(self.store)
+      self._preprocesses = {}
+      for info in self.store.GetStorageInformation():
+        if hasattr(info, 'store_range'):
+          for store_number in range(info.store_range[0], info.store_range[1]):
+            self._preprocesses[store_number] = info
+
     self.filehandle.write(
         'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         'version,filename,inode,notes,format,extra\n')
@@ -56,6 +65,9 @@ class L2tcsv(output.FileLogOutputFormatter):
 
     Args:
       event_object: The event object (EventObject).
+
+    Raises:
+      errors.NoFormatterFound: If no formatter for that event is found.
     """
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
@@ -76,7 +88,7 @@ class L2tcsv(output.FileLogOutputFormatter):
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         event_formatter.format_string)
     for key in event_object.GetAttributes():
-      if key in helper.RESERVED_VARIABLES or key in format_variables:
+      if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
       extra.append('%s: %s ' % (key, getattr(event_object, key)))
     extra = ' '.join(extra)
@@ -87,6 +99,19 @@ class L2tcsv(output.FileLogOutputFormatter):
           event_object.pathspec, 'image_inode'):
         inode = event_object.pathspec.image_inode
 
+    hostname = getattr(event_object, 'hostname', '')
+
+    username = getattr(event_object, 'username', '-')
+    if self.store:
+      if not hostname:
+        hostname = self._hostnames.get(event_object.store_number, '-')
+
+      check_user = helper.GetUsernameFromPreProcess(
+          self._preprocesses.get(event_object.store_number), username)
+
+      if check_user != '-':
+        username = check_user
+
     row = (date_use.strftime('%m/%d/%Y'),
            date_use.strftime('%H:%M:%S'),
            self.zone,
@@ -94,8 +119,8 @@ class L2tcsv(output.FileLogOutputFormatter):
            event_object.source_short,
            event_object.source_long,
            event_object.timestamp_desc,
-           getattr(event_object, 'username', '-'),
-           getattr(event_object, 'hostname', '-'),
+           username,
+           hostname,
            msg_short,
            msg,
            '2',

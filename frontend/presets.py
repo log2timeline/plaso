@@ -16,13 +16,13 @@
 """Helper file for filtering out parsers."""
 
 categories = {
-  'winxp': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-            'WinLnkParser','Symantec'],
-  'win7': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-           'WinLnkParser','Symantec'],
-  'webhist': ['Chrome', 'Firefox'],
-  'linux': ['Firefox', 'Chrome', 'Syslog', 'GoogleDrive', 'PfileStat'],
-  'macosx': ['ApplicationUsage', 'Firefox', 'LsQuarantine', 'Chrome', 'Syslog',
-             'GoogleDrive', 'PfileStat'],
+    'winxp': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
+              'WinLnkParser', 'Hachoir', 'Symantec'],
+    'win7': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
+             'WinLnkParser', 'Hachoir', 'Symantec'],
+    'webhist': ['Chrome', 'Firefox'],
+    'linux': ['Firefox', 'Chrome', 'SELinux', 'Syslog', 'GoogleDrive',
+              'PfileStat'],
+    'macosx': ['ApplicationUsage', 'Firefox', 'LsQuarantine', 'Chrome',
+               'Syslog', 'GoogleDrive', 'PfileStat'],
 }
-

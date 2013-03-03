@@ -13,12 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains an import statement for each registry related plugin."""
+"""This file contains a selinux formatter in plaso."""
+from plaso.lib import eventdata
 
-from plaso.registry import default
-from plaso.registry import mru
-from plaso.registry import mrux
-from plaso.registry import run
-from plaso.registry import winver
-from plaso.registry import xpuserassist
 
+class SELinuxFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for selinux files."""
+  DATA_TYPE = 'selinux:line'
+
+  FORMAT_STRING_SEPARATOR = u''
+
+  FORMAT_STRING_PIECES = [u'[', u'audit_type: {audit_type}',
+                          u', pid: {pid}', u'] {body}']

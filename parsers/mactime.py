@@ -21,19 +21,22 @@ The format specifications can be read here:
 import re
 
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
 
-class MactimeEvent(event.EventObject):
-  """A Mactime specific EventObject."""
+class MactimeEvent(event.PosixTimeEvent):
+  """Convenience class for a mactime-based event."""
 
-  def __init__(self, description, timestamp):
-    """Initialize the EventObject."""
-    super(MactimeEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromPosixTime(int(timestamp))
-    self.timestamp_desc = description
-    self.data_type = 'mactime:line'
+  def __init__(self, posix_time, usage):
+    """Initializes a mactime-based event object.
+
+    Args:
+      posix_time: The POSIX time value.
+      usage: The description of the usage of the time value.
+    """
+    super(MactimeEvent, self).__init__(posix_time, usage, 'mactime:line')
 
 
 class MactimeParser(parser.TextCSVParser):
@@ -48,6 +51,13 @@ class MactimeParser(parser.TextCSVParser):
   VALUE_SEPARATOR = '|'
 
   MD5_RE = re.compile('^[0-9a-fA-F]+$')
+
+  _TIMESTAMP_DESC_MAP = {
+      'atime': eventdata.EventTimestamp.ACCESS_TIME,
+      'crtime': eventdata.EventTimestamp.CREATION_TIME,
+      'ctime': eventdata.EventTimestamp.CHANGE_TIME,
+      'mtime': eventdata.EventTimestamp.MODIFICATION_TIME,
+  }
 
   def VerifyRow(self, row):
     """Verify we are dealing with a mactime bodyfile."""
@@ -82,13 +92,14 @@ class MactimeParser(parser.TextCSVParser):
           for user in self._pre_obj.users:
             if user.get('sid', '') == value:
               container.username = user.get('name', 'N/A')
-            if user.get('gid', '') == value:
+            if user.get('uid', '') == value:
               container.username = user.get('name', 'N/A')
 
     for key in ('atime', 'mtime', 'ctime', 'crtime'):
       value = row.get(key, 0)
       if value:
-        container.Append(MactimeEvent(key, value))
+        container.Append(MactimeEvent(
+            int(value), self._TIMESTAMP_DESC_MAP[key]))
 
     if len(container) > 0:
       return container

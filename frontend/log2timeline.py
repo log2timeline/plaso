@@ -16,9 +16,9 @@
 """This file contains log2timeline, the friendly front-end to plaso."""
 
 import argparse
-import os
-import multiprocessing
 import logging
+import multiprocessing
+import os
 import sys
 
 from plaso.lib import errors
@@ -75,6 +75,14 @@ def Main():
       '--single-thread', dest='single_thread', action='store_true',
       default=False,
       help='Indicate that the tool should run in a single thread.')
+
+  arg_parser.add_argument(
+      '-f', '--file_filter', dest='file_filter', action='store', type=str,
+      default=None, help=('List of files to include for targeted collection of'
+                          ' files to parse, one line per file path, setup is '
+                          '/path|file - where each element can contain either'
+                          ' a variable set in the preprocessing stage or a '
+                          'regular expression'))
 
   arg_parser.add_argument(
       '--scan-archives', dest='open_files', action='store_true', default=False,

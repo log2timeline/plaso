@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows EventLog (EVT) files."""
-import pyevt
-
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
+
+import pyevt
 
 
 class WinEvtRecordEventContainer(event.EventContainer):
@@ -36,7 +36,7 @@ class WinEvtRecordEventContainer(event.EventContainer):
     self.data_type = 'windows:evt:record'
 
     # TODO: refactor to formatter.
-    self.source_long = 'WinEvtParser'
+    self.source_long = 'WinEvt'
     self.source_short = 'EVT'
 
     self.recovered = recovered
@@ -106,12 +106,24 @@ class WinEvtParser(parser.PlasoParser):
     try:
       evt_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile("[%s] unable to parse file %s: %s" % (
+      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
           self.NAME, file_object.name, exception))
 
-    for evt_record in evt_file.records:
-      yield self._ParseRecord(evt_record)
+    for record_index in range(0, evt_file.number_of_records):
+      try:
+        evt_record = evt_file.get_record(record_index)
+        yield self._ParseRecord(evt_record)
+      except IOError as exception:
+        logging.warning("[%s] unable to parse event record: %d in file: %s" % (
+            self.NAME, record_index, file_object.name, exception))
+        pass
 
-    for evt_record in evt_file.recovered_records:
-      yield self._ParseRecord(evt_record, recovered=True)
-
+    for record_index in range(0, evt_file.number_of_recovered_records):
+      try:
+        evt_record = evt_file.get_recovered_record(record_index)
+        yield self._ParseRecord(evt_record, recovered=True)
+      except IOError:
+        logging.info(
+            "[%s] unable to parse recovered event record: %d in file: %s" % (
+            self.NAME, record_index, file_object.name, exception))
+        pass

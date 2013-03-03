@@ -62,16 +62,16 @@ import logging
 import struct
 import sys
 import zipfile
-import yaml
-
-from google.protobuf import message
 
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import pfile
+from plaso.lib import preprocess
 from plaso.lib import queue
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
+
+from google.protobuf import message
+import yaml
 
 __pychecker__ = 'no-abstract'
 
@@ -151,31 +151,70 @@ class PlasoStorage(object):
           if int(number) >= self._filenumber:
             self._filenumber = int(number) + 1
 
+      self._first_filenumber = self._filenumber
+
   def _StorePreObject(self, pre_obj):
     """Store information gathered during preprocessing to the storage file."""
-    current_object = self.GetStorageInformation()
-    if current_object:
-      current_object.append(pre_obj)
-    else:
-      current_object = [pre_obj, ]
+    strings = []
+    try:
+      pre_fh = self.zipfile.open('information.dump', 'r')
+      while 1:
+        read_str = pre_fh.read(1024)
+        if not read_str:
+          break
+        strings.append(read_str)
+    except KeyError:
+      pass
 
-    self.zipfile.writestr('information.yaml', yaml.dump(current_object))
+    # Store information about store range for this particular
+    # preprocessing object. This will determine which stores
+    # this information is applicaple for.
+    stores = list(self.GetProtoNumbers())
+    if stores:
+      end = stores[-1] + 1
+    else:
+      end = self._first_filenumber
+    pre_obj.store_range = (self._first_filenumber, end)
+
+    serialized = pre_obj.ToProtoString()
+    strings.append(struct.pack('<I', len(serialized)) + serialized)
+    self.zipfile.writestr('information.dump', ''.join(strings))
 
   def GetStorageInformation(self):
     """Return gathered preprocessing information from a storage file."""
+    information = []
     try:
-      pre_file = self.zipfile.open('information.yaml', 'r')
-      pre_file_obj = yaml.load(pre_file)
-
-      stores = list(self.GetProtoNumbers())
-      pre_file_obj[0].stores = {}
-      pre_file_obj[0].stores['Number'] = len(stores)
-      for store in stores:
-        pre_file_obj[0].stores['Store %d' % store] = self.ReadMeta(store)
-
-      return pre_file_obj
+      pre_fh = self.zipfile.open('information.dump', 'r')
     except KeyError:
-      return None
+      return information
+
+    while 1:
+      unpacked = pre_fh.read(4)
+      if len(unpacked) != 4:
+        break
+
+      size = struct.unpack('<I', unpacked)[0]
+
+      if size > 1024 * 1024 * 40:
+        raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
+
+      serialized = pre_fh.read(size)
+      info = preprocess.PlasoPreprocess()
+      try:
+        info.FromProtoString(serialized)
+      except message.DecodeError:
+        logging.error('Unable to parse preprocessing object, bailing out.')
+        break
+
+      information.append(info)
+
+    stores = list(self.GetProtoNumbers())
+    information[-1].stores = {}
+    information[-1].stores['Number'] = len(stores)
+    for store in stores:
+      information[-1].stores['Store %d' % store] = self.ReadMeta(store)
+
+    return information
 
   def _GetEntry(self, number, entry_index=-1):
     """Return a serialized EventObject protobuf read from filehandle.
@@ -193,6 +232,7 @@ class PlasoStorage(object):
 
     Raises:
       EOFError: When we reach the end of the protobuf file.
+      errors.WrongProtobufEntry: If the probotuf size is too large for storage.
     """
     last_index = 0
     if number in self.protofiles:
@@ -342,7 +382,7 @@ class PlasoStorage(object):
       A dict object containing all the variables inside the metadata file.
     """
     meta_file = self.zipfile.open('plaso_meta.%06d' % number, 'r')
-    return yaml.load(meta_file)
+    return yaml.safe_load(meta_file)
 
   def GetBufferSize(self):
     """Return the size of the buffer."""
@@ -356,7 +396,7 @@ class PlasoStorage(object):
     """Add an entry into the buffer.
 
     Args:
-      event: An EventObject to append to the buffer (serialized).
+      event_str: A serialized EventObject to append to the buffer.
 
     Raises:
       IOError: When trying to write to a closed storage file.
@@ -411,7 +451,7 @@ class PlasoStorage(object):
     self._count_evt_long = collections.Counter()
     self._count_evt_short = collections.Counter()
     self._count_parser = collections.Counter()
-    self.zipfile.writestr(meta_fh, yaml.dump(yaml_dict))
+    self.zipfile.writestr(meta_fh, yaml.safe_dump(yaml_dict))
 
     ofs = 0
     proto_str = []

@@ -19,22 +19,17 @@
 __pychecker__ = 'unusednames=pyvshadow'
 
 import datetime
-import os
-import pytz
 import logging
+import os
 import tempfile
 
 from IPython.frontend.terminal.embed import InteractiveShellEmbed
-
-import pyvshadow
 
 from plaso import formatters
 from plaso import output
 from plaso import parsers
 from plaso import preprocessors
 from plaso import registry
-
-from plaso.lib.putils import *
 
 from plaso.lib import collector
 from plaso.lib import engine
@@ -57,11 +52,15 @@ from plaso.lib import vss
 from plaso.lib import win_registry
 from plaso.lib import win_registry_interface
 from plaso.lib import worker
+from plaso.lib.putils import *
 
 from plaso.output import helper
 
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
+
+import pytz
+import pyvshadow
 
 
 def Main():

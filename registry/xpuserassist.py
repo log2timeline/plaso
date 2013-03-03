@@ -26,7 +26,7 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
   """A registry plugin that parses XP UserAssist entries."""
 
   REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}\\Count')
+             '\\UserAssist\\{{75048700-EF1F-11D0-9888-006097DEACF9}}\\Count')
   REG_TYPE = 'NTUSER'
   URLS = [u'http://blog.didierstevens.com/programs/userassist/']
 

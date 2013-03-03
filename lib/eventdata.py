@@ -20,18 +20,21 @@ import re
 
 from plaso.lib import errors
 from plaso.lib import registry
+from plaso.lib import utils
 
 
 class EventTimestamp(object):
   """Class to manage event data."""
   # The timestamp_desc values.
   ACCESS_TIME = u'Last Access Time'
+  CHANGE_TIME = u'Metadata Modification Time'
   CREATION_TIME = u'Creation Time'
-  MODIFICATION_TIME = u'Modification Time'
+  MODIFICATION_TIME = u'Content Modification Time'
+  ENTRY_MODIFICATION_TIME = u'Metadata Modification Time'
   # Added time and Creation time are considered the same.
   ADDED_TIME = u'Creation Time'
   # Written time and Modification time are considered the same.
-  WRITTEN_TIME = u'Modification Time'
+  WRITTEN_TIME = u'Content Modification Time'
 
   FILE_DOWNLOADED = u'File Downloaded'
   PAGE_VISITED = u'Page Visited'
@@ -60,6 +63,7 @@ class EventFormatterManager(object):
     """
     if not hasattr(cls, 'event_formatters'):
       cls.event_formatters = {}
+      cls.default_formatter = DefaultFormatter()
       for cls_formatter in EventFormatter.classes:
         try:
           formatter = EventFormatter.classes[cls_formatter]()
@@ -68,16 +72,22 @@ class EventFormatterManager(object):
           if formatter.DATA_TYPE in cls.event_formatters:
             raise RuntimeError(
                 'event formatter for data type: %s defined in: %s and %s.' %(
-                formatter.DATA_TYPE, cls_formatter,
-                cls.event_formatters[formatter.DATA_TYPE].__class__.__name__))
+                    formatter.DATA_TYPE, cls_formatter,
+                    cls.event_formatters[
+                        formatter.DATA_TYPE].__class__.__name__))
           cls.event_formatters[formatter.DATA_TYPE] = formatter
         except RuntimeError as exeception:
           # Ignore broken formatters.
           logging.warning('%s', exeception)
-          pass
+
       cls.event_formatters.setdefault(None)
 
-    return cls.event_formatters[event_object.data_type]
+    if event_object.data_type in cls.event_formatters:
+      return cls.event_formatters[event_object.data_type]
+    else:
+      logging.warning(
+          u'Using default formatter for data type: %s', event_object.data_type)
+      return cls.default_formatter
 
   @classmethod
   def GetMessageStrings(cls, event_object):
@@ -173,10 +183,10 @@ class EventFormatter(object):
         msg_short = (
             u'Unable to format string: %s') % self.format_string_short
     else:
-      if len(msg) > 80:
-        msg_short = u'%s...' % msg[0:77]
-      else:
-        msg_short = msg
+      msg_short = msg
+
+    if len(msg_short) > 80:
+      msg_short = u'%s...' % msg_short[0:77]
 
     return msg, msg_short
 
@@ -235,8 +245,8 @@ class ConditionalEventFormatter(EventFormatter):
         self._format_string_pieces_map.append(attribute_name)
       else:
         raise RuntimeError(
-            "Invalid format string piece: [%s] contains more than 1 attribute "
-            "name.", format_string_piece)
+            'Invalid format string piece: [%s] contains more than 1 attribute '
+            'name.', format_string_piece)
 
     self._format_string_short_pieces_map = []
     for format_string_piece in self.FORMAT_STRING_SHORT_PIECES:
@@ -251,8 +261,8 @@ class ConditionalEventFormatter(EventFormatter):
         self._format_string_short_pieces_map.append(attribute_name)
       else:
         raise RuntimeError(
-            "Invalid short format string piece: [%s] contains more than 1 "
-            "attribute name.", format_string_piece)
+            'Invalid short format string piece: [%s] contains more than 1 '
+            'attribute name.', format_string_piece)
 
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
@@ -281,6 +291,28 @@ class ConditionalEventFormatter(EventFormatter):
     self.format_string_short = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     return super(ConditionalEventFormatter, self).GetMessages(event_object)
+
+
+class DefaultFormatter(EventFormatter):
+  """Default formatter for events that do not have any defined formatter."""
+
+  DATA_TYPE = 'event'
+  FORMAT_STRING = u'<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'
+  FORMAT_STRING_SHORT = u'<DEFAULT> {attribute_driven}'
+
+  def GetMessages(self, event_object):
+    """Return a list of messages extracted from an event object."""
+    text_pieces = []
+
+    for key, value in event_object.GetValues().items():
+      if key in utils.RESERVED_VARIABLES:
+        continue
+      text_pieces.append(u'{}: {}'.format(key, value))
+
+    event_object.attribute_driven = u' '.join(text_pieces)
+    # Make the formatter work.
+    event_object.data_type = self.DATA_TYPE
+    return super(DefaultFormatter, self).GetMessages(event_object)
 
 
 class TextEventFormatter(EventFormatter):

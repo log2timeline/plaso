@@ -26,11 +26,11 @@ a human readable format for easy human consumption/analysis.
 
 """
 
-import sys
 import StringIO
-import pytz
+import sys
 
 from plaso.lib import registry
+import pytz
 
 
 class LogOutputFormatter(object):
