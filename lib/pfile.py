@@ -28,9 +28,6 @@ import os
 import tarfile
 import zipfile
 
-import pytsk3
-import pyvshadow
-
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import registry
@@ -38,6 +35,9 @@ from plaso.lib import sleuthkit
 from plaso.lib import timelib
 from plaso.lib import vss
 from plaso.proto import transmission_pb2
+
+import pytsk3
+import pyvshadow
 
 # TODO: Add support for "carving" embedded files
 # out using the embedded portion of the proto.
@@ -157,7 +157,8 @@ class PlasoFile(object):
       fscache: A FilesystemCache object.
 
     Raises:
-      IOError: If this class supports the wrong driver for this file.
+      errors.UnableToOpenFile: If this class supports the wrong driver for this
+      file.
     """
     self.pathspec = proto
     if root:
@@ -286,6 +287,9 @@ class TskFile(PlasoFile):
       path: Path to the image file.
       offset: If this is a disk partition an offset to the filesystem
       is needed.
+
+    Raises:
+      IOError: If no pfile.FilesystemCache object is provided.
     """
     if not hasattr(self, '_fscache'):
       raise IOError('No FS cache provided, unable to open a file.')
@@ -363,6 +367,9 @@ class TskFile(PlasoFile):
     inode = 0
     if hasattr(self.pathspec, 'image_inode'):
       inode = self.pathspec.image_inode
+
+    if not hasattr(self.pathspec, 'file_path'):
+      self.pathspec.file_path = 'NA_NotProvided'
 
     self.fh = sleuthkit.Open(
         self._fs, inode, self.pathspec.file_path)
@@ -850,7 +857,7 @@ class Stats(object):
 
   def __setattr__(self, attr, value):
     """Sets the value to either the default or the attribute store."""
-    if value == None:
+    if value is None:
       return
     try:
       object.__getattribute__(self, attr)

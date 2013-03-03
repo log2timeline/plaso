@@ -19,9 +19,8 @@ This library serves as a basis for reading and parsing registry files in Plaso.
 It should provide a read interface to the registry irrelevant of the underlying
 registry library that is used to parse the actual registry file.
 """
-import pyregf
-
 from plaso.lib import win_registry_interface
+import pyregf
 
 
 class WinPyregKey(win_registry_interface.WinRegKey):

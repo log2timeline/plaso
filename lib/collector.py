@@ -23,11 +23,12 @@ import logging
 import os
 
 import pytsk3
-import pyvshadow
 
+from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfile
+from plaso.lib import preprocess
 from plaso.lib import queue
 from plaso.lib import utils
 from plaso.lib import vss
@@ -131,23 +132,34 @@ class PCollector(object):
     directories = []
     for f in directory:
       try:
-        name = f.info.name.name
+        tsk_name = f.info.name
+        if not tsk_name:
+          continue
+        # TODO: Add a test that tests the reason for this. Why is this?
+        # If an inode/file gets reallocated yet is still listed inside
+        # a directory node there may be issues (reparsing a file, ending
+        # up in an endless loop, etc.).
+        if tsk_name.flags == pytsk3.TSK_FS_NAME_FLAG_UNALLOC:
+          # TODO: Perhaps add a direct parsing of timestamps here to include
+          # in the timeline.
+          continue
         if not f.info.meta:
           continue
+        name_str = tsk_name.name
         inode_addr = f.info.meta.addr
         f_type = f.info.meta.type
       except AttributeError as e:
         logging.error('[ParseImage] Problem reading file [%s], error: %s',
-                      name, e)
+                      name_str, e)
         continue
 
       # List of files we do not want to process further.
-      if name in ['$OrphanFiles', '.', '..']:
+      if name_str in ['$OrphanFiles', '.', '..']:
         continue
 
       # We only care about regular files and directories
       if f_type == pytsk3.TSK_FS_META_TYPE_DIR:
-        directories.append((inode_addr, os.path.join(path, name)))
+        directories.append((inode_addr, os.path.join(path, name_str)))
       elif f_type == pytsk3.TSK_FS_META_TYPE_REG:
         transfer_proto = event.EventPathSpec()
         if fs.store_nr >= 0:
@@ -158,7 +170,7 @@ class PCollector(object):
         transfer_proto.container_path = fs.path
         transfer_proto.image_offset = fs.offset
         transfer_proto.image_inode = inode_addr
-        file_path = os.path.join(path, name)
+        file_path = os.path.join(path, name_str)
         transfer_proto.file_path = utils.GetUnicodeString(file_path)
 
         # If we are dealing with a VSS we want to calculate a hash
@@ -193,20 +205,20 @@ class PCollector(object):
     ret_hash = hashlib.md5()
 
     ret_hash.update('atime:{0}.{1}'.format(
-      getattr(meta, 'atime', 0),
-      getattr(meta, 'atime_nano', 0)))
+        getattr(meta, 'atime', 0),
+        getattr(meta, 'atime_nano', 0)))
 
     ret_hash.update('crtime:{0}.{1}'.format(
-      getattr(meta, 'crtime', 0),
-      getattr(meta, 'crtime_nano', 0)))
+        getattr(meta, 'crtime', 0),
+        getattr(meta, 'crtime_nano', 0)))
 
     ret_hash.update('mtime:{0}.{1}'.format(
-      getattr(meta, 'mtime', 0),
-      getattr(meta, 'mtime_nano', 0)))
+        getattr(meta, 'mtime', 0),
+        getattr(meta, 'mtime_nano', 0)))
 
     ret_hash.update('ctime:{0}.{1}'.format(
-      getattr(meta, 'ctime', 0),
-      getattr(meta, 'ctime_nano', 0)))
+        getattr(meta, 'ctime', 0),
+        getattr(meta, 'ctime_nano', 0)))
 
     return ret_hash.hexdigest()
 
@@ -282,14 +294,7 @@ class SimpleImageCollector(queue.SimpleQueue):
 
       if self._vss:
         logging.debug('Searching for VSS')
-        volume = pyvshadow.volume()
-        fh = vss.VShadowVolume(self._image, offset)
-        vss_numbers = 0
-        try:
-          volume.open_file_object(fh)
-          vss_numbers = volume.number_of_stores
-        except IOError as e:
-          logging.warning('Error while trying to read VSS information: %s', e)
+        vss_numbers = vss.GetVssStoreCount(self._image, offset)
         logging.info('Collecting from VSS.')
         stores = []
         if self._vss_stores:
@@ -305,3 +310,98 @@ class SimpleImageCollector(queue.SimpleQueue):
           my_collector.CollectFromVss(self._image, store_nr, offset)
 
     logging.debug('Simple Image Collector - Done.')
+
+
+class TargetedFileSystemCollector(queue.SimpleQueue):
+  """This is a simple collector that collects using a targeted list."""
+
+  def __init__(self, pre_obj, mount_point, file_filter):
+    """Initialize the targeted filesystem collector.
+
+    Args:
+      pre_obj: The PlasoPreprocess object.
+      mount_point: The path to the mount point or base directory.
+      file_filter: The path of the filter file.
+    """
+    super(TargetedFileSystemCollector, self).__init__()
+    self._collector = preprocess.FileSystemCollector(
+        pre_obj, mount_point)
+    self._file_filter = file_filter
+
+  def Run(self):
+    """Start the collector."""
+    for pathspec_string in collector_filter.CollectionFilter(
+        self._collector, self._file_filter).GetPathSpecs():
+      self.Queue(pathspec_string)
+
+    self.Close()
+
+
+class TargetedImageCollector(SimpleImageCollector):
+  """Targeted collector that works against an image file."""
+
+  def __init__(self, image, file_filter, pre_obj, sector_offset=0,
+               byte_offset=0, parse_vss=False, vss_stores=None):
+    """Initialize the image collector.
+
+    Args:
+      image: The path to the image file.
+      file_filter: A file path to a file that contains simple collection
+      filters.
+      pre_obj: A PlasoPreprocess object.
+      sector_offset: A sector offset into the image file if this is a disk
+      image.
+      byte_offset: A bytes offset into the image file if this is a disk image.
+      parse_vss: Boolean determining if we should collect from VSS as well
+      (only applicaple in Windows with Volume Shadow Snapshot).
+      vss_stores: If defined a range of VSS stores to include in vss parsing.
+    """
+    super(TargetedImageCollector, self).__init__(
+        image, sector_offset, byte_offset, parse_vss, vss_stores)
+    self._file_filter = file_filter
+    self._pre_obj = pre_obj
+
+  def Run(self):
+    """Start the collector."""
+    # TODO: Change the parent object so that is uses the sector/byte_offset
+    # to minimize confusion.
+    offset = self._offset_bytes or self._offset * self.SECTOR_SIZE
+    pre_collector = preprocess.TSKFileCollector(
+        self._pre_obj, self._image, offset)
+
+    try:
+      for pathspec_string in collector_filter.CollectionFilter(
+          pre_collector, self._file_filter).GetPathSpecs():
+        self.Queue(pathspec_string)
+
+      if self._vss:
+        logging.debug('Searching for VSS')
+        volume = pyvshadow.volume()
+        fh = vss.VShadowVolume(self._image, offset)
+        vss_numbers = 0
+        try:
+          volume.open_file_object(fh)
+          vss_numbers = volume.number_of_stores
+        except IOError as e:
+          logging.warning('Error while trying to read VSS information: %s', e)
+        logging.info('Collecting from VSS.')
+        stores = []
+        if self._vss_stores:
+          for nr in self._vss_stores:
+            if nr >= 0 and nr <= vss_numbers:
+              stores.append(nr)
+        else:
+          stores = range(0, vss_numbers)
+
+        for store_nr in stores:
+          logging.info('Collecting from VSS store number: %d/%d', store_nr + 1,
+                       vss_numbers)
+          vss_collector = preprocess.VSSFileCollector(
+              self._pre_obj, self._image, store_nr, offset)
+
+          for pathspec_string in collector_filter.CollectionFilter(
+              vss_collector, self._file_filter).GetPathSpecs():
+            self.Queue(pathspec_string)
+    finally:
+      logging.debug('Targeted Image Collector - Done.')
+      self.Close()

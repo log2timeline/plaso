@@ -32,7 +32,7 @@ class WinEvtFormatter(eventdata.ConditionalEventFormatter):
       u'Strings: {strings}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'[{event_identifier}]',
+      u'[0x{event_identifier:08x}]',
       u'Strings: {strings}']
 
   # Mapping of the numeric event types to a descriptive string.

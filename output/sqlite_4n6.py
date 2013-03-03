@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2012 Google Inc. All Rights Reserved.
+# Copyright 2013 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +13,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import logging
-import pytz
 import os
 import re
 import sys
-import sqlite3
 
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
+from plaso.lib import utils
 from plaso.output import helper
+from plaso import formatters
+import pytz
+import sqlite3
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -38,27 +39,33 @@ class Sql4n6(output.LogOutputFormatter):
   META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
                  'color', 'type']
 
-  def __init__(self, filehandle=sys.stdout, zone=pytz.utc,
-               fields=['host','user','source','sourcetype',
-                       'type','datetime','color'],
-               append=False):
+  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc,
+               fields=None, append=False, set_status=None):
     """Constructor for the output module.
 
     Args:
+      store: The storage object.
       filehandle: A file-like object that can be written to.
       zone: The output time zone (a pytz object).
       fields: The fields to create index for.
       append: Whether to create a new db or appending to an existing one.
+      set_status: Sets status dialog in 4n6time.
     """
-    super(Sql4n6, self).__init__(filehandle, zone)
-    self.fields = fields
+    # TODO: Add a unit test for this output module.
+    super(Sql4n6, self).__init__(store, filehandle, zone)
+    self.set_status = set_status
+    # TODO: Revisit handeling this outside of plaso.
     self.dbname = filehandle
     self.append = append
+    if fields:
+      self.fields = fields
+    else:
+      self.fields = [
+          'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color']
 
   def Usage(self):
     """Return a quick help message that describes the output provided."""
-    return ('4n6time sqlite database format. database with one table, which'
-            'has 15 fields e.g. user, host, date, etc.')
+    return '4n6time sqlite database format.'
 
   # Override LogOutputFormatter methods so it won't write to the file
   # handle any more.
@@ -87,11 +94,29 @@ class Sql4n6(output.LogOutputFormatter):
            'datetime, reportnotes TEXT, inreport TEXT, tag TEXT,'
            'color TEXT, offset INT, store_number INT, store_index INT,'
            'vss_store_number INT)'))
+      if self.set_status:
+        self.set_status('Created table log2timeline.')
+    
       for field in self.META_FIELDS:
         self.curs.execute(
             'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
+      if self.set_status:
+        self.set_status('Created table l2t_%s' % field)
+          
       self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
+      if self.set_status:
+        self.set_status('Created table l2t_tags')
+        
       self.curs.execute('CREATE TABLE l2t_saved_query (name TEXT, query TEXT)')
+      if self.set_status:
+        self.set_status('Created table l2t_saved_query')
+
+      self.curs.execute('CREATE TABLE l2t_disk (disk_type INT, mount_path TEXT,'
+                        ' dd_path TEXT, dd_offset TEXT, export_path TEXT)')
+      self.curs.execute('INSERT INTO l2t_disk (disk_type, mount_path, dd_path,'
+                        'dd_offset, export_path) VALUES (0, "", "", "", "")')
+      if self.set_status:
+        self.set_status('Created table l2t_disk')
 
     self.count = 0
 
@@ -101,10 +126,15 @@ class Sql4n6(output.LogOutputFormatter):
     # It will commit the inserts automatically before creating index.
     if not self.append:
       for fn in self.fields:
-        ciSQL = 'CREATE INDEX %s_idx ON log2timeline (%s)' % (fn, fn)
-        self.curs.execute(ciSQL)
+        sql = 'CREATE INDEX {0}_idx ON log2timeline ({0})'.format(fn)
+        self.curs.execute(sql)
+        if self.set_status:
+          self.set_status('Created index for %s' % fn)
 
     # Get meta info and save into their tables.
+    if self.set_status:
+      self.set_status('Checking meta data...')
+      
     for field in self.META_FIELDS:
       vals = self._GetDistinctValues(field)
       self.curs.execute('DELETE FROM l2t_%ss' % field)
@@ -116,12 +146,15 @@ class Sql4n6(output.LogOutputFormatter):
     for tag in self._ListTags():
       self.curs.execute('INSERT INTO l2t_tags (tag) VALUES (?)', tag)
 
+    if self.set_status:
+      self.set_status('Database created.')
+
     self.conn.commit()
     self.curs.close()
     self.conn.close()
 
   def _GetDistinctValues(self, field_name):
-    """Query database for unique field types"""
+    """Query database for unique field types."""
     self.curs.execute(
         u'SELECT {0}, COUNT({0}) FROM log2timeline GROUP BY {0}'.format(
             field_name))
@@ -132,10 +165,10 @@ class Sql4n6(output.LogOutputFormatter):
     return res
 
   def _ListTags(self):
-    """Query database for unique tag types"""
+    """Query database for unique tag types."""
     all_tags = []
-    self.curs.execute('SELECT DISTINCT tag \
-                      FROM log2timeline')
+    self.curs.execute(
+        'SELECT DISTINCT tag FROM log2timeline')
 
     # This cleans up the messy SQL return.
     for tag_row in self.curs.fetchall():
@@ -152,7 +185,7 @@ class Sql4n6(output.LogOutputFormatter):
     pass
 
   def EndEvent(self):
-    """Do nothing, just override the parent's EndEvent method"""
+    """Do nothing, just override the parent's EndEvent method."""
     pass
 
   def EventBody(self, evt):
@@ -160,6 +193,9 @@ class Sql4n6(output.LogOutputFormatter):
 
     Args:
       evt: An EventObject that contains the event data.
+
+    Raises:
+      raise errors.NoFormatterFound: If no formatter for this event is found.
     """
 
     if 'timestamp' not in evt.GetAttributes():
@@ -180,7 +216,7 @@ class Sql4n6(output.LogOutputFormatter):
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         formatter.format_string)
     for key in evt.GetAttributes():
-      if key in helper.RESERVED_VARIABLES or key in format_variables:
+      if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
       extra.append('%s: %s ' % (key, getattr(evt, key, None)))
     extra = ' '.join(extra)
@@ -228,6 +264,8 @@ class Sql4n6(output.LogOutputFormatter):
     # Commit the current transaction every 10000 inserts.
     if self.count % 10000 == 0:
       self.conn.commit()
+      if self.set_status:
+        self.set_status('Inserting event: %s' % self.count)
 
   def GetVSSNumber(self, evt):
     """Return the vss_store_number of the event."""

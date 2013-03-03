@@ -1,0 +1,9 @@
+type=LOGIN msg=audit(1337845201.174:94983): pid=25443 uid=0 old auid=4294967295 new auid=0 old ses=4294967295 new ses=1165
+type=WRONGDATE msg=audit(1337845201): missing milliseconds, should be skipped by parser
+type=SHORTDATE msg=audit(1337845201.0:0): check for rounding
+type=EMPTYDATE msg=audit(): empty date, should be skipped by parser
+
+type= msg=audit(1337845333.174:94984): missing type value, should be skipped by parser
+msg=audit(1337845201.174:94984): missing type param, should be skipped by parser
+type=NOMSG msg=audit(1337845222.174:94984):
+type=UNDER_SCORE msg=audit(1337845666.174:94984): pid=25444 uid=0 old auid=4294967295 new auid=54321 old ses=4294967295 new ses=1166

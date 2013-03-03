@@ -28,24 +28,21 @@ import sys
 import time
 import traceback
 
-import pytz
-import pyvshadow
-
 from plaso import preprocessors
 from plaso import registry as reg_plugins
 
 from plaso.lib import collector
 from plaso.lib import errors
 from plaso.lib import preprocess
-from plaso.lib import queue
-from plaso.lib import sleuthkit
-from plaso.lib import storage
 from plaso.lib import putils
+from plaso.lib import queue
+from plaso.lib import storage
 from plaso.lib import vss
 from plaso.lib import worker
 
+import pytz
 
-__version__ = '1.0alpha'
+__version__ = '1.0.1alpha-pre'
 
 
 def GetTimeZoneList():
@@ -251,14 +248,7 @@ class Engine(object):
         my_collector.CollectFromImage(self.config.filename, ofs)
         if self.config.parse_vss:
           logging.debug('Parsing VSS from image.')
-          volume = pyvshadow.volume()
-          fh = vss.VShadowVolume(self.config.filename, ofs)
-          vss_numbers = 0
-          try:
-            volume.open_file_object(fh)
-            vss_numbers = volume.number_of_stores
-          except IOError as e:
-            logging.warning('Error while trying to read VSS: %s', e)
+          vss_numbers = vss.GetVssStoreCount(self.config.filename, ofs)
           for store_nr in range(0, vss_numbers):
             my_collector.CollectFromVss(
                 self.config.filename, store_nr, ofs)
@@ -293,6 +283,9 @@ class Engine(object):
 
     The local implementation uses the muliprocessing library to
     start up new threads or processes.
+
+    Raises:
+      errors.BadConfigOption: If the file being parsed does not exist.
     """
 
     pre_obj = preprocess.PlasoPreprocess()
@@ -316,32 +309,47 @@ class Engine(object):
 
     # Start the collector.
     start_collection_thread = True
-    if self.config.image:
-      logging.debug('Collection started from an image.')
-      my_collector = collector.SimpleImageCollector(
-          self.config.filename, offset=self.config.image_offset,
-          offset_bytes=self.config.image_offset_bytes,
-          parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
-    elif self.config.recursive:
-      logging.debug('Collection started from a directory.')
-      my_collector = collector.SimpleFileCollector(self.config.filename)
+
+    if self.config.file_filter:
+      # Start a targeted collection filter.
+      if self.config.image:
+        logging.debug('Starting a targeted image collection.')
+        my_collector = collector.TargetedImageCollector(
+            self.config.filename, self.config.file_filter, pre_obj,
+            sector_offset=self.config.image_offset,
+            byte_offset=self.config.image_offset_bytes,
+            parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
+      else:
+        logging.debug('Starting a targeted recursive collection.')
+        my_collector = collector.TargetedFileSystemCollector(
+            pre_obj, self.config.filename, self.config.file_filter)
     else:
-      # If we are parsing a single file we don't want to start a separate
-      # thread for the collection, hence this variable.
-      start_collection_thread = False
-      self.config.workers = 1
+      if self.config.image:
+        logging.debug('Collection started from an image.')
+        my_collector = collector.SimpleImageCollector(
+            self.config.filename, offset=self.config.image_offset,
+            offset_bytes=self.config.image_offset_bytes,
+            parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
+      elif self.config.recursive:
+        logging.debug('Collection started from a directory.')
+        my_collector = collector.SimpleFileCollector(self.config.filename)
+      else:
+        # If we are parsing a single file we don't want to start a separate
+        # thread for the collection, hence this variable.
+        start_collection_thread = False
+        self.config.workers = 1
 
-      # We need to make sure we are dealing with a file.
-      if not os.path.isfile(self.config.filename):
-        raise errors.BadConfigOption(
-            'Wrong usage: {%s} has to be a file.' % self.config.filename)
+        # We need to make sure we are dealing with a file.
+        if not os.path.isfile(self.config.filename):
+          raise errors.BadConfigOption(
+              'Wrong usage: {%s} has to be a file.' % self.config.filename)
 
-      # Need to manage my own queueing since we are not starting a formal
-      # collector.
-      my_collector = queue.SimpleQueue()
-      a_collector = collector.PCollector(my_collector)
-      a_collector.ProcessFile(self.config.filename, my_collector)
-      my_collector.Close()
+        # Need to manage my own queueing since we are not starting a formal
+        # collector.
+        my_collector = queue.SimpleQueue()
+        a_collector = collector.PCollector(my_collector)
+        a_collector.ProcessFile(self.config.filename, my_collector)
+        my_collector.Close()
 
     my_storage = storage.SimpleStorageDumper(
         self.config.output, self.config.buffer_size, pre_obj)
@@ -403,18 +411,26 @@ class Engine(object):
     obj.collection_information['parsers'] = [
         x.parser_name for x in putils.FindAllParsers(obj, filter_query)['all']]
 
-    obj.collection_information['preprocess'] = str(
-        bool(self.config.preprocess))
+    obj.collection_information['preprocess'] = bool(
+        self.config.preprocess)
 
-    obj.collection_information['recursive'] = str(
-        bool(self.config.recursive))
-    obj.collection_information['debug'] = str(
-        bool(self.config.debug))
-    obj.collection_information['vss parsing'] = str(
-        bool(self.config.parse_vss))
+    obj.collection_information['recursive'] = bool(
+        self.config.recursive)
+    obj.collection_information['debug'] = bool(
+        self.config.debug)
+    obj.collection_information['vss parsing'] = bool(
+        self.config.parse_vss)
 
     if hasattr(self.config, 'filter') and self.config.filter:
       obj.collection_information['filter'] = self.config.filter
+
+    if hasattr(self.config, 'file_filter') and self.config.file_filter:
+      if os.path.isfile(self.config.file_filter):
+        filters = []
+        with open(self.config.file_filter, 'rb') as fh:
+          for line in fh:
+            filters.append(line.rstrip())
+        obj.collection_information['file_filter'] = ', '.join(filters)
 
     obj.collection_information['os_detected'] = getattr(
         self.config, 'os', 'N/A')
