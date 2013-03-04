@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright David Nides (davnads.blogspot.com). All Rights Reserved.
+# Copyright 2012 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 """This file contains a formatter for the Google Drive snaphots."""
 from plaso.lib import eventdata
+
+__author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class GDriveCloudEntryFormatter(eventdata.EventFormatter):
