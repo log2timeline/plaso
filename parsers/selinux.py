@@ -78,12 +78,13 @@ class SELinux(parser.TextParser):
   PID_RE = re.compile('pid=([0-9]+)[\s]+', re.DOTALL)
 
   tokens = [
+    lexer.Token('INITIAL', r'^\r?\n', '', ''),
     lexer.Token('INITIAL', r'^type=([\w]+)[ \t]+', 'ParseType', 'MSG'),
     lexer.Token('MSG', r'msg=audit\(([0-9]+)\.([0-9]+):[0-9]*\):[ \t]+',
                 'ParseTime', 'STRING'),
-    lexer.Token('STRING', r'([^\n]+)', 'ParseString', ''),
-    lexer.Token('STRING', r'\n', 'ParseMessage', 'INITIAL'),
-    lexer.Token('.', '([^\n]+)\n', 'ParseIncomplete', 'INITIAL')
+    lexer.Token('STRING', r'([^\r\n]+)', 'ParseString', ''),
+    lexer.Token('STRING', r'\r?\n', 'ParseMessage', 'INITIAL'),
+    lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseIncomplete', 'INITIAL')
   ]
 
   def __init__(self, pre_obj):
