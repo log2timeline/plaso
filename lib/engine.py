@@ -41,7 +41,6 @@ from plaso.lib import vss
 from plaso.lib import worker
 
 import pytz
-import pyvshadow
 
 __version__ = '1.0.1alpha-pre'
 
@@ -249,14 +248,7 @@ class Engine(object):
         my_collector.CollectFromImage(self.config.filename, ofs)
         if self.config.parse_vss:
           logging.debug('Parsing VSS from image.')
-          volume = pyvshadow.volume()
-          fh = vss.VShadowVolume(self.config.filename, ofs)
-          vss_numbers = 0
-          try:
-            volume.open_file_object(fh)
-            vss_numbers = volume.number_of_stores
-          except IOError as e:
-            logging.warning('Error while trying to read VSS: %s', e)
+          vss_numbers = vss.GetVssStoreCount(self.config.filename, ofs)
           for store_nr in range(0, vss_numbers):
             my_collector.CollectFromVss(
                 self.config.filename, store_nr, ofs)

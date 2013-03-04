@@ -42,31 +42,38 @@ class MactimeUnitTest(unittest.TestCase):
     self.input_file.seek(0)
     events = list(parser.Parse(self.input_file))
 
+    # The file contains 10 lines x 4 timestamps per line makes 40 events.
     self.assertEquals(len(events), 40)
 
     # Test this entry:
-    # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961563|
-    # 1337961563|1337961563|0
+    # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961583|
+    # 1337961584|1337961585|0
     test_event1 = events[8]
     test_event2 = events[9]
     test_event3 = events[10]
     test_event4 = events[11]
 
     self.assertEquals(test_event1.timestamp, 0)
-    self.assertEquals(test_event1.timestamp_desc, 'crtime')
+    self.assertEquals(test_event1.timestamp_desc,
+                      eventdata.EventTimestamp.CREATION_TIME)
     self.assertEquals(test_event1.inode, '16')
-    self.assertEquals(test_event2.timestamp, 1337961563000000)
-    self.assertEquals(test_event2.timestamp_desc, 'atime')
-    self.assertEquals(test_event3.timestamp, 1337961563000000)
-    self.assertEquals(test_event3.timestamp_desc, 'mtime')
-    self.assertEquals(test_event4.timestamp, 1337961563000000)
-    self.assertEquals(test_event4.timestamp_desc, 'ctime')
+
+    self.assertEquals(test_event2.timestamp, 1337961583000000)
+    self.assertEquals(test_event2.timestamp_desc,
+                      eventdata.EventTimestamp.ACCESS_TIME)
+
+    self.assertEquals(test_event3.timestamp, 1337961584000000)
+    self.assertEquals(test_event3.timestamp_desc,
+                      eventdata.EventTimestamp.MODIFICATION_TIME)
+
+    self.assertEquals(test_event4.timestamp, 1337961585000000)
+    self.assertEquals(test_event4.timestamp_desc,
+                      eventdata.EventTimestamp.CHANGE_TIME)
     self.assertEquals(test_event4.name, '/a_directory/another_file')
     self.assertEquals(test_event4.mode_as_string, 'r/rrw-------')
 
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(test_event1)
     self.assertEquals(msg, u'/a_directory/another_file')
-
 
 
 if __name__ == '__main__':
