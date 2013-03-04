@@ -17,13 +17,20 @@
 from plaso.lib import eventdata
 
 
-class ChromePageVisitedFormatter(eventdata.EventFormatter):
+class ChromePageVisitedFormatter(eventdata.ConditionalEventFormatter):
   """The event formatter for page visited data in Chrome History."""
   DATA_TYPE = 'chrome:history:page_visited'
 
-  FORMAT_STRING = (u'{url} ({title}) [count: {typed_count}] Host: '
-                   '{hostname} {extra}')
-  FORMAT_STRING_SHORT = u'{url} ({title})'
+  FORMAT_STRING_PIECES = [
+      u'{url}',
+      u'({title})',
+      u'[count: {typed_count}]',
+      u'Host: {hostname}',
+      u'{extra}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'{url}',
+      u'({title})']
 
 
 class ChromeFileDownloadFormatter(eventdata.EventFormatter):
