@@ -17,13 +17,12 @@
 
 categories = {
     'winxp': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-              'WinLnkParser', 'Hachoir'],
+              'WinLnkParser', 'Hachoir', 'Symantec'],
     'win7': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-             'WinLnkParser', 'Hachoir'],
+             'WinLnkParser', 'Hachoir', 'Symantec'],
     'webhist': ['Chrome', 'Firefox'],
     'linux': ['Firefox', 'Chrome', 'SELinux', 'Syslog', 'GoogleDrive',
               'PfileStat'],
     'macosx': ['ApplicationUsage', 'Firefox', 'LsQuarantine', 'Chrome',
                'Syslog', 'GoogleDrive', 'PfileStat'],
 }
-

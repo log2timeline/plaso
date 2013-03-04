@@ -748,7 +748,7 @@ class PosixTimeEvent(TimestampEvent):
   """Convenience class for a POSIX time-based event."""
 
   def __init__(self, posix_time, usage, data_type=None):
-    """Initializes a POSIX times-based event object.
+    """Initializes a POSIX time-based event object.
 
     Args:
       posix_time: The POSIX time value.

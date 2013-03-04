@@ -152,3 +152,16 @@ class VShadowVolume(object):
 
   def get_offset(self):
     return self.tell()
+
+
+def GetVssStoreCount(image, offset=0):
+  """Return the number of VSS stores available in an image."""
+  volume = pyvshadow.volume()
+  fh = VShadowVolume(image, offset)
+  try:
+    volume.open_file_object(fh)
+    return volume.number_of_stores
+  except IOError as e:
+    logging.warning('Error while trying to read VSS information: %s', e)
+
+  return 0

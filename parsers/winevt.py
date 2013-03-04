@@ -109,9 +109,21 @@ class WinEvtParser(parser.PlasoParser):
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
           self.NAME, file_object.name, exception))
 
-    for evt_record in evt_file.records:
-      yield self._ParseRecord(evt_record)
+    for record_index in range(0, evt_file.number_of_records):
+      try:
+        evt_record = evt_file.get_record(record_index)
+        yield self._ParseRecord(evt_record)
+      except IOError as exception:
+        logging.warning("[%s] unable to parse event record: %d in file: %s" % (
+            self.NAME, record_index, file_object.name, exception))
+        pass
 
-    for evt_record in evt_file.recovered_records:
-      yield self._ParseRecord(evt_record, recovered=True)
-
+    for record_index in range(0, evt_file.number_of_recovered_records):
+      try:
+        evt_record = evt_file.get_recovered_record(record_index)
+        yield self._ParseRecord(evt_record, recovered=True)
+      except IOError:
+        logging.info(
+            "[%s] unable to parse recovered event record: %d in file: %s" % (
+            self.NAME, record_index, file_object.name, exception))
+        pass

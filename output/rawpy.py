@@ -18,7 +18,10 @@ import pprint
 
 from plaso.lib import eventdata
 from plaso.lib import output
+from plaso.lib import timelib
 from plaso.lib import utils
+
+import pytz
 
 
 class Rawpy(output.FileLogOutputFormatter):
@@ -50,15 +53,13 @@ class Rawpy(output.FileLogOutputFormatter):
 
     out_write = []
     out_reserved = []
-    out_reserved.append('+-' * 80)
     out_reserved.append('[Reserved attributes]:')
     out_write.append('[Additional attributes]:')
 
     for attr_key, attr_value in sorted(evt.GetValues().items()):
       if attr_key in utils.RESERVED_VARIABLES:
         if attr_key == 'pathspec':
-          out_reserved.append(u'  {{{0}}}\n{2}\n{1}{2}'.format(
-              attr_key, attr_value.ToProto(), '-' * 30))
+          continue
         else:
           out_reserved.append(u'  {{{key}}} {value}'.format(
                 key=attr_key, value=self.printer.pformat(attr_value)))
@@ -69,9 +70,11 @@ class Rawpy(output.FileLogOutputFormatter):
     out_reserved.append('')
     out_reserved.append('')
 
-    self.filehandle.write('\n'.join(out_reserved).encode('utf-8'))
-    self.filehandle.write('\n'.join(out_write).encode('utf-8'))
-    self.filehandle.write('\n[Message strings]:\n')
+    self.filehandle.write('+-' * 40)
+    date_use = timelib.DateTimeFromTimestamp(evt.timestamp, pytz.utc)
+    self.filehandle.write(
+        '\n[Timestamp]:\n  {}'.format(date_use.strftime('%Y-%m-%dT%H:%M:%Sz')))
+    self.filehandle.write('\n\n[Message Strings]:\n')
     event_formatter = eventdata.EventFormatterManager.GetFormatter(evt)
     if not event_formatter:
       self.filehandle.write('None')
@@ -79,3 +82,11 @@ class Rawpy(output.FileLogOutputFormatter):
       msg, msg_short = event_formatter.GetMessages(evt)
       self.filehandle.write(u'{2:>7}: {0}\n{3:>7}: {1}\n\n'.format(
           msg_short, msg, 'Short', 'Long'))
+    if hasattr(evt, 'pathspec'):
+      pathspec_string = str(evt.pathspec.ToProto()).rstrip()
+      self.filehandle.write(
+          u'{1}:\n  {0}\n\n'.format(
+              pathspec_string.replace('\n', '\n  '), '[Pathspec]'))
+    self.filehandle.write('\n'.join(out_reserved).encode('utf-8'))
+    self.filehandle.write('\n'.join(out_write).encode('utf-8'))
+    self.filehandle.write('\n')

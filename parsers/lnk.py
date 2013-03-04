@@ -22,8 +22,8 @@ from plaso.lib import parser
 import pylnk
 
 
-if pylnk.get_version() < '20130117':
-  raise ImportWarning('WinLnkParser requires at least pylnk 20130117.')
+if pylnk.get_version() < '20130304':
+  raise ImportWarning('WinLnkParser requires at least pylnk 20130304.')
 
 
 class WinLnkLinkEventContainer(event.EventContainer):
@@ -45,7 +45,12 @@ class WinLnkLinkEventContainer(event.EventContainer):
 
     self.offset = 0
 
+    self.file_size = lnk_file.file_size
+    self.file_attribute_flags = lnk_file.file_attribute_flags
+    self.drive_type = lnk_file.drive_type
+    self.drive_serial_number = lnk_file.drive_serial_number
     self.description = lnk_file.description
+    self.volume_label = lnk_file.volume_label
     self.local_path = lnk_file.local_path
     self.network_path = lnk_file.network_path
     self.command_line_arguments = lnk_file.command_line_arguments
