@@ -196,7 +196,7 @@ class ChromeHistoryParser(parser.SQLiteParser):
         multi = u''
 
       extras.append(
-          (u'(typed %d time{0} {1} - not indicating directly typed '
+          (u'(typed {1} time{0} - not indicating directly typed '
            'count)').format(multi, count))
     else:
       extras.append(u'(URL not typed directly - no typed count)')
