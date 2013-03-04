@@ -1,0 +1,8 @@
+This folder contains few extra nuggets, scripts that somehow use the plaso
+libraries or other files that can be used with plaso. In other words useful
+tools that use the underlying infrastructure to perform actions that are not
+part of the original design.
+
+There is no formal setup file for any of the scripts here, these are mostly
+provided here as a PoC showing what can be done using the plaso libraries
+to extend the tool.

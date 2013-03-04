@@ -30,6 +30,7 @@ class WinLnkParserTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     self.test_parser = lnk.WinLnkParser(pre_obj)
+    self.maxDiff = None
 
   def testParseFile(self):
     """Read a LNK file and run a few tests."""
@@ -67,12 +68,16 @@ class WinLnkParserTest(unittest.TestCase):
     self.assertEquals(event_object.env_var_location, expected_string)
 
     # date -u -d"Jul 13, 2009 23:29:02.849131000" +"%s.%N"
+    # TODO: Re-enable after changes to sorting in containers.
+    #self.assertEquals(event_object.timestamp_desc,
+    #                  eventdata.EventTimestamp.CREATION_TIME)
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEquals(event_object.timestamp,
                       (1247527742 * 1000000) + int(849131000 / 1000))
 
     # date -u -d"Jul 13, 2009 23:29:02.849131000" +"%s.%N"
+    # TODO: Swap back to ACCESS_TIME when containers are fixed.
     event_object = events[1]
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.CREATION_TIME)
@@ -91,6 +96,8 @@ class WinLnkParserTest(unittest.TestCase):
          event_object)
 
     expected_msg = (u'[@%windir%\\system32\\migwiz\\wet.dll,-590] '
+                    u'File size: 544768 '
+                    u'File attribute flags: 0x00000020 '
                     u'env location: %windir%\\system32\\migwiz\\migwiz.exe '
                     u'Relative path: .\\migwiz\\migwiz.exe '
                     u'Working dir: %windir%\\system32\\migwiz '

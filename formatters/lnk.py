@@ -23,6 +23,11 @@ class WinLnkLinkFormatter(eventdata.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'[{description}]',
+      u'File size: {file_size}',
+      u'File attribute flags: 0x{file_attribute_flags:08x}',
+      u'Drive type: {drive_type}',
+      u'Drive serial number: 0x{drive_serial_number:08x}',
+      u'Volume label: {volume_label}',
       u'Local path: {local_path}',
       u'Network path: {network_path}',
       u'cmd arguments: {command_line_arguments}',
