@@ -155,14 +155,14 @@ class Timestamp(object):
     FAT date time is mainly used in DOS/Windows file formats and NTFS.
 
     The FAT date and time is a 32-bit value containing two 16-bit values:
-      * The time of day (lower 16-bit).
-        * bits 0 - 4: seconds (in 2 second intervals)
-        * bits 5 - 10: minutes
-        * bits 11 - 15: hours
-      * The date (upper 16-bit).
+      * The date (lower 16-bit).
         * bits 0 - 4:  day of month, where 1 represents the first day
         * bits 5 - 8:  month of year, where 1 represent January
         * bits 9 - 15: year since 1980
+      * The time of day (upper 16-bit).
+        * bits 0 - 4: seconds (in 2 second intervals)
+        * bits 5 - 10: minutes
+        * bits 11 - 15: hours
 
     Args:
       fat_date_time: The 32-bit FAT date time.
@@ -172,16 +172,6 @@ class Timestamp(object):
     """
     number_of_seconds = cls.FAT_DATE_TO_POSIX_BASE
 
-    seconds = (fat_date_time & 0x1f) * 2
-    minutes = (fat_date_time >> 5) & 0x3f
-    hours = (fat_date_time >> 11) & 0x1f
-
-    if hours > 23 or minutes > 59 or seconds > 59:
-      return 0
-
-    number_of_seconds += (((hours * 60) + minutes) * 60) + seconds
-
-    fat_date_time >>= 16
     day_of_month = (fat_date_time & 0x1f) - 1
     month = ((fat_date_time >> 5) & 0x0f) - 1
     year = (fat_date_time >> 9) & 0x7f
@@ -192,6 +182,17 @@ class Timestamp(object):
     number_of_days = cls.DayOfYear(day_of_month, month, 1980 + year)
     for past_year in range(0, year):
       number_of_days += cls.DaysInYear(past_year)
+
+    fat_date_time >>= 16
+
+    seconds = (fat_date_time & 0x1f) * 2
+    minutes = (fat_date_time >> 5) & 0x3f
+    hours = (fat_date_time >> 11) & 0x1f
+
+    if hours > 23 or minutes > 59 or seconds > 59:
+      return 0
+
+    number_of_seconds += (((hours * 60) + minutes) * 60) + seconds
 
     number_of_seconds += number_of_days * cls.SECONDS_PER_DAY
 
