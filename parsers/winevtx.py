@@ -82,7 +82,7 @@ class WinEvtxParser(parser.PlasoParser):
     try:
       evtx_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile("[%s] unable to parse file %s: %s" % (
+      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
           self.NAME, file_object.name, exception))
 
     for record_index in range(0, evtx_file.number_of_records):
@@ -90,7 +90,8 @@ class WinEvtxParser(parser.PlasoParser):
         evtx_record = evtx_file.get_record(record_index)
         yield WinEvtxRecordEvent(evtx_record)
       except IOError as exception:
-        logging.warning("[%s] unable to parse event record: %d in file: %s" % (
+        logging.warning(
+            '[%s] unable to parse event record: %d in file: %s: %s' % (
             self.NAME, record_index, file_object.name, exception))
         pass
 
@@ -100,6 +101,6 @@ class WinEvtxParser(parser.PlasoParser):
         yield WinEvtxRecordEvent(evtx_record, recovered=True)
       except IOError:
         logging.info(
-            "[%s] unable to parse recovered event record: %d in file: %s" % (
-            self.NAME, record_index, file_object.name, exception))
+            '[%s] unable to parse recovered event record: %d in file: %s: '
+            '%s' % (self.NAME, record_index, file_object.name, exception))
         pass

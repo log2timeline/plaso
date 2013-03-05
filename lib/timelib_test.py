@@ -61,34 +61,34 @@ class TimeLibUnitTest(unittest.TestCase):
   def testTimestampFromFatDateTime(self):
     """Test the FAT date time conversion."""
     # Aug 12, 2010 21:06:32
-    fat_date_time = 0x3d0ca8d0
+    fat_date_time = 0xa8d03d0c
     # date -u -d"Aug 12, 2010 21:06:32" +"%s"
     timestamp = 1281647192 * 1000000
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), timestamp)
 
     # Invalid number of seconds.
-    fat_date_time = (0x3d0ca8d0 & ~(0x1f)) | (30 & 0x1f)
+    fat_date_time = (0xa8d03d0c & ~(0x1f << 16)) | ((30 & 0x1f) << 16)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid number of minutes.
-    fat_date_time = (0x3d0ca8d0 & ~(0x3f << 5)) | ((60 & 0x3f) << 5)
+    fat_date_time = (0xa8d03d0c & ~(0x3f << 21)) | ((60 & 0x3f) << 21)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid number of hours.
-    fat_date_time = (0x3d0ca8d0 & ~(0x1f << 11)) | ((24 & 0x1f) << 11)
+    fat_date_time = (0xa8d03d0c & ~(0x1f << 27)) | ((24 & 0x1f) << 27)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid day of month.
-    fat_date_time = (0x3d0ca8d0 & ~(0x1f << 16)) | ((32 & 0x1f) << 16)
+    fat_date_time = (0xa8d03d0c & ~(0x1f)) | (32 & 0x1f)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid month.
-    fat_date_time = (0x3d0ca8d0 & ~(0x0f << 21)) | ((13 & 0x0f) << 21)
+    fat_date_time = (0xa8d03d0c & ~(0x0f << 5)) | ((13 & 0x0f) << 5)
     self.assertEquals(
         timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
