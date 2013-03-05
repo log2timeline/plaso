@@ -98,7 +98,8 @@ class WinEvtParser(parser.PlasoParser):
       file_object: A file-like object to read data from.
 
     Yields:
-      An event container (EventContainer) that contains the parsed data.
+      An event container (WinEvtRecordEventContainer) that contains
+      the parsed data.
     """
     evt_file = pyevt.file()
     evt_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
@@ -114,7 +115,8 @@ class WinEvtParser(parser.PlasoParser):
         evt_record = evt_file.get_record(record_index)
         yield self._ParseRecord(evt_record)
       except IOError as exception:
-        logging.warning("[%s] unable to parse event record: %d in file: %s" % (
+        logging.warning(
+            '[%s] unable to parse event record: %d in file: %s: %s' % (
             self.NAME, record_index, file_object.name, exception))
         pass
 
@@ -124,6 +126,6 @@ class WinEvtParser(parser.PlasoParser):
         yield self._ParseRecord(evt_record, recovered=True)
       except IOError:
         logging.info(
-            "[%s] unable to parse recovered event record: %d in file: %s" % (
-            self.NAME, record_index, file_object.name, exception))
+            '[%s] unable to parse recovered event record: %d in file: %s: '
+            '%s' % (self.NAME, record_index, file_object.name, exception))
         pass
