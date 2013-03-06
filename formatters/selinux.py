@@ -24,4 +24,4 @@ class SELinuxFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_SEPARATOR = u''
 
   FORMAT_STRING_PIECES = [u'[', u'audit_type: {audit_type}',
-                          u', pid: {pid}', u'] {body}']
+                          u', pid: {pid}', u']', u' {body}']
