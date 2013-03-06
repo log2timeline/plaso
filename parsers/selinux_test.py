@@ -46,25 +46,17 @@ class SELinuxUnitTest(unittest.TestCase):
     self.filehandle.seek(0)
     sl_generator = sl.Parse(self.filehandle)
     events = list(sl_generator)
-
-    self.assertEquals(len(events), 8)
+    
+    self.assertEquals(len(events), 4)
 
     normal_entry = events[0]
-    wrong_date = events[1]
-    short_date = events[2]
-    empty_date = events[3]
-    no_type_value = events[4]
-    no_type_param = events[5]
-    no_msg = events[6]
-    under_score = events[7]
+    short_date = events[1]
+    no_msg = events[2]
+    under_score = events[3]
 
     self.assertEquals(normal_entry.timestamp, 1337845201174000)
-    self.assertEquals(wrong_date.timestamp, 0)
     self.assertEquals(short_date.timestamp, 1337845201000000)
-    self.assertEquals(empty_date.timestamp, 0)
-    self.assertEquals(no_type_value.timestamp, 0)
-    self.assertEquals(no_type_param.timestamp, 0)
-    self.assertEquals(no_msg.timestamp, 0)
+    self.assertEquals(no_msg.timestamp, 1337845222174000)
     self.assertEquals(under_score.timestamp, 1337845666174000)
 
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(normal_entry)
@@ -72,19 +64,12 @@ class SELinuxUnitTest(unittest.TestCase):
         '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
         'auid=4294967295 new auid=0 old ses=4294967295 new ses=1165'))
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(no_type_value)
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(short_date)
     self.assertEquals(msg, (
-        '[] type= msg=audit(1337845333.174:94984): missing type value, should '
-        'be skipped by parser'))
-
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(no_type_param)
-    self.assertEquals(msg, (
-        '[] msg=audit(1337845201.174:94984): missing type param, should be '
-        'skipped by parser'))
+        '[audit_type: SHORTDATE] check rounding'))
 
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(no_msg)
-    self.assertEquals(msg, (
-        '[audit_type: NOMSG] msg=audit(1337845222.174:94984):'))
+    self.assertEquals(msg, ('[audit_type: NOMSG]'))
 
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(under_score)
     self.assertEquals(msg, (
