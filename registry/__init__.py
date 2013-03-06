@@ -16,6 +16,7 @@
 """This file contains an import statement for each registry related plugin."""
 
 from plaso.registry import default
+from plaso.registry import lfu
 from plaso.registry import mru
 from plaso.registry import mrux
 from plaso.registry import run
