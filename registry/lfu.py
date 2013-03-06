@@ -28,8 +28,8 @@ class BootVerificationPlugin(win_registry_interface.KeyPlugin):
   URLS = ['http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
   def GetEntries(self):
-    """Gather the BootVerification key values and return one event for all."""
-    """This key is rare, so its presence is suspect"""
+    """Gather the BootVerification key values and return one event for all.
+    This key is rare, so its presence is suspect."""
     text_dict = {}
     text_dict['BootVerification'] = 'REGALERT'
     for value in self._key.GetValues():
@@ -47,8 +47,8 @@ class BootExecutePlugin(win_registry_interface.KeyPlugin):
   URLS = ['http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
   def GetEntries(self):
-    """Gather the BootExecute Value, compare to default, return event"""
-    """The rest of the Session Manager key is in a separate event"""
+    """Gather the BootExecute Value, compare to default, return event. The
+    rest of the values in the Session Manager key are in a separate event."""
     text_dict = {}
 
     for value in self._key.GetValues():
@@ -56,9 +56,9 @@ class BootExecutePlugin(win_registry_interface.KeyPlugin):
         boot_dict = {}
         boot = value.GetData(unicode)
         if boot != u'autocheck autochk *':
-          boot_dict['BootExecute'] = 'REGALERT: ' + boot
+          boot_dict['BootExecute'] = u'REGALERT: {}'.format(boot)
         else:
-          boot_dict['BootExecute'] = 'REGNORMAL: '+ boot
+          boot_dict['BootExecute'] = u'REGNORMAL: {}'.format(boot)
 
         event_object = event.WinRegistryEvent(self._key.path, boot_dict,
                                               self._key.timestamp)
