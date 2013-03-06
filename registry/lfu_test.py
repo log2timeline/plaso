@@ -65,6 +65,7 @@ class TestBootExecuteRegistry(unittest.TestCase):
              'Commit: 0 HeapSegmentReserve: 0 NumberOfInitialSessions: 2')
 
     self.assertEquals(len(entries), 2)
+    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT
     self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line1)
@@ -97,6 +98,7 @@ class TestBootVerificationRegistry(unittest.TestCase):
             'updater.exe')
 
     self.assertEquals(len(entries), 1)
+    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT
     self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
