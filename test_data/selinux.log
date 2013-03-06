@@ -1,6 +1,6 @@
 type=LOGIN msg=audit(1337845201.174:94983): pid=25443 uid=0 old auid=4294967295 new auid=0 old ses=4294967295 new ses=1165
 type=WRONGDATE msg=audit(1337845201): missing milliseconds, should be skipped by parser
-type=SHORTDATE msg=audit(1337845201.0:0): check for rounding
+type=SHORTDATE msg=audit(1337845201.0:0): check rounding
 type=EMPTYDATE msg=audit(): empty date, should be skipped by parser
 
 type= msg=audit(1337845333.174:94984): missing type value, should be skipped by parser
