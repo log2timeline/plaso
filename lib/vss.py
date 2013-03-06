@@ -17,6 +17,7 @@
 import os
 
 import pytsk3
+import pyvshadow
 
 __pychecker__ = 'no-funcdoc'
 
