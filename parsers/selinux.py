@@ -43,6 +43,7 @@ import datetime
 import logging
 import re
 
+from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import lexer
@@ -78,13 +79,23 @@ class SELinux(parser.TextParser):
   PID_RE = re.compile('pid=([0-9]+)[\s]+', re.DOTALL)
 
   tokens = [
+    # Skipping empty lines, both EOLs are considered here and in other states.
     lexer.Token('INITIAL', r'^\r?\n', '', ''),
-    lexer.Token('INITIAL', r'^type=([\w]+)[ \t]+', 'ParseType', 'MSG'),
-    lexer.Token('MSG', r'msg=audit\(([0-9]+)\.([0-9]+):[0-9]*\):[ \t]+',
+    # FSM entry point ('type=anything msg=audit'), critical to recognize a
+    # SELinux audit file and used to retrieve the audit type. From there two
+    # next states are possible: TIME or failure, since TIME state is required.
+    # An empty type is not accepted and it will cause a failure.
+    lexer.Token('INITIAL', r'^type=([\w]+)[ \t]+msg=audit',
+                'ParseType', 'TIMESTAMP'),
+    lexer.Token('TIMESTAMP', r'\(([0-9]+)\.([0-9]+):[0-9]*\):',
                 'ParseTime', 'STRING'),
-    lexer.Token('STRING', r'([^\r\n]+)', 'ParseString', ''),
-    lexer.Token('STRING', r'\r?\n', 'ParseMessage', 'INITIAL'),
-    lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseIncomplete', 'INITIAL')
+    # Get the log entry description and stay in the same state.
+    lexer.Token('STRING', r'[ \t]*([^\r\n]+)', 'ParseString', ''),
+    # Entry parsed. Note that an empty description is managed and it will not
+    # raise a parsing failure.
+    lexer.Token('STRING', r'[ \t]*\r?\n', 'ParseMessage', 'INITIAL'),
+    # The entry is not formatted as expected, so the parsing failed.
+    lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseFailed', 'INITIAL')
   ]
 
   def __init__(self, pre_obj):
@@ -106,6 +117,9 @@ class SELinux(parser.TextParser):
     except ValueError as e:
       logging.error(('Error %s, unable to get UTC timestamp', e))
       self.timestamp = 0
+    # TODO: I'd like to raise as soon as spotted, but TextParser
+    # main loop is not expecting such an exception, being a
+    # TimestampNotCorrectlyFormed
 
   def ParseString(self, match, **_):
     """Add a string to the body attribute.
@@ -115,19 +129,26 @@ class SELinux(parser.TextParser):
 
     """
     try:
-      self.attributes['body'] += match.group(1).strip('\n')
+      self.attributes['body'] += match.group(1)
       # TODO: fix it using lexer or remove pid parsing.
+      # Indeed this is something that lexer is able to manage, but 'pid' field
+      # is non positional: so, by doing the following step, the FSM is kept
+      # simpler. Left the 'to do' as a reminder of possible refactoring.
       pid_search = self.PID_RE.search(self.attributes['body'])
       if pid_search:
         self.attributes['pid'] = pid_search.group(1)
     except IndexError:
       self.attributes['body'] += match.group(0).strip('\n')
 
+  def ParseFailed(self, match, **_):
+    """Entry parsing failed callback."""
+    self.line_ready = False
+
   def ParseLine(self, zone):
     """Parse a single line from the SELinux audit file.
 
     This method extends the one from TextParser slightly, creating a 
-    TextEvent with the timestamp (UTC) taken from log entries.
+    SELinux event with the timestamp (UTC) taken from log entries.
 
     Args:
       zone: The timezone of the host computer, not used since the
@@ -136,6 +157,9 @@ class SELinux(parser.TextParser):
     Returns:
       An EventObject that is constructed from the selinux entry.
     """
+    if not self.timestamp:
+      raise errors.TimestampNotCorrectlyFormed(
+          u'Unable to parse entry, timestamp not defined.')
     offset = getattr(self, 'entry_offset', 0)
     evt = SELinuxLineEvent(self.timestamp, offset, self.attributes)
     self.timestamp = 0
