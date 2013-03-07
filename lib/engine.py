@@ -390,8 +390,14 @@ class Engine(object):
     logging.info('Collection is hereby DONE')
 
     logging.info('Waiting until all processing is done.')
-    for thread in self.worker_threads:
-      thread.join()
+    for thread_nr, thread in enumerate(self.worker_threads):
+      if thread.is_alive():
+        thread.join()
+      else:
+        logging.error(
+            (u'Worker process {} is already stopped, no need'
+             ' to wait for join.').format(thread_nr))
+        thread.terminate()
 
     logging.info('Processing done, waiting for storage.')
     my_storage.Close()
