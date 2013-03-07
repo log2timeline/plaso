@@ -319,6 +319,14 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
 
   def ParseLine(self, zone):
     """Return an EventObject extracted from the current line."""
+    if not self.attributes['time']:
+      raise errors.TimestampNotCorrectlyFormed(
+          u'Unable to parse timestamp, time not set.')
+
+    if not self.attributes['iyear']:
+      raise errors.TimestampNotCorrectlyFormed(
+          u'Unable to parse timestamp, year not set.')
+
     times = self.attributes['time'].split(':')
     if self.local_zone:
       time_zone = zone

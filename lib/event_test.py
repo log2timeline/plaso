@@ -201,13 +201,13 @@ class PlasoEventUnitTest(unittest.TestCase):
 
   def testExistsInEventObject(self):
     """Calls to an attribute that is stored within the EventObject itself."""
-    events = list(self.container)
+    events = list(self.container.GetSortedEvents())
 
     self.assertEquals(events[0].keyname, '//HKCU/Windows/Normal')
 
   def testExistsInParentObject(self):
     """Call to an attribute that is contained within the parent object."""
-    events = list(self.container)
+    events = list(self.container.GetSortedEvents())
 
     self.assertEquals(events[0].filename, 'c:/Users/joesmith/NTUSER.DAT')
 
