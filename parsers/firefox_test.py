@@ -125,13 +125,10 @@ class FirefoxHistoryParserTest(unittest.TestCase):
     self.assertEquals(event_object.data_type,
                      'firefox:places:bookmark_annotation')
 
-    # TODO: determine why the modification time is the first and not the added
-    # time since they are appended in that order. Unless they are sorted by
-    # timestamp?
     self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.MODIFICATION_TIME)
+                      eventdata.EventTimestamp.CREATION_TIME)
 
-    self.assertEquals(event_object.timestamp, 0)
+    self.assertEquals(event_object.timestamp, 1309518839267146)
 
     # Check the second bookmark annotation event.
     event_object = events[184]
@@ -140,9 +137,9 @@ class FirefoxHistoryParserTest(unittest.TestCase):
                       'firefox:places:bookmark_annotation')
 
     self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.ADDED_TIME)
+                      eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    self.assertEquals(event_object.timestamp, 1309518839267146)
+    self.assertEquals(event_object.timestamp, 0)
 
     expected_url = (
         'place:folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder=TOOLBAR&'

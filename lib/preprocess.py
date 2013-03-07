@@ -94,6 +94,11 @@ class PreprocessPlugin(object):
     """Return the value for the attribute."""
     raise NotImplementedError
 
+  @property
+  def plugin_name(self):
+    """Return the name of the plugin."""
+    return self.__class__.__name__
+
 
 class PlasoPreprocess(object):
   """Object used to store all information gained from preprocessing."""
@@ -238,9 +243,16 @@ class WinRegistryPreprocess(PreprocessPlugin):
       reg = win_registry.WinRegistry(hive_fh, codepage)
     except IOError as e:
       raise errors.PreProcessFail(
-          u'Unable to open the registry file: %s [%s]', file_name[0], e)
+          u'Unable to open the registry: {} [{}] (library version:{}'.format(
+              file_name[0], e, win_registry.GetLibraryVersion()))
     key_path = self.ExpandKeyPath()
-    key = reg.GetKey(key_path)
+
+    try:
+      key = reg.GetKey(key_path)
+    except IOError as e:
+      raise errors.PreProcessFail(
+          u'Error fetching registry key: {} Error {} (library: {}'.format(
+              key_path, e, win_registry.GetLibraryVersion()))
 
     if not key:
       raise errors.PreProcessFail(

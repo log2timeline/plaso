@@ -28,12 +28,6 @@ do
   then
     continue;
   fi
-  # TODO: disabled since this test is flaky at the moment.
-  # Upcoming changes to fix this so that the test can be re-enabled.
-  if [ "${TEST_FILE}" = "./parsers/lnk_test.py" ];
-  then
-    continue;
-  fi
 
   echo "---+ ${TEST_FILE} +---"
   PYTHONPATH=../ /usr/bin/python ${TEST_FILE}

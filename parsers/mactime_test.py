@@ -53,24 +53,24 @@ class MactimeUnitTest(unittest.TestCase):
     test_event3 = events[10]
     test_event4 = events[11]
 
-    self.assertEquals(test_event1.timestamp, 0)
-    self.assertEquals(test_event1.timestamp_desc,
+    self.assertEquals(test_event4.timestamp, 0)
+    self.assertEquals(test_event4.timestamp_desc,
                       eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEquals(test_event1.inode, '16')
+    self.assertEquals(test_event4.inode, '16')
 
-    self.assertEquals(test_event2.timestamp, 1337961583000000)
-    self.assertEquals(test_event2.timestamp_desc,
+    self.assertEquals(test_event1.timestamp, 1337961583000000)
+    self.assertEquals(test_event1.timestamp_desc,
                       eventdata.EventTimestamp.ACCESS_TIME)
 
-    self.assertEquals(test_event3.timestamp, 1337961584000000)
-    self.assertEquals(test_event3.timestamp_desc,
+    self.assertEquals(test_event2.timestamp, 1337961584000000)
+    self.assertEquals(test_event2.timestamp_desc,
                       eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    self.assertEquals(test_event4.timestamp, 1337961585000000)
-    self.assertEquals(test_event4.timestamp_desc,
+    self.assertEquals(test_event3.timestamp, 1337961585000000)
+    self.assertEquals(test_event3.timestamp_desc,
                       eventdata.EventTimestamp.CHANGE_TIME)
-    self.assertEquals(test_event4.name, '/a_directory/another_file')
-    self.assertEquals(test_event4.mode_as_string, 'r/rrw-------')
+    self.assertEquals(test_event3.name, '/a_directory/another_file')
+    self.assertEquals(test_event3.mode_as_string, 'r/rrw-------')
 
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(test_event1)
     self.assertEquals(msg, u'/a_directory/another_file')
