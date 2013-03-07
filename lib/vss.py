@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a simple library to read files stored in VSS."""
+import logging
 import os
 
 import pytsk3
