@@ -55,16 +55,16 @@ class WinLnkParserTest(unittest.TestCase):
     # The Last Accessed timestamp.
     event_object = events[0]
 
-    expected_string = u'@%windir%\system32\migwiz\wet.dll,-590'
+    expected_string = u'@%windir%\\system32\\migwiz\\wet.dll,-590'
     self.assertEquals(event_object.description, expected_string)
 
-    expected_string = u'.\migwiz\migwiz.exe'
+    expected_string = u'.\\migwiz\\migwiz.exe'
     self.assertEquals(event_object.relative_path, expected_string)
 
-    expected_string = u'%windir%\system32\migwiz'
+    expected_string = u'%windir%\\system32\\migwiz'
     self.assertEquals(event_object.working_directory, expected_string)
 
-    expected_string = u'%windir%\system32\migwiz\migwiz.exe'
+    expected_string = u'%windir%\\system32\\migwiz\\migwiz.exe'
     self.assertEquals(event_object.icon_location, expected_string)
     self.assertEquals(event_object.env_var_location, expected_string)
 
