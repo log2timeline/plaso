@@ -182,3 +182,8 @@ class WinRegistry(object):
     root = self.GetRoot()
     for key in self.GetAllSubKeys(root):
       yield key
+
+
+def GetLibraryVersion():
+  """Return the library version number of pyregf."""
+  return pyregf.get_version()

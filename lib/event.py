@@ -160,7 +160,16 @@ class EventContainer(object):
     return res
 
   def __iter__(self):
-    """An iterator that returns alls EventObjects stored in the containers."""
+    """An iterator that returns all EventObjects stored in the containers."""
+    for event in self.events:
+      yield event
+
+    for container in self.containers:
+      for event in container:
+        yield event
+
+  def GetSortedEvents(self):
+    """An iterator that returns all EventObjects in a sorted order."""
     all_events = []
 
     for event in self.events:
