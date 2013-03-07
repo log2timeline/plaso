@@ -17,10 +17,10 @@
 import os
 import unittest
 
-from plaso.formatters import lnk
+from plaso.formatters import winlnk
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import lnk
+from plaso.parsers import winlnk
 
 
 class WinLnkParserTest(unittest.TestCase):
@@ -29,7 +29,7 @@ class WinLnkParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = lnk.WinLnkParser(pre_obj)
+    self.test_parser = winlnk.WinLnkParser(pre_obj)
     self.maxDiff = None
 
   def testParseFile(self):

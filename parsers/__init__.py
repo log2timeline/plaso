@@ -21,7 +21,6 @@ from plaso.parsers import filestat
 from plaso.parsers import firefox
 from plaso.parsers import gdrive
 from plaso.parsers import hachoir
-from plaso.parsers import lnk
 from plaso.parsers import ls_quarantine
 from plaso.parsers import mactime
 from plaso.parsers import selinux
@@ -29,4 +28,5 @@ from plaso.parsers import syslog
 from plaso.parsers import symantec
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
+from plaso.parsers import winlnk
 from plaso.parsers import winreg
