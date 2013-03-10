@@ -394,7 +394,7 @@ class Engine(object):
       if thread.is_alive():
         thread.join()
       else:
-        logging.error(
+        logging.warning(
             (u'Worker process {} is already stopped, no need'
              ' to wait for join.').format(thread_nr))
         thread.terminate()

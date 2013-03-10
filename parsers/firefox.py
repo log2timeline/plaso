@@ -316,6 +316,9 @@ class FirefoxHistoryParser(parser.SQLiteParser):
     Returns:
       Reversed string without a leading dot.
     """
+    if not hostname:
+      return ''
+
     if len(hostname) > 1:
       if hostname[-1] == '.':
         return hostname[::-1][1:]

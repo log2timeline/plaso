@@ -25,17 +25,23 @@ class RunBase(win_registry_interface.KeyPlugin):
   """Base class for all Run Key plugins."""
 
   __abstract = True
+
   URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
   DESCRIPTION = 'Run Key'
 
   def GetEntries(self):
     """Collect the Values under the Run Key and return an event for each one."""
     for value in self._key.GetValues():
+      if not value.name:
+        continue
       text_dict = {}
       text_dict[value.name] = value.GetStringData()
-      reg_evt = event.WinRegistryEvent(self._key.path, text_dict,
-                                       self._key.timestamp)
-      reg_evt.source_append = ": " + self.DESCRIPTION
+      if not text_dict[value.name]:
+        continue
+
+      reg_evt = event.WinRegistryEvent(
+          self._key.path, text_dict, self._key.timestamp)
+      reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
       yield reg_evt
 
 
