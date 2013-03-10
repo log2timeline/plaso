@@ -35,7 +35,24 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
     for value in self._key.GetValues():
       data = value.GetRawData()
       name_raw = value.name
-      name = name_raw.decode('rot-13')
+      try:
+        name = name_raw.decode('rot-13')
+      except UnicodeEncodeError as e:
+        logging.error(
+            u'Unable to properly decode UA string: {} - [{}]'.format(
+                name_raw, e))
+        characters = []
+        for char in name_raw:
+          if ord(char) < 128:
+            try:
+              characters.append(char.decode('rot-13'))
+            except UnicodeEncodeError:
+              characters.append(char)
+          else:
+            characters.append(char)
+
+        name = u''.join(characters)
+
       if len(data) != 16:
         logging.debug('[UserAssist] Value entry is not of correct length.')
         continue

@@ -246,9 +246,17 @@ class WinRegValue(object):
     elif val_type == 'BINARY':
       ret = self.GetRawData()
     elif val_type == 'DWORD_LE':
-      ret = struct.unpack('<i', self.GetRawData()[:struct.calcsize('<i')])[0]
+      try:
+        ret = struct.unpack('<i', self.GetRawData()[:struct.calcsize('<i')])[0]
+      except struct.error as e:
+        logging.error('Unable to unpack: {}'.format(e))
+        return None
     elif val_type == 'DWORD_BE':
-      ret = struct.unpack('>i', self.GetRawData()[:struct.calcsize('<i')])[0]
+      try:
+        ret = struct.unpack('>i', self.GetRawData()[:struct.calcsize('<i')])[0]
+      except struct.error as e:
+        logging.error('Unable to unpack: {}'.format(e))
+        return None
     elif val_type == 'LINK':
       # TODO: Should we rather fetch the key that is linked
       # to here or simply return the value and let the end user

@@ -210,6 +210,13 @@ def Main():
     options.image = True
     options.preprocess = True
 
+  if options.file_filter:
+    if not os.path.isfile(options.file_filter):
+      logging.error(
+          u'Error with collection filter, file: {} does not exist.'.format(
+              options.file_filter))
+      sys.exit(1)
+
   try:
     l2t = engine.Engine(options)
   except errors.BadConfigOption as e:
