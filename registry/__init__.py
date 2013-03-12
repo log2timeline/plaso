@@ -20,6 +20,7 @@ from plaso.registry import lfu
 from plaso.registry import mru
 from plaso.registry import mrux
 from plaso.registry import run
+from plaso.registry import services
 from plaso.registry import winver
 from plaso.registry import xpuserassist
 
