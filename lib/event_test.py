@@ -100,7 +100,8 @@ class TestEventContainer(event.EventContainer):
 
     event_object = event.WinRegistryEvent(
         u'//HKCU/Secret/EvilEmpire/Malicious_key',
-        {u'Value': u'send all the exes to the other world'}, 1334966206929596)
+        {u'Value': u'REGALERT: send all the exes to the other world'},
+        1334966206929596)
     event_object.source_long = 'UNKNOWN'
     container.Append(event_object)
 
@@ -204,6 +205,12 @@ class PlasoEventUnitTest(unittest.TestCase):
     events = list(self.container.GetSortedEvents())
 
     self.assertEquals(events[0].keyname, '//HKCU/Windows/Normal')
+
+  def testExistsRegalert(self):
+    """Calls to the attribute that stores the regalert."""
+    events = list(self.container.GetSortedEvents())
+
+    self.assertEquals(events[2].regalert, True)
 
   def testExistsInParentObject(self):
     """Call to an attribute that is contained within the parent object."""

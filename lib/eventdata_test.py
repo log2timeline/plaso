@@ -69,7 +69,7 @@ class EventFormatterUnitTest(unittest.TestCase):
         events)
     self.assertIn(
         (u'1334966206929596,REG,UNKNOWN,[//HKCU/Secret/EvilEmpire/Malicious_ke'
-         'y] Value: send all the exes to the other world'), events)
+         'y] Value: REGALERT: send all the exes to the other world'), events)
     self.assertIn((u'1334940286000000,REG,UNKNOWN,[//HKCU/Windows'
                    '/Normal] Value: run all the benign stuff'), events)
     self.assertIn(('1335781787929596,FILE,Weird Log File,This log line reads '

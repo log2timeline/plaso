@@ -31,7 +31,7 @@ class BootVerificationPlugin(win_registry_interface.KeyPlugin):
     """Gather the BootVerification key values and return one event for all.
     This key is rare, so its presence is suspect."""
     text_dict = {}
-    text_dict['BootVerification'] = 'REGALERT'
+    text_dict['BootVerification'] = u'REGALERT'
     for value in self._key.GetValues():
       text_dict[value.name] = value.GetData()
     event_object = event.WinRegistryEvent(self._key.path, text_dict,
@@ -58,7 +58,7 @@ class BootExecutePlugin(win_registry_interface.KeyPlugin):
         if boot != u'autocheck autochk *':
           boot_dict['BootExecute'] = u'REGALERT: {}'.format(boot)
         else:
-          boot_dict['BootExecute'] = u'REGNORMAL: {}'.format(boot)
+          boot_dict['BootExecute'] = boot
 
         event_object = event.WinRegistryEvent(self._key.path, boot_dict,
                                               self._key.timestamp)

@@ -42,6 +42,7 @@ class TestRunNtuserRegistry(unittest.TestCase):
             'C:\WINDOWS\system32\ctfmon.exe')
 
     self.assertEquals(len(entries), 1)
+    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
     self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
@@ -69,6 +70,7 @@ class TestRunOnceNtuserRegistry(unittest.TestCase):
             'updater.exe: C:\WINDOWS\system32\googleupdater.exe')
 
     self.assertEquals(len(entries), 1)
+    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
     self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
@@ -95,6 +97,7 @@ class TestRunSoftwareRegistry(unittest.TestCase):
             'C:\WINDOWS\system32\ctfmon.exe')
 
     self.assertEquals(len(entries), 1)
+    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
     self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
@@ -122,6 +125,7 @@ class TestRunOnceSoftwareRegistry(unittest.TestCase):
             'C:\WINDOWS\system32\googleupdater.exe')
 
     self.assertEquals(len(entries), 1)
+    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
     self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
