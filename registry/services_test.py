@@ -63,6 +63,7 @@ class TestServicesRegistry(unittest.TestCase):
 
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
+    self.assertEquals(entries[0].regalert, True)
 
 
 if __name__ == '__main__':
