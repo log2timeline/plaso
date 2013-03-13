@@ -57,8 +57,8 @@ class TestBootExecuteRegistry(unittest.TestCase):
     plugin = lfu.BootExecutePlugin(None, self.preprocess)
     entries = list(plugin.Process(self.regkey))
 
-    line1 = (u'[\ControlSet001\Control\Session Manager] BootExecute: REGNORMAL:'
-             ' autocheck autochk *')
+    line1 = (u'[\ControlSet001\Control\Session Manager] BootExecute: '
+             'autocheck autochk *')
     line2 = (u'[\ControlSet001\Control\Session Manager] CriticalSectionTimeout'
              ': 2592000 ExcludeFromKnownDlls: [] GlobalFlag: 0 HeapDeCommitFre'
              'eBlockThreshold: 0 HeapDeCommitTotalFreeThreshold: 0 HeapSegment'
@@ -102,6 +102,7 @@ class TestBootVerificationRegistry(unittest.TestCase):
     self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
+    self.assertEquals(entries[0].regalert, True)
 
 
 if __name__ == '__main__':

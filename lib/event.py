@@ -795,6 +795,9 @@ class WinRegistryEvent(EventObject):
       self.keyname = key
     self.keyvalue_dict = value_dict
     self.regvalue = value_dict
+    for value in value_dict.values():
+      if value[0:4] == 'REGA':
+        self.regalert = True
 
 
 class TextEvent(EventObject):
