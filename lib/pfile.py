@@ -460,7 +460,12 @@ class ZipFile(PlasoFile):
   def Open(self, filehandle=None):
     """Open the file as it is described in the PathSpec protobuf."""
     if filehandle:
-      zf = zipfile.ZipFile(filehandle, 'r')
+      try:
+        zf = zipfile.ZipFile(filehandle, 'r')
+      except zipfile.BadZipfile as e:
+        raise IOError(
+            u'Unable to open ZIP file, not a ZIP file?: {} [{}]'.format(
+                filehandle.name, e))
       path_name = filehandle.name
       self.inode = getattr(filehandle.Stat(), 'ino', 0)
     else:
@@ -477,7 +482,7 @@ class ZipFile(PlasoFile):
     try:
       self.fh = zf.open(self.pathspec.file_path, 'r')
     except RuntimeError as e:
-      raise IOError('Unable to open ZIP file: {%s} -> %s' % (self.name, e))
+      raise IOError(u'Unable to open ZIP file: {%s} -> %s' % (self.name, e))
 
   def read(self, size=None):
     """Read size bytes from file and return them."""

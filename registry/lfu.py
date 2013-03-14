@@ -60,11 +60,12 @@ class BootExecutePlugin(win_registry_interface.KeyPlugin):
         else:
           boot_dict['BootExecute'] = boot
 
-        event_object = event.WinRegistryEvent(self._key.path, boot_dict,
-                                              self._key.timestamp)
+        event_object = event.WinRegistryEvent(
+            self._key.path, boot_dict, self._key.timestamp)
         yield event_object
       else:
         text_dict[value.name] = value.GetData()
-    event_object = event.WinRegistryEvent(self._key.path, text_dict,
-                                          self._key.timestamp)
+
+    event_object = event.WinRegistryEvent(
+        self._key.path, text_dict, self._key.timestamp)
     yield event_object

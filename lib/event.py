@@ -796,7 +796,7 @@ class WinRegistryEvent(EventObject):
     self.keyvalue_dict = value_dict
     self.regvalue = value_dict
     for value in value_dict.values():
-      if value[0:4] == 'REGA':
+      if type(value) in (str, unicode) and value[0:4] == 'REGA':
         self.regalert = True
 
 
