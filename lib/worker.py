@@ -285,27 +285,19 @@ class PlasoWorker(object):
         fh.seek(0)
         fh_zip = zipfile.ZipFile(fh, 'r')
 
-        logging.debug('ZIP FILE (JAR?): %s', fh.name)
-        # Check if this is a JAR file, and skip it if so.
-        # Don't want to skip ALL files called JAR, even though they
-        # are deemed as ZIP files, check few other conditions.
-        if '.jar' in fh.name[-4:] or '.sym' in fh.name[-4:]:
-          logging.debug('JAR FILE CHECK: %s', fh.name)
-          class_file = False
-          meta_inf_file = False
-          for name in fh_zip.namelist():
-            if '.class' in name[-6:] or '.properties' in name[-11:]:
-              class_file = True
-            if 'META-INF' in name:
-              meta_inf_file = True
-            if class_file and meta_inf_file:
-              logging.debug('Skipping JAR file: %s', fh.display_name)
-              return
+        # TODO: Make this is a more "sane" check, and perhaps
+        # not entirely skip the file if it has this particular
+        # ending, but for now, this both slows the tool down
+        # considerably and makes it also more unstable.
+        file_ending = fh.name.lower()[-4:]
+        if file_ending in ['.jar', '.sym', '.xpi']:
+          logging.debug(
+              u'ZIP but the wrong type of zip [%s]: %s', file_ending, fh.name)
+          return
 
-        logging.debug('ZIP FILE NOT A JAR (%s)', fh.name)
         for info in fh_zip.infolist():
           if info.file_size > 0:
-            logging.debug('Including: %s from ZIP into process queue.',
+            logging.debug(u'Including: %s from ZIP into process queue.',
                           info.filename)
             pathspec = fh.pathspec_root
             transfer_zip = event.EventPathSpec()
@@ -327,7 +319,7 @@ class PlasoWorker(object):
         fh_gzip = gzip.GzipFile(fileobj=fh, mode='rb')
         _ = fh_gzip.read(4)
         fh_gzip.seek(0)
-        logging.debug('Including: %s from GZIP into process queue.', fh.name)
+        logging.debug(u'Including: %s from GZIP into process queue.', fh.name)
         transfer_gzip = event.EventPathSpec()
         transfer_gzip.type = 'GZIP'
         transfer_gzip.file_path = utils.GetUnicodeString(fh.pathspec.file_path)
@@ -346,7 +338,7 @@ class PlasoWorker(object):
         fh.seek(0)
         fh_tar = tarfile.open(fileobj=fh, mode='r')
         for name in fh_tar.getnames():
-          logging.debug('Including: %s from TAR into process queue.', name)
+          logging.debug(u'Including: %s from TAR into process queue.', name)
           pathspec = fh.pathspec_root
           transfer_tar = event.EventPathSpec()
           transfer_tar.type = 'TAR'
