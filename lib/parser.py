@@ -246,6 +246,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
 
     while 1:
       _ = self.NextToken()
+
       if self.state == 'INITIAL':
         self.entry_offset = getattr(self, 'next_entry_offset', 0)
         self.next_entry_offset = self.fd.tell() - len(self.buffer)
@@ -255,6 +256,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
                       self.state)
         name = '%s (%s)' % (self.fd.name, self.fd.display_name)
         raise errors.UnableToParseFile(u'File %s not a %s.' % (name, self.NAME))
+
       if self.line_ready:
         try:
           yield self.ParseLine(self._pre_obj.zone)

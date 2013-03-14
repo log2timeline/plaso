@@ -117,9 +117,7 @@ class SELinux(parser.TextParser):
     except ValueError as e:
       logging.error(('Error %s, unable to get UTC timestamp', e))
       self.timestamp = 0
-    # TODO: I'd like to raise as soon as spotted, but TextParser
-    # main loop is not expecting such an exception, being a
-    # TimestampNotCorrectlyFormed
+      raise lexer.ParseError(u'Not a valid timestamp.')
 
   def ParseString(self, match, **_):
     """Add a string to the body attribute.
@@ -142,12 +140,12 @@ class SELinux(parser.TextParser):
 
   def ParseFailed(self, match, **_):
     """Entry parsing failed callback."""
-    self.line_ready = False
+    raise lexer.ParseError(u'Not a proper SELinux line.')
 
   def ParseLine(self, zone):
     """Parse a single line from the SELinux audit file.
 
-    This method extends the one from TextParser slightly, creating a 
+    This method extends the one from TextParser slightly, creating a
     SELinux event with the timestamp (UTC) taken from log entries.
 
     Args:

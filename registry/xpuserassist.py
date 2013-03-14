@@ -38,9 +38,10 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
       try:
         name = name_raw.decode('rot-13')
       except UnicodeEncodeError as e:
-        logging.error(
-            u'Unable to properly decode UA string: {} - [{}]'.format(
-                name_raw, e))
+        logging.warning(
+            (u'Unable to decode UserAssist string in whole (piecewise '
+             'decoding instead): {} - [{}]').format(name_raw, e))
+
         characters = []
         for char in name_raw:
           if ord(char) < 128:
