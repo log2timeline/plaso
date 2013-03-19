@@ -39,7 +39,7 @@ class Rawpy(output.FileLogOutputFormatter):
     return ('Returns a raw representation of the EventObject. Useful for'
             ' debugging.')
 
-  def EventBody(self, evt):
+  def EventBody(self, event_object):
     """Prints out to a filehandle string representation of an EventObject.
 
     Each EventObject contains both attributes that are considered "reserved"
@@ -48,7 +48,7 @@ class Rawpy(output.FileLogOutputFormatter):
     strings from the object.
 
     Args:
-      evt: The EventObject.
+      event_object: The EventObject.
     """
 
     out_write = []
@@ -56,7 +56,7 @@ class Rawpy(output.FileLogOutputFormatter):
     out_reserved.append('[Reserved attributes]:')
     out_write.append('[Additional attributes]:')
 
-    for attr_key, attr_value in sorted(evt.GetValues().items()):
+    for attr_key, attr_value in sorted(event_object.GetValues().items()):
       if attr_key in utils.RESERVED_VARIABLES:
         if attr_key == 'pathspec':
           continue
@@ -71,19 +71,18 @@ class Rawpy(output.FileLogOutputFormatter):
     out_reserved.append('')
 
     self.filehandle.write('+-' * 40)
-    date_use = timelib.DateTimeFromTimestamp(evt.timestamp, pytz.utc)
-    self.filehandle.write(
-        '\n[Timestamp]:\n  {}'.format(date_use.strftime('%Y-%m-%dT%H:%M:%Sz')))
+    self.filehandle.write('\n[Timestamp]:\n  %s' %(
+        timelib.Timestamp.CopyToIsoFormat(event_object.timestamp, pytz.utc)))
     self.filehandle.write('\n\n[Message Strings]:\n')
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(evt)
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       self.filehandle.write('None')
     else:
-      msg, msg_short = event_formatter.GetMessages(evt)
+      msg, msg_short = event_formatter.GetMessages(event_object)
       self.filehandle.write(u'{2:>7}: {0}\n{3:>7}: {1}\n\n'.format(
           msg_short, msg, 'Short', 'Long'))
-    if hasattr(evt, 'pathspec'):
-      pathspec_string = str(evt.pathspec.ToProto()).rstrip()
+    if hasattr(event_object, 'pathspec'):
+      pathspec_string = str(event_object.pathspec.ToProto()).rstrip()
       self.filehandle.write(
           u'{1}:\n  {0}\n\n'.format(
               pathspec_string.replace('\n', '\n  '), '[Pathspec]'))

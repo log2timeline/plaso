@@ -32,7 +32,8 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class SymantecEvent(event.TextEvent):
   """Convenience class for a Symantec line event."""
   DATA_TYPE = 'av:symantec:scanlog'
-    
+
+
 class Symantec(parser.TextCSVParser):
   """Parse Symantec log files using the TextCSVParser."""
 
@@ -60,7 +61,7 @@ class Symantec(parser.TextCSVParser):
 
   def VerifyRow(self, row):
     """Verify a single line of a Symantec log file."""
-    
+
     try:
       timestamp = self.GetTimestamp(row['time'])
     except (TypeError, ValueError) as e:
@@ -121,7 +122,6 @@ class Symantec(parser.TextCSVParser):
     timestamp = timelib.Timestamp.FromPosixTime(epoch)
 
     return timestamp
-    
 
   def ParseRow(self, row):
     """Parse a single line from the symantec log file."""
