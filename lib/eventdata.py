@@ -38,6 +38,10 @@ class EventTimestamp(object):
 
   FILE_DOWNLOADED = u'File Downloaded'
   PAGE_VISITED = u'Page Visited'
+  # TODO: change page visited into last visited time.
+  LAST_VISITED_TIME = u'Last Visited Time'
+
+  EXPIRATION_TIME = u'Expiration Time'
 
 
 class EventFormatterManager(object):

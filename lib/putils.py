@@ -25,6 +25,7 @@ from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfile
 from plaso.lib import pfilter
+from plaso.lib import timelib
 from plaso.lib import utils
 
 # TODO: Refactor the putils library so it does not end up being a trash can
@@ -214,11 +215,9 @@ def FindAllOutputs():
 
 def PrintTimestamp(timestamp):
   """Print a human readable timestamp using ISO 8601 format."""
-  epoch = int(timestamp / 1e6)
-  my_date = (datetime.datetime.utcfromtimestamp(epoch) +
-             datetime.timedelta(microseconds=(timestamp % 1e6)))
-
-  return my_date.isoformat()
+  # TODO: this function is only used by frontend/plaso_console.py
+  # refactor that code to use timelib and remove this function.
+  return timelib.Timestamp.CopyToIsoFormat(timestamp)
 
 
 def GetEventData(evt, fscache=None, before=0, length=20):

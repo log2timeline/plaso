@@ -96,17 +96,17 @@ class Sql4n6(output.LogOutputFormatter):
            'vss_store_number INT)'))
       if self.set_status:
         self.set_status('Created table log2timeline.')
-    
+
       for field in self.META_FIELDS:
         self.curs.execute(
             'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
       if self.set_status:
         self.set_status('Created table l2t_%s' % field)
-          
+
       self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
       if self.set_status:
         self.set_status('Created table l2t_tags')
-        
+
       self.curs.execute('CREATE TABLE l2t_saved_query (name TEXT, query TEXT)')
       if self.set_status:
         self.set_status('Created table l2t_saved_query')
@@ -134,7 +134,7 @@ class Sql4n6(output.LogOutputFormatter):
     # Get meta info and save into their tables.
     if self.set_status:
       self.set_status('Checking meta data...')
-      
+
     for field in self.META_FIELDS:
       vals = self._GetDistinctValues(field)
       self.curs.execute('DELETE FROM l2t_%ss' % field)
@@ -188,68 +188,70 @@ class Sql4n6(output.LogOutputFormatter):
     """Do nothing, just override the parent's EndEvent method."""
     pass
 
-  def EventBody(self, evt):
+  def EventBody(self, event_object):
     """Formats data as 4n6time database table format and writes to the db.
 
     Args:
-      evt: An EventObject that contains the event data.
+      event_object: The event object (EventObject).
 
     Raises:
       raise errors.NoFormatterFound: If no formatter for this event is found.
     """
 
-    if 'timestamp' not in evt.GetAttributes():
+    if 'timestamp' not in event_object.GetAttributes():
       return
 
-    formatter = eventdata.EventFormatterManager.GetFormatter(evt)
+    formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not formatter:
       raise errors.NoFormatterFound(
           'Unable to output event, no formatter found.')
 
-    msg, msg_short = formatter.GetMessages(evt)
+    msg, msg_short = formatter.GetMessages(event_object)
 
-    date_use = timelib.DateTimeFromTimestamp(evt.timestamp, self.zone)
-    if not date_use:
-      logging.error(u'Unable to process date for entry: %s', msg)
-      return
+    date_use = timelib.Timestamp.CopyToDatetime(
+        event_object.timestamp, self.zone)
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         formatter.format_string)
-    for key in evt.GetAttributes():
+    for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append('%s: %s ' % (key, getattr(evt, key, None)))
+      extra.append('%s: %s ' % (key, getattr(event_object, key, None)))
     extra = ' '.join(extra)
 
-    inode = getattr(evt, 'inode', '-')
+    inode = getattr(event_object, 'inode', '-')
     if inode == '-':
-      if hasattr(evt, 'pathspec') and hasattr(evt.pathspec, 'image_inode'):
-        inode = evt.pathspec.image_inode
+      if (hasattr(event_object, 'pathspec') and
+          hasattr(event_object.pathspec, 'image_inode')):
+        inode = event_object.pathspec.image_inode
 
+    date_use_string = '%04d-%02d-%02d %02d:%02d:%02d' %(
+        date_use.month, date_use.day, date_use.year, date_use.hour,
+        date_use.minute, date_use.second)
     row = (str(self.zone),
-           helper.GetLegacy(evt),
-           getattr(evt, 'source_short', 'LOG'),
-           evt.source_long,
-           evt.timestamp_desc,
-           getattr(evt, 'username', '-'),
-           getattr(evt, 'hostname', '-'),
+           helper.GetLegacy(event_object),
+           getattr(event_object, 'source_short', 'LOG'),
+           event_object.source_long,
+           event_object.timestamp_desc,
+           getattr(event_object, 'username', '-'),
+           getattr(event_object, 'hostname', '-'),
            msg_short,
            msg,
            '2',
-           getattr(evt, 'filename', '-'),
+           getattr(event_object, 'filename', '-'),
            inode,
-           getattr(evt, 'notes', '-'),
-           getattr(evt, 'parser', '-'),
+           getattr(event_object, 'notes', '-'),
+           getattr(event_object, 'parser', '-'),
            extra,
-           date_use.strftime('%Y-%m-%d %H:%M:%S'),
+           date_use_string,
            '',
            '',
            '',
            '',
-           evt.offset,
-           evt.store_number,
-           evt.store_index,
-           self.GetVSSNumber(evt))
+           event_object.offset,
+           event_object.store_number,
+           event_object.store_index,
+           self.GetVSSNumber(event_object))
 
     self.curs.execute(
         ('INSERT INTO log2timeline(timezone, MACB, source, '
@@ -267,9 +269,9 @@ class Sql4n6(output.LogOutputFormatter):
       if self.set_status:
         self.set_status('Inserting event: %s' % self.count)
 
-  def GetVSSNumber(self, evt):
+  def GetVSSNumber(self, event_object):
     """Return the vss_store_number of the event."""
-    if not hasattr(evt, 'pathspec'):
+    if not hasattr(event_object, 'pathspec'):
       return -1
 
-    return getattr(evt.pathspec, 'vss_store_number', -1)
+    return getattr(event_object.pathspec, 'vss_store_number', -1)

@@ -79,11 +79,8 @@ class L2tcsv(output.FileLogOutputFormatter):
     if not hasattr(event_object, 'timestamp'):
       return
 
-    date_use = timelib.DateTimeFromTimestamp(event_object.timestamp, self.zone)
-    if not date_use:
-      logging.error(u'Unable to process date for entry: %s', msg)
-      return
-
+    date_use = timelib.Timestamp.CopyToDatetime(
+        event_object.timestamp, self.zone)
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         event_formatter.format_string)
@@ -112,8 +109,8 @@ class L2tcsv(output.FileLogOutputFormatter):
       if check_user != '-':
         username = check_user
 
-    row = (date_use.strftime('%m/%d/%Y'),
-           date_use.strftime('%H:%M:%S'),
+    row = ('%02d/%02d/%04d' %(date_use.month, date_use.day, date_use.year),
+           '%02d:%02d:%02d' %(date_use.hour, date_use.minute, date_use.second),
            self.zone,
            helper.GetLegacy(event_object),
            event_object.source_short,

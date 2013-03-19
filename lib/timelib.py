@@ -260,6 +260,60 @@ class Timestamp(object):
       return 0
     return int(posix_time) * cls.MICRO_SECONDS_PER_SECOND
 
+  @classmethod
+  def LocaltimeToUTC(cls, timestamp, timezone, is_dst=False):
+    """Converts the timestamp in localtime of the timezone to UTC.
+
+    Args:
+      timestamp: An integer containing the timestamp.
+      timezone: The timezone (pytz.timezone) object.
+      is_dst: A boolean to indicate the timestamp is corrected for daylight
+              savings time (DST) only used for the DST transition period.
+              The default is false.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    if timezone and timezone != pytz.utc:
+      dt = (datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=None) +
+            datetime.timedelta(microseconds=timestamp))
+
+      # Check if timezone is UTC since utcoffset() does not support is_dst
+      # for UTC and will raise.
+      dt_delta = timezone.utcoffset(dt, is_dst=is_dst)
+      timestamp -= dt_delta.seconds * cls.MICRO_SECONDS_PER_SECOND
+
+    return timestamp
+
+  @classmethod
+  def CopyToDatetime(cls, timestamp, timezone):
+    """Copies the timestamp to a datetime object.
+
+    Args:
+      timestamp: An integer containing the timestamp.
+      timezone: The timezone (pytz.timezone) object.
+
+    Returns:
+      A datetime object.
+    """
+    dt = (datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc) +
+          datetime.timedelta(microseconds=timestamp))
+    return dt.astimezone(timezone)
+
+  @classmethod
+  def CopyToIsoFormat(cls, timestamp, timezone):
+    """Copies the timestamp to an ISO 8601 formatted string.
+
+    Args:
+      timestamp: An integer containing the timestamp.
+      timezone: The timezone (pytz.timezone) object.
+
+    Returns:
+      A string containing an ISO 8601 formatted date and time.
+    """
+    dt = cls.CopyToDatetime(timestamp, timezone)
+    return dt.isoformat()
+
 
 def Timetuple2Timestamp(time_tuple):
   """Return a micro second precision timestamp from a timetuple."""
@@ -269,12 +323,8 @@ def Timetuple2Timestamp(time_tuple):
   return int(calendar.timegm(time_tuple))
 
 
-def DateTimeFromTimestamp(timestamp, zone):
-  """Return a datetime object from a given timestamp."""
-  try:
-    mydate = datetime.datetime.utcfromtimestamp(
-        timestamp / 1e6)
-  except ValueError:
-    return None
+def GetCurrentYear():
+  """Determines the current year."""
+  dt = datetime.datetime.now()
+  return dt.year
 
-  return mydate.replace(tzinfo=pytz.utc).astimezone(zone)

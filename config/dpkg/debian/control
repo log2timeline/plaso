@@ -11,6 +11,6 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Conflicts: log2timeline-perl
 Description: Static (PyInstaller) build of Plaso Log2Timeline
- Log2Timeline is a framework to create super timelines. 
+ Log2Timeline is a framework to create super timelines.
  It is a framework to parse various files and collect time-based
  digital artifacts that can be used in computer forensics.
