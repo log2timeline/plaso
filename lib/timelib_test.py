@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a unit test for the timelib in Plaso."""
+import datetime
 import unittest
+import pytz
 
 from plaso.lib import timelib
 
@@ -158,6 +160,83 @@ class TimeLibUnitTest(unittest.TestCase):
 
     month = timelib.MONTH_DICT.get('doesnotexist')
     self.assertEquals(month, None)
+
+  def testLocaltimeToUTC(self):
+    """Test the localtime to UTC conversion."""
+    timezone = pytz.timezone('CET')
+
+    # date -u -d"Jan 1, 2013 01:00:00" +"%s.%N"
+    local_timestamp = 1357002000 * 1000000
+    # date -u -d"Jan 1, 2013 00:00:00" +"%s.%N"
+    expected_timestamp = 1356998400 * 1000000
+    self.assertEquals(
+        timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone),
+        expected_timestamp)
+
+    # date -u -d"Jul 1, 2013 02:00:00" +"%s.%N"
+    local_timestamp = 1372644000 * 1000000
+    # date -u -d"Jul 1, 2013 00:00:00" +"%s.%N"
+    expected_timestamp = 1372636800 * 1000000
+    self.assertEquals(
+        timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone),
+        expected_timestamp)
+
+    # In the local timezone this is a non-existent timestamp.
+    # date -u -d"Mar 31, 2013 02:00:00" +"%s.%N"
+    local_timestamp = 1364695200 * 1000000
+
+    with self.assertRaises(pytz.NonExistentTimeError):
+        timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
+
+    # date -u -d"Mar 31, 2013 00:00:00" +"%s.%N"
+    expected_timestamp = 1364688000 * 1000000
+    self.assertEquals(
+        timelib.Timestamp.LocaltimeToUTC(
+            local_timestamp, timezone, is_dst=True),
+        expected_timestamp)
+
+    # date -u -d"Mar 31, 2013 01:00:00" +"%s.%N"
+    expected_timestamp = 1364691600 * 1000000
+    self.assertEquals(
+        timelib.Timestamp.LocaltimeToUTC(
+            local_timestamp, timezone, is_dst=False),
+        expected_timestamp)
+
+    # In the local timezone this is an ambiguous timestamp.
+    # date -u -d"Oct 27, 2013 02:30:00" +"%s.%N"
+    local_timestamp = 1382841000 * 1000000
+
+    with self.assertRaises(pytz.AmbiguousTimeError):
+        timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
+
+    # date -u -d"Oct 27, 2013 00:30:00" +"%s.%N"
+    expected_timestamp = 1382833800 * 1000000
+    self.assertEquals(
+        timelib.Timestamp.LocaltimeToUTC(
+            local_timestamp, timezone, is_dst=True),
+        expected_timestamp)
+
+    # date -u -d"Oct 27, 2013 01:30:00" +"%s.%N"
+    expected_timestamp = 1382837400 * 1000000
+    self.assertEquals(
+        timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone),
+        expected_timestamp)
+
+    # Use the UTC timezone.
+    self.assertEquals(
+        timelib.Timestamp.LocaltimeToUTC(local_timestamp, pytz.utc),
+        local_timestamp)
+
+  def testCopyToDatetime(self):
+    """Test the copy to datetime object."""
+    timezone = pytz.timezone('CET')
+
+    # date -u -d"2013-03-14 20:20:08.850041+00:00" +"%s.%N"
+    timestamp = (1363292408 * 1000000) + (850041000 / 1000)
+
+    self.assertEquals(
+        timelib.Timestamp.CopyToDatetime(timestamp, timezone),
+        datetime.datetime(2013, 3, 14, 21, 20, 8, 850041, tzinfo=timezone))
 
 
 if __name__ == '__main__':

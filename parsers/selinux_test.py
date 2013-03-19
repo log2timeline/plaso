@@ -46,7 +46,7 @@ class SELinuxUnitTest(unittest.TestCase):
     self.filehandle.seek(0)
     sl_generator = sl.Parse(self.filehandle)
     events = list(sl_generator)
-    
+
     self.assertEquals(len(events), 4)
 
     normal_entry = events[0]
