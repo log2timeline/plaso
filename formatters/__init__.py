@@ -23,6 +23,7 @@ from plaso.formatters import gdrive
 from plaso.formatters import hachoir
 from plaso.formatters import ls_quarantine
 from plaso.formatters import mactime
+from plaso.formatters import msiecf
 from plaso.formatters import selinux
 from plaso.formatters import syslog
 from plaso.formatters import symantec
