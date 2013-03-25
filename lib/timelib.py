@@ -24,6 +24,7 @@ a more human readable one.
 """
 import calendar
 import datetime
+import logging
 import time
 import pytz
 
@@ -296,9 +297,16 @@ class Timestamp(object):
     Returns:
       A datetime object.
     """
-    dt = (datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc) +
-          datetime.timedelta(microseconds=timestamp))
-    return dt.astimezone(timezone)
+    dt = (datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc))
+    try:
+      dt += datetime.timedelta(microseconds=timestamp)
+      return dt.astimezone(timezone)
+    except OverflowError as error_msg:
+      logging.error(
+          u'Unable to copy {} to a datetime object, error: {}'.format(
+              timestamp, error_msg))
+
+    return dt
 
   @classmethod
   def CopyToIsoFormat(cls, timestamp, timezone):
