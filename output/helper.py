@@ -39,6 +39,9 @@ def GetLegacy(evt):
     elif letter == 'a':
       return '.A..'
     elif letter == 'c':
+      if evt.timestamp_desc[1] == 'r':
+        return '...B'
+
       return '..C.'
     else:
       return '....'

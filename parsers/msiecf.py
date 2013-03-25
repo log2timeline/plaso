@@ -20,6 +20,7 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
+from plaso.lib import timelib
 
 import pymsiecf
 
@@ -54,7 +55,7 @@ class MsiecfUrlEventContainer(event.EventContainer):
     self.filename = msiecf_item.filename
     self.cached_file_size = msiecf_item.cached_file_size
 
-    if msiecf_item.type:
+    if msiecf_item.type and msiecf_item.data:
       if msiecf_item.type == u'cache':
         if msiecf_item.data[:4] == 'HTTP':
           self.http_headers = msiecf_item.data
