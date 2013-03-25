@@ -156,6 +156,8 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
 
     # Gather all the other values and insert as they are.
     for value in self._key.GetValues():
+      if not value.name:
+        continue
       if value.name not in text_dict:
         text_dict[value.name] = value.GetData()
 
