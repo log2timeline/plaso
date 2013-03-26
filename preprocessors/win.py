@@ -47,6 +47,21 @@ class WinCurrentControl(preprocess.WinRegistryPreprocess):
     return 'ControlSet%.3d' % value.GetData()
 
 
+class WinVersion(preprocess.WinRegistryPreprocess):
+  """Fetch information about the current Windows version."""
+
+  ATTRIBUTE = 'osversion'
+
+  REGFILE = 'SOFTWARE'
+  REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion'
+
+  def ParseKey(self, key):
+    """Extract the version information from the key."""
+    product = key.GetValue('ProductName')
+    if product:
+      return u'{}'.format(product.GetData())
+
+
 class WinUsers(preprocess.WinRegistryPreprocess):
   """Fetch information about user profiles."""
 
