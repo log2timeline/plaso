@@ -42,7 +42,7 @@ from plaso.lib import worker
 
 import pytz
 
-__version__ = '1.0.1alpha-pre'
+__version__ = '1.0.1alpha'
 
 
 def GetTimeZoneList():
@@ -55,7 +55,7 @@ def GetTimeZoneList():
 class Engine(object):
   """The main engine of plaso, the one that rules them all."""
 
-  def __init__(self, config, event_filter=None):
+  def __init__(self, config):
     """Initialize the Plaso engine.
 
     Initializes some variables used in the tool as well
@@ -63,18 +63,10 @@ class Engine(object):
 
     Args:
       config: A configuration object, either an optparse or an argparse one.
-      event_filter: A filter object used to filter the output.
 
     Raises:
       errors.BadConfigOption: If the configuration options are wrong.
     """
-
-    # TODO: Do something with the event_filter, that is
-    # build an event filter that can be used to actually filter
-    # out events and pass them to the needed modules for
-    # additional processing.
-    self.event_filter = event_filter
-
     self.worker_threads = []
     self.config = config
 
@@ -150,6 +142,7 @@ class Engine(object):
       self.config.os = self._GuessOS(pre_collector)
 
     plugin_list = preprocessors.PreProcessList(pre_obj, pre_collector)
+    pre_obj.guessed_os = self.config.os
 
     for weight in plugin_list.GetWeightList(self.config.os):
       for plugin in plugin_list.GetWeight(self.config.os, weight):
@@ -304,6 +297,47 @@ class Engine(object):
         return
     else:
       pre_obj.zone = self.config.zone
+
+    # TODO: Make this more sane. Currently we are only checking against
+    # one possible version of Windows, and then making the assumption if
+    # that is not correct we default to Windows 7. Same thing with other
+    # OS's, no assumption or checks are really made there.
+    # Also this is done by default, and no way for the user to turn off
+    # this behavior, need to add a parameter to the frontend that takes
+    # care of overwriting this behavior.
+    if not hasattr(self.config, 'filter'):
+      self.config.filter = u''
+
+    if not self.config.filter:
+      self.config.filter = u''
+
+    prepend_filter = u''
+
+    if hasattr(pre_obj, 'osversion'):
+      if 'windows xp' in pre_obj.osversion.lower():
+        prepend_filter = 'winxp'
+      else:
+        prepend_filter = 'win7'
+
+    if hasattr(pre_obj, 'guessed_os'):
+      if pre_obj.guessed_os == 'OSX':
+        prepend_filter = u'macosx'
+      elif pre_obj.guessed_os == 'Linux':
+        prepend_filter = 'linux'
+
+    if 'parser inlist' in self.config.filter:
+      prepend_filter = ''
+
+    if prepend_filter:
+      old_filter = self.config.filter
+      if old_filter:
+        self.config.filter = 'parser inlist "{}" and ({})'.format(
+            prepend_filter, old_filter)
+      else:
+        self.config.filter = 'parser inlist "{}"'.format(prepend_filter)
+
+      logging.info(u'Filter expression changed from "{}" to: "{}"'.format(
+          old_filter, self.config.filter))
 
     # Save some information about the run time into the pre-processing object.
     self._StoreCollectionInformation(pre_obj)

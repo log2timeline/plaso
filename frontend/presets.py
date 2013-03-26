@@ -16,13 +16,29 @@
 """Helper file for filtering out parsers."""
 
 categories = {
-    'winxp': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-              'WinLnkParser', 'Hachoir', 'Symantec'],
-    'win7': ['Firefox', 'Chrome', 'WinRegistry', 'GoogleDrive', 'PfileStat',
-             'WinLnkParser', 'Hachoir', 'Symantec'],
-    'webhist': ['Chrome', 'Firefox'],
-    'linux': ['Firefox', 'Chrome', 'SELinux', 'Syslog', 'GoogleDrive',
-              'PfileStat'],
-    'macosx': ['ApplicationUsage', 'Firefox', 'LsQuarantine', 'Chrome',
-               'Syslog', 'GoogleDrive', 'PfileStat'],
+    'winxp': [
+        'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
+        'Hachoir', 'MsiecfParser', 'PfileStatParser', 'Symantec',
+        'WinEvtParser', 'WinLnkParser', 'WinRegistryParser'],
+    'winxp_fast': [
+        'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
+        'MsiecfParser', 'PfileStatParser', 'Symantec',
+        'WinEvtParser', 'WinLnkParser', 'WinRegistryParser'],
+    'win7': [
+        'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
+        'Hachoir', 'MsiecfParser', 'PfileStatParser', 'Symantec',
+        'WinEvtxParser', 'WinLnkParser', 'WinRegistryParser'],
+    'win7_fast': [
+        'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
+        'MsiecfParser', 'PfileStatParser', 'Symantec',
+        'WinEvtxParser', 'WinLnkParser', 'WinRegistryParser'],
+    'webhist': [
+        'ChromeHistoryParser', 'FirefoxHistoryParser', 'MsiecfParser'],
+    'linux': [
+        'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
+        'Hachoir', 'PfileStatParser', 'SELinux', 'SyslogParser'],
+    'macosx': [
+        'ApplicationUsageParser', 'ChromeHistoryParser',
+        'FirefoxHistoryParser', 'GoogleDriveParser', 'Hachoir',
+        'LsQuarantineParser', 'PfileStatParser', 'SyslogParser'],
 }

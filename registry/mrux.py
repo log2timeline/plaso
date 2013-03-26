@@ -62,3 +62,9 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
       event_timestamp = 0
       yield evt
 
+  def Process(self, key):
+    """Determine if we can process this registry key or not."""
+    if 'BagMRU' in key.path:
+      return None
+
+    return super(MRUexPlugin, self).Process(key)

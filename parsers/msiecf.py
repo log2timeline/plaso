@@ -58,7 +58,7 @@ class MsiecfUrlEventContainer(event.EventContainer):
     if msiecf_item.type and msiecf_item.data:
       if msiecf_item.type == u'cache':
         if msiecf_item.data[:4] == 'HTTP':
-          self.http_headers = msiecf_item.data
+          self.http_headers = msiecf_item.data[:-1]
       # TODO: parse data of other URL item type like history which requires
       # OLE VT parsing.
 

@@ -159,7 +159,7 @@ class ParserList(objectfilter.GenericBinaryOperator):
     """Construct the parser list and retrieve a list of available parsers."""
     super(ParserList, self).__init__(*children, **kwargs)
     self.compiled_list = presets.categories.get(
-        self.right_operand, [])
+        self.right_operand.lower(), [])
 
   def Operation(self, x, unused_y):
     """Return a bool depending on the parser list contains the parser."""

@@ -59,5 +59,7 @@ install_tool psort
 
 echo "Installing missing dylibs."
 sudo mv libregf.1.dylib /usr/lib/
-sudo mv libvshadow.1.dylib /usr/lib/
 sudo mv liblnk.1.dylib /usr/lib/
+sudo mv libevt.1.dylib /usr/lib/
+sudo mv libevtx.1.dylib /usr/lib/
+sudo mv libmsiecf.1.dylib /usr/lib/
