@@ -24,9 +24,25 @@ class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'Location: {location}',
       u'Number of hits: {number_of_hits}',
-      u'Filename: {filename}',
       u'Cached file size: {cached_file_size}',
-      u'HTTP headers: {http_headers}']
+      u'HTTP headers: {http_headers_cleaned}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'Location: {location}']
+
+  def GetMessages(self, event_object):
+    """Returns a list of messages extracted from an event object.
+
+    Args:
+      event_object: The event object (EventObject) containing the event
+                    specific data.
+
+    Returns:
+      A list that contains both the longer and shorter version of the message
+      string.
+    """
+    if hasattr(event_object, 'http_headers'):
+      event_object.http_headers_cleaned = event_object.http_headers.replace(
+        '\r\n', ' - ')
+    return super(MsiecfUrlFormatter, self).GetMessages(event_object)
+
