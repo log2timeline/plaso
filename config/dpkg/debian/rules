@@ -18,13 +18,11 @@ override_dh_auto_test:
 
 override_dh_installinit:
 	mkdir -p debian/plaso-static/usr/lib/plaso
-	mkdir -p debian/plaso-static/usr/lib/plaso/IPython/config/profile
 	install -D -p -m755 debian/tmp/usr/lib/plaso/*.* debian/plaso-static/usr/lib/plaso
 	install -D -p -m755 debian/tmp/usr/lib/plaso/log2timeline debian/plaso-static/usr/lib/plaso
 	install -D -p -m755 debian/tmp/usr/lib/plaso/plaso_console debian/plaso-static/usr/lib/plaso
 	install -D -p -m755 debian/tmp/usr/lib/plaso/plaso_information debian/plaso-static/usr/lib/plaso
 	install -D -p -m755 debian/tmp/usr/lib/plaso/psort debian/plaso-static/usr/lib/plaso
-	install -D -p -m755 debian/tmp/usr/lib/plaso/IPython/config/profile/README_STARTUP debian/plaso-static/usr/lib/plaso/IPython/config/profile
 
 override_dh_installmenu:
 
