@@ -37,7 +37,7 @@ class Sql4n6(output.LogOutputFormatter):
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
   META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
-                 'color', 'type']
+                 'color', 'type', 'record_number']
 
   def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc,
                fields=None, append=False, set_status=None):
@@ -75,7 +75,7 @@ class Sql4n6(output.LogOutputFormatter):
       raise IOError('Can\'t connect to stdout as database, '
                     'please specify a file.')
 
-    if os.path.isfile(self.filehandle):
+    if (not self.append) and os.path.isfile(self.filehandle):
       raise IOError(
           (u'Unable to use an already existing file for output '
            '[%s]' % self.filehandle))
@@ -89,24 +89,30 @@ class Sql4n6(output.LogOutputFormatter):
       self.curs.execute(
           ('CREATE TABLE log2timeline (timezone TEXT, '
            'MACB TEXT, source TEXT, sourcetype TEXT, type TEXT, user TEXT, '
-           'host TEXT, short TEXT, desc TEXT, version TEXT, filename '
-           'TEXT, inode TEXT, notes TEXT, format TEXT, extra TEXT, datetime '
-           'datetime, reportnotes TEXT, inreport TEXT, tag TEXT,'
-           'color TEXT, offset INT, store_number INT, store_index INT,'
-           'vss_store_number INT)'))
+           'host TEXT, desc TEXT, filename TEXT, inode TEXT, notes TEXT, '
+           'format TEXT, extra TEXT, datetime datetime, reportnotes TEXT, '
+           'inreport TEXT, tag TEXT, color TEXT, offset INT,'
+           'store_number INT, store_index INT, vss_store_number INT,'
+           'url TEXT, record_number TEXT,'
+           'event_identifier TEXT, event_type TEXT, event_category TEXT,'
+           'source_name TEXT, user_sid TEXT, computer_name TEXT,'
+           'event_level TEXT, title TEXT, typed_count INT, description TEXT,'
+           'local_path TEXT, network_path TEXT, command_line_arguments TEXT,'
+           'env_var_location TEXT, relative_path TEXT, working_directory TEXT,'
+           'icon_location TEXT)'))
       if self.set_status:
         self.set_status('Created table log2timeline.')
-
+    
       for field in self.META_FIELDS:
         self.curs.execute(
             'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
       if self.set_status:
         self.set_status('Created table l2t_%s' % field)
-
+          
       self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
       if self.set_status:
         self.set_status('Created table l2t_tags')
-
+        
       self.curs.execute('CREATE TABLE l2t_saved_query (name TEXT, query TEXT)')
       if self.set_status:
         self.set_status('Created table l2t_saved_query')
@@ -134,7 +140,7 @@ class Sql4n6(output.LogOutputFormatter):
     # Get meta info and save into their tables.
     if self.set_status:
       self.set_status('Checking meta data...')
-
+      
     for field in self.META_FIELDS:
       vals = self._GetDistinctValues(field)
       self.curs.execute('DELETE FROM l2t_%ss' % field)
@@ -208,8 +214,10 @@ class Sql4n6(output.LogOutputFormatter):
 
     msg, msg_short = formatter.GetMessages(event_object)
 
-    date_use = timelib.Timestamp.CopyToDatetime(
-        event_object.timestamp, self.zone)
+    date_use = timelib.DateTimeFromTimestamp(event_object.timestamp, self.zone)
+    if not date_use:
+      logging.error(u'Unable to process date for entry: %s', msg)
+      return
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         formatter.format_string)
@@ -226,8 +234,9 @@ class Sql4n6(output.LogOutputFormatter):
         inode = event_object.pathspec.image_inode
 
     date_use_string = '%04d-%02d-%02d %02d:%02d:%02d' %(
-        date_use.month, date_use.day, date_use.year, date_use.hour,
+        date_use.year, date_use.month, date_use.day, date_use.hour,
         date_use.minute, date_use.second)
+        
     row = (str(self.zone),
            helper.GetLegacy(event_object),
            getattr(event_object, 'source_short', 'LOG'),
@@ -235,9 +244,7 @@ class Sql4n6(output.LogOutputFormatter):
            event_object.timestamp_desc,
            getattr(event_object, 'username', '-'),
            getattr(event_object, 'hostname', '-'),
-           msg_short,
            msg,
-           '2',
            getattr(event_object, 'filename', '-'),
            inode,
            getattr(event_object, 'notes', '-'),
@@ -251,15 +258,41 @@ class Sql4n6(output.LogOutputFormatter):
            event_object.offset,
            event_object.store_number,
            event_object.store_index,
-           self.GetVSSNumber(event_object))
+           self.GetVSSNumber(event_object),
+           getattr(event_object, 'url', '-'),
+           getattr(event_object, 'record_number', 0),
+           getattr(event_object, 'event_identifier', '-'),
+           getattr(event_object, 'event_type', '-'),
+           getattr(event_object, 'event_category', '-'),
+           getattr(event_object, 'source_name', '-'),
+           getattr(event_object, 'user_sid', '-'),
+           getattr(event_object, 'computer_name', '-'),
+           getattr(event_object, 'event_level', '-'),
+           getattr(event_object, 'title', '-'),
+           getattr(event_object, 'typed_count', 0),
+           getattr(event_object, 'description', '-'),
+           getattr(event_object, 'local_path', '-'),
+           getattr(event_object, 'network_path', '-'),
+           getattr(event_object, 'command_line_arguments', '-'),
+           getattr(event_object, 'evn_var_location', '-'),
+           getattr(event_object, 'relative_path', '-'),
+           getattr(event_object, 'working_directory', '-'),
+           getattr(event_object, 'icon_location', '-')
+           )
 
     self.curs.execute(
         ('INSERT INTO log2timeline(timezone, MACB, source, '
-         'sourcetype, type, user, host, short, desc, version, filename, '
+         'sourcetype, type, user, host, desc, filename, '
          'inode, notes, format, extra, datetime, reportnotes, inreport,'
-         'tag, color, offset, store_number, store_index, vss_store_number)'
-         ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-         '?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
+         'tag, color, offset, store_number, store_index, vss_store_number,'
+         'URL, record_number, event_identifier, event_type, event_category,'
+         'source_name, user_sid, computer_name, event_level, title,'
+         'typed_count, description, local_path, network_path,'
+         'command_line_arguments, env_var_location, relative_path,'
+         'working_directory, icon_location)'
+         ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
+         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
+         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
 
     self.count += 1
 
