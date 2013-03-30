@@ -411,7 +411,7 @@ class Engine(object):
     for worker_nr in range(self.config.workers):
       logging.debug('Starting worker: %d', worker_nr)
       my_worker = worker.PlasoWorker(
-          my_collector, my_storage, self.config, pre_obj)
+          worker_nr, my_collector, my_storage, self.config, pre_obj)
       self.worker_threads.append(multiprocessing.Process(
           name='Worker_%d' % worker_nr,
           target=my_worker.Run))
