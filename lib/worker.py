@@ -25,6 +25,7 @@ of extracting EventObjects from it.
 import copy
 import gzip
 import logging
+import os
 import pdb
 import tarfile
 import zipfile
@@ -69,7 +70,7 @@ class PlasoWorker(object):
   # This is only used temporary until files can be classified.
   magic_max_length = 0
 
-  def __init__(self, proc_queue, stor_queue, config, pre_obj):
+  def __init__(self, identifier, proc_queue, stor_queue, config, pre_obj):
     """Constructor for the class.
 
     Args:
@@ -79,6 +80,7 @@ class PlasoWorker(object):
       pre_obj: A PlasoPreprocess object containing information collected from
       image.
     """
+    self._identifier = identifier
     self._proc_queue = proc_queue
     self._stor_queue = stor_queue
     self.config = config
@@ -95,7 +97,8 @@ class PlasoWorker(object):
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
-    logging.debug('Starting to monitor process queue.')
+    logging.info('Worker %d (PID: %d) started monitoring process queue.' % (
+        self._identifier, os.getpid()))
     for item in self._proc_queue.PopItems():
       pathspec = event.EventPathSpec()
       try:
@@ -116,7 +119,9 @@ class PlasoWorker(object):
         logging.warning(u'Unable to parse file: %s (%s)', pathspec.file_path, e)
         logging.warning(
             u'Proto\n%s\n%s\n%s', '-+' * 20, pathspec.ToProto(), '-+' * 20)
-    logging.debug('Processing is completed.')
+
+    logging.info('Worker %d (PID: %d) stopped monitoring process queue.' % (
+        self._identifier, os.getpid()))
 
   def ParseAllFiles(self, filehandle):
     """Parse every file that can be extracted from a PFile object.

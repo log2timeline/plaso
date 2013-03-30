@@ -57,7 +57,7 @@ def Main():
 
   arg_parser.add_argument(
       '-i', '--image', dest='image', action='store_true', default=False,
-      help='Indicates that this is an image instaed of a regular file.')
+      help='Indicates that this is an image instead of a regular file.')
 
   arg_parser.add_argument(
       '--vss', dest='parse_vss', action='store_true', default=False,

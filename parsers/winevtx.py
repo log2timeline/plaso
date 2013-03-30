@@ -100,7 +100,7 @@ class WinEvtxParser(parser.PlasoParser):
         evtx_record = evtx_file.get_recovered_record(record_index)
         yield WinEvtxRecordEvent(evtx_record, recovered=True)
       except IOError as exception:
-        logging.info(
+        logging.debug(
             '[%s] unable to parse recovered event record: %d in file: %s: '
             '%s' % (self.NAME, record_index, file_object.name, exception))
         pass
