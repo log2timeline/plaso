@@ -259,7 +259,7 @@ class Engine(object):
     logging.debug('Starting worker.')
     # Start processing entries.
     my_worker = worker.PlasoWorker(
-        collection_queue, storage_queue, self.config, pre_obj)
+        0, collection_queue, storage_queue, self.config, pre_obj)
     my_worker.Run()
     logging.debug('Worker process done.')
 
