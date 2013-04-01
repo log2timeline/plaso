@@ -48,5 +48,5 @@ class FirefoxPageVisitFormatter(eventdata.EventFormatter):
 
   # TODO: make extra conditional formatting.
   FORMAT_STRING = (u'{url} ({title}) [count: {visit_count}] '
-                   u'Host: {hostname}{extra}')
+                   u'Host: {host}{extra}')
   FORMAT_STRING_SHORT = u'URL: {url}'

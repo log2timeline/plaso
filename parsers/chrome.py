@@ -86,7 +86,7 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
     self.offset = row_id
     self.url = url
     self.title = title
-    self.hostname = hostname
+    self.host = hostname
     self.typed_count = typed_count
     self.extra = extra
 
