@@ -103,7 +103,7 @@ class FirefoxPlacesBookmark(event.EventContainer):
     self.title = title
     self.url = url
     self.places_title = places_title
-    self.hostname = hostname
+    self.host = hostname
     self.visit_count = visit_count
 
 
@@ -137,7 +137,7 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
     self.offset = row_id
     self.url = url
     self.title = title
-    self.hostname = hostname
+    self.host = hostname
     self.visit_count = visit_count
     if extra:
       self.extra = u' %s' % extra
