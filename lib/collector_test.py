@@ -148,10 +148,11 @@ class PlasoTargetedImageTest(unittest.TestCase):
 
     # pathspecs[1]
     # type: TSK
-    # file_path: '//passwords.txt'
+    # file_path: '///passwords.txt'
     # container_path: 'test_data/image.dd'
     # image_offset: 0
-    self.assertEquals(pathspecs[1].file_path, '//passwords.txt')
+    # TODO: Remove this unnecessary buildup of slashes in front.
+    self.assertEquals(pathspecs[1].file_path, '///passwords.txt')
 
 
 class PlasoTargetedDirectory(unittest.TestCase):
@@ -193,7 +194,7 @@ class PlasoTargetedDirectory(unittest.TestCase):
 
     self.assertTrue('./lib/collector_filter.py' in paths)
     self.assertTrue('./lib/collector_filter_test.py' in paths)
-    self.assertTrue('./AUTHORS' in paths)
+    self.assertTrue('././AUTHORS' in paths)
 
 
 if __name__ == '__main__':

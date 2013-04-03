@@ -62,18 +62,19 @@ class CollectionFilter(object):
     """A generator yielding all pathspecs from the given filters."""
     for filter_path, filter_file in self._filters:
       try:
-        path = self._collector.FindPath(filter_path)
+        paths = list(self._collector.FindPaths(filter_path))
       except errors.PathNotFound as e:
         logging.warning(u'Unable to find path: [{}]'.format(filter_path))
         continue
       try:
-        for file_path in self._collector.GetFilePaths(path, filter_file):
-          fh = self._collector.OpenFile(file_path)
-          yield fh.pathspec_root.ToProtoString()
-      except errors.PreProcessFail:
+        for path in paths:
+          for file_path in self._collector.GetFilePaths(path, filter_file):
+            fh = self._collector.OpenFile(file_path)
+            yield fh.pathspec_root.ToProtoString()
+      except errors.PreProcessFail as e:
         logging.warning(
-            u'Unable to parse the filter: {}|{} - path not found.'.format(
-                filter_path, filter_file))
+            u'Unable to parse the filter: {}|{} - path not found [{}].'.format(
+                filter_path, filter_file, e))
         continue
       except sre_constants.error:
         logging.warning(
