@@ -96,32 +96,6 @@ class Engine(object):
     if self.config.image:
       self.config.preprocess = True
 
-  def _GuessOS(self, col_obj):
-    """Return a guess for the OS we are pre-processing."""
-    # TODO: Add error handling for WindowsError, a builtin
-    # error in Windows, but not found otherwise (so no global error exists).
-    # This causes the tool to crash on Windows if preprocessor is unable to
-    # guess the OS, like when accidentally run against a directory.
-    try:
-      if col_obj.FindPath('/(Windows|WINNT)/System32'):
-        return 'Windows'
-    except errors.PathNotFound:
-      pass
-
-    try:
-      if col_obj.FindPath('/System/Library'):
-        return 'OSX'
-    except errors.PathNotFound:
-      pass
-
-    try:
-      if col_obj.FindPath('/etc'):
-        return 'Linux'
-    except errors.PathNotFound:
-      pass
-
-    return 'None'
-
   def _PreProcess(self, pre_obj):
     """Run the preprocessors."""
 
@@ -139,7 +113,7 @@ class Engine(object):
       return
 
     if not hasattr(self.config, 'os'):
-      self.config.os = self._GuessOS(pre_collector)
+      self.config.os = preprocess.GuessOS(pre_collector)
 
     plugin_list = preprocessors.PreProcessList(pre_obj, pre_collector)
     pre_obj.guessed_os = self.config.os

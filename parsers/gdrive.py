@@ -69,7 +69,7 @@ class GoogleDriveSnapshotCloudEntryEventContainer(event.EventContainer):
     self.url = url
     self.path = path
     self.size = size
-    self.doc_type = self._DOC_TYPES[doc_type]
+    self.doc_type = self._DOC_TYPES.get(doc_type, 'UNKNOWN')
 
 
 class GoogleDriveSnapshotLocalEntryEvent(event.EventObject):

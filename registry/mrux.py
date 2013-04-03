@@ -64,7 +64,7 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
 
   def Process(self, key):
     """Determine if we can process this registry key or not."""
-    if 'BagMRU' in key.path:
+    if 'BagMRU' in key.path or 'Explorer\\StreamMRU' in key.path:
       return None
 
     return super(MRUexPlugin, self).Process(key)

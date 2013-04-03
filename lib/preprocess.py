@@ -226,17 +226,24 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
   def GetValue(self):
     """Return the value gathered from a registry key for preprocessing."""
-    sys_dir = self._collector.FindPath(self.REG_PATH)
+    sys_dirs = list(self._collector.FindPaths(self.REG_PATH))
+    if not sys_dirs:
+      raise errors.PreProcessFail(
+          u'Unable to find file name: {}/{}'.format(
+              self.REG_PATH, self.REG_FILE))
+
+    sys_dir = sys_dirs[0]
     file_name = self._collector.GetFilePaths(sys_dir, self.REG_FILE)
     if not file_name:
       raise errors.PreProcessFail(
-          u'Unable to find file name: %s/%s', sys_dir, self.REG_FILE)
+          u'Unable to find file name: {}/{}'.format(
+              sys_dir, self.REG_FILE))
 
     try:
       hive_fh = self._collector.OpenFile(file_name[0])
     except IOError as e:
       raise errors.PreProcessFail(
-          u'Unable to open file: %s [%s]', file_name[0], e)
+          u'Unable to open file: {} [{}]'.format(file_name[0], e))
 
     codepage = getattr(self._obj_store, 'code_page', 'cp1252')
     try:
@@ -280,7 +287,9 @@ class PreprocessGetPath(PreprocessPlugin):
 
   def GetValue(self):
     """Return the path as found by the collector."""
-    return self._collector.FindPath(self.PATH)
+    paths = list(self._collector.FindPaths(self.PATH))
+    if paths:
+      return paths[0]
 
 
 class Collector(object):
@@ -295,7 +304,7 @@ class Collector(object):
     """
     self._pre_obj = pre_obj
 
-  def FindPath(self, path_expression):
+  def FindPaths(self, path_expression):
     """Return a path from a regular expression or a potentially wrong path.
 
     This method should attempt to find the correct file path given potentially
@@ -312,8 +321,14 @@ class Collector(object):
     Raises:
       errors.PathNotFound: If unable to compile any regular expression.
     """
+    if not path_expression:
+      return self.GetPaths('/')
+
     re_list = []
     for path_part in path_expression.split('/'):
+      if not path_part:
+        continue
+
       if '{' in path_part:
         re_list.append(self.GetExtendedPath(path_part))
       else:
@@ -325,18 +340,18 @@ class Collector(object):
               path_part, e)
           raise errors.PathNotFound(u'Unable to compile regex for path: %s', e)
 
-    return self.GetPath(re_list)
+    return self.GetPaths(re_list)
 
   @abc.abstractmethod
-  def GetPath(self, path_list):
-    """Return a path from an extended regular expression path.
+  def GetPaths(self, path_list):
+    """Return a list of paths from an extended regular expression path.
 
     Args:
       path_list: A list of either regular expressions or expanded
       paths (strings).
 
     Returns:
-      The string, presenting the correct path (None if not found).
+      A list of strings, presenting the correct paths (None if not found).
     """
 
   def GetExtendedPath(self, path):
@@ -351,16 +366,19 @@ class Collector(object):
     Returns:
       A string containing the extended path.
     """
-    path = utils.PathReplacer(self._pre_obj, path)
-    return path.GetPath()
+    try:
+      path_replacer = utils.PathReplacer(self._pre_obj, path)
+      return path_replacer.GetPath()
+    except errors.PathNotFound as e:
+      logging.error(u'Unable to extend path %s, reason: %s', path, e)
 
   @abc.abstractmethod
   def GetFilePaths(self, path, file_name):
     """Return a filepath to a file given a name pattern and a path.
 
     Args:
-      path: The correct path to the file, perhaps gathered from GetPath
-      or FindPath.
+      path: The correct path to the file, perhaps gathered from GetPaths
+      or FindPaths.
       file_name: The filename to the file (may be a regular expression).
 
     Returns:
@@ -380,42 +398,67 @@ class FileSystemCollector(Collector):
     super(FileSystemCollector, self).__init__(pre_obj)
     self._mount_point = mount_point
 
-  def GetPath(self, path_list):
+  def GetPaths(self, path_list):
     """Find the path on the OS if it exists."""
-    real_path = u''
+    paths = []
 
     for part in path_list:
       if isinstance(part, (str, unicode)):
-        real_path = os.path.join(real_path, part)
+        if part == '/':
+          part = os.sep
+
+        if len(paths):
+          for index, path in enumerate(paths):
+            paths[index] = os.path.join(path, part)
+        else:
+          paths.append(part)
+
       else:
         found_path = False
-        for entry in os.listdir(os.path.join(self._mount_point, real_path)):
-          m = part.match(entry)
-          if m:
-            real_path = os.path.join(real_path, m.group(0))
-            found_path = True
-            break
+        if not paths:
+          paths.append('.')
+
+        old_paths = list(paths)
+        paths = []
+        for path in old_paths:
+          for entry in os.listdir(os.path.join(self._mount_point, path)):
+            m = part.match(entry)
+            if m:
+              paths.append(os.path.join(path, m.group(0)))
+              found_path = True
         if not found_path:
           raise errors.PathNotFound(
-              u'Path not found inside %s/%s', self._mount_point, real_path)
+              u'Path not found inside %s/%s', self._mount_point, paths)
 
-    if not os.path.isdir(os.path.join(self._mount_point, real_path)):
-      logging.warning(
-          u'File path does not seem to exist (%s/%s)', self._mount_point,
-          real_path)
-      return None
+    for real_path in paths:
+      if not os.path.isdir(os.path.join(self._mount_point, real_path)):
+        logging.warning(
+            u'File path does not seem to exist (%s/%s)', self._mount_point,
+            real_path)
+        continue
 
-    return real_path
+      ret = real_path
+      if real_path[0] == '.':
+        ret = real_path[2:]
+
+      yield ret
 
   def GetFilePaths(self, path, file_name):
     """Return a list of files given a path and a pattern."""
     ret = []
     file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
-    for entry in os.listdir(os.path.join(self._mount_point, path)):
+    if path == os.sep:
+      directory = self._mount_point
+      path_use = '.'
+    else:
+      directory = os.path.join(self._mount_point, path)
+      path_use = path
+
+    for entry in os.listdir(directory):
       m = file_re.match(entry)
       if m:
-        if os.path.isfile(os.path.join(self._mount_point, path, m.group(0))):
-          ret.append(os.path.join(path, m.group(0)))
+        if os.path.isfile(os.path.join(directory, m.group(0))):
+          ret.append(os.path.join(path_use, m.group(0)))
     return ret
 
   def OpenFile(self, path):
@@ -434,40 +477,55 @@ class TSKFileCollector(Collector):
     self._fscache = pfile.FilesystemCache()
     self._fs_obj = self._fscache.Open(image_path, offset)
 
-  def GetPath(self, path_list):
+  def GetPaths(self, path_list):
     """Return a path."""
-    real_path = u''
+    paths = []
 
     for part in path_list:
       if isinstance(part, (str, unicode)):
-        real_path = u'/'.join([real_path, part])
+        if paths:
+          for index, path in enumerate(paths):
+            paths[index] = u'/'.join([path, part])
+        else:
+          paths.append(u'/{}'.format(part))
       else:
         found_path = False
-        try:
-          directory = self._fs_obj.fs.open_dir(real_path)
-        except IOError as e:
-          logging.error('Unable to open directory (TSK): %s', e)
-          raise errors.PathNotFound(u'Path not found inside: %s', real_path)
-        for f in directory:
-          try:
-            name = f.info.name.name
-            if not f.info.meta:
-              continue
-          except AttributeError as e:
-            logging.error('[ParseImage] Problem reading file [%s], error: %s',
-                          name, e)
-            continue
+        if not paths:
+          paths.append('/')
 
-          m = part.match(name)
-          if m:
-            real_path = u'/'.join([real_path, m.group(0)])
-            found_path = True
-            break
+        old_paths = list(paths)
+        paths = []
+        for real_path in old_paths:
+          try:
+            directory = self._fs_obj.fs.open_dir(real_path)
+          except IOError as e:
+            logging.error('Unable to open directory (TSK): %s', e)
+            raise errors.PathNotFound(u'Path not found inside: %s', real_path)
+          for f in directory:
+            try:
+              name = f.info.name.name
+              if not f.info.meta:
+                continue
+            except AttributeError as e:
+              logging.error('[ParseImage] Problem reading file [%s], error: %s',
+                            name, e)
+              continue
+
+            if name == '.' or name == '..':
+              continue
+
+            m = part.match(name)
+            if m:
+              append_path = u'/'.join([real_path, m.group(0)])
+              found_path = True
+              paths.append(append_path)
+
         if not found_path:
           raise errors.PathNotFound(
               u'Path not found inside %s', real_path)
 
-    return real_path
+    for real_path in paths:
+      yield real_path
 
   def GetFilePaths(self, path, file_name):
     """Return a list of files given a path and a pattern."""
@@ -534,19 +592,19 @@ def GuessOS(col_obj):
   # This causes the tool to crash on Windows if preprocessor is unable to
   # guess the OS, like when accidentally run against a directory.
   try:
-    if col_obj.FindPath('/(Windows|WINNT)/System32'):
+    if col_obj.FindPaths('/(Windows|WINNT)/System32'):
       return 'Windows'
   except errors.PathNotFound:
     pass
 
   try:
-    if col_obj.FindPath('/System/Library'):
+    if col_obj.FindPaths('/System/Library'):
       return 'OSX'
   except errors.PathNotFound:
     pass
 
   try:
-    if col_obj.FindPath('/etc'):
+    if col_obj.FindPaths('/etc'):
       return 'Linux'
   except errors.PathNotFound:
     pass

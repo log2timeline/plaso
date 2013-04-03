@@ -25,6 +25,13 @@ class WinGetSystemPath(preprocess.PreprocessGetPath):
   PATH = '(Windows|WinNT)/System32'
 
 
+class WinGetWinDirPath(preprocess.PreprocessGetPath):
+  """Get the system path."""
+  SUPPORTED_OS = ['Windows']
+  ATTRIBUTE = 'windir'
+  PATH = '(Windows|WinNT|WINNT35|WTSRV)'
+
+
 class WinGetRegistryPath(preprocess.PreprocessGetPath):
   """Get the system registry path."""
   SUPPORTED_OS = ['Windows']
