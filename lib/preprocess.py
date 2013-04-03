@@ -498,8 +498,7 @@ class TSKFileCollector(Collector):
         for real_path in old_paths:
           try:
             directory = self._fs_obj.fs.open_dir(real_path)
-          except IOError as e:
-            logging.error('Unable to open directory (TSK): %s', e)
+          except IOError:
             raise errors.PathNotFound(u'Path not found inside: %s', real_path)
           for f in directory:
             try:
