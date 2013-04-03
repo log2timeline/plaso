@@ -299,7 +299,7 @@ class Engine(object):
       elif pre_obj.guessed_os == 'Linux':
         prepend_filter = 'linux'
 
-    if 'parser inlist' in self.config.filter:
+    if 'parser ' in self.config.filter:
       prepend_filter = ''
 
     if prepend_filter:

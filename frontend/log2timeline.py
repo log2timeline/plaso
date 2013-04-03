@@ -52,7 +52,7 @@ def Main():
       help='The buffer size for the output (defaults to 196MiB).')
 
   arg_parser.add_argument(
-      '--workers', dest='workers', action='store', type=int, default=10,
+      '--workers', dest='workers', action='store', type=int, default=4,
       help='The number of worker threads [default 10].')
 
   arg_parser.add_argument(
