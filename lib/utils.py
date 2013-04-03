@@ -22,7 +22,7 @@ RESERVED_VARIABLES = frozenset(
     ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue', 'timestamp',
      'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
      'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
-     'tag', 'data_type'])
+     'tag', 'data_type', 'metadata'])
 
 
 def GetUnicodeString(string):
@@ -72,6 +72,6 @@ class PathReplacer(lexer.Lexer):
       self._path.append(replace)
     else:
       raise errors.PathNotFound(
-          u'Path variable: %s not discovered yet.', match.group(1))
+          u'Path variable: {} not discovered yet.'.format(match.group(1)))
 
 

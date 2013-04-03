@@ -376,14 +376,7 @@ class TargetedImageCollector(SimpleImageCollector):
 
       if self._vss:
         logging.debug('Searching for VSS')
-        volume = pyvshadow.volume()
-        fh = vss.VShadowVolume(self._image, offset)
-        vss_numbers = 0
-        try:
-          volume.open_file_object(fh)
-          vss_numbers = volume.number_of_stores
-        except IOError as e:
-          logging.warning('Error while trying to read VSS information: %s', e)
+        vss_numbers = vss.GetVssStoreCount(self._image, offset)
         logging.info('Collecting from VSS.')
         stores = []
         if self._vss_stores:
