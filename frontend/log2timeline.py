@@ -52,8 +52,9 @@ def Main():
       help='The buffer size for the output (defaults to 196MiB).')
 
   arg_parser.add_argument(
-      '--workers', dest='workers', action='store', type=int, default=4,
-      help='The number of worker threads [default 10].')
+      '--workers', dest='workers', action='store', type=int, default=0,
+      help=('The number of worker threads [defaults to available system '
+            'CPU\'s minus three].'))
 
   arg_parser.add_argument(
       '-i', '--image', dest='image', action='store_true', default=False,
@@ -216,6 +217,13 @@ def Main():
           u'Error with collection filter, file: {} does not exist.'.format(
               options.file_filter))
       sys.exit(1)
+
+  if options.workers < 1:
+    # One worker for each "available" CPU (minus other processes).
+    cpus = multiprocessing.cpu_count()
+    options.workers = cpus
+    if cpus > 3:
+      options.workers -= 3
 
   try:
     l2t = engine.Engine(options)

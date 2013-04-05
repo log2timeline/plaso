@@ -24,6 +24,7 @@ import logging
 import multiprocessing
 import os
 import pdb
+import signal
 import sys
 import time
 import traceback
@@ -129,13 +130,14 @@ class Engine(object):
 
     # Set the timezone.
     if hasattr(pre_obj, 'time_zone_str'):
-      logging.info(u'Timezone set to: %s', pre_obj.time_zone_str)
+      logging.info(u'Setting timezone to: %s', pre_obj.time_zone_str)
       try:
         pre_obj.zone = pytz.timezone(pre_obj.time_zone_str)
       except pytz.UnknownTimeZoneError:
         if hasattr(self.config, 'zone'):
           logging.warning(
-              'TimeZone was not properly set using user supplied one.')
+              (u'Unable to automatically configure timezone, falling back '
+               'to the user supplied one [%s]'), self.config.zone.zone)
           pre_obj.zone = self.config.zone
         else:
           logging.warning('TimeZone was not properly set, defaults to UTC')
@@ -484,8 +486,23 @@ class Engine(object):
 
     try:
       logging.warning('Waiting for workers to complete.')
-      for t in self.worker_threads:
-        t.join()
+      for number, worker in enumerate(self.worker_threads):
+        pid = worker.pid
+        logging.warning('Waiting for worker: %d [PID %d]', number, pid)
+        # Let's kill the process, different methods depending on the platform
+        # used.
+        if sys.platform.startswith('win'):
+          import ctypes
+          PROCESS_TERMINATE = 1
+          handle = ctypes.windll.kernel32.OpenProcess(
+              PROCESS_TERMINATE, False, pid)
+          ctypes.windll.kernel32.TerminateProcess(handle, -1)
+          ctypes.windll.kernel32.CloseHandle(handle)
+        else:
+          os.kill(pid, signal.SIGKILL)
+
+        logging.warning('Worker: %d CLOSED', pid)
+
       logging.warning('Workers completed.')
       if hasattr(self, 'storage_thread'):
         logging.warning('Waiting for storage.')

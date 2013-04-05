@@ -29,7 +29,7 @@ from plaso.lib import putils
 from plaso.lib import vss
 
 
-def ExtractFiles(my_collector, filter_file, export_path, prefix=''):
+def ExtractFiles(my_collector, filter_file, fscache, export_path, prefix=''):
   """Extracts files that match the filter."""
   col_fil = collector_filter.CollectionFilter(my_collector, filter_file)
 
@@ -107,7 +107,7 @@ def Main():
   plugin_list = preprocessors.PreProcessList(pre_obj, tsk_col)
 
   logging.info('Guessing OS')
-  guessed_os = preprocessors.GuessOS(tsk_col)
+  guessed_os = preprocess.GuessOS(tsk_col)
   logging.info('OS: %s', guessed_os)
   logging.info('Running preprocess.')
   for weight in plugin_list.GetWeightList(guessed_os):
@@ -121,7 +121,7 @@ def Main():
 
   logging.info('Preprocess done, saving files from image.')
   # Save the regular files.
-  ExtractFiles(tsk_col, options.filter, options.path)
+  ExtractFiles(tsk_col, options.filter, fscache, options.path)
   logging.info('Files extracted.')
 
   # Go through VSS if desired.
@@ -132,7 +132,8 @@ def Main():
       logging.info('Extracting files from VSS %d/%d', store_nr + 1, vss_numbers)
       vss_col = preprocess.VSSFileCollector(
           pre_obj, options.image, store_nr, options.offset * 512)
-      ExtractFiles(vss_col, options.filter, options.path, 'vss_%d' % store_nr)
+      ExtractFiles(
+          vss_col, options.filter, fscache, options.path, 'vss_%d' % store_nr)
 
 
 if __name__ == '__main__':

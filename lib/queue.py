@@ -59,7 +59,10 @@ class SimpleQueue(PlasoQueue):
   def PopItems(self):
     """Yield items from the queue."""
     while 1:
-      item = self._queue.get()
+      try:
+        item = self._queue.get()
+      except KeyboardInterrupt:
+        break
 
       if item == 'STOP':
         self.Close()
