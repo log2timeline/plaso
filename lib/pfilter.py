@@ -278,6 +278,10 @@ class TrueObject(object):
     """Save the text object so it can be used when comparing text."""
     self.txt = txt
 
+  def __getattr__(self, unused_attr):
+    """Return a TrueObject for every attribute request."""
+    return self
+
   def __eq__(self, unused_x):
     """Return true for tests of equality."""
     return True

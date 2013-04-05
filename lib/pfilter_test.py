@@ -231,6 +231,10 @@ class PFilterTest(unittest.TestCase):
     query = ('(parser contains "fake" or date < "2015-06-12") AND '
              'message CONTAINS "weird"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
+
+    query = ('(parser contains "fake" or date < "2015-06-12") AND '
+             'metadata.author CONTAINS "weird"')
+    parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 3)
 
 
