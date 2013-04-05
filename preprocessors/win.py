@@ -338,6 +338,7 @@ class WinRegTimeZone(preprocess.WinRegistryPreprocess):
   def ParseKey(self, key):
     """Extract timezone information from the registry."""
     value = key.GetValue('StandardName')
+    data = value.GetData()
     # do mapping to "true" value as determined by Olson database.
-    return self.ZONE_LIST.get(value.GetData(), value.GetData())
+    return self.ZONE_LIST.get(data.replace(' ', ''), data)
 
