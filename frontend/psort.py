@@ -400,6 +400,12 @@ def Main():
         try:
           MergeSort(range_checked_pb_nums, first, last,
                     output_render, my_args.filter)
+        except IOError as e:
+          # Piping results to "|head" for instance causes an IOError.
+          if 'Broken pipe' not in e:
+            logging.error('Processing stopped early: %s.', e)
+        except KeyboardInterrupt:
+          pass
         # Catching a very generic error in case we would like to debug
         # a potential crash in the tool.
         except Exception:

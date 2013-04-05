@@ -97,8 +97,9 @@ class PlasoWorker(object):
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
+    self.pid = os.getpid()
     logging.info('Worker %d (PID: %d) started monitoring process queue.' % (
-        self._identifier, os.getpid()))
+        self._identifier, self.pid))
     for item in self._proc_queue.PopItems():
       pathspec = event.EventPathSpec()
       try:
