@@ -94,12 +94,8 @@ class Sql4n6(output.LogOutputFormatter):
            'inreport TEXT, tag TEXT, color TEXT, offset INT,'
            'store_number INT, store_index INT, vss_store_number INT,'
            'url TEXT, record_number TEXT,'
-           'event_identifier TEXT, event_type TEXT, event_category TEXT,'
-           'source_name TEXT, user_sid TEXT, computer_name TEXT,'
-           'event_level TEXT, title TEXT, typed_count INT, description TEXT,'
-           'local_path TEXT, network_path TEXT, command_line_arguments TEXT,'
-           'env_var_location TEXT, relative_path TEXT, working_directory TEXT,'
-           'icon_location TEXT)'))
+           'event_identifier TEXT, event_type TEXT,'
+           'source_name TEXT, user_sid TEXT, computer_name TEXT)'))
       if self.set_status:
         self.set_status('Created table log2timeline.')
     
@@ -166,7 +162,7 @@ class Sql4n6(output.LogOutputFormatter):
             field_name))
     res = {}
     for row in self.curs.fetchall():
-      if row[0]:
+      if row[0] != '':
         res[row[0]] = int(row[1])
     return res
 
@@ -212,9 +208,18 @@ class Sql4n6(output.LogOutputFormatter):
       raise errors.NoFormatterFound(
           'Unable to output event, no formatter found.')
 
+    if (isinstance(
+      formatter, formatters.winreg.WinRegistryGenericFormatter) and
+        formatter.FORMAT_STRING.find('<|>') == -1):
+      formatter.FORMAT_STRING = u'[{keyname}]<|>{text}<|>'
+    elif isinstance(formatter, eventdata.ConditionalEventFormatter):
+      formatter.FORMAT_STRING_SEPARATOR = u'<|>'
+    elif isinstance(formatter, eventdata.EventFormatter):
+      formatter.format_string = formatter.format_string.replace('}', '}<|>')
     msg, msg_short = formatter.GetMessages(event_object)
 
-    date_use = timelib.DateTimeFromTimestamp(event_object.timestamp, self.zone)
+    date_use = timelib.Timestamp.CopyToDatetime(
+      event_object.timestamp, self.zone)
     if not date_use:
       logging.error(u'Unable to process date for entry: %s', msg)
       return
@@ -263,21 +268,9 @@ class Sql4n6(output.LogOutputFormatter):
            getattr(event_object, 'record_number', 0),
            getattr(event_object, 'event_identifier', '-'),
            getattr(event_object, 'event_type', '-'),
-           getattr(event_object, 'event_category', '-'),
            getattr(event_object, 'source_name', '-'),
            getattr(event_object, 'user_sid', '-'),
-           getattr(event_object, 'computer_name', '-'),
-           getattr(event_object, 'event_level', '-'),
-           getattr(event_object, 'title', '-'),
-           getattr(event_object, 'typed_count', 0),
-           getattr(event_object, 'description', '-'),
-           getattr(event_object, 'local_path', '-'),
-           getattr(event_object, 'network_path', '-'),
-           getattr(event_object, 'command_line_arguments', '-'),
-           getattr(event_object, 'evn_var_location', '-'),
-           getattr(event_object, 'relative_path', '-'),
-           getattr(event_object, 'working_directory', '-'),
-           getattr(event_object, 'icon_location', '-')
+           getattr(event_object, 'computer_name', '-')
            )
 
     self.curs.execute(
@@ -285,14 +278,10 @@ class Sql4n6(output.LogOutputFormatter):
          'sourcetype, type, user, host, desc, filename, '
          'inode, notes, format, extra, datetime, reportnotes, inreport,'
          'tag, color, offset, store_number, store_index, vss_store_number,'
-         'URL, record_number, event_identifier, event_type, event_category,'
-         'source_name, user_sid, computer_name, event_level, title,'
-         'typed_count, description, local_path, network_path,'
-         'command_line_arguments, env_var_location, relative_path,'
-         'working_directory, icon_location)'
+         'URL, record_number, event_identifier, event_type,'
+         'source_name, user_sid, computer_name)'
          ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
+         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
 
     self.count += 1
 
