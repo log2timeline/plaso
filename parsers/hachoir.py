@@ -95,25 +95,34 @@ class Hachoir(parser.PlasoParser):
 
     attributes = {}
     for meta in metatext:
-      if meta[0] == '-':
-        key, _, value = meta[2:].partition(':')
-        if not value:
-          continue
-        try:
-          date = metadata.get(key)
-          if isinstance(date, datetime.datetime):
-            container.Append(HachoirEvent(date, key))
-        except ValueError:
-          pass
-        if key in attributes:
-          if isinstance(attributes.get(key), list):
-            attributes[key].append(value)
-          else:
-            old_value = attributes.get(key)
-            attributes[key] = [old_value, value]
-            # TODO: Catch dates stored as TEXT such as last printed.
+      if meta[0] != '-' or len(meta) < 3:
+        continue
+      
+      key, _, value = meta[2:].partition(': ')
+
+      key2, _, value2 = value.partition(': ')
+      if key2 == 'LastPrinted' and value2 != 'False':
+        date_object = timelib.StringToDatetime(
+          value2, timezone=self._pre_obj.zone)
+        if isinstance(date_object, datetime.datetime):
+          container.Append(HachoirEvent(
+            date_object, key2))
+
+      try:
+        date = metadata.get(key)
+        if isinstance(date, datetime.datetime):
+          container.Append(HachoirEvent(date, key))
+      except ValueError:
+        pass
+      
+      if key in attributes:
+        if isinstance(attributes.get(key), list):
+          attributes[key].append(value)
         else:
-          attributes[key] = value
+          old_value = attributes.get(key)
+          attributes[key] = [old_value, value]
+      else:
+        attributes[key] = value
 
     length = len(container)
     if not length:

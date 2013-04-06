@@ -238,6 +238,61 @@ class TimeLibUnitTest(unittest.TestCase):
         timelib.Timestamp.CopyToDatetime(timestamp, timezone),
         datetime.datetime(2013, 3, 14, 21, 20, 8, 850041, tzinfo=timezone))
 
+  def testStringToDatetime(self):
+    """Test the StringToDatetime function."""
+    zone = pytz.timezone('EST')
+    timestring = '12-15-1984 05:13:00'
+    expected = 471953580
+    self.CompareTimestamps(expected, timestring, zone)
 
+    timestring = '12-15-1984 10:13:00Z'
+    expected = 471953580
+    self.CompareTimestamps(expected, timestring, zone)
+
+    timestring = '15/12/1984 10:13:00Z'
+    expected = 471953580
+    self.CompareTimestamps(expected, timestring, zone)
+
+    timestring = '15-12-84 10:13:00Z'
+    expected = 471953580
+    self.CompareTimestamps(expected, timestring, zone)
+
+    timestring = '15-12-84 10:13:00-04'
+    expected = 471967980
+    self.CompareTimestamps(expected, timestring, zone)
+
+    timestring = 'thisisnotadatetime'
+    expected = 0
+    self.CompareTimestamps(expected, timestring, zone)
+
+    zone = pytz.timezone('America/Chicago')
+    timestring = '12-15-1984 05:13:00'
+    expected = 471957180
+    self.CompareTimestamps(expected, timestring, zone)
+
+    zone = pytz.timezone('US/Pacific')
+    timestring = '12-15-1984 05:13:00'
+    expected = 471964380
+    self.CompareTimestamps(expected, timestring, zone)
+
+  def CompareTimestamps(self, expected, timestring,
+                        timezone=pytz.utc, fmt=''):
+    """Compare epoch values derived from StringToDatetime.
+    
+    Args:
+      expected: Excpected integer value of timestring.
+      timestring: A string formatted as a timestamp.
+      timezone: The timezone (pytz.timezone) object.
+      fmt: Optional argument that defines the format of a string
+           representation of a timestamp. By default the parser
+           tries to "guess" the proper format.
+    Returns:
+      A result object.
+
+    """
+    dt = timelib.StringToDatetime(timestring, timezone, fmt)
+    calculated = timelib.Timetuple2Timestamp(dt.timetuple())
+    self.assertEquals(calculated, expected)  
+            
 if __name__ == '__main__':
   unittest.main()

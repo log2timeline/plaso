@@ -24,6 +24,7 @@ a more human readable one.
 """
 import calendar
 import datetime
+import dateutil.parser
 import logging
 import time
 import pytz
@@ -331,8 +332,37 @@ def Timetuple2Timestamp(time_tuple):
   return int(calendar.timegm(time_tuple))
 
 
+def StringToDatetime(timestring, timezone=pytz.utc, fmt=''):
+  """Converts a string timestamp into a datetime object.
+
+  Args:
+    timestring: A string formatted as a timestamp.
+    timezone: The timezone (pytz.timezone) object.
+    fmt: Optional argument that defines the format of a string
+         representation of a timestamp. By default the parser
+         tries to "guess" the proper format.
+
+  Returns:
+    A datetime object.
+  """
+  try:
+    if fmt:
+      datetimeobject = dateutil.parser.parse(timestring, fmt)
+    else:
+      datetimeobject = dateutil.parser.parse(timestring)
+
+  except ValueError as error_msg:
+    logging.error(
+        u'Unable to copy {} to a datetime object, error: {}'.format(
+            timestring, error_msg))
+    return datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc)
+
+  if datetimeobject.tzinfo:
+    return datetimeobject.astimezone(pytz.utc)
+
+  return datetimeobject.replace(tzinfo=timezone).astimezone(pytz.utc)
+
 def GetCurrentYear():
   """Determines the current year."""
   dt = datetime.datetime.now()
   return dt.year
-
