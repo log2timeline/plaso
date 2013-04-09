@@ -19,6 +19,7 @@ This library serves as a basis for reading and parsing registry files in Plaso.
 It should provide a read interface to the registry irrelevant of the underlying
 registry library that is used to parse the actual registry file.
 """
+import logging
 from plaso.lib import win_registry_interface
 import pyregf
 
@@ -131,7 +132,16 @@ class WinRegistry(object):
     """
     self._hive = pyregf.file()
     self._hive.open_file_object(hive)
-    self._hive.set_ascii_codepage(codepage)
+    try:
+      # TODO: Add a more elegant error handling to this issue. There are some
+      # code pages that are not supported by the parent library. However we
+      # need to properly set the codepage so the library can properly interpret
+      # values in the registry.
+      self._hive.set_ascii_codepage(codepage)
+    except IOError:
+      logging.error(
+          u'Unable to set the registry codepage to: {}. Not setting it'.format(
+              codepage))
     # Keeping a copy of the volume due to limitation of the python bindings
     # for VSS.
     self._fh = hive
