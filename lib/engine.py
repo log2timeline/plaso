@@ -509,6 +509,11 @@ class Engine(object):
         self.storage_thread.join()
         logging.warning('Storage ended.')
 
+      logging.info('Exiting the tool.')
+      # Sometimes the main thread will be unresponsive.
+      if not sys.platform.startswith('win'):
+        os.kill(os.getpid(), signal.SIGKILL)
+
     except KeyboardInterrupt:
       logging.warning('Terminating all processes.')
       for t in self.worker_threads:
