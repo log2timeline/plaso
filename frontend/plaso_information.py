@@ -28,7 +28,12 @@ from plaso.lib import storage
 
 def GetInformation(params):
   """Return generator for all potential storage information in a container."""
-  store = storage.PlasoStorage(params.storage_file, read_only=True)
+  try:
+    store = storage.PlasoStorage(params.storage_file, read_only=True)
+  except IOError as e:
+    logging.error(u'Unable to open storage file: %s', e)
+    return
+
   infos = store.GetStorageInformation()
 
   if not infos:
