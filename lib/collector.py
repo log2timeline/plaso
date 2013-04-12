@@ -52,12 +52,13 @@ class PCollector(object):
 
     Args:
       directory: The path to the directory to be parsed.
-      to determine if they contain other files, read files within compressed.
     """
     for root, _, files in os.walk(directory):
       for filename in files:
         try:
           path = os.path.join(root, filename)
+          if os.path.islink(path):
+            continue
           if os.path.isfile(path):
             self.ProcessFile(path, self._queue)
         except IOError as e:
