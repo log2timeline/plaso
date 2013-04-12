@@ -558,6 +558,7 @@ class SQLiteParser(PlasoParser):
           tables.append(row[0])
 
         if not set(tables) >= set(self.REQUIRED_TABLES):
+          self._RemoveTempFile(name)
           raise errors.UnableToParseFile(
               u'File %s not a %s (wrong tables).' % (filehandle.name,
               self.NAME))
@@ -586,6 +587,10 @@ class SQLiteParser(PlasoParser):
     except sqlite3.DatabaseError as e:
       logging.debug('SQLite error occured: %s', e)
 
+    self._RemoveTempFile(name)
+
+  def _RemoveTempFile(self, name):
+    """Delete the temporary created db file from the system."""
     try:
       os.remove(name)
     except (OSError, IOError) as e:
