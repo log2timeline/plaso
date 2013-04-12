@@ -287,7 +287,10 @@ class PreprocessGetPath(PreprocessPlugin):
 
   def GetValue(self):
     """Return the path as found by the collector."""
-    paths = list(self._collector.FindPaths(self.PATH))
+    try:
+      paths = list(self._collector.FindPaths(self.PATH))
+    except errors.PathNotFound as e:
+      raise errors.PreProcessFail(u'Unable to find path: %s' % e)
     if paths:
       return paths[0]
 
@@ -482,6 +485,9 @@ class TSKFileCollector(Collector):
     paths = []
 
     for part in path_list:
+      if not part:
+        continue
+
       if isinstance(part, (str, unicode)):
         if paths:
           for index, path in enumerate(paths):
@@ -521,7 +527,7 @@ class TSKFileCollector(Collector):
 
         if not found_path:
           raise errors.PathNotFound(
-              u'Path not found inside %s', real_path)
+              u'Path not found inside %s' % real_path)
 
     for real_path in paths:
       yield real_path
@@ -591,19 +597,19 @@ def GuessOS(col_obj):
   # This causes the tool to crash on Windows if preprocessor is unable to
   # guess the OS, like when accidentally run against a directory.
   try:
-    if col_obj.FindPaths('/(Windows|WINNT)/System32'):
+    if list(col_obj.FindPaths('/(Windows|WINNT)/System32')):
       return 'Windows'
   except errors.PathNotFound:
     pass
 
   try:
-    if col_obj.FindPaths('/System/Library'):
+    if list(col_obj.FindPaths('/System/Library')):
       return 'OSX'
   except errors.PathNotFound:
     pass
 
   try:
-    if col_obj.FindPaths('/etc'):
+    if list(col_obj.FindPaths('/etc')):
       return 'Linux'
   except errors.PathNotFound:
     pass
