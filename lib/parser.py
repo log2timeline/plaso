@@ -558,7 +558,7 @@ class SQLiteParser(PlasoParser):
           tables.append(row[0])
 
         if not set(tables) >= set(self.REQUIRED_TABLES):
-          self._RemoveTempFile(name)
+          self._RemoveTempFile(name, filehandle.name)
           raise errors.UnableToParseFile(
               u'File %s not a %s (wrong tables).' % (filehandle.name,
               self.NAME))
@@ -587,16 +587,16 @@ class SQLiteParser(PlasoParser):
     except sqlite3.DatabaseError as e:
       logging.debug('SQLite error occured: %s', e)
 
-    self._RemoveTempFile(name)
+    self._RemoveTempFile(name, filehandle.name)
 
-  def _RemoveTempFile(self, name):
+  def _RemoveTempFile(self, name, orig_name):
     """Delete the temporary created db file from the system."""
     try:
       os.remove(name)
     except (OSError, IOError) as e:
       logging.warning(
           u'Unable to remove temporary file: %s [derived from %s] due to: %s',
-          name, filehandle.name, e)
+          name, orig_name, e)
 
   def Default(self, **kwarg):
     """Default callback method for SQLite events, does nothing."""
