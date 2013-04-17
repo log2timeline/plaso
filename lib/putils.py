@@ -28,6 +28,8 @@ from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.lib import utils
 
+import pytz
+
 # TODO: Refactor the putils library so it does not end up being a trash can
 # for all things core/front-end. We don't want this to be end up being a
 # collection for all methods that have no other home.
@@ -217,7 +219,7 @@ def PrintTimestamp(timestamp):
   """Print a human readable timestamp using ISO 8601 format."""
   # TODO: this function is only used by frontend/plaso_console.py
   # refactor that code to use timelib and remove this function.
-  return timelib.Timestamp.CopyToIsoFormat(timestamp)
+  return timelib.Timestamp.CopyToIsoFormat(timestamp, pytz.UTC)
 
 
 def GetEventData(evt, fscache=None, before=0, length=20):
