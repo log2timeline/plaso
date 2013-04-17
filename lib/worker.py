@@ -231,7 +231,7 @@ class PlasoWorker(object):
     """
     for pathspec in cls.SmartOpenFile(fh):
       try:
-        pathspec_orig = copy.copy(pathspec)
+        pathspec_orig = copy.deepcopy(pathspec)
         new_fh = pfile.OpenPFile(
             spec=pathspec, orig=pathspec_orig, fscache=fscache)
         yield new_fh
@@ -301,16 +301,18 @@ class PlasoWorker(object):
               u'ZIP but the wrong type of zip [%s]: %s', file_ending, fh.name)
           return
 
+        container_path = fh.pathspec.file_path
+        root_pathspec = fh.pathspec_root
         for info in fh_zip.infolist():
           if info.file_size > 0:
             logging.debug(u'Including: %s from ZIP into process queue.',
                           info.filename)
-            pathspec = fh.pathspec_root
+            pathspec = copy.deepcopy(root_pathspec)
             transfer_zip = event.EventPathSpec()
             transfer_zip.type = 'ZIP'
             transfer_zip.file_path = utils.GetUnicodeString(info.filename)
             transfer_zip.container_path = utils.GetUnicodeString(
-                fh.pathspec.file_path)
+                container_path)
             cls.SetNestedContainer(pathspec, transfer_zip)
             yield pathspec
         return
@@ -329,8 +331,9 @@ class PlasoWorker(object):
         transfer_gzip = event.EventPathSpec()
         transfer_gzip.type = 'GZIP'
         transfer_gzip.file_path = utils.GetUnicodeString(fh.pathspec.file_path)
-        cls.SetNestedContainer(fh.pathspec_root, transfer_gzip)
-        yield fh.pathspec_root
+        pathspec = copy.deepcopy(fh.pathspec_root)
+        cls.SetNestedContainer(pathspec, transfer_gzip)
+        yield pathspec
         return
       except (IOError, zlib.error, errors.SameFileType):
         pass
@@ -343,14 +346,15 @@ class PlasoWorker(object):
       try:
         fh.seek(0)
         fh_tar = tarfile.open(fileobj=fh, mode='r')
+        root_pathspec = fh.pathspec_root
+        file_path = fh.pathspec.file_path
         for name in fh_tar.getnames():
           logging.debug(u'Including: %s from TAR into process queue.', name)
-          pathspec = fh.pathspec_root
+          pathspec = copy.deepcopy(root_pathspec)
           transfer_tar = event.EventPathSpec()
           transfer_tar.type = 'TAR'
           transfer_tar.file_path = utils.GetUnicodeString(name)
-          transfer_tar.container_path = utils.GetUnicodeString(
-              fh.pathspec.file_path)
+          transfer_tar.container_path = utils.GetUnicodeString(file_path)
           cls.SetNestedContainer(pathspec, transfer_tar)
           yield pathspec
         return

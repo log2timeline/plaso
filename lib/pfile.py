@@ -474,7 +474,11 @@ class ZipFile(PlasoFile):
       self.inode = os.stat(path_name).st_ino
 
     self.name = self.pathspec.file_path
-    self.display_name = u'%s:%s' % (path_name, self.pathspec.file_path)
+    if filehandle:
+      self.display_name = u'%s:%s' % (filehandle.display_name,
+                                      self.pathspec.file_path)
+    else:
+      self.display_name = u'%s:%s' % (path_name, self.pathspec.file_path)
     self.offset = 0
     self.orig_fh = filehandle
     self.zipinfo = zf.getinfo(self.pathspec.file_path)
