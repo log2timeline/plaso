@@ -74,6 +74,7 @@ class PlasoWorker(object):
     """Constructor for the class.
 
     Args:
+      identifier: A thread identifier, usually an incrementing integer.
       proc_queue: A queue containing the filehandles needed to be processed.
       stor_queue: A queue that extracted EventObjects should be added to.
       config: A config object that contains all the tool's configuration.
@@ -98,8 +99,8 @@ class PlasoWorker(object):
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
     self.pid = os.getpid()
-    logging.info('Worker %d (PID: %d) started monitoring process queue.' % (
-        self._identifier, self.pid))
+    logging.info('Worker %d (PID: %d) started monitoring process queue.',
+                 self._identifier, self.pid)
     for item in self._proc_queue.PopItems():
       pathspec = event.EventPathSpec()
       try:
@@ -121,8 +122,9 @@ class PlasoWorker(object):
         logging.warning(
             u'Proto\n%s\n%s\n%s', '-+' * 20, pathspec.ToProto(), '-+' * 20)
 
-    logging.info('Worker %d (PID: %d) stopped monitoring process queue.' % (
-        self._identifier, os.getpid()))
+    logging.info(
+        'Worker %d (PID: %d) stopped monitoring process queue.',
+        self._identifier, os.getpid())
 
   def ParseAllFiles(self, filehandle):
     """Parse every file that can be extracted from a PFile object.

@@ -486,16 +486,16 @@ class Engine(object):
 
     try:
       logging.warning('Waiting for workers to complete.')
-      for number, worker in enumerate(self.worker_threads):
-        pid = worker.pid
+      for number, worker_thread in enumerate(self.worker_threads):
+        pid = worker_thread.pid
         logging.warning('Waiting for worker: %d [PID %d]', number, pid)
         # Let's kill the process, different methods depending on the platform
         # used.
         if sys.platform.startswith('win'):
           import ctypes
-          PROCESS_TERMINATE = 1
+          process_terminate = 1
           handle = ctypes.windll.kernel32.OpenProcess(
-              PROCESS_TERMINATE, False, pid)
+              process_terminate, False, pid)
           ctypes.windll.kernel32.TerminateProcess(handle, -1)
           ctypes.windll.kernel32.CloseHandle(handle)
         else:

@@ -186,7 +186,7 @@ class TimeLibUnitTest(unittest.TestCase):
     local_timestamp = 1364695200 * 1000000
 
     with self.assertRaises(pytz.NonExistentTimeError):
-        timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
+      timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
 
     # date -u -d"Mar 31, 2013 00:00:00" +"%s.%N"
     expected_timestamp = 1364688000 * 1000000
@@ -207,7 +207,7 @@ class TimeLibUnitTest(unittest.TestCase):
     local_timestamp = 1382841000 * 1000000
 
     with self.assertRaises(pytz.AmbiguousTimeError):
-        timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
+      timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
 
     # date -u -d"Oct 27, 2013 00:30:00" +"%s.%N"
     expected_timestamp = 1382833800 * 1000000
@@ -278,7 +278,7 @@ class TimeLibUnitTest(unittest.TestCase):
   def CompareTimestamps(self, expected, timestring,
                         timezone=pytz.utc, fmt=''):
     """Compare epoch values derived from StringToDatetime.
-    
+
     Args:
       expected: Excpected integer value of timestring.
       timestring: A string formatted as a timestamp.
@@ -292,7 +292,8 @@ class TimeLibUnitTest(unittest.TestCase):
     """
     dt = timelib.StringToDatetime(timestring, timezone, fmt)
     calculated = timelib.Timetuple2Timestamp(dt.timetuple())
-    self.assertEquals(calculated, expected)  
-            
+    self.assertEquals(calculated, expected)
+
+
 if __name__ == '__main__':
   unittest.main()
