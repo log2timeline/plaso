@@ -14,14 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for extracting metadata."""
-
-import calendar
-import time
 import datetime
 
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
@@ -41,7 +37,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class Hachoir(parser.PlasoParser):
-  """Parse meta data from files"""
+  """Parse meta data from files."""
 
   NAME = 'Hachoir'
   PARSER_TYPE = 'META'
@@ -61,17 +57,17 @@ class Hachoir(parser.PlasoParser):
           self.NAME, filehandle.name, 'Not fstream'))
 
     try:
-      parser = hachoir_parser.guessParser(fstream)
+      doc_parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, exception))
 
-    if not parser:
+    if not doc_parser:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, 'Not parser'))
 
     try:
-      metadata = hachoir_metadata.extractMetadata(parser)
+      metadata = hachoir_metadata.extractMetadata(doc_parser)
     except (AssertionError, AttributeError) as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
           self.NAME, filehandle.name, exception))
@@ -97,16 +93,16 @@ class Hachoir(parser.PlasoParser):
     for meta in metatext:
       if meta[0] != '-' or len(meta) < 3:
         continue
-      
+
       key, _, value = meta[2:].partition(': ')
 
       key2, _, value2 = value.partition(': ')
       if key2 == 'LastPrinted' and value2 != 'False':
         date_object = timelib.StringToDatetime(
-          value2, timezone=self._pre_obj.zone)
+            value2, timezone=self._pre_obj.zone)
         if isinstance(date_object, datetime.datetime):
           container.Append(HachoirEvent(
-            date_object, key2))
+              date_object, key2))
 
       try:
         date = metadata.get(key)
@@ -114,7 +110,7 @@ class Hachoir(parser.PlasoParser):
           container.Append(HachoirEvent(date, key))
       except ValueError:
         pass
-      
+
       if key in attributes:
         if isinstance(attributes.get(key), list):
           attributes[key].append(value)

@@ -98,17 +98,17 @@ class Sql4n6(output.LogOutputFormatter):
            'source_name TEXT, user_sid TEXT, computer_name TEXT)'))
       if self.set_status:
         self.set_status('Created table log2timeline.')
-    
+
       for field in self.META_FIELDS:
         self.curs.execute(
             'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
       if self.set_status:
         self.set_status('Created table l2t_%s' % field)
-          
+
       self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
       if self.set_status:
         self.set_status('Created table l2t_tags')
-        
+
       self.curs.execute('CREATE TABLE l2t_saved_query (name TEXT, query TEXT)')
       if self.set_status:
         self.set_status('Created table l2t_saved_query')
@@ -136,7 +136,7 @@ class Sql4n6(output.LogOutputFormatter):
     # Get meta info and save into their tables.
     if self.set_status:
       self.set_status('Checking meta data...')
-      
+
     for field in self.META_FIELDS:
       vals = self._GetDistinctValues(field)
       self.curs.execute('DELETE FROM l2t_%ss' % field)
@@ -219,7 +219,7 @@ class Sql4n6(output.LogOutputFormatter):
     msg, msg_short = formatter.GetMessages(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
-      event_object.timestamp, self.zone)
+        event_object.timestamp, self.zone)
     if not date_use:
       logging.error(u'Unable to process date for entry: %s', msg)
       return
@@ -241,7 +241,7 @@ class Sql4n6(output.LogOutputFormatter):
     date_use_string = '%04d-%02d-%02d %02d:%02d:%02d' %(
         date_use.year, date_use.month, date_use.day, date_use.hour,
         date_use.minute, date_use.second)
-        
+
     row = (str(self.zone),
            helper.GetLegacy(event_object),
            getattr(event_object, 'source_short', 'LOG'),
@@ -271,7 +271,7 @@ class Sql4n6(output.LogOutputFormatter):
            getattr(event_object, 'source_name', '-'),
            getattr(event_object, 'user_sid', '-'),
            getattr(event_object, 'computer_name', '-')
-           )
+          )
 
     self.curs.execute(
         ('INSERT INTO log2timeline(timezone, MACB, source, '
