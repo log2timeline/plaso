@@ -115,8 +115,9 @@ def Main():
       help='Turn on debug information in the tool.')
 
   arg_parser.add_argument(
-      '-w', '--write', dest='output', action='store', metavar='STORAGE_FILE',
-      help='The output file (needs to be defined).')
+      'output', action='store', metavar='STORAGE_FILE', default=None,
+      help=('The path to the output file, if the file exists it will get '
+            'appended to.'))
 
   arg_parser.add_argument(
       'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT',
