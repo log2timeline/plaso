@@ -33,7 +33,7 @@ def CheckVersion(library):
   if not m:
     return 0
 
-  _, _, end_part= m.group(1).rpartition('-')
+  _, _, end_part = m.group(1).rpartition('-')
   version, _, _ = end_part.partition('.')
 
   return int(version)
