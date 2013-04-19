@@ -68,7 +68,7 @@ URL_CODEREVIEW="https://codereview.appspot.com";
 # Get the description of the change list
 if [ "x`which json_xs`" != "x" ];
 then
-  DESCRIPTION=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER} | json_xs | grep '"subject"' | awk -F ':' '{print $2}' | cut -c3- | rev | cut -c3- | rev`;
+  DESCRIPTION=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER} | json_xs | grep '"subject"' | awk -F '"' '{print $(NF-1)}'`;
 else
   DESCRIPTION=`curl ${URL_CODEREVIEW}/${CL_NUMBER}/ -s | grep "Issue ${CL_NUMBER}" | awk -F ':' '{print $2}' | tail -1`;
 fi
