@@ -22,7 +22,7 @@ RESERVED_VARIABLES = frozenset(
     ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue', 'timestamp',
      'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
      'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
-     'tag', 'data_type', 'metadata', 'http_headers'])
+     'tag', 'data_type', 'metadata', 'http_headers', 'query'])
 
 
 def GetUnicodeString(string):

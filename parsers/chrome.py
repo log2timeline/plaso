@@ -104,7 +104,13 @@ class ChromeHistoryParser(parser.SQLiteParser):
                'visits WHERE urls.id = visits.url ORDER BY visits.visit_time'),
               'ParseLastVisitedRow'),
              (('SELECT id, full_path, url, start_time, received_bytes, '
-               'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
+               'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow'),
+             (('SELECT downloads.id AS id, downloads.start_time AS start_time,'
+               'downloads.target_path AS full_path, downloads_url_chains.url '
+               'AS url, downloads.received_bytes AS received_bytes, '
+               'downloads.total_bytes AS total_bytes FROM downloads, '
+               'downloads_url_chains WHERE downloads.id = '
+               'downloads_url_chains.id'), 'ParseFileDownloadedRow')]
 
   # The required tables.
   REQUIRED_TABLES = ('urls', 'visits', 'downloads')
