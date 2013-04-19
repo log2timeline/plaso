@@ -544,26 +544,32 @@ class SQLiteParser(PlasoParser):
         fh.write(data)
         data = filehandle.read(65536)
 
-    try:
-      with sqlite3.connect(name) as self.db:
+    with sqlite3.connect(name) as self.db:
+      try:
         self.db.row_factory = sqlite3.Row
         cursor = self.db.cursor()
+      except sqlite3.DatabaseError as e:
+        logging.debug('SQLite error occured: %s', e)
 
-        # Verify the table by reading in all table names and compare it to
-        # the list of required tables.
+      # Verify the table by reading in all table names and compare it to
+      # the list of required tables.
+      try:
         sql_results = cursor.execute(
             'SELECT name FROM sqlite_master WHERE type="table"')
-        tables = []
-        for row in sql_results:
-          tables.append(row[0])
+      except sqlite3.DatabaseError as e:
+        logging.debug('SQLite error occured: %s', e)
+      tables = []
+      for row in sql_results:
+        tables.append(row[0])
 
-        if not set(tables) >= set(self.REQUIRED_TABLES):
-          self._RemoveTempFile(name, filehandle.name)
-          raise errors.UnableToParseFile(
-              u'File %s not a %s (wrong tables).' % (filehandle.name,
-              self.NAME))
+      if not set(tables) >= set(self.REQUIRED_TABLES):
+        self._RemoveTempFile(name, filehandle.name)
+        raise errors.UnableToParseFile(
+            u'File %s not a %s (wrong tables).' % (filehandle.name,
+            self.NAME))
 
-        for query, action in self.QUERIES:
+      for query, action in self.QUERIES:
+        try:
           call_back = getattr(self, action, self.Default)
           sql_results = cursor.execute(query)
           row = sql_results.fetchone()
@@ -584,8 +590,8 @@ class SQLiteParser(PlasoParser):
                     evt.offset = 0
                 yield evt
             row = sql_results.fetchone()
-    except sqlite3.DatabaseError as e:
-      logging.debug('SQLite error occured: %s', e)
+        except sqlite3.DatabaseError as e:
+          logging.debug('SQLite error occured: %s', e)
 
     self._RemoveTempFile(name, filehandle.name)
 
