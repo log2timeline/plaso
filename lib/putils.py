@@ -212,7 +212,7 @@ def _FindClasses(class_object, *args):
 
 def FindAllOutputs():
   """Find all available output modules."""
-  return _FindClasses(output.LogOutputFormatter)
+  return _FindClasses(output.LogOutputFormatter, None)
 
 
 def PrintTimestamp(timestamp):

@@ -40,7 +40,7 @@ class PfileStatEventContainer(event.EventContainer):
 
 
 class PfileStatParser(parser.PlasoParser):
-  """Parse the PFile Stat object to extract filesystem timestamps.."""
+  """Parse the PFile Stat object to extract filesystem timestamps."""
   NAME = 'File Stat'
   PARSER_TYPE = 'FILE'
 
