@@ -42,7 +42,7 @@ class ChromeHistoryFileDownloadedEvent(event.EventObject):
       total_bytes: The total number of bytes to download.
     """
     super(ChromeHistoryFileDownloadedEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
+    self.timestamp = timestamp
     self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
 
     # TODO: move into formatter.
@@ -103,14 +103,13 @@ class ChromeHistoryParser(parser.SQLiteParser):
                'visit_time, visits.from_visit, visits.transition FROM urls, '
                'visits WHERE urls.id = visits.url ORDER BY visits.visit_time'),
               'ParseLastVisitedRow'),
+             (('SELECT downloads.id AS id, downloads.start_time,'
+               'downloads.target_path, downloads_url_chains.url, '
+               'downloads.received_bytes, downloads.total_bytes FROM downloads,'
+               ' downloads_url_chains WHERE downloads.id = '
+               'downloads_url_chains.id'), 'ParseNewFileDownloadedRow'),
              (('SELECT id, full_path, url, start_time, received_bytes, '
-               'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow'),
-             (('SELECT downloads.id AS id, downloads.start_time AS start_time,'
-               'downloads.target_path AS full_path, downloads_url_chains.url '
-               'AS url, downloads.received_bytes AS received_bytes, '
-               'downloads.total_bytes AS total_bytes FROM downloads, '
-               'downloads_url_chains WHERE downloads.id = '
-               'downloads_url_chains.id'), 'ParseFileDownloadedRow')]
+               'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
 
   # The required tables.
   REQUIRED_TABLES = ('urls', 'visits', 'downloads')
@@ -163,8 +162,25 @@ class ChromeHistoryParser(parser.SQLiteParser):
       An event object (ChromeHistoryFileDownloadedEvent) containing the event
       data.
     """
+    timestamp = timelib.Timestamp.FromPosixTime(row['start_time'])
     yield ChromeHistoryFileDownloadedEvent(
-        row['start_time'], row['id'], row['url'], row['full_path'],
+        timestamp, row['id'], row['url'], row['full_path'],
+        row['received_bytes'], row['total_bytes'])
+
+  __pychecker__ = 'unusednames=kwargs'
+  def ParseNewFileDownloadedRow(self, row, **kwargs):
+    """Parses a file downloaded row.
+
+    Args:
+      row: The row resulting from the query.
+
+    Yields:
+      An event object (ChromeHistoryFileDownloadedEvent) containing the event
+      data.
+    """
+    timestamp = timelib.Timestamp.FromWebKitTime(row['start_time'])
+    yield ChromeHistoryFileDownloadedEvent(
+        timestamp, row['id'], row['url'], row['target_path'],
         row['received_bytes'], row['total_bytes'])
 
   __pychecker__ = 'unusednames=kwargs'

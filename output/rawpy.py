@@ -80,7 +80,7 @@ class Rawpy(output.FileLogOutputFormatter):
     else:
       msg, msg_short = event_formatter.GetMessages(event_object)
       self.filehandle.write(u'{2:>7}: {0}\n{3:>7}: {1}\n\n'.format(
-          msg_short, msg, 'Short', 'Long'))
+          msg_short, msg, 'Short', 'Long').encode('utf-8'))
     if hasattr(event_object, 'pathspec'):
       pathspec_string = str(event_object.pathspec.ToProto()).rstrip()
       self.filehandle.write(

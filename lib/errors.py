@@ -66,3 +66,7 @@ class WrongFormatter(Error):
 
 class NoFormatterFound(Error):
   """Raised when no formatter is found for a particular event."""
+
+
+class WinRegistryValueError(Error):
+  """Raised when there is an issue reading a registry value."""

@@ -72,7 +72,7 @@ class SELinuxLineEvent(event.TextEvent):
 
 
 class SELinux(parser.TextParser):
-  """Parse SELinux audit log files using the TextParser."""
+  """Parse SELinux audit log files."""
 
   NAME = 'SELinux'
   SOURCE_LONG = 'Audit log file'

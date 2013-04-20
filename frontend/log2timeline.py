@@ -24,6 +24,7 @@ import sys
 from plaso.lib import errors
 from plaso.lib import engine
 from plaso.lib import pfilter
+from plaso.lib import putils
 
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024
@@ -111,17 +112,21 @@ def Main():
       help='Show the current version of the backend.')
 
   arg_parser.add_argument(
+      '--info', dest='info', action='store_true', default=False,
+      help='Print out information about supported plugins and parsers.')
+
+  arg_parser.add_argument(
       '-d', '--debug', dest='debug', action='store_true', default=False,
       help='Turn on debug information in the tool.')
 
   arg_parser.add_argument(
-      'output', action='store', metavar='STORAGE_FILE', default=None,
+      'output', action='store', metavar='STORAGE_FILE', nargs='?',
       help=('The path to the output file, if the file exists it will get '
             'appended to.'))
 
   arg_parser.add_argument(
       'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT',
-      default=None, help=(
+      nargs='?', help=(
           'The path to the file, directory, image file or mount point that the'
           ' tool should parse. If this is a directory it will recursively go '
           'through it, same with an image file.'))
@@ -142,6 +147,43 @@ def Main():
     for zone in engine.GetTimeZoneList():
       print '  %s' % zone
     print '=' * 40
+    sys.exit(0)
+
+  if options.info:
+    # Import all plugins and parsers to print out the necessary information.
+    # This is not import at top since this is only required if this parameter
+    # is set, otherwise these libraries get imported in their respected
+    # locations.
+    from plaso import parsers
+    from plaso import registry
+    from plaso import output as outputs
+    from plaso.lib import output
+    from plaso.lib import win_registry_interface
+
+    print '{:=^80}'.format(' log2timeline/plaso information. ')
+
+    print '\n{:*^80}'.format(' Versions ')
+    print FormatOutputString('plaso engine', engine.__version__)
+    print FormatOutputString('python', sys.version)
+    # TODO: Add here a list of all the parsing library versions.
+
+    print '\n{:*^80}'.format(' Parsers ')
+    for parser in sorted(putils.FindAllParsers()['all']):
+      doc_string, _, _ = parser.__doc__.partition('\n')
+      print FormatOutputString(parser.parser_name, doc_string)
+
+    print '\n{:*^80}'.format(' Output Modules ')
+    for name, description in sorted(output.ListOutputFormatters()):
+      print FormatOutputString(name, description)
+
+    print '\n{:*^80}'.format(' Registry Plugins ')
+    reg_plugins = win_registry_interface.GetRegistryPlugins()
+    a_plugin = reg_plugins.GetAllKeyPlugins()[0]
+
+    for plugin, obj in sorted(a_plugin.classes.items()):
+      doc_string, _, _ = obj.__doc__.partition('\n')
+      print FormatOutputString(plugin, doc_string)
+
     sys.exit(0)
 
   # This frontend only deals with local setup of the tool.
@@ -238,6 +280,32 @@ def Main():
   except KeyboardInterrupt:
     logging.warning('Tool being killed.')
     l2t.StopThreads()
+
+
+def FormatOutputString(name, description):
+  """Return a formatted string ready for output."""
+  if len(description) < 52:
+    return u'{:>25s} : {}'.format(name, description)
+
+  # Split each word up in the description.
+  words = description.split()
+  # We've got two lines.
+  lengths = []
+  counter = 0
+  for word in words:
+    counter += len(word) + 1
+    lengths.append(counter)
+
+  index = 0
+  for length_index, length in enumerate(lengths):
+    if length < 53:
+      index = length_index
+  index += 1
+  ret = []
+  ret.append(u'{:>25s} : {}'.format(name, u' '.join(words[:index])))
+  ret.append(u'{: <28}{}'.format('', u' '.join(words[index:])))
+
+  return u'\n'.join(ret)
 
 
 if __name__ == '__main__':
