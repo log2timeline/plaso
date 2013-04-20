@@ -42,7 +42,7 @@ class SyslogLineEvent(event.TextEvent):
 
 
 class SyslogParser(parser.TextParser):
-  """Parse syslog files using the TextParser."""
+  """Parse text based syslog files."""
 
   NAME = 'Syslog'
 

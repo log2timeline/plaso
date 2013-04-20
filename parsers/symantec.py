@@ -35,7 +35,7 @@ class SymantecEvent(event.TextEvent):
 
 
 class Symantec(parser.TextCSVParser):
-  """Parse Symantec log files using the TextCSVParser."""
+  """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
   NAME = 'Symantec'
   PARSER_TYPE = 'LOG'

@@ -247,16 +247,16 @@ class WinRegValue(object):
       ret = self.GetRawData()
     elif val_type == 'DWORD_LE':
       try:
-        ret = struct.unpack('<i', self.GetRawData()[:struct.calcsize('<i')])[0]
+        ret = struct.unpack('<i', self.GetRawData()[:4])[0]
       except struct.error as e:
         logging.error('Unable to unpack: {}'.format(e))
-        return None
+        return self.GetRawData()
     elif val_type == 'DWORD_BE':
       try:
-        ret = struct.unpack('>i', self.GetRawData()[:struct.calcsize('<i')])[0]
+        ret = struct.unpack('>i', self.GetRawData()[:4])[0]
       except struct.error as e:
         logging.error('Unable to unpack: {}'.format(e))
-        return None
+        return self.GetRawData()
     elif val_type == 'LINK':
       # TODO: Should we rather fetch the key that is linked
       # to here or simply return the value and let the end user
@@ -273,7 +273,18 @@ class WinRegValue(object):
       # TODO: Return a better format here.
       ret = self.GetRawData()
     elif val_type == 'QWORD':
-      ret = struct.unpack('<q', self.GetRawData())[0]
+      try:
+        raw = self.GetRawData()
+        if len(raw) >= 8:
+          ret = struct.unpack('<q', raw[:8])[0]
+        else:
+          logging.error(
+              u'Unable to unpack value %s, data not long enough for a QWORD',
+              self.name)
+          ret = raw
+      except struct.error as e:
+        logging.error('Unable to unpack: {}'.format(e))
+        return self.GetRawData()
 
     if not data_type:
       return ret

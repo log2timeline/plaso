@@ -21,6 +21,7 @@ registry library that is used to parse the actual registry file.
 """
 import logging
 from plaso.lib import win_registry_interface
+from plaso.lib import errors
 import pyregf
 
 
@@ -37,7 +38,7 @@ class WinPyregKey(win_registry_interface.WinRegKey):
     super(WinPyregKey, self).__init__()
     self._key = key
     self.name = key.name
-    self.path = '%s\\%s' % (parent_path, self.name)
+    self.path = u'%s\\%s' % (parent_path, self.name)
     # Timestamp as FILETIME
     filetime = self._key.get_last_written_time_as_integer()
     # TODO: Add a helper function for this since this conversion
@@ -56,7 +57,14 @@ class WinPyregKey(win_registry_interface.WinRegKey):
       A winPyregValue object for each value in the registry key.
     """
     for value in self._key.values:
-      yield WinPyregValue(value)
+      try:
+        ret_value = WinPyregValue(value)
+      except errors.WinRegistryValueError as e:
+        logging.error(
+            u'Unable to read registry value. Key: %s, error message: %s',
+            self.path, e[0])
+        ret_value = e[1]
+      yield ret_value
 
   def GetValue(self, name):
     """Return a WinRegValue object for a specific registry key path."""
@@ -68,7 +76,14 @@ class WinPyregKey(win_registry_interface.WinRegKey):
     if not value:
       return None
 
-    return WinPyregValue(value)
+    try:
+      ret_value = WinPyregValue(value)
+    except errors.WinRegistryValueError as e:
+      logging.error(
+          u'Unable to read registry value. Key: %s, error message: %s',
+          self.path, e[0])
+      ret_value = e[1]
+    return ret_value
 
   def GetSubKeys(self):
     """Returns all subkeys of the registry key."""
@@ -102,7 +117,12 @@ class WinPyregValue(win_registry_interface.WinRegValue):
     self.name = value.name
     self._type = value.type
     self._type_str = self.GetTypeStr()
-    self._raw_value = self._value.data
+    try:
+      self._raw_value = self._value.data
+    except IOError:
+      self._raw_value = '<FAILED TO READ RAW DATA>'
+      raise errors.WinRegistryValueError(
+          'Unable to read raw data from value: %s' % self.name, self)
 
   def GetStringData(self):
     """Return a string value from the data, if it is a string type."""
