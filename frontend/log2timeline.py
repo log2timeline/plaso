@@ -189,8 +189,6 @@ def Main():
   # This frontend only deals with local setup of the tool.
   options.local = True
 
-  options.recursive = os.path.isdir(options.filename)
-
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   if options.debug:
     logging.basicConfig(level=logging.DEBUG, format=format_str)
@@ -205,6 +203,16 @@ def Main():
     logging.error(
         'Wrong usage: need to define an output (using -w parameter).')
     sys.exit(1)
+
+  if not options.filename:
+    arg_parser.print_help()
+    print ''
+    arg_parser.print_usage()
+    print ''
+    logging.error(u'No input file supplied.')
+    sys.exit(1)
+
+  options.recursive = os.path.isdir(options.filename)
 
   if options.filter and not pfilter.GetMatcher(options.filter):
     logging.error(
