@@ -54,6 +54,11 @@ from it and which parsers recognize it.
       '-v', '--verbose', dest='verbose', action='store_true', default=False,
       help='Be extra verbose in the information printed out.')
 
+  # TODO: Add the option of dropping into a python shell that contains the
+  # stats attribute and others, just print out basic information and do the
+  # profiling, then drop into a ipython shell that allows you to work with
+  # the stats object.
+
   arg_parser.add_argument(
       'file_to_parse', nargs='?', action='store', metavar='FILE_TO_PARSE',
       default=None, help='A path to the file that is to be parsed.')
@@ -99,6 +104,10 @@ from it and which parsers recognize it.
   print u'{:>20s} : {}'.format('pymsiecf', pymsiecf.get_version())
   print u'{:>20s} : {}'.format('pyregf', pyregf.get_version())
   print u'{:>20s} : {}'.format('pyvshadow', pyvshadow.get_version())
+
+  if options.filter:
+    print '\n{:*^80}'.format(' Filter Used ')
+    print u'{:>20s}'.format(options.filter)
 
   pre_obj = preprocess.PlasoPreprocess()
   pre_obj.zone = pytz.UTC
