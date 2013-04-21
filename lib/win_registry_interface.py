@@ -25,6 +25,7 @@ import abc
 import logging
 import struct
 
+from plaso.lib import errors
 from plaso.lib import registry
 from plaso.lib import utils
 
@@ -103,7 +104,13 @@ class KeyPlugin(RegistryPlugin):
 
   def Process(self, key):
     """Process the key based plugin."""
-    key_fixed = utils.PathReplacer(self._config, self.REG_KEY).GetPath()
+    try:
+      key_fixed = utils.PathReplacer(self._config, self.REG_KEY).GetPath()
+    except errors.PathNotFound as e:
+      logging.warning(u'Unable to use plugin %s, error message: %s',
+                      self.plugin_name, e)
+      return None
+
     if key.path != key_fixed:
       return None
 
