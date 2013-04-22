@@ -23,11 +23,11 @@ def CheckOut(q):
   return len(list(q.PopItems()))
 
 
-class PlasoQueueTest(unittest.TestCase):
-  """The unit test for plaso queue mechanism."""
+class MultiThreadedQueueTest(unittest.TestCase):
+  """The unit test for multi threaded queue."""
 
-  def testSingleQueue(self):
-    my_queue = queue.SimpleQueue()
+  def test(self):
+    my_queue = queue.MultiThreadedQueue()
     my_queue.Queue('some stuff')
     my_queue.Queue('some stuff')
     my_queue.Queue('some stuff')
@@ -41,7 +41,11 @@ class PlasoQueueTest(unittest.TestCase):
     my_queue.Close()
     self.assertEquals(CheckOut(my_queue), 4)
 
-  def testSingleThreadedQueue(self):
+
+class SingleThreadedQueueTest(unittest.TestCase):
+  """The unit test for single threaded queue."""
+
+  def test(self):
     my_queue = queue.SingleThreadedQueue()
     my_queue.Queue('some stuff')
     my_queue.Queue('some stuff')

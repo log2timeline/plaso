@@ -22,38 +22,44 @@ The queue has been abstracted in order to provide support for different
 implementations of the queueing mechanism, to support multi processing and
 scalability.
 """
+import abc
 import collections
 import logging
 import multiprocessing
 
 
-class PlasoQueue(object):
-  """Queue mangement for Plaso."""
+class QueueInterface(object):
+  """Abstract class that represents the interface of a queue."""
+  __abstract = True
 
+  @abc.abstractmethod
   def PopItems(self):
     """A generator that returns items from the queue."""
     raise NotImplementedError
 
+  @abc.abstractmethod
   def Close(self):
     """Send a stop or end of processing signal to the queue."""
     raise NotImplementedError
 
+  @abc.abstractmethod
   def Queue(self, item):
     """Add item to the queue."""
     raise NotImplementedError
 
+  @abc.abstractmethod
   def __len__(self):
     """Return the estimated number of entries inside the queue."""
     raise NotImplementedError
 
 
-class SimpleQueue(PlasoQueue):
-  """Queue management for Plaso."""
+class MultiThreadedQueue(QueueInterface):
+  """Multi threaded queue."""
 
   def __init__(self):
-    """Constructor for a simple multiprocessing queue."""
+    """Initializes a multi threaded queue."""
     self._queue = multiprocessing.Queue()
-    super(SimpleQueue, self).__init__()
+    super(MultiThreadedQueue, self).__init__()
     self.closed = False
 
   def PopItems(self):
@@ -93,11 +99,11 @@ class SimpleQueue(PlasoQueue):
     return size
 
 
-class SingleThreadedQueue(PlasoQueue):
-  """Simple queue that is used in a single threaded solution."""
+class SingleThreadedQueue(QueueInterface):
+  """Single threaded queue."""
 
   def __init__(self):
-    """Constructor for a simple single threaded queue."""
+    """Initializes a single threaded queue."""
     super(SingleThreadedQueue, self).__init__()
     self._queue = collections.deque()
     self.closed = False

@@ -243,7 +243,7 @@ class PCollector(object):
     return self
 
 
-class SimpleFileCollector(queue.SimpleQueue):
+class SimpleFileCollector(queue.MultiThreadedQueue):
   """This is a simple collector that collects from a directory."""
 
   def __init__(self, directory):
@@ -261,7 +261,7 @@ class SimpleFileCollector(queue.SimpleQueue):
       my_collector.CollectFromDir(self._dir)
 
 
-class SimpleImageCollector(queue.SimpleQueue):
+class SimpleImageCollector(queue.MultiThreadedQueue):
   """This is a simple collector that collects from an image file."""
 
   SECTOR_SIZE = 512
@@ -313,7 +313,7 @@ class SimpleImageCollector(queue.SimpleQueue):
     logging.debug('Simple Image Collector - Done.')
 
 
-class TargetedFileSystemCollector(queue.SimpleQueue):
+class TargetedFileSystemCollector(queue.MultiThreadedQueue):
   """This is a simple collector that collects using a targeted list."""
 
   def __init__(self, pre_obj, mount_point, file_filter):
