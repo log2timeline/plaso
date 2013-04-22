@@ -357,7 +357,7 @@ class Engine(object):
 
         # Need to manage my own queueing since we are not starting a formal
         # collector.
-        my_collector = queue.SimpleQueue()
+        my_collector = queue.MultiThreadedQueue()
         a_collector = collector.PCollector(my_collector)
         a_collector.ProcessFile(self.config.filename, my_collector)
         my_collector.Close()

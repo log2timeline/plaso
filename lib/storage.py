@@ -777,7 +777,7 @@ class SimpleStorageDumper(object):
       buffer_size: The estimated size of a protobuf file.
       pre: A pre-processing object.
     """
-    self._queue = queue.SimpleQueue()
+    self._queue = queue.MultiThreadedQueue()
     self.output = output_file
     self.buffer_size = buffer_size
     self._pre_obj = pre
