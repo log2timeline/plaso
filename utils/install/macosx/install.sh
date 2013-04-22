@@ -56,6 +56,7 @@ install_tool log2timeline
 install_tool plaso_information
 install_tool plaso_console
 install_tool psort
+install_tool pprof
 
 echo "Installing missing dylibs."
 sudo mv libregf.1.dylib /usr/lib/
