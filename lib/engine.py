@@ -198,7 +198,7 @@ class Engine(object):
         return
       except IOError as e:
         logging.error(
-            (u'An IOError occurred while trying to pre-process, bailing out.'
+            (u'An IOError occurred while trying to pre-process, bailing out. '
              'The error given is: %s'), e)
         return
     else:
@@ -268,7 +268,7 @@ class Engine(object):
         return
       except IOError as e:
         logging.error(
-            (u'An IOError occurred while trying to pre-process, bailing out.'
+            (u'An IOError occurred while trying to pre-process, bailing out. '
              'The error given is: %s'), e)
         return
     else:
