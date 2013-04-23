@@ -85,7 +85,12 @@ class FilesystemCache(object):
     Raises:
       errors.UnableToOpenFilesystem: If it is not able to open the filesystem.
     """
-    img = pytsk3.Img_Info(path)
+    try:
+      img = pytsk3.Img_Info(path)
+    except IOError as e:
+      raise errors.UnableToOpenFilesystem(
+          'Unable to open image file. [%s]' % e)
+
     try:
       fs = pytsk3.FS_Info(img, offset=offset)
     except IOError as e:
