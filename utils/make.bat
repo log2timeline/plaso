@@ -1,6 +1,6 @@
 @echo off
-del /q /s build dist
-rmdir /q /s build dist
+del /q /s build dist 2> NUL
+rmdir /q /s build dist 2> NUL
 
 set PYTHONPATH=C:\plaso-build\
 
