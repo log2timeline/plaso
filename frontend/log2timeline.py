@@ -201,7 +201,7 @@ def Main():
     arg_parser.print_usage()
     print ''
     logging.error(
-        'Wrong usage: need to define an output (using -w parameter).')
+        'Wrong usage: need to define an output.')
     sys.exit(1)
 
   if not options.filename:
