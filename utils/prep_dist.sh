@@ -25,7 +25,7 @@ EXIT_SUCCESS=0;
 
 rm -f parsers/hachoir*
 
-sed -e "/import hachoir/d" -i parsers/__init__.py
+sed -i -e "/import hachoir/d" parsers/__init__.py
 
 SED_SCRIPT="
 /_slow': \[/ {
@@ -37,7 +37,7 @@ SED_SCRIPT="
   d
 }";
 
-sed -e "${SED_SCRIPT}" -i frontend/presets.py
+sed -i -e "${SED_SCRIPT}" frontend/presets.py
 
 exit ${EXIT_SUCCESS};
 

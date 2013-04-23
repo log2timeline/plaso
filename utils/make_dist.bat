@@ -1,7 +1,7 @@
 @echo off
-del /q /s dist\plaso
+del /q /s dist\plaso 2> NUL
 
-rmdir /q /s dist\plaso
+rmdir /q /s dist\plaso 2> NUL
 
 mkdir dist\plaso
 
