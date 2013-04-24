@@ -1,0 +1,45 @@
+Acknowledgements: plaso
+
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Plaso is a Python rewrite of the log2timeline Perl version.
+
+Plaso is developed and maintained by:
+* Kristinn Gudjonsson
+* Eric Mak
+* Joachim Metz
+
+Plaso depends on various other projects. So thanks to the authors
+and others involved with these projects:
+* Python and modules
+* libyaml
+* iPython
+* PyInstaller
+* the SleuthKit
+* pytsk
+
+Thanks to contributors (alphabetically based on last name):
+* David Nides (davnads.blogspot.com)
+  * for the 4n6time output generator with thanks to Eric Wong for assistance
+  * for the gdrive parser
+* Francesco Picasso
+  * for SELinux parser
+* Jordi Sanchez
+  * for the object filter
+* Elizabeth Schweinsberg
+  * for multiple Registry plugins
+* Keith Wall
+  * for updates to the timezone transformation
+
+Test data:
+
+Copied with permission from the GRR project: https://code.google.com/p/grr/
+* History
+* index.dat
+* places.sqlite
+
+Copied with permission granted by Rob Lee.
+Copyright SANS Institute - Digital Forensics and Incident Response.
+* example.lnk
+* SysEvent.Evt
+* System.evtx
