@@ -79,7 +79,7 @@ class TestStore(object):
       return {'range': (1350820458000000, 1355914295000000)}
 
 
-class TestOutputRenderer(object):
+class TestEventBuffer(object):
   """A dummy renderer."""
 
   def __init__(self, store):
@@ -137,7 +137,7 @@ class PsortTest(unittest.TestCase):
     number = 2
     while not success:
       returned_timestamp, _ = psort.ReadPbCheckTime(
-          number, self.first, self.last, TestOutputRenderer(store))
+          number, self.first, self.last, TestEventBuffer(store))
       if returned_timestamp:
         timestamp_list.append(returned_timestamp)
       else:
@@ -153,7 +153,7 @@ class PsortTest(unittest.TestCase):
     a modified output renderer is used for which the flush functionality has
     been removed.
 
-    The test will be to read the TestOutputRenderer storage and check to see
+    The test will be to read the TestEventBuffer storage and check to see
     if it matches the known good sort order.
     """
 
@@ -162,7 +162,7 @@ class PsortTest(unittest.TestCase):
       yield 5
 
     store = storage.PlasoStorage(self.test_file, read_only=True)
-    output_renderer = TestOutputRenderer(store)
+    output_renderer = TestEventBuffer(store)
     psort.MergeSort(MockReadMetaOutput(), self.first,
                     self.last, output_renderer)
     returned_list = []
@@ -180,13 +180,13 @@ class PsortTest(unittest.TestCase):
 
     self.assertEquals(returned_list, correct_order)
 
-  def testOutputRenderer_Flush(self):
+  def testEventBuffer_Flush(self):
     """Test to ensure we empty our buffers and sends to output properly."""
     options = {}
     options['file_descriptor'] = open(os.devnull, 'a')
     options['out_format'] = 'Raw'
     options['store'] = None
-    my_test_ob = psort.OutputRenderer(**options)
+    my_test_ob = psort.EventBuffer(**options)
     my_test_ob.Append(TestEvent1())
     my_test_ob.Flush()
     self.assertEquals(len(my_test_ob.buffer_list), 0)
@@ -213,7 +213,7 @@ class PsortTest(unittest.TestCase):
       with psort.SetupStorage(fh.name) as store:
         psort.MergeSort(
             (1,), 0, 90000000000,
-            psort.OutputRenderer(store, file_descriptor=output_fd))
+            psort.EventBuffer(store, file_descriptor=output_fd))
 
     lines = []
     for line in output_fd.getvalue().split('\n'):
