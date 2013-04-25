@@ -349,6 +349,13 @@ class EventObject(object):
   _SOURCE_SHORT_FROM_PROTO_MAP.setdefault(6)
   _SOURCE_SHORT_TO_PROTO_MAP.setdefault('LOG')
 
+  # This is a reserved variable just used for comparison operation and defines
+  # attributes that should not be used during evaluation of whether two
+  # EventObjects are the same.
+  COMPARE_EXCLUDE = frozenset([
+      'timestamp', 'inode', 'pathspec', 'filename',
+      'data_type', 'display_name', 'store_number', 'store_index'])
+
   parent_container = None
   attributes = None
 
@@ -389,6 +396,62 @@ class EventObject(object):
             self.__class__.__name__, attr))
 
     raise AttributeError('Attribute [%s] not defined' % attr)
+
+  def __eq__(self, event_object):
+    """Return a boolean indicating if two EventObject are considered equal.
+
+    Compares two EventObject objects together and evaluates if they are
+    the same or close enough to be considered to represent the same event.
+
+    For two EventObject objects to be considered the same they need to
+    have the following conditions:
+      + Have the same timestamp.
+      + Have the same data_type value.
+      + Have the same set of attributes.
+      + Compare all other attributes than those that are reserved, and
+      they all have to match.
+
+    The following attributes are considered to be "reserved" and not used
+    for the comparison, so they may be different yet the EventObject is still
+    considered to be equal:
+      + inode
+      + pathspec
+      + filename
+      + display_name
+      + store_number
+      + store_index
+
+    Args:
+      event_object: The EventObject that is being compared to this one.
+
+    Returns:
+      True: if both EventObjects are considered equal, otherwise False.
+    """
+    if not isinstance(event_object, EventObject):
+      return False
+
+    if self.timestamp != event_object.timestamp:
+      return False
+
+    if self.data_type != event_object.data_type:
+      return False
+
+    attributes = self.GetAttributes()
+    if attributes != event_object.GetAttributes():
+      return False
+
+    # Here we have to deal with "near" duplicates, so not all attributes
+    # should be compared.
+    for attribute in attributes.difference(self.COMPARE_EXCLUDE):
+      if getattr(self, attribute) != getattr(event_object, attribute):
+        return False
+
+    # If we are dealing with the stat parser the inode number is the one
+    # attribute that really matters, unlike others.
+    if 'PfileStatParser' in getattr(self, 'parser', ''):
+      return getattr(self, 'inode', 'a') == getattr(event_object, 'inode', 'b')
+
+    return True
 
   def GetAttributes(self):
     """Return a list of all defined attributes."""
