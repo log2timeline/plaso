@@ -70,3 +70,7 @@ class NoFormatterFound(Error):
 
 class WinRegistryValueError(Error):
   """Raised when there is an issue reading a registry value."""
+
+
+class WrongFilterPlugin(Error):
+  """Raised when a particular filter does not support the filter query."""

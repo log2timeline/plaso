@@ -25,6 +25,7 @@ import tempfile
 
 from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
+from plaso import filters
 from plaso import formatters
 from plaso import output
 from plaso import parsers
@@ -32,10 +33,12 @@ from plaso import preprocessors
 from plaso import registry
 
 from plaso.lib import collector
+from plaso.lib import collector_filter
 from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import filter_interface
 from plaso.lib import lexer
 from plaso.lib import objectfilter
 from plaso.lib import output
@@ -76,7 +79,12 @@ def Main():
   options.buffer_size = 0
   options.workers = 10
   options.image = False
+  options.image_offset = 0
+  options.image_offset_bytes = 0
   options.single_thread = False
+  options.parse_vss = False
+  options.filter = ''
+  options.file_filter = ''
   options.open_files = True
   options.image_offset = 0
   options.debug = False
