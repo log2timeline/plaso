@@ -47,6 +47,7 @@ class TestEvent1(event.EventObject):
     """Initializes the test event object."""
     super(TestEvent1, self).__init__()
     self.timestamp = timestamp
+    self.timestamp_desc = 'Some time in the future'
     self.source_short = 'FILE'
     self.attributes.update(attributes)
 
@@ -193,6 +194,55 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertIn(1334966206929596, last)
     self.assertIn(1335781787929596, first)
     self.assertIn(1338934459000000, last)
+
+  def testSameEvent(self):
+    """Test the EventObject comparison."""
+    event_a = event.EventObject()
+    event_b = event.EventObject()
+    event_c = event.EventObject()
+    event_d = event.EventObject()
+    event_e = event.EventObject()
+
+    event_a.timestamp = 123
+    event_a.timestamp_desc = 'LAST WRITTEN'
+    event_a.data_type = 'mock:nothing'
+    event_a.inode = 124
+    event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_a.another_attribute = False
+
+    event_b.timestamp = 123
+    event_b.timestamp_desc = 'LAST WRITTEN'
+    event_b.data_type = 'mock:nothing'
+    event_b.inode = 124
+    event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_b.another_attribute = False
+
+    event_c.timestamp = 123
+    event_c.timestamp_desc = 'LAST UPDATED'
+    event_c.data_type = 'mock:nothing'
+    event_c.inode = 124
+    event_c.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_c.another_attribute = False
+
+    event_d.timestamp = 14523
+    event_d.timestamp_desc = 'LAST WRITTEN'
+    event_d.data_type = 'mock:nothing'
+    event_d.inode = 124
+    event_d.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_d.another_attribute = False
+
+    event_e.timestamp = 123
+    event_e.timestamp_desc = 'LAST WRITTEN'
+    event_e.data_type = 'mock:nothing'
+    event_e.inode = 623423
+    event_e.filename = 'c:/afrit/onnurskra.txt'
+    event_e.another_attribute = False
+
+    self.assertEquals(event_a, event_b)
+    self.assertNotEquals(event_a, event_c)
+    self.assertEquals(event_a, event_e)
+    self.assertNotEquals(event_c, event_d)
+
 
   def testDoesNotExist(self):
     """Calls to a non-existing attribute should result in an exception."""

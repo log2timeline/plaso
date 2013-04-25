@@ -56,6 +56,11 @@ Otherwise the structure of a proto file is:
 For further details about the storage design see:
 http://plaso.kiddaland.net/developer/libraries/storage
 """
+# TODO: Go through the storage library to see if it can be split in two, one
+# part which will define the storage itself, and can be relatively independent.
+# Independent enough to be split into separate project to ease integration by
+# other tools. This file will then contain the queueing mechanism and other
+# plaso specific mechanism, making it easier to import the storage library.
 import collections
 import heapq
 import logging
@@ -348,6 +353,10 @@ class PlasoStorage(object):
     Yields:
       A protobuf object from the protobuf file.
     """
+    # TODO: Change this function, don't accespt a store number and implement the
+    # MergeSort functionailty of the psort file in here. This will then always
+    # return the sorted entries from the storage file, implementing the second
+    # stage of the sort/merge algorithm.
     while True:
       try:
         proto = self.GetEntry(number)

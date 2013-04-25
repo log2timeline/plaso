@@ -16,23 +16,14 @@
 """Psort (Plaso Síar Og Raðar Þessu) - Makes output from Plaso Storage files.
 
 Sample Usage:
-  ./psort
-  --storagefile=$PATH_TO_PLASO_CONTAINER
-  --first_time="2012-10-10 14:18:56" --last_time="2012-10-10 14:24:20"
-  or
-  --first_time_microsec=1349893136000000 --last_time_microsec=1349893460000000
-  --output_format=L2tCsv
-  --zone="US/Eastern"
-  --write=output_filename.txt
+  psort.py /tmp/mystorage.dump "date > '01-06-2012'"
 
-For further details about the storage design see:
-https://sites.google.com/a/kiddaland.net/plaso/developer/libraries/storage
-
-This utility should resemble the section entitiled 'External Merge'
+See additional details here: http://plaso.kiddaland.net/usage/psort
 """
 import argparse
 import calendar
 import heapq
+import os
 import logging
 import pdb
 import sys
@@ -45,11 +36,14 @@ from plaso.lib import event
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
 from plaso.lib import storage
+from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 import pytz
 
+# TODO: Move to a separate library, perhaps lib.limit?
 MAX_INT64 = 2**64-1
-__version__ = '1.0'
+
+__version__ = '1.1'
 
 
 def GetMicroseconds(date_str, timezone):
@@ -62,7 +56,8 @@ def GetMicroseconds(date_str, timezone):
   Returns:
     Integer of microseconds from epoch.
   """
-
+  # TODO: Remove this for an equivalent call to timelib. Shouldn't have any
+  # dateutil/datetime parsing inside this tool.
   dt = dateutil.parser.parse(date_str)
   loc_dt = timezone.localize(dt)
   utc_dt = loc_dt.astimezone(pytz.UTC)
@@ -83,9 +78,8 @@ def GetTimes(my_args):
   Returns:
     (first, last): First and last timestamp as microseconds.
   """
-  # TODO: Write logic to intake (seconds, microseconds, or human friendly)
-  # dates with one flag instead of two.
-
+  # TODO: Remove this, since we are now using the filters to define time
+  # constraints.
   timezone = pytz.timezone(my_args.timezone)
   if my_args.first_time:
     first = GetMicroseconds(my_args.first_time, timezone)
@@ -140,6 +134,12 @@ def ReadMeta(store, bound_first, bound_last):
   Yields:
     The number of a container when entries in it are within time boundries.
   """
+  # TODO: Add more parsing here, as in also return information about
+  # parsers used and other useful information that can be used for the filters.
+
+  # TODO: Move this logic into the storage file.
+  # Since actual merge will be included
+  # in the storage it might make more sense to include this there too.
   for number in store.GetProtoNumbers():
     first, last = store.ReadMeta(number).get('range', (0, MAX_INT64))
     if first == 0:
@@ -172,6 +172,10 @@ def ReadPbCheckTime(number, bound_first, bound_last, output_renderer):
 
     (None, None) if there are no more protos or they are out of bounds.
   """
+  # TODO: Change name of the function and also base this on more than just
+  # the time constraints (other information read from the meta). This function
+  # should take in as a parameter the filter object and use that to determine
+  # which stores should be returned back.
 
   while True:
     proto_read = output_renderer.FetchEntry(number)
@@ -180,6 +184,10 @@ def ReadPbCheckTime(number, bound_first, bound_last, output_renderer):
 
     elif bound_first <= proto_read.timestamp <= bound_last:
       return proto_read.timestamp, proto_read
+
+  # TODO: Add here or somewhere else that makes sense the check that if there
+  # is an upper bound of date and we've surpassed it we should bail out, not
+  # continue to retrieve events, since there is no need for that.
 
 
 def MergeSort(range_checked_nums, bound_first, bound_last, my_output,
@@ -190,10 +198,15 @@ def MergeSort(range_checked_nums, bound_first, bound_last, my_output,
     range_checked_nums: Container numbers with relevant entries.
     bound_first: Earliest microsecond considered in bounds.
     bound_last: Latest microsecond considered in bounds.
-    my_output: OutputRenderer object.
+    my_output: EventBuffer object.
     my_filter: A filter string.
 
   """
+  # TODO: This should be moved into the storage library instead of being kept
+  # here. There is no need for the storage library to return these partially
+  # sorted events. Also make some experiments with sorting the events, heapq
+  # despite being "comfortable" is not always as quick as the simple "sorted"
+  # option, and there may be other better suitable sorting mechanism.
   read_list = []
 
   matcher = None
@@ -213,6 +226,7 @@ def MergeSort(range_checked_nums, bound_first, bound_last, my_output,
     timestamp, file_number, event_read = heapq.heappop(read_list)
     if not event_read:
       continue
+
     if not matcher:
       my_output.Append(event_read)
     else:
@@ -225,61 +239,76 @@ def MergeSort(range_checked_nums, bound_first, bound_last, my_output,
         my_output.Append(event_read)
       else:
         filter_count += 1
+
     new_timestamp, new_event_read = ReadPbCheckTime(
         file_number, bound_first, bound_last, my_output)
+
     if new_event_read:
       heapq.heappush(read_list, (new_timestamp, file_number, new_event_read))
 
   my_output.Flush()
+
   if filter_count:
     logging.info('Events filtered out: %d', filter_count)
 
+  if my_output.duplicate_counter:
+    logging.info('Duplicate entries removed: %d', my_output.duplicate_counter)
 
-class OutputRenderer(object):
-  """This class handles output and formating.
 
-     Currently only supports dumping basic to string formating of objects.
-  """
+class EventBuffer(object):
+  """Small buffer class for output processing."""
 
   def __init__(self, store, out_format='L2tcsv', timezone='UTC',
                file_descriptor=sys.stdout):
-    """Initalizes the OutputRenderer.
+    """Initalizes the EventBuffer.
+
+    This class is used for buffering up events for duplicate removals
+    and for other post-processing/analysis of events before being presented
+    by the appropriate output module.
 
     Args:
-      store: The storage object (PlasoStorage).
-      out_format:  Name of output_lib formatter class to use.
-      timezone: The timezone of the output
+      store: A PlasoStorage object to read EventObjects from.
+      out_format:  Name of output module to use.
+      timezone: The timezone of the output. Defaults to UTC.
       file_descriptor:  File descriptor to send output to.
     """
+    # TODO: Move this class definition out of psort library and into the
+    # lib/output.py one. No need for these definitions to lie inside the
+    # frontend. Perhaps change names too, since this will be be an output
+    # processor, potentially sending extracted events into processing
+    # plugins, etc. (this will make it unnecessary to depend upon the frontend
+    # for other tools that are trying to integrate)
     self.buffer_list = []
-    format_str = '%s%s' % (out_format[0].upper(), out_format[1:].lower())
+    format_str = ''.join([out_format[0].upper(), out_format[1:].lower()])
+    self.current_timestamp = 0
+    self.duplicate_counter = 0
 
-    # TODO: out_format should check against loaded output modules and help the
-    # user find the right one with output_lib.ListOutputFormatters().
     try:
       self.formatter = (
           output_lib.LogOutputFormatter.classes[format_str](
               store, file_descriptor, pytz.timezone(timezone)))
-      self.formatter.Start()  # Write header
+      self.formatter.Start()
     except IOError as e:
-      logging.error('Error occured during output processing: %s', e)
+      logging.error(u'Error occured during output processing: %s', e)
+      self.formatter = None
+    except KeyError:
+      logging.error((
+          u'Wrong output module choosen, module <{}> does not exist. Please '
+          'use {} -o list to see all available modules.').format(
+              out_format, sys.argv[0]))
       self.formatter = None
 
-  def Append(self, mblog):
-    """Adds a record to the output buffer.
-
-    Currently immediately calls Flush.  Will be changed when De-Dupe is
-    implemented.
+  def Append(self, event_object):
+    """Append an EventObject into the processing pipeline.
 
     Args:
-      mblog: tuple of (evt timestamp, protobuf, container number).
+      event_object: The EventObject that is being added.
     """
-    # TODO: Perform de-duplication of records.  The source input files may
-    # contain duplicates and that may not add additional value.  DeDupe is
-    # complicated will deal with that in the next version.
+    self.buffer_list.append(event_object)
 
-    self.buffer_list.append(mblog)
-    self.Flush()
+    if event_object.timestamp != self.current_timestamp:
+      self.current_timestamp = event_object.timestamp
+      self.Flush()
 
   def FetchEntry(self, store_number):
     """Fetch an entry from the store."""
@@ -287,8 +316,48 @@ class OutputRenderer(object):
 
   def Flush(self):
     """Flushes the buffer by sending records to a formatter and prints."""
-    while self.buffer_list:
-      self.formatter.WriteEvent(self.buffer_list.pop(0))
+    if not self.buffer_list:
+      return
+
+    if len(self.buffer_list) == 1:
+      self.formatter.WriteEvent(self.buffer_list.pop())
+    else:
+      length = len(self.buffer_list)
+      for index in range(0, length):
+        event_object = self.buffer_list[index]
+        if not event_object:
+          continue
+        for in_index in range(index + 1, length):
+          event_compare = self.buffer_list[in_index]
+          if not event_compare:
+            continue
+          if event_object == event_compare:
+            self.JoinEvents(event_object, event_compare)
+            self.buffer_list[in_index] = None
+
+        # Comparison done, objects combined, time to write it to output.
+        self.formatter.WriteEvent(event_object)
+
+      self.buffer_list = []
+
+  def JoinEvents(self, event_a, event_b):
+    """Join this EventObject with another one."""
+    self.duplicate_counter += 1
+    # TODO: Currently we are using the first event pathspec, perhaps that
+    # is not the best approach. There is no need to have all the pathspecs
+    # inside the combined event, however which one should be chosen is
+    # perhaps something that can be evaluated here (regular TSK in favor of
+    # an event stored deep inside a VSS for instance).
+
+    event_a.inode = ';'.join([
+      utils.GetUnicodeString(getattr(event_a, 'inode', '')),
+      utils.GetUnicodeString(getattr(event_b, 'inode', ''))])
+    event_a.filename= ';'.join([
+      utils.GetUnicodeString(getattr(event_a, 'filename', '')),
+      utils.GetUnicodeString(getattr(event_b, 'filename', ''))])
+    event_a.display_name= ';'.join([
+      utils.GetUnicodeString(getattr(event_a, 'display_name', '')),
+      utils.GetUnicodeString(getattr(event_b, 'display_name', ''))])
 
   def End(self):
     """Call the formatter to produce the closing line."""
@@ -310,6 +379,8 @@ def Main():
       description='Psort (Plaso Síar Og Raðar Þessu) - Human-readable from'
       ' PlasoStorage files.')
 
+  # TODO: Go over arguments, remove some of them. For instance there is no need
+  # for the date constraints here since they are defined now inside the filters.
   parser.add_argument('-d', '--debug', action='store_true',
                       help='Fall back to debug shell if psort fails.')
 
@@ -386,32 +457,48 @@ def Main():
     logging.error('STORAGEFILE required! or -h for HELP')
     sys.exit(0)
 
+  if not os.path.isfile(my_args.storagefile):
+    parser.print_help()
+    print ''
+    parser.print_usage()
+    print ''
+    logging.error(u'Storage file {} does not exist.'.format(
+        my_args.storagefile))
+    sys.exit(0)
+
   first, last = GetTimes(my_args)
 
   if not my_args.write:
     my_args.write = sys.stdout
 
   with SetupStorage(my_args.storagefile) as store:
-    # Identify Files
+    # Identify which stores to use.
+    # TODO: Send the filter here so it can be used to properly
+    # evaluate which stores should be used.
     range_checked_pb_nums = ReadMeta(store, first, last)
-    with OutputRenderer(store, my_args.output_format, my_args.timezone,
-                        my_args.write) as output_render:
-      if output_render.formatter:
-        try:
-          MergeSort(range_checked_pb_nums, first, last,
-                    output_render, my_args.filter)
-        except IOError as e:
-          # Piping results to "|head" for instance causes an IOError.
-          if 'Broken pipe' not in e:
-            logging.error('Processing stopped early: %s.', e)
-        except KeyboardInterrupt:
-          pass
-        # Catching a very generic error in case we would like to debug
-        # a potential crash in the tool.
-        except Exception:
-          if not my_args.debug:
-            raise
-          pdb.post_mortem()
+
+    with EventBuffer(
+        store, my_args.output_format, my_args.timezone,
+        my_args.write) as output_render:
+      if not output_render.formatter:
+        logging.error(u'Unable to proceed, output renderer not available.')
+        sys.exit(1)
+
+      try:
+        MergeSort(
+            range_checked_pb_nums, first, last, output_render, my_args.filter)
+      except IOError as e:
+        # Piping results to "|head" for instance causes an IOError.
+        if 'Broken pipe' not in e:
+          logging.error('Processing stopped early: %s.', e)
+      except KeyboardInterrupt:
+        pass
+      # Catching a very generic error in case we would like to debug
+      # a potential crash in the tool.
+      except Exception:
+        if not my_args.debug:
+          raise
+        pdb.post_mortem()
 
 
 if __name__ == '__main__':
