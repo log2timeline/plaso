@@ -85,7 +85,7 @@ class WinPyregKey(win_registry_interface.WinRegKey):
       ret_value = e[1]
     return ret_value
 
-  def GetSubKeys(self):
+  def GetSubkeys(self):
     """Returns all subkeys of the registry key."""
     for key in self._key.sub_keys:
       yield WinPyregKey(key, self.path)
@@ -192,25 +192,28 @@ class WinRegistry(object):
     except KeyError:
       return False
 
-  def GetAllSubKeys(self, key):
+  def GetAllSubkeys(self, key):
     """Generator that returns all sub keys of any given registry key.
 
     Args:
-      key: The key that should be recursively searched.
+      key: A Windows Registry key string or a WinPyregKey object.
 
     Yields:
       A WinPyregKey for each registry key underneath the input key.
     """
-    for subkey in key.GetSubKeys():
+    if not hasattr(key, 'GetSubkeys'):
+      key = self.GetKey(key)
+
+    for subkey in key.GetSubkeys():
       yield subkey
       if subkey.HasSubkeys():
-        for s in self.GetAllSubKeys(subkey):
+        for s in self.GetAllSubkeys(subkey):
           yield s
 
   def __iter__(self):
     """Default iterator, returns all subkeys of the registry hive."""
     root = self.GetRoot()
-    for key in self.GetAllSubKeys(root):
+    for key in self.GetAllSubkeys(root):
       yield key
 
 

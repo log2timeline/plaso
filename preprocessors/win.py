@@ -81,7 +81,7 @@ class WinUsers(preprocess.WinRegistryPreprocess):
     """Extract current control set information."""
     users = []
 
-    for sid in key.GetSubKeys():
+    for sid in key.GetSubkeys():
       user = {}
       user['sid'] = sid.name
       value = sid.GetValue('ProfileImagePath')
