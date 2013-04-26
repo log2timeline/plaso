@@ -18,12 +18,12 @@ import os
 import tempfile
 import unittest
 
-from plaso.filters import helper
+from plaso.filters import test_helper
 from plaso.filters import filterlist
 
 
-class PFilterTest(helper.FilterTestHelper):
-  """Tests for the PFilters filter."""
+class ObjectFilterTest(test_helper.FilterTestHelper):
+  """Tests for the ObjectFilterList filter."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""

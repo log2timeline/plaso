@@ -54,7 +54,7 @@ class TestRegKey(win_registry_interface.WinRegKey):
       if value.name == name:
         return value
 
-  def GetSubKeys(self):
+  def GetSubkeys(self):
     """Return a list of all subkeys."""
     return self._subkeys
 
