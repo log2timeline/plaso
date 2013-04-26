@@ -167,7 +167,7 @@ class WinRegKey(object):
     """Return a WinRegValue object for a specific registry key path."""
 
   @abc.abstractmethod
-  def GetSubKeys(self):
+  def GetSubkeys(self):
     """Generator that returns all subkeys of the key."""
 
   @abc.abstractmethod
