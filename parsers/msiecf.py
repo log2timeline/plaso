@@ -93,7 +93,10 @@ class MsiecfParser(parser.PlasoParser):
     primary_timestamp = msiecf_item.get_primary_time_as_integer()
     primary_timestamp_desc = 'Primary Time'
 
-    secondary_timestamp = msiecf_item.get_secondary_time_as_integer()
+    # Need to convert the FILETIME to the internal timestamp here to
+    # do the from localtime conversion.
+    secondary_timestamp = timelib.Timestamp.FromFiletime(
+        msiecf_item.get_secondary_time_as_integer())
     secondary_timestamp_desc = 'Secondary Time'
 
     if msiecf_item.type:
@@ -127,7 +130,7 @@ class MsiecfParser(parser.PlasoParser):
         primary_timestamp, primary_timestamp_desc, event_container.data_type))
 
     if secondary_timestamp > 0:
-      event_container.Append(event.FiletimeEvent(
+      event_container.Append(event.TimestampEvent(
           secondary_timestamp, secondary_timestamp_desc,
           event_container.data_type))
 

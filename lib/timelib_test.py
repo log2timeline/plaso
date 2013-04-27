@@ -227,6 +227,17 @@ class TimeLibUnitTest(unittest.TestCase):
         timelib.Timestamp.LocaltimeToUTC(local_timestamp, pytz.utc),
         local_timestamp)
 
+    # Use a timezone in the Western Hemisphere.
+    timezone = pytz.timezone('EST')
+
+    # date -u -d"Jan 1, 2013 00:00:00" +"%s.%N"
+    local_timestamp = 1356998400 * 1000000
+    # date -u -d"Jan 1, 2013 05:00:00" +"%s.%N"
+    expected_timestamp = 1357016400 * 1000000
+    self.assertEquals(
+        timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone),
+        expected_timestamp)
+
   def testCopyToDatetime(self):
     """Test the copy to datetime object."""
     timezone = pytz.timezone('CET')
