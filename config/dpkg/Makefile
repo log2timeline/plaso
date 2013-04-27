@@ -6,7 +6,7 @@ PYINSTALLER=../pyinstaller/pyinstaller.py
 
 prefix=debian/tmp/usr
 
-all: build_log2timeline build_plaso_console build_plaso_information build_pprof build_psort
+all: build_log2timeline build_pinfo build_pprof build_pshell build_psort
 
 build_log2timeline: frontend/log2timeline.py
 	$(PYINSTALLER) \
@@ -16,19 +16,11 @@ build_log2timeline: frontend/log2timeline.py
 	  --paths=../ \
 	  $<
 
-build_plaso_console: frontend/plaso_console.py
+build_pinfo: frontend/pinfo.py
 	$(PYINSTALLER) \
 	  --onedir \
 	  --console \
-	  --name=plaso_console \
-	  --paths=../ \
-	  $<
-
-build_plaso_information: frontend/plaso_information.py
-	$(PYINSTALLER) \
-	  --onedir \
-	  --console \
-	  --name=plaso_information \
+	  --name=pinfo \
 	  --paths=../ \
 	  $<
 
@@ -37,6 +29,14 @@ build_pprof: frontend/pprof.py
 	  --onedir \
 	  --console \
 	  --name=pprof \
+	  --paths=../ \
+	  $<
+
+build_pshell: frontend/pshell.py
+	$(PYINSTALLER) \
+	  --onedir \
+	  --console \
+	  --name=pshell \
 	  --paths=../ \
 	  $<
 
@@ -55,12 +55,12 @@ install:
 	@mkdir -p $(prefix)/lib/plaso
 	@install -m 0755 dist/log2timeline/*.* $(prefix)/lib/plaso
 	@install -m 0755 dist/log2timeline/log2timeline $(prefix)/lib/plaso
-	@install -m 0755 dist/plaso_console/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/plaso_console/plaso_console $(prefix)/lib/plaso
-	@install -m 0755 dist/plaso_information/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/plaso_information/plaso_information $(prefix)/lib/plaso
+	@install -m 0755 dist/pinfo/*.* $(prefix)/lib/plaso
+	@install -m 0755 dist/pinfo/pinfo $(prefix)/lib/plaso
 	@install -m 0755 dist/pprof/*.* $(prefix)/lib/plaso
 	@install -m 0755 dist/pprof/pprof $(prefix)/lib/plaso
+	@install -m 0755 dist/pshell/*.* $(prefix)/lib/plaso
+	@install -m 0755 dist/pshell/pshell $(prefix)/lib/plaso
 	@install -m 0755 dist/psort/*.* $(prefix)/lib/plaso
 	@install -m 0755 dist/psort/psort $(prefix)/lib/plaso
 

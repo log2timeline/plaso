@@ -1,5 +1,5 @@
 #!/bin/bash
-# A small script that submits a code for code review.
+# Script that installs the binary version of plaso on Mac OS X.
 #
 # Copyright 2012 Google Inc. All Rights Reserved.
 #
@@ -53,15 +53,15 @@ fi
 
 echo "Installing tools."
 install_tool log2timeline
-install_tool plaso_information
-install_tool plaso_console
-install_tool psort
+install_tool pinfo
 install_tool pprof
+install_tool pshell
+install_tool psort
 
 echo "Installing missing dylibs."
-sudo mv libregf.1.dylib /usr/lib/
-sudo mv liblnk.1.dylib /usr/lib/
 sudo mv libevt.1.dylib /usr/lib/
 sudo mv libevtx.1.dylib /usr/lib/
 sudo mv libmsiecf.1.dylib /usr/lib/
+sudo mv liblnk.1.dylib /usr/lib/
+sudo mv libregf.1.dylib /usr/lib/
 sudo mv libvshadow.1.dylib /usr/lib/
