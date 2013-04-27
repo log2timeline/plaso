@@ -154,9 +154,12 @@ def Main():
     # This is not import at top since this is only required if this parameter
     # is set, otherwise these libraries get imported in their respected
     # locations.
+    from plaso import filters
     from plaso import parsers
     from plaso import registry
     from plaso import output as outputs
+    from plaso.frontend import presets
+    from plaso.lib import filter_interface
     from plaso.lib import output
     from plaso.lib import win_registry_interface
 
@@ -172,6 +175,10 @@ def Main():
       doc_string, _, _ = parser.__doc__.partition('\n')
       print FormatOutputString(parser.parser_name, doc_string)
 
+    print '\n{:*^80}'.format(' Parser Lists ')
+    for category, parsers in sorted(presets.categories.items()):
+      print FormatOutputString(category, ', '.join(parsers))
+
     print '\n{:*^80}'.format(' Output Modules ')
     for name, description in sorted(output.ListOutputFormatters()):
       print FormatOutputString(name, description)
@@ -183,6 +190,11 @@ def Main():
     for plugin, obj in sorted(a_plugin.classes.items()):
       doc_string, _, _ = obj.__doc__.partition('\n')
       print FormatOutputString(plugin, doc_string)
+
+    print '\n{:*^80}'.format(' Filters ')
+    for filter_obj in sorted(filter_interface.ListFilters()):
+      doc_string, _, _ = filter_obj.__doc__.partition('\n')
+      print FormatOutputString(filter_obj.filter_name, doc_string)
 
     sys.exit(0)
 
@@ -292,26 +304,34 @@ def Main():
 
 def FormatOutputString(name, description):
   """Return a formatted string ready for output."""
-  if len(description) < 52:
+  line_length = 52
+
+  if len(description) < line_length:
     return u'{:>25s} : {}'.format(name, description)
 
   # Split each word up in the description.
   words = description.split()
-  # We've got two lines.
-  lengths = []
-  counter = 0
-  for word in words:
-    counter += len(word) + 1
-    lengths.append(counter)
 
-  index = 0
-  for length_index, length in enumerate(lengths):
-    if length < 53:
-      index = length_index
-  index += 1
+  current = 0
+  line_count = len(description) / line_length + 1
+  word_count = len(words) / line_count + 1
+
+  lines = []
+  word_buffer = []
+  for word in words:
+    current += len(word) + 1
+    if current >= line_length:
+      current = len(word)
+      lines.append(u' '.join(word_buffer))
+      word_buffer = [word]
+    else:
+      word_buffer.append(word)
+  lines.append(u' '.join(word_buffer))
+
   ret = []
-  ret.append(u'{:>25s} : {}'.format(name, u' '.join(words[:index])))
-  ret.append(u'{: <28}{}'.format('', u' '.join(words[index:])))
+  ret.append(u'{:>25s} : {}'.format(name, lines[0]))
+  for line in lines[1:]:
+    ret.append(u'{: <28}{}'.format('', line))
 
   return u'\n'.join(ret)
 
