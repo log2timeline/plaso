@@ -217,7 +217,7 @@ def FindAllOutputs():
 
 def PrintTimestamp(timestamp):
   """Print a human readable timestamp using ISO 8601 format."""
-  # TODO: this function is only used by frontend/plaso_console.py
+  # TODO: this function is only used by frontend/pshell.py
   # refactor that code to use timelib and remove this function.
   return timelib.Timestamp.CopyToIsoFormat(timestamp, pytz.UTC)
 

@@ -10,7 +10,7 @@ xcopy /q /y AUTHORS dist\plaso
 xcopy /q /y LICENSE.TXT dist\plaso
 
 xcopy /q /y /s dist\log2timeline\* dist\plaso
-xcopy /q /y /s dist\plaso_console\* dist\plaso
-xcopy /q /y /s dist\plaso_information\* dist\plaso
+xcopy /q /y /s dist\pinfo\* dist\plaso
 xcopy /q /y /s dist\pprof\* dist\plaso
+xcopy /q /y /s dist\pshell\* dist\plaso
 xcopy /q /y /s dist\psort\* dist\plaso
