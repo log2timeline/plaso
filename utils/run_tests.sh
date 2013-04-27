@@ -18,29 +18,32 @@
 EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
-TEST_FILES=`find . -name "*_test.py" | grep -v "\/build\/"`;
-
-# TODO: add an ordering of tests, e.g. lib first.
-for TEST_FILE in ${TEST_FILES};
+# Run the tests in a specific order.
+for SUBDIR in "lib filters classifier parsers registry output frontend";
 do
-  # TODO: black listing this test for now.
-  if [ "${TEST_FILE}" = "./frontend/psort_test.py" ];
-  then
-    continue;
-  fi
+  TEST_FILES=`find ${SUBDIR} -name "*_test.py" | grep -v "\/build\/"`;
 
-  echo "---+ ${TEST_FILE} +---"
-  PYTHONPATH=../ /usr/bin/python ${TEST_FILE}
+  for TEST_FILE in ${TEST_FILES};
+  do
+    # TODO: black listing this test for now.
+    if [ "${TEST_FILE}" = "frontend/psort_test.py" ];
+    then
+      continue;
+    fi
 
-  if [ $? -ne 0 ]
-  then
-    echo "TEST FAILED: ${TEST_FILE}.";
+    echo "---+ ${TEST_FILE} +---"
+    PYTHONPATH=../ /usr/bin/python ${TEST_FILE}
+
+    if [ $? -ne 0 ]
+    then
+      echo "TEST FAILED: ${TEST_FILE}.";
+      echo "";
+      echo "Stopping further testing.";
+      echo "";
+      exit ${EXIT_FAILURE};
+    fi
     echo "";
-    echo "Stopping further testing.";
-    echo "";
-    exit ${EXIT_FAILURE};
-  fi
-  echo "";
+  done
 done
 
 exit ${EXIT_SUCCESS};
