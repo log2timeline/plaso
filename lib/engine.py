@@ -43,7 +43,7 @@ from plaso.lib import worker
 
 import pytz
 
-__version__ = '1.0.1alpha'
+__version__ = '1.0.2_dev-alpha'
 
 
 def GetTimeZoneList():
