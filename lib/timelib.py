@@ -283,7 +283,8 @@ class Timestamp(object):
       # Check if timezone is UTC since utcoffset() does not support is_dst
       # for UTC and will raise.
       dt_delta = timezone.utcoffset(dt, is_dst=is_dst)
-      timestamp -= dt_delta.seconds * cls.MICRO_SECONDS_PER_SECOND
+      seconds_delta = int(dt_delta.total_seconds())
+      timestamp -= seconds_delta * cls.MICRO_SECONDS_PER_SECOND
 
     return timestamp
 
@@ -361,6 +362,7 @@ def StringToDatetime(timestring, timezone=pytz.utc, fmt=''):
     return datetimeobject.astimezone(pytz.utc)
 
   return datetimeobject.replace(tzinfo=timezone).astimezone(pytz.utc)
+
 
 def GetCurrentYear():
   """Determines the current year."""
