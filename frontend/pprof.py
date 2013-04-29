@@ -27,6 +27,7 @@ from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import preprocess
 from plaso.lib import putils
+from plaso.lib import utils
 from plaso.lib import queue
 from plaso.lib import worker
 
@@ -93,21 +94,21 @@ from it and which parsers recognize it.
                   options.file_to_parse, e)
     sys.exit(1)
 
-  print '\n{:*^80}'.format(' File Parsed ')
+  print utils.FormatHeader('File Parsed')
   print u'{:>20s}'.format(options.file_to_parse)
 
-  print '\n{:*^80}'.format(' Versions ')
-  print u'{:>20s} : {}'.format('plaso engine', engine.__version__)
-  print u'{:>20s} : {}'.format('pyevt', pyevt.get_version())
-  print u'{:>20s} : {}'.format('pyevtx', pyevtx.get_version())
-  print u'{:>20s} : {}'.format('pylnk', pylnk.get_version())
-  print u'{:>20s} : {}'.format('pymsiecf', pymsiecf.get_version())
-  print u'{:>20s} : {}'.format('pyregf', pyregf.get_version())
-  print u'{:>20s} : {}'.format('pyvshadow', pyvshadow.get_version())
+  print utils.FormatHeader('Versions')
+  print utils.FormatOutputString('plaso engine', engine.__version__)
+  print utils.FormatOutputString('pyevt', pyevt.get_version())
+  print utils.FormatOutputString('pyevtx', pyevtx.get_version())
+  print utils.FormatOutputString('pylnk', pylnk.get_version())
+  print utils.FormatOutputString('pymsiecf', pymsiecf.get_version())
+  print utils.FormatOutputString('pyregf', pyregf.get_version())
+  print utils.FormatOutputString('pyvshadow', pyvshadow.get_version())
 
   if options.filter:
-    print '\n{:*^80}'.format(' Filter Used ')
-    print u'{:>20s}'.format(options.filter)
+    print utils.FormatHeader('Filter Used')
+    print utils.FormatOutputString('Filter String', options.filter)
 
   pre_obj = preprocess.PlasoPreprocess()
   pre_obj.zone = pytz.UTC
@@ -140,24 +141,24 @@ from it and which parsers recognize it.
     counter['Total'] += 1
 
   if not options.verbose:
-    print '\n{:*^80}'.format(' Time Used ')
+    print utils.FormatHeader('Time Used')
     print u'{:>20f}s'.format(time_end - time_start)
 
-  print '\n{:*^80}'.format(' Parsers Used ')
+  print utils.FormatHeader('Parsers Used')
   for parser in sorted(parsers):
-    print u'{:>20s}'.format(parser)
+    print utils.FormatOutputString('', parser)
 
-  print '\n{:*^80}'.format(' Counter ')
+  print utils.FormatHeader('Counter')
   for key, value in counter.most_common():
-    print u'{:>20s} : {}'.format(key, value)
+    print utils.FormatOutputString(key, value)
 
   if options.verbose:
     stats = pstats.Stats(profiler, stream=sys.stdout)
-    print '\n{:*^80}'.format(' Profiler ')
+    print utils.FormatHeader('Profiler')
 
-    print '\n{:-^20}'.format(' Top 5 Time Spent ')
+    print '\n{:-^20}'.format(' Top 10 Time Spent ')
     stats.sort_stats('cumulative')
-    stats.print_stats(5)
+    stats.print_stats(10)
 
     print '\n{:-^20}'.format(' Sorted By Function Calls ')
     stats.sort_stats('calls')

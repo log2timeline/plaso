@@ -24,7 +24,9 @@ import unittest
 
 from plaso.frontend import psort
 from plaso.lib import event
+from plaso.lib import output
 from plaso.lib import eventdata
+from plaso.lib import pfilter
 from plaso.lib import storage
 
 __pychecker__ = 'no-funcdoc'
@@ -67,37 +69,39 @@ class TestEvent2Formatter(eventdata.EventFormatter):
   FORMAT_STRING = 'My text goes along: {some} lines'
 
 
-class TestStore(object):
-  def GetProtoNumbers(self):
-    yield 3
-    yield 10
+class TestFormatter(output.LogOutputFormatter):
+  """Dummy formatter."""
 
-  def ReadMeta(self, number):
-    if number == 3:
-      return {'range': (1349893007000000, 1349893565000000)}
-    if number == 10:
-      return {'range': (1350820458000000, 1355914295000000)}
+  def FetchEntry(self):
+    return self.store.GetSortedEntry()
+
+  def Start(self):
+    self.filehandle.write((
+        'date,time,timezone,MACB,source,sourcetype,type,user,host,'
+        'short,desc,version,filename,inode,notes,format,extra\n'))
+
+  def EventBody(self, event_object):
+    self.filehandle.write(u'{}\n.'.format(unicode(event_object)))
 
 
-class TestEventBuffer(object):
-  """A dummy renderer."""
+class TestEventBuffer(output.EventBuffer):
+  """A dummy output buffer."""
 
-  def __init__(self, store):
-    self.buffer_list = []
+  def __init__(self, store, formatter=None):
     self.record_count = 0
     self.store = store
+    if not formatter:
+      formatter = TestFormatter(store)
+    super(TestEventBuffer, self).__init__(formatter, False)
 
-  def Append(self, item):
-    __pychecker__ = 'missingattrs=buffer_list,record_count'
-    self.buffer_list.append(item)
+  def Append(self, event_object):
+    self._buffer_list.append(event_object)
     self.record_count += 1
 
-  def FetchEntry(self, store_index):
-    """Fake a fetch entry."""
-    return self.store.GetEntry(store_index)
-
   def Flush(self):
-    pass
+    for index, event_object in enumerate(self._buffer_list):
+      self.formatter.EventBody(event_object)
+    self._buffer_list = []
 
   def End(self):
     pass
@@ -108,88 +112,32 @@ class PsortTest(unittest.TestCase):
 
   def setUp(self):
     """Setup sets parameters that will be reused throughout this test."""
-
     # TODO: have sample output generated from the test.
     self.test_file = os.path.join('test_data', 'psort_test.out')
     self.first = 1342799054000000  # Fri, 20 Jul 2012 15:44:14 GMT
     self.last = 1342824552000000  # Fri, 20 Jul 2012 22:49:12 GMT
 
-  def testGetMicroseconds(self):
-    """Tests GetMicroseconds returns the correct timestamp."""
-    date_str = '2012-10-10 16:18:56'  # Naive date string
-    source_timezone = pytz.timezone('US/Eastern')  # UTC-4
-    rtn = psort.GetMicroseconds(date_str, source_timezone)
-    self.assertEquals(rtn, 1349900336000000)  # Wed, 10 Oct 2012 20:18:56 UTC+0
+  def testSetupStorage(self):
+    storage_cls = psort.SetupStorage(self.test_file)
+    self.assertEquals(type(storage_cls), storage.PlasoStorage)
 
-  def testReadMeta(self):
-    """ReadMeta should read metas and return containers only within bounds."""
-    store = TestStore()
-    # The test store contains 3 and 10, and only 3 is in range.
-    expected_result = (3)
-    for value in psort.ReadMeta(store, self.first, self.last):
-      self.assertEquals(value, expected_result)
-
-  def testReadPbCheckTime(self):
-    """Ensure returned protobufs from a container are within the timebounds."""
+  def testReadEntries(self):
+    """Ensure returned EventObjects from the storage are within timebounds."""
     store = storage.PlasoStorage(self.test_file, read_only=True)
-    success = False
     timestamp_list = []
     number = 2
-    while not success:
-      returned_timestamp, _ = psort.ReadPbCheckTime(
-          number, self.first, self.last, TestEventBuffer(store))
-      if returned_timestamp:
-        timestamp_list.append(returned_timestamp)
-      else:
-        success = 1
-    timestamp_list = sorted(timestamp_list)
+    pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
+    pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
+    store.SetStoreLimit()
+
+    event_object = store.GetSortedEntry()
+    while event_object:
+      timestamp_list.append(event_object.timestamp)
+      event_object = store.GetSortedEntry()
+
+    self.assertEquals(len(timestamp_list), 9)
     self.assertTrue(timestamp_list[0] >= self.first and
                     timestamp_list[-1] <= self.last)
-
-  def testMergeSort(self):
-    """This test ensures that items read and output are in the correct order.
-
-    This method by design outputs data as it runs. In order to test this a
-    a modified output renderer is used for which the flush functionality has
-    been removed.
-
-    The test will be to read the TestEventBuffer storage and check to see
-    if it matches the known good sort order.
-    """
-
-    def MockReadMetaOutput():
-      yield 2
-      yield 5
-
-    store = storage.PlasoStorage(self.test_file, read_only=True)
-    output_renderer = TestEventBuffer(store)
-    psort.MergeSort(MockReadMetaOutput(), self.first,
-                    self.last, output_renderer)
-    returned_list = []
-    for item in output_renderer.buffer_list:
-      returned_list.append(item.timestamp)
-
-    correct_order = [1342799054000000L,
-                     1342824253000000L,
-                     1342824299000000L,
-                     1342824546000000L,
-                     1342824546000000L,
-                     1342824552000000L,
-                     1342824552000000L,
-                     1342824552000000L]
-
-    self.assertEquals(returned_list, correct_order)
-
-  def testEventBuffer_Flush(self):
-    """Test to ensure we empty our buffers and sends to output properly."""
-    options = {}
-    options['file_descriptor'] = open(os.devnull, 'a')
-    options['out_format'] = 'Raw'
-    options['store'] = None
-    my_test_ob = psort.EventBuffer(**options)
-    my_test_ob.Append(TestEvent1())
-    my_test_ob.Flush()
-    self.assertEquals(len(my_test_ob.buffer_list), 0)
 
   def testOutput(self):
     """Testing if psort can output data."""
@@ -211,20 +159,25 @@ class PsortTest(unittest.TestCase):
       store.CloseStorage()
 
       with psort.SetupStorage(fh.name) as store:
-        psort.MergeSort(
-            (1,), 0, 90000000000,
-            psort.EventBuffer(store, file_descriptor=output_fd))
+        store._store_range = [1]
+        formatter = TestFormatter(store, output_fd)
+        event_buffer = TestEventBuffer(store, formatter)
 
+        psort.ProcessOutput(event_buffer, formatter, None)
+
+    event_buffer.Flush()
     lines = []
     for line in output_fd.getvalue().split('\n'):
+      if line == '.':
+        continue
       if line:
         lines.append(line)
 
     # One more line than events (header row).
     self.assertEquals(len(lines), 7)
     self.assertTrue('My text goes along: My text dude. lines' in lines[2])
-    self.assertTrue(',LOG,' in lines[2])
-    self.assertTrue(',None in Particular,' in lines[2])
+    self.assertTrue('LOG/' in lines[2])
+    self.assertTrue('None in Particular' in lines[2])
     self.assertEquals(
         lines[0], ('date,time,timezone,MACB,source,sourcetype,type,user,host,'
                    'short,desc,version,filename,inode,notes,format,extra'))
