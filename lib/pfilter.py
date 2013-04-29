@@ -29,6 +29,7 @@ import dateutil.parser
 from plaso.frontend import presets
 
 from plaso.lib import eventdata
+from plaso.lib import limit
 from plaso.lib import objectfilter
 from plaso.lib import utils
 
@@ -117,6 +118,8 @@ class PlasoExpression(objectfilter.BasicExpression):
   # to reference some core attributes (implementation specific).
   swap_source = {
     'date': 'timestamp',
+    'datetime': 'timestamp',
+    'time': 'timestamp',
     'source': 'source_short',
     'description_long': 'message',
     'description': 'message',
@@ -142,6 +145,12 @@ class PlasoExpression(objectfilter.BasicExpression):
         args.append(DateCompareObject(arg))
       self.args = args
 
+    for arg in self.args:
+      if isinstance(arg, DateCompareObject):
+        if 'Less' in str(operator):
+          TimeRangeCache.SetUpperTimestamp(arg.data)
+        else:
+          TimeRangeCache.SetLowerTimestamp(arg.data)
     arguments.extend(self.args)
     expander = filter_implementation.FILTERS['ValueExpander']
     ops = operator(arguments=arguments, value_expander=expander)
@@ -218,7 +227,10 @@ class DateCompareObject(object):
     elif type(data) in (str, unicode):
       try:
         dt = dateutil.parser.parse(utils.GetUnicodeString(data))
-        utc_dt = pytz.UTC.localize(dt)
+        if dt.tzinfo:
+          utc_dt = dt.astimezone(pytz.utc)
+        else:
+          utc_dt = pytz.UTC.localize(dt)
         self.data = calendar.timegm(utc_dt.timetuple()) * int(1e6)
         self.data += utc_dt.microsecond
       except ValueError as e:
@@ -226,6 +238,7 @@ class DateCompareObject(object):
                          data, e)
     elif type(data) == datetime.datetime:
       self.data = calendar.timegm(data.timetuple()) * int(1e6)
+      self.data += data.microsecond
     elif isinstance(DateCompareObject, data):
       self.data = data.data
     else:
@@ -354,6 +367,41 @@ class MockTestFilter(object):
       return self.attributes.get(attr, None)
 
     return TrueObject(self.txt)
+
+
+class TimeRangeCache(object):
+  """A class that stores timeranges from filters."""
+
+  @classmethod
+  def SetLowerTimestamp(cls, timestamp):
+    """Sets the lower bound timestamp."""
+    if not hasattr(cls, '_lower'):
+      cls._lower = timestamp
+      return
+
+    if timestamp < cls._lower:
+      cls._lower = timestamp
+
+  @classmethod
+  def SetUpperTimestamp(cls, timestamp):
+    """Sets the upper bound timestamp."""
+    if not hasattr(cls, '_upper'):
+      cls._upper = timestamp
+      return
+
+    if timestamp > cls._upper:
+      cls._upper = timestamp
+
+  @classmethod
+  def GetTimeRange(cls):
+    """Return the first and last timestamp of filter range."""
+    first = getattr(cls, '_lower', 0)
+    last = getattr(cls, '_upper', limit.MAX_INT64)
+
+    if first < last:
+      return first, last
+    else:
+      return last, first
 
 
 def GetMatcher(query):

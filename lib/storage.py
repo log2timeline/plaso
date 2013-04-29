@@ -70,6 +70,8 @@ import zipfile
 
 from plaso.lib import errors
 from plaso.lib import event
+from plaso.lib import limit
+from plaso.lib import pfilter
 from plaso.lib import preprocess
 from plaso.lib import queue
 from plaso.lib import utils
@@ -304,6 +306,83 @@ class PlasoStorage(object):
     proto.store_index = last_index
 
     return proto
+
+  def SetStoreLimit(self, my_filter=None):
+    """Set a limit to the stores used for returning data."""
+    if not hasattr(self, '_store_range'):
+      self._store_range = []
+
+    # Retrieve set first and last timestamps.
+    self._GetTimeBounds()
+
+    for number in self.GetProtoNumbers():
+      # TODO: Read more criteria from here.
+      first, last = self.ReadMeta(number).get('range', (0, limit.MAX_INT64))
+      if last < first:
+        logging.error('last: %d first: %d container: %d (last < first)',
+                      last, first, number)
+
+      if first <= self._bound_last and self._bound_first <= last:
+        self._store_range.append(number)
+      else:
+        logging.debug('Store [%d] not used', number)
+
+  def _GetTimeBounds(self):
+    """Get the upper and lower time bounds."""
+    if hasattr(self, '_bound_first'):
+      return
+
+    self._bound_first, self._bound_last = pfilter.TimeRangeCache.GetTimeRange()
+
+  def GetSortedEntry(self, proto_out=False):
+    """Return a sorted entry from the storage file.
+
+    Args:
+      proto_out: A boolean variable indicating whether or not a protobuf
+      or a python object should be returned.
+
+    Returns:
+      An EventObject python object, unless proto_out is set then an EventObject
+      protobuf is returned back.
+    """
+    if not hasattr(self, '_bound_first'):
+      self._GetTimeBounds()
+
+    if not hasattr(self, '_merge_buffer'):
+      self._merge_buffer = []
+      number_range = getattr(self, '_store_range', list(self.GetProtoNumbers()))
+      for store_number in number_range:
+        if proto_out:
+          event_object = self.GetProtoEntry(store_number)
+        else:
+          event_object = self.GetEntry(store_number)
+
+        heapq.heappush(
+            self._merge_buffer,
+            (event_object.timestamp, store_number, event_object))
+
+    if not self._merge_buffer:
+      return
+
+    _, store_number, event_read = heapq.heappop(self._merge_buffer)
+    if not event_read:
+      return
+
+    # Stop as soon as we hit the upper bound.
+    if event_read.timestamp > self._bound_last:
+      return
+
+    if proto_out:
+      new_event_object = self.GetProtoEntry(store_number)
+    else:
+      new_event_object = self.GetEntry(store_number)
+
+    if new_event_object:
+      heapq.heappush(
+          self._merge_buffer,
+          (new_event_object.timestamp, store_number, new_event_object))
+
+    return event_read
 
   def GetEntry(self, number, entry_index=-1):
     """Return an EventObject read from a filehandle.
@@ -806,5 +885,3 @@ class SimpleStorageDumper(object):
   def Close(self):
     """Close the queue, indicating to the storage to flush and close."""
     self._queue.Close()
-
-

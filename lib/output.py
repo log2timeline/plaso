@@ -25,11 +25,11 @@ entry to an output formatter that takes care of parsing the output into
 a human readable format for easy human consumption/analysis.
 
 """
-
 import StringIO
 import sys
 
 from plaso.lib import registry
+from plaso.lib import utils
 import pytz
 
 
@@ -55,9 +55,24 @@ class LogOutputFormatter(object):
     self.filehandle = filehandle
     self.store = store
 
-  def FetchEntry(self, number, entry_index=-1):
-    """Fetches an entry from the storage."""
-    return self.store.GetEntry(number, entry_index)
+  def FetchEntry(self, store_number=-1, store_index=-1):
+    """Fetches an entry from the storage.
+
+    Fetches the next entry in the storage file, except if location
+    is explicitly indicated.
+
+    Args:
+      store_number: The store number if explicit location is to be read.
+      store_index: The index into the store, if explicit location is to be
+      read.
+
+    Returns:
+      An EventObject, either the next one or from a specific location.
+    """
+    if store_number > 0:
+      return self.store.GetEntry(store_number, store_index)
+    else:
+      return self.store.GetSortedEntry()
 
   def WriteEvent(self, evt):
     """Write the output of a single entry to the output filehandle.
@@ -145,18 +160,134 @@ class ProtoLogOutputFormatter(LogOutputFormatter):
   """A simple formatter that processes EventObject protobufs."""
   __abstract = True
 
-  def FetchEntry(self, number, entry_index=-1):
+  def FetchEntry(self, store_number=-1, store_index=-1):
     """Fetches an entry from the storage."""
-    return self.store.GetProtoEntry(number, entry_index)
+    if store_index > 0:
+      return self.store.GetProtoEntry(store_number, store_index)
+    else:
+      return self.store.GetSortedEntry(True)
 
 
 class FileProtoLogOutputFormatter(FileLogOutputFormatter):
   """A sipmle file based output formatter that processes raw protobufs."""
   __abstract = True
 
-  def FetchEntry(self, number, entry_index=-1):
+  def FetchEntry(self, store_number=-1, store_index=-1):
     """Fetches an entry from the storage."""
-    return self.store.GetProtoEntry(number, entry_index)
+    if store_index > 0:
+      return self.store.GetProtoEntry(store_number, store_index)
+    else:
+      return self.store.GetSortedEntry(True)
+
+
+class EventBuffer(object):
+  """Buffer class for EventObject output processing."""
+
+  def __init__(self, formatter, check_dedups=True):
+    """Initalizes the EventBuffer.
+
+    This class is used for buffering up events for duplicate removals
+    and for other post-processing/analysis of events before being presented
+    by the appropriate output module.
+
+    Args:
+      formatter: An OutputFormatter object.
+      check_dedups: Boolean value indicating whether or not the buffer should
+      check and merge duplicate entries or not.
+    """
+    self._buffer_list = []
+    self._current_timestamp = 0
+    self.duplicate_counter = 0
+    self.check_dedups = check_dedups
+
+    self.formatter = formatter
+    self.formatter.Start()
+
+  def Append(self, event_object):
+    """Append an EventObject into the processing pipeline.
+
+    Args:
+      event_object: The EventObject that is being added.
+    """
+    if event_object.timestamp != self._current_timestamp:
+      self._current_timestamp = event_object.timestamp
+      self.Flush()
+
+    self._buffer_list.append(event_object)
+
+  def Flush(self):
+    """Flushes the buffer by sending records to a formatter and prints."""
+    if not self._buffer_list:
+      return
+
+    if len(self._buffer_list) == 1:
+      self.formatter.WriteEvent(self._buffer_list.pop())
+    elif not self.check_dedups:
+      for event_object in self._buffer_list:
+        self.formatter.WriteEvent(event_object)
+    else:
+      length = len(self._buffer_list)
+      for index in range(0, length):
+        event_object = self._buffer_list[index]
+        if not event_object:
+          continue
+        for in_index in range(index + 1, length):
+          event_compare = self._buffer_list[in_index]
+          if not event_compare:
+            continue
+          if event_object == event_compare:
+            self.JoinEvents(event_object, event_compare)
+            self._buffer_list[in_index] = None
+
+        # Comparison done, objects combined, time to write it to output.
+        self.formatter.WriteEvent(event_object)
+
+    self._buffer_list = []
+
+  def JoinEvents(self, event_a, event_b):
+    """Join this EventObject with another one."""
+    self.duplicate_counter += 1
+    # TODO: Currently we are using the first event pathspec, perhaps that
+    # is not the best approach. There is no need to have all the pathspecs
+    # inside the combined event, however which one should be chosen is
+    # perhaps something that can be evaluated here (regular TSK in favor of
+    # an event stored deep inside a VSS for instance).
+    event_a.inode = ';'.join([
+      utils.GetUnicodeString(getattr(event_a, 'inode', '')),
+      utils.GetUnicodeString(getattr(event_b, 'inode', ''))])
+    event_a.filename= ';'.join([
+      utils.GetUnicodeString(getattr(event_a, 'filename', '')),
+      utils.GetUnicodeString(getattr(event_b, 'filename', ''))])
+    event_a.display_name= ';'.join([
+      utils.GetUnicodeString(getattr(event_a, 'display_name', '')),
+      utils.GetUnicodeString(getattr(event_b, 'display_name', ''))])
+
+  def End(self):
+    """Call the formatter to produce the closing line."""
+    self.Flush()
+
+    if self.formatter:
+      self.formatter.End()
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    self.End()
+
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
+
+
+def GetOutputFormatter(output_string):
+  """Return an output formatter that matches the provided string."""
+  # Format the output string (make the input case in-sensitive).
+  if type(output_string) not in (str, unicode):
+    return None
+
+  format_str = ''.join(
+      [output_string[0].upper(), output_string[1:].lower()])
+
+  return LogOutputFormatter.classes.get(format_str, None)
 
 
 def ListOutputFormatters():
