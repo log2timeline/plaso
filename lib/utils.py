@@ -75,3 +75,46 @@ class PathReplacer(lexer.Lexer):
           u'Path variable: {} not discovered yet.'.format(match.group(1)))
 
 
+def FormatHeader(header):
+  """Format and return a header for output."""
+  return '\n{:*^80}'.format(u' %s ' % header)
+
+
+def FormatOutputString(name, description, col_length=25):
+  """Return a formatted string ready for output."""
+  max_width = 80
+  line_length = max_width - col_length - 3
+
+  fmt = u'{:>%ds} : {}' % col_length
+  fmt_second = u'{:<%d}{}' % (col_length + 3)
+
+  description = unicode(description)
+  if len(description) < line_length:
+    return fmt.format(name, description)
+
+  # Split each word up in the description.
+  words = description.split()
+
+  current = 0
+  line_count = len(description) / line_length + 1
+  word_count = len(words) / line_count + 1
+
+  lines = []
+  word_buffer = []
+  for word in words:
+    current += len(word) + 1
+    if current >= line_length:
+      current = len(word)
+      lines.append(u' '.join(word_buffer))
+      word_buffer = [word]
+    else:
+      word_buffer.append(word)
+  lines.append(u' '.join(word_buffer))
+
+  ret = []
+  ret.append(fmt.format(name, lines[0]))
+  for line in lines[1:]:
+    ret.append(fmt_second.format('', line))
+
+  return u'\n'.join(ret)
+

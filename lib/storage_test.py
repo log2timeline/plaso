@@ -14,12 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for the storage mechanism of Plaso."""
+import os
 import tempfile
 import unittest
 import zipfile
 
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.formatters import winreg
 from plaso.proto import plaso_storage_pb2
@@ -97,6 +99,15 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.events.append(event_2)
     self.events.append(event_3)
     self.events.append(event_4)
+
+  def testSetStoreLimit(self):
+    """Test the store limit options."""
+
+  def testGetTimeBounds(self):
+    """Test the time bound calls."""
+
+  def testGetSortedEntry(self):
+    """Test reading entries in the correct time order from the storage file."""
 
   def testStorageDumper(self):
     """Test the storage dumper."""
@@ -236,6 +247,51 @@ class PlasoStorageUnitTest(unittest.TestCase):
 
     self.assertEquals(same_events, list(a.ToProtoString() for a in
                                         group_events))
+
+
+class StoreStorageTest(unittest.TestCase):
+  """Test sorting storage file,"""
+
+  def setUp(self):
+    """Setup sets parameters that will be reused throughout this test."""
+    # TODO: have sample output generated from the test.
+    self.test_file = os.path.join('test_data', 'psort_test.out')
+    self.first = 1342799054000000  # Fri, 20 Jul 2012 15:44:14 GMT
+    self.last = 1342824552000000  # Fri, 20 Jul 2012 22:49:12 GMT
+
+  def testStorageSort(self):
+    """This test ensures that items read and output are in the correct order.
+
+    This method by design outputs data as it runs. In order to test this a
+    a modified output renderer is used for which the flush functionality has
+    been removed.
+
+    The test will be to read the TestEventBuffer storage and check to see
+    if it matches the known good sort order.
+    """
+
+    store = storage.PlasoStorage(self.test_file, read_only=True)
+
+    store._store_range = [2, 5]
+    pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
+    pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
+
+    read_list = []
+    event_object = store.GetSortedEntry()
+    while event_object:
+      read_list.append(event_object.timestamp)
+      event_object = store.GetSortedEntry()
+
+    correct_order = [1342799054000000L,
+                     1342824253000000L,
+                     1342824299000000L,
+                     1342824546000000L,
+                     1342824546000000L,
+                     1342824552000000L,
+                     1342824552000000L,
+                     1342824552000000L]
+
+    self.assertEquals(read_list, correct_order)
 
 
 if __name__ == '__main__':

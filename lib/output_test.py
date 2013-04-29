@@ -17,6 +17,7 @@
 import tempfile
 import unittest
 
+from plaso.lib import event
 from plaso.lib import output
 
 __pychecker__ = 'no-funcdoc'
@@ -28,9 +29,9 @@ class DummyEvent(object):
   def __init__(self, timestamp, entry):
     self.date = '03/01/2012'
     try:
-      self.time = int(timestamp)
+      self.timestamp = int(timestamp)
     except ValueError:
-      self.time = 0
+      self.timestamp = 0
     self.entry = entry
 
 
@@ -48,7 +49,7 @@ class TestOutput(output.LogOutputFormatter):
     self.filehandle.write(
         '\t<Date>%s</Date>\n\t<Time>%d</Time>\n\t<Entry>%s</Entry>\n' % (
             event.date,
-            event.time,
+            event.timestamp,
             event.entry))
 
   def EndEvent(self):
@@ -110,6 +111,35 @@ class PlasoOutputUnitTest(unittest.TestCase):
       self.assertEquals(name, 'TestOutput')
       self.assertEquals(description, ('This is a dummy test module that '
                                       'provides a simple XML.'))
+
+
+class EventBufferTest(unittest.TestCase):
+  """Few unit tests for the EventBuffer class."""
+
+  def testFlush(self):
+    """Test to ensure we empty our buffers and sends to output properly."""
+    with tempfile.NamedTemporaryFile() as fh:
+      formatter = TestOutput(fh)
+      event_buffer = output.EventBuffer(formatter, False)
+
+      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      self.assertEquals(len(event_buffer._buffer_list), 1)
+
+      # Add three events.
+      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      self.assertEquals(len(event_buffer._buffer_list), 4)
+
+      event_buffer.Flush()
+      self.assertEquals(len(event_buffer._buffer_list), 0)
+
+      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      self.assertEquals(len(event_buffer._buffer_list), 3)
+      event_buffer.Append(DummyEvent(123457, 'Now is different'))
+      self.assertEquals(len(event_buffer._buffer_list), 1)
 
 
 if __name__ == '__main__':

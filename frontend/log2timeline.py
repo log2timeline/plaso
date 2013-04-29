@@ -25,6 +25,7 @@ from plaso.lib import errors
 from plaso.lib import engine
 from plaso.lib import pfilter
 from plaso.lib import putils
+from plaso.lib import utils
 
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024
@@ -165,36 +166,36 @@ def Main():
 
     print '{:=^80}'.format(' log2timeline/plaso information. ')
 
-    print '\n{:*^80}'.format(' Versions ')
-    print FormatOutputString('plaso engine', engine.__version__)
-    print FormatOutputString('python', sys.version)
+    print utils.FormatHeader('Versions')
+    print utils.FormatOutputString('plaso engine', engine.__version__)
+    print utils.FormatOutputString('python', sys.version)
     # TODO: Add here a list of all the parsing library versions.
 
-    print '\n{:*^80}'.format(' Parsers ')
+    print utils.FormatHeader('Parsers')
     for parser in sorted(putils.FindAllParsers()['all']):
       doc_string, _, _ = parser.__doc__.partition('\n')
-      print FormatOutputString(parser.parser_name, doc_string)
+      print utils.FormatOutputString(parser.parser_name, doc_string)
 
-    print '\n{:*^80}'.format(' Parser Lists ')
+    print utils.FormatHeader('Parser Lists')
     for category, parsers in sorted(presets.categories.items()):
-      print FormatOutputString(category, ', '.join(parsers))
+      print utils.FormatOutputString(category, ', '.join(parsers))
 
-    print '\n{:*^80}'.format(' Output Modules ')
+    print utils.FormatHeader('Output Modules')
     for name, description in sorted(output.ListOutputFormatters()):
-      print FormatOutputString(name, description)
+      print utils.FormatOutputString(name, description)
 
-    print '\n{:*^80}'.format(' Registry Plugins ')
+    print utils.FormatHeader('Registry Plugins')
     reg_plugins = win_registry_interface.GetRegistryPlugins()
     a_plugin = reg_plugins.GetAllKeyPlugins()[0]
 
     for plugin, obj in sorted(a_plugin.classes.items()):
       doc_string, _, _ = obj.__doc__.partition('\n')
-      print FormatOutputString(plugin, doc_string)
+      print utils.FormatOutputString(plugin, doc_string)
 
-    print '\n{:*^80}'.format(' Filters ')
+    print utils.FormatHeader('Filters')
     for filter_obj in sorted(filter_interface.ListFilters()):
       doc_string, _, _ = filter_obj.__doc__.partition('\n')
-      print FormatOutputString(filter_obj.filter_name, doc_string)
+      print utils.FormatOutputString(filter_obj.filter_name, doc_string)
 
     sys.exit(0)
 
@@ -300,40 +301,6 @@ def Main():
   except KeyboardInterrupt:
     logging.warning('Tool being killed.')
     l2t.StopThreads()
-
-
-def FormatOutputString(name, description):
-  """Return a formatted string ready for output."""
-  line_length = 52
-
-  if len(description) < line_length:
-    return u'{:>25s} : {}'.format(name, description)
-
-  # Split each word up in the description.
-  words = description.split()
-
-  current = 0
-  line_count = len(description) / line_length + 1
-  word_count = len(words) / line_count + 1
-
-  lines = []
-  word_buffer = []
-  for word in words:
-    current += len(word) + 1
-    if current >= line_length:
-      current = len(word)
-      lines.append(u' '.join(word_buffer))
-      word_buffer = [word]
-    else:
-      word_buffer.append(word)
-  lines.append(u' '.join(word_buffer))
-
-  ret = []
-  ret.append(u'{:>25s} : {}'.format(name, lines[0]))
-  for line in lines[1:]:
-    ret.append(u'{: <28}{}'.format('', line))
-
-  return u'\n'.join(ret)
 
 
 if __name__ == '__main__':

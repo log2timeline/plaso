@@ -236,6 +236,7 @@ class Timestamp(object):
     Returns:
       An integer containing the timestamp or 0 on error.
     """
+    # TODO: Add a handling for if the timestamp equals to zero.
     if filetime < 0:
       return 0
     timestamp = (filetime - cls.FILETIME_TO_POSIX_BASE) / 10

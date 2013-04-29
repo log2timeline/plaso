@@ -38,6 +38,20 @@ folder()
   sudo cp -r "$1/" "$FOLDER/$1/"
 }
 
+uninstall_tool()
+{
+  echo -n "Uninstalling $1..."
+  if [ -d "$FOLDER/$1" ]
+  then
+    sudo /bin/rm -rf "$FOLDER/$1"
+  fi
+
+  if [ -h "$LNK_PATH/$1" ]
+  then
+    sudo rm "$LNK_PATH/$1"
+  fi
+}
+
 install_tool()
 {
   echo -n "Installing $1..."
@@ -50,6 +64,10 @@ if [ ! -d "$FOLDER" ]
 then
   sudo mkdir -p $FOLDER
 fi
+
+echo "Uninstalling previous versions."
+uninstall_tool plaso_console
+uninstall_tool plaso_information
 
 echo "Installing tools."
 install_tool log2timeline
