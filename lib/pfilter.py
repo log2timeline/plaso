@@ -404,7 +404,7 @@ class TimeRangeCache(object):
       return last, first
 
 
-def GetMatcher(query):
+def GetMatcher(query, quiet=False):
   """Return a filter match object for a given query."""
   matcher = None
   try:
@@ -412,6 +412,7 @@ def GetMatcher(query):
     matcher = parser.Compile(
         PlasoAttributeFilterImplementation)
   except objectfilter.ParseError as e:
-    logging.error('Filter <%s> malformed: %s', query, e)
+    if not quiet:
+      logging.error('Filter <%s> malformed: %s', query, e)
 
   return matcher
