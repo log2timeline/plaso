@@ -20,6 +20,8 @@ which are core components of the storage mechanism of plaso.
 
 """
 import heapq
+import pprint
+import pytz
 
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -471,32 +473,48 @@ class EventObject(object):
 
   def __str__(self):
     """Print a human readable string from the EventObject."""
+    printer = pprint.PrettyPrinter(indent=8)
+    out_write = []
 
-    message, _ = eventdata.EventFormatterManager.GetMessageStrings(self)
-    if not message:
-      return 'Unable to print event, no formatter defined.'
+    out_write.append(u'+-' * 40)
+    out_write.append(u'[Timestamp]:\n  %s' %(
+        timelib.Timestamp.CopyToIsoFormat(self.timestamp, pytz.utc)))
+    out_write.append(u'\n[Message Strings]:')
 
-    time = 0
-    short = u''
-    s_long = u''
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(self)
+    if not event_formatter:
+      out_write.append(u'None')
+    else:
+      msg, msg_short = event_formatter.GetMessages(self)
+      out_write.append(u'{2:>7}: {0}\n{3:>7}: {1}\n'.format(
+          msg_short, msg, 'Short', 'Long').encode('utf-8'))
 
-    __pychecker__ = ('missingattrs=timestamp,source_short,'
-                     'source_long')
-    try:
-      time = self.timestamp
-    except AttributeError:
-      pass
+    if hasattr(self, 'pathspec'):
+      pathspec_string = str(self.pathspec.ToProto()).rstrip()
+      out_write.append(
+          u'{1}:\n  {0}\n'.format(
+              pathspec_string.replace('\n', '\n  '), '[Pathspec]'))
 
-    try:
-      short = self.source_short
-    except AttributeError:
-      pass
-    try:
-      s_long = self.source_long
-    except AttributeError:
-      pass
+    out_additional = []
+    out_write.append('[Reserved attributes]:')
+    out_additional.append('[Additional attributes]:')
 
-    return u'[{0}] {1}/{2} - {3}'.format(time, short, s_long, message)
+    for attr_key, attr_value in sorted(self.GetValues().items()):
+      if attr_key in utils.RESERVED_VARIABLES:
+        if attr_key == 'pathspec':
+          continue
+        else:
+          out_write.append(u'  {{{key}}} {value}'.format(
+                key=attr_key, value=printer.pformat(attr_value)))
+      else:
+        out_additional.append(u'  {{{key}}} {value}'.format(
+              key=attr_key, value=printer.pformat(attr_value)))
+
+    out_write.append('\n')
+    out_additional.append('')
+
+    return u'{}{}'.format(u'\n'.join(out_write).encode('utf-8'),
+                          u'\n'.join(out_additional).encode('utf-8'))
 
   def FromProto(self, proto):
     """Unserializes the event object from a protobuf.
