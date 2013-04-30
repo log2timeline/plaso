@@ -118,7 +118,7 @@ def ParseStorage(my_args):
                 my_args.output_format, sys.argv[0]))
         sys.exit(1)
       formatter = formatter_cls(
-              store, my_args.write, pytz.timezone(my_args.timezone))
+              store, my_args.write, pytz.timezone(my_args.timezone), filter_use)
     except IOError as e:
       logging.error(u'Error occured during output processing: %s', e)
 
@@ -127,20 +127,7 @@ def ParseStorage(my_args):
       sys.exit(1)
 
     with output_lib.EventBuffer(formatter, my_args.dedup) as output_buffer:
-      try:
-        ProcessOutput(output_buffer, formatter, filter_use)
-      except IOError as e:
-        # Piping results to "|head" for instance causes an IOError.
-        if 'Broken pipe' not in e:
-          logging.error('Processing stopped early: %s.', e)
-      except KeyboardInterrupt:
-        pass
-      # Catching a very generic error in case we would like to debug
-      # a potential crash in the tool.
-      except Exception:
-        if not my_args.debug:
-          raise
-        pdb.post_mortem()
+      ProcessOutput(output_buffer, formatter, filter_use)
 
 
 def Main():
@@ -244,7 +231,20 @@ def Main():
   if not my_args.write:
     my_args.write = sys.stdout
 
-  ParseStorage(my_args)
+  try:
+    ParseStorage(my_args)
+  except IOError as e:
+    # Piping results to "|head" for instance causes an IOError.
+    if 'Broken pipe' not in str(e):
+      logging.error('Processing stopped early: %s.', e)
+  except KeyboardInterrupt:
+    pass
+  # Catching a very generic error in case we would like to debug
+  # a potential crash in the tool.
+  except Exception:
+    if not my_args.debug:
+      raise
+    pdb.post_mortem()
 
 
 if __name__ == '__main__':
