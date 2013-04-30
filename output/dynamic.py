@@ -32,7 +32,8 @@ class Dynamic(output.FileLogOutputFormatter):
 
   # A dict containing mappings between "special" attributes and
   # how they should be calculated and presented.
-  # They should be documented 
+  # They should be documented here:
+  #   http://plaso.kiddaland.net/usage/psort/output
   SPECIAL_HANDLING = {
       'date': 'ParseDate',
       'datetime': 'ParseDateTime',
@@ -163,9 +164,12 @@ class Dynamic(output.FileLogOutputFormatter):
   def Start(self):
     """Returns a header for the output."""
     # Start by finding out which fields are to be used.
+    self.fields = []
+
     if self._filter:
       self.fields = self._filter.fields
-    else:
+
+    if not self.fields:
       # TODO: Evaluate which fields should be included by default.
       self.fields = [
           'datetime', 'timestamp_desc', 'source_short', 'source_long',

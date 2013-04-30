@@ -81,7 +81,7 @@ class ObjectFilterList(filter_interface.FilterObject):
             u'Entry inside {} does not contain a filter statement.'.format(
                 name))
 
-      matcher = pfilter.GetMatcher(meta.get('filter'))
+      matcher = pfilter.GetMatcher(meta.get('filter'), True)
       if not matcher:
         raise errors.WrongFilterPlugin(
           u'Filter entry [{}] malformed for rule: <{}>'.format(

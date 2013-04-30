@@ -104,6 +104,11 @@ def ParseStorage(my_args):
   filter_use = None
   if my_args.filter:
     filter_use = filter_interface.GetFilter(my_args.filter)
+    if not filter_use:
+      logging.error(
+          u'No filter found for the filter expression: {}'.format(
+              my_args.filter))
+      sys.exit(1)
 
   with SetupStorage(my_args.storagefile) as store:
     # Identify which stores to use.
