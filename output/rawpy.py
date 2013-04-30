@@ -14,14 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Represents an EventObject as a string."""
-import pprint
-
-from plaso.lib import eventdata
 from plaso.lib import output
-from plaso.lib import timelib
-from plaso.lib import utils
-
-import pytz
 
 
 class Rawpy(output.FileLogOutputFormatter):
@@ -29,10 +22,6 @@ class Rawpy(output.FileLogOutputFormatter):
   # TODO: Revisit the name of this class, perhaps rename it to
   # something more closely similar to what it is doing now, as in
   # "native" or something else.
-
-  def Start(self):
-    """Set up the pretty printer."""
-    self.printer = pprint.PrettyPrinter(indent=8)
 
   def Usage(self):
     """Return usage information."""
@@ -50,42 +39,5 @@ class Rawpy(output.FileLogOutputFormatter):
     Args:
       event_object: The EventObject.
     """
-
-    out_write = []
-    out_reserved = []
-    out_reserved.append('[Reserved attributes]:')
-    out_write.append('[Additional attributes]:')
-
-    for attr_key, attr_value in sorted(event_object.GetValues().items()):
-      if attr_key in utils.RESERVED_VARIABLES:
-        if attr_key == 'pathspec':
-          continue
-        else:
-          out_reserved.append(u'  {{{key}}} {value}'.format(
-                key=attr_key, value=self.printer.pformat(attr_value)))
-      else:
-        out_write.append(u'  {{{key}}} {value}'.format(
-              key=attr_key, value=self.printer.pformat(attr_value)))
-    out_write.append('')
-    out_reserved.append('')
-    out_reserved.append('')
-
-    self.filehandle.write('+-' * 40)
-    self.filehandle.write('\n[Timestamp]:\n  %s' %(
-        timelib.Timestamp.CopyToIsoFormat(event_object.timestamp, pytz.utc)))
-    self.filehandle.write('\n\n[Message Strings]:\n')
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
-    if not event_formatter:
-      self.filehandle.write('None')
-    else:
-      msg, msg_short = event_formatter.GetMessages(event_object)
-      self.filehandle.write(u'{2:>7}: {0}\n{3:>7}: {1}\n\n'.format(
-          msg_short, msg, 'Short', 'Long').encode('utf-8'))
-    if hasattr(event_object, 'pathspec'):
-      pathspec_string = str(event_object.pathspec.ToProto()).rstrip()
-      self.filehandle.write(
-          u'{1}:\n  {0}\n\n'.format(
-              pathspec_string.replace('\n', '\n  '), '[Pathspec]'))
-    self.filehandle.write('\n'.join(out_reserved).encode('utf-8'))
-    self.filehandle.write('\n'.join(out_write).encode('utf-8'))
-    self.filehandle.write('\n')
+    out_write = u'%s' % event_object
+    self.filehandle.write(out_write.encode('utf-8'))

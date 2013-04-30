@@ -43,17 +43,20 @@ class LogOutputFormatter(object):
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
-  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc):
+  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc,
+               filter_use=None):
     """Constructor for the output module.
 
     Args:
       store: A PlasoStorage object that defines the storage.
       filehandle: A file-like object that can be written to.
       zone: The output time zone (a pytz object).
+      filter_use: A filter_interface.FilterObject object.
     """
     self.zone = zone
     self.filehandle = filehandle
     self.store = store
+    self._filter = filter_use
 
   def FetchEntry(self, store_number=-1, store_index=-1):
     """Fetches an entry from the storage.
@@ -144,9 +147,11 @@ class FileLogOutputFormatter(LogOutputFormatter):
 
   __abstract = True
 
-  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc):
+  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc,
+               filter_use=None):
     """Set up the formatter."""
-    super(FileLogOutputFormatter, self).__init__(store, filehandle, zone)
+    super(FileLogOutputFormatter, self).__init__(
+        store, filehandle, zone, filter_use)
     if not isinstance(filehandle, (file, StringIO.StringIO)):
       self.filehandle = open(filehandle, 'w')
 
