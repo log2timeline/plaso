@@ -121,7 +121,7 @@ class L2tcsv(output.FileLogOutputFormatter):
            msg_short,
            msg,
            '2',
-           event_object.filename,
+           event_object.display_name,
            inode,
            getattr(event_object, 'notes', '-'),  # Notes field placeholder.
            getattr(event_object, 'parser', '-'),
