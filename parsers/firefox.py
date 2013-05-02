@@ -112,7 +112,7 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
   DATA_TYPE = 'firefox:places:page_visited'
 
   def __init__(self, timestamp, row_id, url, title, hostname, visit_count,
-               extra):
+               visit_type, extra):
     """Initializes the event object.
 
     Args:
@@ -123,7 +123,8 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
       title: The title of the visited page.
       hostname: The visited hostname.
       visit_count: The visit count.
-      extra: String containing extra event data (TODO refactor).
+      visit_type: The transition type for the event.
+      extra: A list containing extra event data (TODO refactor).
     """
     super(FirefoxPlacesPageVisitedEvent, self).__init__()
 
@@ -139,8 +140,9 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
     self.title = title
     self.host = hostname
     self.visit_count = visit_count
+    self.visit_type = visit_type
     if extra:
-      self.extra = u' %s' % extra
+      self.extra = extra
 
 
 class FirefoxHistoryParser(parser.SQLiteParser):
@@ -184,18 +186,6 @@ class FirefoxHistoryParser(parser.SQLiteParser):
   # The required tables.
   REQUIRED_TABLES = ('moz_places', 'moz_historyvisits', 'moz_bookmarks',
                      'moz_items_annos')
-
-  # TODO: move to formatter.
-  _URL_TYPES = {
-      1: 'LINK',
-      2: 'TYPED',
-      3: 'BOOKMARK',
-      4: 'EMBED',
-      5: 'REDIRECT_PERMANENT',
-      6: 'REDIRECT_TEMPORARY',
-      7: 'DOWNLOAD'
-  }
-  _URL_TYPES.setdefault('N/A')
 
   __pychecker__ = 'unusednames=kwargs'
   def ParseBookmarkAnnotationRow(self, row, **kwargs):
@@ -294,13 +284,10 @@ class FirefoxHistoryParser(parser.SQLiteParser):
     else:
       extras.append('(URL not typed directly)')
 
-    visit_type = row['visit_type']
-    extras.append(self._URL_TYPES[visit_type])
-
     yield FirefoxPlacesPageVisitedEvent(
         row['visit_date'], row['id'], row['url'], row['title'],
         self._ReverseHostname(row['rev_host']), row['visit_count'],
-        u' '.join(extras))
+        row['visit_type'], extras)
 
   def _ReverseHostname(self, hostname):
     """Reverses the hostname and strips the leading dot.

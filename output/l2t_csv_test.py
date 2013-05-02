@@ -38,6 +38,7 @@ class TestEvent(event.EventObject):
     self.source_long = 'Syslog'
     self.hostname = 'ubuntu'
     self.filename = 'log/syslog.1'
+    self.display_name = 'log/syslog.1'
     self.text = (
         u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
         u'closed for user root)')

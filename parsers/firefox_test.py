@@ -72,7 +72,7 @@ class FirefoxHistoryParserTest(unittest.TestCase):
 
     expected_msg = (
          u'%s (%s) [count: 1] Host: news.google.com '
-         u'(URL not typed directly) TYPED') % (
+         u'(URL not typed directly) Transition: TYPED') % (
          expected_url, expected_title)
 
     self.assertEquals(msg, expected_msg)
