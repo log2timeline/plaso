@@ -42,11 +42,48 @@ class FirefoxBookmarkFormatter(eventdata.EventFormatter):
   FORMAT_STRING_SHORT = u'Bookmarked {title} ({url})'
 
 
-class FirefoxPageVisitFormatter(eventdata.EventFormatter):
+class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite page visited."""
   DATA_TYPE = 'firefox:places:page_visited'
 
-  # TODO: make extra conditional formatting.
-  FORMAT_STRING = (u'{url} ({title}) [count: {visit_count}] '
-                   u'Host: {host}{extra}')
-  FORMAT_STRING_SHORT = u'URL: {url}'
+  # Transitions defined in the source file:
+  #   src/toolkit/components/places/nsINavHistoryService.idl
+  # Also contains further explanation into what each of these settings mean.
+  _URL_TRANSITIONS = {
+      1: 'LINK',
+      2: 'TYPED',
+      3: 'BOOKMARK',
+      4: 'EMBED',
+      5: 'REDIRECT_PERMANENT',
+      6: 'REDIRECT_TEMPORARY',
+      7: 'DOWNLOAD',
+      8: 'FRAMED_LINK',
+  }
+  _URL_TRANSITIONS.setdefault('UNKOWN')
+
+  # TODO: Make extra conditional formatting.
+  FORMAT_STRING_PIECES = [
+      u'{url}',
+      u'({title})',
+      u'[count: {visit_count}]',
+      u'Host: {host}',
+      u'{extra_string}']
+
+  FORMAT_STRING_SHORT_PIECES = [u'URL: {url}']
+
+  def GetMessages(self, event_object):
+    """Return the message strings."""
+    transition = self._URL_TRANSITIONS.get(
+        getattr(event_object, 'visit_type', 0), None)
+
+    if transition:
+      transition_str = 'Transition: {}'.format(transition)
+
+    if hasattr(event_object, 'extra'):
+      if transition:
+        event_object.extra.append(transition_str)
+      event_object.extra_string = u' '.join(event_object.extra)
+    elif transition:
+      event_object.extra_string = transition_str
+
+    return super(FirefoxPageVisitFormatter, self).GetMessages(event_object)
