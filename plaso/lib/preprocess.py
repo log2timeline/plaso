@@ -336,7 +336,9 @@ class Collector(object):
         re_list.append(self.GetExtendedPath(path_part))
       else:
         try:
-          re_list.append(re.compile(r'%s' % path_part, re.I | re.S))
+          # We compile the regular expression so it matches the entire string
+          # from beginning to end.
+          re_list.append(re.compile(r'^%s$' % path_part, re.I | re.S))
         except sre_constants.error as e:
           logging.warning(
               u'Unable to append the following expression: %s due to %s',

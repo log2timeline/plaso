@@ -19,20 +19,14 @@ EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
 # Run the tests in a specific order.
-for SUBDIR in "lib filters classifier parsers registry output frontend";
+for SUBDIR in lib filters classifier parsers registry output frontend;
 do
-  TEST_FILES=`find ${SUBDIR} -name "*_test.py" | grep -v "\/build\/"`;
+  TEST_FILES=`find "plaso/${SUBDIR}" -name "*_test.py" | grep -v "\/build\/"`;
 
   for TEST_FILE in ${TEST_FILES};
   do
-    # TODO: black listing this test for now.
-    if [ "${TEST_FILE}" = "frontend/psort_test.py" ];
-    then
-      continue;
-    fi
-
     echo "---+ ${TEST_FILE} +---"
-    PYTHONPATH=../ /usr/bin/python ${TEST_FILE}
+    PYTHONPATH=. /usr/bin/python ${TEST_FILE}
 
     if [ $? -ne 0 ]
     then

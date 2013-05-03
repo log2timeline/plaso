@@ -32,7 +32,7 @@ class CollectionFilterTest(unittest.TestCase):
     with tempfile.NamedTemporaryFile(delete=False) as fh:
       filter_name = fh.name
       # Three hits.
-      fh.write('/lib/collector_.+.py\n')
+      fh.write('/plaso/lib/collector_.+.py\n')
       # A single hit.
       fh.write('/test_data/.+evtx\n')
       # A single hit.
