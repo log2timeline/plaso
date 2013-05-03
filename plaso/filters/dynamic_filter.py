@@ -94,7 +94,8 @@ class DynamicFilter(eventfilter.EventObjectFilter):
         raise errors.WrongFilterPlugin('No filter defined for DynamicFilter.')
 
     if lex.state != 'END':
-      raise errors.WrongFilterPlugin('Malformed DynamicFilter, end state not reached.')
+      raise errors.WrongFilterPlugin(
+          'Malformed DynamicFilter, end state not reached.')
 
     self._fields = lex._fields
     if lex._filter:

@@ -36,21 +36,15 @@ if sys.version < '2.7':
 def GetTools():
   """List up all scripts that should be runable from the command line."""
   data = []
-  for _, _, filenames in os.walk('frontend/'):
+  for _, _, filenames in os.walk(os.path.join('plaso', 'frontend')):
     for filename in filenames:
+      if '_test' in filename:
+        continue
       if '.py' in filename and filename != '__init__.py':
-        if os.path.isfile(os.path.join('frontend', filename)):
-          data.append(os.path.join('frontend', filename))
+        if os.path.isfile(os.path.join('plaso', 'frontend', filename)):
+          data.append(os.path.join('plaso', 'frontend', filename))
 
   return data
-
-def GetPackages():
-  packages = ['plaso']
-
-  for package in find_packages('.'):
-    packages.append('plaso.' + package)
-
-  return packages
 
 
 def GetFileList(path, patterns):
@@ -68,11 +62,11 @@ def GetFileList(path, patterns):
 
 
 setup(name='plaso',
-      version='0.1',
+      version='1.0.2dev',
       description='The plaso backend as well as few front-ends.',
       license='Apache License, Version 2.0',
       url='https://sites.google.com/a/kiddaland.net/plaso',
-      package_dir={'plaso': '../plaso'},
+      package_dir={'plaso': 'plaso'},
       scripts=GetTools(),
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -81,7 +75,7 @@ setup(name='plaso',
           'Programming Language :: Python',
       ],
       #include_package_data=True,
-      packages=GetPackages(),
+      packages=find_packages('.'),
       package_data={'plaso.test_data': GetFileList('test_data', ['*'])},
      )
 

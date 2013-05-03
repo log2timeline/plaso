@@ -163,7 +163,7 @@ class PlasoTargetedDirectory(unittest.TestCase):
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as fh:
       filter_name = fh.name
-      fh.write('/lib/collector_.+.py\n')
+      fh.write('/plaso/lib/collector_.+.py\n')
       fh.write('/test_data/.+evtx\n')
       fh.write('/AUTHORS\n')
       fh.write('/does_not_exist/some_file_[0-9]+txt\n')
@@ -192,8 +192,8 @@ class PlasoTargetedDirectory(unittest.TestCase):
     for pathspec in pathspecs:
       paths.append(pathspec.file_path)
 
-    self.assertTrue('./lib/collector_filter.py' in paths)
-    self.assertTrue('./lib/collector_filter_test.py' in paths)
+    self.assertTrue('./plaso/lib/collector_filter.py' in paths)
+    self.assertTrue('./plaso/lib/collector_filter_test.py' in paths)
     self.assertTrue('././AUTHORS' in paths)
 
 
