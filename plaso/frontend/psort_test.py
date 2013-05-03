@@ -81,7 +81,10 @@ class TestFormatter(output.LogOutputFormatter):
         'short,desc,version,filename,inode,notes,format,extra\n'))
 
   def EventBody(self, event_object):
-    self.filehandle.write(u'{}\n.'.format(unicode(event_object)))
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    msg, _= event_formatter.GetMessages(event_object)
+    self.filehandle.write(u'{}/{} {}\n'.format(
+        event_object.source_short, event_object.source_long, msg))
 
 
 class TestEventBuffer(output.EventBuffer):

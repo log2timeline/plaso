@@ -20,6 +20,7 @@ from plaso.lib import eventdata
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
+
 class SymantecFormatter(eventdata.ConditionalEventFormatter):
   """Define the formatting for Symantec files."""
 
@@ -121,7 +122,8 @@ class SymantecFormatter(eventdata.ConditionalEventFormatter):
       '3': 'Deleted',
       '4': 'Left alone',
       '5': 'Cleaned',
-      '6': 'Cleaned or macros deleted (no longer used as of Symantec AntiVirus 9.x)',
+      '6': ('Cleaned or macros deleted (no longer used as of '
+            'Symantec AntiVirus 9.x)'),
       '7': 'Saved file as...',
       '8': 'Sent to Intel (AMS)',
       '9': 'Moved to backup location',
