@@ -354,8 +354,12 @@ class PlasoStorage(object):
       for store_number in number_range:
         if proto_out:
           event_object = self.GetProtoEntry(store_number)
+          while event_object.timestamp < self._bound_first:
+            event_object = self.GetProtoEntry(store_number)
         else:
           event_object = self.GetEntry(store_number)
+          while event_object.timestamp < self._bound_first:
+            event_object = self.GetEntry(store_number)
 
         heapq.heappush(
             self._merge_buffer,
