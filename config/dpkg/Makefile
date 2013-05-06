@@ -8,44 +8,44 @@ prefix=debian/tmp/usr
 
 all: build_log2timeline build_pinfo build_pprof build_pshell build_psort
 
-build_log2timeline: frontend/log2timeline.py
+build_log2timeline: plaso/frontend/log2timeline.py
 	$(PYINSTALLER) \
 	  --onedir \
 	  --console \
 	  --name=log2timeline \
-	  --paths=../ \
+	  --paths=./ \
 	  $<
 
-build_pinfo: frontend/pinfo.py
+build_pinfo: plaso/frontend/pinfo.py
 	$(PYINSTALLER) \
 	  --onedir \
 	  --console \
 	  --name=pinfo \
-	  --paths=../ \
+	  --paths=./ \
 	  $<
 
-build_pprof: frontend/pprof.py
+build_pprof: plaso/frontend/pprof.py
 	$(PYINSTALLER) \
 	  --onedir \
 	  --console \
 	  --name=pprof \
-	  --paths=../ \
+	  --paths=./ \
 	  $<
 
-build_pshell: frontend/pshell.py
+build_pshell: plaso/frontend/pshell.py
 	$(PYINSTALLER) \
 	  --onedir \
 	  --console \
 	  --name=pshell \
-	  --paths=../ \
+	  --paths=./ \
 	  $<
 
-build_psort: frontend/psort.py
+build_psort: plaso/frontend/psort.py
 	$(PYINSTALLER) \
 	  --onedir \
 	  --console \
 	  --name=psort \
-	  --paths=../ \
+	  --paths=./ \
 	  $<
 
 clean:
