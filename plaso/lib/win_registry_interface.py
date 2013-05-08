@@ -111,6 +111,17 @@ class KeyPlugin(RegistryPlugin):
                       self.plugin_name, e)
       return None
 
+    # Special case of Wow6432 registry redirection.
+    # URL:  http://msdn.microsoft.com/en-us/library/windows/desktop/\
+    # ms724072%28v=vs.85%29.aspx
+    if key_fixed.startswith('\\Software'):
+      _, first, second = key_fixed.partition('\\Software')
+      key_redirect = u'{}\\Wow6432Node{}'.format(first, second)
+
+      if key_redirect == key.path:
+        self._key = key
+        return self.GetEntries()
+
     if key.path != key_fixed:
       return None
 
