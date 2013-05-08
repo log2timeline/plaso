@@ -51,19 +51,19 @@ if __name__ == '__main__':
       if line == '\n':
         empty_line += 1
 
-      if line[0:6] == 'class ':
+      if line.startswith('class '):
         if empty_line != 2:
           print (u'Line nr %d [class declaration]: Need two empty lines before'
                  ' class declaration.') % line_counter
           error_counter += 1
 
-      if line[0:4] == 'def ':
+      if line.startswith('def '):
         if empty_line != 2:
           print (u'Line nr %d [function declaration]: Need two empty lines befo'
                  're top level function declaration.') % line_counter
           error_counter += 1
 
-      if line != '\n':
+      if line != '\n' and not line.startswith('#'):
         empty_line = 0
 
       if len(line) > 81:

@@ -73,6 +73,7 @@ echo "Installing tools."
 install_tool log2timeline
 install_tool pinfo
 install_tool pprof
+install_tool preg
 install_tool pshell
 install_tool psort
 
