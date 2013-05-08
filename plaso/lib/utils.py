@@ -75,9 +75,9 @@ class PathReplacer(lexer.Lexer):
           u'Path variable: {} not discovered yet.'.format(match.group(1)))
 
 
-def FormatHeader(header):
+def FormatHeader(header, char='*'):
   """Format and return a header for output."""
-  return '\n{:*^80}'.format(u' %s ' % header)
+  return ('\n{:%s^80}' % char).format(u' %s ' % header)
 
 
 def FormatOutputString(name, description, col_length=25):
