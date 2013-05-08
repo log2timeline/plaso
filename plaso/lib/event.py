@@ -487,7 +487,8 @@ class EventObject(object):
     else:
       msg, msg_short = event_formatter.GetMessages(self)
       out_write.append(u'{2:>7}: {0}\n{3:>7}: {1}\n'.format(
-          msg_short, msg, 'Short', 'Long').encode('utf-8'))
+          utils.GetUnicodeString(msg_short), utils.GetUnicodeString(msg),
+          'Short', 'Long'))
 
     if hasattr(self, 'pathspec'):
       pathspec_string = str(self.pathspec.ToProto()).rstrip()
@@ -513,8 +514,9 @@ class EventObject(object):
     out_write.append('\n')
     out_additional.append('')
 
-    return u'{}{}'.format(u'\n'.join(out_write).encode('utf-8'),
-                          u'\n'.join(out_additional).encode('utf-8'))
+    return u'{}{}'.format(utils.GetUnicodeString(
+        u'\n'.join(out_write)), utils.GetUnicodeString(
+            u'\n'.join(out_additional)))
 
   def FromProto(self, proto):
     """Unserializes the event object from a protobuf.
