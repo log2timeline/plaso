@@ -74,3 +74,7 @@ class WinRegistryValueError(Error):
 
 class WrongFilterPlugin(Error):
   """Raised when a particular filter does not support the filter query."""
+
+
+class WrongPlistPlugin(Error):
+  """Error reporting wrong plist plugin used."""

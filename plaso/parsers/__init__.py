@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2012 Google Inc. All Rights Reserved.
+# Copyright 2013 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ from plaso.parsers import hachoir
 from plaso.parsers import ls_quarantine
 from plaso.parsers import mactime
 from plaso.parsers import msiecf
+from plaso.parsers import plist
 from plaso.parsers import selinux
 from plaso.parsers import syslog
 from plaso.parsers import symantec

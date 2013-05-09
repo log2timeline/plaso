@@ -40,5 +40,5 @@ categories = {
     'macosx': [
         'ApplicationUsageParser', 'ChromeHistoryParser',
         'FirefoxHistoryParser', 'GoogleDriveParser',
-        'LsQuarantineParser', 'PfileStatParser', 'SyslogParser'],
+        'LsQuarantineParser', 'PfileStatParser', 'PlistParser', 'SyslogParser'],
 }
