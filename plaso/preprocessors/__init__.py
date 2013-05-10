@@ -18,6 +18,7 @@
 from plaso.lib import preprocess
 
 from plaso.preprocessors import linux
+from plaso.preprocessors import mac
 from plaso.preprocessors import win
 
 

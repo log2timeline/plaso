@@ -18,7 +18,7 @@
 import datetime
 import logging
 
-from plaso.lib import plist_event as event
+from plaso.events import plist_event
 from plaso.lib import plist_interface
 from plaso.lib import timelib
 
@@ -38,11 +38,11 @@ class DefaultPlugin(plist_interface.PlistPlugin):
     Yields:
       An EventObject from Plists values that are date objects.
     """
-    for root, key, value in self.RecurseKey(self._top_level):
+    for root, key, value in plist_interface.RecurseKey(self._top_level):
       if isinstance(value, datetime.datetime):
         time = timelib.Timestamp.FromPosixTime(timelib.Timetuple2Timestamp(
             value.timetuple()))
-        yield event.PlistEvent(root, key, time)
+        yield plist_event.PlistEvent(root, key, time)
       # TODO(make): Binplist keeps a list of offsets but not mapped to a key.
       # adjust code when there is a way to map keys to offsets.
 
