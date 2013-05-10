@@ -15,7 +15,7 @@
 # limitations under the License.
 """This file contains a default plist plugin in Plaso."""
 
-from plaso.lib import plist_event as event
+from plaso.events import plist_event
 from plaso.lib import plist_interface
 from plaso.lib import timelib
 
@@ -57,26 +57,26 @@ class BtPlugin(plist_interface.PlistPlugin):
         if 'LastInquiryUpdate' in value:
           time = timelib.Timestamp.FromPosixTime(timelib.Timetuple2Timestamp(
               value['LastInquiryUpdate'].timetuple()))
-          yield event.PlistEvent(root, key, time, desc)
+          yield plist_event.PlistEvent(root, key, time, desc)
 
       if value.get('LastInquiryUpdate'):
         desc = u' '.join(filter(None, ('Bluetooth Discovery', name)))
         key = u''.join((device, '/LastInquiryUpdate'))
         time = timelib.Timestamp.FromPosixTime(timelib.Timetuple2Timestamp(
             value['LastInquiryUpdate'].timetuple()))
-        yield event.PlistEvent(root, key, time, desc)
+        yield plist_event.PlistEvent(root, key, time, desc)
 
       if value.get('LastNameUpdate'):
         desc = u' '.join(filter(None, ('Device Name Set', name)))
         key = u''.join((device, '/LastNameUpdate'))
         time = timelib.Timestamp.FromPosixTime(timelib.Timetuple2Timestamp(
             value['LastNameUpdate'].timetuple()))
-        yield event.PlistEvent(root, key, time, desc)
+        yield plist_event.PlistEvent(root, key, time, desc)
 
       if value.get('LastServicesUpdate'):
         desc = desc = u' '.join(filter(None, ('Services Updated', name)))
         key = ''.join((device, '/LastServicesUpdate'))
         time = timelib.Timestamp.FromPosixTime(timelib.Timetuple2Timestamp(
             value['LastServicesUpdate'].timetuple()))
-        yield event.PlistEvent(root, key, time, desc)
+        yield plist_event.PlistEvent(root, key, time, desc)
 

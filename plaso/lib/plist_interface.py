@@ -89,59 +89,61 @@ class PlistPlugin(object):
     if set(top_level.keys()) >= self.PLIST_KEYS:
       logging.debug('Plist Plugin Used: {} for: {}'.format(self.plugin_name,
                                                            plist_name))
-      self.match = self.GetKeys(top_level, self.PLIST_KEYS)
+      self.match = GetKeys(top_level, self.PLIST_KEYS)
       return self.GetEntries()
 
     raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
 
-  def RecurseKey(self, recur_item, root='', depth=15):
-    """Recurse through nested dictionaries yielding non-dictionary values.
 
-    Args:
-      recur_item: An object to be checked for additional nested items.
-      root: The pathname of the current working key.
-      depth: A counter to ensure we stop at the maximum recursion depth.
+def RecurseKey(recur_item, root='', depth=15):
+  """Recurse through nested dictionaries yielding non-dictionary values.
 
-    Yields:
-      A tuple of the root, key, and value from a plist.
-    """
-    if depth < 1:
-      logging.warning('%s: Recursion limit hit for key: %s',
-                      self.plugin_name, root)
-      return
+  Args:
+    recur_item: An object to be checked for additional nested items.
+    root: The pathname of the current working key.
+    depth: A counter to ensure we stop at the maximum recursion depth.
 
-    if not isinstance(recur_item, dict):
-      for value in recur_item:
-        yield root, '', value
-    else:
-      for key, value in recur_item.iteritems():
-        yield root, key, value
-        if isinstance(value, dict):
-          for keyval in self.RecurseKey(
-              value, root=u'/'.join([root, key]), depth=depth - 1):
-            yield keyval
-        if isinstance(value, list):
-          for item in value:
-            if isinstance(item, dict):
-              for keyval in self.RecurseKey(
-                  item, root=u'/'.join([root, key]), depth=depth - 1):
-                yield keyval
+  Yields:
+    A tuple of the root, key, and value from a plist.
+  """
+  if depth < 1:
+    logging.warning(
+        u'Recursion limit hit for key: %s', root)
+    return
 
-  def GetKeys(self, top_level, keys):
-    """Helper function to return keys nested in a plist dict.
+  if not isinstance(recur_item, dict):
+    for value in recur_item:
+      yield root, '', value
+  else:
+    for key, value in recur_item.iteritems():
+      yield root, key, value
+      if isinstance(value, dict):
+        for keyval in RecurseKey(
+            value, root=u'/'.join([root, key]), depth=depth - 1):
+          yield keyval
+      if isinstance(value, list):
+        for item in value:
+          if isinstance(item, dict):
+            for keyval in RecurseKey(
+                item, root=u'/'.join([root, key]), depth=depth - 1):
+              yield keyval
 
-    Args:
-      top_level: A serialized plist file.
-      keys: A list of keys that should be returned.
 
-    Returns:
-      A dictionary with just the keys requested.
-    """
-    match = {}
-    for _, parsed_key, parsed_value in self.RecurseKey(top_level):
-      if parsed_key in keys:
-        match[parsed_key] = parsed_value
-    return match
+def GetKeys(top_level, keys):
+  """Helper function to return keys nested in a plist dict.
+
+  Args:
+    top_level: A serialized plist file.
+    keys: A list of keys that should be returned.
+
+  Returns:
+    A dictionary with just the keys requested.
+  """
+  match = {}
+  for _, parsed_key, parsed_value in RecurseKey(top_level):
+    if parsed_key in keys:
+      match[parsed_key] = parsed_value
+  return match
 
 
 def GetPlistPlugins(pre_obj=None):

@@ -24,12 +24,16 @@ import sre_constants
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfile
+from plaso.lib import plist_interface
 from plaso.lib import putils
 from plaso.lib import registry
 from plaso.lib import utils
 from plaso.lib import win_registry
 
 from plaso.proto import plaso_storage_pb2
+
+from binplist import binplist
+from xml.etree import ElementTree
 
 import pytsk3
 import pytz
@@ -204,6 +208,114 @@ class PlasoPreprocess(object):
     proto = self.ToProto()
 
     return proto.SerializeToString()
+
+
+class MacPlistPreprocess(PreprocessPlugin):
+  """A preprocessing class that extract values from plist files."""
+  __abstract = True
+
+  SUPPORTED_OS = ['MacOSX']
+  WEIGHT = 2
+
+  # Path to the plist file to be parsed, can depend on paths discovered
+  # in previous preprocessors.
+  PLIST_PATH = ''
+
+  # The key that's value should be returned back.
+  PLIST_KEY = ''
+
+  def GetValue(self):
+    """Return the value gathered from a plist file for preprocessing."""
+    try:
+      file_path, _, file_name = self.PLIST_PATH.rpartition('/')
+      paths = self._collector.GetFilePaths(file_path, file_name)
+    except errors.PathNotFound as e:
+      raise errors.PreProcessFail(u'Unable to find path: %s' % e)
+
+    if not paths:
+      raise errors.PreProcessFail(u'Unable to find path: %s' % self.PLIST_PATH)
+
+    try:
+      filehandle = self._collector.OpenFile(paths[0])
+    except IOError:
+      raise errors.PreProcessFail(
+          u'Unable to open file {}: {}'.format(paths[0], e))
+
+    return self.ParseFile(filehandle)
+
+  def ParseFile(self, filehandle):
+    """Parse the file and return parsed key."""
+    try:
+      plist_file = binplist.BinaryPlist(filehandle)
+      top_level_object = plist_file.Parse()
+    except binplist.FormatError as e:
+      raise errors.PreProcessFail(
+          u'File is not a plist:{}'.format(utils.GetUnicodeString(e)))
+    except OverflowError as e:
+      raise errors.PreProcessFail(
+          u'Error processing:{} Error:{}'.format(filehandle.display_name, e))
+
+    if not plist_file:
+      raise errors.PreProcessFail(
+          u'File is not a plist:{}'.format(utils.GetUnicodeString(
+              filehandle.display_name)))
+
+    match = plist_interface.GetKeys(
+        top_level_object, frozenset([self.PLIST_KEY]))
+
+    if not match:
+      raise errors.PreProcessFail(
+          u'No plist keys found, trying to locate: {}'.format(self.PLIST_KEY))
+
+    return self.ParseKey(match)
+
+  def ParseKey(self, key):
+    """Fetch the first key as defined in the PLIST_KEY and return value."""
+    value = key.get(self.PLIST_KEY, None)
+    if not value:
+      raise errors.PreProcessFail('Value not found.')
+
+    return value
+
+
+class MacXMLPlistPreprocess(MacPlistPreprocess):
+  """A preprocessing class that extract values from a XML plist file."""
+  __abstract = True
+
+  def ParseFile(self, filehandle):
+    """Parse the file and return parsed key."""
+    # TODO: Move to defusedxml for safer XML parsing.
+    try:
+      xml = ElementTree.parse(filehandle)
+    except ElementTree.ParseError:
+      raise errors.PreProcessFail(u'File is not a XML file.')
+    except IOError:
+      raise errors.PreProcessFail(u'File is not a XML file.')
+
+    match = self._GetKeys(xml.getroot())
+
+    if not match:
+      raise errors.PreProcessFail(
+          u'Keys not found inside plist file [{}].'.format(self.PLIST_KEY))
+
+    return self.ParseKey(match)
+
+  def _GetKeys(self, xml_root):
+    """Return a dict with the requested keys."""
+    match = {}
+
+    generator = xml_root.iter()
+    for key in generator:
+      if 'key' in key.tag and self.PLIST_KEY in key.text:
+        value_key = generator.next()
+        value = ''
+        for subkey in value_key.iter():
+          if 'string' in subkey.tag:
+            value = subkey.text
+        match[key.text] = value
+
+    # Now we need to go over the match dict and retrieve values.
+    return match
 
 
 class WinRegistryPreprocess(PreprocessPlugin):
@@ -606,7 +718,7 @@ def GuessOS(col_obj):
 
   try:
     if list(col_obj.FindPaths('/System/Library')):
-      return 'OSX'
+      return 'MacOSX'
   except errors.PathNotFound:
     pass
 
