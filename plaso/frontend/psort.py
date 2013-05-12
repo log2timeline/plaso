@@ -73,6 +73,8 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
     my_filter: A filter object.
   """
   filter_count = 0
+  total_count = 0
+  limit = getattr(my_filter, 'limit', 0)
 
   event_object = formatter.FetchEntry()
   while event_object:
@@ -84,6 +86,10 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
 
       if my_filter.Match(event_match):
         output_buffer.Append(event_object)
+        if limit:
+          total_count += 1
+          if total_count is limit:
+            break
       else:
         filter_count += 1
     else:

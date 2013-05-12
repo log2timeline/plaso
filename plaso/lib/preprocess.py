@@ -697,7 +697,7 @@ def GuessOS(col_obj):
 
   The available return strings are:
     + Windows
-    + OSX
+    + MacOSX
     + Linux
 
   Args:

@@ -35,11 +35,15 @@ class DynamicFilterTest(test_helper.FilterTestHelper):
     self.TestFail('some_stuff is "random" and other_stuff is not "random"')
     self.TestFail('SELECT stuff FROM machine WHERE conditions are met')
     self.TestFail('SELECT field_a, field_b WHERE ')
+    self.TestFail('SELECT field_a, field_b LIMIT WHERE')
 
   def testFilterApprove(self):
     self.TestTrue('SELECT stuff FROM machine WHERE some_stuff is "random"')
     self.TestTrue('SELECT field_a, field_b, field_c')
+    self.TestTrue('SELECT field_a, field_b, field_c LIMIT 10')
     self.TestTrue('SELECT field_a, field_b, field_c WHERE date > "2012"')
+    self.TestTrue(
+        'SELECT field_a, field_b, field_c WHERE date > "2012" LIMIT 100')
     self.TestTrue((
         'SELECT parser, date, time WHERE some_stuff is "random" and '
         'date < "2021-02-14 14:51:23"'))
@@ -57,6 +61,15 @@ class DynamicFilterTest(test_helper.FilterTestHelper):
     self.test_filter.CompileFilter(query)
     self.assertEquals(['date', 'message', 'zone', 'hostname'],
                       self.test_filter.fields)
+
+    query = 'SELECT hlutir'
+    self.test_filter.CompileFilter(query)
+    self.assertEquals(['hlutir'], self.test_filter.fields)
+
+    query = 'SELECT hlutir LIMIT 10'
+    self.test_filter.CompileFilter(query)
+    self.assertEquals(['hlutir'], self.test_filter.fields)
+    self.assertEquals(10, self.test_filter.limit)
 
 
 if __name__ == '__main__':
