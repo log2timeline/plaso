@@ -25,12 +25,16 @@ class SelectiveLexer(lexer.Lexer):
   tokens = [
     lexer.Token('INITIAL', r'SELECT', '', 'FIELDS'),
     lexer.Token('FIELDS', r'(.+) WHERE ', 'SetFields', 'FILTER'),
+    lexer.Token('FIELDS', r'(.+) LIMIT', 'SetFields', 'LIMIT_END'),
     lexer.Token('FIELDS', r'(.+)$', 'SetFields', 'END'),
-    lexer.Token('FILTER', r'([^\r?\n]+)', 'SetFilter', 'END')]
+    lexer.Token('FILTER', r'(.+) LIMIT', 'SetFilter', 'LIMIT_END'),
+    lexer.Token('FILTER', r'(.+)$', 'SetFilter', 'END'),
+    lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
 
   def __init__(self, data=''):
     """Initialize the lexer."""
     self._fields = []
+    self._limit = 0
     self._filter = None
     super(SelectiveLexer, self).__init__(data)
 
@@ -38,6 +42,18 @@ class SelectiveLexer(lexer.Lexer):
   def SetFilter(self, match, **kwargs):
     """Set the filter query."""
     self._filter = match.group(1)
+
+  __pychecker__ = 'unusednames=kwargs'
+  def SetLimit(self, match, **kwargs):
+    """Set the row limit."""
+    try:
+      limit = int(match.group(1))
+    except ValueError:
+      self.Error('Invalid limit value, should be int [{}] = {}'.format(
+          type(match.group(1)), match.group(1)))
+      limit = 0
+
+    self._limit = limit
 
   __pychecker__ = 'unusednames=kwargs'
   def SetFields(self, match, **kwargs):
@@ -71,10 +87,16 @@ class DynamicFilter(eventfilter.EventObjectFilter):
     """Set the fields property."""
     return self._fields
 
+  @property
+  def limit(self):
+    """Return the limit of row counts."""
+    return self._limit
+
   def __init__(self):
     """Initialize the selective EventObjectFilter."""
-    self._fields = []
     super(DynamicFilter, self).__init__()
+    self._fields = []
+    self._limit = 0
 
   def CompileFilter(self, filter_string):
     """Compile the filter string into a EventObjectFilter matcher."""
@@ -88,16 +110,19 @@ class DynamicFilter(eventfilter.EventObjectFilter):
     if lex.error:
       raise errors.WrongFilterPlugin('No fields defined.')
 
-    if lex.state != 'END':
-      _ = lex.NextToken()
-      if lex.error:
-        raise errors.WrongFilterPlugin('No filter defined for DynamicFilter.')
+    if lex.state is not 'END':
+      while lex.state is not 'END':
+        _ = lex.NextToken()
+        if lex.error:
+          raise errors.WrongFilterPlugin('No filter defined for DynamicFilter.')
 
     if lex.state != 'END':
       raise errors.WrongFilterPlugin(
           'Malformed DynamicFilter, end state not reached.')
 
     self._fields = lex._fields
+    self._limit = lex._limit
+
     if lex._filter:
       super(DynamicFilter, self).CompileFilter(lex._filter)
     else:

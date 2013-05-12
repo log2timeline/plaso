@@ -296,7 +296,7 @@ class Engine(object):
         prepend_filter = 'win7'
 
     if hasattr(pre_obj, 'guessed_os'):
-      if pre_obj.guessed_os == 'OSX':
+      if pre_obj.guessed_os == 'MacOSX':
         prepend_filter = u'macosx'
       elif pre_obj.guessed_os == 'Linux':
         prepend_filter = 'linux'
