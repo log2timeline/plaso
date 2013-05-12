@@ -48,6 +48,11 @@ class FilterObject(object):
     """Return a list of fields for adaptive output modules."""
     return []
 
+  @property
+  def limit(self):
+    """Returns the max number of records to return, or zero for all records."""
+    return 0
+
   @abc.abstractmethod
   def CompileFilter(self, filter_string):
     """Verify filter string and prepare the filter for later usage.
