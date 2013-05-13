@@ -36,6 +36,7 @@ class EventTimestamp(object):
   # Written time and Modification time are considered the same.
   WRITTEN_TIME = u'Content Modification Time'
   EXIT_TIME = u'Exit Time'
+  LAST_RUNTIME = u'Last Time Executed'
 
   FILE_DOWNLOADED = u'File Downloaded'
   PAGE_VISITED = u'Page Visited'

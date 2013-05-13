@@ -44,12 +44,15 @@ class BinaryTests(unittest.TestCase):
     path = os.path.join('test_data', 'ping.pf')
     with open(path, 'rb') as fh:
       fh.seek(0x10)
+      # Read a null char terminated string.
       self.assertEquals(binary.ReadUtf16Stream(fh), 'PING.EXE')
 
       fh.seek(0x27F8)
+      # Read a fixed size string.
       volume_string = binary.ReadUtf16Stream(fh, byte_size=46)
       self.assertEquals(volume_string, u'\\DEVICE\\HARDDISKVOLUME')
       fh.seek(7236)
+      # Read another null char terminated string.
       self.assertEquals(
           binary.ReadUtf16Stream(fh),
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
