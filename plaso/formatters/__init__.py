@@ -33,4 +33,5 @@ from plaso.formatters import volatility
 from plaso.formatters import winevt
 from plaso.formatters import winevtx
 from plaso.formatters import winlnk
+from plaso.formatters import winprefetch
 from plaso.formatters import winreg

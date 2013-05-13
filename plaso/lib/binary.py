@@ -17,7 +17,7 @@
 import binascii
 
 
-def ReadUtf16Stream(filehandle, offset=None, eol_char='\x00\x00', byte_size=0):
+def ReadUtf16Stream(filehandle, offset=None, byte_size=0):
   """Read an UTF-16 unicode line and returns it.
 
   Read an UTF-16 encoded line that's terminated by a
@@ -27,7 +27,6 @@ def ReadUtf16Stream(filehandle, offset=None, eol_char='\x00\x00', byte_size=0):
     filehandle: A file like object to read the data from.
     offset: An offset into the filehandle, if -1 or not set
     the current location into the filehandle is used.
-    eol_char: The end of line character.
     byte_size: Size in bytes of the string to be read.
 
   Returns:
@@ -44,7 +43,7 @@ def ReadUtf16Stream(filehandle, offset=None, eol_char='\x00\x00', byte_size=0):
     if byte_size and size_counter >= byte_size:
       break
 
-    if eol_char in char_raw:
+    if '\x00\x00' in char_raw:
       break
     char_buffer.append(char_raw)
     size_counter += 2
