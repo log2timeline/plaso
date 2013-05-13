@@ -18,20 +18,22 @@
 categories = {
     'winxp': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'MsiecfParser', 'PfileStatParser', 'Symantec',
-        'WinEvtParser', 'WinLnkParser', 'WinRegistryParser'],
+        'MsiecfParser', 'PfileStatParser', 'Symantec', 'WinEvtParser',
+        'WinLnkParser', 'WinPrefetchParser', 'WinRegistryParser'],
     'winxp_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
         'Hachoir', 'MsiecfParser', 'PfileStatParser', 'Symantec',
-        'WinEvtParser', 'WinLnkParser', 'WinRegistryParser'],
+        'WinEvtParser', 'WinLnkParser', 'WinPrefetchParser',
+        'WinRegistryParser'],
     'win7': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'MsiecfParser', 'PfileStatParser', 'Symantec',
-        'WinEvtxParser', 'WinLnkParser', 'WinRegistryParser'],
+        'MsiecfParser', 'PfileStatParser', 'Symantec', 'WinEvtxParser',
+        'WinLnkParser', 'WinPrefetchParser', 'WinRegistryParser'],
     'win7_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
         'Hachoir', 'MsiecfParser', 'PfileStatParser', 'Symantec',
-        'WinEvtxParser', 'WinLnkParser', 'WinRegistryParser'],
+        'WinEvtxParser', 'WinLnkParser', 'WinPrefetchParser',
+        'WinRegistryParser'],
     'webhist': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'MsiecfParser'],
     'linux': [
