@@ -114,9 +114,11 @@ class Sql4n6(output.LogOutputFormatter):
         self.set_status('Created table l2t_saved_query')
 
       self.curs.execute('CREATE TABLE l2t_disk (disk_type INT, mount_path TEXT,'
-                        ' dd_path TEXT, dd_offset TEXT, export_path TEXT)')
+                        ' dd_path TEXT, dd_offset TEXT, storage_file TEXT,'
+                        ' export_path TEXT)')
       self.curs.execute('INSERT INTO l2t_disk (disk_type, mount_path, dd_path,'
-                        'dd_offset, export_path) VALUES (0, "", "", "", "")')
+                        'dd_offset, storage_file, export_path) VALUES '
+                        '(0, "", "", "", "", "")')
       if self.set_status:
         self.set_status('Created table l2t_disk')
 
