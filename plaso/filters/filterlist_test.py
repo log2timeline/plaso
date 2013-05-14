@@ -18,8 +18,8 @@ import os
 import tempfile
 import unittest
 
-from plaso.filters import test_helper
 from plaso.filters import filterlist
+from plaso.filters import test_helper
 
 
 class ObjectFilterTest(test_helper.FilterTestHelper):
