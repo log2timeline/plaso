@@ -148,7 +148,8 @@ def cd(key):
     RegCache.cur_key = registry_key
     ip = get_ipython()
     ip.prompt_manager.in_template = u'{}->{} [\\#] '.format(
-        RegCache.GetHiveName(), path)
+        StripCurlyBrace(RegCache.GetHiveName()),
+        StripCurlyBrace(path))
   else:
     print 'Unable to change to [{}]'.format(key_path)
 
@@ -195,6 +196,11 @@ def ls(verbose=False):
       print 'dr-xr-xr-x {}'.format(entry)
     else:
       print '-r-xr-xr-x {}'.format(entry)
+
+
+def StripCurlyBrace(string):
+  """Return a format "safe" string."""
+  return string.replace('}', '}}').replace('{', '{{')
 
 
 def IsLoaded():
@@ -379,6 +385,7 @@ def ErrorAndDie(arg_parser, error):
   print ''
   logging.error(error)
   sys.exit(1)
+
 
 def Main():
   """Run the tool."""
@@ -686,7 +693,7 @@ def Main():
 
   # "Fix" for Windows redirect.
   for key in keys:
-    if key.startswith('\\Software'):
+    if key.startswith('\\Software') and 'Wow6432Node' not in key:
       _, first, second = key.partition('\\Software')
       keys.append(u'{}\\Wow6432Node{}'.format(first, second))
 

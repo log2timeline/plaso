@@ -39,29 +39,25 @@ class Sql4n6(output.LogOutputFormatter):
   META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
                  'color', 'type', 'record_number']
 
-  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc,
-               fields=None, append=False, set_status=None):
+  def __init__(self, store, filehandle=sys.stdout, config=None,
+               filter_use=None):
     """Constructor for the output module.
 
     Args:
       store: The storage object.
       filehandle: A file-like object that can be written to.
-      zone: The output time zone (a pytz object).
-      fields: The fields to create index for.
-      append: Whether to create a new db or appending to an existing one.
-      set_status: Sets status dialog in 4n6time.
+      config: The configuration object for the module.
+      filter_use: The filter object used.
     """
     # TODO: Add a unit test for this output module.
-    super(Sql4n6, self).__init__(store, filehandle, zone)
-    self.set_status = set_status
+    super(Sql4n6, self).__init__(store, filehandle, config, filter_use)
+    self.set_status = getattr(config, 'status', None)
+
     # TODO: Revisit handeling this outside of plaso.
     self.dbname = filehandle
-    self.append = append
-    if fields:
-      self.fields = fields
-    else:
-      self.fields = [
-          'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color']
+    self.append = getattr(config, 'append', False)
+    self.fields = getattr(config, 'fields', [
+        'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color'])
 
   def Usage(self):
     """Return a quick help message that describes the output provided."""
