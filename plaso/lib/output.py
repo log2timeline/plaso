@@ -30,6 +30,7 @@ import sys
 
 from plaso.lib import registry
 from plaso.lib import utils
+
 import pytz
 
 
@@ -43,17 +44,23 @@ class LogOutputFormatter(object):
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
-  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc,
+  def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
     """Constructor for the output module.
 
     Args:
       store: A PlasoStorage object that defines the storage.
       filehandle: A file-like object that can be written to.
-      zone: The output time zone (a pytz object).
+      config: The configuration object, containing config information.
       filter_use: A filter_interface.FilterObject object.
     """
-    self.zone = zone
+    zone = getattr(config, 'timezone', 'UTC')
+    try:
+      self.zone = pytz.timezone(zone)
+    except pytz.UnknownTimeZoneError:
+      logging.warning(u'Unkown timezone: %s, default fallback to UTC', zone)
+      self.zone = pytz.utc
+
     self.filehandle = filehandle
     self.store = store
     self._filter = filter_use
@@ -147,18 +154,19 @@ class FileLogOutputFormatter(LogOutputFormatter):
 
   __abstract = True
 
-  def __init__(self, store, filehandle=sys.stdout, zone=pytz.utc,
+  def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
     """Set up the formatter."""
     super(FileLogOutputFormatter, self).__init__(
-        store, filehandle, zone, filter_use)
+        store, filehandle, config, filter_use)
     if not isinstance(filehandle, (file, StringIO.StringIO)):
       self.filehandle = open(filehandle, 'w')
 
   def End(self):
     """Close the open filehandle after the last output."""
     super(FileLogOutputFormatter, self).End()
-    self.filehandle.close()
+    if self.filehandle is not sys.stdout:
+      self.filehandle.close()
 
 
 class ProtoLogOutputFormatter(LogOutputFormatter):

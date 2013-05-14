@@ -21,6 +21,7 @@ Sample Usage:
 See additional details here: http://plaso.kiddaland.net/usage/psort
 """
 import argparse
+import collections
 import datetime
 import os
 import logging
@@ -72,8 +73,7 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
     formatter: An OutputFormatter.
     my_filter: A filter object.
   """
-  filter_count = 0
-  total_count = 0
+  counter = collections.Counter()
   limit = getattr(my_filter, 'limit', 0)
 
   event_object = formatter.FetchEntry()
@@ -85,29 +85,31 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
         event_match.FromProto(event_object)
 
       if my_filter.Match(event_match):
+        counter['Events Included'] += 1
         output_buffer.Append(event_object)
         if limit:
-          total_count += 1
-          if total_count is limit:
+          if counter['Events Included'] is limit:
             break
       else:
-        filter_count += 1
+        counter['Events Filtered Out'] += 1
     else:
+      counter['Events Included'] += 1
       output_buffer.Append(event_object)
 
     event_object = formatter.FetchEntry()
 
-  if filter_count:
-    logging.info('Events filtered out: %d', filter_count)
-
   if output_buffer.duplicate_counter:
-    logging.info(
-        'Duplicate entries removed: %d', output_buffer.duplicate_counter)
+    counter['Duplicate Removals'] = output_buffer.duplicate_counter
+
+  if limit:
+    counter['Limited By'] = limit
+  return counter
 
 
 def ParseStorage(my_args):
   """Open a storage file and parse through it."""
   filter_use = None
+  counter = None
   if my_args.filter:
     filter_use = filter_interface.GetFilter(my_args.filter)
     if not filter_use:
@@ -129,7 +131,7 @@ def ParseStorage(my_args):
                 my_args.output_format, sys.argv[0]))
         sys.exit(1)
       formatter = formatter_cls(
-              store, my_args.write, pytz.timezone(my_args.timezone), filter_use)
+              store, my_args.write, my_args, filter_use)
     except IOError as e:
       logging.error(u'Error occured during output processing: %s', e)
 
@@ -138,7 +140,16 @@ def ParseStorage(my_args):
       sys.exit(1)
 
     with output_lib.EventBuffer(formatter, my_args.dedup) as output_buffer:
-      ProcessOutput(output_buffer, formatter, filter_use)
+      counter = ProcessOutput(output_buffer, formatter, filter_use)
+
+    for information in store.GetStorageInformation():
+      if hasattr(information, 'counter'):
+        counter['Stored Events'] += information.counter['total']
+
+  if filter_use and not counter['Limited By']:
+    counter['Filter By Date'] = counter['Stored Events'] - counter[
+        'Events Included'] - counter['Events Filtered Out']
+  return counter
 
 
 def Main():
@@ -152,6 +163,10 @@ def Main():
       '-d', '--debug', action='store_true', dest='debug', default=False,
       help='Fall back to debug shell if psort fails.')
 
+  parser.add_argument(
+      '-q', '--quiet', action='store_true', dest='quiet', default=False,
+      help='Don\'t print out counter information after processing.')
+
   # TODO: Change this behavior so by default it runs with dedups removed once
   # the dedup process has been optimized and does not slow down the tool as
   # much as the current implementation.
@@ -163,7 +178,7 @@ def Main():
 
   parser.add_argument(
       '-o', '--output_format', metavar='FORMAT', dest='output_format',
-      default='L2tCsv', help='Output format.  -o list to see loaded modules.')
+      default='dynamic', help='Output format.  -o list to see loaded modules.')
 
   parser.add_argument(
       '-z', '--zone', metavar='TIMEZONE', default='UTC', dest='timezone',
@@ -243,7 +258,12 @@ def Main():
     my_args.write = sys.stdout
 
   try:
-    ParseStorage(my_args)
+    counter = ParseStorage(my_args)
+
+    if not my_args.quiet:
+      logging.info(utils.FormatHeader('Counter'))
+      for element, count in counter.most_common():
+        logging.info(utils.FormatOutputString(element, count))
   except IOError as e:
     # Piping results to "|head" for instance causes an IOError.
     if 'Broken pipe' not in str(e):
