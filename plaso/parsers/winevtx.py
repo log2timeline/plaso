@@ -36,9 +36,15 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
       recovered: Boolean value to indicate the record was recovered, False
                  by default.
     """
+    try:
+      timestamp = evtx_record.get_written_time_as_integer()
+    except OverflowError as e:
+      logging.warning(
+          u'Unable to read the timestamp from record, error: %s', e)
+      timestamp = 0
+
     super(WinEvtxRecordEvent, self).__init__(
-        evtx_record.get_written_time_as_integer(),
-        eventdata.EventTimestamp.WRITTEN_TIME)
+        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
 
     # TODO: refactor to formatter.
     self.source_long = 'WinEvtx'
