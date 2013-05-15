@@ -84,14 +84,24 @@ class WinEvtParser(parser.PlasoParser):
     """
     event_container = WinEvtRecordEventContainer(evt_record, recovered)
 
+    try:
+      creation_time = evt_record.get_creation_time_as_integer()
+    except OverflowError as e:
+      logging.warning(
+          u'Unable to read the timestamp from record, error: %s', e)
+      creation_time = 0
     event_container.Append(event.PosixTimeEvent(
-        evt_record.get_creation_time_as_integer(),
-        eventdata.EventTimestamp.CREATION_TIME,
+        creation_time, eventdata.EventTimestamp.CREATION_TIME,
         event_container.data_type))
 
+    try:
+      written_time = evt_record.get_written_time_as_integer()
+    except OverflowError as e:
+      logging.warning(
+          u'Unable to read the timestamp from record, error: %s', e)
+      written_time = 0
     event_container.Append(event.PosixTimeEvent(
-        evt_record.get_written_time_as_integer(),
-        eventdata.EventTimestamp.WRITTEN_TIME,
+        written_time, eventdata.EventTimestamp.WRITTEN_TIME,
         event_container.data_type))
 
     return event_container
