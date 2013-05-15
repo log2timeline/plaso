@@ -49,6 +49,8 @@ class TestServicesRegistry(unittest.TestCase):
     """Test the ServicesPlugin."""
     plugin = services.ServicesPlugin(None, None)
     entries = list(plugin.Process(self.regkey))
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
     self.maxDiff = None
 
     line = (u'[\\ControlSet001\\services\\TestDriver] DisplayName: Test Driver '

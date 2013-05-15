@@ -66,7 +66,7 @@ class ChromeHistoryParserTest(unittest.TestCase):
          event_object)
 
     expected_msg = (
-         u'%s (%s) Host: start.ubuntu.com '
+         u'%s (%s) [count: 0] Host: start.ubuntu.com '
          u'(URL not typed directly - no typed count)') % (
          expected_url, expected_title)
 

@@ -102,7 +102,7 @@ class MsiecfParserTest(unittest.TestCase):
 
     expected_msg = (u'Location: Visited: testing@http://www.trafficfusionx.com'
                     u'/download/tfscrn2/funnycats.exe '
-                    u'Number of hits: 6')
+                    u'Number of hits: 6 Cached file size: 0')
 
     self.assertEquals(msg, expected_msg)
 
