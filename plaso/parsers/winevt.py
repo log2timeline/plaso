@@ -43,8 +43,14 @@ class WinEvtRecordEventContainer(event.EventContainer):
 
     self.recovered = recovered
     self.offset = evt_record.offset
-    self.record_number = evt_record.identifier
-    self.event_identifier = evt_record.event_identifier
+    try:
+      self.record_number = evt_record.identifier
+    except OverflowError as e:
+      logging.warning(u'Unable to assign the record  identifier [%s].', e)
+    try:
+      self.event_identifier = evt_record.event_identifier
+    except OverflowError as e:
+      logging.warning(u'Unable to assign the event identifier [%s].', e)
     self.event_type = evt_record.event_type
     self.event_category = evt_record.event_category
     self.source_name = evt_record.source_name

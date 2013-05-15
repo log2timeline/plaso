@@ -281,7 +281,10 @@ class WinRegValue(object):
       # of this library decide what to do with this value?
       ret = GetRegistryStringValue(self.GetRawData(), val_type)
     elif val_type == 'MULTI_SZ':
-      raw_string = self.GetRawData().decode('utf_16_le', 'ignore')
+      raw_data = self.GetRawData()
+      if not raw_data:
+        return u''
+      raw_string = raw_data.decode('utf_16_le', 'ignore')
       ret_list = raw_string.split('\x00')
       ret = filter(None, ret_list)
     elif val_type == 'RESOURCE_LIST':

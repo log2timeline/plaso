@@ -17,13 +17,16 @@
 from plaso.lib import eventdata
 
 
-class FirefoxBookmarkAnnotationFormatter(eventdata.EventFormatter):
+class FirefoxBookmarkAnnotationFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite bookmark annotation."""
   DATA_TYPE = 'firefox:places:bookmark_annotation'
 
-  FORMAT_STRING = (u'Bookmark Annotation: [{content}] to bookmark [{title}] '
-                   u'({url})')
-  FORMAT_STRING_SHORT = u'Bookmark Annotation: {title}'
+  FORMAT_STRING_PIECES = [
+      u'Bookmark Annotation: [{content}]',
+      u'to bookmark [{title}]',
+      u'({url})']
+
+  FORMAT_STRING_SHORT_PIECES = [u'Bookmark Annotation: {title}']
 
 
 class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
@@ -33,13 +36,20 @@ class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
   FORMAT_STRING = '{title}'
 
 
-class FirefoxBookmarkFormatter(eventdata.EventFormatter):
+class FirefoxBookmarkFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite URL bookmark."""
   DATA_TYPE = 'firefox:places:bookmark'
 
-  FORMAT_STRING = (u'Bookmark {type} {title} ({url}) '
-                   u'[{places_title}] visit count {visit_count}')
-  FORMAT_STRING_SHORT = u'Bookmarked {title} ({url})'
+  FORMAT_STRING_PIECES = [
+      u'Bookmark {type}',
+      u'{title}',
+      u'({url})',
+      u'[{places_title}]',
+      u'visit count {visit_count}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Bookmarked {title}',
+      u'({url})']
 
 
 class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
