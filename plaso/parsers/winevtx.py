@@ -47,9 +47,15 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
 
     self.recovered = recovered
     self.offset = evtx_record.offset
-    self.record_number = evtx_record.identifier
+    try:
+      self.record_number = evtx_record.identifier
+    except OverflowError as e:
+      logging.warning(u'Unable to assign the record number [%s].', e)
 
-    self.event_identifier = evtx_record.event_identifier
+    try:
+      self.event_identifier = evtx_record.event_identifier
+    except OverflowError as e:
+      logging.warning(u'Unable to assign the event identifier [%s].', e)
     self.event_level = evtx_record.event_level
     self.source_name = evtx_record.source_name
     # Computer name is the value stored in the event record and does not

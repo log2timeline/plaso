@@ -27,6 +27,8 @@ class TestBootExecuteRegistry(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
     self.maxDiff = None
     values = []
     values.append(test_lib.TestRegValue(

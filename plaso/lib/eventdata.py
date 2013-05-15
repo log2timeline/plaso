@@ -285,7 +285,14 @@ class ConditionalEventFormatter(EventFormatter):
     # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
     string_pieces = []
     for map_index, attribute_name in enumerate(self._format_string_pieces_map):
-      if not attribute_name or getattr(event_object, attribute_name, None):
+      if not attribute_name or hasattr(event_object, attribute_name):
+        if attribute_name:
+          attribute = getattr(event_object, attribute_name, None)
+          # If an attribute is an int, yet has zero value we want to include
+          # that in the format string, since that is still potentially valid
+          # information. Otherwise we would like to skip it.
+          if type(attribute) not in (int, long, float) and not attribute:
+            continue
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
     self.format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 

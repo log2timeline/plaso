@@ -39,10 +39,9 @@ from plaso.proto import transmission_pb2
 import pytsk3
 import pyvshadow
 
+
 # TODO: Add support for "carving" embedded files
 # out using the embedded portion of the proto.
-
-
 class FilesystemContainer(object):
   """A container for the filesystem and image."""
 
