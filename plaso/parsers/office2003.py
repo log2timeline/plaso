@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2013 Google Inc. All Rights Reserved.
+# Copyright 2013 The Plaso Project Authors.
+# Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,7 +44,7 @@ class Office2003(parser.PlasoParser):
 
     if self.MAGIC not in filehandle.read(len(self.MAGIC)):
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, 'Not an OLE File.'))      
+        self.NAME, filehandle.name, 'Not an OLE File.'))
 
     try:
       loader = OleFileIO_PL.OleFileIO(filehandle)
@@ -82,7 +83,7 @@ class Office2003(parser.PlasoParser):
     if isinstance(created_date, datetime.datetime):
       container.Append(OLE2Event(created_date,
                                  eventdata.EventTimestamp.CREATION_TIME))
-      
+
     modified_date = metadata.last_saved_time
     if isinstance(modified_date, datetime.datetime):
       container.Append(OLE2Event(modified_date,
@@ -101,7 +102,7 @@ class Office2003(parser.PlasoParser):
       value = value.strip('\x00')
     return value
 
-  
+
 class OLE2Event(event.PosixTimeEvent):
   """Process timestamps from Hachoir Events."""
 
