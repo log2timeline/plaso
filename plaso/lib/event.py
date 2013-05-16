@@ -619,6 +619,96 @@ class EventObject(object):
     return proto
 
 
+class EventPathBundle(object):
+  """A native Python object for the PathBundle protobuf."""
+
+  def __init__(self, pattern=''):
+    """Initialize a PathBundle object.
+
+    Args:
+      pattern: A string containing the pattern used by the collector
+      to find all the PathSpecs contained in this bundle. This is used
+      by parsers to match if the bundle is the correct one for the parser.
+    """
+    self._pathspecs = []
+    self.pattern = ''
+
+  def ToProto(self):
+    """Serialize an EventPathBundle to PathBundle protobuf."""
+    proto = transmission_pb2.PathBundle()
+
+    for pathspec in self._pathspecs:
+      proto_pathspec = proto.pathspecs.add()
+      proto_pathspec.MergeFrom(pathspec.ToProto())
+
+    proto.pattern = self.pattern
+
+    return proto
+
+  def ToProtoString(self):
+    """Serialize the object into a string."""
+    proto = self.ToProto()
+
+    return proto.SerializeToString()
+
+  def FromProto(self, proto):
+    """Unserializes the EventPathBundle from a PathBundle protobuf."""
+    self._pathspecs = []
+    if not hasattr(proto, 'pattern'):
+      raise RuntimeError('Unsupported proto')
+    if not hasattr(proto, 'pathspecs'):
+      raise RuntimeError('Unsupported proto')
+
+    self.pattern = proto.pattern
+
+    for pathspec in proto.pathspecs:
+      pathspec_object = EventPathSpec()
+      pathspec_object.FromProto(pathspec)
+      self._pathspecs.append(pathspec_object)
+
+  def FromProtoString(self, proto_string):
+    """Unserializes the EventPathBundle from a serialized PathBundle."""
+    proto = transmission_pb2.PathBundle()
+    proto.ParseFromString(proto_string)
+    self.FromProto(proto)
+
+  def Append(self, pathspec):
+    """Append a pathspec to the bundle."""
+    self._pathspecs.append(pathspec)
+
+  def _GetHash(self, pathspec):
+    """Return a calculated "hash" value from a pathspec based on attributes."""
+    if hasattr(pathspec, 'nested_pathspec'):
+      extra = self._GetHash(pathspec.nested_pathspec)
+    else:
+      extra = u''
+
+    return u'{}:{}'.format(u':'.join([
+        utils.GetUnicodeString(getattr(pathspec, 'container_path', u'-')),
+        utils.GetUnicodeString(getattr(pathspec, 'image_offset', u'-')),
+        utils.GetUnicodeString(getattr(pathspec, 'vss_store_number', u'-')),
+        utils.GetUnicodeString(getattr(pathspec, 'image_inode', u'-')),
+        utils.GetUnicodeString(getattr(pathspec, 'file_path', u'-'))]), extra)
+
+  def ListFiles(self):
+    """Return a list of available files inside the pathbundle."""
+    for pathspec in self._pathspecs:
+      yield self._GetHash(pathspec)
+
+  def GetPathspecFromHash(self, file_hash):
+    """Return a PathSpec based on a "hash" value from bundle.
+
+    Args:
+      file_hash: A calculated hash value (from self.ListFiles()).
+
+    Returns:
+      An EventPathspec object that matches the hash, if one is found.
+    """
+    for pathspec in self._pathspecs:
+      if file_hash == self._GetHash(pathspec):
+        return pathspec
+
+
 class EventPathSpec(object):
   """A native Python object for the pathspec definition."""
 
