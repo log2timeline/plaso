@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2013 Google Inc. All Rights Reserved.
+# Copyright 2012 The Plaso Project Authors.
+# Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,9 +27,8 @@ from plaso.lib import timelib
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
+
 # TODO: Add tests: gdrive_test.py.
-
-
 class GoogleDriveSnapshotCloudEntryEventContainer(event.EventContainer):
   """Convenience class for a Google Drive snapshot cloud entry container."""
 
