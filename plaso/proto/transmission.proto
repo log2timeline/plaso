@@ -104,3 +104,15 @@ message PathSpec {
   // Define which VSS store needs to be opened (in the case of a VSS file).
   optional uint64 vss_store_number = 12;
 };
+
+// A PathBundle is a group of PathSpec messages, a PathSpec dict sort of speak.
+// This is used during collection phase to pass in more than a single file to
+// a parser.
+message PathBundle {
+  // This string describes the pattern used to create the PathBundle.
+  required string pattern = 1;
+
+  // A list of PathSpec protobufs that were discovered using the pattern above.
+  repeated PathSpec pathspecs = 2;
+};
+

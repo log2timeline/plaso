@@ -416,5 +416,59 @@ class EventPathSpecUnitTest(unittest.TestCase):
     self.assertEquals(proto_evt2.file_path, '/tmp/nowhere')
 
 
+class EventPathBundleTest(unittest.TestCase):
+  """The unit test for the PathBundle protobuf."""
+
+  def testEventBundle(self):
+    """Test the serialize/deserialize EventBundle event."""
+    pattern = '/tmp/.+'
+
+    proto = transmission_pb2.PathBundle()
+    proto.pattern = pattern
+
+    p1_proto = transmission_pb2.PathSpec()
+    p1_proto.file_path = '/tmp/nowhere'
+    # Type 0 = OS.
+    p1_proto.type = 0
+
+    first_pathspec = proto.pathspecs.add()
+    first_pathspec.MergeFrom(p1_proto)
+
+    nested_proto = transmission_pb2.PathSpec()
+    nested_proto.container_path = 'SomeFilePath'
+    nested_proto.type = 2
+    nested_proto.file_path = 'My.zip'
+    nested_proto.image_offset = 35
+    nested_proto.image_inode = 6124543
+
+    p1_proto.nested_pathspec.MergeFrom(nested_proto)
+
+    second_pathspec = proto.pathspecs.add()
+    second_pathspec.MergeFrom(p1_proto)
+
+    p2_proto = transmission_pb2.PathSpec()
+    # Type 1 = TSK.
+    p2_proto.type = 1
+    p2_proto.container_path = 'myimage.raw'
+    p2_proto.image_inode = 124
+    p2_proto.image_offset = 12345
+
+    third_pathspec = proto.pathspecs.add()
+    third_pathspec.MergeFrom(p2_proto)
+
+    bundle = event.EventPathBundle()
+    bundle.FromProto(proto)
+
+    self.assertEquals(len(bundle._pathspecs), 3)
+    self.assertEquals(len(list(bundle.ListFiles())), 3)
+    self.assertEquals(bundle.pattern, pattern)
+
+    nested_hash = u'-:-:-:-:/tmp/nowhere:SomeFilePath:35:-:6124543:My.zip:'
+    nested_pathspec = bundle.GetPathspecFromHash(nested_hash)
+
+    self.assertEquals(
+        nested_pathspec.ToProtoString(), p1_proto.SerializeToString())
+
+
 if __name__ == '__main__':
   unittest.main()

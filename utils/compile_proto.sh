@@ -6,6 +6,5 @@ compile()
   protoc -I=. --python_out=. plaso/proto/$1
 }
 
-cd ..
 compile plaso_storage.proto
 compile transmission.proto
