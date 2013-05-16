@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2012 Google Inc. All Rights Reserved.
+# Copyright 2012 The Plaso Project Authors.
+# Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,11 +31,10 @@ from plaso.lib import utils
 
 import pytz
 
+
 # TODO: Refactor the putils library so it does not end up being a trash can
 # for all things core/front-end. We don't want this to be end up being a
 # collection for all methods that have no other home.
-
-
 class Options(object):
   """A simple configuration object."""
 
