@@ -1,7 +1,8 @@
 #!/bin/bash
 # A small script that contains common functions for code review checks.
 #
-# Copyright 2012 Google Inc. All Rights Reserved.
+# Copyright 2012 The Plaso Project Authors.
+# Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

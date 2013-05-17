@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Copyright 2012 Google Inc.
+# Copyright 2012 The Plaso Project Authors.
+# Please see the AUTHORS file for details on individual authors.
 #
 # Originally copied from the GRR project:
 # http://code.google.com/p/grr/source/browse/lib/objectfilter.py
@@ -880,8 +881,6 @@ class Parser(lexer.SearchParser):
 
 
 ### FILTER IMPLEMENTATIONS
-
-
 class BaseFilterImplementation(object):
   """Defines the base implementation of an object filter by its attributes.
 

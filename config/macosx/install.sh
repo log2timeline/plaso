@@ -1,7 +1,8 @@
 #!/bin/bash
 # Script that installs the binary version of plaso on Mac OS X.
 #
-# Copyright 2012 Google Inc. All Rights Reserved.
+# Copyright 2012 The Plaso Project Authors.
+# Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
