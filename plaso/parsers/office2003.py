@@ -43,15 +43,17 @@ class Office2003(parser.PlasoParser):
     # TODO: Add a unit test for this parser.
 
     if self.MAGIC not in filehandle.read(len(self.MAGIC)):
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-        self.NAME, filehandle.name, 'Not an OLE File.'))
+      raise errors.UnableToParseFile(
+          u'[%s] unable to parse file %s: %s' % (
+              self.NAME, filehandle.name, 'Not an OLE File.')) 
 
     try:
       loader = OleFileIO_PL.OleFileIO(filehandle)
       metadata = loader.get_metadata()
     except ValueError as exception:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.NAME, filehandle.name, exception))
+      raise errors.UnableToParseFile(
+          u'[%s] unable to parse file %s: %s' % (
+              self.NAME, filehandle.name, exception))
 
     container = event.EventContainer()
     container.offset = 0
@@ -81,13 +83,13 @@ class Office2003(parser.PlasoParser):
 
     created_date = metadata.create_time
     if isinstance(created_date, datetime.datetime):
-      container.Append(OLE2Event(created_date,
-                                 eventdata.EventTimestamp.CREATION_TIME))
-
+      container.Append(OLE2Event(
+          created_date,eventdata.EventTimestamp.CREATION_TIME))
+      
     modified_date = metadata.last_saved_time
     if isinstance(modified_date, datetime.datetime):
-      container.Append(OLE2Event(modified_date,
-                                 eventdata.EventTimestamp.MODIFICATION_TIME))
+      container.Append(OLE2Event(
+          modified_date,eventdata.EventTimestamp.MODIFICATION_TIME))
 
     lastprinted_date = metadata.last_printed
     if isinstance(lastprinted_date, datetime.datetime):
@@ -102,7 +104,7 @@ class Office2003(parser.PlasoParser):
       value = value.strip('\x00')
     return value
 
-
+  
 class OLE2Event(event.PosixTimeEvent):
   """Process timestamps from Hachoir Events."""
 
