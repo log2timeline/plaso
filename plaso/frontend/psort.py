@@ -89,7 +89,7 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
         counter['Events Included'] += 1
         output_buffer.Append(event_object)
         if limit:
-          if counter['Events Included'] is limit:
+          if counter['Events Included'] == limit:
             break
       else:
         counter['Events Filtered Out'] += 1

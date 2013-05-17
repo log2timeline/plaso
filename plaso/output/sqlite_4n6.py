@@ -52,7 +52,7 @@ class Sql4n6(output.LogOutputFormatter):
     """
     # TODO: Add a unit test for this output module.
     super(Sql4n6, self).__init__(store, filehandle, config, filter_use)
-    self.set_status = getattr(config, 'status', None)
+    self.set_status = getattr(config, 'set_status', None)
 
     # TODO: Revisit handeling this outside of plaso.
     self.dbname = filehandle
