@@ -559,6 +559,8 @@ class SQLiteParser(PlasoParser):
             'SELECT name FROM sqlite_master WHERE type="table"')
       except sqlite3.DatabaseError as e:
         logging.debug('SQLite error occured: %s', e)
+        raise errors.UnableToParseFile(
+            u'Unable to open the database file: %s', e)
       tables = []
       for row in sql_results:
         tables.append(row[0])

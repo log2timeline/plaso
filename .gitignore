@@ -5,5 +5,8 @@
 /dist/
 /build/
 
-# And don't care about the 'egg'
+# And don't care about the 'egg'.
 /plaso.egg-info
+
+# And don't care about the temporary code review file if it exists.
+._code_review_number
