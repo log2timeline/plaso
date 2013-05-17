@@ -1,10 +1,7 @@
-#!/usr/bin/env python
-# Copyright 2012 Google Inc.
-#
-# Originally copied from the GRR project:
-# http://code.google.com/p/grr/source/browse/lib/objectfilter.py
-# Copied on 11/15/2012
-# Minor changes made to make it work in plaso.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# Copyright 2012 The Plaso Project Authors.
+# Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
