@@ -22,18 +22,28 @@ EXIT_SUCCESS=0;
 
 SCRIPTNAME=`basename $0`;
 
-# Check usage
-if [ $# -ne 1 ];
+if [ -f ._code_review_number ];
 then
-  echo "Usage: ./${SCRIPTNAME} CL#";
-  echo "";
-  echo "       CL#: the change list number that is to be submitted.";
-  echo "";
+  CL_NUMBER=`cat ._code_review_number`
+  if [ "x`echo $CL_NUMBER | sed -e 's/[0-9]//g'`" != "x" ];
+  then
+    echo "File ._code_review_number exists but contains wrong CL number.";
+    exit 1;
+  fi
+else
+  # Check usage
+  if [ $# -ne 1 ];
+  then
+    echo "Usage: ./${SCRIPTNAME} CL#";
+    echo "";
+    echo "       CL#: the change list number that is to be submitted.";
+    echo "";
 
-  exit ${EXIT_MISSING_ARGS};
+    exit ${EXIT_MISSING_ARGS};
+  fi
+
+  CL_NUMBER=$1;
 fi
-
-CL_NUMBER=$1;
 
 if [ ! -f "utils/common.sh" ];
 then
@@ -118,4 +128,9 @@ then
 else
   echo "Could not find an authenticated session to codereview. You need to"
   echo "manually close the ticket on the code review site."
+fi
+
+if [ -f "._code_review_number" ];
+then
+  rm -f ._code_review_number
 fi

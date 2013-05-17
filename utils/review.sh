@@ -76,4 +76,12 @@ fi
 
 echo -n "Short description of code review request: "
 read DESC
-python utils/upload.py -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER -m "$M" -t "$DESC" --send_mail
+T1=`mktemp .tmp_plaso_code_review.XXXXXX`
+python utils/upload.py -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER -m "$M" -t "$DESC" --send_mail > $T1
+
+CL=`cat $T1 | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`
+cat $T1
+rm -f $T1
+echo ""
+echo $CL > ._code_review_number
+echo "Code review number: ${CL} is saved, so no need to include that in future updates/submits."
