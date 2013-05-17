@@ -14,8 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Formatter for MS Office 2003 events."""
+
 from plaso.lib import eventdata
 
 __author__ = 'David Nides (david.nides@gmail.com)'

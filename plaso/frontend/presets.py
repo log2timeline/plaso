@@ -19,29 +19,31 @@
 categories = {
     'winxp': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'MsiecfParser', 'PfileStatParser', 'Symantec', 'WinEvtParser',
-        'WinLnkParser', 'WinPrefetchParser', 'WinRegistryParser'],
+        'MsiecfParser', 'Office2003', 'PfileStatParser', 'Symantec',
+        'WinEvtParser', 'WinLnkParser', 'WinPrefetchParser',
+        'WinRegistryParser'],
     'winxp_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Hachoir', 'MsiecfParser', 'PfileStatParser', 'Symantec',
-        'WinEvtParser', 'WinLnkParser', 'WinPrefetchParser',
+        'Hachoir', 'MsiecfParser', 'Office2003', 'PfileStatParser',
+        'Symantec', 'WinEvtParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRegistryParser'],
     'win7': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'MsiecfParser', 'PfileStatParser', 'Symantec', 'WinEvtxParser',
-        'WinLnkParser', 'WinPrefetchParser', 'WinRegistryParser'],
+        'MsiecfParser', 'Office2003', 'PfileStatParser', 'Symantec',
+        'WinEvtxParser', 'WinLnkParser', 'WinPrefetchParser',
+        'WinRegistryParser'],
     'win7_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Hachoir', 'MsiecfParser', 'PfileStatParser', 'Symantec',
-        'WinEvtxParser', 'WinLnkParser', 'WinPrefetchParser',
+        'Hachoir', 'MsiecfParser', 'Office2003', 'PfileStatParser',
+        'Symantec','WinEvtxParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRegistryParser'],
     'webhist': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'MsiecfParser'],
     'linux': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'PfileStatParser', 'SELinux', 'SyslogParser'],
+        'Office2003', 'PfileStatParser', 'SELinux', 'SyslogParser'],
     'macosx': [
         'ApplicationUsageParser', 'ChromeHistoryParser',
-        'FirefoxHistoryParser', 'GoogleDriveParser',
-        'LsQuarantineParser', 'PfileStatParser', 'PlistParser', 'SyslogParser'],
+        'FirefoxHistoryParser', 'GoogleDriveParser','LsQuarantineParser',
+        'Office2003', 'PfileStatParser', 'PlistParser', 'SyslogParser'],
 }
