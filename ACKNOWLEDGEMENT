@@ -1,6 +1,7 @@
 Acknowledgements: plaso
 
-Copyright 2012 Google Inc. All Rights Reserved.
+Copyright 2012 The Plaso Project Authors.
+Please see the AUTHORS file for details on individual authors.
 
 Plaso is a Python rewrite of the log2timeline Perl version.
 

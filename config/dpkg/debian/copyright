@@ -3,11 +3,11 @@ Upstream-Name: plaso
 Source: http://code.google.com/p/plaso/
 
 Files: *
-Copyright: 2012 Google Inc.
+Copyright: 2012 The Plaso Project Authors.
 License: Apache-2.0
 
 Files: debian/*
-Copyright: 2012 Google Inc.
+Copyright: 2012 The Plaso Project Authors.
 License: Apache-2.0
 
 License: Apache-2.0
