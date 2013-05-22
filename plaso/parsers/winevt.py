@@ -38,10 +38,6 @@ class WinEvtRecordEventContainer(event.EventContainer):
     super(WinEvtRecordEventContainer, self).__init__()
     self.data_type = 'windows:evt:record'
 
-    # TODO: refactor to formatter.
-    self.source_long = 'WinEvt'
-    self.source_short = 'EVT'
-
     self.recovered = recovered
     self.offset = evt_record.offset
     try:
@@ -66,7 +62,6 @@ class WinEvtRecordEventContainer(event.EventContainer):
 class WinEvtParser(parser.PlasoParser):
   """Parses Windows EventLog (EVT) files."""
   NAME = 'WinEvt'
-  PARSER_TYPE = 'EVT'
 
   def _ParseRecord(self, evt_record, recovered=False):
     """Extract data from a Windows EventLog (EVT) record.

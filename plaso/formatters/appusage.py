@@ -26,3 +26,5 @@ class ApplicationUsageFormatter(eventdata.EventFormatter):
                    ' Launched: {count} time(s)')
   FORMAT_STRING_SHORT = u'{application} ({count} time(s))'
 
+  SOURCE_LONG = 'Application Usage'
+  SOURCE_SHORT = 'LOG'

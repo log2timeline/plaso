@@ -26,6 +26,15 @@ class PfileStatFormatter(eventdata.ConditionalEventFormatter):
                           u'({unallocated})']
   FORMAT_STRING_SHORT_PIECES = [u'{filename}']
 
+  SOURCE_SHORT = 'FILE'
+
+  def GetSources(self, event_object):
+    """Return a list of source short and long messages."""
+    self.source_string = u'%s Time' % getattr(
+        event_object, 'fs_type', 'Unknown')
+
+    return super(PfileStatFormatter, self).GetSources(event_object)
+
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
 

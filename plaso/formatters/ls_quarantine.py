@@ -24,3 +24,6 @@ class LSQuarantineFormatter(eventdata.EventFormatter):
 
   FORMAT_STRING = u'[{agent}] Downloaded: {url} <{data}>'
   FORMAT_STRING_SHORT = u'{url}'
+
+  SOURCE_LONG = 'LS Quarantine Event'
+  SOURCE_SHORT = 'LOG'

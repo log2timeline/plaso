@@ -32,7 +32,6 @@ class PlistParser(parser.PlasoParser):
   """Parse Plist files with applicable plugins and yield events."""
 
   NAME = 'Plist Parser'
-  PARSER_TYPE = 'PLIST'
 
   def __init__(self, pre_obj):
     super(PlistParser, self).__init__(pre_obj)

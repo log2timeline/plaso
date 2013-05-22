@@ -67,8 +67,7 @@ class SELinuxLineEvent(event.TextEvent):
       offset: The offset of the event.
       attributes: A dict that contains the events attributes
     """
-    super(SELinuxLineEvent, self).__init__(
-        timestamp, attributes, 'Audit log File')
+    super(SELinuxLineEvent, self).__init__(timestamp, attributes)
     self.offset = offset
 
 

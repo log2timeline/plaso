@@ -32,7 +32,7 @@ def GetLegacy(evt):
   # The filestat parser is somewhat limited.
   # Also fix this when duplicate entries have been implemented so that
   # the function actually returns more than a single entry (as in combined).
-  if evt.source_short == 'FILE':
+  if evt.data_type.startswith('fs:'):
     letter = evt.timestamp_desc[0]
 
     if letter == 'm':

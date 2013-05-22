@@ -37,17 +37,19 @@ class Empty(object):
 
 class FakeFormatter(eventdata.EventFormatter):
   """A formatter for this fake class."""
-  ID_RE = re.compile('Weirdo:Made up Source:Last Written', re.DOTALL)
+  DATA_TYPE = 'Weirdo:Made up Source:Last Written'
 
   FORMAT_STRING = '{text}'
   FORMAT_STRING_SHORT = '{text_short}'
+
+  SOURCE_LONG = 'Fake Parsing Source'
+  SOURCE_SHORT = 'REG'
 
 
 class FakeParser(parser.PlasoParser):
   """A fake parser that does not parse anything, but registers."""
 
-  MY_SOURCE = 'Fake Parsing Source'
-  PARSER_TYPE = 'NONE'
+  DATA_TYPE = 'Weirdo:Made up Source:Last Written'
 
   def Parse(self, unused_filehandle):
     """A parse method yields a single event."""
@@ -63,8 +65,7 @@ class FakeParser(parser.PlasoParser):
     evt.parser = 'Weirdo'
     evt.inode = '1245'
     evt.display_name = u'unknown:%s' % evt.filename
-    evt.source_short = 'REG'
-    evt.source_long = self.MY_SOURCE
+    evt.data_type = self.DATA_TYPE
 
     yield evt
 
@@ -72,13 +73,27 @@ class FakeParser(parser.PlasoParser):
 class AnotherParser(FakeParser):
   """Another fake parser that does nothing but register as a parser."""
 
-  MY_SOURCE = 'Another Fake Source'
+  DATA_TYPE = 'Weirdo:AnotherFakeSource'
+
+
+class AnotherFakeFormatter(FakeFormatter):
+  """Formatter for the AnotherParser event."""
+
+  DATA_TYPE = 'Weirdo:AnotherFakeSource'
+  SOURCE_LONG = 'Another Fake Source'
 
 
 class AllEvilParser(FakeParser):
   """A class that does nothing but has a fancy name."""
 
-  MY_SOURCE = 'A Truly Evil'
+  DATA_TYPE = 'Weirdo:AllEvil'
+
+
+class EvilFormatter(FakeFormatter):
+  """Formatter for the AllEvilParser."""
+
+  DATA_TYPE = 'Weirdo:AllEvil'
+  SOURCE_LONG = 'A Truly Evil'
 
 
 class PFilterTest(unittest.TestCase):
@@ -100,9 +115,7 @@ class PFilterTest(unittest.TestCase):
     Python object as well as the protobuf.
     """
     container = event.EventContainer()
-    container.data_type = 'test:pfilter'
-    container.source_short = 'REG'
-    container.source_long = 'Made up Source'
+    container.data_type = 'Weirdo:Made up Source:Last Written'
 
     evt = event.EventObject()
     # 2015-11-18T01:15:43
@@ -182,7 +195,7 @@ class PFilterTest(unittest.TestCase):
     self.RunPlasoTest(evt, query, False)
 
     # Test atttributes stored in the container.
-    query = 'source_long not contains \'Made\''
+    query = 'source_long not contains \'Fake\''
     self.RunPlasoTest(evt, query, False)
 
     query = 'source is \'REG\''
@@ -192,11 +205,11 @@ class PFilterTest(unittest.TestCase):
     self.RunPlasoTest(evt, query, True)
 
     # Multiple attributes.
-    query = ('source_long is \'Made up Source\' AND description_long regexp '
-             '\'bad, bad thing [\sa-zA-Z\.]+ evil\'')
+    query = ('source_long is \'Fake Parsing Source\' AND description_long '
+             'regexp \'bad, bad thing [\sa-zA-Z\.]+ evil\'')
     self.RunPlasoTest(evt, query, False)
 
-    query = ('source_long is \'Made up Source\' AND text iregexp '
+    query = ('source_long is \'Fake Parsing Source\' AND text iregexp '
              '\'bad, bad thing [\sa-zA-Z\.]+ evil\'')
     self.RunPlasoTest(evt, query, True)
 

@@ -29,12 +29,18 @@ class FirefoxBookmarkAnnotationFormatter(eventdata.ConditionalEventFormatter):
 
   FORMAT_STRING_SHORT_PIECES = [u'Bookmark Annotation: {title}']
 
+  SOURCE_LONG = 'Firefox History'
+  SOURCE_SHORT = 'WEBHIST'
+
 
 class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
   """Formatter for a Firefox places.sqlite bookmark folder."""
   DATA_TYPE = 'firefox:places:bookmark_folder'
 
   FORMAT_STRING = '{title}'
+
+  SOURCE_LONG = 'Firefox History'
+  SOURCE_SHORT = 'WEBHIST'
 
 
 class FirefoxBookmarkFormatter(eventdata.ConditionalEventFormatter):
@@ -51,6 +57,9 @@ class FirefoxBookmarkFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Bookmarked {title}',
       u'({url})']
+
+  SOURCE_LONG = 'Firefox History'
+  SOURCE_SHORT = 'WEBHIST'
 
 
 class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
@@ -81,6 +90,9 @@ class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
       u'{extra_string}']
 
   FORMAT_STRING_SHORT_PIECES = [u'URL: {url}']
+
+  SOURCE_LONG = 'Firefox History'
+  SOURCE_SHORT = 'WEBHIST'
 
   def GetMessages(self, event_object):
     """Return the message strings."""

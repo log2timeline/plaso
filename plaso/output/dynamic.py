@@ -48,6 +48,7 @@ class Dynamic(output.FileLogOutputFormatter):
       'message_short': 'ParseMessageShort',
       'source': 'ParseSourceShort',
       'sourcetype': 'ParseSource',
+      'source_long': 'ParseSource',
       'time': 'ParseTime',
       'timezone': 'ParseZone',
       'type': 'ParseTimestampDescription',
@@ -62,11 +63,23 @@ class Dynamic(output.FileLogOutputFormatter):
 
   def ParseSource(self, event_object):
     """Return the source string."""
-    return getattr(event_object, 'source_long', '-')
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    if not event_formatter:
+      raise errors.NoFormatterFound(
+          'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
+
+    _, source = event_formatter.GetSources(event_object)
+    return source
 
   def ParseSourceShort(self, event_object):
     """Return the source string."""
-    return getattr(event_object, 'source_short', '-')
+    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    if not event_formatter:
+      raise errors.NoFormatterFound(
+          'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
+
+    source, _ = event_formatter.GetSources(event_object)
+    return source
 
   def ParseZone(self, event_object):
     """Return a timezone."""

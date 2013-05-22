@@ -129,6 +129,8 @@ class TestTextEventFormatter(eventdata.EventFormatter):
   DATA_TYPE = 'test:parser:text'
   FORMAT_STRING = u'{body}'
 
+  SOURCE_LONG = 'Test Text Parser'
+
 
 class TestTextParser(parser.TextParser):
   """Implement a text parser object that can successfully parse a text file.
@@ -137,7 +139,6 @@ class TestTextParser(parser.TextParser):
   one.
   """
   NAME = 'TestTextParser'
-  source_long = 'Test Text Parser'
 
   tokens = [
       lexer.Token('INITIAL',
@@ -163,7 +164,7 @@ class TestTextParser(parser.TextParser):
     pass
 
   def CreateEvent(self, timestamp, offset, attributes):
-    event_object = TestTextEvent(timestamp, attributes, self.source_long)
+    event_object = TestTextEvent(timestamp, attributes)
     event_object.offset = offset
     return event_object
 

@@ -150,6 +150,9 @@ class SymantecFormatter(eventdata.ConditionalEventFormatter):
       u', Remote Machine: {remote_machine}',
       u', Remote IP: {remote_machine_ip}']
 
+  SOURCE_LONG = 'AV Log Entry'
+  SOURCE_SHORT = 'LOG'
+
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
 

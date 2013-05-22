@@ -30,11 +30,17 @@ class TestEvent1Formatter(eventdata.EventFormatter):
   DATA_TYPE = 'test:event1'
   FORMAT_STRING = u'{text}'
 
+  SOURCE_SHORT = 'FILE'
+  SOURCE_LONG = 'Weird Log File'
+
 
 class WrongEventFormatter(eventdata.EventFormatter):
   """A simple event formatter."""
   DATA_TYPE = 'test:wrong'
   FORMAT_STRING = u'This format string does not match {body}.'
+
+  SOURCE_SHORT = 'FILE'
+  SOURCE_LONG = 'Weird Log File'
 
 
 class EventFormatterUnitTest(unittest.TestCase):
@@ -48,12 +54,13 @@ class EventFormatterUnitTest(unittest.TestCase):
     """Takes an EventObject and prints out a simple CSV line from it."""
     try:
       msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
+      get_sources = eventdata.EventFormatterManager.GetSourceStrings
+      source_short, source_long = get_sources(event_object)
     except KeyError:
       print event_object.attributes
       print event_object.__dict__
     return '%s,%s,%s,%s' % (
-        event_object.timestamp, event_object.source_short,
-        event_object.source_long, msg)
+        event_object.timestamp, source_short, source_long, msg)
 
   def testInitialization(self):
     """Test the initialization."""
@@ -65,13 +72,15 @@ class EventFormatterUnitTest(unittest.TestCase):
     for event_object in self.container:
       events[self.GetCSVLine(event_object)] = True
 
+    self.assertIn((
+        u'1334961526929596,REG,UNKNOWN key,[MY AutoRun key] Run: '
+        'c:/Temp/evil.exe'), events)
+
     self.assertIn(
-        u'1334961526929596,REG,UNKNOWN,[MY AutoRun key] Run: c:/Temp/evil.exe',
-        events)
-    self.assertIn(
-        (u'1334966206929596,REG,UNKNOWN,[//HKCU/Secret/EvilEmpire/Malicious_ke'
-         'y] Value: REGALERT: send all the exes to the other world'), events)
-    self.assertIn((u'1334940286000000,REG,UNKNOWN,[//HKCU/Windows'
+        (u'1334966206929596,REG,UNKNOWN key,[//HKCU/Secret/EvilEmpire/'
+         'Malicious_key] Value: REGALERT: send all the exes to the other '
+         'world'), events)
+    self.assertIn((u'1334940286000000,REG,UNKNOWN key,[//HKCU/Windows'
                    '/Normal] Value: run all the benign stuff'), events)
     self.assertIn(('1335781787929596,FILE,Weird Log File,This log line reads '
                    'ohh so much.'), events)
@@ -83,7 +92,9 @@ class EventFormatterUnitTest(unittest.TestCase):
   def testTextBasedEvent(self):
     """Test a text based event."""
     for event_object in self.container:
-      if event_object.source_short == 'LOG':
+      source_short, _ = eventdata.EventFormatterManager.GetSourceStrings(
+          event_object)
+      if source_short == 'LOG':
         msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
             event_object)
 
@@ -109,11 +120,17 @@ class ConditionalTestEvent1Formatter(eventdata.ConditionalEventFormatter):
                           u'Optional: {optional}',
                           u'Text: {text}']
 
+  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = 'Some Text File.'
+
 
 class BrokenConditionalEventFormatter(eventdata.ConditionalEventFormatter):
   """A broken conditional event formatter."""
   DATA_TYPE = 'test:broken_conditional'
   FORMAT_STRING_PIECES = [u'{too} {many} formatting placeholders']
+
+  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = 'Some Text File.'
 
 
 class ConditionalEventFormatterUnitTest(unittest.TestCase):
