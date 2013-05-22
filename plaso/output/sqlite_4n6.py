@@ -216,6 +216,7 @@ class Sql4n6(output.LogOutputFormatter):
     elif isinstance(formatter, eventdata.EventFormatter):
       formatter.format_string = formatter.format_string.replace('}', '}<|>')
     msg, msg_short = formatter.GetMessages(event_object)
+    source_short, source_long = formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
@@ -243,8 +244,8 @@ class Sql4n6(output.LogOutputFormatter):
 
     row = (str(self.zone),
            helper.GetLegacy(event_object),
-           getattr(event_object, 'source_short', 'LOG'),
-           event_object.source_long,
+           source_short,
+           source_long,
            event_object.timestamp_desc,
            getattr(event_object, 'username', '-'),
            getattr(event_object, 'hostname', '-'),

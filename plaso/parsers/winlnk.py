@@ -40,10 +40,6 @@ class WinLnkLinkEventContainer(event.EventContainer):
 
     self.data_type = 'windows:lnk:link'
 
-    # TODO: refactor to formatter.
-    self.source_long = 'WinLnkParser'
-    self.source_short = 'LNK'
-
     self.offset = 0
 
     self.file_size = lnk_file.file_size
@@ -65,7 +61,6 @@ class WinLnkParser(parser.PlasoParser):
   """Parses Windows Shortcut (LNK) files."""
 
   NAME = 'WinLnkParser'
-  PARSER_TYPE = 'LNK'
 
   def Parse(self, file_object):
     """Extract data from a Windows Shortcut (LNK) file.

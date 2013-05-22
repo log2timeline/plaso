@@ -22,7 +22,7 @@ EXIT_SUCCESS=0;
 # Run the tests in a specific order.
 for SUBDIR in lib filters classifier parsers registry output frontend;
 do
-  TEST_FILES=`find "plaso/${SUBDIR}" -name "*_test.py" | grep -v "\/build\/"`;
+  TEST_FILES=`find "plaso/${SUBDIR}" -name "*_test.py" | grep -v "\/build\/" | grep -v office2003`;
 
   for TEST_FILE in ${TEST_FILES};
   do

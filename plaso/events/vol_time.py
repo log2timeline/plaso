@@ -43,9 +43,6 @@ class VolatilityEvent(event.EventObject):
 
     self.timestamp_desc = eventdata.EventTimestamp.CREATION_TIME
 
-    # TODO: Refactor this to formatter.
-    self.source_short = 'RAM'
-
 
 class EprocessEvent(VolatilityEvent):
   """Process Creation Event."""
@@ -61,7 +58,8 @@ class EprocessEvent(VolatilityEvent):
       creation event.
     """
     super(EprocessEvent, self).__init__(timestamp)
-    self.source_long = 'Eprocess'
+    # TODO: Remove this once each separate data type has it's own formatter.
+    self.source_type = 'Eprocess'
     self.text = (
         u'Process: {}/PID: {}/PPID: {}/POffset:0x{:08x}').format(
             eprocess.ImageFileName, eprocess.UniqueProcessId,
@@ -84,7 +82,7 @@ class SockEvent(VolatilityEvent):
     """
     super(SockEvent, self).__init__(timestamp)
 
-    self.source_long = 'Socket'
+    self.source_type = 'Socket'
     self.text = u'PID: {}/LocalIP: {}:{}/Protocol: {}({})'.format(
         sock.Pid, sock.LocalIpAddress, sock.LocalPort, sock.Protocol, protocol,
         sock.obj_offset)
@@ -102,7 +100,7 @@ class EvtEvent(VolatilityEvent):
     """
     super(EvtEvent, self).__init__(timestamp)
     self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
-    self.source_long = 'WinEvt'
+    self.source_type = 'WinEvt'
     # TODO: Refactor this so the text makes more sense, split each
     # field into a proper attribute and make a formatter.
     self.text = u'{}/{}/{}/{}/{}/{}/{}'.format(
@@ -129,7 +127,7 @@ class NetObjectEvent(VolatilityEvent):
       state: The network connection state.
     """
     super(NetObjectEvent, self).__init__(timestamp)
-    self.source_long = 'Network Connection'
+    self.source_type = 'Network Connection'
     self.text = u'{}/{}:{} -> {}:{}/{}/{}/{:<#10x}'.format(
         net_object.Owner.UniqueProcessId, src_ip, src_port, dst_ip, dst_port,
         proto, state, net_object.obj_offset)
@@ -149,7 +147,7 @@ class ThreadEvent(VolatilityEvent):
       thread_exit: Indication if this is a process exit.
     """
     super(ThreadEvent, self).__init__(timestamp)
-    self.source_long = 'Thread'
+    self.source_type = 'Thread'
     self.text = u'File: {}/PID: {}/TID: {}'.format(
         image, thread.Cid.UniqueProcess, thread.Cid.UniqueThread)
 
@@ -169,7 +167,7 @@ class ProcExeDumpEvent(VolatilityEvent):
       mod_base: The base of the DLL.
     """
     super(ProcExeDumpEvent, self).__init__(timestamp)
-    self.source_long = 'ProcExe Dump'
+    self.source_type = 'ProcExe Dump'
     self.text = u'File: {}/Base: {:#010x}'.format(
         mod_name, mod_base)
 
@@ -186,7 +184,7 @@ class PoOffsetEvent(VolatilityEvent):
       offset: The offset.
     """
     super(PoOffsetEvent, self).__init__(timestamp)
-    self.source_long = 'PE Timestamp Exe'
+    self.source_type = 'PE Timestamp Exe'
     self.text = (
         u'File: {}/PID: {}/PPID: {}/Command: {}/'
         'POffset:0x{:08x}').format(
@@ -209,7 +207,7 @@ class DLLEvent(VolatilityEvent):
       base: The base of the DLL (DllBase).
     """
     super(DLLEvent, self).__init__(timestamp)
-    self.source_long = 'PE DLL'
+    self.source_type = 'PE DLL'
     self.text = (
         u'File: {}/Process: {}/PID: {}/PPID: {}/Process POffset:'
         '0x{:08x}/DLL Base: 0x{:8x}').format(
@@ -234,7 +232,7 @@ class UserAssistEvent(VolatilityEvent):
     """
     super(UserAssistEvent, self).__init__(timestamp)
     self.timestamp_desc = 'Last Written'
-    self.source_long = 'User Assist'
+    self.source_type = 'User Assist'
     self.text = (
         u'{}/Value: {}/ID: {}/Count: {}/FocusCount:{}/TimeFocused:'
         '{}').format(
@@ -254,7 +252,7 @@ class ShimCacheEvent(VolatilityEvent):
       or last written time (updated).
     """
     super(ShimCacheEvent, self).__init__(timestamp)
-    self.source_long = 'ShimCache'
+    self.source_type = 'ShimCache'
     self.text = unicode(path)
     if update:
       self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
@@ -272,5 +270,5 @@ class RegistryEvent(VolatilityEvent):
       reg_value: The extracted registry value.
     """
     super(RegistryEvent, self).__init__(timestamp)
-    self.source_long = 'Registry'
+    self.source_type = 'Registry'
     self.text = u'{}/{}'.format(reg_key, reg_value)

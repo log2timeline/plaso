@@ -35,10 +35,6 @@ class WinPrefetchEventContainer(event.EventContainer):
 
     self.data_type = 'windows:prefetch:prefetch'
 
-    # TODO: refactor to formatter.
-    self.source_long = 'WinPrefetch'
-    self.source_short = 'LOG'
-
     self.offset = 0
 
     self.executable = executable
@@ -53,7 +49,6 @@ class WinPrefetchParser(parser.PlasoParser):
   """Parses Windows Prefetch and Superfetch files."""
 
   NAME = 'WinPrefetchParser'
-  PARSER_TYPE = 'LOG'
 
   # Define a list of all structs used.
   FILE_HEADER_STRUCT = construct.Struct(

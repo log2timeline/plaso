@@ -28,3 +28,6 @@ class PlistFormatter(eventdata.ConditionalEventFormatter):
       u'{root}/',
       u'{key}',
       u' {desc}']
+
+  SOURCE_LONG = 'Plist Entry'
+  SOURCE_SHORT = 'PLIST'

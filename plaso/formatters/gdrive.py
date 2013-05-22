@@ -29,6 +29,9 @@ class GDriveCloudEntryFormatter(eventdata.EventFormatter):
                    u'doc_type:{doc_type}')
   FORMAT_STRING_SHORT = u'{path}'
 
+  SOURCE_LONG = 'Google Drive (cloud entry)'
+  SOURCE_SHORT = 'LOG'
+
 
 class GDriveLocalEntryFormatter(eventdata.EventFormatter):
   """Formatter for Google Drive snapshot local entry."""
@@ -36,3 +39,6 @@ class GDriveLocalEntryFormatter(eventdata.EventFormatter):
 
   FORMAT_STRING = u'File Path: {path} Size: {size}'
   FORMAT_STRING_SHORT = u'{path}'
+
+  SOURCE_LONG = 'Google Drive (local entry)'
+  SOURCE_SHORT = 'LOG'

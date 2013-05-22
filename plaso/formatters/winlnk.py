@@ -42,6 +42,9 @@ class WinLnkLinkFormatter(eventdata.ConditionalEventFormatter):
       u'{linked_path}',
       u'{command_line_arguments}']
 
+  SOURCE_LONG = 'Windows Shortcut'
+  SOURCE_SHORT = 'LNK'
+
   def _GetLinkedPath(self, event_object):
     """Determines the linked path.
 

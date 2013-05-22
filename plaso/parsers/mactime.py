@@ -37,14 +37,13 @@ class MactimeEvent(event.PosixTimeEvent):
       posix_time: The POSIX time value.
       usage: The description of the usage of the time value.
     """
-    super(MactimeEvent, self).__init__(posix_time, usage, 'mactime:line')
+    super(MactimeEvent, self).__init__(posix_time, usage, 'fs:mactime:line')
 
 
 class MactimeParser(parser.TextCSVParser):
   """Parses TSK's mactime bodyfiles."""
 
   NAME = 'MactimeParser'
-  PARSER_TYPE = 'LOG'
 
   COLUMNS = [
       'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',
@@ -77,8 +76,6 @@ class MactimeParser(parser.TextCSVParser):
     """Parse a single row and return an extracted EventObject from it."""
 
     container = event.EventContainer()
-    container.source_long = 'Mactime Bodyfile'
-    container.source_short = 'FILE'
 
     for key, value in row.items():
       if key == 'md5' and value == '0':

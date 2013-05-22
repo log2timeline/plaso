@@ -24,3 +24,11 @@ class VolatilityFormatter(eventdata.EventFormatter):
 
   FORMAT_STRING = u'{text}'
 
+  SOURCE_LONG = 'Application Usage'
+  SOURCE_SHORT = 'RAM'
+
+  def GetSources(self, event_object):
+    """Return a list of source short and long for the event object."""
+    self.source_string = getattr(event_object, 'source_type', '-')
+
+    return super(VolatilityFormatter, self).GetSources(event_object)
