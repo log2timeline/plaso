@@ -31,6 +31,9 @@ class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'Location: {location}']
 
+  SOURCE_LONG = 'MSIE Cache File URL record'
+  SOURCE_SHORT = 'WEBHIST'
+
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
 

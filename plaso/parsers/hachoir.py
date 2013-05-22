@@ -41,7 +41,6 @@ class Hachoir(parser.PlasoParser):
   """Parse meta data from files."""
 
   NAME = 'Hachoir'
-  PARSER_TYPE = 'META'
   DATA_TYPE = 'metadata:hachoir'
 
   def Parse(self, filehandle):
@@ -86,8 +85,6 @@ class Hachoir(parser.PlasoParser):
 
     container = event.EventContainer()
     container.offset = 0
-    container.source_long = self.NAME
-    container.source_short = self.PARSER_TYPE
     container.data_type = self.DATA_TYPE
 
     attributes = {}

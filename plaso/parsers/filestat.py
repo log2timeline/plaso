@@ -33,9 +33,6 @@ class PfileStatEventContainer(event.EventContainer):
 
     self.data_type = 'fs:stat'
 
-    # TODO: refactor to formatter.
-    self.source_short = 'FILE'
-
     self.offset = 0
     self.allocated = allocated
 
@@ -43,7 +40,6 @@ class PfileStatEventContainer(event.EventContainer):
 class PfileStatParser(parser.PlasoParser):
   """Parse the PFile Stat object to extract filesystem timestamps."""
   NAME = 'File Stat'
-  PARSER_TYPE = 'FILE'
 
   def Parse(self, filehandle):
     """Extract the stat object and parse it."""
@@ -77,7 +73,7 @@ class PfileStatParser(parser.PlasoParser):
         continue
 
       evt.timestamp_desc = time
-      evt.source_long = u'%s Time' % getattr(stat, 'os_type', 'N/A')
+      evt.fs_type = getattr(stat, 'os_type', 'N/A')
 
       event_container.Append(evt)
 

@@ -39,8 +39,6 @@ class PlistEvent(event.EventObject):
     super(PlistEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
-    self.source_short = 'PLIST'
-    self.source_long = 'PLIST File'
     self.root = root
     self.key = key
     if desc:

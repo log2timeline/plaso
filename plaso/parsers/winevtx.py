@@ -47,11 +47,6 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
     super(WinEvtxRecordEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
 
-    # TODO: refactor to formatter.
-    self.source_long = 'WinEvtx'
-    # TODO: Change back to EVTX once this has been refactored to formatter.
-    self.source_short = 'EVT'
-
     self.recovered = recovered
     self.offset = evtx_record.offset
     try:
@@ -78,7 +73,6 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
 class WinEvtxParser(parser.PlasoParser):
   """Parses Windows XML EventLog (EVTX) files."""
   NAME = 'WinEvtx'
-  PARSER_TYPE = 'EVTX'
 
   def Parse(self, file_object):
     """Extract data from a Windows XML EventLog (EVTX) file.

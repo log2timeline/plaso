@@ -25,6 +25,9 @@ class WinRegistryGenericFormatter(eventdata.EventFormatter):
   FORMAT_STRING = u'[{keyname}] {text}'
   FORMAT_STRING_ALTERNATIVE = u'{text}'
 
+  SOURCE_LONG = 'Registry Key'
+  SOURCE_SHORT = 'REG'
+
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
 
@@ -47,3 +50,13 @@ class WinRegistryGenericFormatter(eventdata.EventFormatter):
       self.format_string = self.FORMAT_STRING_ALTERNATIVE
 
     return super(WinRegistryGenericFormatter, self).GetMessages(event_object)
+
+  def GetSources(self, event_object):
+    """Returns a list of source short and long messages for the event."""
+    self.source_string = getattr(
+        event_object, 'source_long', u'{} key'.format(
+            getattr(event_object, 'registry_type', 'UNKNOWN')))
+    if hasattr(event_object, 'source_append'):
+      self.source_string += u'%s' % event_object.source_append
+
+    return super(WinRegistryGenericFormatter, self).GetSources(event_object)

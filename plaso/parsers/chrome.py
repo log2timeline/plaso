@@ -46,10 +46,6 @@ class ChromeHistoryFileDownloadedEvent(event.EventObject):
     self.timestamp = timestamp
     self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
 
-    # TODO: move into formatter.
-    self.source_short = 'WEBHIST'
-    self.source_long = 'Chrome History'
-
     self.offset = row_id
     self.url = url
     self.full_path = full_path
@@ -79,10 +75,6 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
     super(ChromeHistoryPageVisitedEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = eventdata.EventTimestamp.PAGE_VISITED
-
-    # TODO: move into formatter.
-    self.source_short = 'WEBHIST'
-    self.source_long = 'Chrome History'
 
     self.offset = row_id
     self.url = url
