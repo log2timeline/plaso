@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Plug-in to collect information about the Windows version."""
-
-import struct
+import construct
 
 from plaso.lib import event
 from plaso.lib import timelib
@@ -29,6 +28,8 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
   REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion'
   REG_TYPE = 'SOFTWARE'
   URLS = []
+
+  INT_STRUCT = construct.ULInt32('install')
 
   def GetText(self, value):
     """Return the text value from the registry key."""
@@ -48,11 +49,10 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
     install_raw = self._key.GetValue('InstallDate').GetRawData()
     # TODO: move this to a function in utils with a more descriptive name
     # e.g. CopyByteStreamToInt32BigEndian.
-    int_len = struct.calcsize('<I')
-    if len(install_raw) < int_len:
+    try:
+      install = self.INT_STRUCT.parse(install_raw)
+    except construct.FieldError:
       install = 0
-    else:
-      install = struct.unpack('<I', install_raw[:int_len])[0]
 
     event_object = event.WinRegistryEvent(
         self._key.path, text_dict, timelib.Timestamp.FromPosixTime(install))

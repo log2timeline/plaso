@@ -342,10 +342,10 @@ class TskFile(PlasoFile):
     ret.bkup_time_nano = getattr(meta, 'bktime_nano', None)
     fs_type = str(self._fs.info.ftype)
 
-    if len(fs_type) > 12:
-      ret.os_type = fs_type[12:]
+    if fs_type.startswith('TSK_FS_TYPE'):
+      ret.fs_type = fs_type[12:]
     else:
-      ret.os_type = fs_type
+      ret.fs_type = fs_type
 
     self._stat = ret
     return ret
@@ -436,7 +436,7 @@ class OsFile(PlasoFile):
       ret.mtime = stat.st_mtime
     if stat.st_ctime > 0:
       ret.ctime = stat.st_ctime
-    ret.os_type = 'Unknown'
+    ret.fs_type = 'Unknown'
 
     return ret
 
@@ -459,7 +459,7 @@ class ZipFile(PlasoFile):
     ret.ctime = timelib.Timetuple2Timestamp(self.zipinfo.date_time)
     ret.ino = self.inode
     ret.size = self.zipinfo.file_size
-    ret.os_type = 'ZIP Container'
+    ret.fs_type = 'ZIP Container'
     return ret
 
   def Open(self, filehandle=None):
@@ -598,7 +598,7 @@ class GzipFile(PlasoFile):
 
     ret.size = self.size
     ret.ino = self.inode
-    ret.os_type = 'GZ File'
+    ret.fs_type = 'GZ File'
 
     return ret
 
@@ -679,7 +679,7 @@ class Bz2File(PlasoFile):
       return ret
 
     ret.ino = self.inode
-    ret.os_type = 'BZ2 container'
+    ret.fs_type = 'BZ2 container'
     return ret
 
   def readline(self, size=-1):
@@ -726,7 +726,7 @@ class TarFile(PlasoFile):
       return ret
 
     ret.ino = self.inode
-    ret.os_type = 'Tar container'
+    ret.fs_type = 'Tar container'
     return ret
 
   def Open(self, filehandle=None):
