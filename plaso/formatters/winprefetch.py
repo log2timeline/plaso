@@ -37,6 +37,9 @@ class WinPrefetchFormatter(eventdata.ConditionalEventFormatter):
       u'{executable} was run',
       u'{run_count} time(s)']
 
+  SOURCE_LONG = 'WinPrefetch'
+  SOURCE_SHORT = 'LOG'
+
   def GetMessages(self, event_object):
     """Return the message strings."""
     if event_object.version == 0x11:

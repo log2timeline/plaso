@@ -39,7 +39,6 @@ class Symantec(parser.TextCSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
   NAME = 'Symantec'
-  PARSER_TYPE = 'LOG'
 
   # Define the columns that make up the structure of a Symantec log file.
   # http://www.symantec.com/docs/TECH100099
@@ -128,4 +127,4 @@ class Symantec(parser.TextCSVParser):
     """Parse a single line from the symantec log file."""
     epoch = self.GetTimestamp(row['time'])
     # TODO: Create new dict object that only contains valuable attributes.
-    yield SymantecEvent(epoch, row, 'AV Log Entry')
+    yield SymantecEvent(epoch, row)

@@ -36,6 +36,9 @@ class WinEvtFormatter(eventdata.ConditionalEventFormatter):
       u'[0x{event_identifier:08x}]',
       u'Strings: {strings}']
 
+  SOURCE_LONG = 'WinEVT'
+  SOURCE_SHORT = 'EVT'
+
   # Mapping of the numeric event types to a descriptive string.
   _EVENT_TYPES = [u'Error event', u'Warning event', u'Information event',
                   u'Success Audit event', u'Failure Audit event']

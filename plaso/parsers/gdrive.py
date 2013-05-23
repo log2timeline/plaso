@@ -63,9 +63,6 @@ class GoogleDriveSnapshotCloudEntryEventContainer(event.EventContainer):
     # TODO: refactor to formatter.
     self.data_type = 'gdrive:snapshot:cloud_entry'
 
-    self.source_short = 'LOG'
-    self.source_long = 'Google Drive (cloud entry)'
-
     self.url = url
     self.path = path
     self.size = size
@@ -89,8 +86,6 @@ class GoogleDriveSnapshotLocalEntryEvent(event.EventObject):
 
     self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
     self.timestamp_desc = eventdata.EventTimestamp.MODIFICATION_TIME
-    self.source_short = 'LOG'
-    self.source_long = 'Google Drive (local entry)'
 
     self.path = local_path
     self.size = size

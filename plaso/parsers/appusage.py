@@ -48,9 +48,6 @@ class MacOSXApplicationUsageEvent(event.EventObject):
     # it will hold here.
     self.timestamp_desc = usage
 
-    self.source_short = 'LOG'
-    self.source_long = 'Application Usage'
-
     self.application = application_name
     self.app_version = application_version
     self.bundle_id = bundle_id

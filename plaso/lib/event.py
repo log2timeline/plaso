@@ -487,9 +487,13 @@ class EventObject(object):
       out_write.append(u'None')
     else:
       msg, msg_short = event_formatter.GetMessages(self)
+      source_short, source_long = event_formatter.GetSources(self)
       out_write.append(u'{2:>7}: {0}\n{3:>7}: {1}\n'.format(
           utils.GetUnicodeString(msg_short), utils.GetUnicodeString(msg),
           'Short', 'Long'))
+      out_write.append(u'{2:>7}: {0}\n{3:>7}: {1}\n'.format(
+          utils.GetUnicodeString(source_short),
+          utils.GetUnicodeString(source_long), 'Source Short', 'Source Long'))
 
     if hasattr(self, 'pathspec'):
       pathspec_string = str(self.pathspec.ToProto()).rstrip()
@@ -708,6 +712,23 @@ class EventPathBundle(object):
       if file_hash == self._GetHash(pathspec):
         return pathspec
 
+  def __str__(self):
+    """Return a string representation of the bundle."""
+    out_write = []
+    out_write.append(u'+-' * 40)
+    hashes = list(self.ListFiles())
+
+    out_write.append(utils.FormatOutputString('Pattern', self.pattern, 10))
+
+    out_write.append('')
+
+    for pathspec in self._pathspecs:
+      out_write.append(utils.FormatOutputString(
+          'Hash', self._GetHash(pathspec), 10))
+      out_write.append(unicode(pathspec))
+
+    return u'\n'.join(out_write)
+
 
 class EventPathSpec(object):
   """A native Python object for the pathspec definition."""
@@ -784,6 +805,10 @@ class EventPathSpec(object):
     proto = self.ToProto()
 
     return proto.SerializeToString()
+
+  def __str__(self):
+    """Return a string representation of the pathspec."""
+    return unicode(self.ToProto())
 
 
 class EventTag(object):
@@ -964,7 +989,6 @@ class WinRegistryEvent(EventObject):
     super(WinRegistryEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = usage or 'Last Written'
-    self.source_short = 'REG'
     if key:
       self.keyname = key
     self.keyvalue_dict = value_dict
@@ -979,22 +1003,18 @@ class TextEvent(EventObject):
   # TODO: move this class to parsers/text.py
   DATA_TYPE = 'text'
 
-  def __init__(self, timestamp, attributes, source):
+  def __init__(self, timestamp, attributes):
     """Initializes a text event.
 
     Args:
       timestamp: The timestamp time value. The timestamp contains the
                  number of microseconds since Jan 1, 1970 00:00:00 UTC.
       attributes: A dict that contains the events attributes.
-      source: The source_long description of the event.
     """
     super(TextEvent, self).__init__()
     self.timestamp = timestamp
     # TODO: use eventdata.EventTimestamp after class has moved.
     self.timestamp_desc = 'Entry Written'
-    # TODO: refactor to formatter.
-    self.source_short = 'LOG'
-    self.source_long = source
     for name, value in attributes.items():
       # TODO: Revisit this constraints and see if we can implement
       # it using a more sane solution.

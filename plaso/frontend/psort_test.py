@@ -39,9 +39,6 @@ class TestEvent1(event.EventObject):
   def __init__(self):
     super(TestEvent1, self).__init__()
     self.timestamp = 123456
-    # TODO: move to formatter.
-    self.source_short = 'LOG'
-    self.source_long = 'NoSource'
 
 
 class TestEvent2(event.EventObject):
@@ -51,10 +48,6 @@ class TestEvent2(event.EventObject):
     super(TestEvent2, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = 'Last Written'
-
-    # TODO: move to formatter.
-    self.source_short = 'LOG'
-    self.source_long = 'None in Particular'
 
     self.parser = 'TestEvent'
 
@@ -68,6 +61,9 @@ class TestEvent2Formatter(eventdata.EventFormatter):
   DATA_TYPE = 'test:psort:2'
 
   FORMAT_STRING = 'My text goes along: {some} lines'
+
+  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = 'None in Particular'
 
 
 class TestFormatter(output.LogOutputFormatter):
@@ -84,8 +80,9 @@ class TestFormatter(output.LogOutputFormatter):
   def EventBody(self, event_object):
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     msg, _= event_formatter.GetMessages(event_object)
+    source_short, source_long = event_formatter.GetSources(event_object)
     self.filehandle.write(u'{}/{} {}\n'.format(
-        event_object.source_short, event_object.source_long, msg))
+        source_short, source_long, msg))
 
 
 class TestEventBuffer(output.EventBuffer):
