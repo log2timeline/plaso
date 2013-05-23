@@ -47,3 +47,6 @@ class Office2003Formatter(eventdata.ConditionalEventFormatter):
       u'Title: {title}',
       u'Subject: {subject}',
       u'Author: {author}']
+
+  SOURCE_LONG = 'Office Metadata'
+  SOURCE_SHORT = 'META'

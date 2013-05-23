@@ -36,10 +36,6 @@ class FirefoxPlacesBookmarkAnnotation(event.EventContainer):
     super(FirefoxPlacesBookmarkAnnotation, self).__init__()
     self.data_type = 'firefox:places:bookmark_annotation'
 
-    # TODO: refactor to formatter.
-    self.source_short = 'WEBHIST'
-    self.source_long = 'Firefox History'
-
     self.offset = row_id
     self.title = title
     self.url = url
@@ -58,10 +54,6 @@ class FirefoxPlacesBookmarkFolder(event.EventContainer):
     """
     super(FirefoxPlacesBookmarkFolder, self).__init__()
     self.data_type = 'firefox:places:bookmark_folder'
-
-    # TODO: refactor to formatter.
-    self.source_short = 'WEBHIST'
-    self.source_long = 'Firefox History'
 
     self.offset = row_id
     self.title = title
@@ -93,10 +85,6 @@ class FirefoxPlacesBookmark(event.EventContainer):
     """
     super(FirefoxPlacesBookmark, self).__init__()
     self.data_type = 'firefox:places:bookmark'
-
-    # TODO: refactor to formatter.
-    self.source_short = 'WEBHIST'
-    self.source_long = 'Firefox History'
 
     self.offset = row_id
     self.type = self._TYPES[type]
@@ -130,10 +118,6 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
 
     self.timestamp = timestamp
     self.timestamp_desc = eventdata.EventTimestamp.PAGE_VISITED
-
-    # TODO: refactor to formatter.
-    self.source_short = 'WEBHIST'
-    self.source_long = 'Firefox History'
 
     self.offset = row_id
     self.url = url

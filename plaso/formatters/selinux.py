@@ -26,3 +26,6 @@ class SELinuxFormatter(eventdata.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [u'[', u'audit_type: {audit_type}',
                           u', pid: {pid}', u']', u' {body}']
+
+  SOURCE_LONG = 'Audit log File'
+  SOURCE_SHORT = 'LOG'

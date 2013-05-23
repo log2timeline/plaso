@@ -97,6 +97,23 @@ class EventFormatterManager(object):
       return cls.default_formatter
 
   @classmethod
+  def GetSourceStrings(cls, event_object):
+    """Retrieves the formatted source long and short strings for an event.
+
+    Args:
+      event_object: The event object (EventObject) which is used to identify
+                    the formatter.
+
+    Returns:
+      A list that contains the source_short and source_long version of the
+      event.
+    """
+    formatter = cls.GetFormatter(event_object)
+    if not formatter:
+      return u'', u''
+    return formatter.GetSources(event_object)
+
+  @classmethod
   def GetMessageStrings(cls, event_object):
     """Retrieves the formatted message strings for a specific event object.
 
@@ -135,10 +152,16 @@ class EventFormatter(object):
   FORMAT_STRING = u''
   FORMAT_STRING_SHORT = u''
 
+  # The source short and long strings.
+  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = u''
+
   def __init__(self):
     """Set up the formatter and determine if this is the right formatter."""
     self.format_string = self.FORMAT_STRING
     self.format_string_short = self.FORMAT_STRING_SHORT
+    self.source_string = self.SOURCE_LONG
+    self.source_string_short = self.SOURCE_SHORT
 
   def GetMessages(self, event_object):
     """Return a list of messages extracted from an event object.
@@ -196,6 +219,14 @@ class EventFormatter(object):
       msg_short = u'%s...' % msg_short[0:77]
 
     return msg, msg_short
+
+  def GetSources(self, event_object):
+    """Return a list containing source short and long."""
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter('Unsupported data type: %s.' % (
+          event_object.data_type))
+
+    return self.source_string_short, self.source_string
 
 
 class ConditionalEventFormatter(EventFormatter):

@@ -35,3 +35,6 @@ class WinEvtxFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [
       u'[0x{event_identifier:08x}]',
       u'Strings: {strings}']
+
+  SOURCE_LONG = 'WinEVTX'
+  SOURCE_SHORT = 'EVT'

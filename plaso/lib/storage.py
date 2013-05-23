@@ -148,8 +148,7 @@ class PlasoStorage(object):
           pre_obj.collection_information['cmd_line'] = u' '.join(sys.argv)
 
       # Start up a counter for modules in buffer.
-      self._count_evt_long = collections.Counter()
-      self._count_evt_short = collections.Counter()
+      self._count_data_type = collections.Counter()
       self._count_parser = collections.Counter()
 
       # Need to get the last number in the list.
@@ -512,8 +511,7 @@ class PlasoStorage(object):
       self._pre_obj.counter[evt.attributes.get('parser', 'N/A')] += 1
 
     # Add to temporary counter.
-    self._count_evt_long[evt.source_long] += 1
-    self._count_evt_short[evt.source_short] += 1
+    self._count_data_type[evt.data_type] += 1
     self._count_parser[evt.attributes.get('parser', 'unknown_parser')] += 1
 
     heapq.heappush(self._buffer, (evt.timestamp, event_str))
@@ -536,13 +534,11 @@ class PlasoStorage(object):
     yaml_dict = {'range': (self._buffer_first_timestamp,
                            self._buffer_last_timestamp),
                  'version': self.STORAGE_VERSION,
-                 'source_short': list(self._count_evt_short.viewkeys()),
-                 'source_long': list(self._count_evt_long.viewkeys()),
+                 'data_type': list(self._count_data_type.viewkeys()),
                  'parsers': list(self._count_parser.viewkeys()),
                  'count': len(self._buffer),
-                 'source_count': self._count_evt_long.most_common()}
-    self._count_evt_long = collections.Counter()
-    self._count_evt_short = collections.Counter()
+                 'type_count': self._count_data_type.most_common()}
+    self._count_data_type = collections.Counter()
     self._count_parser = collections.Counter()
     self.zipfile.writestr(meta_fh, yaml.safe_dump(yaml_dict))
 

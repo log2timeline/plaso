@@ -43,10 +43,6 @@ class MsiecfUrlEventContainer(event.EventContainer):
     super(MsiecfUrlEventContainer, self).__init__()
     self.data_type = 'msiecf:url'
 
-    # TODO: refactor to formatter.
-    self.source_long = 'MSIE Cache File URL record'
-    self.source_short = 'WEBHIST'
-
     self.recovered = recovered
     self.offset = msiecf_item.offset
 
@@ -67,7 +63,6 @@ class MsiecfUrlEventContainer(event.EventContainer):
 class MsiecfParser(parser.PlasoParser):
   """Parses MSIE Cache Files (MSIECF)."""
   NAME = 'Msiecf'
-  PARSER_TYPE = 'WEBHIST'
 
   def _ParseUrl(self, pre_obj, msiecf_item, recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) URL item.

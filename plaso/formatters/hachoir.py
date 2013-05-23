@@ -26,6 +26,9 @@ class HachoirFormatter(eventdata.EventFormatter):
   DATA_TYPE = 'metadata:hachoir'
   FORMAT_STRING = u'{data}'
 
+  SOURCE_LONG = 'Hachoir Metadata'
+  SOURCE_SHORT = 'META'
+
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
 

@@ -49,7 +49,6 @@ class TestEvent1(event.EventObject):
     super(TestEvent1, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = 'Some time in the future'
-    self.source_short = 'FILE'
     self.attributes.update(attributes)
 
 
@@ -62,9 +61,6 @@ class TestEvent2(event.EventObject):
     super(TestEvent2, self).__init__()
     self.timestamp = 1234124
     self.timestamp_desc = 'Written'
-
-    self.source_short = 'LOG'
-    self.source_long = 'Some Source Long'
 
     self.empty_string = u''
     self.zero_integer = 0
@@ -93,24 +89,20 @@ class TestEventContainer(event.EventContainer):
     container = event.EventContainer()
     container.username = 'joesmith'
     container.filename = 'c:/Users/joesmith/NTUSER.DAT'
-    container.source_long = 'NTUSER.DAT Registry'
 
     event_object = event.WinRegistryEvent(
         u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'}, 1334961526929596)
-    event_object.source_long = 'UNKNOWN'
     container.Append(event_object)
 
     event_object = event.WinRegistryEvent(
         u'//HKCU/Secret/EvilEmpire/Malicious_key',
         {u'Value': u'REGALERT: send all the exes to the other world'},
         1334966206929596)
-    event_object.source_long = 'UNKNOWN'
     container.Append(event_object)
 
     event_object = event.WinRegistryEvent(
         u'//HKCU/Windows/Normal', {u'Value': u'run all the benign stuff'},
         1334940286000000)
-    event_object.source_long = 'UNKNOWN'
     container.Append(event_object)
 
     self.Append(container)
@@ -118,7 +110,6 @@ class TestEventContainer(event.EventContainer):
     # A sub event container that contains 4 event objects.
     container = event.EventContainer()
     container.filename = 'c:/Temp/evil.exe'
-    container.source_long = 'Weird Log File'
 
     container.Append(TestEvent1(1335781787929596, {
         'text': 'This log line reads ohh so much.'}))
@@ -133,8 +124,7 @@ class TestEventContainer(event.EventContainer):
         'This is a line by someone not reading the log line properly. And '
         'since this log line exceeds the accepted 80 chars it will be '
         'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
-    event_object = event.TextEvent(1338934459000000, text_dict,
-                                   'Some random text file')
+    event_object = event.TextEvent(1338934459000000, text_dict)
     event_object.text = event_object.body
     container.Append(event_object)
 
@@ -172,7 +162,7 @@ class PlasoEventUnitTest(unittest.TestCase):
     # The parent container set one attribute, the hostname.
     self.assertEquals(len(container.attributes), 1)
     self.assertTrue('hostname' in container.attributes)
-    self.assertEquals(len(container.containers[0].attributes), 3)
+    self.assertEquals(len(container.containers[0].attributes), 2)
 
     first_array = []
     last_array = []
@@ -295,11 +285,11 @@ class PlasoEventUnitTest(unittest.TestCase):
 
     attr = my_event.GetAttributes()
 
-    self.assertEquals(len(attr), 10)
+    self.assertEquals(len(attr), 8)
 
     self.assertEquals(sorted(attr), [
-        'body', 'data_type', 'filename', 'hostname', 'source_long',
-        'source_short', 'text', 'timestamp', 'timestamp_desc', 'username'])
+        'body', 'data_type', 'filename', 'hostname', 'text', 'timestamp',
+        'timestamp_desc', 'username'])
 
   def testSerialization(self):
     """Test serialize event and attribute saving."""
@@ -331,7 +321,6 @@ class PlasoEventUnitTest(unittest.TestCase):
     evt2.FromProtoString(proto_ser)
 
     self.assertEquals(evt2.timestamp, evt.timestamp)
-    self.assertEquals(evt2.source_short, evt.source_short)
     self.assertEquals(evt.my_dict, evt2.my_dict)
     self.assertEquals(evt.my_list, evt2.my_list)
     self.assertEquals(evt.string, evt2.string)

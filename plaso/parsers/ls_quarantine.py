@@ -40,8 +40,6 @@ class LsQuarantineEvent(event.EventObject):
 
     self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
     self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
-    self.source_short = 'HIST'
-    self.source_long = 'LS Quarantine Event'
 
     self.url = url
     self.agent = user_agent

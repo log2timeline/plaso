@@ -185,8 +185,8 @@ def FindAllParsers(pre_obj=None, filter_query=None):
 
     if add:
       results['all'].append(parser_obj)
-      parser_type = parser_obj.PARSER_TYPE
-      results.setdefault(parser_type, []).append(parser_obj)
+      # TODO: Find a way to reintroduce PARSER_TYPE using other mechanism to
+      # group parsers together.
 
   return results
 

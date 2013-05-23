@@ -76,6 +76,7 @@ class L2tcsv(output.FileLogOutputFormatter):
           'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
 
     msg, msg_short = event_formatter.GetMessages(event_object)
+    source_short, source_long = event_formatter.GetSources(event_object)
 
     if not hasattr(event_object, 'timestamp'):
       return
@@ -114,8 +115,8 @@ class L2tcsv(output.FileLogOutputFormatter):
            '%02d:%02d:%02d' %(date_use.hour, date_use.minute, date_use.second),
            self.zone,
            helper.GetLegacy(event_object),
-           event_object.source_short,
-           event_object.source_long,
+           source_short,
+           source_long,
            event_object.timestamp_desc,
            username,
            hostname,

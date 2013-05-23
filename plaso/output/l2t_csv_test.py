@@ -35,8 +35,6 @@ class TestEvent(event.EventObject):
     super(TestEvent, self).__init__()
     self.timestamp = 1340821021000000
     self.timestamp_desc = 'Entry Written'
-    self.source_short = 'LOG'
-    self.source_long = 'Syslog'
     self.hostname = 'ubuntu'
     self.filename = 'log/syslog.1'
     self.display_name = 'log/syslog.1'
@@ -48,6 +46,9 @@ class TestEvent(event.EventObject):
 class TestEventFormatter(eventdata.EventFormatter):
   DATA_TYPE = 'test:l2t_csv'
   FORMAT_STRING = u'{text}'
+
+  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = 'Syslog'
 
 
 class L2tCsvTest(unittest.TestCase):
