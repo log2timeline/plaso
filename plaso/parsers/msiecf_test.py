@@ -66,7 +66,7 @@ class MsiecfParserTest(unittest.TestCase):
         u'/funnycats.exe')
 
     self.assertEquals(event_container.offset, 21376)
-    self.assertEquals(event_container.location, expected_location)
+    self.assertEquals(event_container.url, expected_location)
     self.assertEquals(event_container.cache_directory_index, -2)
 
     event_object = event_container.events[0]

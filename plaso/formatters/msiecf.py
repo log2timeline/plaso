@@ -23,13 +23,13 @@ class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
   DATA_TYPE = 'msiecf:url'
 
   FORMAT_STRING_PIECES = [
-      u'Location: {location}',
+      u'Location: {url}',
       u'Number of hits: {number_of_hits}',
       u'Cached file size: {cached_file_size}',
       u'HTTP headers: {http_headers_cleaned}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Location: {location}']
+      u'Location: {url}']
 
   SOURCE_LONG = 'MSIE Cache File URL record'
   SOURCE_SHORT = 'WEBHIST'

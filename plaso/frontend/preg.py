@@ -124,10 +124,14 @@ def cd(key):
     parent_path, _, _ = RegCache.cur_key.path.rpartition('\\')
     _, _, key_path = key.partition('\\')
     if parent_path:
-      registry_key = RegCache.hive.GetKey(u'{}\\{}'.format(
-          parent_path, key_path))
+      if key_path:
+        path = u'{}\\{}'.format(parent_path, key_path)
+      else:
+        path = parent_path
+      registry_key = RegCache.hive.GetKey(path)
     else:
       registry_key = RegCache.hive.GetKey(u'\\{}'.format(key_path))
+
   else:
     # Check if key is not set at all, then assume traversal from root.
     if not RegCache.cur_key:
@@ -194,9 +198,9 @@ def ls(verbose=False):
 
   for entry, subkey in sorted(sub):
     if subkey:
-      print 'dr-xr-xr-x {}'.format(entry)
+      print u'dr-xr-xr-x {}'.format(entry)
     else:
-      print '-r-xr-xr-x {}'.format(entry)
+      print u'-r-xr-xr-x {}'.format(entry)
 
 
 def StripCurlyBrace(string):
