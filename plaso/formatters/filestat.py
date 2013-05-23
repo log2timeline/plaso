@@ -30,8 +30,9 @@ class PfileStatFormatter(eventdata.ConditionalEventFormatter):
 
   def GetSources(self, event_object):
     """Return a list of source short and long messages."""
-    self.source_string = u'%s Time' % getattr(
-        event_object, 'fs_type', 'Unknown')
+    self.source_string = u'{} {}'.format(
+        getattr(event_object, 'fs_type', 'Unknown'),
+        getattr(event_object, 'timestamp_desc', 'Time'))
 
     return super(PfileStatFormatter, self).GetSources(event_object)
 

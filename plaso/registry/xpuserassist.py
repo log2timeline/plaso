@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a simple UserAssist plugin for Plaso."""
+import construct
 import logging
-import struct
 
 from plaso.lib import event
 from plaso.lib import timelib
@@ -31,11 +31,20 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
   REG_TYPE = 'NTUSER'
   URLS = [u'http://blog.didierstevens.com/programs/userassist/']
 
+  USERASSIST_STRUCT = construct.Struct(
+      'userassist_entry', construct.Padding(4), construct.ULInt32('count'),
+      construct.ULInt64('timestamp'))
+
   def GetEntries(self):
     """Retrieves the values in the UserAssist Registry key."""
     for value in self._key.GetValues():
       data = value.GetRawData()
       name_raw = value.name
+
+      if len(data) != 16:
+        logging.debug('[UserAssist] Value entry is not of correct length.')
+        continue
+
       try:
         name = name_raw.decode('rot-13')
       except UnicodeEncodeError as e:
@@ -55,21 +64,14 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
 
         name = u''.join(characters)
 
-      if len(data) != 16:
-        logging.debug('[UserAssist] Value entry is not of correct length.')
-        continue
-      _, count, filetime = struct.unpack('<LLQ', data)
-
-      if not filetime:
-        logging.debug(
-            u'[UserAssist] Value entry without a timestamp value: %s (%d)',
-            name, count)
-        continue
+      data_parsed = self.USERASSIST_STRUCT.parse(data)
+      filetime = data_parsed.get('timestamp', 0)
+      count = data_parsed.get('count', 0)
 
       if count > 5:
         count -= 5
 
       text_dict = {}
-      text_dict[u'{0}'.format(name)] = u'[Count: {0}]'.format(count)
+      text_dict[name] = u'[Count: {0}]'.format(count)
       yield event.WinRegistryEvent(
           u'', text_dict, timelib.Timestamp.FromFiletime(filetime))
