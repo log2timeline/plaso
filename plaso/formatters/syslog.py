@@ -25,3 +25,6 @@ class SyslogLineFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_SEPARATOR = u''
 
   FORMAT_STRING_PIECES = [u'[', u'{reporter}', u', pid: {pid}', u'] {body}']
+
+  SOURCE_LONG = 'Log File'
+  SOURCE_SHORT = 'LOG'

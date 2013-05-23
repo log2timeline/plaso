@@ -32,8 +32,6 @@ from plaso.lib import utils
 
 import pytz
 
-__pychecker__ = 'no-funcdoc'
-
 
 class DictObject(object):
   """A simple object representing a dict object.
@@ -93,6 +91,16 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
 
     return ret
 
+  def _GetSources(self, obj):
+    """Return a properly formatted source strings."""
+    try:
+      get_sources = eventdata.EventFormatterManager.GetSourceStrings
+      source_short, source_long = get_sources(obj)
+    except KeyError as e:
+      logging.warning(u'Unable to correctly assemble event: %s', e)
+
+    return source_short, source_long
+
   def _GetValue(self, obj, attr_name):
     ret = getattr(obj, attr_name, None)
 
@@ -104,6 +112,18 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     # Check if this is a message request and we have a regular EventObject.
     if attr_name == 'message' and not hasattr(obj.attributes, 'MergeForm'):
       return self._GetMessage(obj)
+
+    # Check if this is a source_short request.
+    if attr_name in ('source', 'source_short') and not hasattr(
+        obj.attributes, 'MergeForm'):
+      source_short, _ = self._GetSources(obj)
+      return source_short
+
+    # Check if this is a source_long request.
+    if attr_name in ('source_long', 'sourcetype') and not hasattr(
+        obj.attributes, 'MergeForm'):
+      _, source_long = self._GetSources(obj)
+      return source_long
 
   def _GetAttributeName(self, path):
     return path[0].lower()
@@ -117,7 +137,6 @@ class PlasoExpression(objectfilter.BasicExpression):
     'date': 'timestamp',
     'datetime': 'timestamp',
     'time': 'timestamp',
-    'source': 'source_short',
     'description_long': 'message',
     'description': 'message',
     'description_short': 'message_short',

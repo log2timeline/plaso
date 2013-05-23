@@ -46,14 +46,11 @@ class PlasoParser(object):
 
   There is one class variables that needs defining:
     NAME - the name of the type of file being parsed, eg. Syslog
-    PARSER_TYPE - the name of the filetype the parser is capable of
-    parsing. (eg. TXT, EVTX)
   """
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
   NAME = 'General Log Parser'
-  PARSER_TYPE = 'all'
 
   def __init__(self, pre_obj):
     """Parser constructor.
@@ -129,7 +126,6 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
 
   # Description of the log file.
   NAME = 'Generic Text File'
-  PARSER_TYPE = 'txt'
 
   # Define the max number of lines before we determine this is
   # not the correct parser.
@@ -379,8 +375,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
     Returns:
       A text event (TextEvent).
     """
-    __pychecker__ = ('missingattrs=source_long')
-    event_object = event.TextEvent(timestamp, attributes, self.source_long)
+    event_object = event.TextEvent(timestamp, attributes)
     event_object.offset = offset
     return event_object
 
@@ -389,7 +384,6 @@ class TextCSVParser(PlasoParser):
   """An implementation of a simple CSV line-per-entry log files."""
 
   NAME = 'CSV Parser'
-  PARSER_TYPE = 'TXT'
 
   __abstract = True
 
@@ -501,7 +495,6 @@ class SQLiteParser(PlasoParser):
 
   # Description of the log file.
   NAME = 'Generic SQLite Parsing'
-  PARSER_TYPE = 'sqlite'
 
   def __init__(self, pre_obj, local_zone=False):
     """Constructor for the SQLite parser."""

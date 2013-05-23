@@ -32,8 +32,6 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class Office2003(parser.PlasoParser):
   """Parse meta data from OLE files."""
 
-  NAME = 'Office2003'
-  PARSER_TYPE = 'META'
   DATA_TYPE = 'metadata:office2003'
 
   MAGIC = '\320\317\021\340\241\261\032\341'
@@ -45,7 +43,7 @@ class Office2003(parser.PlasoParser):
     if self.MAGIC not in filehandle.read(len(self.MAGIC)):
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
-              self.NAME, filehandle.name, 'Not an OLE File.')) 
+              self.NAME, filehandle.name, 'Not an OLE File.'))
 
     try:
       loader = OleFileIO_PL.OleFileIO(filehandle)
@@ -57,8 +55,6 @@ class Office2003(parser.PlasoParser):
 
     container = event.EventContainer()
     container.offset = 0
-    container.source_long = self.NAME
-    container.source_short = self.PARSER_TYPE
     container.data_type = self.DATA_TYPE
 
     container.codepage = self.SetValue(metadata.codepage)
@@ -85,7 +81,7 @@ class Office2003(parser.PlasoParser):
     if isinstance(created_date, datetime.datetime):
       container.Append(OLE2Event(
           created_date,eventdata.EventTimestamp.CREATION_TIME))
-      
+
     modified_date = metadata.last_saved_time
     if isinstance(modified_date, datetime.datetime):
       container.Append(OLE2Event(
@@ -104,7 +100,7 @@ class Office2003(parser.PlasoParser):
       value = value.strip('\x00')
     return value
 
-  
+
 class OLE2Event(event.PosixTimeEvent):
   """Process timestamps from Hachoir Events."""
 

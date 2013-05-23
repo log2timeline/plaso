@@ -37,8 +37,7 @@ class SyslogLineEvent(event.TextEvent):
       offset: The offset of the event.
       attributes: A dict that contains the events attributes
     """
-    super(SyslogLineEvent, self).__init__(
-        timestamp, attributes, 'Log File')
+    super(SyslogLineEvent, self).__init__(timestamp, attributes)
     self.offset = offset
 
 
