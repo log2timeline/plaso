@@ -53,8 +53,8 @@ class Office2003Test(unittest.TestCase):
 
     event_object = events[1]
 
-    self.assertEquals(event_object.num_chars, 5357)
-    self.assertEquals(event_object.revision_number, '3')
+    self.assertEquals(event_object.num_chars, 18)
+    self.assertEquals(event_object.revision_number, '4')
     self.assertEquals(event_object.last_saved_by, 'Nides')
     self.assertEquals(event_object.author, 'DAVID NIDES')
     self.assertEquals(event_object.title, 'Table of Context')
