@@ -73,7 +73,7 @@ class PfileStatParser(parser.PlasoParser):
         continue
 
       evt.timestamp_desc = time
-      evt.fs_type = getattr(stat, 'os_type', 'N/A')
+      evt.fs_type = getattr(stat, 'fs_type', 'N/A')
 
       event_container.Append(evt)
 

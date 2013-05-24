@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a simple MRUx plugin for Plaso."""
-
-import struct
+import construct
 
 from plaso.lib import event
 from plaso.lib import win_registry_interface
@@ -28,6 +27,8 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
   REG_TYPE = 'any'
   REG_VALUES = frozenset(['MRUListEx', '0'])
   URLS = [u'http://forensicartifacts.com/2011/02/recentdocs/']
+
+  LIST_STRUCT = construct.Range(1, 500, construct.ULInt32('entry_number'))
 
   def GetText(self, mru_entry):
     """Return a string from a MRU value."""
@@ -45,10 +46,13 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
     """Extract EventObjects from a MRU list."""
     mru_list_data = self._key.GetValue('MRUListEx')
     raw_data = mru_list_data.GetRawData()
-    entry_length = struct.calcsize('<L')
 
-    fmt = '<' + 'L' * int(len(raw_data) / entry_length)
-    mru_list = struct.unpack(fmt, raw_data[:struct.calcsize(fmt)])
+    try:
+      mru_list = self.LIST_STRUCT.parse(raw_data)
+    except construct.FieldError:
+      logging.warning(u'Unable to parse the MRU key: %s', self._key.path)
+      return
+
     event_timestamp = self._key.timestamp
 
     for nr, entry in enumerate(mru_list):
