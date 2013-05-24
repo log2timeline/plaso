@@ -46,7 +46,7 @@ class MsiecfUrlEventContainer(event.EventContainer):
     self.recovered = recovered
     self.offset = msiecf_item.offset
 
-    self.location = msiecf_item.location
+    self.url = msiecf_item.location
     self.number_of_hits = msiecf_item.number_of_hits
     self.cache_directory_index = msiecf_item.cache_directory_index
     self.filename = msiecf_item.filename
