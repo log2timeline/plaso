@@ -38,7 +38,6 @@ class Office2003(parser.PlasoParser):
 
   def Parse(self, filehandle):
     """Extract EventObjects from a file."""
-    # TODO: Add a unit test for this parser.
 
     if self.MAGIC not in filehandle.read(len(self.MAGIC)):
       raise errors.UnableToParseFile(
@@ -47,8 +46,14 @@ class Office2003(parser.PlasoParser):
 
     try:
       loader = OleFileIO_PL.OleFileIO(filehandle)
+    except RuntimeError as exception:
+      raise errors.UnableToParseFile(
+          u'[%s] unable to parse file %s: %s' % (
+              self.NAME, filehandle.name, exception))
+    
+    try:
       metadata = loader.get_metadata()
-    except ValueError as exception:
+    except (OverflowError, ValueError) as exception:
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
               self.NAME, filehandle.name, exception))
