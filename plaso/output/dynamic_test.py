@@ -64,7 +64,7 @@ class DynamicTest(unittest.TestCase):
     output = StringIO.StringIO()
     formatter = dynamic.Dynamic(None, output)
     correct_line = (
-        'datetime,timestamp_desc,source_short,source_long,message,parser,'
+        'datetime,timestamp_desc,source,source_long,message,parser,'
         'display_name,store_number,store_index\n')
 
     formatter.Start()

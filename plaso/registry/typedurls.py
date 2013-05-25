@@ -46,7 +46,7 @@ class IETypedURLS(win_registry_interface.KeyPlugin):
       else:
         reg_evt = event.WinRegistryEvent(
             self._key.path, text_dict, 0)
-        
+
       reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
       yield reg_evt
 
