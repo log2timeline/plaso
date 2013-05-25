@@ -72,8 +72,8 @@ class Office2003Test(unittest.TestCase):
     self.assertEquals(msg, (
         u'Title: Table of Context Author: DAVID NIDES Template:'
         ' Normal.dotm Last saved by: Nides Revision number:'
-        ' 3 Total edit time: 1601-01-01 00:00:00 Num pages:'
-        ' 2 Num words: 939 Num chars: 5357 Codepage: 1252'
+        ' 4 Total edit time: 1601-01-01 00:00:00 Num pages:'
+        ' 1 Num words: 3 Num chars: 18 Security: 0 Codepage: 1252'
         ' Creating application: Microsoft Office Word'))
 
 
