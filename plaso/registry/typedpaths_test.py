@@ -50,13 +50,13 @@ class RegistryTypedPathsTest(unittest.TestCase):
     self.assertEquals(entries[0].timestamp, 1289375895811625)
     self.assertTrue(
         u'url1' in entries[0].regvalue)
-    
+
     self.assertEquals(entries[0].regvalue[u'url1'],
                       u'\\\\controller')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(
-        msg, u'[\Software\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths] url1: '
-        '\\\\controller')
+        msg, (u'[\Software\Microsoft\Windows\CurrentVersion\Explorer\\'
+              'TypedPaths] url1: \\\\controller'))
 
 
 if __name__ == '__main__':
