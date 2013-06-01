@@ -30,7 +30,7 @@ from plaso.output import helper
 
 
 class L2tcsv(output.FileLogOutputFormatter):
-  """Contains functions for outputting as l2t_csv."""
+  """A L2T CSV output formatter, a CSV output with 17 fixed fields defined."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -73,7 +73,7 @@ class L2tcsv(output.FileLogOutputFormatter):
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
-          'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
+          u'Unable to find event formatter for: %s.' % event_object.DATA_TYPE)
 
     msg, msg_short = event_formatter.GetMessages(event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
@@ -89,7 +89,7 @@ class L2tcsv(output.FileLogOutputFormatter):
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append('%s: %s ' % (key, getattr(event_object, key)))
+      extra.append(u'%s: %s ' % (key, getattr(event_object, key)))
     extra = ' '.join(extra)
 
     inode = getattr(event_object, 'inode', '-')
@@ -117,13 +117,13 @@ class L2tcsv(output.FileLogOutputFormatter):
            helper.GetLegacy(event_object),
            source_short,
            source_long,
-           event_object.timestamp_desc,
+           getattr(event_object, 'timestamp_desc', '-'),
            username,
            hostname,
            msg_short,
            msg,
            '2',
-           event_object.display_name,
+           getattr(event_object, 'display_name', '-'),
            inode,
            getattr(event_object, 'notes', '-'),  # Notes field placeholder.
            getattr(event_object, 'parser', '-'),

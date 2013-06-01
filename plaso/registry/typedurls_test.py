@@ -49,7 +49,7 @@ class RegistryIETypedURLSTest(unittest.TestCase):
     self.assertEquals(entries[0].timestamp, 1331587433307749)
     self.assertTrue(
         u'url1' in entries[0].regvalue)
-    
+
     self.assertEquals(entries[0].regvalue[u'url1'],
                       u'http://cnn.com/')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
