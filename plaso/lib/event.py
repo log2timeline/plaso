@@ -414,7 +414,7 @@ class EventObject(object):
       + Compare all other attributes than those that are reserved, and
       they all have to match.
 
-    The following attributes are considered to be "reserved" and not used
+    The following attributes are considered to be 'reserved' and not used
     for the comparison, so they may be different yet the EventObject is still
     considered to be equal:
       + inode

@@ -186,7 +186,7 @@ class Dynamic(output.FileLogOutputFormatter):
     if not self.fields:
       # TODO: Evaluate which fields should be included by default.
       self.fields = [
-          'datetime', 'timestamp_desc', 'source_short', 'source_long',
+          'datetime', 'timestamp_desc', 'source', 'source_long',
           'message', 'parser', 'display_name', 'store_number',
           'store_index']
 
