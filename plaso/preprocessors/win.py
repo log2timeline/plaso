@@ -186,7 +186,7 @@ class WinRegTimeZone(preprocess.WinRegistryPreprocess):
       'NorthAsiaEastStandardTime': 'Asia/Bangkok',
       'SingaporeStandardTime': 'Asia/Bangkok',
       'ChinaStandardTime': 'Asia/Bangkok',
-      'W.AustraliaStandardTime': 'Asia/Bangkok',
+      'W.AustraliaStandardTime': 'Australia/Perth',
       'TaipeiStandardTime': 'Asia/Bangkok',
       'TokyoStandardTime': 'Asia/Tokyo',
       'KoreaStandardTime': 'Asia/Seoul',
