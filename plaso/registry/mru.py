@@ -18,6 +18,7 @@
 
 from plaso.lib import event
 from plaso.lib import win_registry_interface
+from plaso.winreg import interface
 
 
 class MRUPlugin(win_registry_interface.ValuePlugin):
@@ -43,7 +44,9 @@ class MRUPlugin(win_registry_interface.ValuePlugin):
       if val.GetTypeStr() == 'SZ' or val.GetTypeStr() == 'EXPAND_SZ':
         string = val.GetData()
       else:
-        string = win_registry_interface.GetRegistryStringValue(
+        # TODO: refactor this, interface should not be directly invoked
+        # this should be moved to a module factory class or equiv.
+        string = interface.GetRegistryStringValue(
             val.GetRawData(), val.GetTypeStr())
       return string
     return u''

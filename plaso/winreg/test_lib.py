@@ -15,11 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a simple abstraction of registry keys for testing."""
-from plaso.formatters import winreg
-from plaso.lib import win_registry_interface
+from plaso.winreg import interface
 
 
-class TestRegKey(win_registry_interface.WinRegKey):
+class TestRegKey(interface.WinRegKey):
   """A simple implementation of a registry key to use in testing."""
 
   def __init__(self, path, timestamp, values, offset=0, subkeys=None):
@@ -72,7 +71,7 @@ class TestRegKey(win_registry_interface.WinRegKey):
     return len(self._values)
 
 
-class TestRegValue(win_registry_interface.WinRegValue):
+class TestRegValue(interface.WinRegValue):
   """WinRegValue is an object describing a registry value."""
 
   def __init__(self, name, value, value_type=1, offset=0):
