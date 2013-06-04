@@ -159,7 +159,7 @@ class WinRegistry(object):
       # need to properly set the codepage so the library can properly interpret
       # values in the registry.
       self._hive.set_ascii_codepage(codepage)
-    except IOError:
+    except (TypeError, IOError):
       logging.error(
           u'Unable to set the registry codepage to: {}. Not setting it'.format(
               codepage))
