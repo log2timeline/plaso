@@ -26,7 +26,8 @@ class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
       u'Location: {url}',
       u'Number of hits: {number_of_hits}',
       u'Cached file size: {cached_file_size}',
-      u'HTTP headers: {http_headers_cleaned}']
+      u'HTTP headers: {http_headers_cleaned}',
+      u'{recovered_string}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'Location: {url}']
@@ -48,5 +49,10 @@ class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
     if hasattr(event_object, 'http_headers'):
       event_object.http_headers_cleaned = event_object.http_headers.replace(
         '\r\n', ' - ')
+    # TODO: Could this be moved upstream since this is done in other parsers
+    # as well?
+    if getattr(event_object, 'recovered', None):
+      event_object.recovered_string = '[Recovered Entry]'
+
     return super(MsiecfUrlFormatter, self).GetMessages(event_object)
 
