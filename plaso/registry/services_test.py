@@ -17,9 +17,10 @@
 """This file contains tests for Services registry parsing in Plaso."""
 import unittest
 
+from plaso.formatters import winreg
 from plaso.lib import eventdata
 from plaso.registry import services
-from plaso.registry import test_lib
+from plaso.winreg import test_lib
 
 
 class TestServicesRegistry(unittest.TestCase):
