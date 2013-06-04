@@ -22,10 +22,10 @@ import re
 import unittest
 
 from plaso.lib import eventdata
-from plaso.lib import win_registry
 from plaso.parsers import winreg
 from plaso.registry import test_lib
 from plaso.registry import typedpaths
+from plaso.winreg import winpyregf
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -37,7 +37,9 @@ class RegistryTypedPathsTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
     file_object = open(test_file, 'rb')
-    self.registry = win_registry.WinRegistry(file_object)
+    # TODO: create a factory not have a specific back-end implementation
+    # directly invoked here.
+    self.registry = winpyregf.WinRegistry(file_object)
 
   def testTypedPathst(self):
     """Test the Typed Paths plugin."""
