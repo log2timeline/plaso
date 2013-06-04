@@ -120,6 +120,9 @@ class Dynamic(output.FileLogOutputFormatter):
       if check_user != '-':
         username = check_user
 
+    if username == '-' and hasattr(event_object, 'user_sid'):
+      return getattr(event_object, 'user_sid', '-')
+
     return username
 
   def ParseMessage(self, event_object):

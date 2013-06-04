@@ -89,6 +89,7 @@ class PlasoWorker(object):
     self._pre_obj = pre_obj
     filter_query = getattr(config, 'filter', None)
     self._parsers = putils.FindAllParsers(pre_obj, filter_query)
+    self._user_mapping = self._GetUserMapping()
 
     if hasattr(config, 'image') and config.image:
       self._fscache = pfile.FilesystemCache()
@@ -142,6 +143,25 @@ class PlasoWorker(object):
                      'further files from it. Msg: %s'),
                     filehandle.display_name, e)
 
+  def _GetUserMapping(self):
+    """Return a user dict which maps SID/UID values and usernames."""
+    user_dict = {}
+
+    if not getattr(self, '_pre_obj', None):
+      return user_dict
+
+    for user in getattr(self._pre_obj, 'users', []):
+      sid = user.get('sid', '')
+      if sid:
+        value = sid
+      else:
+        value = user.get('uid', '')
+
+      if value:
+        user_dict[value] = user.get('name', value)
+
+    return user_dict
+
   def _ParseEvent(self, event_object, filehandle, parser_name, stat_obj):
     """Adjust value of an extracted EventObject before storing it."""
     # TODO: Make some more adjustments to the event object.
@@ -157,6 +177,12 @@ class PlasoWorker(object):
       event_object.hostname = self._pre_obj.hostname
     if not hasattr(event_object, 'inode') and hasattr(stat_obj, 'ino'):
       event_object.inode = stat_obj.ino
+
+    # Set the username that is associated to the record.
+    if getattr(event_object, 'user_sid', None) and self._user_mapping:
+      username = self._user_mapping.get(event_object.user_sid, None)
+      if username:
+        event_object.username = username
 
     if not self._filter:
       self._stor_queue.AddEvent(event_object.ToProtoString())

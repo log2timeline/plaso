@@ -124,7 +124,7 @@ class WinEvtxParserTest(unittest.TestCase):
     msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
-    expected_msg = (u'[0x00001b7c] '
+    expected_msg = (u'[7036 / 0x00001b7c] '
                     u'Record Number: 12050 '
                     u'Event Level: 4 '
                     u'Source Name: Service Control Manager '

@@ -23,13 +23,13 @@ class WinEvtFormatter(eventdata.ConditionalEventFormatter):
   DATA_TYPE = 'windows:evt:record'
 
   FORMAT_STRING_PIECES = [
-      u'[0x{event_identifier:08x}]',
+      u'[{event_identifier} /',
+      u'0x{event_identifier:08x}]',
       u'Record Number: {record_number}',
       u'Event Type: {event_type_string}',
       u'Event Category: {event_category}',
       u'Source Name: {source_name}',
       u'Computer Name: {computer_name}',
-      u'User SID: {user_sid}',
       u'Strings: {strings}']
 
   FORMAT_STRING_SHORT_PIECES = [

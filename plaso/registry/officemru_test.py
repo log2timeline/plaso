@@ -48,7 +48,7 @@ class RegistryIETypedURLSTest(unittest.TestCase):
     self.assertEquals(entries[0].timestamp, 1331663235083000)
     self.assertTrue(
         u'Item 1' in entries[0].regvalue)
-    
+
     self.assertEquals(entries[0].regvalue[u'Item 1'],
                       u'[F00000000][T01CD0146EA1EADB0][O00000000]*'
                       'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
