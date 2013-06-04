@@ -19,8 +19,8 @@ import logging
 
 from plaso.lib import errors
 from plaso.lib import parser
-from plaso.lib import win_registry
 from plaso.lib import win_registry_interface
+from plaso.winreg import winpyregf
 
 
 class WinRegistryParser(parser.PlasoParser):
@@ -61,7 +61,9 @@ class WinRegistryParser(parser.PlasoParser):
 
     # Determine type, find all parsers
     try:
-      reg = win_registry.WinRegistry(filehandle, codepage)
+      # TODO: create a factory not have a specific back-end implementation
+      # directly invoked here.
+      reg = winpyregf.WinRegistry(filehandle, codepage)
     except IOError as e:
       raise errors.UnableToParseFile(
           '[%s] Unable to parse file %s: %s' % (self.NAME, filehandle.name, e))

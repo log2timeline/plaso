@@ -1,6 +1,5 @@
-#!/bin/bash
-# A small script that runs all tests
-#
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,31 +14,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This file contains the unit tests for the winpyregf library in plaso."""
+import os
+import unittest
 
-EXIT_FAILURE=1;
-EXIT_SUCCESS=0;
+from plaso.winreg import winpyregf
 
-# Run the tests in a specific order.
-for SUBDIR in lib winreg filters classifier parsers registry output frontend;
-do
-  TEST_FILES=`find "plaso/${SUBDIR}" -name "*_test.py" | grep -v "\/build\/" | grep -v office2003`;
+__pychecker__ = 'no-funcdoc'
 
-  for TEST_FILE in ${TEST_FILES};
-  do
-    echo "---+ ${TEST_FILE} +---"
-    PYTHONPATH=. /usr/bin/python ${TEST_FILE}
 
-    if [ $? -ne 0 ]
-    then
-      echo "TEST FAILED: ${TEST_FILE}.";
-      echo "";
-      echo "Stopping further testing.";
-      echo "";
-      exit ${EXIT_FAILURE};
-    fi
-    echo "";
-  done
-done
+class RegistryUnitTest(unittest.TestCase):
+  """An unit test for the plaso winpyregf library."""
 
-exit ${EXIT_SUCCESS};
+  def testListKeys(self):
+    test_file = os.path.join('test_data', 'NTUSER.DAT')
+    file_object = open(test_file, 'rb')
+    reg = winpyregf.WinRegistry(file_object)
+    keys = list(reg)
 
+    # Count the number of registry keys in the hive.
+    self.assertEquals(len(keys), 1126)
+
+
+if __name__ == '__main__':
+  unittest.main()

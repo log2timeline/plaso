@@ -33,8 +33,8 @@ from plaso.lib import putils
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.lib import vss
-from plaso.lib import win_registry
 from plaso.lib import win_registry_interface
+from plaso.winreg import winpyregf
 
 import pytz
 
@@ -229,7 +229,9 @@ def OpenHive(filename, collector=None, codepage='cp1252'):
     fh = collector.OpenFile(filename)
 
   use_codepage = getattr(RegCache.pre_obj, 'code_page', codepage)
-  RegCache.hive = win_registry.WinRegistry(fh, use_codepage)
+  # TODO: create a factory not have a specific back-end implementation
+  # directly invoked here.
+  RegCache.hive = winpyregf.WinRegistry(fh, use_codepage)
   RegCache.SetHiveType()
   RegCache.cur_key = RegCache.hive.GetKey('\\')
 
