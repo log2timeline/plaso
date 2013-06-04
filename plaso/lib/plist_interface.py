@@ -84,12 +84,12 @@ class PlistPlugin(object):
     """
     self._top_level = top_level
 
-    if not plist_name.lower() == self.PLIST_PATH.lower():
+    if plist_name.lower() != self.PLIST_PATH.lower():
       raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
 
     if set(top_level.keys()) >= self.PLIST_KEYS:
-      logging.debug('Plist Plugin Used: {} for: {}'.format(self.plugin_name,
-                                                           plist_name))
+      logging.debug(u'Plist Plugin Used: {} for: {}'.format(self.plugin_name,
+                                                            plist_name))
       self.match = GetKeys(top_level, self.PLIST_KEYS)
       return self.GetEntries()
 
