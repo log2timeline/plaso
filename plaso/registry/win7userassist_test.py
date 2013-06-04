@@ -19,10 +19,11 @@ import os
 import re
 import unittest
 
+from plaso.formatters import winreg
 from plaso.lib import eventdata
 from plaso.parsers import winreg
-from plaso.registry import test_lib
 from plaso.registry import win7userassist
+from plaso.winreg import test_lib
 from plaso.winreg import winpyregf
 
 __author__ = 'David Nides (david.nides@gmail.com)'

@@ -21,12 +21,12 @@ It should provide a read interface to the registry irrelevant of the underlying
 registry library that is used to parse the actual registry file.
 """
 import logging
-from plaso.lib import win_registry_interface
 from plaso.lib import errors
+from plaso.winreg import interface
 import pyregf
 
 
-class WinPyregKey(win_registry_interface.WinRegKey):
+class WinPyregKey(interface.WinRegKey):
   """An implementation of WinRegKey using pyregf."""
 
   def __init__(self, key, parent_path=''):
@@ -107,7 +107,7 @@ class WinPyregKey(win_registry_interface.WinRegKey):
     return self._key.get_number_of_values()
 
 
-class WinPyregValue(win_registry_interface.WinRegValue):
+class WinPyregValue(interface.WinRegValue):
   """An implementation of the WinRegValue based on pyregf."""
 
   def __init__(self, value):
@@ -131,12 +131,12 @@ class WinPyregValue(win_registry_interface.WinRegValue):
       try:
         ret = self._value.data_as_string
       except IOError:
-        ret = win_registry_interface.GetRegistryStringValue(
+        ret = interface.GetRegistryStringValue(
             self.GetRawData(), self._type_str)
 
       return ret
 
-    return win_registry_interface.GetRegistryStringValue(
+    return interface.GetRegistryStringValue(
         self.GetRawData(), self._type_str)
 
 

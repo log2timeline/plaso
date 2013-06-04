@@ -17,9 +17,10 @@
 """This file contains a test for MRU registry parsing in Plaso."""
 import unittest
 
+from plaso.formatters import winreg
 from plaso.lib import eventdata
 from plaso.registry import mru
-from plaso.registry import test_lib
+from plaso.winreg import test_lib
 
 
 class TestMRURegistry(unittest.TestCase):

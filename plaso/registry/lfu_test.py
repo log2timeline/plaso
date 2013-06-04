@@ -17,10 +17,11 @@
 """This file contains tests for Less Frequently Used Keys parsing in Plaso."""
 import unittest
 
+from plaso.formatters import winreg
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.registry import lfu
-from plaso.registry import test_lib
+from plaso.winreg import test_lib
 
 
 class TestBootExecuteRegistry(unittest.TestCase):
