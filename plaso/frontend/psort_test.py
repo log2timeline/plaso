@@ -96,13 +96,13 @@ class TestEventBuffer(output.EventBuffer):
     super(TestEventBuffer, self).__init__(formatter, False)
 
   def Append(self, event_object):
-    self._buffer_list.append(event_object)
+    self._buffer_dict[event_object.EqualityString()] = event_object
     self.record_count += 1
 
   def Flush(self):
-    for index, event_object in enumerate(self._buffer_list):
-      self.formatter.EventBody(event_object)
-    self._buffer_list = []
+    for event_object_key in self._buffer_dict:
+      self.formatter.EventBody(self._buffer_dict[event_object_key])
+    self._buffer_dict = {}
 
   def End(self):
     pass
