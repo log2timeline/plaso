@@ -209,7 +209,7 @@ class EventBuffer(object):
       check_dedups: Boolean value indicating whether or not the buffer should
       check and merge duplicate entries or not.
     """
-    self._buffer_list = []
+    self._buffer_dict = {}
     self._current_timestamp = 0
     self.duplicate_counter = 0
     self.check_dedups = check_dedups
@@ -223,40 +223,28 @@ class EventBuffer(object):
     Args:
       event_object: The EventObject that is being added.
     """
+    if not self.check_dedups:
+      self.formatter.WriteEvent(event_object)
+      return
+
     if event_object.timestamp != self._current_timestamp:
       self._current_timestamp = event_object.timestamp
       self.Flush()
 
-    self._buffer_list.append(event_object)
+    key = event_object.EqualityString()
+    if key in self._buffer_dict:
+      self.JoinEvents(event_object, self._buffer_dict.pop(key))
+    self._buffer_dict[key] = event_object
 
   def Flush(self):
     """Flushes the buffer by sending records to a formatter and prints."""
-    if not self._buffer_list:
+    if not self._buffer_dict:
       return
 
-    if len(self._buffer_list) == 1:
-      self.formatter.WriteEvent(self._buffer_list.pop())
-    elif not self.check_dedups:
-      for event_object in self._buffer_list:
-        self.formatter.WriteEvent(event_object)
-    else:
-      length = len(self._buffer_list)
-      for index in range(0, length):
-        event_object = self._buffer_list[index]
-        if not event_object:
-          continue
-        for in_index in range(index + 1, length):
-          event_compare = self._buffer_list[in_index]
-          if not event_compare:
-            continue
-          if event_object == event_compare:
-            self.JoinEvents(event_object, event_compare)
-            self._buffer_list[in_index] = None
+    for event_object in self._buffer_dict.values():
+      self.formatter.WriteEvent(event_object)
 
-        # Comparison done, objects combined, time to write it to output.
-        self.formatter.WriteEvent(event_object)
-
-    self._buffer_list = []
+    self._buffer_dict = {}
 
   def JoinEvents(self, event_a, event_b):
     """Join this EventObject with another one."""
@@ -266,15 +254,13 @@ class EventBuffer(object):
     # inside the combined event, however which one should be chosen is
     # perhaps something that can be evaluated here (regular TSK in favor of
     # an event stored deep inside a VSS for instance).
-    event_a.inode = ';'.join([
-      utils.GetUnicodeString(getattr(event_a, 'inode', '')),
-      utils.GetUnicodeString(getattr(event_b, 'inode', ''))])
-    event_a.filename= ';'.join([
-      utils.GetUnicodeString(getattr(event_a, 'filename', '')),
-      utils.GetUnicodeString(getattr(event_b, 'filename', ''))])
-    event_a.display_name= ';'.join([
-      utils.GetUnicodeString(getattr(event_a, 'display_name', '')),
-      utils.GetUnicodeString(getattr(event_b, 'display_name', ''))])
+    combine = ['inode', 'filename', 'display_name']
+    for attr in combine:
+      val_a = set(utils.GetUnicodeString(getattr(event_a, attr, '')).split(';'))
+      val_b = set(utils.GetUnicodeString(getattr(event_b, attr, '')).split(';'))
+      values_list = list(val_a | val_b)
+      values_list.sort() # keeping this consistent across runs helps with diffs
+      setattr(event_a, attr, u';'.join(values_list))
 
   def End(self):
     """Call the formatter to produce the closing line."""

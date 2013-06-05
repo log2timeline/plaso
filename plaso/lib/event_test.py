@@ -234,6 +234,105 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertEquals(event_a, event_e)
     self.assertNotEquals(event_c, event_d)
 
+  def testEqualityString(self):
+    """Test the EventObject EqualityString."""
+    event_a = event.EventObject()
+    event_b = event.EventObject()
+    event_c = event.EventObject()
+    event_d = event.EventObject()
+    event_e = event.EventObject()
+    event_f = event.EventObject()
+
+    event_a.timestamp = 123
+    event_a.timestamp_desc = 'LAST WRITTEN'
+    event_a.data_type = 'mock:nothing'
+    event_a.inode = 124
+    event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_a.another_attribute = False
+
+    event_b.timestamp = 123
+    event_b.timestamp_desc = 'LAST WRITTEN'
+    event_b.data_type = 'mock:nothing'
+    event_b.inode = 124
+    event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_b.another_attribute = False
+
+    event_c.timestamp = 123
+    event_c.timestamp_desc = 'LAST UPDATED'
+    event_c.data_type = 'mock:nothing'
+    event_c.inode = 124
+    event_c.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_c.another_attribute = False
+
+    event_d.timestamp = 14523
+    event_d.timestamp_desc = 'LAST WRITTEN'
+    event_d.data_type = 'mock:nothing'
+    event_d.inode = 124
+    event_d.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_d.another_attribute = False
+
+    event_e.timestamp = 123
+    event_e.timestamp_desc = 'LAST WRITTEN'
+    event_e.data_type = 'mock:nothing'
+    event_e.inode = 623423
+    event_e.filename = 'c:/afrit/öñṅûŗ₅ḱŖūα.txt'
+    event_e.another_attribute = False
+
+    event_f.timestamp = 14523
+    event_f.timestamp_desc = 'LAST WRITTEN'
+    event_f.data_type = 'mock:nothing'
+    event_f.inode = 124
+    event_f.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_f.another_attribute = False
+    event_f.weirdness = 'I am a potato'
+
+    self.assertEquals(event_a.EqualityString(), event_b.EqualityString())
+    self.assertNotEquals(event_a.EqualityString(), event_c.EqualityString())
+    self.assertEquals(event_a.EqualityString(), event_e.EqualityString())
+    self.assertNotEquals(event_c.EqualityString(), event_d.EqualityString())
+    self.assertNotEquals(event_d.EqualityString(), event_f.EqualityString())
+
+  def testEqualityPfileStatParserMissingInode(self):
+    """Test that PfileStatParser files with missing inodes are distinct"""
+    event_a = event.EventObject()
+    event_b = event.EventObject()
+
+    event_a.timestamp = 123
+    event_a.timestamp_desc = 'LAST WRITTEN'
+    event_a.data_type = 'mock:nothing'
+    event_a.parser = 'PfileStatParser'
+    event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_a.another_attribute = False
+
+    event_b.timestamp = 123
+    event_b.timestamp_desc = 'LAST WRITTEN'
+    event_b.data_type = 'mock:nothing'
+    event_b.parser = 'PfileStatParser'
+    event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_b.another_attribute = False
+
+    self.assertNotEquals(event_a, event_b)
+
+  def testEqualityStringPfileStatParserMissingInode(self):
+    """Test that PfileStatParser files with missing inodes are distinct"""
+    event_a = event.EventObject()
+    event_b = event.EventObject()
+
+    event_a.timestamp = 123
+    event_a.timestamp_desc = 'LAST WRITTEN'
+    event_a.data_type = 'mock:nothing'
+    event_a.parser = 'PfileStatParser'
+    event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_a.another_attribute = False
+
+    event_b.timestamp = 123
+    event_b.timestamp_desc = 'LAST WRITTEN'
+    event_b.data_type = 'mock:nothing'
+    event_b.parser = 'PfileStatParser'
+    event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_b.another_attribute = False
+
+    self.assertNotEquals(event_a.EqualityString(), event_b.EqualityString())
 
   def testDoesNotExist(self):
     """Calls to a non-existing attribute should result in an exception."""
