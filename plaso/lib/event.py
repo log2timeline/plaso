@@ -23,6 +23,7 @@ which are core components of the storage mechanism of plaso.
 import heapq
 import pprint
 import pytz
+import uuid
 
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -400,6 +401,34 @@ class EventObject(object):
 
     raise AttributeError('Attribute [%s] not defined' % attr)
 
+  def EqualityString(self):
+    """Return a string describing the EventObject in terms of object equality.
+
+    The details of this function must match the logic of __eq__. EqualityStrings
+    of two event objects should be the same if and only if the EventObjects are
+    equal as described in __eq__.
+
+    Returns:
+      String: will match another EventObject's Equality String if and only if
+              the EventObjects are equal
+    """
+
+    fields = list(self.GetAttributes().difference(self.COMPARE_EXCLUDE))
+    fields.sort()
+
+    basic = [self.timestamp, self.data_type]
+    attributes = [getattr(self, attribute) for attribute in fields]
+    identity = basic + [x for pair in zip(fields, attributes) for x in pair]
+
+    if 'PfileStatParser' in getattr(self, 'parser', ''):
+      inode = getattr(self, 'inode', 'a')
+      if inode == 'a':
+        inode = '_' + str(uuid.uuid4())
+      identity.append('inode')
+      identity.append(inode)
+
+    return u'|'.join(map(unicode, identity))
+
   def __eq__(self, event_object):
     """Return a boolean indicating if two EventObject are considered equal.
 
@@ -430,6 +459,9 @@ class EventObject(object):
     Returns:
       True: if both EventObjects are considered equal, otherwise False.
     """
+
+    # Note: if this method changes, the above EqualityString method MUST be
+    # updated as well
     if not isinstance(event_object, EventObject):
       return False
 
@@ -452,7 +484,9 @@ class EventObject(object):
     # If we are dealing with the stat parser the inode number is the one
     # attribute that really matters, unlike others.
     if 'PfileStatParser' in getattr(self, 'parser', ''):
-      return getattr(self, 'inode', 'a') == getattr(event_object, 'inode', 'b')
+      return utils.GetUnicodeString(getattr(
+          self, 'inode', 'a')) == utils.GetUnicodeString(getattr(
+              event_object, 'inode', 'b'))
 
     return True
 

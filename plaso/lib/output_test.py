@@ -34,6 +34,8 @@ class DummyEvent(object):
     except ValueError:
       self.timestamp = 0
     self.entry = entry
+  def EqualityString(self):
+    return ';'.join(map(str, [self.timestamp, self.entry]))
 
 
 class TestOutput(output.LogOutputFormatter):
@@ -120,27 +122,33 @@ class EventBufferTest(unittest.TestCase):
   def testFlush(self):
     """Test to ensure we empty our buffers and sends to output properly."""
     with tempfile.NamedTemporaryFile() as fh:
+
+      def CheckBufferLength(event_buffer, expected):
+        if not event_buffer.check_dedups:
+          expected = 0
+        self.assertEquals(len(event_buffer._buffer_dict), expected)
+
       formatter = TestOutput(fh)
       event_buffer = output.EventBuffer(formatter, False)
 
       event_buffer.Append(DummyEvent(123456, 'Now is now'))
-      self.assertEquals(len(event_buffer._buffer_list), 1)
+      CheckBufferLength(event_buffer, 1)
 
       # Add three events.
+      event_buffer.Append(DummyEvent(123456, 'OMG I AM DIFFERENT'))
       event_buffer.Append(DummyEvent(123456, 'Now is now'))
       event_buffer.Append(DummyEvent(123456, 'Now is now'))
-      event_buffer.Append(DummyEvent(123456, 'Now is now'))
-      self.assertEquals(len(event_buffer._buffer_list), 4)
+      CheckBufferLength(event_buffer, 2)
 
       event_buffer.Flush()
-      self.assertEquals(len(event_buffer._buffer_list), 0)
+      CheckBufferLength(event_buffer, 0)
 
       event_buffer.Append(DummyEvent(123456, 'Now is now'))
       event_buffer.Append(DummyEvent(123456, 'Now is now'))
-      event_buffer.Append(DummyEvent(123456, 'Now is now'))
-      self.assertEquals(len(event_buffer._buffer_list), 3)
+      event_buffer.Append(DummyEvent(123456, 'Different again :)'))
+      CheckBufferLength(event_buffer, 2)
       event_buffer.Append(DummyEvent(123457, 'Now is different'))
-      self.assertEquals(len(event_buffer._buffer_list), 1)
+      CheckBufferLength(event_buffer, 1)
 
 
 if __name__ == '__main__':
