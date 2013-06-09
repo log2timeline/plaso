@@ -18,19 +18,28 @@ and others involved with these projects:
 * PyInstaller
 * the SleuthKit
 * pytsk
+* OleFileIO_PL
+* Hachoir (not included in binary release)
 
 Thanks to contributors (alphabetically based on last name):
 * David Nides (davnads.blogspot.com)
-  * for the 4n6time output generator with thanks to Eric Wong for assistance
-  * for the gdrive parser
+  * 4n6time output generator with thanks to Eric Wong for assistance
+  * Google Drive parser
+  * Symantec Log parser
+  * Hachoir (meta data) parser
+  * OLECF parser
+  * Typed Paths registry parser
+  * Typed URLs registry parser
+  * Win7 Userassist registry parser
+  * timelib StringToDatetime function
 * Francesco Picasso
-  * for SELinux parser
+  * SELinux parser
 * Jordi Sanchez
-  * for the object filter
+  * object filter
 * Elizabeth Schweinsberg
-  * for multiple Registry plugins
+  * multiple Registry plugins
 * Keith Wall
-  * for updates to the timezone transformation
+  * updates to the timezone transformation
 
 Test data:
 
@@ -44,3 +53,4 @@ Copyright SANS Institute - Digital Forensics and Incident Response.
 * example.lnk
 * SysEvent.Evt
 * System.evtx
+* Ntuser.dat (multiple instances)

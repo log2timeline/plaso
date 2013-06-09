@@ -14,30 +14,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the Office2003 parser."""
+"""Tests for the OLECF parser."""
 
 import os
 import unittest
 
-from plaso.formatters import office2003
+from plaso.formatters import olecf
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import office2003
+from plaso.parsers import olecf
 
 
-class Office2003Test(unittest.TestCase):
-  """Tests for the Office2003 parser."""
+class OLECFTest(unittest.TestCase):
+  """Tests for the OLECF parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = office2003.Office2003(pre_obj)
+    self.test_parser = olecf.OLECF(pre_obj)
     # Show full diff results, part of TestCase so does not 
     # follow our naming conventions.
     self.maxDiff = None
 
   def testParseFile(self):
-    """Read a Office2003 file and run a few tests."""
+    """Read a OLECF file and run a few tests."""
     test_file = os.path.join('test_data', 'Document.doc')
 
     events = None
@@ -63,6 +63,17 @@ class Office2003Test(unittest.TestCase):
                       'Microsoft Office Word')
     self.assertEquals(event_object.codepage, 1252)
     self.assertEquals(event_object.template, 'Normal.dotm')
+    self.assertEquals(event_object.company, 'KPMG')
+    self.assertEquals(event_object.manager, None)
+    self.assertEquals(event_object.slides, None)
+    self.assertEquals(event_object.hidden_slides, None)
+    self.assertEquals(event_object.version, 917504)
+    self.assertEquals(event_object.doc_version, None)
+    self.assertEquals(event_object.m_notes, None)
+    self.assertEquals(event_object.dig_sig, None)
+    self.assertEquals(event_object.shared_doc, False)
+    self.assertEquals(event_object.language, None)
+    self.assertEquals(event_object.mm_clips, None)
 
     # Test the event specific formatter.
     msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
@@ -70,11 +81,12 @@ class Office2003Test(unittest.TestCase):
 
     # TODO: Add test for msg_short.
     self.assertEquals(msg, (
-        u'Title: Table of Context Author: DAVID NIDES Template:'
-        ' Normal.dotm Last saved by: Nides Revision number:'
-        ' 4 Total edit time: 1601-01-01 00:00:00 Num pages:'
-        ' 1 Num words: 3 Num chars: 18 Security: 0 Codepage: 1252'
-        ' Creating application: Microsoft Office Word'))
+        u'Creating application: Microsoft Office Word Title: '
+        'Table of Context Last saved by: Nides Author: '
+        'DAVID NIDES Total edit time (secs): 0 Revision number: '
+        '4 Version: 917504 Template: Normal.dotm Num pages: '
+        '1 Num words: 3 Num chars: 18 Company: KPMG Security: '
+        '0 Codepage: 1252'))
 
 
 if __name__ == '__main__':

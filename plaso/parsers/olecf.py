@@ -14,7 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a parser for extracting metadata."""
+"""This file contains a parser for extracting olecf metadata."""
 
 import datetime
 
@@ -29,10 +29,10 @@ import OleFileIO_PL
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Office2003(parser.PlasoParser):
-  """Parse meta data from OLE files."""
+class OLECF(parser.PlasoParser):
+  """Parse metadata from OLE files."""
 
-  DATA_TYPE = 'metadata:office2003'
+  DATA_TYPE = 'metadata:OLECF'
 
   MAGIC = '\320\317\021\340\241\261\032\341'
 
@@ -73,14 +73,25 @@ class Office2003(parser.PlasoParser):
       metadata.last_saved_by)
     container.revision_number = self.SetValue(
       metadata.revision_number)
-    container.total_edit_time = str(self.SetValue(
-      metadata.total_edit_time))
+    container.total_edit_time = self.SetValue(
+      metadata.total_edit_time)
     container.num_pages = self.SetValue(metadata.num_pages)
     container.num_words = self.SetValue(metadata.num_words)
     container.num_chars = self.SetValue(metadata.num_chars)
     container.creating_application = self.SetValue(
       metadata.creating_application)
     container.security = self.SetValue(metadata.security)
+    container.company = self.SetValue(metadata.company)
+    container.manager = self.SetValue(metadata.manager)
+    container.slides = self.SetValue(metadata.slides)
+    container.hidden_slides = self.SetValue(metadata.hidden_slides)
+    container.version = self.SetValue(metadata.version)
+    container.doc_version = self.SetValue(metadata.doc_version)
+    container.m_notes = self.SetValue(metadata.notes)
+    container.dig_sig = self.SetValue(metadata.dig_sig)
+    container.shared_doc = self.SetValue(metadata.shared_doc)
+    container.language = self.SetValue(metadata.language)
+    container.mm_clips = self.SetValue(metadata.mm_clips)
 
     created_date = metadata.create_time
     if isinstance(created_date, datetime.datetime):
@@ -107,9 +118,10 @@ class Office2003(parser.PlasoParser):
 
 
 class OLE2Event(event.PosixTimeEvent):
-  """Process timestamps from Hachoir Events."""
+  """Process timestamps from OLECF Events."""
 
   def __init__(self, timestamp, description):
     """Return timestamp as posix."""
     posix = timelib.Timetuple2Timestamp(timestamp.timetuple())
     super(OLE2Event, self).__init__(posix, description, self.DATA_TYPE)
+
