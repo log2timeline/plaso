@@ -14,39 +14,51 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Formatter for MS Office 2003 events."""
+"""Formatter for OLECF events."""
 
 from plaso.lib import eventdata
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Office2003Formatter(eventdata.ConditionalEventFormatter):
-  """Formatter for MS Office 2003 based events."""
+class OLECFFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for OLECF based events."""
 
-  DATA_TYPE = 'metadata:office2003'
+  DATA_TYPE = 'metadata:OLECF'
 
   FORMAT_STRING_PIECES = [
+      u'Creating application: {creating_application}',
       u'Title: {title}',
       u'Subject: {subject}',
-      u'Author: {author}',
-      u'Keywords: {keywords}',
-      u'Comments: {comments}',
-      u'Template: {template}',
       u'Last saved by: {last_saved_by}',
+      u'Author: {author}',
+      u'Total edit time (secs): {total_edit_time}',
+      u'Keywords: {keywords}',
+      u'Comments: {comments}',   
       u'Revision number: {revision_number}',
-      u'Total edit time: {total_edit_time}',
+      u'Version: {version}',
+      u'Doc Version: {doc_version}',
+      u'Template: {template}', 
       u'Num pages: {num_pages}',
       u'Num words: {num_words}',
       u'Num chars: {num_chars}',
+      u'Company: {company}',
+      u'Manager: {manager}',
+      u'Shared: {shared_doc}',
       u'Security: {security}',
+      u'Digital Signature: {dig_sig}',
       u'Codepage: {codepage}',
-      u'Creating application: {creating_application}']
+      u'Language: {language}', 
+      u'Slides: {slides}',
+      u'Hidden Slides: {hidden_slides}',
+      u'MM Clips: {mm_clips}',
+      u'Notes: {m_notes}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'Title: {title}',
       u'Subject: {subject}',
       u'Author: {author}']
 
-  SOURCE_LONG = 'Office Metadata'
+  SOURCE_LONG = 'OLECF Metadata'
   SOURCE_SHORT = 'META'
+  

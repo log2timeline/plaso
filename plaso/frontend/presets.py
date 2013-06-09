@@ -19,31 +19,31 @@
 categories = {
     'winxp': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'MsiecfParser', 'Office2003', 'PfileStatParser', 'Symantec',
+        'MsiecfParser', 'OLECF', 'PfileStatParser', 'Symantec',
         'WinEvtParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRegistryParser'],
     'winxp_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Hachoir', 'MsiecfParser', 'Office2003', 'PfileStatParser',
+        'Hachoir', 'MsiecfParser', 'OLECF', 'PfileStatParser',
         'Symantec', 'WinEvtParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRegistryParser'],
     'win7': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'MsiecfParser', 'Office2003', 'PfileStatParser', 'Symantec',
+        'MsiecfParser', 'OLECF', 'PfileStatParser', 'Symantec',
         'WinEvtxParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRegistryParser'],
     'win7_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Hachoir', 'MsiecfParser', 'Office2003', 'PfileStatParser',
+        'Hachoir', 'MsiecfParser', 'OLECF', 'PfileStatParser',
         'Symantec','WinEvtxParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRegistryParser'],
     'webhist': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'MsiecfParser'],
     'linux': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Office2003', 'PfileStatParser', 'SELinux', 'SyslogParser'],
+        'OLECF', 'PfileStatParser', 'SELinux', 'SyslogParser'],
     'macosx': [
         'ApplicationUsageParser', 'ChromeHistoryParser',
         'FirefoxHistoryParser', 'GoogleDriveParser','LsQuarantineParser',
-        'Office2003', 'PfileStatParser', 'PlistParser', 'SyslogParser'],
+        'OLECF', 'PfileStatParser', 'PlistParser', 'SyslogParser'],
 }
