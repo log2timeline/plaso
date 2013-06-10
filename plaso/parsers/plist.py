@@ -31,8 +31,6 @@ from plaso.lib import utils
 class PlistParser(parser.PlasoParser):
   """Parse Plist files with applicable plugins and yield events."""
 
-  NAME = 'Plist Parser'
-
   def __init__(self, pre_obj):
     super(PlistParser, self).__init__(pre_obj)
     self._plugins = plist_interface.GetPlistPlugins()

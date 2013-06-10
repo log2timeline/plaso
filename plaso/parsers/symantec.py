@@ -38,8 +38,6 @@ class SymantecEvent(event.TextEvent):
 class Symantec(parser.TextCSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
-  NAME = 'Symantec'
-
   # Define the columns that make up the structure of a Symantec log file.
   # http://www.symantec.com/docs/TECH100099
   COLUMNS = [
