@@ -138,8 +138,6 @@ class TestTextParser(parser.TextParser):
   To be able to achieve that one function has to be implemented, the ParseDate
   one.
   """
-  NAME = 'TestTextParser'
-
   tokens = [
       lexer.Token('INITIAL',
                   r'^([\d\/]+) ', 'SetDate', 'TIME'),

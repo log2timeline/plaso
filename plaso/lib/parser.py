@@ -44,13 +44,9 @@ class PlasoParser(object):
   This parent class gets inherited from other classes that are parsing
   log files.
 
-  There is one class variables that needs defining:
-    NAME - the name of the type of file being parsed, eg. Syslog
   """
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
-
-  NAME = 'General Log Parser'
 
   def __init__(self, pre_obj):
     """Parser constructor.
@@ -123,9 +119,6 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
   parser is designed for.
   """
   __abstract = True
-
-  # Description of the log file.
-  NAME = 'Generic Text File'
 
   # Define the max number of lines before we determine this is
   # not the correct parser.
@@ -252,7 +245,8 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
         logging.debug('Lexer error count: %d and current state %s', self.error,
                       self.state)
         name = '%s (%s)' % (self.fd.name, self.fd.display_name)
-        raise errors.UnableToParseFile(u'File %s not a %s.' % (name, self.NAME))
+        raise errors.UnableToParseFile(u'File %s not a %s.' % (
+            name, self.parser_name))
 
       if self.line_ready:
         try:
@@ -264,13 +258,13 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
             logging.debug('[%s VERIFIED] Error count: %d and ERROR: %d',
                           filehandle.name, error_count, self.error)
             logging.warning(('[%s] Unable to parse timestamp, skipping entry. '
-                             'Msg: [%s]'), self.NAME, e)
+                             'Msg: [%s]'), self.parser_name, e)
           else:
             logging.debug('[%s EVALUATING] Error count: %d and ERROR: %d',
                           filehandle.name, error_count, self.error)
             if error_count >= self.MAX_LINES:
               raise errors.UnableToParseFile(u'File %s not a %s.' % (
-                  self.fd.name, self.NAME))
+                  self.fd.name, self.parser_name))
 
         finally:
           self.ClearValues()
@@ -279,7 +273,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
 
     if not file_verified:
       raise errors.UnableToParseFile(
-          u'File %s not a %s.' % (filehandle.name, self.NAME))
+          u'File %s not a %s.' % (filehandle.name, self.parser_name))
 
   __pychecker__ = 'unusednames=kwargs'
   def ParseString(self, match, **kwargs):
@@ -383,8 +377,6 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
 class TextCSVParser(PlasoParser):
   """An implementation of a simple CSV line-per-entry log files."""
 
-  NAME = 'CSV Parser'
-
   __abstract = True
 
   # A list that contains the names of all the fields in the log file.
@@ -448,17 +440,17 @@ class TextCSVParser(PlasoParser):
     if len(row) != len(self.COLUMNS):
       raise errors.UnableToParseFile(
           u'File %s not a %s. (wrong nr. of columns %d vs. %d)' % (
-              filehandle.name, self.NAME, len(row), len(self.COLUMNS)))
+              filehandle.name, self.parser_name, len(row), len(self.COLUMNS)))
 
     for key, value in row.items():
       if key == self.MAGIC_TEST_STRING or value == self.MAGIC_TEST_STRING:
         raise errors.UnableToParseFile(
             u'File %s not a %s (wrong nr. of columns, should be %d' % (
-                filehandle.name, self.NAME, len(row)))
+                filehandle.name, self.parser_name, len(row)))
 
     if not self.VerifyRow(row):
       raise errors.UnableToParseFile('File %s not a %s. (wrong magic)' % (
-          filehandle.name, self.NAME))
+          filehandle.name, self.parser_name))
 
     for evt in self._ParseRow(row):
       if evt:
@@ -493,9 +485,6 @@ class SQLiteParser(PlasoParser):
   # List of tables that should be present in the database, for verification.
   REQUIRED_TABLES = ()
 
-  # Description of the log file.
-  NAME = 'Generic SQLite Parsing'
-
   def __init__(self, pre_obj, local_zone=False):
     """Constructor for the SQLite parser."""
     super(SQLiteParser, self).__init__(pre_obj)
@@ -517,7 +506,7 @@ class SQLiteParser(PlasoParser):
       filehandle.seek(-len(magic), 1)
       raise errors.UnableToParseFile(
           u'File %s not a %s. (invalid signature)' % (
-              filehandle.name, self.NAME))
+              filehandle.name, self.parser_name))
 
     # TODO: Current design copies the entire file into a buffer
     # that is parsed by each SQLite parser. This is not very efficient,
@@ -562,7 +551,7 @@ class SQLiteParser(PlasoParser):
         self._RemoveTempFile(name, filehandle.name)
         raise errors.UnableToParseFile(
             u'File %s not a %s (wrong tables).' % (filehandle.name,
-            self.NAME))
+            self.parser_name))
 
       for query, action in self.QUERIES:
         try:
@@ -605,3 +594,41 @@ class SQLiteParser(PlasoParser):
     __pychecker__ = 'unusednames=self'
     logging.debug('Default handler: %s', kwarg)
 
+
+class BundleParser(PlasoParser):
+  """A base class for parsers that need more than a single file to parse."""
+
+  __abstract = True
+
+  # A list of all file patterns to match against. This list will be used by the
+  # collector to find all available files to parse.
+  PATTERNS = []
+
+  @abc.abstractmethod
+  def ParseBundle(self, filehandles):
+    """Return a generator of EventObjects from a list of files.
+
+    Args:
+      filehandles: A list of open file like objects.
+
+    Yields:
+      EventObject for each extracted event.
+    """
+    pass
+
+  def Parse(self, filebundle):
+    """Return a generator for EventObjects extracted from a path bundle."""
+    if not isinstance(filebundle, event.EventPathBundle):
+      raise errors.UnableToParseFile(u'Not a file bundle.')
+
+    bundle_pattern = getattr(filebundle, 'pattern', None)
+
+    if not bundle_pattern:
+      raise errors.UnableToParseFile(u'No bundle pattern defined.')
+
+    if u'|'.join(self.PATTERNS) != bundle_pattern:
+      raise errors.UnableToParseFile(u'No bundle pattern defined.')
+
+    filehandles = list(filebundle)
+
+    return self.ParseBundle(filehandles)

@@ -44,8 +44,6 @@ class SyslogLineEvent(event.TextEvent):
 class SyslogParser(parser.TextParser):
   """Parse text based syslog files."""
 
-  NAME = 'Syslog'
-
   # TODO: can we change this similar to SQLite where create an
   # event specific object for different lines using a callback function.
   # Define the tokens that make up the structure of a syslog file.
