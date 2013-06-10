@@ -72,7 +72,6 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
 
 class WinEvtxParser(parser.PlasoParser):
   """Parses Windows XML EventLog (EVTX) files."""
-  NAME = 'WinEvtx'
 
   def Parse(self, file_object):
     """Extract data from a Windows XML EventLog (EVTX) file.
@@ -90,7 +89,7 @@ class WinEvtxParser(parser.PlasoParser):
       evtx_file.open_file_object(file_object)
     except IOError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.NAME, file_object.name, exception))
+          self.parser_name, file_object.name, exception))
 
     for record_index in range(0, evtx_file.number_of_records):
       try:
@@ -99,7 +98,7 @@ class WinEvtxParser(parser.PlasoParser):
       except IOError as exception:
         logging.warning(
             u'[%s] unable to parse event record: %d in file: %s: %s',
-            self.NAME, record_index, file_object.name, exception)
+            self.parser_name, record_index, file_object.name, exception)
 
     for record_index in range(0, evtx_file.number_of_recovered_records):
       try:
@@ -108,4 +107,4 @@ class WinEvtxParser(parser.PlasoParser):
       except IOError as exception:
         logging.debug(
             u'[%s] unable to parse recovered event record: %d in file: %s: '
-            '%s', self.NAME, record_index, file_object.name, exception)
+            '%s', self.parser_name, record_index, file_object.name, exception)

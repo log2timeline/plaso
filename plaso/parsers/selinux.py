@@ -74,8 +74,6 @@ class SELinuxLineEvent(event.TextEvent):
 class SELinux(parser.TextParser):
   """Parse SELinux audit log files."""
 
-  NAME = 'SELinux'
-  SOURCE_LONG = 'Audit log file'
   PID_RE = re.compile('pid=([0-9]+)[\s]+', re.DOTALL)
 
   tokens = [

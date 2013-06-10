@@ -489,7 +489,7 @@ class EventPathSpecUnitTest(unittest.TestCase):
     proto_str = proto.SerializeToString()
 
     evt2 = event.EventPathSpec()
-    evt2.FromProtoString(proto_str)
+    evt2.FromProtoString('P' + proto_str)
 
     self.assertEquals(evt2.file_path, '/tmp/nowhere')
     self.assertTrue(hasattr(evt2, 'nested_pathspec'))
@@ -555,7 +555,7 @@ class EventPathBundleTest(unittest.TestCase):
     nested_pathspec = bundle.GetPathspecFromHash(nested_hash)
 
     self.assertEquals(
-        nested_pathspec.ToProtoString(), p1_proto.SerializeToString())
+        nested_pathspec.ToProtoString(), 'P' + p1_proto.SerializeToString())
 
 
 if __name__ == '__main__':

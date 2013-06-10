@@ -48,8 +48,6 @@ class WinPrefetchEventContainer(event.EventContainer):
 class WinPrefetchParser(parser.PlasoParser):
   """Parses Windows Prefetch and Superfetch files."""
 
-  NAME = 'WinPrefetchParser'
-
   # Define a list of all structs used.
   FILE_HEADER_STRUCT = construct.Struct(
       'header_signature', construct.ULInt16('version'), construct.Padding(2),

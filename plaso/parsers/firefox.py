@@ -136,9 +136,6 @@ class FirefoxHistoryParser(parser.SQLiteParser):
      places.sqlite.
   """
 
-  # TODO: is this still needed? if not remove.
-  NAME = 'Firefox History'
-
   # Define the needed queries.
   QUERIES = [
       (('SELECT moz_historyvisits.id, moz_places.url, moz_places.title, '

@@ -39,7 +39,6 @@ class PfileStatEventContainer(event.EventContainer):
 
 class PfileStatParser(parser.PlasoParser):
   """Parse the PFile Stat object to extract filesystem timestamps."""
-  NAME = 'File Stat'
 
   def Parse(self, filehandle):
     """Extract the stat object and parse it."""

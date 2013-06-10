@@ -53,8 +53,7 @@ from plaso.lib import sleuthkit
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.lib import vss
-from plaso.lib import win_registry
-from plaso.lib import win_registry_interface
+from plaso.lib import win_registry_interface as win_registry_plugin_interface
 from plaso.lib import worker
 from plaso.lib.putils import *
 
@@ -62,6 +61,9 @@ from plaso.output import helper
 
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
+
+from plaso.winreg import interface as win_registry_interface
+from plaso.winreg import winpyregf
 
 import pytz
 import pyvshadow

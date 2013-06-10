@@ -574,11 +574,14 @@ class FileSystemCollector(Collector):
       directory = os.path.join(self._mount_point, path)
       path_use = path
 
-    for entry in os.listdir(directory):
-      m = file_re.match(entry)
-      if m:
-        if os.path.isfile(os.path.join(directory, m.group(0))):
-          ret.append(os.path.join(path_use, m.group(0)))
+    try:
+      for entry in os.listdir(directory):
+        m = file_re.match(entry)
+        if m:
+          if os.path.isfile(os.path.join(directory, m.group(0))):
+            ret.append(os.path.join(path_use, m.group(0)))
+    except OSError as e:
+      logging.error(u'Unable to read directory: %s, reason %s', directory, e)
     return ret
 
   def OpenFile(self, path):

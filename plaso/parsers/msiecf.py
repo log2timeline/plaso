@@ -62,7 +62,6 @@ class MsiecfUrlEventContainer(event.EventContainer):
 
 class MsiecfParser(parser.PlasoParser):
   """Parses MSIE Cache Files (MSIECF)."""
-  NAME = 'Msiecf'
 
   def _ParseUrl(self, pre_obj, msiecf_item, recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) URL item.
@@ -175,7 +174,7 @@ class MsiecfParser(parser.PlasoParser):
       self.version = msiecf_file.format_version
     except IOError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.NAME, file_object.name, exception))
+          self.parser_name, file_object.name, exception))
 
     for item_index in range(0, msiecf_file.number_of_items):
       try:
@@ -186,7 +185,7 @@ class MsiecfParser(parser.PlasoParser):
         # pymsiecf.item.
       except IOError as exception:
         logging.warning('[%s] unable to parse item: %d in file: %s: %s' % (
-            self.NAME, item_index, file_object.name, exception))
+            self.parser_name, item_index, file_object.name, exception))
         pass
 
     for item_index in range(0, msiecf_file.number_of_recovered_items):
@@ -199,5 +198,5 @@ class MsiecfParser(parser.PlasoParser):
       except IOError as exception:
         logging.info(
             '[%s] unable to parse recovered item: %d in file: %s: %s' % (
-            self.NAME, item_index, file_object.name, exception))
+            self.parser_name, item_index, file_object.name, exception))
         pass
