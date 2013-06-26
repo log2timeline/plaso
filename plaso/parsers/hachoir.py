@@ -126,10 +126,17 @@ class Hachoir(parser.PlasoParser):
     return container
 
 
-class HachoirEvent(event.PosixTimeEvent):
+class HachoirEvent(event.TimestampEvent):
   """Process timestamps from Hachoir Events."""
 
-  def __init__(self, timestamp, description):
-    """Return timestamp as posix."""
-    posix = timelib.Timetuple2Timestamp(timestamp.timetuple())
-    super(HachoirEvent, self).__init__(posix, description, self.DATA_TYPE)
+  DATA_TYPE = 'metadata:hachoir'
+
+  def __init__(self, dt_timestamp, usage):
+    """An EventObject created from a Hachoir entry.
+
+    Args:
+      dt_timestamp: A python datetime.datetime object.
+      usage: The description of the usage of the time value.
+    """
+    timestamp = timelib.Timestamp.FromPythonDatetime(dt_timestamp)
+    super(HachoirEvent, self).__init__(timestamp, usage, self.DATA_TYPE)
