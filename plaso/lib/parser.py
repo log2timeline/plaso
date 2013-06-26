@@ -21,9 +21,7 @@ also some implementations that extend it to provide a more comprehensive
 parser.
 """
 import abc
-import calendar
 import csv
-import datetime
 import logging
 import os
 import tempfile
@@ -338,7 +336,7 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
         sec = times[2]
         us = 0
 
-      timestamp = datetime.datetime(
+      timestamp = timelib.Timestamp.FromTimeParts(
           int(self.attributes['iyear']), self.attributes['imonth'],
           self.attributes['iday'], int(times[0]), int(times[1]),
           int(sec), int(us), time_zone)
@@ -347,11 +345,8 @@ class TextParser(PlasoParser, lexer.SelfFeederMixIn):
       raise errors.TimestampNotCorrectlyFormed(
           u'Unable to parse: %s [er: %s]', self.PrintLine(), e)
 
-    epoch = int(calendar.timegm(timestamp.timetuple()) * 1e6)
-    epoch += timestamp.microsecond
-
     return self.CreateEvent(
-        epoch, getattr(self, 'entry_offset', 0), self.attributes)
+        timestamp, getattr(self, 'entry_offset', 0), self.attributes)
 
   # TODO: this is a rough initial implementation to get this working.
   def CreateEvent(self, timestamp, offset, attributes):

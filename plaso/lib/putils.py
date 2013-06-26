@@ -16,7 +16,6 @@
 # limitations under the License.
 """This file contains few methods for Plaso."""
 import binascii
-import datetime
 import logging
 import os
 import tempfile
