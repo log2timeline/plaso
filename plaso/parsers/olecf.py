@@ -117,11 +117,17 @@ class OLECF(parser.PlasoParser):
     return value
 
 
-class OLE2Event(event.PosixTimeEvent):
+class OLE2Event(event.TimestampEvent):
   """Process timestamps from OLECF Events."""
 
-  def __init__(self, timestamp, description):
-    """Return timestamp as posix."""
-    posix = timelib.Timetuple2Timestamp(timestamp.timetuple())
-    super(OLE2Event, self).__init__(posix, description, self.DATA_TYPE)
+  DATA_TYPE = 'metadata:OLECF'
 
+  def __init__(self, dt_timestamp, usage):
+    """An EventObject created from an OLE2 entry.
+
+    Args:
+      dt_timestamp: A python datetime.datetime object.
+      usage: The description of the usage of the time value.
+    """
+    timestamp = timelib.Timestamp.FromPythonDatetime(dt_timestamp)
+    super(OLE2Event, self).__init__(timestamp, usage, self.DATA_TYPE)
