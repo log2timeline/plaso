@@ -157,7 +157,7 @@ def Main():
   """Start the tool."""
   parser = argparse.ArgumentParser(
       description=(
-          u'PSORT (Plaso Síar Og Raðar Þessu) - Read, filter and process '
+          u'PSORT - Application to read, filter and process '
           'output from a plaso storage file.'))
 
   parser.add_argument(
