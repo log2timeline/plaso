@@ -355,9 +355,16 @@ class DefaultFormatter(EventFormatter):
       text_pieces.append(u'{}: {}'.format(key, value))
 
     event_object.attribute_driven = u' '.join(text_pieces)
-    # Make the formatter work.
+    # Due to the way the default formatter behaves it requires the data_type
+    # to be set as 'event', otherwise it will complain and deny processing
+    # the event.
+    # TODO: Change this behavior and allow the default formatter to accept
+    # arbitrary data types (as it should).
+    old_data_type = getattr(event_object, 'data_type', None)
     event_object.data_type = self.DATA_TYPE
-    return super(DefaultFormatter, self).GetMessages(event_object)
+    msg, msg_short = super(DefaultFormatter, self).GetMessages(event_object)
+    event_object.data_type = old_data_type
+    return msg, msg_short
 
 
 class TextEventFormatter(EventFormatter):
