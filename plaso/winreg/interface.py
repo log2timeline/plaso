@@ -14,70 +14,101 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains basic interface for registry handling within Plaso.
-
-This library serves a basis for defining interfaces for registry keys, values
-and other items that may need defining.
-
-This is provided as a separate file to make it easier to inherit in other
-projects that may want to use the registry plugin system in Plaso.
-"""
+"""The interface for Windows Registry related objects."""
 import abc
 import logging
 import struct
 
 
 class WinRegKey(object):
-  """WinRegKey abstracts the registry key so it can be used in the plugins."""
+  """Abstract class to represent the Windows Registry Key interface."""
 
-  def __init__(self):
-    """An abstract object for a Windows registry key.
+  PATH_SEPARATOR = u'\\'
 
-    A WinRegKey abstracts the registry key to make it easy to both implement
-    a new library for the underlying mechanism of parsing a registry file,
-    without the need to rewrite all of the plugins.
+  @abc.abstractproperty
+  def path(self):
+    """The path of the key."""
 
-    It also adds the ability to use the plugins in another tool, that may not
-    be able to use the same collection and processing mechanism as Plaso does.
+  @abc.abstractproperty
+  def name(self):
+    """The name of the key."""
+
+  @abc.abstractproperty
+  def offset(self):
+    """The offset of the key within the Registry File."""
+
+  # TODO: have a more descriptive name for this property.
+  @abc.abstractproperty
+  def timestamp(self):
+    """The last written time of the key represented as a timestamp."""
+
+  # TODO: refactor this to a number of values or values count property.
+  @abc.abstractmethod
+  def GetValueCount(self):
+    """Retrieves the number of values within the key."""
+
+  @abc.abstractmethod
+  def GetValue(self, name):
+    """Retrieves a value by name.
+
+    Args:
+      name: Name of the value or an empty string for the default value.
+
+    Returns:
+      An instance of a Windows Registry Value object (WinRegValue) if
+      a corresponding value was found or None if not.
     """
-    self.path = '\\'
-    self.timestamp = 0
-    self.offset = 0
-    self.name = ''
 
+  # TODO: refactor this to a values property.
   @abc.abstractmethod
   def GetValues(self):
-    """Returns a generator that returns all values found inside the key.
+    """Retrieves all values within the key.
 
-    The method should yield all WinRegValue objects inside the registry
-    key.
+    Yields:
+      Instances of Windows Registry Value objects (WinRegValue) that represent
+      the values stored within the key.
     """
 
+  # TODO: refactor this to a number of subkeys or subkeys count property.
   @abc.abstractmethod
-  def GetValue(self, path):
-    """Return a WinRegValue object for a specific registry key path."""
-
-  @abc.abstractmethod
-  def GetSubkeys(self):
-    """Generator that returns all subkeys of the key."""
+  def GetSubkeyCount(self):
+    """Retrieves the number of subkeys within the key."""
 
   @abc.abstractmethod
   def HasSubkeys(self):
-    """Return a boolean value indicating whether or not the key has subkeys."""
+    """Determines if the key has subkeys."""
     return False
 
+  # TODO: refactor this to a subkeys property.
   @abc.abstractmethod
-  def GetSubkeyCount(self):
-    """Returns the number of sub keys for this particular registry key."""
+  def GetSubkeys(self):
+    """Retrieves all subkeys within the key.
 
-  @abc.abstractmethod
-  def GetValueCount(self):
-    """Returns the number of values this key has."""
+    Yields:
+      Instances of Windows Registry Key objects (WinRegKey) that represent
+      the subkeys stored within the key.
+    """
 
 
 class WinRegValue(object):
-  """WinRegValue is an object describing a registry value."""
+  """Abstract class to represent the Windows Registry Value interface."""
 
+  REG_NONE = 0
+  REG_SZ = 1
+  REG_EXPAND_SZ = 2
+  REG_BINARY = 3
+  REG_DWORD = 4
+  REG_DWORD_LITTLE_ENDIAN = 4
+  REG_DWORD_BIG_ENDIAN = 5
+  REG_LINK = 6
+  REG_MULTI_SZ = 7
+  REG_RESOURCE_LIST = 8
+  REG_FULL_RESOURCE_DESCRIPTOR = 9
+  REG_RESOURCE_REQUIREMENT_LIST = 10
+  REG_QWORD = 11
+
+  # TODO: refactor the string representations, if no longer needed remove
+  # otherwise change to a frozenset of a list of strings.
   TYPES = {
       0: 'NONE',
       1: 'SZ',
@@ -95,27 +126,88 @@ class WinRegValue(object):
 
   def __init__(self):
     """Default constructor for the registry value."""
-    self.offset = 0
-    self.name = u''
-    self._type = 0
-    self._raw_value = u''
+    self._data = u''
 
+  @abc.abstractproperty
+  def name(self):
+    """The name of the value."""
+
+  @abc.abstractproperty
+  def offset(self):
+    """The offset of the value within the Registry File."""
+
+  @abc.abstractproperty
+  def data_type(self):
+    """Numeric value that contains the data type."""
+
+  @abc.abstractproperty
+  def data(self):
+    """The value data as a native Python object."""
+
+  # TODO: temporary solution as the data fallback functionality
+  # refactor this function away.
+  @classmethod
+  def CopyDataToObject(cls, data, data_type):
+    """Creates a Python object representation based on the data and data type.
+
+    Where:
+      REG_NONE, REG_BINARY, REG_RESOURCE_LIST, REG_FULL_RESOURCE_DESCRIPTOR
+      and RESOURCE_REQUIREMENT_LIST are represented as a byte string.
+
+      REG_SZ, REG_EXPAND_SZ and REG_LINK are represented as an Unicode string.
+
+      REG_DWORD, REG_DWORD_BIG_ENDIAN and REG_QWORD as an integer.
+
+      REG_MULTI_SZ as a list of Unicode strings.
+
+      Any data that mismatches data type and size constraits is represented as
+      a byte string.
+
+    Note that function is intended to contain the generic conversion behavior.
+    A back-end can choose to use this function or provide its own conversion
+    functionality.
+
+    Args:
+      data: The value data.
+      data_type: The numeric value data type.
+
+    Returns:
+      A Python object representation of the data.
+    """
+    if data_type in [cls.REG_SZ, cls.REG_EXPAND_SZ, cls.REG_LINK]:
+      try:
+        return unicode(data.decode('utf-16-le'))
+      except UnicodeError:
+        pass
+
+    elif data_type == cls.REG_DWORD and len(data) == 4:
+        return struct.unpack('<i', data)[0]
+
+    elif data_type == cls.REG_DWORD_BIG_ENDIAN and len(data) == 4:
+        return struct.unpack('>i', data)[0]
+
+    elif data_type == cls.REG_QWORD and len(data) == 8:
+        return struct.unpack('<q', data)[0]
+
+    elif data_type == cls.REG_MULTI_SZ:
+      try:
+        utf16_string = unicode(data.decode('utf-16-le'))
+        return filter(None, utf16_string.split('\x00'))
+      except UnicodeError:
+        pass
+
+    return data
+
+  # TODO: refactor this function away.
   def GetType(self):
     """Return the type of data this value returns."""
-    return type(self.GetData())
+    return type(self.data)
 
   def GetTypeStr(self):
     """Returns the registry value type."""
-    return self.TYPES.get(self._type, 'NONE')
+    return self.TYPES.get(self.data_type, 'NONE')
 
-  def GetRawData(self):
-    """Return the raw value data of the key."""
-    return self._raw_value
-
-  def GetStringData(self):
-    """Return a string value from the value."""
-    return self._raw_value
-
+  # TODO: refactor this to a data property.
   def GetData(self, data_type=None):
     """Return a Python interpreted data from the value.
 
@@ -134,77 +226,35 @@ class WinRegValue(object):
     Returns:
       A value that depends on the value type.
     """
-    if data_type and not type(data_type) == type:
-      raise TypeError('Need to define a proper type')
-
-    val_type = self.GetTypeStr()
-    ret = None
-    if val_type == 'SZ' or val_type == 'EXPAND_SZ':
-      ret = self.GetStringData()
-    elif val_type == 'BINARY':
-      ret = self.GetRawData()
-    elif val_type == 'DWORD_LE':
-      try:
-        ret = struct.unpack('<i', self.GetRawData()[:4])[0]
-      except struct.error as e:
-        logging.error('Unable to unpack: {}'.format(e))
-        return self.GetRawData()
-    elif val_type == 'DWORD_BE':
-      try:
-        ret = struct.unpack('>i', self.GetRawData()[:4])[0]
-      except struct.error as e:
-        logging.error('Unable to unpack: {}'.format(e))
-        return self.GetRawData()
-    elif val_type == 'LINK':
-      # TODO: Should we rather fetch the key that is linked
-      # to here or simply return the value and let the end user
-      # of this library decide what to do with this value?
-      ret = GetRegistryStringValue(self.GetRawData(), val_type)
-    elif val_type == 'MULTI_SZ':
-      raw_data = self.GetRawData()
-      if not raw_data:
-        return u''
-      raw_string = raw_data.decode('utf_16_le', 'ignore')
-      ret_list = raw_string.split('\x00')
-      ret = filter(None, ret_list)
-    elif val_type == 'RESOURCE_LIST':
-      # TODO: Return a better format here.
-      ret = self.GetRawData()
-    elif val_type == 'FULL_RESOURCE_DESCRIPTOR':
-      # TODO: Return a better format here.
-      ret = self.GetRawData()
-    elif val_type == 'QWORD':
-      try:
-        raw = self.GetRawData()
-        if len(raw) >= 8:
-          ret = struct.unpack('<q', raw[:8])[0]
-        else:
-          logging.error(
-              u'Unable to unpack value %s, data not long enough for a QWORD',
-              self.name)
-          ret = raw
-      except struct.error as e:
-        logging.error('Unable to unpack: {}'.format(e))
-        return self.GetRawData()
+    data = self.data
 
     if not data_type:
-      return ret
+      return data
 
     # TODO: Add a more complete solution, now it's only unicode
     # and only partial for that matter.
     if data_type == unicode:
-      if type(ret) == list:
+      if type(data) == list:
         try:
-          return u' '.join(ret)
+          return u' '.join(data)
         except UnicodeDecodeError:
-          return u' '.decode('utf_16_le', 'ignore').join(ret)
+          return u' '.decode('utf_16_le', 'ignore').join(data)
 
       try:
-        ret = unicode(ret)
+        data = unicode(data)
       except UnicodeDecodeError:
-        ret = GetRegistryStringValue(ret, val_type)
+        data = GetRegistryStringValue(data, self.GetTypeStr())
+    return data
 
-    return ret
+  # TODO: refactor this to a raw_data property.
+  @abc.abstractmethod
+  def GetRawData(self):
+    """Return the raw value data of the key."""
+
+  # TODO: not sure what the use-case of this function is.
+  @abc.abstractmethod
+  def GetStringData(self):
+    """Return a string value from the value."""
 
 
 def GetRegistryStringValue(raw_string, key_type='SZ'):

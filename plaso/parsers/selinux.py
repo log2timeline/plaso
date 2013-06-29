@@ -39,8 +39,6 @@
    http://www.redhat.com/promo/summit/2010/presentations/
    taste_of_training/Summit_2010_SELinux.pdf
 """
-
-import datetime
 import logging
 import re
 
