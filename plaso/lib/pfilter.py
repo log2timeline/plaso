@@ -72,6 +72,13 @@ class DictObject(object):
     if attr in self._dict_object:
       return self._dict_object.get(attr)
 
+    # Special case of getting all the key/value pairs.
+    if attr == '__all__':
+      ret = []
+      for key, value in self._dict_translated.items():
+        ret.append(u'{}:{}'.format(key, value))
+      return u' '.join(ret)
+
     test = self._StripKey(attr)
     if test in self._dict_translated:
       return self._dict_translated.get(test)
@@ -107,6 +114,10 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     if ret:
       if isinstance(ret, dict):
         ret = DictObject(ret)
+
+      if attr_name == 'tag':
+        return ret.tags
+
       return ret
 
     # Check if this is a message request and we have a regular EventObject.

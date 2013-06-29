@@ -389,6 +389,10 @@ class PlasoStorage(object):
           self._merge_buffer,
           (new_event_object.timestamp, store_number, new_event_object))
 
+    tag = self.GetTag(event_read.store_number, event_read.store_index)
+    if tag:
+      event_read.tag = tag
+
     return event_read
 
   def GetEntry(self, number, entry_index=-1):
@@ -729,20 +733,39 @@ class PlasoStorage(object):
     Returns:
       An EventTagging protobuf, if one exists.
     """
+    if not hasattr(self, '_tag_memory'):
+      self._ReadTagInformationIntoMemory()
+
+    key_index = '{}:{}'.format(store_number, store_index)
+
+    if key_index not in self._tag_memory:
+      return
+
+    tag_store, tag_offset = self._tag_memory.get(key_index)
+
+    tag_fh = self.zipfile.open('plaso_tagging.%06d' % tag_store , 'r')
+    _  = tag_fh.read(tag_offset)
+    return self._GetTagEntry(tag_fh)
+
+  def _ReadTagInformationIntoMemory(self):
+    """Build a dict that maintains tag offset information for quick reading."""
+    self._tag_memory = {}
+
     for name in self.zipfile.namelist():
       if 'plaso_tag_index.' in name:
         fh = self.zipfile.open(name, 'r')
-        number = int(name.split('.')[-1])
-
-        tag_ofs = self._GetTagFromIndex(fh, store_number, store_index)
-        if tag_ofs:
-          tag_fh = self.zipfile.open('plaso_tagging.%06d' % number, 'r')
-          __pychecker__ = 'unusednames=_'
-          _  = tag_fh.read(tag_ofs)
-          tag = self._GetTagEntry(tag_fh)
-
-          if tag:
-            return tag
+        _, _, number_str = name.rpartition('.')
+        number = int(number_str)
+        offset = None
+        while 1:
+          raw = fh.read(12)
+          if not raw:
+            break
+          if len(raw) != 12:
+            break
+          ofs, read_number, read_index = struct.unpack('<III', raw)
+          read_key = '{}:{}'.format(read_number, read_index)
+          self._tag_memory[read_key] = (number, ofs)
 
   def _GetTagFromIndex(self, fh, store_number, store_index):
     """Return an offset into a tag store for a given store number and index.
