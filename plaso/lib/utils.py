@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains utility functions."""
+import os
 
 from plaso.lib import errors
 from plaso.lib import lexer
@@ -24,6 +25,30 @@ RESERVED_VARIABLES = frozenset(
      'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
      'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
      'tag', 'data_type', 'metadata', 'http_headers', 'query', 'mapped_files'])
+
+
+def GetBaseName(path):
+  """Returns back a basename for a path (could be Windows or *NIX separated)."""
+  # First check the case where both forward and backward slash are in the path.
+  if '/' and '\\' in path:
+    # Let's count slashes and guess which one is the right one.
+    forward_count = len(path.split('/'))
+    backward_count = len(path.split('\\'))
+
+    if forward_count > backward_count:
+      _, _, base = path.rpartition('/')
+    else:
+      _, _, base = path.rpartition('\\')
+
+    return base
+
+  # Now we are sure there is only one type of separators.
+  if '/' in path:
+    _, _, base = path.rpartition('/')
+  else:
+    _, _, base = path.rpartition('\\')
+
+  return base
 
 
 def GetUnicodeString(string):

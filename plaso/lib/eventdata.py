@@ -38,6 +38,7 @@ class EventTimestamp(object):
   WRITTEN_TIME = u'Content Modification Time'
   EXIT_TIME = u'Exit Time'
   LAST_RUNTIME = u'Last Time Executed'
+  DELETED_TIME = u'Content Deletion Time'
 
   FILE_DOWNLOADED = u'File Downloaded'
   PAGE_VISITED = u'Page Visited'
