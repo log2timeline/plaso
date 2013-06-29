@@ -629,7 +629,7 @@ class EventObject(object):
 
       elif attribute_name == 'pathspec':
         pathspec_str = self.pathspec.ToProtoString()
-        proto.pathspec.MergeFromString(pathspec_str)
+        proto.pathspec.MergeFromString(pathspec_str[1:])
 
       elif attribute_name == 'tag':
         tag_str = self.tag.ToProtoString()
@@ -687,7 +687,9 @@ class EventPathBundle(object):
     """Serialize the object into a string."""
     proto = self.ToProto()
 
-    return proto.SerializeToString()
+    # TODO: Remove this "ugly" hack in favor of something more elegant
+    # and one that makes more sense.
+    return u'B' + proto.SerializeToString()
 
   def FromProto(self, proto):
     """Unserializes the EventPathBundle from a PathBundle protobuf."""
@@ -706,8 +708,11 @@ class EventPathBundle(object):
 
   def FromProtoString(self, proto_string):
     """Unserializes the EventPathBundle from a serialized PathBundle."""
+    if not proto_string.startswith('B'):
+      raise errors.WrongProtobufEntry(
+          u'Wrong protobuf type, unable to unserialize')
     proto = transmission_pb2.PathBundle()
-    proto.ParseFromString(proto_string)
+    proto.ParseFromString(proto_string[1:])
     self.FromProto(proto)
 
   def Append(self, pathspec):
@@ -762,6 +767,11 @@ class EventPathBundle(object):
       out_write.append(unicode(pathspec))
 
     return u'\n'.join(out_write)
+
+  def __iter__(self):
+    """A generator that returns all pathspecs from object."""
+    for pathspec in self._pathspecs:
+      yield pathspec
 
 
 class EventPathSpec(object):
@@ -830,15 +840,21 @@ class EventPathSpec(object):
 
   def FromProtoString(self, proto_string):
     """Unserializes the EventObject from a serialized PathSpec."""
+    if not proto_string.startswith('P'):
+      raise errors.WrongProtobufEntry(
+          u'Unable to unserialize, illegal type field.')
+
     proto = transmission_pb2.PathSpec()
-    proto.ParseFromString(proto_string)
+    proto.ParseFromString(proto_string[1:])
     self.FromProto(proto)
 
   def ToProtoString(self):
     """Serialize the object into a string."""
     proto = self.ToProto()
 
-    return proto.SerializeToString()
+    # TODO: Remove this "ugly" hack in favor of something more elegant
+    # and one that makes more sense.
+    return 'P' + proto.SerializeToString()
 
   def __str__(self):
     """Return a string representation of the pathspec."""

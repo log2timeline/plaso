@@ -16,7 +16,6 @@
 # limitations under the License.
 """An extension of the objectfilter to provide plaso specific options."""
 
-import calendar
 import datetime
 import logging
 
@@ -28,6 +27,7 @@ from plaso.frontend import presets
 from plaso.lib import eventdata
 from plaso.lib import limit
 from plaso.lib import objectfilter
+from plaso.lib import timelib
 from plaso.lib import utils
 
 import pytz
@@ -242,19 +242,14 @@ class DateCompareObject(object):
       self.data = long(data)
     elif type(data) in (str, unicode):
       try:
-        dt = dateutil.parser.parse(utils.GetUnicodeString(data))
-        if dt.tzinfo:
-          utc_dt = dt.astimezone(pytz.utc)
-        else:
-          utc_dt = pytz.UTC.localize(dt)
-        self.data = calendar.timegm(utc_dt.timetuple()) * int(1e6)
-        self.data += utc_dt.microsecond
+        self.data = timelib.Timestamp.FromTimeString(
+            utils.GetUnicodeString(data))
       except ValueError as e:
-        raise ValueError('Date string is wrongly formatted (%s) - %s',
-                         data, e)
+        raise ValueError(
+            u'Date string is wrongly formatted (%s) - %s',
+            data, e)
     elif type(data) == datetime.datetime:
-      self.data = calendar.timegm(data.timetuple()) * int(1e6)
-      self.data += data.microsecond
+      self.data = timelib.Timestamp.FromPythonDatetime(data)
     elif isinstance(DateCompareObject, data):
       self.data = data.data
     else:
@@ -387,6 +382,14 @@ class MockTestFilter(object):
 
 class TimeRangeCache(object):
   """A class that stores timeranges from filters."""
+
+  @classmethod
+  def ResetTimeConstraints(cls):
+    """Resets the time constraints."""
+    if hasattr(cls, '_lower'):
+      del cls._lower
+    if hasattr(cls, '_upper'):
+      del cls._upper
 
   @classmethod
   def SetLowerTimestamp(cls, timestamp):

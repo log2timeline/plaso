@@ -53,7 +53,6 @@ class LsQuarantineParser(parser.SQLiteParser):
      /Users/<username>/Library/Preferences/\
          QuarantineEvents.com.apple.LaunchServices
   """
-  NAME = 'LS Quarantine'
 
   # Define the needed queries.
   # TODO: move the timestamp adjustment into code and make sure to change

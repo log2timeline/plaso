@@ -32,7 +32,7 @@ class OLECFTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     self.test_parser = olecf.OLECF(pre_obj)
-    # Show full diff results, part of TestCase so does not 
+    # Show full diff results, part of TestCase so does not
     # follow our naming conventions.
     self.maxDiff = None
 

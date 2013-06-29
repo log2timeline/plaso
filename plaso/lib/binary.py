@@ -68,7 +68,7 @@ def ReadUtf16(string_buffer):
   except SyntaxError as e:
     logging.error(u'Unable to decode string: {} [{}].'.format(
         HexifyBuffer(string_buffer), e))
-  except UnicodeEncodeError as e:
+  except (UnicodeDecodeError, UnicodeEncodeError) as e:
     logging.error(u'Unable to properly decode string: {} [{}]'.format(
         HexifyBuffer(string_buffer), e))
 

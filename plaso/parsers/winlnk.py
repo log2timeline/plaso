@@ -60,8 +60,6 @@ class WinLnkLinkEventContainer(event.EventContainer):
 class WinLnkParser(parser.PlasoParser):
   """Parses Windows Shortcut (LNK) files."""
 
-  NAME = 'WinLnkParser'
-
   def Parse(self, file_object):
     """Extract data from a Windows Shortcut (LNK) file.
 
@@ -79,7 +77,7 @@ class WinLnkParser(parser.PlasoParser):
       lnk_file.open_file_object(file_object)
     except IOError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.NAME, file_object.name, exception))
+          self.parser_name, file_object.name, exception))
 
     container = WinLnkLinkEventContainer(lnk_file)
 
