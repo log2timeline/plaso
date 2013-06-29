@@ -145,7 +145,7 @@ class Sql4n6(output.LogOutputFormatter):
                 field, field, name, freq))
     self.curs.execute('DELETE FROM l2t_tags')
     for tag in self._ListTags():
-      self.curs.execute('INSERT INTO l2t_tags (tag) VALUES (?)', tag)
+      self.curs.execute('INSERT INTO l2t_tags (tag) VALUES (?)', [tag])
 
     if self.set_status:
       self.set_status('Database created.')
@@ -242,6 +242,10 @@ class Sql4n6(output.LogOutputFormatter):
         date_use.year, date_use.month, date_use.day, date_use.hour,
         date_use.minute, date_use.second)
 
+    tags = []
+    if hasattr(event_object, 'tag'):
+      tags = event_object.tag.tags
+    taglist = ','.join(tags)
     row = (str(self.zone),
            helper.GetLegacy(event_object),
            source_short,
@@ -258,7 +262,7 @@ class Sql4n6(output.LogOutputFormatter):
            date_use_string,
            '',
            '',
-           '',
+           taglist,
            '',
            getattr(event_object, 'offset', 0),
            event_object.store_number,
