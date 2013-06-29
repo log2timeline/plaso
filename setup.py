@@ -24,10 +24,12 @@ import glob
 import os
 import sys
 
+import run_tests
+
 try:
-  from setuptools import find_packages, setup
+  from setuptools import find_packages, setup, Command
 except ImportError:
-  from distutils.core import find_packages, setup
+  from distutils.core import find_packages, setup, Command
 
 if sys.version < '2.7':
   print ('Wrong Python Version, require version 2.7 or higher (and lower '
@@ -62,6 +64,20 @@ def GetFileList(path, patterns):
   return file_list
 
 
+class TestCommand(Command):
+  """Run tests, implementing an interface."""
+  user_options = []
+
+  def initialize_options(self):
+    self._dir = os.getcwd()
+
+  def finalize_options(self):
+    pass
+
+  def run(self):
+    results = run_tests.RunTests()
+
+
 setup(name='plaso',
       version='1.0.2dev',
       description='The plaso backend as well as few front-ends.',
@@ -69,6 +85,7 @@ setup(name='plaso',
       url='https://sites.google.com/a/kiddaland.net/plaso',
       package_dir={'plaso': 'plaso'},
       scripts=GetTools(),
+      cmdclass = {'test': TestCommand},
       classifiers=[
           'Development Status :: 4 - Beta',
           'Environment :: Console',

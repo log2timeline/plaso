@@ -384,6 +384,14 @@ class TimeRangeCache(object):
   """A class that stores timeranges from filters."""
 
   @classmethod
+  def ResetTimeConstraints(cls):
+    """Resets the time constraints."""
+    if hasattr(cls, '_lower'):
+      del cls._lower
+    if hasattr(cls, '_upper'):
+      del cls._upper
+
+  @classmethod
   def SetLowerTimestamp(cls, timestamp):
     """Sets the lower bound timestamp."""
     if not hasattr(cls, '_lower'):

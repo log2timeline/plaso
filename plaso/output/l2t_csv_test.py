@@ -28,11 +28,11 @@ from plaso.proto import transmission_pb2
 __pychecker__ = 'no-funcdoc'
 
 
-class TestEvent(event.EventObject):
+class L2tTestEvent(event.EventObject):
   DATA_TYPE = 'test:l2t_csv'
 
   def __init__(self):
-    super(TestEvent, self).__init__()
+    super(L2tTestEvent, self).__init__()
     self.timestamp = 1340821021000000
     self.timestamp_desc = 'Entry Written'
     self.hostname = 'ubuntu'
@@ -43,7 +43,7 @@ class TestEvent(event.EventObject):
         u'closed for user root)')
 
 
-class TestEventFormatter(eventdata.EventFormatter):
+class L2tTestEventFormatter(eventdata.EventFormatter):
   DATA_TYPE = 'test:l2t_csv'
   FORMAT_STRING = u'{text}'
 
@@ -66,7 +66,7 @@ class L2tCsvTest(unittest.TestCase):
 
   def testEventBody(self):
     """Test ensures that returned lines returned are fmt CSV as expected."""
-    event_object = TestEvent()
+    event_object = L2tTestEvent()
 
     self.formatter.Start()
     header = (
@@ -83,7 +83,7 @@ class L2tCsvTest(unittest.TestCase):
 
   def testEventBodyNoCommas(self):
     """Test ensures that commas inside fields are replaced by space."""
-    event_object = TestEvent()
+    event_object = L2tTestEvent()
 
     self.formatter.EventBody(event_object)
     correct = (
