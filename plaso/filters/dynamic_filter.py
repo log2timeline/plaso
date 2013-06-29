@@ -27,9 +27,23 @@ class SelectiveLexer(lexer.Lexer):
     lexer.Token('INITIAL', r'SELECT', '', 'FIELDS'),
     lexer.Token('FIELDS', r'(.+) WHERE ', 'SetFields', 'FILTER'),
     lexer.Token('FIELDS', r'(.+) LIMIT', 'SetFields', 'LIMIT_END'),
+    lexer.Token('FIELDS', r'(.+) SEPARATED BY', 'SetFields', 'SEPARATE'),
     lexer.Token('FIELDS', r'(.+)$', 'SetFields', 'END'),
+    lexer.Token('FILTER', r'(.+) SEPARATED BY', 'SetFilter', 'SEPARATE'),
     lexer.Token('FILTER', r'(.+) LIMIT', 'SetFilter', 'LIMIT_END'),
     lexer.Token('FILTER', r'(.+)$', 'SetFilter', 'END'),
+    lexer.Token('SEPARATE', r' ', '', ''),  # Ignore white space here.
+    lexer.Token('SEPARATE', r'LIMIT', '', 'LIMIT_END'),
+    lexer.Token(
+        'SEPARATE', r'[\'"]([^ \'"]+)[\'"] LIMIT', 'SetSeparator',
+        'LIMIT_END'),
+    lexer.Token(
+        'SEPARATE', r'[\'"]([^ \'"]+)[\'"]$', 'SetSeparator', 'END'),
+    lexer.Token(
+        'SEPARATE', r'(.+)$', 'SetSeparator', 'END'),
+    lexer.Token(
+        'LIMIT_END', r'SEPARATED BY [\'"]([^\'"]+)[\'"]', 'SetSeparator', ''),
+    lexer.Token('LIMIT_END', r'(.+) SEPARATED BY', 'SetLimit', 'SEPARATE'),
     lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
 
   def __init__(self, data=''):
@@ -37,12 +51,25 @@ class SelectiveLexer(lexer.Lexer):
     self._fields = []
     self._limit = 0
     self._filter = None
+    self._separator = u','
     super(SelectiveLexer, self).__init__(data)
 
   __pychecker__ = 'unusednames=kwargs'
   def SetFilter(self, match, **kwargs):
     """Set the filter query."""
-    self._filter = match.group(1)
+    filter_match = match.group(1)
+    if 'LIMIT' in filter_match:
+      # This only occurs in the case where we have "LIMIT X SEPARATED BY".
+      self._filter, _, push_back = filter_match.rpartition('LIMIT')
+      self.PushBack('LIMIT {} SEPARATED BY '.format(push_back))
+    else:
+      self._filter = filter_match
+
+  def SetSeparator(self, match, **kwargs):
+    """Set the separator of the output, only uses the first char."""
+    separator = match.group(1)
+    if separator:
+      self._separator = separator[0]
 
   __pychecker__ = 'unusednames=kwargs'
   def SetLimit(self, match, **kwargs):
@@ -93,11 +120,17 @@ class DynamicFilter(eventfilter.EventObjectFilter):
     """Return the limit of row counts."""
     return self._limit
 
+  @property
+  def separator(self):
+    """Return the separator value."""
+    return self._separator
+
   def __init__(self):
     """Initialize the selective EventObjectFilter."""
     super(DynamicFilter, self).__init__()
     self._fields = []
     self._limit = 0
+    self._separator = u','
 
   def CompileFilter(self, filter_string):
     """Compile the filter string into a EventObjectFilter matcher."""
@@ -123,6 +156,7 @@ class DynamicFilter(eventfilter.EventObjectFilter):
 
     self._fields = lex._fields
     self._limit = lex._limit
+    self._separator = unicode(lex._separator)
 
     if lex._filter:
       super(DynamicFilter, self).CompileFilter(lex._filter)

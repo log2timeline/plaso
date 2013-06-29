@@ -14,12 +14,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a simple abstraction of registry keys for testing."""
+"""Implementation of Windows Registry related objects for testing."""
 from plaso.winreg import interface
 
 
 class TestRegKey(interface.WinRegKey):
-  """A simple implementation of a registry key to use in testing."""
+  """Implementation of the Registry key interface for testing."""
 
   def __init__(self, path, timestamp, values, offset=0, subkeys=None):
     """An abstract object for a Windows registry key.
@@ -37,16 +37,37 @@ class TestRegKey(interface.WinRegKey):
       subkeys: A list of subkeys this key has.
     """
     super(TestRegKey, self).__init__()
-    self.path = path
-    self.timestamp = timestamp
-    self.offset = offset
+    self._path = path
+    self._timestamp = timestamp
     self._values = values
-    self.name = path.split('\\')[-1]
+    self._offset = offset
     self._subkeys = subkeys
 
-  def GetValues(self):
-    """Return a list of all values from the registry key."""
-    return self._values
+  @property
+  def path(self):
+    """The path of the key."""
+    return self._path
+
+  @property
+  def name(self):
+    """The name of the key."""
+    if not self._name and self._path:
+      self._name = self._path.split(self.PATH_SEPARATOR)[-1];
+    return self._name
+
+  @property
+  def offset(self):
+    """The offset of the key within the Registry File."""
+    return self._offset
+
+  @property
+  def timestamp(self):
+    """The last written time of the key represented as a timestamp."""
+    return self._timestamp
+
+  def GetValueCount(self):
+    """Return the number of values stored."""
+    return len(self._values)
 
   def GetValue(self, name):
     """Return a WinRegValue object for a specific registry key path."""
@@ -54,38 +75,62 @@ class TestRegKey(interface.WinRegKey):
       if value.name == name:
         return value
 
-  def GetSubkeys(self):
-    """Return a list of all subkeys."""
-    return self._subkeys
-
-  def HasSubkeys(self):
-    """Return a boolean value indicating whether or not the key has subkeys."""
-    return bool(self._subkeys)
+  def GetValues(self):
+    """Return a list of all values from the registry key."""
+    return self._values
 
   def GetSubkeyCount(self):
     """Returns the number of sub keys for this particular registry key."""
     return len(self._subkeys)
 
-  def GetValueCount(self):
-    """Return the number of values stored."""
-    return len(self._values)
+  def HasSubkeys(self):
+    """Return a boolean value indicating whether or not the key has subkeys."""
+    return bool(self._subkeys)
+
+  def GetSubkeys(self):
+    """Return a list of all subkeys."""
+    return self._subkeys
 
 
 class TestRegValue(interface.WinRegValue):
-  """WinRegValue is an object describing a registry value."""
+  """Implementation of the Registry value interface for testing."""
 
-  def __init__(self, name, value, value_type=1, offset=0):
+  def __init__(self, name, data, data_type, offset=0):
     """Set up the test reg value object."""
     super(TestRegValue, self).__init__()
-    self.offset = offset
-    self.name = name
-    self._raw_value = value
-    self._type = value_type
-    self._type_str = self.GetTypeStr()
+    self._name = name
+    self._data = data
+    self._data_type = data_type
+    self._offset = offset
+    self._type_str = ''
+
+  @property
+  def name(self):
+    """The name of the value."""
+    return self._name
+
+  @property
+  def offset(self):
+    """The offset of the value within the Registry File."""
+    return self._offset
+
+  @property
+  def data_type(self):
+    """Numeric value that contains the data type."""
+    return self._data_type
+
+  @property
+  def data(self):
+    """The value data as a native Python object."""
+    return interface.WinRegValue.CopyDataToObject(
+        self._data, self._data_type)
+
+  def GetRawData(self):
+    """Return the raw value data of the key."""
+    return self._data
 
   def GetStringData(self):
     """Return a string data."""
-    if self._type_str == 'SZ' or self._type_str == 'EXPAND_SZ':
-      return self._raw_value.decode('utf_16_le', 'ignore')
-
+    if self._data_type in [self.REG_SZ, self.REG_EXPAND_SZ]:
+      return self._data.decode('utf_16_le', 'ignore')
     return u''
