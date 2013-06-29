@@ -38,6 +38,7 @@ class TestEvent(event.EventObject):
     self.parser = 'TestEvent'
     self.display_name = 'fake:{}'.format(filename)
 
+
 class TestArgs(object):
   DATA_TYPE = 'test:plasm:2'
 
@@ -46,6 +47,7 @@ class TestArgs(object):
     self.storagefile = storagefile
     self.tag_input = tag_input
     self.quiet = True
+
 
 class PlasmTest(unittest.TestCase):
 

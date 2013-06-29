@@ -263,7 +263,7 @@ class Win7UserAssistPlugin(win_registry_interface.KeyPlugin):
       if len(data) != 72:
         logging.debug('[UserAssist] Value entry is not of correct length.')
         continue
-      
+
       name_raw = value.name
       try:
         name = name_raw.decode('rot-13')
@@ -285,11 +285,10 @@ class Win7UserAssistPlugin(win_registry_interface.KeyPlugin):
         name = u''.join(characters)
 
       guid, _, _ = name.partition('\\')
-      
+
       if guid in self._folder_guids:
         name = name.replace(guid, self._folder_guids[guid])
 
-      
       parsed_data = self.USERASSIST_STRUCT.parse(data)
 
       userassist_entry = parsed_data.get('userassist_entry', None)

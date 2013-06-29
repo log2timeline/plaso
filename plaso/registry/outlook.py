@@ -39,7 +39,7 @@ class Outlook(win_registry_interface.KeyPlugin):
       if not value.name:
         continue
       text_dict = {}
-      # TODO: Decode Data in key. Only pulls PST path as-is. 
+      # TODO: Decode Data in key. Only pulls PST path as-is.
       text_dict[value.name] = ''
 
       if value_count == 0:
@@ -54,7 +54,7 @@ class Outlook(win_registry_interface.KeyPlugin):
       value = value_count+1
 
 
-# TODO: Address different MS Office versions.    
+# TODO: Address different MS Office versions.
 class MSOutlook2010Search(Outlook):
   """Gathers MS Outlook 2010 Data File locations from the NTUSER hive."""
 
@@ -65,7 +65,7 @@ class MSOutlook2010Search(Outlook):
 
 class MSOutlook2010Catalog(Outlook):
   """Gathers MS Outlook 2010 Data File locations from the NTUSER hive."""
-  
+
   REG_KEY = (
     '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search\\Catalog')
   REG_TYPE = 'NTUSER'
@@ -74,7 +74,7 @@ class MSOutlook2010Catalog(Outlook):
 
 class MSOutlook2003Catalog(Outlook):
   """Gathers MS Outlook 2003 Data File locations from the NTUSER hive."""
-  
+
   REG_KEY = ('\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog')
   REG_TYPE = 'NTUSER'
   DESCRIPTION = "PST Paths"
