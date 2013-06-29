@@ -22,6 +22,7 @@ import unittest
 
 from plaso.frontend import plasm
 from plaso.lib import event
+from plaso.lib import pfilter
 from plaso.lib import storage
 
 __pychecker__ = 'no-funcdoc'
@@ -73,6 +74,8 @@ class PlasmTest(unittest.TestCase):
 
     self.my_args = TestArgs(self.storage_name, self.tag_input_name)
     self.storage = storage.PlasoStorage(self.storage_file)
+    pfilter.TimeRangeCache.ResetTimeConstraints()
+    self.storage.SetStoreLimit()
 
   def tearDown(self):
     self.storage_file.close()
@@ -117,6 +120,8 @@ class PlasmTest(unittest.TestCase):
       counter += 1
     self.assertEquals(counter, 5)
     self.storage = storage.PlasoStorage(self.storage_file)
+    pfilter.TimeRangeCache.ResetTimeConstraints()
+    self.storage.SetStoreLimit()
     counter = 0
     for event_object in plasm.EventObjectGenerator(self.storage, quiet=False):
       counter += 1
@@ -145,6 +150,8 @@ class PlasmTest(unittest.TestCase):
     plasm.TaggingEngine(self.my_args)
     plasm.GroupingEngine(self.my_args)
     test = storage.PlasoStorage(self.storage_name)
+    pfilter.TimeRangeCache.ResetTimeConstraints()
+    test.SetStoreLimit()
     self.assertTrue(test.HasGrouping())
     groups = test.GetGrouping()
     count = 0

@@ -155,6 +155,8 @@ class PsortTest(unittest.TestCase):
 
     with tempfile.NamedTemporaryFile() as fh:
       store = storage.PlasoStorage(fh)
+      pfilter.TimeRangeCache.ResetTimeConstraints()
+      store.SetStoreLimit()
 
       for my_event in events:
         store.AddEntry(my_event.ToProtoString())
