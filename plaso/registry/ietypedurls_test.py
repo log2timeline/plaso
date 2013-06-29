@@ -46,7 +46,7 @@ class RegistryTypedPathsTest(unittest.TestCase):
     """Test the Typed IE URLs plugin."""
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Internet Explorer\\TypedURLs')
-    plugin = ietypedurls.IETypedURLs(None, None)
+    plugin = ietypedurls.IEtypedURLsPlugin(None, None)
     entries = list(plugin.Process(key))
 
     self.assertEquals(entries[0].timestamp, 1331587433307749)

@@ -34,11 +34,11 @@ class OLECFFormatter(eventdata.ConditionalEventFormatter):
       u'Author: {author}',
       u'Total edit time (secs): {total_edit_time}',
       u'Keywords: {keywords}',
-      u'Comments: {comments}',   
+      u'Comments: {comments}',
       u'Revision number: {revision_number}',
       u'Version: {version}',
       u'Doc Version: {doc_version}',
-      u'Template: {template}', 
+      u'Template: {template}',
       u'Num pages: {num_pages}',
       u'Num words: {num_words}',
       u'Num chars: {num_chars}',
@@ -48,7 +48,7 @@ class OLECFFormatter(eventdata.ConditionalEventFormatter):
       u'Security: {security}',
       u'Digital Signature: {dig_sig}',
       u'Codepage: {codepage}',
-      u'Language: {language}', 
+      u'Language: {language}',
       u'Slides: {slides}',
       u'Hidden Slides: {hidden_slides}',
       u'MM Clips: {mm_clips}',
@@ -61,4 +61,3 @@ class OLECFFormatter(eventdata.ConditionalEventFormatter):
 
   SOURCE_LONG = 'OLECF Metadata'
   SOURCE_SHORT = 'META'
-  
