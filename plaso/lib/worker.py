@@ -101,32 +101,62 @@ class PlasoWorker(object):
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
     self.pid = os.getpid()
-    logging.info('Worker %d (PID: %d) started monitoring process queue.',
-                 self._identifier, self.pid)
+    logging.info(
+        u'Worker %d (PID: %d) started monitoring process queue.',
+        self._identifier, self.pid)
     for item in self._proc_queue.PopItems():
-      pathspec = event.EventPathSpec()
-      try:
-        pathspec.FromProtoString(item)
-      except RuntimeError:
-        logging.debug(('Error while trying to parse a PathSpec from the queue.'
-                       'The PathSpec that caused the error:\n%s'), item)
-        continue
-
-      # Either parse this file and all extracted files, or just the file.
-      try:
-        with pfile.OpenPFile(pathspec,
-                             fscache=getattr(self, '_fscache', None)) as fh:
-          self.ParseFile(fh)
-          if self.config.open_files:
-            self.ParseAllFiles(fh)
-      except IOError as e:
-        logging.warning(u'Unable to parse file: %s (%s)', pathspec.file_path, e)
-        logging.warning(
-            u'Proto\n%s\n%s\n%s', '-+' * 20, pathspec.ToProto(), '-+' * 20)
+      # TODO: Remove this "ugly" hack in favor of something more elegant
+      # and one that makes more sense.
+      if item.startswith('P'):
+        self.ParsePathSpec(item)
+      elif item.startswith('B'):
+        self.ParseBundle(item)
+      else:
+        logging.error(
+            u'Unable to unserialize pathspec, wrong type: %s', item[0])
 
     logging.info(
         'Worker %d (PID: %d) stopped monitoring process queue.',
         self._identifier, os.getpid())
+
+  def ParseBundle(self, bundle_string):
+    """Parse a file given a serialized pathspec bundle."""
+    bundle = event.EventPathBundle()
+    try:
+      bundle.FromProtoString(bundle_string)
+    except RuntimeError:
+      logging.debug(
+          (u'Error while trying to parse a PathSpecBundle from the queue. '
+           'The bundle that caused the error:\n%s'), bundle_string)
+      return
+
+    print bundle.ToProto()
+    # GO OVER ALL BUNDLE PARSERS!
+    #          self._ParseEvent(evt, filehandle, parsing_object.parser_name,
+    #                           stat_obj)
+
+  def ParsePathSpec(self, pathspec_string):
+    """Parse a file given a serialized pathspec."""
+    pathspec = event.EventPathSpec()
+    try:
+      pathspec.FromProtoString(pathspec_string)
+    except RuntimeError:
+      logging.debug(
+          (u'Error while trying to parse a PathSpec from the queue.'
+           'The PathSpec that caused the error:\n%s'), pathspec_string)
+      return
+
+    # Either parse this file and all extracted files, or just the file.
+    try:
+      with pfile.OpenPFile(
+          pathspec, fscache=getattr(self, '_fscache', None)) as fh:
+        self.ParseFile(fh)
+        if self.config.open_files:
+          self.ParseAllFiles(fh)
+    except IOError as e:
+      logging.warning(u'Unable to parse file: %s (%s)', pathspec.file_path, e)
+      logging.warning(
+          u'Proto\n%s\n%s\n%s', '-+' * 20, pathspec.ToProto(), '-+' * 20)
 
   def ParseAllFiles(self, filehandle):
     """Parse every file that can be extracted from a PFile object.
@@ -208,25 +238,26 @@ class PlasoWorker(object):
     stat_obj = filehandle.Stat()
     for parsing_object in self._parsers['all']:
       logging.debug('Checking [%s] against: %s', filehandle.name,
-                    parsing_object.NAME)
+                    parsing_object.parser_name)
       try:
         filehandle.seek(0)
         for evt in parsing_object.Parse(filehandle):
           if evt:
             if isinstance(evt, event.EventObject):
-              self._ParseEvent(evt, filehandle, parsing_object.parser_name,
-                               stat_obj)
+              self._ParseEvent(
+                  evt, filehandle, parsing_object.parser_name, stat_obj)
             elif isinstance(evt, event.EventContainer):
               for event_object in evt:
-                self._ParseEvent(event_object, filehandle,
-                                 parsing_object.parser_name, stat_obj)
+                self._ParseEvent(
+                    event_object, filehandle, parsing_object.parser_name,
+                    stat_obj)
 
       except errors.UnableToParseFile as e:
-        logging.debug('Not a %s file (%s) - %s', parsing_object.NAME,
+        logging.debug('Not a %s file (%s) - %s', parsing_object.parser_name,
                       filehandle.name, e)
       except IOError as e:
         logging.debug('Unable to parse: %s [%s] using %s', filehandle.name,
-                      filehandle.display_name, parsing_object.NAME)
+                      filehandle.display_name, parsing_object.parser_name)
       # Casting a wide net, catching all exceptions. Done to keep the worker
       # running, despite the parser hitting errors, so the worker doesn't die
       # if a single file is corrupted or there is a bug in a parser.
@@ -234,7 +265,7 @@ class PlasoWorker(object):
         logging.warning(('An unexpected error occured during processing of '
                          'file: %s using module %s. The error was: %s.\nParsin'
                          'g of file is is terminated.'), filehandle.name,
-                        parsing_object.NAME, e)
+                        parsing_object.parser_name, e)
         logging.debug('The PathSpec that caused the error:\n(root)\n%s\n%s',
                       filehandle.pathspec_root.ToProto(),
                       filehandle.pathspec.ToProto())

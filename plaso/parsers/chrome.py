@@ -87,9 +87,6 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
 class ChromeHistoryParser(parser.SQLiteParser):
   """Parse Chrome history files."""
 
-  # TODO: is this still needed? If not remove or refactor to use parser_name.
-  NAME = 'Chrome History'
-
   # Define the needed queries.
   QUERIES = [(('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
                'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'

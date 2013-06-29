@@ -61,7 +61,6 @@ class WinEvtRecordEventContainer(event.EventContainer):
 
 class WinEvtParser(parser.PlasoParser):
   """Parses Windows EventLog (EVT) files."""
-  NAME = 'WinEvt'
 
   def _ParseRecord(self, evt_record, recovered=False):
     """Extract data from a Windows EventLog (EVT) record.
@@ -122,7 +121,7 @@ class WinEvtParser(parser.PlasoParser):
       evt_file.open_file_object(file_object)
     except IOError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.NAME, file_object.name, exception))
+          self.parser_name, file_object.name, exception))
 
     for record_index in range(0, evt_file.number_of_records):
       try:
@@ -131,7 +130,7 @@ class WinEvtParser(parser.PlasoParser):
       except IOError as exception:
         logging.warning(
             '[%s] unable to parse event record: %d in file: %s: %s' % (
-            self.NAME, record_index, file_object.name, exception))
+            self.parser_name, record_index, file_object.name, exception))
         pass
 
     for record_index in range(0, evt_file.number_of_recovered_records):
@@ -139,7 +138,8 @@ class WinEvtParser(parser.PlasoParser):
         evt_record = evt_file.get_recovered_record(record_index)
         yield self._ParseRecord(evt_record, recovered=True)
       except IOError as exception:
-        logging.info(
-            '[%s] unable to parse recovered event record: %d in file: %s: '
-            '%s' % (self.NAME, record_index, file_object.name, exception))
+        logging.info((
+            u'[%s] unable to parse recovered event record: %d in file: %s: '
+            u'%s') % (
+                self.parser_name, record_index, file_object.name, exception))
         pass

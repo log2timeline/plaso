@@ -94,8 +94,6 @@ class GoogleDriveSnapshotLocalEntryEvent(event.EventObject):
 class GoogleDriveParser(parser.SQLiteParser):
   """Parser for Google Drive snapshot.db files."""
 
-  NAME = 'Google Drive'
-
   # Define the needed queries.
   QUERIES = [(('SELECT resource_id, filename, modified, '
                'created, size, doc_type, shared, checksum, url '

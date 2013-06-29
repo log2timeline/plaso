@@ -23,6 +23,8 @@ from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import preprocess
 
+from plaso.proto import transmission_pb2
+
 
 class CollectionFilterTest(unittest.TestCase):
   """Test CollectionFilter check."""
@@ -58,7 +60,8 @@ class CollectionFilterTest(unittest.TestCase):
     # This filter will contain all the filter lines, even those that will fail
     # during finding pathspecs, yet there is one that will fail, so we should
     # have five hits.
-    self.assertEquals(len(my_filter._filters), 5)
+    filter_list = my_filter.BuildFiltersFromProto()
+    self.assertEquals(len(filter_list), 5)
 
     pathspecs = list(my_filter.GetPathSpecs())
     # One evtx, one AUTHORS, three collector_* files, total five files.
@@ -67,6 +70,28 @@ class CollectionFilterTest(unittest.TestCase):
     with self.assertRaises(errors.BadConfigOption):
       _ = collector_filter.CollectionFilter(
           my_collector, 'thisfiledoesnotexist')
+
+    # Build a proto using the same filter criteria as above.
+    proto = transmission_pb2.PathFilter()
+    proto.filter_string.append('failing/')
+    proto.filter_string.append('/AUTHORS')
+    proto.filter_string.append('/does_not_exist/some_file_[0-9]+txt')
+    proto.filter_string.append('/test_data/.+evtx')
+    proto.filter_string.append('/plaso/lib/collector_.+.py')
+    proto.filter_string.append('bad re (no close on that parenthesis/file')
+
+    proto_filter = collector_filter.CollectionFilter(my_collector, proto)
+    proto_list = proto_filter.BuildFiltersFromProto()
+    self.assertEquals(len(proto_list), 5)
+
+    proto_serialized_filter = collector_filter.CollectionFilter(
+        my_collector, proto.SerializeToString())
+    proto_serialized_list = proto_serialized_filter.BuildFiltersFromProto()
+    self.assertEquals(len(proto_serialized_list), 5)
+
+    self.assertEquals((u'', u'AUTHORS'), proto_serialized_list[0])
+    self.assertEquals((u'/does_not_exist', u'some_file_[0-9]+txt'),
+                      proto_serialized_list[1])
 
 
 if __name__ == '__main__':

@@ -41,8 +41,7 @@ class DefaultPlugin(plist_interface.PlistPlugin):
     """
     for root, key, value in plist_interface.RecurseKey(self._top_level):
       if isinstance(value, datetime.datetime):
-        time = timelib.Timestamp.FromPosixTime(timelib.Timetuple2Timestamp(
-            value.timetuple()))
+        time = timelib.Timestamp.FromPythonDatetime(value)
         yield plist_event.PlistEvent(root, key, time)
       # TODO(make): Binplist keeps a list of offsets but not mapped to a key.
       # adjust code when there is a way to map keys to offsets.
