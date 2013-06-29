@@ -309,8 +309,11 @@ class PlasoStorage(object):
 
   def SetStoreLimit(self, my_filter=None):
     """Set a limit to the stores used for returning data."""
-    if not hasattr(self, '_store_range'):
-      self._store_range = []
+    # We are setting the bounds now, remove potential prior bound settings.
+    if hasattr(self, '_bound_first'):
+      del self._bound_first
+
+    self._store_range = []
 
     # Retrieve set first and last timestamps.
     self._GetTimeBounds()

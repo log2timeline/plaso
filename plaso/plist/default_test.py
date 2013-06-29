@@ -64,7 +64,7 @@ class TestDefaultPlist(unittest.TestCase):
     self.assertEquals(len(event), 1)
     self.assertEquals(event[0].root, '/DE-00-AD-00-BE-EF')
     self.assertEquals(event[0].key, 'LastUsed')
-    self.assertEquals(event[0].timestamp, 1351819298000000)
+    self.assertEquals(event[0].timestamp, 1351819298997672)
 
   def testDefault_many_nested(self):
     """Test to ensure the five keys with dates values are yielded."""

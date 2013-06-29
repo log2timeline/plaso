@@ -50,6 +50,11 @@ class FilterObject(object):
     return []
 
   @property
+  def separator(self):
+    """Return a separator for adaptive output modules."""
+    return ','
+
+  @property
   def limit(self):
     """Returns the max number of records to return, or zero for all records."""
     return 0

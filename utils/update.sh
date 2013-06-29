@@ -71,7 +71,7 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-echo "All came out clean, let's submit the code.";
+echo "All came out clean, let's update the code review.";
 
 python utils/upload.py -y -i ${CL_NUMBER} -t "." -m ".";
 

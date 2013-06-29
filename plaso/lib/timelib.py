@@ -152,6 +152,33 @@ class Timestamp(object):
     return day_of_year
 
   @classmethod
+  def FromPythonDatetime(cls, datetime_object):
+    """Converts a Python datetime object into a timestamp."""
+    if not isinstance(datetime_object, datetime.datetime):
+      return 0
+
+    posix_epoch = Timetuple2Timestamp(datetime_object.utctimetuple())
+    epoch = cls.FromPosixTime(posix_epoch)
+    return epoch + datetime_object.microsecond
+
+  @classmethod
+  def FromTimeString(cls, time_string, zone=pytz.utc, fmt=''):
+    """Converts a string representation of a timestamp into a timestamp.
+
+    Args:
+      time_string: A string formatted as a timestamp.
+      zone: The timezone (pytz.timezone) object.
+      fmt: Optional argument that defines the format of a string
+           representation of a timestamp. By default the parser
+           tries to "guess" the proper format.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    dt = StringToDatetime(time_string, zone, fmt)
+    return cls.FromPythonDatetime(dt)
+
+  @classmethod
   def FromFatDateTime(cls, fat_date_time):
     """Converts a FAT date and time into a timestamp.
 
@@ -263,6 +290,36 @@ class Timestamp(object):
         posix_time > cls.TIMESTAMP_MAX_SECONDS):
       return 0
     return int(posix_time) * cls.MICRO_SECONDS_PER_SECOND
+
+  @classmethod
+  def FromTimeParts(
+      cls, year, month, day, hour, minute, second, microsecond=0,
+      zone=pytz.utc):
+    """Converts a list of time entries to a timestamp.
+
+    Args:
+      year: An integer representing the year.
+      month: An integer between 1 and 12.
+      day: An integer representing the number of day in the month.
+      hour: An integer representing the hour, 0 <= hour < 24.
+      minute: An integer, 0 <= minute < 60.
+      second: An integer, 0 <= second < 60.
+      microsecond: Number of microseconds, 0 <= microsecond < 1000000.
+      zone: The timezone of the timestamp, defaults to UTC.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    date = datetime.datetime(
+        year, month, day, hour, minute, second, microsecond)
+
+    if type(zone) is str:
+      zone = pytz.timezone(zone)
+
+    date_use = zone.localize(date)
+    epoch = Timetuple2Timestamp(date_use.utctimetuple())
+
+    return cls.FromPosixTime(epoch)
 
   @classmethod
   def LocaltimeToUTC(cls, timestamp, timezone, is_dst=False):

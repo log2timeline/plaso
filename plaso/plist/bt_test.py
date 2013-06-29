@@ -51,13 +51,13 @@ class TestBtPlugin(unittest.TestCase):
 
     # Ensure all 14 events and times from the plist are parsed correctly.
     self.assertEquals(len(timestamps), 14)
-    correct_timestamps = frozenset([1351818797000000, 1351818797000000,
-                                    1351819298000000, 1351818803000000,
-                                    1301012201000000, 1341957900000000,
-                                    1302199013000000, 1350666385000000,
-                                    1350666391000000, 1341957896000000,
-                                    1341957896000000, 1351827808000000,
-                                    1345251268000000, 1345251192000000])
+
+    correct_timestamps = frozenset([
+        1341957896010535, 1341957896010535, 1350666385239661, 1350666391557044,
+        1341957900020116, 1302199013524275, 1301012201414766, 1351818797324095,
+        1351818797324095, 1351819298997672, 1351818803000000, 1351827808261762,
+        1345251268370453, 1345251192528750])
+
     self.assertTrue(correct_timestamps == set(timestamps))
 
     # Ensure two paired devices are matched.

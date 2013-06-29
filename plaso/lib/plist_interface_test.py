@@ -20,6 +20,7 @@ import os
 import unittest
 
 from plaso import plist
+from plaso.events import plist_event
 from plaso.lib import errors
 from plaso.lib import plist_interface
 
@@ -30,7 +31,9 @@ class MockPlugin(plist_interface.PlistPlugin):
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
   def GetEntries(self):
-    return True
+    yield plist_event.PlistEvent(
+        '/DeviceCache/44-00-00-00-00-00', 'LastInquiryUpdate',
+        1351827808261762)
 
 
 class TestPlistInterface(unittest.TestCase):

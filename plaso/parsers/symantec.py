@@ -15,9 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a Symantec parser in plaso."""
-
-import calendar
-import datetime
 import re
 
 from plaso.lib import errors
@@ -25,7 +22,6 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
-
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -113,11 +109,9 @@ class Symantec(parser.TextCSVParser):
     year, month, day, hour, minute, sec = (
         int(x[0] + x[1], 16) for x in zip(
             timestamp_raw[::2], timestamp_raw[1::2]))
-    # TODO: Move the calls to datetime to timelib.
-    date = datetime.datetime(year + 1970, month + 1, day, hour, minute, sec,
-                             0, self._pre_obj.zone)
-    epoch = timelib.Timetuple2Timestamp(date.timetuple())
-    timestamp = timelib.Timestamp.FromPosixTime(epoch)
+
+    timestamp = timelib.FromTimeParts(
+        year + 1970, month + 1, day, hour, minute, sec, 0, self._pre_obj.zone)
 
     return timestamp
 

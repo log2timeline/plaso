@@ -189,44 +189,18 @@ class Engine(object):
     This is therefore mostly useful during debugging sessions for some
     limited parsing.
     """
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = self._StartRuntime()
 
-    if self.config.preprocess:
-      try:
-        self._PreProcess(pre_obj)
-      except errors.UnableToOpenFilesystem as e:
-        logging.error(u'Unable to open the filesystem: %s', e)
-        return
-      except IOError as e:
-        logging.error(
-            (u'An IOError occurred while trying to pre-process, bailing out. '
-             'The error given is: %s'), e)
-        return
-    else:
-      pre_obj.zone = self.config.zone
-
+    # Start the necessary queues.
     collection_queue = queue.SingleThreadedQueue()
     storage_queue = queue.SingleThreadedQueue()
 
-    # Save some information about the run time into the pre-processing object.
-    self._StoreCollectionInformation(pre_obj)
-
     # Start with collection.
     logging.debug('Starting collection.')
-    with collector.PCollector(collection_queue) as my_collector:
-      if self.config.image:
-        ofs = self.config.image_offset_bytes or self.config.image_offset * 512
-        my_collector.CollectFromImage(self.config.filename, ofs)
-        if self.config.parse_vss:
-          logging.debug('Parsing VSS from image.')
-          vss_numbers = vss.GetVssStoreCount(self.config.filename, ofs)
-          for store_nr in range(0, vss_numbers):
-            my_collector.CollectFromVss(
-                self.config.filename, store_nr, ofs)
-      elif self.config.recursive:
-        my_collector.CollectFromDir(self.config.filename)
-      else:
-        my_collector.ProcessFile(self.config.filename, collection_queue)
+
+    with self.GetCollector(
+        self.config, pre_obj, collection_queue) as my_collector:
+      my_collector.Collect()
 
     logging.debug('Collection done.')
 
@@ -249,17 +223,10 @@ class Engine(object):
         storage_buffer.AddEntry(item)
     logging.debug('Storage done.')
 
-  def _StartLocal(self):
-    """Start the process, set up all threads and start them up.
-
-    The local implementation uses the muliprocessing library to
-    start up new threads or processes.
-
-    Raises:
-      errors.BadConfigOption: If the file being parsed does not exist.
-    """
-
+  def _StartRuntime(self):
+    """Run preprocessing and other actions needed before starting threads."""
     pre_obj = preprocess.PlasoPreprocess()
+
     # Run pre-processing if necessary.
     if self.config.preprocess:
       try:
@@ -319,54 +286,31 @@ class Engine(object):
     # Save some information about the run time into the pre-processing object.
     self._StoreCollectionInformation(pre_obj)
 
+    return pre_obj
+
+  def _StartLocal(self):
+    """Start the process, set up all threads and start them up.
+
+    The local implementation uses the muliprocessing library to
+    start up new threads or processes.
+
+    Raises:
+      errors.BadConfigOption: If the file being parsed does not exist.
+    """
+    pre_obj = self._StartRuntime()
+
     # Start the collector.
     start_collection_thread = True
 
-    if self.config.file_filter:
-      # Start a targeted collection filter.
-      if self.config.image:
-        logging.debug('Starting a targeted image collection.')
-        my_collector = collector.TargetedImageCollector(
-            self.config.filename, self.config.file_filter, pre_obj,
-            sector_offset=self.config.image_offset,
-            byte_offset=self.config.image_offset_bytes,
-            parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
-      else:
-        logging.debug('Starting a targeted recursive collection.')
-        my_collector = collector.TargetedFileSystemCollector(
-            pre_obj, self.config.filename, self.config.file_filter)
-    else:
-      if self.config.image:
-        logging.debug('Collection started from an image.')
-        my_collector = collector.SimpleImageCollector(
-            self.config.filename, offset=self.config.image_offset,
-            offset_bytes=self.config.image_offset_bytes,
-            parse_vss=self.config.parse_vss, vss_stores=self.config.vss_stores)
-      elif self.config.recursive:
-        logging.debug('Collection started from a directory.')
-        my_collector = collector.SimpleFileCollector(self.config.filename)
-      else:
-        # If we are parsing a single file we don't want to start a separate
-        # thread for the collection, hence this variable.
-        start_collection_thread = False
-        self.config.workers = 1
+    collection_queue = queue.MultiThreadedQueue()
 
-        # We need to make sure we are dealing with a file.
-        if not os.path.isfile(self.config.filename):
-          raise errors.BadConfigOption(
-              'Wrong usage: {%s} has to be a file.' % self.config.filename)
-
-        # Need to manage my own queueing since we are not starting a formal
-        # collector.
-        my_collector = queue.MultiThreadedQueue()
-        a_collector = collector.PCollector(my_collector)
-        a_collector.ProcessFile(self.config.filename, my_collector)
-        my_collector.Close()
+    my_collector = self.GetCollector(
+        self.config, pre_obj, collection_queue)
 
     my_storage = storage.SimpleStorageDumper(
         self.config.output, self.config.buffer_size, pre_obj)
 
-    self.queues = [my_collector, my_storage]
+    self.queues = [collection_queue, my_storage]
 
     # Start the storage.
     logging.info('Starting storage thread.')
@@ -388,7 +332,7 @@ class Engine(object):
     for worker_nr in range(self.config.workers):
       logging.debug('Starting worker: %d', worker_nr)
       my_worker = worker.PlasoWorker(
-          worker_nr, my_collector, my_storage, self.config, pre_obj)
+          worker_nr, collection_queue, my_storage, self.config, pre_obj)
       self.worker_threads.append(multiprocessing.Process(
           name='Worker_%d' % worker_nr,
           target=my_worker.Run))
@@ -524,4 +468,40 @@ class Engine(object):
         self.storage_thread.terminate()
         logging.warning('Storage terminated.')
       sys.exit(1)
+
+  def GetCollector(self, config, pre_obj, collection_queue):
+    """Return back a collector based on config."""
+    if config.file_filter:
+      # Start a targeted collection filter.
+      if config.image:
+        logging.debug(u'Starting a targeted image collection.')
+        return collector.TargetedImageCollector(
+            collection_queue, config.filename, config.file_filter, pre_obj,
+            sector_offset=config.image_offset,
+            byte_offset=config.image_offset_bytes,
+            parse_vss=config.parse_vss, vss_stores=config.vss_stores)
+      else:
+        logging.debug(u'Starting a targeted recursive collection.')
+        return collector.TargetedFileSystemCollector(
+            collection_queue, pre_obj, config.filename, config.file_filter)
+
+    if config.image:
+      logging.debug(u'Collection started from an image.')
+      return collector.SimpleImageCollector(
+          collection_queue, config.filename, offset=config.image_offset,
+          offset_bytes=config.image_offset_bytes,
+          parse_vss=config.parse_vss, vss_stores=config.vss_stores)
+    elif config.recursive:
+      logging.debug(u'Collection started from a directory.')
+      return collector.SimpleFileCollector(collection_queue, config.filename)
+    else:
+      # Parsing a single file, no need to have multiple workers.
+      config.workers = 1
+
+      # We need to make sure we are dealing with a file.
+      if not os.path.isfile(config.filename):
+        raise errors.BadConfigOption(
+            u'Wrong usage: {%s} has to be a file.' % config.filename)
+
+      return collector.SimpleFileCollector(collection_queue, config.filename)
 

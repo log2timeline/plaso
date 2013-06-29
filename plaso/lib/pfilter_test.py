@@ -35,7 +35,7 @@ class Empty(object):
   """An empty object."""
 
 
-class FakeFormatter(eventdata.EventFormatter):
+class PfilterFakeFormatter(eventdata.EventFormatter):
   """A formatter for this fake class."""
   DATA_TYPE = 'Weirdo:Made up Source:Last Written'
 
@@ -46,7 +46,7 @@ class FakeFormatter(eventdata.EventFormatter):
   SOURCE_SHORT = 'REG'
 
 
-class FakeParser(parser.PlasoParser):
+class PfilterFakeParser(parser.PlasoParser):
   """A fake parser that does not parse anything, but registers."""
 
   DATA_TYPE = 'Weirdo:Made up Source:Last Written'
@@ -70,26 +70,26 @@ class FakeParser(parser.PlasoParser):
     yield evt
 
 
-class AnotherParser(FakeParser):
+class PfilterAnotherParser(PfilterFakeParser):
   """Another fake parser that does nothing but register as a parser."""
 
   DATA_TYPE = 'Weirdo:AnotherFakeSource'
 
 
-class AnotherFakeFormatter(FakeFormatter):
+class PfilterAnotherFakeFormatter(PfilterFakeFormatter):
   """Formatter for the AnotherParser event."""
 
   DATA_TYPE = 'Weirdo:AnotherFakeSource'
   SOURCE_LONG = 'Another Fake Source'
 
 
-class AllEvilParser(FakeParser):
+class PfilterAllEvilParser(PfilterFakeParser):
   """A class that does nothing but has a fancy name."""
 
   DATA_TYPE = 'Weirdo:AllEvil'
 
 
-class EvilFormatter(FakeFormatter):
+class PfilterEvilFormatter(PfilterFakeFormatter):
   """Formatter for the AllEvilParser."""
 
   DATA_TYPE = 'Weirdo:AllEvil'
@@ -222,11 +222,16 @@ class PFilterTest(unittest.TestCase):
     self.assertEqual(result, matcher.Matches(obj))
 
   def testParserFilter(self):
-    query = 'source is "REG" AND message CONTAINS "is"'
+    query = (
+        'source is "REG" AND message CONTAINS "is" and parser contains '
+        '"Pfilter"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
+
     self.assertEquals(len(parsers), 3)
 
-    query = 'source is "REG" and parser is not "FakeParser"'
+    query = (
+        'source is "REG" and parser is not "PfilterFakeParser" and parser '
+        'contains "Pfilter"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 2)
 
@@ -235,20 +240,16 @@ class PFilterTest(unittest.TestCase):
     self.assertEquals(len(parsers), 1)
 
     query = ('date > 0 AND message regexp "\sW\sW" AND parser '
-             'is not "FakeParser"')
+             'is not "PfilterFakeParser" and parser contains "PFilter"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 2)
 
-    query = ('(date > 0 AND message regexp "\sW\sW") OR parser '
-             'is not "FakeParser"')
-    parsers = putils.FindAllParsers(self._pre, query)['all']
-    self.assertEquals(len(parsers), 3)
-
-    query = ('(parser contains "fake" or date < "2015-06-12") AND '
+    query = ('(parser contains "pfilter" or date < "2015-06-12") AND '
              'message CONTAINS "weird"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
 
-    query = ('(parser contains "fake" or date < "2015-06-12") AND '
+    query = ('parser contains "pfilter" and (parser contains "pfilter" or '
+             'date < "2015-06-12") AND '
              'metadata.author CONTAINS "weird"')
     parsers = putils.FindAllParsers(self._pre, query)['all']
     self.assertEquals(len(parsers), 3)

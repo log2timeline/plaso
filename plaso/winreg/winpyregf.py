@@ -14,122 +14,173 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a basic library used by plaso for registry handling.
-
-This library serves as a basis for reading and parsing registry files in Plaso.
-It should provide a read interface to the registry irrelevant of the underlying
-registry library that is used to parse the actual registry file.
-"""
+"""Pyregf specific implementation for the Plaso Windows Registry File access."""
 import logging
+
 from plaso.lib import errors
+from plaso.lib import timelib
 from plaso.winreg import interface
+
 import pyregf
 
 
 class WinPyregKey(interface.WinRegKey):
-  """An implementation of WinRegKey using pyregf."""
+  """Implementation of a Windows Registry Key using pyregf."""
 
-  def __init__(self, key, parent_path=''):
-    """An implementation of WinRegKey using pyregf library.
+  def __init__(self, pyregf_key, parent_path=u''):
+    """Initializes a Windows Registry Key object.
 
     Args:
-      key: The pyregf.key object.
-      parent_path: A string, full path of the parent key.
+      pyregf_key: An instance of a pyregf.key object.
+      parent_path: The path of the parent key.
     """
     super(WinPyregKey, self).__init__()
-    self._key = key
-    self.name = key.name
-    self.path = u'%s\\%s' % (parent_path, self.name)
-    # Timestamp as FILETIME
-    filetime = self._key.get_last_written_time_as_integer()
-    # TODO: Add a helper function for this since this conversion
-    # will take place in several places and could potentially
-    # be made less lossy.
-    self.timestamp = filetime / 10 - 11644473600000000
-    self.offset = self._key.get_offset()
+    self._pyregf_key = pyregf_key
+    self._path = self.PATH_SEPARATOR.join([parent_path, self._pyregf_key.name])
 
-  def GetValues(self):
-    """Returns a generator that returns all values found inside the key.
+  @property
+  def path(self):
+    """The path of the key."""
+    return self._path
 
-    The method should yield all WinRegValue objects inside the registry
-    key.
+  @property
+  def name(self):
+    """The name of the key."""
+    return self._pyregf_key.name
 
-    Yields:
-      A winPyregValue object for each value in the registry key.
-    """
-    for value in self._key.values:
-      try:
-        ret_value = WinPyregValue(value)
-      except errors.WinRegistryValueError as e:
-        logging.error(
-            u'Unable to read registry value. Key: %s, error message: %s',
-            self.path, e[0])
-        ret_value = e[1]
-      yield ret_value
+  @property
+  def offset(self):
+    """The offset of the key within the Registry File."""
+    return self._pyregf_key.offset
+
+  @property
+  def timestamp(self):
+    """The last written time of the key represented as a timestamp."""
+    return timelib.Timestamp.FromFiletime(
+        self._pyregf_key.get_last_written_time_as_integer())
+
+  def GetValueCount(self):
+    """Retrieves the number of values within the key."""
+    return self._pyregf_key.number_of_values
 
   def GetValue(self, name):
-    """Return a WinRegValue object for a specific registry key path."""
+    """Retrieves a value by name.
+
+    Args:
+      name: Name of the value or an empty string for the default value.
+
+    Returns:
+      An instance of a Windows Registry Value object (WinRegValue) if
+      a corresponding value was found or None if not.
+    """
     # Value names are not unique and pyregf provides first match for
     # the value. If this becomes problematic this method needs to
     # be changed into a generator, iterating through all returned value
     # for a given name.
-    value = self._key.get_value_by_name(name)
-    if not value:
-      return None
+    pyregf_value = self._pyregf_key.get_value_by_name(name)
+    if pyregf_value:
+      return WinPyregValue(pyregf_value)
+    return None
 
-    try:
-      ret_value = WinPyregValue(value)
-    except errors.WinRegistryValueError as e:
-      logging.error(
-          u'Unable to read registry value. Key: %s, error message: %s',
-          self.path, e[0])
-      ret_value = e[1]
-    return ret_value
+  def GetValues(self):
+    """Retrieves all values within the key.
 
-  def GetSubkeys(self):
-    """Returns all subkeys of the registry key."""
-    for key in self._key.sub_keys:
-      yield WinPyregKey(key, self.path)
+    Yields:
+      Instances of Windows Registry Value objects (WinRegValue) that represent
+      the values stored within the key.
+    """
+    for pyregf_value in self._pyregf_key.values:
+      yield WinPyregValue(pyregf_value)
 
   def GetSubkeyCount(self):
-    """Returns the number of sub keys for this particular registry key."""
-    return self._key.get_number_of_sub_keys()
+    """Retrieves the number of subkeys within the key."""
+    return self._pyregf_key.number_of_sub_keys
 
   def HasSubkeys(self):
-    """Return a boolean value indicating whether or not the key has subkeys."""
-    if self.GetSubkeyCount():
-      return True
+    """Determines if the key has subkeys."""
+    return self._pyregf_key.number_of_sub_keys != 0
 
-    return False
+  def GetSubkeys(self):
+    """Retrieves all subkeys within the key.
 
-  def GetValueCount(self):
-    """Return the number of values this registry key stores."""
-    return self._key.get_number_of_values()
+    Yields:
+      Instances of Windows Registry Key objects (WinRegKey) that represent
+      the subkeys stored within the key.
+    """
+    for pyregf_key in self._pyregf_key.sub_keys:
+      yield WinPyregKey(pyregf_key, self.path)
 
 
 class WinPyregValue(interface.WinRegValue):
-  """An implementation of the WinRegValue based on pyregf."""
+  """Implementation of a Windows Registry Value using pyregf."""
 
-  def __init__(self, value):
-    """Initializes the Windows Registry value object."""
+  def __init__(self, pyregf_value):
+    """Initializes a Windows Registry Value object.
+
+    Args:
+      pyregf_value: An instance of a pyregf.value object.
+    """
     super(WinPyregValue, self).__init__()
-    self._value = value
-    self.offset = value.get_offset()
-    self.name = value.name
-    self._type = value.type
-    self._type_str = self.GetTypeStr()
+    self._pyregf_value = pyregf_value
+    self._type_str = ''
+
+  @property
+  def name(self):
+    """The name of the value."""
+    return self._pyregf_value.name
+
+  @property
+  def offset(self):
+    """The offset of the value within the Registry File."""
+    return self._pyregf_value.offset
+
+  @property
+  def data_type(self):
+    """Numeric value that contains the data type."""
+    return self._pyregf_value.type
+
+  @property
+  def data(self):
+    """The value data as a native Python object."""
+    # TODO: add support for REG_LINK to pyregf.
+    if self._pyregf_value.type in [self.REG_SZ, self.REG_EXPAND_SZ]:
+      try:
+        return self._pyregf_value.data_as_string
+      except IOError:
+        pass
+
+    elif self._pyregf_value.type in [
+        self.REG_DWORD, self.REG_DWORD_BIG_ENDIAN, self.REG_QWORD]:
+      try:
+        return self._pyregf_value.data_as_integer
+      except IOError:
+        pass
+      except AttributeError:
+        import pdb
+        pdb.post_mortem()
+
+    # TODO: add support for REG_MULTI_SZ to pyregf.
+    elif self._pyregf_value.type in [self.REG_LINK, self.REG_MULTI_SZ]:
+      return interface.WinRegValue.CopyDataToObject(
+          self._pyregf_value.data, self._pyregf_value.type)
+
+    return self._pyregf_value.data
+
+  def GetRawData(self):
+    """Return the raw value data of the key."""
     try:
-      self._raw_value = self._value.data
+      return self._pyregf_value.data
     except IOError:
-      self._raw_value = '<FAILED TO READ RAW DATA>'
       raise errors.WinRegistryValueError(
-          'Unable to read raw data from value: %s' % self.name, self)
+          'Unable to read raw data from value: %s' % self._pyregf_value.name)
 
   def GetStringData(self):
     """Return a string value from the data, if it is a string type."""
+    if not self._type_str:
+      self._type_str = self.GetTypeStr()
     if self._type_str == 'SZ' or self._type_str == 'EXPAND_SZ':
       try:
-        ret = self._value.data_as_string
+        ret = self._pyregf_value.data_as_string
       except IOError:
         ret = interface.GetRegistryStringValue(
             self.GetRawData(), self._type_str)
@@ -151,14 +202,14 @@ class WinRegistry(object):
       codepage: The codepage of the registry hive, used for string
                 representation.
     """
-    self._hive = pyregf.file()
-    self._hive.open_file_object(hive)
+    self._pyregf_file = pyregf.file()
+    self._pyregf_file.open_file_object(hive)
     try:
       # TODO: Add a more elegant error handling to this issue. There are some
       # code pages that are not supported by the parent library. However we
       # need to properly set the codepage so the library can properly interpret
       # values in the registry.
-      self._hive.set_ascii_codepage(codepage)
+      self._pyregf_file.set_ascii_codepage(codepage)
     except (TypeError, IOError):
       logging.error(
           u'Unable to set the registry codepage to: {}. Not setting it'.format(
@@ -169,16 +220,14 @@ class WinRegistry(object):
 
   def GetRoot(self):
     """Return the root key of the registry hive."""
-    ret = WinPyregKey(self._hive.get_root_key())
-    ret.path = ''
-    return ret
+    return WinPyregKey(self._pyregf_file.get_root_key())
 
   def GetKey(self, key):
     """Return a registry key as a WinPyregKey object."""
     if not key:
       return None
 
-    my_key = self._hive.get_key_by_path(key)
+    my_key = self._pyregf_file.get_key_by_path(key)
     if not my_key:
       return None
 
@@ -219,5 +268,5 @@ class WinRegistry(object):
 
 
 def GetLibraryVersion():
-  """Return the library version number of pyregf."""
+  """Return the pyregf and libregf version."""
   return pyregf.get_version()
