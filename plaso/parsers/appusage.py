@@ -69,8 +69,6 @@ class ApplicationUsageParser(parser.SQLiteParser):
   Default installation: /var/db/application_usage.sqlite
   """
 
-  NAME = 'Application Usage'
-
   # Define the needed queries.
   QUERIES = [(('SELECT last_time, event, bundle_id, app_version, app_path,'
                'number_times FROM application_usage ORDER BY last_time'),

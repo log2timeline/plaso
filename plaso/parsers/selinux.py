@@ -39,8 +39,6 @@
    http://www.redhat.com/promo/summit/2010/presentations/
    taste_of_training/Summit_2010_SELinux.pdf
 """
-
-import datetime
 import logging
 import re
 
@@ -74,8 +72,6 @@ class SELinuxLineEvent(event.TextEvent):
 class SELinux(parser.TextParser):
   """Parse SELinux audit log files."""
 
-  NAME = 'SELinux'
-  SOURCE_LONG = 'Audit log file'
   PID_RE = re.compile('pid=([0-9]+)[\s]+', re.DOTALL)
 
   tokens = [

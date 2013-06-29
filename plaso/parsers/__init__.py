@@ -27,6 +27,7 @@ from plaso.parsers import mactime
 from plaso.parsers import msiecf
 from plaso.parsers import olecf
 from plaso.parsers import plist
+from plaso.parsers import recycler
 from plaso.parsers import selinux
 from plaso.parsers import syslog
 from plaso.parsers import symantec

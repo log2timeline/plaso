@@ -37,9 +37,6 @@ class WinRegistryParser(parser.PlasoParser):
       'UNKNOWN': (),
   }
 
-  # Description of the log file.
-  NAME = 'WinRegistryParser'
-
   def __init__(self, pre_obj):
     """Default constructor for the Windows registry."""
     super(WinRegistryParser, self).__init__(pre_obj)
@@ -56,8 +53,8 @@ class WinRegistryParser(parser.PlasoParser):
     codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
     if data != magic:
-      raise errors.UnableToParseFile('File %s not a %s. (wrong magic)' % (
-          filehandle.name, self.NAME))
+      raise errors.UnableToParseFile(u'File %s not a %s. (wrong magic)' % (
+          filehandle.name, self.parser_name))
 
     # Determine type, find all parsers
     try:
@@ -66,7 +63,8 @@ class WinRegistryParser(parser.PlasoParser):
       reg = winpyregf.WinRegistry(filehandle, codepage)
     except IOError as e:
       raise errors.UnableToParseFile(
-          '[%s] Unable to parse file %s: %s' % (self.NAME, filehandle.name, e))
+          u'[%s] Unable to parse file %s: %s' % (
+              self.parser_name, filehandle.name, e))
 
     # Detect registry type.
     registry_type = 'UNKNOWN'
@@ -83,7 +81,7 @@ class WinRegistryParser(parser.PlasoParser):
         break
 
     self._registry_type = registry_type
-    logging.debug('Registry file %s detected as <%s>', filehandle.name,
+    logging.debug(u'Registry file %s detected as <%s>', filehandle.name,
                   registry_type)
 
     plugins = {}

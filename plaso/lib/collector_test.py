@@ -81,8 +81,8 @@ class PlasoCollectorUnitTest(unittest.TestCase):
 
     # Start with a collector without opening files.
     my_queue = queue.SingleThreadedQueue()
-    my_collect = collector.PCollector(my_queue)
-    my_collect.CollectFromImage(path, 0)
+    my_collect = collector.SimpleImageCollector(my_queue, path, 0)
+    my_collect.Run()
     events = self.GetEvents(my_queue)
 
     self.assertEquals(len(events), 2)
@@ -100,8 +100,8 @@ class PlasoCollectorUnitTest(unittest.TestCase):
         shutil.copy(a_file, dirname)
 
       my_queue = queue.SingleThreadedQueue()
-      my_collect = collector.PCollector(my_queue)
-      my_collect.CollectFromDir(dirname)
+      with collector.SimpleFileCollector(my_queue, dirname) as my_collector:
+        my_collector.Collect()
       events = self.GetEvents(my_queue)
 
       self.assertEquals(len(events), 4)
@@ -121,14 +121,15 @@ class PlasoTargetedImageTest(unittest.TestCase):
       fh.write('/passwords.txt\n')
 
     pre_obj = preprocess.PlasoPreprocess()
+    my_queue = queue.SingleThreadedQueue()
     my_collector = collector.TargetedImageCollector(
-        image_path, filter_name, pre_obj, sector_offset=0, byte_offset=0,
-        parse_vss=False)
+        my_queue, image_path, filter_name, pre_obj, sector_offset=0,
+        byte_offset=0, parse_vss=False)
 
     my_collector.Run()
 
     pathspecs = []
-    for serialized_pathspec in my_collector.PopItems():
+    for serialized_pathspec in my_queue.PopItems():
       pathspec = event.EventPathSpec()
       pathspec.FromProtoString(serialized_pathspec)
       pathspecs.append(pathspec)
@@ -145,7 +146,7 @@ class PlasoTargetedImageTest(unittest.TestCase):
     # file_path: '//a_directory/another_file'
     # container_path: 'test_data/image.dd'
     # image_offset: 0
-    self.assertEquals(pathspecs[0].file_path, '//a_directory/another_file')
+    self.assertEquals(pathspecs[1].file_path, '//a_directory/another_file')
 
     # pathspecs[1]
     # type: TSK
@@ -153,7 +154,7 @@ class PlasoTargetedImageTest(unittest.TestCase):
     # container_path: 'test_data/image.dd'
     # image_offset: 0
     # TODO: Remove this unnecessary buildup of slashes in front.
-    self.assertEquals(pathspecs[1].file_path, '///passwords.txt')
+    self.assertEquals(pathspecs[0].file_path, '///passwords.txt')
 
 
 class PlasoTargetedDirectory(unittest.TestCase):
@@ -170,12 +171,13 @@ class PlasoTargetedDirectory(unittest.TestCase):
       fh.write('/does_not_exist/some_file_[0-9]+txt\n')
 
     pre_obj = preprocess.PlasoPreprocess()
+    my_queue = queue.SingleThreadedQueue()
     my_collector = collector.TargetedFileSystemCollector(
-      pre_obj, './', filter_name)
+      my_queue, pre_obj, './', filter_name)
 
     my_collector.Run()
     pathspecs = []
-    for serialized_pathspec in my_collector.PopItems():
+    for serialized_pathspec in my_queue.PopItems():
       pathspec = event.EventPathSpec()
       pathspec.FromProtoString(serialized_pathspec)
       pathspecs.append(pathspec)

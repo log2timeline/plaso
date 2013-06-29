@@ -40,7 +40,6 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class Hachoir(parser.PlasoParser):
   """Parse meta data from files."""
 
-  NAME = 'Hachoir'
   DATA_TYPE = 'metadata:hachoir'
 
   def Parse(self, filehandle):
@@ -50,38 +49,38 @@ class Hachoir(parser.PlasoParser):
       fstream = hachoir_core.stream.InputIOStream(filehandle, None, tags=[])
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.NAME, filehandle.name, exception))
+          self.parser_name, filehandle.name, exception))
 
     if not fstream:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.NAME, filehandle.name, 'Not fstream'))
+          self.parser_name, filehandle.name, 'Not fstream'))
 
     try:
       doc_parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.NAME, filehandle.name, exception))
+          self.parser_name, filehandle.name, exception))
 
     if not doc_parser:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.NAME, filehandle.name, 'Not parser'))
+          self.parser_name, filehandle.name, 'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(doc_parser)
     except (AssertionError, AttributeError) as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.NAME, filehandle.name, exception))
+          self.parser_name, filehandle.name, exception))
 
     try:
       metatext = metadata.exportPlaintext(human=False)
     except AttributeError as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.NAME, filehandle.name, exception))
+          self.parser_name, filehandle.name, exception))
 
     if not metatext:
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: No metadata' % (
-              self.NAME, filehandle.name))
+              self.parser_name, filehandle.name))
 
     container = event.EventContainer()
     container.offset = 0
@@ -121,16 +120,23 @@ class Hachoir(parser.PlasoParser):
     length = len(container)
     if not length:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.NAME, filehandle.name, 'None'))
+          self.parser_name, filehandle.name, 'None'))
 
     container.metadata = attributes
     return container
 
 
-class HachoirEvent(event.PosixTimeEvent):
+class HachoirEvent(event.TimestampEvent):
   """Process timestamps from Hachoir Events."""
 
-  def __init__(self, timestamp, description):
-    """Return timestamp as posix."""
-    posix = timelib.Timetuple2Timestamp(timestamp.timetuple())
-    super(HachoirEvent, self).__init__(posix, description, self.DATA_TYPE)
+  DATA_TYPE = 'metadata:hachoir'
+
+  def __init__(self, dt_timestamp, usage):
+    """An EventObject created from a Hachoir entry.
+
+    Args:
+      dt_timestamp: A python datetime.datetime object.
+      usage: The description of the usage of the time value.
+    """
+    timestamp = timelib.Timestamp.FromPythonDatetime(dt_timestamp)
+    super(HachoirEvent, self).__init__(timestamp, usage, self.DATA_TYPE)

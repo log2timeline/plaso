@@ -42,21 +42,21 @@ class OLECF(parser.PlasoParser):
     if self.MAGIC not in filehandle.read(len(self.MAGIC)):
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
-              self.NAME, filehandle.name, 'Not an OLE File.'))
+              self.parser_name, filehandle.name, 'Not an OLE File.'))
 
     try:
       loader = OleFileIO_PL.OleFileIO(filehandle)
     except RuntimeError as exception:
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
-              self.NAME, filehandle.name, exception))
-    
+              self.parser_name, filehandle.name, exception))
+
     try:
       metadata = loader.get_metadata()
-    except (OverflowError, ValueError) as exception:
+    except (OverflowError, IndexError, ValueError) as exception:
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
-              self.NAME, filehandle.name, exception))
+              self.parser_name, filehandle.name, exception))
 
     container = event.EventContainer()
     container.offset = 0
@@ -70,16 +70,16 @@ class OLECF(parser.PlasoParser):
     container.comments = self.SetValue(metadata.comments)
     container.template = self.SetValue(metadata.template)
     container.last_saved_by = self.SetValue(
-      metadata.last_saved_by)
+        metadata.last_saved_by)
     container.revision_number = self.SetValue(
-      metadata.revision_number)
+        metadata.revision_number)
     container.total_edit_time = self.SetValue(
-      metadata.total_edit_time)
+        metadata.total_edit_time)
     container.num_pages = self.SetValue(metadata.num_pages)
     container.num_words = self.SetValue(metadata.num_words)
     container.num_chars = self.SetValue(metadata.num_chars)
     container.creating_application = self.SetValue(
-      metadata.creating_application)
+        metadata.creating_application)
     container.security = self.SetValue(metadata.security)
     container.company = self.SetValue(metadata.company)
     container.manager = self.SetValue(metadata.manager)
@@ -105,8 +105,8 @@ class OLECF(parser.PlasoParser):
 
     lastprinted_date = metadata.last_printed
     if isinstance(lastprinted_date, datetime.datetime):
-      container.Append(OLE2Event(lastprinted_date,
-                                 'Last Printed'))
+      container.Append(OLE2Event(
+          lastprinted_date, 'Last Printed'))
 
     return container
 
@@ -117,11 +117,17 @@ class OLECF(parser.PlasoParser):
     return value
 
 
-class OLE2Event(event.PosixTimeEvent):
+class OLE2Event(event.TimestampEvent):
   """Process timestamps from OLECF Events."""
 
-  def __init__(self, timestamp, description):
-    """Return timestamp as posix."""
-    posix = timelib.Timetuple2Timestamp(timestamp.timetuple())
-    super(OLE2Event, self).__init__(posix, description, self.DATA_TYPE)
+  DATA_TYPE = 'metadata:OLECF'
 
+  def __init__(self, dt_timestamp, usage):
+    """An EventObject created from an OLE2 entry.
+
+    Args:
+      dt_timestamp: A python datetime.datetime object.
+      usage: The description of the usage of the time value.
+    """
+    timestamp = timelib.Timestamp.FromPythonDatetime(dt_timestamp)
+    super(OLE2Event, self).__init__(timestamp, usage, self.DATA_TYPE)
