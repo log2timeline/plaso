@@ -110,10 +110,15 @@ class PlasoOutputUnitTest(unittest.TestCase):
 
   def testOutputList(self):
     """Test listing up all available registed modules."""
+    module_seen = False
     for name, description in output.ListOutputFormatters():
-      self.assertEquals(name, 'TestOutput')
-      self.assertEquals(description, ('This is a dummy test module that '
-                                      'provides a simple XML.'))
+      if 'TestOutput' in name:
+        module_seen = True
+        self.assertEquals(description, (
+            'This is a dummy test module that '
+            'provides a simple XML.'))
+
+    self.assertTrue(module_seen)
 
 
 class EventBufferTest(unittest.TestCase):

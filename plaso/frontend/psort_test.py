@@ -127,6 +127,7 @@ class PsortTest(unittest.TestCase):
     store = storage.PlasoStorage(self.test_file, read_only=True)
     timestamp_list = []
     number = 2
+    pfilter.TimeRangeCache.ResetTimeConstraints()
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
     store.SetStoreLimit()

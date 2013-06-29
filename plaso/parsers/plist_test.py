@@ -45,8 +45,9 @@ class PlistTest(unittest.TestCase):
                     1351818803000000, 1351819298997672, 1351818797324095,
                     1301012201414766, 1302199013524275, 1341957900020116,
                     1350666391557044, 1350666385239661, 1341957896010535]
+
       self.assertTrue(set(correct_ts) == set(timestamps))
-      self.assertEquals(12, len(timestamps))
+      self.assertEquals(12, len(set(timestamps)))
 
       # Ensures expected devices are parsed.
       correct_roots = frozenset(['/DeviceCache/00-0d-fd-00-00-00',
@@ -56,13 +57,13 @@ class PlistTest(unittest.TestCase):
                                  '/DeviceCache/44-00-00-00-00-03',
                                  '/DeviceCache/44-00-00-00-00-04'])
       self.assertTrue(correct_roots == set(roots))
-      self.assertEquals(12, len(roots))
+      self.assertEquals(6, len(set(roots)))
 
       # Ensures expected key values are parsed.
       correct_keys = frozenset(['LastInquiryUpdate', 'LastServicesUpdate',
                                 'LastNameUpdate'])
       self.assertTrue(correct_keys == set(keys))
-      self.assertEquals(12, len(keys))
+      self.assertEquals(3, len(set(keys)))
 
 if __name__ == '__main__':
   unittest.main()
