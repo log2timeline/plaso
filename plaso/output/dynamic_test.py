@@ -53,8 +53,9 @@ class TestEventFormatter(eventdata.EventFormatter):
 class FakeFilter(object):
   """Provide a fake filter, that defines which fields to use."""
 
-  def __init__(self, fields):
+  def __init__(self, fields, separator=u','):
     self.fields = fields
+    self.separator = separator
 
 
 class DynamicTest(unittest.TestCase):
@@ -75,6 +76,15 @@ class DynamicTest(unittest.TestCase):
         ['date', 'time', 'message', 'hostname', 'filename', 'some_stuff']))
 
     correct_line = 'date,time,message,hostname,filename,some_stuff\n'
+    formatter.Start()
+    self.assertEquals(output.getvalue(), correct_line)
+
+    output = StringIO.StringIO()
+    formatter = dynamic.Dynamic(None, output, filter_use=FakeFilter(
+        ['date', 'time', 'message', 'hostname', 'filename', 'some_stuff'],
+        '@'))
+
+    correct_line = 'date@time@message@hostname@filename@some_stuff\n'
     formatter.Start()
     self.assertEquals(output.getvalue(), correct_line)
 
