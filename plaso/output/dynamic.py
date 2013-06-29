@@ -185,6 +185,9 @@ class Dynamic(output.FileLogOutputFormatter):
 
     if self._filter:
       self.fields = self._filter.fields
+      self.separator = self._filter.separator
+    else:
+      self.separator = u','
 
     if not self.fields:
       # TODO: Evaluate which fields should be included by default.
@@ -201,7 +204,7 @@ class Dynamic(output.FileLogOutputFormatter):
           for store_number in range(info.store_range[0], info.store_range[1]):
             self._preprocesses[store_number] = info
 
-    self.filehandle.write('{}\n'.format(','.join(self.fields)))
+    self.filehandle.write('{}\n'.format(self.separator.join(self.fields)))
 
   def WriteEvent(self, event_object):
     """Write a single event."""
@@ -226,6 +229,7 @@ class Dynamic(output.FileLogOutputFormatter):
         row.append(getattr(event_object, field, '-'))
 
     out_write = u'{0}\n'.format(
-        u','.join(unicode(x).replace(',', ' ') for x in row))
+        self.separator.join(unicode(x).replace(
+            self.separator, ' ') for x in row))
     self.filehandle.write(out_write.encode('utf-8'))
 
