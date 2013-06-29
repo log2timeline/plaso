@@ -25,6 +25,7 @@ from plaso.registry import run
 from plaso.registry import services
 from plaso.registry import typedpaths
 from plaso.registry import typedurls
+from plaso.registry import usbstor
 from plaso.registry import win7userassist
 from plaso.registry import winver
 from plaso.registry import xpuserassist
