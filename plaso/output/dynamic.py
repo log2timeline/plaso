@@ -49,6 +49,7 @@ class Dynamic(output.FileLogOutputFormatter):
       'source': 'ParseSourceShort',
       'sourcetype': 'ParseSource',
       'source_long': 'ParseSource',
+      'tag': 'ParseTag',
       'time': 'ParseTime',
       'timezone': 'ParseZone',
       'type': 'ParseTimestampDescription',
@@ -60,6 +61,15 @@ class Dynamic(output.FileLogOutputFormatter):
   def ParseTimestampDescription(self, event_object):
     """Return the timestamp description."""
     return getattr(event_object, 'timestamp_desc', '-')
+
+  def ParseTag(self, event_object):
+    """Return tagging information."""
+    tag = getattr(event_object, 'tag', None)
+
+    if not tag:
+      return u'-'
+
+    return u' '.join(tag.tags)
 
   def ParseSource(self, event_object):
     """Return the source string."""
