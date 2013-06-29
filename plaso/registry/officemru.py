@@ -71,7 +71,7 @@ class OfficeMRU(win_registry_interface.KeyPlugin):
 
 
 # TODO: Address different MS Office versions.
-class MSWordPlaceMRU(OfficeMRU):
+class MSWord2010PlaceMRU(OfficeMRU):
   """Gathers the MS Word Place 2010 MRU keys for the NTUSER hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Word\Place MRU'
@@ -79,7 +79,7 @@ class MSWordPlaceMRU(OfficeMRU):
   DESCRIPTION = 'Word Place MRU'
 
 
-class MSWordFileMRU(OfficeMRU):
+class MSWord2010FileMRU(OfficeMRU):
   """Gathers the MS Word File 2010 MRU keys for the NTUSER hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Word\File MRU'
@@ -87,7 +87,7 @@ class MSWordFileMRU(OfficeMRU):
   DESCRIPTION = 'Word File MRU'
 
 
-class MSExcelPlaceMRU(OfficeMRU):
+class MSExcel2010PlaceMRU(OfficeMRU):
   """Gathers the MS Excel 2010 Place MRU keys for the NTUSER hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Excel\Place MRU'
@@ -95,7 +95,7 @@ class MSExcelPlaceMRU(OfficeMRU):
   DESCRIPTION = 'Excel Place MRU'
 
 
-class MSExcelFileMRU(OfficeMRU):
+class MSExcel2010FileMRU(OfficeMRU):
   """Gathers the MS Excel 2010 File MRU keys for the NTUSER hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Excel\File MRU'
@@ -103,7 +103,7 @@ class MSExcelFileMRU(OfficeMRU):
   DESCRIPTION = 'Excel File MRU'
 
 
-class MSPowerPointPlaceMRU(OfficeMRU):
+class MSPowerPoint2010PlaceMRU(OfficeMRU):
   """Gathers the MS PowerPoint Place 2010 MRU keys for the NTUSER hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\PowerPoint\Place MRU'
@@ -111,7 +111,7 @@ class MSPowerPointPlaceMRU(OfficeMRU):
   DESCRIPTION = 'PowerPoint Place MRU'
 
 
-class MSPowerPointFileMRU(OfficeMRU):
+class MSPowerPoint2010FileMRU(OfficeMRU):
   """Gathers the MS PowerPoint File 2010 MRU keys for the NTUSER hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\PowerPoint\File MRU'
@@ -119,7 +119,7 @@ class MSPowerPointFileMRU(OfficeMRU):
   DESCRIPTION = 'PowerPoint File MRU'
 
 
-class MSAccessPlaceMRU(OfficeMRU):
+class MSAccess2010PlaceMRU(OfficeMRU):
   """Gathers the MS Access Place 2010 MRU keys for the NTUSER hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Access\Place MRU'
@@ -127,7 +127,7 @@ class MSAccessPlaceMRU(OfficeMRU):
   DESCRIPTION = 'Access Place MRU'
 
 
-class MSAccessFileMRU(OfficeMRU):
+class MSAccess2010FileMRU(OfficeMRU):
   """Gathers the MS Access File 2010 MRU keys for the NTUSER hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Access\File MRU'
