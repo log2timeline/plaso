@@ -14,7 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a test for MS Office MRUs plugin in Plaso."""
+"""This file contains a test for Typed IE URLs plugin in Plaso."""
+
 
 import os
 import re
@@ -23,15 +24,15 @@ import unittest
 from plaso.formatters import winreg
 from plaso.lib import eventdata
 from plaso.parsers import winreg
-from plaso.registry import officemru
+from plaso.registry import ietypedurls
 from plaso.winreg import test_lib
 from plaso.winreg import winpyregf
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class RegistryOfficeMRUTest(unittest.TestCase):
-  """The unit test for IE Typed URLS plugin."""
+class RegistryTypedPathsTest(unittest.TestCase):
+  """The unit test for the Typed IE URLs plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,27 +42,23 @@ class RegistryOfficeMRUTest(unittest.TestCase):
     # directly invoked here.
     self.registry = winpyregf.WinRegistry(file_object)
 
-  def testOfficeMRU(self):
-    """Test the Typed URLS plugin."""
+  def testTypedPathst(self):
+    """Test the Typed IE URLs plugin."""
     key = self.registry.GetKey(
-        '\\Software\\Microsoft\\Office\\14.0\\Word\File MRU')
-    plugin = officemru.MSWord2010FileMRU(None, None)
+        '\\Software\\Microsoft\\Internet Explorer\\TypedURLs')
+    plugin = ietypedurls.IETypedURLs(None, None)
     entries = list(plugin.Process(key))
 
-    self.assertEquals(entries[0].timestamp, 1331663235083000)
+    self.assertEquals(entries[0].timestamp, 1331587433307749)
     self.assertTrue(
-        u'Item 1' in entries[0].regvalue)
+        u'url1' in entries[0].regvalue)
 
-    self.assertEquals(entries[0].regvalue[u'Item 1'],
-                      u'[F00000000][T01CD0146EA1EADB0][O00000000]*'
-                      'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
-                      'SA-23E Mitchell-Hyundyne Starfury.docx')
+    self.assertEquals(entries[0].regvalue[u'url1'],
+                      u'http://cnn.com/')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(
-        msg, u'[\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU] '
-        'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*C:\\'
-        'Users\\nfury\\Documents\\StarFury\\StarFury\\SA-23E Mitchell'
-        '-Hyundyne Starfury.docx')
+        msg, (u'[\\Software\\Microsoft\\Internet Explorer\\TypedURLs]'
+              ' url1: http://cnn.com/'))
 
 
 if __name__ == '__main__':

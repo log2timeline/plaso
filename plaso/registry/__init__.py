@@ -17,15 +17,18 @@
 """This file contains an import statement for each registry related plugin."""
 
 from plaso.registry import default
+from plaso.registry import ietypedurls
 from plaso.registry import lfu
 from plaso.registry import mru
 from plaso.registry import mrux
 from plaso.registry import officemru
+from plaso.registry import outlook
 from plaso.registry import run
 from plaso.registry import services
 from plaso.registry import typedpaths
 from plaso.registry import typedurls
 from plaso.registry import win7userassist
+from plaso.registry import winrar
 from plaso.registry import winver
 from plaso.registry import xpuserassist
 
