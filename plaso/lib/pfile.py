@@ -342,6 +342,12 @@ class TskFile(PlasoFile):
     ret.bkup_time_nano = getattr(meta, 'bktime_nano', None)
     fs_type = str(self._fs.info.ftype)
 
+    check_allocated = getattr(self.fh.fileobj, 'IsAllocated', None)
+    if check_allocated:
+      ret.allocated = check_allocated()
+    else:
+      ret.allocated = True
+
     if fs_type.startswith('TSK_FS_TYPE'):
       ret.fs_type = fs_type[12:]
     else:
@@ -437,6 +443,7 @@ class OsFile(PlasoFile):
     if stat.st_ctime > 0:
       ret.ctime = stat.st_ctime
     ret.fs_type = 'Unknown'
+    ret.allocated = True
 
     return ret
 

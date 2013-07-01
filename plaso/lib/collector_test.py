@@ -81,7 +81,8 @@ class PlasoCollectorUnitTest(unittest.TestCase):
 
     # Start with a collector without opening files.
     my_queue = queue.SingleThreadedQueue()
-    my_collect = collector.SimpleImageCollector(my_queue, path, 0)
+    my_storage = queue.SingleThreadedQueue()
+    my_collect = collector.SimpleImageCollector(my_queue, my_storage, path, 0)
     my_collect.Run()
     events = self.GetEvents(my_queue)
 
@@ -100,7 +101,9 @@ class PlasoCollectorUnitTest(unittest.TestCase):
         shutil.copy(a_file, dirname)
 
       my_queue = queue.SingleThreadedQueue()
-      with collector.SimpleFileCollector(my_queue, dirname) as my_collector:
+      my_store = queue.SingleThreadedQueue()
+      with collector.SimpleFileCollector(
+          my_queue, my_store, dirname) as my_collector:
         my_collector.Collect()
       events = self.GetEvents(my_queue)
 
@@ -122,8 +125,9 @@ class PlasoTargetedImageTest(unittest.TestCase):
 
     pre_obj = preprocess.PlasoPreprocess()
     my_queue = queue.SingleThreadedQueue()
+    my_store = queue.SingleThreadedQueue()
     my_collector = collector.TargetedImageCollector(
-        my_queue, image_path, filter_name, pre_obj, sector_offset=0,
+        my_queue, my_store, image_path, filter_name, pre_obj, sector_offset=0,
         byte_offset=0, parse_vss=False)
 
     my_collector.Run()
@@ -172,8 +176,9 @@ class PlasoTargetedDirectory(unittest.TestCase):
 
     pre_obj = preprocess.PlasoPreprocess()
     my_queue = queue.SingleThreadedQueue()
+    my_store = queue.SingleThreadedQueue()
     my_collector = collector.TargetedFileSystemCollector(
-      my_queue, pre_obj, './', filter_name)
+      my_queue, my_store, pre_obj, './', filter_name)
 
     my_collector.Run()
     pathspecs = []

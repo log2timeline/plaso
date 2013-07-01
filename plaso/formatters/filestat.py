@@ -47,7 +47,7 @@ class PfileStatFormatter(eventdata.ConditionalEventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
-    if event_object.allocated:
+    if not getattr(event_object, 'allocated', True):
       event_object.unallocated = u'unallocated'
 
     return super(PfileStatFormatter, self).GetMessages(event_object)

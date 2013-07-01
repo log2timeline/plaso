@@ -199,7 +199,7 @@ class Engine(object):
     logging.debug('Starting collection.')
 
     with self.GetCollector(
-        self.config, pre_obj, collection_queue) as my_collector:
+        self.config, pre_obj, collection_queue, storage_queue) as my_collector:
       my_collector.Collect()
 
     logging.debug('Collection done.')
@@ -304,11 +304,11 @@ class Engine(object):
 
     collection_queue = queue.MultiThreadedQueue()
 
-    my_collector = self.GetCollector(
-        self.config, pre_obj, collection_queue)
-
     my_storage = storage.SimpleStorageDumper(
         self.config.output, self.config.buffer_size, pre_obj)
+
+    my_collector = self.GetCollector(
+        self.config, pre_obj, collection_queue, my_storage)
 
     self.queues = [collection_queue, my_storage]
 
@@ -469,31 +469,35 @@ class Engine(object):
         logging.warning('Storage terminated.')
       sys.exit(1)
 
-  def GetCollector(self, config, pre_obj, collection_queue):
+  def GetCollector(self, config, pre_obj, collection_queue, storage_queue):
     """Return back a collector based on config."""
     if config.file_filter:
       # Start a targeted collection filter.
       if config.image:
         logging.debug(u'Starting a targeted image collection.')
         return collector.TargetedImageCollector(
-            collection_queue, config.filename, config.file_filter, pre_obj,
+            collection_queue, storage_queue, config.filename,
+            config.file_filter, pre_obj,
             sector_offset=config.image_offset,
             byte_offset=config.image_offset_bytes,
             parse_vss=config.parse_vss, vss_stores=config.vss_stores)
       else:
         logging.debug(u'Starting a targeted recursive collection.')
         return collector.TargetedFileSystemCollector(
-            collection_queue, pre_obj, config.filename, config.file_filter)
+            collection_queue, storage_queue, pre_obj, config.filename,
+            config.file_filter)
 
     if config.image:
       logging.debug(u'Collection started from an image.')
       return collector.SimpleImageCollector(
-          collection_queue, config.filename, offset=config.image_offset,
+          collection_queue, storage_queue, config.filename,
+          offset=config.image_offset,
           offset_bytes=config.image_offset_bytes,
           parse_vss=config.parse_vss, vss_stores=config.vss_stores)
     elif config.recursive:
       logging.debug(u'Collection started from a directory.')
-      return collector.SimpleFileCollector(collection_queue, config.filename)
+      return collector.SimpleFileCollector(
+          collection_queue, storage_queue, config.filename)
     else:
       # Parsing a single file, no need to have multiple workers.
       config.workers = 1
@@ -503,5 +507,6 @@ class Engine(object):
         raise errors.BadConfigOption(
             u'Wrong usage: {%s} has to be a file.' % config.filename)
 
-      return collector.SimpleFileCollector(collection_queue, config.filename)
+      return collector.SimpleFileCollector(
+          collection_queue, storage_queue, config.filename)
 
