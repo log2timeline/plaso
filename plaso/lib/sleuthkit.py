@@ -133,7 +133,7 @@ class TSKFile(object):
     flags = self.fileobj.info.meta.flags
 
     if flags:
-      if int(flags) & int(pytsk3.TSK_FS_META_FLAG_UNALLOC):
+      if int(flags) & int(pytsk3.TSK_FS_META_FLAG_ALLOC):
         ret = True
 
     return ret

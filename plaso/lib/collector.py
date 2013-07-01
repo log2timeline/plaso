@@ -34,12 +34,116 @@ from plaso.lib import preprocess
 from plaso.lib import queue
 from plaso.lib import utils
 from plaso.lib import vss
+from plaso.parsers import filestat
+
+
+def GetTskDirectoryStat(directory_object):
+  """Return a stat object for a TSK directory object.
+
+  Args:
+    directory_object: A pyts3k.Directory object.
+
+  Returns:
+    A pfile.Stats object for the directory.
+  """
+  stat = pfile.Stats()
+
+  info = getattr(directory_object, 'info', None)
+  if not info:
+    return stat
+
+  try:
+    meta = info.fs_file.meta
+  except AttributeError:
+    return stat
+
+  if not meta:
+    return stat
+
+  fs_type = ''
+  stat.mode = getattr(meta, 'mode', None)
+  stat.ino = getattr(meta, 'addr', None)
+  stat.nlink = getattr(meta, 'nlink', None)
+  stat.uid = getattr(meta, 'uid', None)
+  stat.gid = getattr(meta, 'gid', None)
+  stat.size = getattr(meta, 'size', None)
+  stat.atime = getattr(meta, 'atime', None)
+  stat.atime_nano = getattr(meta, 'atime_nano', None)
+  stat.crtime = getattr(meta, 'crtime', None)
+  stat.crtime_nano = getattr(meta, 'crtime_nano', None)
+  stat.mtime = getattr(meta, 'mtime', None)
+  stat.mtime_nano = getattr(meta, 'mtime_nano', None)
+  stat.ctime = getattr(meta, 'ctime', None)
+  stat.ctime_nano = getattr(meta, 'ctime_nano', None)
+  stat.dtime = getattr(meta, 'dtime', None)
+  stat.dtime_nano = getattr(meta, 'dtime_nano', None)
+  stat.bkup_time = getattr(meta, 'bktime', None)
+  stat.bkup_time_nano = getattr(meta, 'bktime_nano', None)
+  fs_type = str(info.fs_info.ftype)
+
+  if fs_type.startswith('TSK_FS_TYPE'):
+    stat.fs_type = fs_type[12:]
+  else:
+    stat.fs_type = fs_type
+
+  return stat
+
+
+def GetOsDirectoryStat(directory_path):
+  """Return a stat object for an OS directory object.
+
+  Args:
+    directory_path: Path to the directory.
+
+  Returns:
+    A stat object for the directory.
+  """
+  ret = pfile.Stats()
+  stat = os.stat(directory_path)
+
+  ret.full_path = directory_path
+  ret.display_path = directory_path
+  ret.mode = stat.st_mode
+  ret.ino = stat.st_ino
+  ret.dev = stat.st_dev
+  ret.nlink = stat.st_nlink
+  ret.uid = stat.st_uid
+  ret.gid = stat.st_gid
+  ret.size = stat.st_size
+  if stat.st_atime > 0:
+    ret.atime = stat.st_atime
+  if stat.st_mtime > 0:
+    ret.mtime = stat.st_mtime
+  if stat.st_ctime > 0:
+    ret.ctime = stat.st_ctime
+  ret.fs_type = 'Unknown'
+  ret.allocated = True
+
+  return ret
+
+
+def SendContainerToStorage(container, stat, storage_queue):
+  """Read events from a container and send them to storage.
+
+  Args:
+    container: An event.EventContainer object that contains
+    all the extracted timestamp events from a directory.
+    stat: A pfile.Stats object that contains stat information.
+    storage_queue: The storage queue to send extracted events to.
+  """
+  for event_object in container:
+    event_object.filename = getattr(stat, 'full_path', '<unknown>')
+    event_object.display_name = getattr(
+        stat, 'display_path', event_object.filename)
+    event_object.parser = u'PfileStatParser'
+    event_object.inode = stat.ino
+    storage_queue.AddEvent(event_object.ToProtoString())
 
 
 class Collector(object):
   """An interface for file collection in Plaso."""
 
-  def __init__(self, proc_queue):
+  def __init__(self, proc_queue, stor_queue):
     """Initialize the Collector.
 
     The collector takes care of discovering all the files that need to be
@@ -48,8 +152,10 @@ class Collector(object):
 
     Args:
       proc_queue: A Plaso queue object used as a processing queue of files.
+      stor_queue: A Plaso queue object used as a buffer to the storage layer.
     """
     self._queue = proc_queue
+    self._storage_queue = stor_queue
 
   def Run(self):
     """Run the collector and then close the queue."""
@@ -77,14 +183,15 @@ class Collector(object):
 class SimpleFileCollector(Collector):
   """This is a simple collector that collects from a directory."""
 
-  def __init__(self, proc_queue, directory):
+  def __init__(self, proc_queue, stor_queue, directory):
     """Initialize the file collector.
 
     Args:
       proc_queue: A Plaso queue object used as a processing queue of files.
+      stor_queue: A Plaso queue object used as a buffer to the storage layer.
       directory: Path to the directory that contains files to be collected.
     """
-    super(SimpleFileCollector, self).__init__(proc_queue)
+    super(SimpleFileCollector, self).__init__(proc_queue, stor_queue)
     self._dir = directory
 
   def Collect(self):
@@ -100,6 +207,7 @@ class SimpleFileCollector(Collector):
       return
 
     for root, _, files in os.walk(self._dir):
+      self.ProcessDir(root)
       for filename in files:
         try:
           path = os.path.join(root, filename)
@@ -109,6 +217,14 @@ class SimpleFileCollector(Collector):
             self.ProcessFile(path, self._queue)
         except IOError as e:
           logging.warning('Unable to further process %s:%s', filename, e)
+
+  def ProcessDir(self, path):
+    """Process a directory and extract timestamps from it."""
+    # Get a stat object and send timestamps for the directory to the storage.
+    directory_stat = GetOsDirectoryStat(path)
+    SendContainerToStorage(
+        filestat.GetEventContainerFromStat(directory_stat),
+        directory_stat, self._storage_queue)
 
   def ProcessFile(self, filename, my_queue):
     """Finds all files available inside a file and inserts into queue."""
@@ -123,12 +239,13 @@ class SimpleImageCollector(Collector):
 
   SECTOR_SIZE = 512
 
-  def __init__(self, proc_queue, image, offset=0, offset_bytes=0,
+  def __init__(self, proc_queue, stor_queue, image, offset=0, offset_bytes=0,
                parse_vss=False, vss_stores=None, fscache=None):
     """Initialize the image collector.
 
     Args:
       proc_queue: A Plaso queue object used as a processing queue of files.
+      stor_queue: A Plaso queue object used as a buffer to the storage layer.
       image: A full path to the image file.
       offset: An offset into the image file if this is a disk image (in sector
       size, not byte size).
@@ -138,7 +255,7 @@ class SimpleImageCollector(Collector):
       vss_stores: If defined a range of VSS stores to include in vss parsing.
       fscache: A FilesystemCache object.
     """
-    super(SimpleImageCollector, self).__init__(proc_queue)
+    super(SimpleImageCollector, self).__init__(proc_queue, stor_queue)
     self._image = image
     self._offset = offset
     self._offset_bytes = offset_bytes
@@ -225,6 +342,13 @@ class SimpleImageCollector(Collector):
     """
     try:
       directory = fs.fs.open_dir(inode=cur_inode)
+      # Get a stat object and send timestamps for the directory to the storage.
+      directory_stat = GetTskDirectoryStat(directory)
+      directory_stat.full_path = path
+      directory_stat.display_path = u'{}:{}'.format(self._image, path)
+      SendContainerToStorage(
+          filestat.GetEventContainerFromStat(directory_stat),
+          directory_stat, self._storage_queue)
     except IOError:
       logging.error(u'IOError while trying to open a directory: %s [%d]',
                     path, cur_inode)
@@ -330,16 +454,19 @@ class SimpleImageCollector(Collector):
 class TargetedFileSystemCollector(SimpleFileCollector):
   """This is a simple collector that collects using a targeted list."""
 
-  def __init__(self, proc_queue, pre_obj, mount_point, file_filter):
+  def __init__(
+      self, proc_queue, stor_queue, pre_obj, mount_point, file_filter):
     """Initialize the targeted filesystem collector.
 
     Args:
       proc_queue: A Plaso queue object used as a processing queue of files.
+      stor_queue: A Plaso queue object used as a buffer to the storage layer.
       pre_obj: The PlasoPreprocess object.
       mount_point: The path to the mount point or base directory.
       file_filter: The path of the filter file.
     """
-    super(TargetedFileSystemCollector, self).__init__(proc_queue, mount_point)
+    super(TargetedFileSystemCollector, self).__init__(
+        proc_queue, stor_queue, mount_point)
     self._collector = preprocess.FileSystemCollector(
         pre_obj, mount_point)
     self._file_filter = file_filter
@@ -354,12 +481,14 @@ class TargetedFileSystemCollector(SimpleFileCollector):
 class TargetedImageCollector(SimpleImageCollector):
   """Targeted collector that works against an image file."""
 
-  def __init__(self, proc_queue, image, file_filter, pre_obj, sector_offset=0,
-               byte_offset=0, parse_vss=False, vss_stores=None):
+  def __init__(self, proc_queue, stor_queue, image, file_filter, pre_obj,
+               sector_offset=0, byte_offset=0, parse_vss=False,
+               vss_stores=None):
     """Initialize the image collector.
 
     Args:
       proc_queue: A Plaso queue object used as a processing queue of files.
+      stor_queue: A Plaso queue object used as a buffer to the storage layer.
       image: The path to the image file.
       file_filter: A file path to a file that contains simple collection
       filters.
@@ -372,7 +501,8 @@ class TargetedImageCollector(SimpleImageCollector):
       vss_stores: If defined a range of VSS stores to include in vss parsing.
     """
     super(TargetedImageCollector, self).__init__(
-        proc_queue, image, sector_offset, byte_offset, parse_vss, vss_stores)
+        proc_queue, stor_queue, image, sector_offset, byte_offset, parse_vss,
+        vss_stores)
     self._file_filter = file_filter
     self._pre_obj = pre_obj
 
