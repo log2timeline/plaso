@@ -155,9 +155,6 @@ class WinPyregValue(interface.WinRegValue):
         return self._pyregf_value.data_as_integer
       except IOError:
         pass
-      except AttributeError:
-        import pdb
-        pdb.post_mortem()
 
     # TODO: add support for REG_MULTI_SZ to pyregf.
     elif self._pyregf_value.type in [self.REG_LINK, self.REG_MULTI_SZ]:

@@ -20,6 +20,49 @@ from plaso.lib import parser
 from plaso.lib import timelib
 
 
+def GetEventContainerFromStat(stat, is_allocated=True):
+  """Return an EventContainer object from a file stat object.
+
+  This method takes a stat object and creates an EventContainer
+  that contains all extracted timestamps from the stat object.
+
+  The constraints are that the stat object implements an iterator
+  that returns back values all timestamp based values have the
+  attribute name 'time' in them. All timestamps also need to be
+  stored as a Posix timestamps.
+
+  Args:
+    stat: A stat object, preferably a pfile.Stat object.
+    is_allocated: A boolean variable defining if the file is
+    currently allocated or not.
+
+  Returns:
+    An EventContainer that contains an EventObject for each extracted
+    timestamp contained in the stat object.
+  """
+  times = []
+  for item, _ in stat:
+    if item[-4:] == 'time':
+      times.append(item)
+
+  event_container = PfileStatEventContainer(is_allocated)
+
+  for time in times:
+    evt = event.EventObject()
+    evt.timestamp = timelib.Timestamp.FromPosixTime(getattr(stat, time, 0))
+    evt.timestamp += getattr(stat, '%s_nano' % time, 0)
+
+    if not evt.timestamp:
+      continue
+
+    evt.timestamp_desc = time
+    evt.fs_type = getattr(stat, 'fs_type', 'N/A')
+
+    event_container.Append(evt)
+
+  return event_container
+
+
 class PfileStatEventContainer(event.EventContainer):
   """File system stat event container."""
 
@@ -47,34 +90,5 @@ class PfileStatParser(parser.PlasoParser):
     if not stat:
       return
 
-    times = []
-    for item, _ in stat:
-      if item[-4:] == 'time':
-        times.append(item)
-
-    # Check if file is allocated (only applicable for TSK).
-    # TODO: the logic here is screwed, rename the function to
-    # IsUnAllocated() or change return. I opt to flag the unallocated
-    # files not allocted.
-    is_allocated = True
-    check_allocated = getattr(filehandle, 'IsAllocated', None)
-    if check_allocated and check_allocated():
-      is_allocated = False
-
-    event_container = PfileStatEventContainer(is_allocated)
-
-    for time in times:
-      evt = event.EventObject()
-      evt.timestamp = timelib.Timestamp.FromPosixTime(getattr(stat, time, 0))
-      evt.timestamp += getattr(stat, '%s_nano' % time, 0)
-
-      if not evt.timestamp:
-        continue
-
-      evt.timestamp_desc = time
-      evt.fs_type = getattr(stat, 'fs_type', 'N/A')
-
-      event_container.Append(evt)
-
-    return event_container
-
+    allocated = getattr(stat, 'allocated', True)
+    return GetEventContainerFromStat(stat, allocated)

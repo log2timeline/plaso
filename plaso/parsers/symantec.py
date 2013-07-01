@@ -110,7 +110,7 @@ class Symantec(parser.TextCSVParser):
         int(x[0] + x[1], 16) for x in zip(
             timestamp_raw[::2], timestamp_raw[1::2]))
 
-    timestamp = timelib.FromTimeParts(
+    timestamp = timelib.Timestamp.FromTimeParts(
         year + 1970, month + 1, day, hour, minute, sec, 0, self._pre_obj.zone)
 
     return timestamp
