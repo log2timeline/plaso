@@ -17,7 +17,6 @@
 """This is a simple filter implementation for the collector in Plaso."""
 import logging
 import os
-import re
 import sre_constants
 
 from google.protobuf import message
@@ -43,61 +42,20 @@ class CollectionFilter(object):
           correctly.
     """
     if type(filter_definition) in (list, tuple):
-      self._filters = self._BuildFiltersFromList(filter_definition)
+      self._filters = BuildFiltersFromList(filter_definition)
     elif isinstance(filter_definition, transmission_pb2.PathFilter):
       self._filters = filter_definition
     elif type(filter_definition) in (str, unicode):
       if os.path.isfile(filter_definition):
-        self._filters = self._BuildFiltersFromFile(filter_definition)
+        self._filters = BuildFiltersFromFile(filter_definition)
       else:
-        self._filters = self._BuildFromSerializedProto(filter_definition)
+        self._filters = BuildFromSerializedProto(filter_definition)
     else:
       raise errors.BadConfigOption(
           u'Filter expression wrongly formatted, unknown type: {}'.format(
               type(filter_definition)))
 
     self._collector = collector
-
-  def _BuildFromSerializedProto(self, filter_serialized):
-    """Return a PathFilter protobuf from a serialized protobuf."""
-    proto = transmission_pb2.PathFilter()
-    try:
-      proto.ParseFromString(filter_serialized)
-    except message.DecodeError:
-      # We get here either because of a faulty serialized protobof or if
-      # this was an attempt to open up a file that does not exist.
-      raise errors.BadConfigOption(
-          u'Filter file [{}] does not exist.'.format(filter_serialized))
-
-    return proto
-
-  def _BuildFiltersFromList(self, filter_list):
-    """Return a PathFilter protobuf from the entries in the filter list."""
-    proto = transmission_pb2.PathFilter()
-
-    for filter_string in filter_list:
-      if filter_string.startswith('filter_string:'):
-        _, _, filter_end = filter_string.partition(':')
-        if filter_end.endswith('\'') or filter_end.endswith('"'):
-          filter_string = filter_end.strip()[1:-1]
-        else:
-          filter_string = filter_end
-
-      proto.filter_string.append(filter_string)
-
-    return proto
-
-  def _BuildFiltersFromFile(self, filter_path):
-    """Return a list of filter paths."""
-    proto = transmission_pb2.PathFilter()
-
-    with open(filter_path, 'rb') as fh:
-      for line in fh:
-        if line[0] == '#':
-          continue
-        proto.filter_string.append(line)
-
-    return proto
 
   def BuildFiltersFromProto(self):
     """Return a list of tuples of paths and file names."""
@@ -141,3 +99,46 @@ class CollectionFilter(object):
              'expression.').format(filter_path, filter_file))
         continue
 
+
+def BuildFromSerializedProto(filter_serialized):
+  """Return a PathFilter protobuf from a serialized protobuf."""
+  proto = transmission_pb2.PathFilter()
+  try:
+    proto.ParseFromString(filter_serialized)
+  except message.DecodeError:
+    # We get here either because of a faulty serialized protobof or if
+    # this was an attempt to open up a file that does not exist.
+    raise errors.BadConfigOption(
+        u'Filter file [{}] does not exist.'.format(filter_serialized))
+
+  return proto
+
+
+def BuildFiltersFromList(filter_list):
+  """Return a PathFilter protobuf from the entries in the filter list."""
+  proto = transmission_pb2.PathFilter()
+
+  for filter_string in filter_list:
+    if filter_string.startswith('filter_string:'):
+      _, _, filter_end = filter_string.partition(':')
+      if filter_end.endswith('\'') or filter_end.endswith('"'):
+        filter_string = filter_end.strip()[1:-1]
+      else:
+        filter_string = filter_end
+
+    proto.filter_string.append(filter_string)
+
+  return proto
+
+
+def BuildFiltersFromFile(filter_path):
+  """Return a list of filter paths."""
+  proto = transmission_pb2.PathFilter()
+
+  with open(filter_path, 'rb') as fh:
+    for line in fh:
+      if line[0] == '#':
+        continue
+      proto.filter_string.append(line)
+
+  return proto

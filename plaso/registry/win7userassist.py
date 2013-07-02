@@ -18,7 +18,6 @@
 
 import construct
 import logging
-import struct
 
 from plaso.lib import event
 from plaso.lib import timelib

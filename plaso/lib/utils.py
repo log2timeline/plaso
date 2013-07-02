@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains utility functions."""
-import os
-
 from plaso.lib import errors
 from plaso.lib import lexer
 
@@ -123,7 +121,6 @@ def FormatOutputString(name, description, col_length=25):
 
   current = 0
   line_count = len(description) / line_length + 1
-  word_count = len(words) / line_count + 1
 
   lines = []
   word_buffer = []

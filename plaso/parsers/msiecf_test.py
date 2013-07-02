@@ -98,7 +98,7 @@ class MsiecfParserTest(unittest.TestCase):
     self.assertEquals(event_object.timestamp_desc, 'Last Checked Time')
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = (u'Location: Visited: testing@http://www.trafficfusionx.com'

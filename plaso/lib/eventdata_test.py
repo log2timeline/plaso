@@ -15,10 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a unit test for the EventFilter."""
-import re
 import unittest
 
-from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import event_test
 from plaso.lib import eventdata
@@ -146,7 +144,7 @@ class ConditionalEventFormatterUnitTest(unittest.TestCase):
     """Test the initialization."""
     self.assertTrue(ConditionalTestEvent1Formatter())
     with self.assertRaises(RuntimeError):
-        BrokenConditionalEventFormatter()
+      BrokenConditionalEventFormatter()
 
   def testGetMessages(self):
     """Test get messages."""

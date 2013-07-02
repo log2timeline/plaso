@@ -44,7 +44,6 @@ import re
 
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 from plaso.lib import timelib
@@ -72,7 +71,7 @@ class SELinuxLineEvent(event.TextEvent):
 class SELinux(parser.TextParser):
   """Parse SELinux audit log files."""
 
-  PID_RE = re.compile('pid=([0-9]+)[\s]+', re.DOTALL)
+  PID_RE = re.compile(r'pid=([0-9]+)[\s]+', re.DOTALL)
 
   tokens = [
     # Skipping empty lines, both EOLs are considered here and in other states.

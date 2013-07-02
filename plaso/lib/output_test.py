@@ -48,12 +48,12 @@ class TestOutput(output.LogOutputFormatter):
   def StartEvent(self):
     self.filehandle.write('<Event>\n')
 
-  def EventBody(self, event):
+  def EventBody(self, event_object):
     self.filehandle.write(
         '\t<Date>%s</Date>\n\t<Time>%d</Time>\n\t<Entry>%s</Entry>\n' % (
-            event.date,
-            event.timestamp,
-            event.entry))
+            event_object.date,
+            event_object.timestamp,
+            event_object.entry))
 
   def EndEvent(self):
     self.filehandle.write('</Event>\n')
@@ -85,8 +85,8 @@ class PlasoOutputUnitTest(unittest.TestCase):
     with tempfile.NamedTemporaryFile() as fh:
       formatter = TestOutput(fh)
       formatter.Start()
-      for event in events:
-        formatter.WriteEvent(event)
+      for event_object in events:
+        formatter.WriteEvent(event_object)
       formatter.End()
 
       fh.seek(0)

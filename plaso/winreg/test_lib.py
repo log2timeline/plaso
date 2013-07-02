@@ -52,7 +52,7 @@ class TestRegKey(interface.WinRegKey):
   def name(self):
     """The name of the key."""
     if not self._name and self._path:
-      self._name = self._path.split(self.PATH_SEPARATOR)[-1];
+      self._name = self._path.split(self.PATH_SEPARATOR)[-1]
     return self._name
 
   @property

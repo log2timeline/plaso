@@ -67,7 +67,7 @@ class WinPrefetchParserTest(unittest.TestCase):
     self.assertEquals(event_object.volume_serial, '0xAC036525')
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     # TODO: Before submit, fix this. For some reason the msg_short
@@ -75,8 +75,8 @@ class WinPrefetchParserTest(unittest.TestCase):
     #self.assertEquals(msg_short, u'PING.EXE was run 14 time(s)')
     self.assertEquals(msg, (
         u'Superfetch [PING.EXE] was executed - run count 14 path:'
-        ' \WINDOWS\SYSTEM32\PING.EXE [ vol serial: 0xAC036525 vol path:'
-        ' \DEVICE\HARDDISKVOLUME1]'))
+        ' \\WINDOWS\\SYSTEM32\\PING.EXE [ vol serial: 0xAC036525 vol path:'
+        ' \\DEVICE\\HARDDISKVOLUME1]'))
 
 
 if __name__ == '__main__':

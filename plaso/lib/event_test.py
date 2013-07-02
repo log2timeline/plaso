@@ -31,7 +31,6 @@ The tests involve:
 Error handling. The following tests are performed for error handling:
  + Access attributes that are not set.
 """
-import re
 import unittest
 
 from plaso.lib import errors
@@ -360,9 +359,9 @@ class PlasoEventUnitTest(unittest.TestCase):
 
   def testNotInEventAndNoParent(self):
     """Call to an attribute that does not exist and no parent container ."""
-    event = TestEvent1(0, {})
+    event_object = TestEvent1(0, {})
 
-    self.assertRaises(AttributeError, getattr, event, 'doesnotexist')
+    self.assertRaises(AttributeError, getattr, event_object, 'doesnotexist')
 
   def testFailEvent(self):
     """Calls to format_string_short that has not been defined."""
@@ -398,7 +397,6 @@ class PlasoEventUnitTest(unittest.TestCase):
     proto_ser = evt.ToProtoString()
 
     self.assertEquals(len(list(proto.attributes)), 7)
-    evt_throw = event.EventObject()
     attributes = dict(
         event.AttributeFromProto(a) for a in proto.attributes)
 

@@ -17,7 +17,7 @@
 """This file contains a test for MRUx registry parsing in Plaso."""
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.registry import mrux
 from plaso.winreg import test_lib

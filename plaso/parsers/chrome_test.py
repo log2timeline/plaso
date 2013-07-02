@@ -63,7 +63,7 @@ class ChromeHistoryParserTest(unittest.TestCase):
     self.assertEquals(event_object.title, expected_title)
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = (

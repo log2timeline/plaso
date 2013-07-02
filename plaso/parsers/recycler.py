@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows Recycle files, INFO2 and $I/$R pairs."""
-import os
 import construct
 
 from plaso.lib import binary
@@ -23,7 +22,6 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
-from plaso.lib import timelib
 from plaso.lib import utils
 
 

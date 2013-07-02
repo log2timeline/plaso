@@ -24,7 +24,6 @@ projects that may want to use the registry plugin system in Plaso.
 """
 import abc
 import logging
-import struct
 
 from plaso.lib import errors
 from plaso.lib import registry

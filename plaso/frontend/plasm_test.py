@@ -116,14 +116,14 @@ class PlasmTest(unittest.TestCase):
   def testIteratingOverPlasoStore(self):
     """Tests the plaso storage iterator"""
     counter = 0
-    for event_object in plasm.EventObjectGenerator(self.storage, quiet=True):
+    for _ in plasm.EventObjectGenerator(self.storage, quiet=True):
       counter += 1
     self.assertEquals(counter, 5)
     self.storage = storage.PlasoStorage(self.storage_file)
     pfilter.TimeRangeCache.ResetTimeConstraints()
     self.storage.SetStoreLimit()
     counter = 0
-    for event_object in plasm.EventObjectGenerator(self.storage, quiet=False):
+    for _ in plasm.EventObjectGenerator(self.storage, quiet=False):
       counter += 1
     self.assertEquals(counter, 5)
 

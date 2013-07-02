@@ -16,6 +16,7 @@
 # limitations under the License.
 """Tests for the PFilters filter."""
 import os
+import logging
 import tempfile
 import unittest
 

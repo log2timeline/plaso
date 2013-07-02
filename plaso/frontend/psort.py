@@ -29,14 +29,13 @@ import logging
 import pdb
 import sys
 
-from plaso import filters
-from plaso import formatters
-from plaso import output
+from plaso import filters   # pylint: disable-msg=W0611
+from plaso import formatters   # pylint: disable-msg=W0611
+from plaso import output   # pylint: disable-msg=W0611
 
 from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import filter_interface
-from plaso.lib import limit
 from plaso.lib import output as output_lib
 from plaso.lib import storage
 from plaso.lib import utils
@@ -75,7 +74,7 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
     my_filter: A filter object.
   """
   counter = collections.Counter()
-  limit = getattr(my_filter, 'limit', 0)
+  my_limit = getattr(my_filter, 'limit', 0)
 
   event_object = formatter.FetchEntry()
   while event_object:
@@ -88,8 +87,8 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
       if my_filter.Match(event_match):
         counter['Events Included'] += 1
         output_buffer.Append(event_object)
-        if limit:
-          if counter['Events Included'] == limit:
+        if my_limit:
+          if counter['Events Included'] == my_limit:
             break
       else:
         counter['Events Filtered Out'] += 1
@@ -102,8 +101,8 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
   if output_buffer.duplicate_counter:
     counter['Duplicate Removals'] = output_buffer.duplicate_counter
 
-  if limit:
-    counter['Limited By'] = limit
+  if my_limit:
+    counter['Limited By'] = my_limit
   return counter
 
 

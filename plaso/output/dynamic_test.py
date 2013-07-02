@@ -15,15 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for plaso.output.l2t_csv."""
-import re
 import StringIO
 import unittest
 
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.output import dynamic
-from plaso.proto import plaso_storage_pb2
-from plaso.proto import transmission_pb2
 
 __pychecker__ = 'no-funcdoc'
 

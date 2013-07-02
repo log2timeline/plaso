@@ -15,9 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the Run/RunOnce Key plugins for Plaso."""
-
-import struct
-
 from plaso.lib import event
 from plaso.lib import win_registry_interface
 

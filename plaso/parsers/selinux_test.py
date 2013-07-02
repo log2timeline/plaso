@@ -17,7 +17,6 @@
 """This file contains a unit test for the selinux parser in plaso."""
 import os
 import pytz
-import re
 import unittest
 
 from plaso.formatters import selinux
