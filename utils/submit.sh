@@ -117,7 +117,7 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-python utils/upload.py -y -i ${CL_NUMBER} -t "Submitted." -m "Code Submitted." --send_mail
+python utils/upload.py --oauth2 -y -i ${CL_NUMBER} -t "Submitted." -m "Code Submitted." --send_mail
 
 git commit -a -m "Code review: ${CL_NUMBER}: ${DESCRIPTION}";
 git push
