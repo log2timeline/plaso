@@ -74,6 +74,6 @@ fi
 
 echo "All came out clean, let's update the code review.";
 
-python utils/upload.py -y -i ${CL_NUMBER} -t "." -m ".";
+python utils/upload.py --oauth2 -y -i ${CL_NUMBER} -t "." -m ".";
 
 exit ${EXIT_SUCCESS};
