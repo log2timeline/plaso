@@ -25,16 +25,16 @@ from plaso.lib import pfilter
 
 
 def IncludeKeyword(loader, node):
-    """A constructor for the include keyword in YAML."""
-    filename = loader.construct_scalar(node)
-    if os.path.isfile(filename):
-      with open(filename, 'rb') as fh:
-        try:
-          data = yaml.safe_load(fh)
-        except yaml.ParserError as e:
-          logging.error(u'Unable to load rule file: {}'.format(e))
-          return None
-    return data
+  """A constructor for the include keyword in YAML."""
+  filename = loader.construct_scalar(node)
+  if os.path.isfile(filename):
+    with open(filename, 'rb') as fh:
+      try:
+        data = yaml.safe_load(fh)
+      except yaml.ParserError as e:
+        logging.error(u'Unable to load rule file: {}'.format(e))
+        return None
+  return data
 
 
 class ObjectFilterList(filter_interface.FilterObject):

@@ -313,7 +313,7 @@ class PlasoStorage(object):
     if hasattr(self, '_bound_first'):
       del self._bound_first
 
-    self._store_range = []
+    self.store_range = []
 
     # Retrieve set first and last timestamps.
     self._GetTimeBounds()
@@ -326,7 +326,7 @@ class PlasoStorage(object):
                       last, first, number)
 
       if first <= self._bound_last and self._bound_first <= last:
-        self._store_range.append(number)
+        self.store_range.append(number)
       else:
         logging.debug('Store [%d] not used', number)
 
@@ -353,7 +353,7 @@ class PlasoStorage(object):
 
     if not hasattr(self, '_merge_buffer'):
       self._merge_buffer = []
-      number_range = getattr(self, '_store_range', list(self.GetProtoNumbers()))
+      number_range = getattr(self, 'store_range', list(self.GetProtoNumbers()))
       for store_number in number_range:
         if proto_out:
           event_object = self.GetProtoEntry(store_number)
@@ -647,6 +647,9 @@ class PlasoStorage(object):
 
       group_str = group.SerializeToString()
       packed = struct.pack('<I', len(group_str)) + group_str
+      # TODO: Size is defined, should be used to determine if we've filled
+      # our buffer size of group information. Check that and write a new
+      # group store file in that case.
       size += len(packed)
       group_packed.append(packed)
 
@@ -756,7 +759,6 @@ class PlasoStorage(object):
         fh = self.zipfile.open(name, 'r')
         _, _, number_str = name.rpartition('.')
         number = int(number_str)
-        offset = None
         while 1:
           raw = fh.read(12)
           if not raw:

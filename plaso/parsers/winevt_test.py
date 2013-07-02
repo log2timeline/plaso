@@ -99,7 +99,7 @@ class WinEvtParserTest(unittest.TestCase):
                       eventdata.EventTimestamp.WRITTEN_TIME)
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = (u'[2147524609 / 0x8000a001] '

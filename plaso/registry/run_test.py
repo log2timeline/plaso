@@ -17,7 +17,7 @@
 """This file contains tests for Run Keys registry parsing in Plaso."""
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.registry import run
 from plaso.winreg import test_lib
@@ -40,8 +40,8 @@ class TestRunNtuserRegistry(unittest.TestCase):
     plugin = run.RunNtuserPlugin(None, None)
     entries = list(plugin.Process(self.regkey))
 
-    line = (u'[\Software\Microsoft\Windows\CurrentVersion\Run] ctfmon.exe: '
-            'C:\WINDOWS\system32\ctfmon.exe')
+    line = (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Run] ctfmon.exe:'
+            ' C:\\WINDOWS\\system32\\ctfmon.exe')
 
     self.assertEquals(len(entries), 1)
     # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
@@ -68,8 +68,8 @@ class TestRunOnceNtuserRegistry(unittest.TestCase):
     plugin = run.RunOnceNtuserPlugin(None, None)
     entries = list(plugin.Process(self.regkey))
 
-    line = (u'[\Software\Microsoft\Windows\CurrentVersion\RunOnce] google'
-            'updater.exe: C:\WINDOWS\system32\googleupdater.exe')
+    line = (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce] '
+            'googleupdater.exe: C:\\WINDOWS\\system32\\googleupdater.exe')
 
     self.assertEquals(len(entries), 1)
     # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
@@ -95,8 +95,8 @@ class TestRunSoftwareRegistry(unittest.TestCase):
     plugin = run.RunSoftwarePlugin(None, None)
     entries = list(plugin.Process(self.regkey))
 
-    line = (u'[\Microsoft\Windows\CurrentVersion\Run] ctfmon.exe: '
-            'C:\WINDOWS\system32\ctfmon.exe')
+    line = (u'[\\Microsoft\\Windows\\CurrentVersion\\Run] ctfmon.exe: '
+            'C:\\WINDOWS\\system32\\ctfmon.exe')
 
     self.assertEquals(len(entries), 1)
     # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
@@ -123,8 +123,9 @@ class TestRunOnceSoftwareRegistry(unittest.TestCase):
     plugin = run.RunOnceSoftwarePlugin(None, None)
     entries = list(plugin.Process(self.regkey))
 
-    line = (u'[\Microsoft\Windows\CurrentVersion\RunOnce] googleupdater.exe: '
-            'C:\WINDOWS\system32\googleupdater.exe')
+    line = (
+        u'[\\Microsoft\\Windows\\CurrentVersion\\RunOnce] googleupdater.exe: '
+        'C:\\WINDOWS\\system32\\googleupdater.exe')
 
     self.assertEquals(len(entries), 1)
     # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.

@@ -17,7 +17,6 @@
 """Tests for plaso.lib.pfilter."""
 import unittest
 import pytz
-import re
 
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -25,8 +24,6 @@ from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfilter
 from plaso.lib import putils
-from plaso.lib import storage
-from plaso.lib import utils
 
 __pychecker__ = 'no-funcdoc'
 
@@ -141,10 +138,10 @@ class PFilterTest(unittest.TestCase):
     # Double negative matching -> should be the same
     # as a positive one.
     query = 'filename not not contains \'GoodFella\''
-    parser = pfilter.PlasoParser(query)
+    my_parser = pfilter.PlasoParser(query)
     self.assertRaises(
         objectfilter.ParseError,
-        parser.Parse)
+        my_parser.Parse)
 
     # Test date filtering.
     query = 'date >= \'2015-11-18\''
@@ -215,8 +212,8 @@ class PFilterTest(unittest.TestCase):
 
   def RunPlasoTest(self, obj, query, result):
     """Run a simple test against an event object."""
-    parser = pfilter.PlasoParser(query).Parse()
-    matcher = parser.Compile(
+    my_parser = pfilter.PlasoParser(query).Parse()
+    matcher = my_parser.Compile(
         pfilter.PlasoAttributeFilterImplementation)
 
     self.assertEqual(result, matcher.Matches(obj))

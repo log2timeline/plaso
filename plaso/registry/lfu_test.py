@@ -17,7 +17,7 @@
 """This file contains tests for Less Frequently Used Keys parsing in Plaso."""
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.registry import lfu
@@ -61,10 +61,11 @@ class TestBootExecuteRegistry(unittest.TestCase):
     plugin = lfu.BootExecutePlugin(None, self.preprocess)
     entries = list(plugin.Process(self.regkey))
 
-    line1 = (u'[\ControlSet001\Control\Session Manager] BootExecute: '
+    line1 = (u'[\\ControlSet001\\Control\\Session Manager] BootExecute: '
              'autocheck autochk *')
-    line2 = (u'[\ControlSet001\Control\Session Manager] CriticalSectionTimeout'
-             ': 2592000 ExcludeFromKnownDlls: [] GlobalFlag: 0 HeapDeCommitFre'
+    line2 = (u'[\\ControlSet001\\Control\\Session Manager] '
+             'CriticalSectionTimeout: 2592000 ExcludeFromKnownDlls: [] '
+             'GlobalFlag: 0 HeapDeCommitFre'
              'eBlockThreshold: 0 HeapDeCommitTotalFreeThreshold: 0 HeapSegment'
              'Commit: 0 HeapSegmentReserve: 0 NumberOfInitialSessions: 2')
 
@@ -97,8 +98,8 @@ class TestBootVerificationRegistry(unittest.TestCase):
     plugin = lfu.BootVerificationPlugin(None, self.preprocess)
     entries = list(plugin.Process(self.regkey))
 
-    line = (u'[\ControlSet001\Control\BootVerificationProgram] Boot'
-            'Verification: REGALERT ImagePath: C:\WINDOWS\system32\google'
+    line = (u'[\\ControlSet001\\Control\\BootVerificationProgram] Boot'
+            'Verification: REGALERT ImagePath: C:\\WINDOWS\\system32\\google'
             'updater.exe')
 
     self.assertEquals(len(entries), 1)

@@ -16,6 +16,7 @@
 # limitations under the License.
 """This file contains a simple MRUx plugin for Plaso."""
 import construct
+import logging
 
 from plaso.lib import event
 from plaso.lib import win_registry_interface

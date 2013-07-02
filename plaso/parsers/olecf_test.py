@@ -76,7 +76,7 @@ class OLECFTest(unittest.TestCase):
     self.assertEquals(event_object.mm_clips, None)
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     # TODO: Add test for msg_short.

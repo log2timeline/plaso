@@ -47,7 +47,7 @@ import logging
 import os
 import sys
 
-from plaso import filters
+from plaso import filters   # pylint: disable-msg=W0611
 
 from plaso.lib import event
 from plaso.lib import filter_interface
@@ -173,8 +173,8 @@ def TaggingEngine(my_args):
     event_tags = []
     for event_object in EventObjectGenerator(store, my_args.quiet):
       matched_tags = []
-      for tag, filters in tags.items():
-        for my_filter in filters:
+      for tag, my_filters in tags.items():
+        for my_filter in my_filters:
           if my_filter.Match(event_object):
             matched_tags.append(tag)
       if len(matched_tags) > 0:
@@ -210,7 +210,6 @@ def GroupingEngine(my_args):
     if not store.HasTagging():
       logging.error('Plaso storage file does not contain tagged events')
       return
-    open_groups = {}
     # Reformat tags as "tag name" => [event, ...]
     all_tags = {}
     for event_tag in store.GetTagging():

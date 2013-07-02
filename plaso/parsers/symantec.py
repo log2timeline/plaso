@@ -15,11 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a Symantec parser in plaso."""
-import re
-
-from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
@@ -58,7 +54,7 @@ class Symantec(parser.TextCSVParser):
 
     try:
       timestamp = self.GetTimestamp(row['time'])
-    except (TypeError, ValueError) as e:
+    except (TypeError, ValueError):
       return False
 
     if not timestamp:
@@ -66,11 +62,11 @@ class Symantec(parser.TextCSVParser):
 
     # Check few entries.
     try:
-      event = int(row['event'])
+      my_event = int(row['event'])
     except TypeError:
       return False
 
-    if event < 1 or event > 77:
+    if my_event < 1 or my_event > 77:
       return False
 
     try:

@@ -16,6 +16,7 @@
 # limitations under the License.
 """Contains the unit tests for the filter collection mechanism of Plaso."""
 import os
+import logging
 import tempfile
 import unittest
 

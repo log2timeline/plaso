@@ -19,13 +19,13 @@
 # Pychecker supressions
 __pychecker__ = 'unusednames=pyvshadow'
 
-import datetime
 import logging
 import os
 import tempfile
 
 from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
+# pylint: disable-msg=W0611
 from plaso import filters
 from plaso import formatters
 from plaso import output
@@ -55,7 +55,7 @@ from plaso.lib import timelib
 from plaso.lib import vss
 from plaso.lib import win_registry_interface as win_registry_plugin_interface
 from plaso.lib import worker
-from plaso.lib.putils import *
+from plaso.lib.putils import *    # pylint: disable-msg=W0401,W0614
 
 from plaso.output import helper
 
@@ -95,7 +95,6 @@ def Main():
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   logging.basicConfig(format=format_str)
 
-  __pychecker__ = 'unusednames=l2t,fscache'
   l2t = engine.Engine(options)
 
   namespace = {}

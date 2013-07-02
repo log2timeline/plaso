@@ -107,6 +107,6 @@ def GetFilter(filter_string):
     try:
       filter_obj.CompileFilter(filter_string)
       return filter_obj
-    except errors.WrongFilterPlugin as e:
+    except errors.WrongFilterPlugin:
       logging.debug(u'Filterstring [{}] is not a filter: {}'.format(
           filter_string, filter_obj.filter_name))

@@ -27,10 +27,9 @@ def FindTestFiles():
   """Return a list of all test files in the project."""
   file_list = []
   pattern = '*_test.py'
-  #plaso_root_dir = os.path.join('.', 'plaso', 'parsers')
   plaso_root_dir = os.path.join('.', 'plaso')
 
-  for directory, sub_directories, files in os.walk(plaso_root_dir):
+  for directory, _, _ in os.walk(plaso_root_dir):
     directory_pattern = os.path.join(directory, pattern)
 
     for pattern_match in glob.iglob(directory_pattern):
@@ -53,20 +52,20 @@ def RunTests():
   return test_run.run(tests)
 
 
-def PrintResults(results):
+def PrintResults(my_results):
   """Print the results from an aggregated test run."""
   errors = 0
   failures = 0
-  print 'Ran: {} tests.'.format(results.testsRun)
-  if results.wasSuccessful():
+  print 'Ran: {} tests.'.format(my_results.testsRun)
+  if my_results.wasSuccessful():
     print '--++'*20
     print 'Yeee you know what, all tests came out clean.'
     print '--++'*20
   else:
-    errors = len(results.errors)
-    failures = len(results.failures)
+    errors = len(my_results.errors)
+    failures = len(my_results.failures)
 
-    print results.printErrors()
+    print my_results.printErrors()
     print utils.FormatHeader('Tests failed.')
     print '  {:>10s}: {}\n  {:>10s}: {}\n  {:>10s}: {}'.format(
         'Errors', errors, 'Failures', failures, 'Total',
@@ -75,14 +74,9 @@ def PrintResults(results):
 
 
 if __name__ == '__main__':
-  """Run all of tests."""
   # Modify the system path to first search the CWD.
   sys.path.insert(0, '.')
 
   results = RunTests()
-  errors = 0
-  failures = 0
 
   PrintResults(results)
-
-

@@ -134,7 +134,7 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
     if service_type > 0 and service_type < 15 and service_start == 2:
       service_start_str = 'REGALERT Unusual Start for Driver: {}'.format(
           self.SERVICE_START[service_start])
-    if service_type > 15 and service_type < 257 and service_start in [0,1]:
+    if service_type > 15 and service_type < 257 and service_start in [0, 1]:
       service_start_str = 'REGALERT Unusal Start for Service: {}'.format(
           self.SERVICE_START[service_start])
 

@@ -181,13 +181,13 @@ class WinRegValue(object):
         pass
 
     elif data_type == cls.REG_DWORD and len(data) == 4:
-        return struct.unpack('<i', data)[0]
+      return struct.unpack('<i', data)[0]
 
     elif data_type == cls.REG_DWORD_BIG_ENDIAN and len(data) == 4:
-        return struct.unpack('>i', data)[0]
+      return struct.unpack('>i', data)[0]
 
     elif data_type == cls.REG_QWORD and len(data) == 8:
-        return struct.unpack('<q', data)[0]
+      return struct.unpack('<q', data)[0]
 
     elif data_type == cls.REG_MULTI_SZ:
       try:

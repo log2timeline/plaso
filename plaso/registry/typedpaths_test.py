@@ -15,17 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a test for Typed Paths plugin in Plaso."""
-
-
 import os
-import re
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.registry import typedpaths
-from plaso.winreg import test_lib
 from plaso.winreg import winpyregf
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -58,7 +54,7 @@ class RegistryTypedPathsTest(unittest.TestCase):
                       u'\\\\controller')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(
-        msg, (u'[\Software\Microsoft\Windows\CurrentVersion\Explorer\\'
+        msg, (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
               'TypedPaths] url1: \\\\controller'))
 
 

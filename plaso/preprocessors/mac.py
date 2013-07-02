@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains preprocessors for Mac OS X."""
-from plaso.lib import errors
 from plaso.lib import preprocess
 
 
