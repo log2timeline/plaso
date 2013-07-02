@@ -25,7 +25,6 @@ from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.formatters import winreg
-from plaso.proto import plaso_storage_pb2
 
 __pychecker__ = 'no-funcdoc'
 
@@ -266,7 +265,7 @@ class StoreStorageTest(unittest.TestCase):
 
     store = storage.PlasoStorage(self.test_file, read_only=True)
 
-    store._store_range = [2, 5]
+    store.store_range = [2, 5]
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
 

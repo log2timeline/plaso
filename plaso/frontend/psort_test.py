@@ -16,11 +16,9 @@
 # limitations under the License.
 """Tests for plaso.frontend.psort."""
 import os
-import re
 import StringIO
 import tempfile
 
-import pytz
 import unittest
 
 from plaso.frontend import psort
@@ -69,7 +67,7 @@ class TestEvent2Formatter(eventdata.EventFormatter):
 class TestFormatter(output.LogOutputFormatter):
   """Dummy formatter."""
 
-  def FetchEntry(self):
+  def FetchEntry(self, store_number=-1, store_index=-1):
     return self.store.GetSortedEntry()
 
   def Start(self):
@@ -79,7 +77,7 @@ class TestFormatter(output.LogOutputFormatter):
 
   def EventBody(self, event_object):
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
-    msg, _= event_formatter.GetMessages(event_object)
+    msg, _ = event_formatter.GetMessages(event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
     self.filehandle.write(u'{}/{} {}\n'.format(
         source_short, source_long, msg))
@@ -126,7 +124,6 @@ class PsortTest(unittest.TestCase):
     """Ensure returned EventObjects from the storage are within timebounds."""
     store = storage.PlasoStorage(self.test_file, read_only=True)
     timestamp_list = []
-    number = 2
     pfilter.TimeRangeCache.ResetTimeConstraints()
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
@@ -163,7 +160,7 @@ class PsortTest(unittest.TestCase):
       store.CloseStorage()
 
       with psort.SetupStorage(fh.name) as store:
-        store._store_range = [1]
+        store.store_range = [1]
         formatter = TestFormatter(store, output_fd)
         event_buffer = TestEventBuffer(store, formatter)
 

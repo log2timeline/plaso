@@ -31,7 +31,6 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfile
 from plaso.lib import preprocess
-from plaso.lib import queue
 from plaso.lib import utils
 from plaso.lib import vss
 from plaso.parsers import filestat
@@ -140,6 +139,37 @@ def SendContainerToStorage(container, stat, storage_queue):
     storage_queue.AddEvent(event_object.ToProtoString())
 
 
+def CalculateNTFSTimeHash(meta):
+  """Return a hash value calculated from a NTFS file's metadata.
+
+  Args:
+    meta: A file system metadata (TSK_FS_META) object.
+
+  Returns:
+    A hash value (string) that can be used to determine if a file's timestamp
+    value has changed.
+  """
+  ret_hash = hashlib.md5()
+
+  ret_hash.update('atime:{0}.{1}'.format(
+      getattr(meta, 'atime', 0),
+      getattr(meta, 'atime_nano', 0)))
+
+  ret_hash.update('crtime:{0}.{1}'.format(
+      getattr(meta, 'crtime', 0),
+      getattr(meta, 'crtime_nano', 0)))
+
+  ret_hash.update('mtime:{0}.{1}'.format(
+      getattr(meta, 'mtime', 0),
+      getattr(meta, 'mtime_nano', 0)))
+
+  ret_hash.update('ctime:{0}.{1}'.format(
+      getattr(meta, 'ctime', 0),
+      getattr(meta, 'ctime_nano', 0)))
+
+  return ret_hash.hexdigest()
+
+
 class Collector(object):
   """An interface for file collection in Plaso."""
 
@@ -197,12 +227,12 @@ class SimpleFileCollector(Collector):
   def Collect(self):
     """Recursive traversal of a directory."""
     if os.path.isfile(self._dir):
-      self.ProcessFile(self._dir, self._queue)
+      self.ProcessFile(self._dir)
       return
 
     if not os.path.isdir(self._dir):
       logging.error((
-          u'Unable to collect, [{}] is neither a file nor a '
+          u'Unable to collect, [%s] is neither a file nor a '
           'directory.'), self._dir)
       return
 
@@ -214,7 +244,7 @@ class SimpleFileCollector(Collector):
           if os.path.islink(path):
             continue
           if os.path.isfile(path):
-            self.ProcessFile(path, self._queue)
+            self.ProcessFile(path)
         except IOError as e:
           logging.warning('Unable to further process %s:%s', filename, e)
 
@@ -226,12 +256,12 @@ class SimpleFileCollector(Collector):
         filestat.GetEventContainerFromStat(directory_stat),
         directory_stat, self._storage_queue)
 
-  def ProcessFile(self, filename, my_queue):
+  def ProcessFile(self, filename):
     """Finds all files available inside a file and inserts into queue."""
     transfer_proto = event.EventPathSpec()
     transfer_proto.type = 'OS'
     transfer_proto.file_path = utils.GetUnicodeString(filename)
-    my_queue.Queue(transfer_proto.ToProtoString())
+    self._queue.Queue(transfer_proto.ToProtoString())
 
 
 class SimpleImageCollector(Collector):
@@ -297,8 +327,11 @@ class SimpleImageCollector(Collector):
       logging.error(u'Unable to read image [no collection] - %s.', e)
       return
 
+    vss_numbers = 0
     if self._vss:
       logging.info(u'Collecting from VSS.')
+      vss_numbers = vss.GetVssStoreCount(self._image, offset)
+
     for store_nr in self.GetVssStores(offset):
       logging.info(
           u'Collecting from VSS store number: %d/%d', store_nr + 1,
@@ -406,7 +439,7 @@ class SimpleImageCollector(Collector):
         # calculated hash values, and only include the file into the queue if
         # the hash does not match.
         if self._vss:
-          hash_value = self.CalculateNTFSTimeHash(f.info.meta)
+          hash_value = CalculateNTFSTimeHash(f.info.meta)
 
           if inode_addr in self._hashlist:
             if hash_value in self._hashlist[inode_addr]:
@@ -419,36 +452,6 @@ class SimpleImageCollector(Collector):
 
     for inode_addr, path in directories:
       self.ParseImageDir(fs, inode_addr, path)
-
-  def CalculateNTFSTimeHash(self, meta):
-    """Return a hash value calculated from a NTFS file's metadata.
-
-    Args:
-      meta: A file system metadata (TSK_FS_META) object.
-
-    Returns:
-      A hash value (string) that can be used to determine if a file's timestamp
-      value has changed.
-    """
-    ret_hash = hashlib.md5()
-
-    ret_hash.update('atime:{0}.{1}'.format(
-        getattr(meta, 'atime', 0),
-        getattr(meta, 'atime_nano', 0)))
-
-    ret_hash.update('crtime:{0}.{1}'.format(
-        getattr(meta, 'crtime', 0),
-        getattr(meta, 'crtime_nano', 0)))
-
-    ret_hash.update('mtime:{0}.{1}'.format(
-        getattr(meta, 'mtime', 0),
-        getattr(meta, 'mtime_nano', 0)))
-
-    ret_hash.update('ctime:{0}.{1}'.format(
-        getattr(meta, 'ctime', 0),
-        getattr(meta, 'ctime_nano', 0)))
-
-    return ret_hash.hexdigest()
 
 
 class TargetedFileSystemCollector(SimpleFileCollector):
@@ -521,6 +524,7 @@ class TargetedImageCollector(SimpleImageCollector):
 
       if self._vss:
         logging.debug(u'Searching for VSS')
+        vss_numbers = vss.GetVssStoreCount(self._image, offset)
         for store_nr in self.GetVssStores(offset):
           logging.info(
               u'Collecting from VSS store number: %d/%d', store_nr + 1,

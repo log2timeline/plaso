@@ -15,16 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a test for MS Office MRUs plugin in Plaso."""
-
 import os
-import re
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.registry import officemru
-from plaso.winreg import test_lib
 from plaso.winreg import winpyregf
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -44,7 +41,7 @@ class RegistryOfficeMRUTest(unittest.TestCase):
   def testOfficeMRU(self):
     """Test the Typed URLS plugin."""
     key = self.registry.GetKey(
-        '\\Software\\Microsoft\\Office\\14.0\\Word\File MRU')
+        '\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU')
     plugin = officemru.MSWord2010FileMRU(None, None)
     entries = list(plugin.Process(key))
 

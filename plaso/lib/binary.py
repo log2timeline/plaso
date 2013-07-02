@@ -16,6 +16,7 @@
 # limitations under the License.
 """This file contains a helper library to read binary files."""
 import binascii
+import logging
 
 
 def ReadUtf16Stream(filehandle, offset=None, byte_size=0):

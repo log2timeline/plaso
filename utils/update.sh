@@ -62,7 +62,8 @@ then
 fi
 
 echo "Run tests.";
-./utils/run_tests.sh
+python run_tests.py 
+#./utils/run_tests.sh
 
 if [ $? -ne 0 ];
 then

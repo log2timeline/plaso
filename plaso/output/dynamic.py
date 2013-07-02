@@ -22,7 +22,6 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.output import helper
 
 
@@ -58,6 +57,8 @@ class Dynamic(output.FileLogOutputFormatter):
       'zone': 'ParseZone',
   }
 
+  # Disable all message due to methods could be functions.
+  # pylint: disable-msg=R0201
   def ParseTimestampDescription(self, event_object):
     """Return the timestamp description."""
     return getattr(event_object, 'timestamp_desc', '-')
@@ -91,7 +92,7 @@ class Dynamic(output.FileLogOutputFormatter):
     source, _ = event_formatter.GetSources(event_object)
     return source
 
-  def ParseZone(self, event_object):
+  def ParseZone(self, _):
     """Return a timezone."""
     return self.zone
 

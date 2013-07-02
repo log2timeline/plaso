@@ -26,7 +26,6 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.output import helper
 from plaso import formatters
-import pytz
 import sqlite3
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -99,8 +98,8 @@ class Sql4n6(output.LogOutputFormatter):
       for field in self.META_FIELDS:
         self.curs.execute(
             'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
-      if self.set_status:
-        self.set_status('Created table l2t_%s' % field)
+        if self.set_status:
+          self.set_status('Created table l2t_%s' % field)
 
       self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
       if self.set_status:
@@ -215,7 +214,7 @@ class Sql4n6(output.LogOutputFormatter):
       formatter.FORMAT_STRING_SEPARATOR = u'<|>'
     elif isinstance(formatter, eventdata.EventFormatter):
       formatter.format_string = formatter.format_string.replace('}', '}<|>')
-    msg, msg_short = formatter.GetMessages(event_object)
+    msg, _ = formatter.GetMessages(event_object)
     source_short, source_long = formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
@@ -238,7 +237,7 @@ class Sql4n6(output.LogOutputFormatter):
           hasattr(event_object.pathspec, 'image_inode')):
         inode = event_object.pathspec.image_inode
 
-    date_use_string = '%04d-%02d-%02d %02d:%02d:%02d' %(
+    date_use_string = '%04d-%02d-%02d %02d:%02d:%02d' % (
         date_use.year, date_use.month, date_use.day, date_use.hour,
         date_use.minute, date_use.second)
 
@@ -267,7 +266,7 @@ class Sql4n6(output.LogOutputFormatter):
            getattr(event_object, 'offset', 0),
            event_object.store_number,
            event_object.store_index,
-           self.GetVSSNumber(event_object),
+           GetVSSNumber(event_object),
            getattr(event_object, 'url', '-'),
            getattr(event_object, 'record_number', 0),
            getattr(event_object, 'event_identifier', '-'),
@@ -295,9 +294,10 @@ class Sql4n6(output.LogOutputFormatter):
       if self.set_status:
         self.set_status('Inserting event: %s' % self.count)
 
-  def GetVSSNumber(self, event_object):
-    """Return the vss_store_number of the event."""
-    if not hasattr(event_object, 'pathspec'):
-      return -1
 
-    return getattr(event_object.pathspec, 'vss_store_number', -1)
+def GetVSSNumber(event_object):
+  """Return the vss_store_number of the event."""
+  if not hasattr(event_object, 'pathspec'):
+    return -1
+
+  return getattr(event_object.pathspec, 'vss_store_number', -1)

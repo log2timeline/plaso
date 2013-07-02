@@ -17,7 +17,7 @@
 """This file contains tests for Services registry parsing in Plaso."""
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.registry import services
 from plaso.winreg import test_lib

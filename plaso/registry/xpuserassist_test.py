@@ -16,14 +16,12 @@
 # limitations under the License.
 """This file contains a test for UserAssist parsing in Plaso."""
 import os
-import re
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.registry import xpuserassist
-from plaso.winreg import test_lib
 from plaso.winreg import winpyregf
 
 

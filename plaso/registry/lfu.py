@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Plug-in to collect the Less Frequently Used Keys."""
-import logging
-
 from plaso.lib import event
 from plaso.lib import win_registry_interface
 

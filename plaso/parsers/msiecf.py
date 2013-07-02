@@ -186,7 +186,6 @@ class MsiecfParser(parser.PlasoParser):
       except IOError as exception:
         logging.warning('[%s] unable to parse item: %d in file: %s: %s' % (
             self.parser_name, item_index, file_object.name, exception))
-        pass
 
     for item_index in range(0, msiecf_file.number_of_recovered_items):
       try:
@@ -199,4 +198,3 @@ class MsiecfParser(parser.PlasoParser):
         logging.info(
             '[%s] unable to parse recovered item: %d in file: %s: %s' % (
             self.parser_name, item_index, file_object.name, exception))
-        pass

@@ -26,6 +26,7 @@ entry to an output formatter that takes care of parsing the output into
 a human readable format for easy human consumption/analysis.
 
 """
+import logging
 import StringIO
 import sys
 

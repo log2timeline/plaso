@@ -23,7 +23,6 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
-from plaso.lib import timelib
 
 
 class WinPrefetchEventContainer(event.EventContainer):

@@ -131,7 +131,6 @@ class WinEvtParser(parser.PlasoParser):
         logging.warning(
             '[%s] unable to parse event record: %d in file: %s: %s' % (
             self.parser_name, record_index, file_object.name, exception))
-        pass
 
     for record_index in range(0, evt_file.number_of_recovered_records):
       try:
@@ -142,4 +141,3 @@ class WinEvtParser(parser.PlasoParser):
             u'[%s] unable to parse recovered event record: %d in file: %s: '
             u'%s') % (
                 self.parser_name, record_index, file_object.name, exception))
-        pass

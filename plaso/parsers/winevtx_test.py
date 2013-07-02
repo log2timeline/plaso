@@ -121,7 +121,7 @@ class WinEvtxParserTest(unittest.TestCase):
     self.assertEquals(event_object.xml_string, expected_xml_string)
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = (u'[7036 / 0x00001b7c] '

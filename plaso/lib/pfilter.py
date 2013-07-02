@@ -19,7 +19,6 @@
 import datetime
 import logging
 
-import dateutil.parser
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
 from plaso.frontend import presets
@@ -29,8 +28,6 @@ from plaso.lib import limit
 from plaso.lib import objectfilter
 from plaso.lib import timelib
 from plaso.lib import utils
-
-import pytz
 
 
 class DictObject(object):

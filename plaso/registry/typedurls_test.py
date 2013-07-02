@@ -15,17 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a test for IE Typed URLS plugin in Plaso."""
-
-
 import os
-import re
 import unittest
 
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.registry import typedurls
-from plaso.winreg import test_lib
 from plaso.winreg import winpyregf
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -56,9 +52,9 @@ class RegistryIETypedURLSTest(unittest.TestCase):
     self.assertEquals(entries[0].regvalue[u'url1'],
                       u'http://cnn.com/')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(
-        msg, u'[\Software\Microsoft\Internet Explorer\TypedURLs] '
-        'url1: http://cnn.com/')
+    self.assertEquals(msg, (
+        u'[\\Software\\Microsoft\\Internet Explorer\\TypedURLs] '
+        'url1: http://cnn.com/'))
 
 
 if __name__ == '__main__':

@@ -92,7 +92,7 @@ class WinLnkParserTest(unittest.TestCase):
                       (1247535558 * 1000000) + int(220000000 / 1000))
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = (u'[@%windir%\\system32\\migwiz\\wet.dll,-590] '

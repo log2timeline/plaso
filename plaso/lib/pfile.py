@@ -270,7 +270,7 @@ class PlasoFile(object):
 
   def HasParent(self):
     """Check if the PathSpec defines a parent."""
-    return hasattr(pathspec, 'nested_pathspec')
+    return hasattr(self.pathspec, 'nested_pathspec')
 
   def __iter__(self):
     """Implement an iterator that reads each line."""

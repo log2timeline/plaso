@@ -24,7 +24,6 @@ import re
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
-from plaso.lib import timelib
 
 
 class MactimeEvent(event.PosixTimeEvent):

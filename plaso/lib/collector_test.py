@@ -16,6 +16,7 @@
 # limitations under the License.
 """This file contains the unit tests for the collection mechanism of Plaso."""
 import os
+import logging
 import shutil
 import tempfile
 import unittest
@@ -23,7 +24,6 @@ import unittest
 from plaso.lib import collector
 from plaso.lib import event
 from plaso.lib import preprocess
-from plaso.lib import sleuthkit
 from plaso.lib import queue
 
 
@@ -47,6 +47,7 @@ class TempDirectory(object):
 class PlasoCollectorUnitTest(unittest.TestCase):
   """The unit test for plaso storage."""
 
+  # pylint: disable-msg=R0201
   def GetEvents(self, collector_queue):
     """Return all events."""
     events = []
