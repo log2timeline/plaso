@@ -77,7 +77,7 @@ fi
 echo -n "Short description of code review request: "
 read DESC
 T1=`mktemp .tmp_plaso_code_review.XXXXXX`
-python utils/upload.py -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER -m "$M" -t "$DESC" --send_mail | tee $T1
+python utils/upload.py --oauth2 -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER -m "$M" -t "$DESC" --send_mail | tee $T1
 
 CL=`cat $T1 | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`
 cat $T1

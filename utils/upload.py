@@ -34,6 +34,7 @@ against by using the '--rev' option.
 # This code is derived from appcfg.py in the App Engine SDK (open source),
 # and from ASPN recipe #146306.
 
+import BaseHTTPServer
 import ConfigParser
 import cookielib
 import errno
@@ -51,6 +52,7 @@ import sys
 import urllib
 import urllib2
 import urlparse
+import webbrowser
 
 # The md5 module was deprecated in Python 2.5.
 try:
@@ -105,6 +107,48 @@ VCS_ABBREVIATIONS = {
   VCS_GIT.lower(): VCS_GIT,
   VCS_CVS.lower(): VCS_CVS,
 }
+
+# OAuth 2.0-Related Constants
+LOCALHOST_IP = '127.0.0.1'
+DEFAULT_OAUTH2_PORT = 8001
+ACCESS_TOKEN_PARAM = 'access_token'
+ERROR_PARAM = 'error'
+OAUTH_DEFAULT_ERROR_MESSAGE = 'OAuth 2.0 error occurred.'
+OAUTH_PATH = '/get-access-token'
+OAUTH_PATH_PORT_TEMPLATE = OAUTH_PATH + '?port=%(port)d'
+AUTH_HANDLER_RESPONSE = """\
+<html>
+  <head>
+    <title>Authentication Status</title>
+    <script>
+    window.onload = function() {
+      window.close();
+    }
+    </script>
+  </head>
+  <body>
+    <p>The authentication flow has completed.</p>
+  </body>
+</html>
+"""
+# Borrowed from google-api-python-client
+OPEN_LOCAL_MESSAGE_TEMPLATE = """\
+Your browser has been opened to visit:
+
+    %s
+
+If your browser is on a different machine then exit and re-run
+upload.py with the command-line parameter
+
+  --no_oauth2_webbrowser
+"""
+NO_OPEN_LOCAL_MESSAGE_TEMPLATE = """\
+Go to the following link in your browser:
+
+    %s
+
+and copy the access token.
+"""
 
 # The result of parsing Subversion's [auto-props] setting.
 svn_auto_props_map = None
@@ -179,8 +223,9 @@ class ClientLoginError(urllib2.HTTPError):
 class AbstractRpcServer(object):
   """Provides a common interface for a simple RPC server."""
 
-  def __init__(self, host, auth_function, host_override=None, extra_headers={},
-               save_cookies=False, account_type=AUTH_ACCOUNT_TYPE):
+  def __init__(self, host, auth_function, host_override=None,
+               extra_headers=None, save_cookies=False,
+               account_type=AUTH_ACCOUNT_TYPE):
     """Creates a new AbstractRpcServer.
 
     Args:
@@ -203,7 +248,7 @@ class AbstractRpcServer(object):
     self.host_override = host_override
     self.auth_function = auth_function
     self.authenticated = False
-    self.extra_headers = extra_headers
+    self.extra_headers = extra_headers or {}
     self.save_cookies = save_cookies
     self.account_type = account_type
     self.opener = self._GetOpener()
@@ -425,10 +470,16 @@ class HttpRpcServer(AbstractRpcServer):
 
   def _Authenticate(self):
     """Save the cookie jar after authentication."""
-    super(HttpRpcServer, self)._Authenticate()
-    if self.save_cookies:
-      StatusUpdate("Saving authentication cookies to %s" % self.cookie_file)
-      self.cookie_jar.save()
+    if isinstance(self.auth_function, OAuth2Creds):
+      access_token = self.auth_function()
+      if access_token is not None:
+        self.extra_headers['Authorization'] = 'OAuth %s' % (access_token,)
+        self.authenticated = True
+    else:
+      super(HttpRpcServer, self)._Authenticate()
+      if self.save_cookies:
+        StatusUpdate("Saving authentication cookies to %s" % self.cookie_file)
+        self.cookie_jar.save()
 
   def _GetOpener(self):
     """Returns an OpenerDirector that supports cookies and ignores redirects.
@@ -495,7 +546,8 @@ class CondensedHelpFormatter(optparse.IndentedHelpFormatter):
 
 
 parser = optparse.OptionParser(
-    usage="%prog [options] [-- diff_options] [path...]",
+    usage=("%prog [options] [-- diff_options] [path...]\n"
+           "See also: http://code.google.com/p/rietveld/wiki/UploadPyUsage"),
     add_help_option=False,
     formatter=CondensedHelpFormatter()
 )
@@ -531,6 +583,17 @@ group.add_option("-H", "--host", action="store", dest="host",
 group.add_option("--no_cookies", action="store_false",
                  dest="save_cookies", default=True,
                  help="Do not save authentication cookies to local disk.")
+group.add_option("--oauth2", action="store_true",
+                 dest="use_oauth2", default=False,
+                 help="Use OAuth 2.0 instead of a password.")
+group.add_option("--oauth2_port", action="store", type="int",
+                 dest="oauth2_port", default=DEFAULT_OAUTH2_PORT,
+                 help=("Port to use to handle OAuth 2.0 redirect. Must be an "
+                       "integer in the range 1024-49151, defaults to "
+                       "'%default'."))
+group.add_option("--no_oauth2_webbrowser", action="store_false",
+                 dest="open_oauth2_local_webbrowser", default=True,
+                 help="Don't open a browser window to get an access token.")
 group.add_option("--account_type", action="store", dest="account_type",
                  metavar="TYPE", default=AUTH_ACCOUNT_TYPE,
                  choices=["GOOGLE", "HOSTED"],
@@ -614,10 +677,158 @@ group.add_option("--p4_user", action="store", dest="p4_user",
                  help=("Perforce user"))
 
 
+# OAuth 2.0 Methods and Helpers
+class ClientRedirectServer(BaseHTTPServer.HTTPServer):
+  """A server for redirects back to localhost from the associated server.
+
+  Waits for a single request and parses the query parameters for an access token
+  or an error and then stops serving.
+  """
+  access_token = None
+  error = None
+
+
+class ClientRedirectHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+  """A handler for redirects back to localhost from the associated server.
+
+  Waits for a single request and parses the query parameters into the server's
+  access_token or error and then stops serving.
+  """
+
+  def SetResponseValue(self):
+    """Stores the access token or error from the request on the server.
+
+    Will only do this if exactly one query parameter was passed in to the
+    request and that query parameter used 'access_token' or 'error' as the key.
+    """
+    query_string = urlparse.urlparse(self.path).query
+    query_params = urlparse.parse_qs(query_string)
+
+    if len(query_params) == 1:
+      if query_params.has_key(ACCESS_TOKEN_PARAM):
+        access_token_list = query_params[ACCESS_TOKEN_PARAM]
+        if len(access_token_list) == 1:
+          self.server.access_token = access_token_list[0]
+      else:
+        error_list = query_params.get(ERROR_PARAM, [])
+        if len(error_list) == 1:
+          self.server.error = error_list[0]
+
+  def do_GET(self):
+    """Handle a GET request.
+
+    Parses and saves the query parameters and prints a message that the server
+    has completed its lone task (handling a redirect).
+
+    Note that we can't detect if an error occurred.
+    """
+    self.send_response(200)
+    self.send_header('Content-type', 'text/html')
+    self.end_headers()
+    self.SetResponseValue()
+    self.wfile.write(AUTH_HANDLER_RESPONSE)
+
+  def log_message(self, format, *args):
+    """Do not log messages to stdout while running as command line program."""
+    pass
+
+
+def OpenOAuth2ConsentPage(server=DEFAULT_REVIEW_SERVER,
+                          port=DEFAULT_OAUTH2_PORT):
+  """Opens the OAuth 2.0 consent page or prints instructions how to.
+
+  Uses the webbrowser module to open the OAuth server side page in a browser.
+
+  Args:
+    server: String containing the review server URL. Defaults to
+      DEFAULT_REVIEW_SERVER.
+    port: Integer, the port where the localhost server receiving the redirect
+      is serving. Defaults to DEFAULT_OAUTH2_PORT.
+
+  Returns:
+    A boolean indicating whether the page opened successfully.
+  """
+  path = OAUTH_PATH_PORT_TEMPLATE % {'port': port}
+  parsed_url = urlparse.urlparse(server)
+  scheme = parsed_url[0] or 'https'
+  if scheme != 'https':
+    ErrorExit('Using OAuth requires a review server with SSL enabled.')
+  # If no scheme was given on command line the server address ends up in
+  # parsed_url.path otherwise in netloc.
+  host = parsed_url[1] or parsed_url[2]
+  page = '%s://%s%s' % (scheme, host, path)
+  page_opened = webbrowser.open(page, new=1, autoraise=True)
+  if page_opened:
+    print OPEN_LOCAL_MESSAGE_TEMPLATE % (page,)
+  return page_opened
+
+
+def WaitForAccessToken(port=DEFAULT_OAUTH2_PORT):
+  """Spins up a simple HTTP Server to handle a single request.
+
+  Intended to handle a single redirect from the production server after the
+  user authenticated via OAuth 2.0 with the server.
+
+  Args:
+    port: Integer, the port where the localhost server receiving the redirect
+      is serving. Defaults to DEFAULT_OAUTH2_PORT.
+
+  Returns:
+    The access token passed to the localhost server, or None if no access token
+      was passed.
+  """
+  httpd = ClientRedirectServer((LOCALHOST_IP, port), ClientRedirectHandler)
+  # Wait to serve just one request before deferring control back
+  # to the caller of wait_for_refresh_token
+  httpd.handle_request()
+  if httpd.access_token is None:
+    ErrorExit(httpd.error or OAUTH_DEFAULT_ERROR_MESSAGE)
+  return httpd.access_token
+
+
+def GetAccessToken(server=DEFAULT_REVIEW_SERVER, port=DEFAULT_OAUTH2_PORT,
+                   open_local_webbrowser=True):
+  """Gets an Access Token for the current user.
+
+  Args:
+    server: String containing the review server URL. Defaults to
+      DEFAULT_REVIEW_SERVER.
+    port: Integer, the port where the localhost server receiving the redirect
+      is serving. Defaults to DEFAULT_OAUTH2_PORT.
+    open_local_webbrowser: Boolean, defaults to True. If set, opens a page in
+      the user's browser.
+
+  Returns:
+    A string access token that was sent to the local server. If the serving page
+      via WaitForAccessToken does not receive an access token, this method
+      returns None.
+  """
+  access_token = None
+  if open_local_webbrowser:
+    page_opened = OpenOAuth2ConsentPage(server=server, port=port)
+    if page_opened:
+      try:
+        access_token = WaitForAccessToken(port=port)
+      except socket.error, e:
+        print 'Can\'t start local webserver. Socket Error: %s\n' % (e.strerror,)
+
+  if access_token is None:
+    # TODO(dhermes): Offer to add to clipboard using xsel, xclip, pbcopy, etc.
+    page = 'https://%s%s' % (server, OAUTH_PATH)
+    print NO_OPEN_LOCAL_MESSAGE_TEMPLATE % (page,)
+    access_token = raw_input('Enter access token: ').strip()
+
+  return access_token
+
+
 class KeyringCreds(object):
   def __init__(self, server, host, email):
     self.server = server
-    self.host = host
+    # Explicitly cast host to str to work around bug in old versions of Keyring
+    # (versions before 0.10). Even though newer versions of Keyring fix this,
+    # some modern linuxes (such as Ubuntu 12.04) still bundle a version with
+    # the bug.
+    self.host = str(host)
     self.email = email
     self.accounts_seen = set()
 
@@ -655,8 +866,24 @@ class KeyringCreds(object):
     return (email, password)
 
 
+class OAuth2Creds(object):
+  """Simple object to hold server and port to be passed to GetAccessToken."""
+
+  def __init__(self, server, port, open_local_webbrowser=True):
+    self.server = server
+    self.port = port
+    self.open_local_webbrowser = open_local_webbrowser
+
+  def __call__(self):
+    """Uses stored server and port to retrieve OAuth 2.0 access token."""
+    return GetAccessToken(server=self.server, port=self.port,
+                          open_local_webbrowser=self.open_local_webbrowser)
+
+
 def GetRpcServer(server, email=None, host_override=None, save_cookies=True,
-                 account_type=AUTH_ACCOUNT_TYPE):
+                 account_type=AUTH_ACCOUNT_TYPE, use_oauth2=False,
+                 oauth2_port=DEFAULT_OAUTH2_PORT,
+                 open_oauth2_local_webbrowser=True):
   """Returns an instance of an AbstractRpcServer.
 
   Args:
@@ -667,11 +894,16 @@ def GetRpcServer(server, email=None, host_override=None, save_cookies=True,
     save_cookies: Whether authentication cookies should be saved to disk.
     account_type: Account type for authentication, either 'GOOGLE'
       or 'HOSTED'. Defaults to AUTH_ACCOUNT_TYPE.
+    use_oauth2: Boolean indicating whether OAuth 2.0 should be used for
+      authentication.
+    oauth2_port: Integer, the port where the localhost server receiving the
+      redirect is serving. Defaults to DEFAULT_OAUTH2_PORT.
+    open_oauth2_local_webbrowser: Boolean, defaults to True. If True and using
+      OAuth, this opens a page in the user's browser to obtain a token.
 
   Returns:
     A new HttpRpcServer, on which RPC calls can be made.
   """
-
   # If this is the dev_appserver, use fake authentication.
   host = (host_override or server).lower()
   if re.match(r'(http://)?localhost([:/]|$)', host):
@@ -690,8 +922,13 @@ def GetRpcServer(server, email=None, host_override=None, save_cookies=True,
     server.authenticated = True
     return server
 
-  return HttpRpcServer(server,
-                       KeyringCreds(server, host, email).GetUserCredentials,
+  positional_args = [server]
+  if use_oauth2:
+    positional_args.append(
+        OAuth2Creds(server, oauth2_port, open_oauth2_local_webbrowser))
+  else:
+    positional_args.append(KeyringCreds(server, host, email).GetUserCredentials)
+  return HttpRpcServer(*positional_args,
                        host_override=host_override,
                        save_cookies=save_cookies,
                        account_type=account_type)
@@ -943,7 +1180,7 @@ class VersionControlSystem(object):
     mimetype =  mimetypes.guess_type(filename)[0]
     if not mimetype:
       return False
-    return mimetype.startswith("image/")
+    return mimetype.startswith("image/") and not mimetype.startswith("image/svg")
 
   def IsBinaryData(self, data):
     """Returns true if data contains a null byte."""
@@ -1391,8 +1628,8 @@ class GitVCS(VersionControlSystem):
     else:
       status = "M"
 
-    is_binary = self.IsBinaryData(base_content)
     is_image = self.IsImage(filename)
+    is_binary = self.IsBinaryData(base_content) or is_image
 
     # Grab the before/after content if we need it.
     # Grab the base content if we don't have it already.
@@ -2215,7 +2452,11 @@ def RealMain(argv, data=None):
   if options.help:
     if options.verbose < 2:
       # hide Perforce options
-      parser.epilog = "Use '--help -v' to show additional Perforce options."
+      parser.epilog = (
+        "Use '--help -v' to show additional Perforce options. "
+        "For more help, see "
+        "http://code.google.com/p/rietveld/wiki/CodeReviewHelp"
+        )
       parser.option_groups.remove(parser.get_option_group('--p4_port'))
     parser.print_help()
     sys.exit(0)
@@ -2256,11 +2497,16 @@ def RealMain(argv, data=None):
   files = vcs.GetBaseFiles(data)
   if verbosity >= 1:
     print "Upload server:", options.server, "(change with -s/--server)"
+  if options.use_oauth2:
+    options.save_cookies = False
   rpc_server = GetRpcServer(options.server,
                             options.email,
                             options.host,
                             options.save_cookies,
-                            options.account_type)
+                            options.account_type,
+                            options.use_oauth2,
+                            options.oauth2_port,
+                            options.open_oauth2_local_webbrowser)
   form_fields = []
 
   repo_guid = vcs.GetGUID()
