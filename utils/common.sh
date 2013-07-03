@@ -41,8 +41,7 @@ linter()
   else
     # TODO: Re-enable pylint again, disabling for a while to not make lint CL
     # larger than it already is.
-    LINTER="pychecker -Q -f --only -6 --unusednames"
-    #LINTER="pylint --rcfile=utils/pylintrc"
+    LINTER="pylint --rcfile=utils/pylintrc"
   fi
 
   echo "Run through pychecker.";

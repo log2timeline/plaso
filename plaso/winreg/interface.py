@@ -75,9 +75,20 @@ class WinRegKey(object):
     """Retrieves the number of subkeys within the key."""
 
   @abc.abstractmethod
-  def HasSubkeys(self):
+  def HasSubkeys(self):   # pylint: disable-msg=R0201
     """Determines if the key has subkeys."""
     return False
+
+  @abc.abstractmethod
+  def GetSubkey(self, name):
+    """Retrive a subkey by name.
+
+    Args:
+      name: The relative path of the current key to the desired one.
+
+    Returns:
+      The subkey with the relative path of name or None if not found.
+    """
 
   # TODO: refactor this to a subkeys property.
   @abc.abstractmethod

@@ -92,6 +92,25 @@ class WinPyregKey(interface.WinRegKey):
     for pyregf_value in self._pyregf_key.values:
       yield WinPyregValue(pyregf_value)
 
+  def GetSubkey(self, name):
+    """Retrive a subkey by name.
+
+    Args:
+      name: The relative path of the current key to the desired one.
+
+    Returns:
+      The subkey with the relative path of name or None if not found.
+    """
+    subkey = self._pyregf_key.get_sub_key_by_name(name)
+
+    if subkey:
+      return WinPyregKey(subkey, self.path)
+
+    path_subkey = self._pyregf_key.get_sub_key_by_path(name)
+    if path_subkey:
+      path, _, _ = name.rpartition('\\')
+      return WinPyregKey(path_subkey, self.path + u'\\%s' % path)
+
   def GetSubkeyCount(self):
     """Retrieves the number of subkeys within the key."""
     return self._pyregf_key.number_of_sub_keys
