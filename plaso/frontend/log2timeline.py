@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains log2timeline, the friendly front-end to plaso."""
-
 import argparse
+import locale
 import logging
 import multiprocessing
 import os
@@ -156,10 +156,10 @@ def Main():
     # This is not import at top since this is only required if this parameter
     # is set, otherwise these libraries get imported in their respected
     # locations.
-    from plaso import filters
-    from plaso import parsers
-    from plaso import registry
-    from plaso import output as outputs
+    from plaso import filters as _
+    from plaso import parsers as _
+    from plaso import registry as _
+    from plaso import output as _
     from plaso.frontend import presets
     from plaso.lib import filter_interface
     from plaso.lib import output
@@ -225,6 +225,16 @@ def Main():
     print ''
     logging.error(u'No input file supplied.')
     sys.exit(1)
+
+  # "Adjust" the filename
+  preferred_encoding = locale.getpreferredencoding()
+  try:
+    filename = options.filename.decode(preferred_encoding)
+    options.filename = filename
+    options.preferred_encoding = preferred_encoding
+  except UnicodeDecodeError:
+    logging.warning(
+        u'Unable to properly decode filename using: %s' % preferred_encoding)
 
   options.recursive = os.path.isdir(options.filename)
 

@@ -63,6 +63,7 @@ http://plaso.kiddaland.net/developer/libraries/storage
 # other tools. This file will then contain the queueing mechanism and other
 # plaso specific mechanism, making it easier to import the storage library.
 import collections
+import construct
 import heapq
 import logging
 import struct
@@ -81,8 +82,6 @@ from plaso.proto import plaso_storage_pb2
 from google.protobuf import message
 import yaml
 
-__pychecker__ = 'no-abstract'
-
 
 class PlasoStorage(object):
   """Abstract the storage reading and writing."""
@@ -92,6 +91,12 @@ class PlasoStorage(object):
 
   # Set the version of this storage mechanism.
   STORAGE_VERSION = 1
+
+  # Define structs.
+  TAG_INDEX_STRUCT = construct.Struct(
+      'tag_index', construct.ULInt32('offset'),
+      construct.ULInt32('store_number'), construct.ULInt32('store_index'))
+  INTEGER = construct.ULInt32('integer')
 
   source_short_map = {}
   for value in plaso_storage_pb2.EventObject.DESCRIPTOR.enum_types_by_name[
@@ -142,10 +147,16 @@ class PlasoStorage(object):
                     self._max_buffer_size)
 
       if pre_obj:
-        __pychecker__ = 'no-abstract'
         pre_obj.counter = collections.Counter()
         if hasattr(pre_obj, 'collection_information'):
-          pre_obj.collection_information['cmd_line'] = u' '.join(sys.argv)
+          cmd_line = ' '.join(sys.argv)
+          encoding = getattr(pre_obj, 'preferred_encoding', None)
+          if encoding:
+            try:
+              cmd_line = cmd_line.decode(encoding)
+            except UnicodeDecodeError:
+              pass
+          pre_obj.collection_information['cmd_line'] = cmd_line
 
       # Start up a counter for modules in buffer.
       self._count_data_type = collections.Counter()
@@ -252,7 +263,6 @@ class PlasoStorage(object):
       index_fh = self.zipfile.open('plaso_index.%06d' % number, 'r')
       ofs = entry_index * 4
 
-      __pychecker__ = 'unusednames=_'
       # Since seek is not supported we need to read and ignore the data.
       _ = index_fh.read(ofs)
       size_byte_stream = index_fh.read(4)
@@ -307,7 +317,7 @@ class PlasoStorage(object):
 
     return proto
 
-  def SetStoreLimit(self, my_filter=None):
+  def SetStoreLimit(self, my_filter=None):    # pylint:disable-msg=W0613
     """Set a limit to the stores used for returning data."""
     # We are setting the bounds now, remove potential prior bound settings.
     if hasattr(self, '_bound_first'):
@@ -552,7 +562,6 @@ class PlasoStorage(object):
     ofs = 0
     proto_str = []
     index_str = []
-    __pychecker__ = 'unusednames=_'
     for _ in range(len(self._buffer)):
       _, entry = heapq.heappop(self._buffer)
       # TODO: Instead of appending to an array
@@ -651,6 +660,8 @@ class PlasoStorage(object):
       # our buffer size of group information. Check that and write a new
       # group store file in that case.
       size += len(packed)
+      if size > self._max_buffer_size:
+        logging.warning(u'Grouping has outgrown buffer size.')
       group_packed.append(packed)
 
     self.zipfile.writestr('plaso_grouping.%06d' % group_number,
@@ -704,27 +715,10 @@ class PlasoStorage(object):
     for name in self.zipfile.namelist():
       if 'plaso_grouping.' in name:
         fh = self.zipfile.open(name, 'r')
-        group_entry = self._GetGroupEntry(fh)
+        group_entry = GetEventGroupProto(fh)
         while group_entry:
           yield group_entry
-          group_entry = self._GetGroupEntry(fh)
-
-  def _GetGroupEntry(self, fh):
-    """Return a single group entry from a filehandle."""
-    unpacked = fh.read(4)
-    if len(unpacked) != 4:
-      return None
-
-    size = struct.unpack('<I', unpacked)[0]
-
-    if size > 1024 * 1024 * 40:
-      raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
-
-    proto_serialized = fh.read(size)
-    proto = plaso_storage_pb2.EventGroup()
-
-    proto.ParseFromString(proto_serialized)
-    return proto
+          group_entry = GetEventGroupProto(fh)
 
   def GetTag(self, store_number, store_index):
     """Return a EventTagging proto if it exists from a store number and index.
@@ -788,12 +782,12 @@ class PlasoStorage(object):
       raw = fh.read(12)
       if not raw:
         break
-      ofs, sn, si = struct.unpack('<III', raw)
-      if store_number != sn:
+      data = self.TAG_INDEX_STRUCT.parse(raw)
+      if store_number != data['store_number']:
         continue
 
-      if store_index == si:
-        return ofs
+      if store_index == data['store_index']:
+        return data['offset']
 
   def GetTagging(self):
     """Return a generator that reads all tagging information from storage.
@@ -851,7 +845,7 @@ class PlasoStorage(object):
     if len(unpacked) != 4:
       return None
 
-    size = struct.unpack('<I', unpacked)[0]
+    size = self.INTEGER.parse(unpacked)
 
     if size > 1024 * 1024 * 40:
       raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
@@ -873,7 +867,6 @@ class PlasoStorage(object):
         logging.info(('[Storage] Closing the storage, nr. of events processed:'
                       ' %d'), self._write_counter)
 
-  __pychecker__ = 'unusednames=unused_type,unused_value,unused_traceback'
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
     self.CloseStorage()
@@ -914,3 +907,22 @@ class SimpleStorageDumper(object):
   def Close(self):
     """Close the queue, indicating to the storage to flush and close."""
     self._queue.Close()
+
+
+def GetEventGroupProto(fh):
+  """Return a single group entry from a filehandle."""
+  unpacked = fh.read(4)
+  if len(unpacked) != 4:
+    return None
+
+  size = struct.unpack('<I', unpacked)[0]
+
+  if size > 1024 * 1024 * 40:
+    raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
+
+  proto_serialized = fh.read(size)
+  proto = plaso_storage_pb2.EventGroup()
+
+  proto.ParseFromString(proto_serialized)
+  return proto
+
