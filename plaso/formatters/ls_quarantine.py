@@ -18,12 +18,16 @@
 from plaso.lib import eventdata
 
 
-class LSQuarantineFormatter(eventdata.EventFormatter):
+class LSQuarantineFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a LS Quarantine history event."""
   DATA_TYPE = 'macosx:lsquarantine'
 
-  FORMAT_STRING = u'[{agent}] Downloaded: {url} <{data}>'
-  FORMAT_STRING_SHORT = u'{url}'
+  FORMAT_STRING_PIECES = [
+      u'[{agent}]',
+      u'Downloaded: {url}',
+      u'<{data}>']
+
+  FORMAT_STRING_SHORT_PIECES = [u'{url}']
 
   SOURCE_LONG = 'LS Quarantine Event'
   SOURCE_SHORT = 'LOG'
