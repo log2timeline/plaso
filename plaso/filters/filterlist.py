@@ -43,7 +43,7 @@ class ObjectFilterList(filter_interface.FilterObject):
   def CompileFilter(self, filter_string):
     """Compile a set of ObjectFilters defined in an YAML file."""
     if not os.path.isfile(filter_string):
-      raise errors.WrongFilterPlugin((
+      raise errors.WrongPlugin((
           'ObjectFilterList requires an YAML file to be passed on, this filter '
           'string is not a file.'))
 
@@ -55,7 +55,7 @@ class ObjectFilterList(filter_interface.FilterObject):
       try:
         results = yaml.safe_load(fh)
       except (yaml.ScannerError, IOError) as e:
-        raise errors.WrongFilterPlugin(
+        raise errors.WrongPlugin(
             u'Malformed YAML file: {}.'.format(e))
 
     self.filters = []
@@ -64,12 +64,12 @@ class ObjectFilterList(filter_interface.FilterObject):
     elif type(results) is list:
       for result in results:
         if type(result) is not dict:
-          raise errors.WrongFilterPlugin(
+          raise errors.WrongPlugin(
               u'Wrong format of YAML file, entry not a dict ({})'.format(
                   type(result)))
         self._ParseEntry(result)
     else:
-      raise errors.WrongFilterPlugin(
+      raise errors.WrongPlugin(
           u'Wrong format of YAML file, entry not a dict ({})'.format(
               type(result)))
 
@@ -78,13 +78,13 @@ class ObjectFilterList(filter_interface.FilterObject):
     # A single file with a list of filters to parse.
     for name, meta in entry.items():
       if 'filter' not in meta:
-        raise errors.WrongFilterPlugin(
+        raise errors.WrongPlugin(
             u'Entry inside {} does not contain a filter statement.'.format(
                 name))
 
       matcher = pfilter.GetMatcher(meta.get('filter'), True)
       if not matcher:
-        raise errors.WrongFilterPlugin(
+        raise errors.WrongPlugin(
           u'Filter entry [{}] malformed for rule: <{}>'.format(
             meta.get('filter'), name))
 

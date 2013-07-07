@@ -44,7 +44,7 @@ class TestDefaultRegistry(unittest.TestCase):
 
   def testDefault(self):
     """Run a simple test against a mocked MRU list."""
-    plugin = default.DefaultPlugin(None, None)
+    plugin = default.DefaultPlugin(None, None, None)
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)

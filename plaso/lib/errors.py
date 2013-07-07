@@ -73,8 +73,8 @@ class WinRegistryValueError(Error):
   """Raised when there is an issue reading a registry value."""
 
 
-class WrongFilterPlugin(Error):
-  """Raised when a particular filter does not support the filter query."""
+class WrongPlugin(Error):
+  """Raised when the plugin is of the wrong type."""
 
 
 class WrongPlistPlugin(Error):

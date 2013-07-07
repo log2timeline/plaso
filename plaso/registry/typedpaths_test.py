@@ -43,7 +43,7 @@ class RegistryTypedPathsTest(unittest.TestCase):
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
         '\\TypedPaths')
-    plugin = typedpaths.TypedPathsPlugin(None, None)
+    plugin = typedpaths.TypedPathsPlugin(None, None, None)
     entries = list(plugin.Process(key))
 
     self.assertEquals(entries[0].timestamp, 1289375895811625)

@@ -46,7 +46,7 @@ class TestMRUxRegistry(unittest.TestCase):
 
   def testMRUX(self):
     """Test the MRUexPlugin."""
-    plugin = mrux.MRUexPlugin(None, None)
+    plugin = mrux.MRUexPlugin(None, None, None)
     entries = list(plugin.Process(self.regkey))
 
     line0 = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] MRUListEx '

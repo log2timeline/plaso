@@ -40,21 +40,6 @@ class WinGetRegistryPath(preprocess.PreprocessGetPath):
   PATH = '(Windows|WinNT)/System32/config'
 
 
-class WinCurrentControl(preprocess.WinRegistryPreprocess):
-  """Fetch information about the current control set."""
-
-  ATTRIBUTE = 'current_control_set'
-
-  REG_FILE = 'SYSTEM'
-  REG_KEY = '\\Select'
-
-  def ParseKey(self, key):
-    """Extract current control set information."""
-    value = key.GetValue('Current')
-
-    return 'ControlSet%.3d' % value.GetData()
-
-
 class WinVersion(preprocess.WinRegistryPreprocess):
   """Fetch information about the current Windows version."""
 

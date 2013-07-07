@@ -27,7 +27,7 @@ class EventObjectFilter(filter_interface.FilterObject):
     """Compile the filter string into a filter matcher."""
     self.matcher =  pfilter.GetMatcher(filter_string, True)
     if not self.matcher:
-      raise errors.WrongFilterPlugin('Malformed filter string.')
+      raise errors.WrongPlugin('Malformed filter string.')
 
   def Match(self, event_object):
     """Evaluate an EventObject against a filter."""

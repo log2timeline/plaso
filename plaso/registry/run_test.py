@@ -37,7 +37,7 @@ class TestRunNtuserRegistry(unittest.TestCase):
         1346445929000000, values, 153)
 
   def testRunNtuser(self):
-    plugin = run.RunNtuserPlugin(None, None)
+    plugin = run.RunNtuserPlugin(None, None, None)
     entries = list(plugin.Process(self.regkey))
 
     line = (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Run] ctfmon.exe:'
@@ -65,7 +65,7 @@ class TestRunOnceNtuserRegistry(unittest.TestCase):
         1346445929000000, values, 153)
 
   def testRunOnceNtuser(self):
-    plugin = run.RunOnceNtuserPlugin(None, None)
+    plugin = run.RunOnceNtuserPlugin(None, None, None)
     entries = list(plugin.Process(self.regkey))
 
     line = (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce] '
@@ -92,7 +92,7 @@ class TestRunSoftwareRegistry(unittest.TestCase):
         153)
 
   def testRunSoftware(self):
-    plugin = run.RunSoftwarePlugin(None, None)
+    plugin = run.RunSoftwarePlugin(None, None, None)
     entries = list(plugin.Process(self.regkey))
 
     line = (u'[\\Microsoft\\Windows\\CurrentVersion\\Run] ctfmon.exe: '
@@ -120,7 +120,7 @@ class TestRunOnceSoftwareRegistry(unittest.TestCase):
         values, 153)
 
   def testRunOnceSoftware(self):
-    plugin = run.RunOnceSoftwarePlugin(None, None)
+    plugin = run.RunOnceSoftwarePlugin(None, None, None)
     entries = list(plugin.Process(self.regkey))
 
     line = (

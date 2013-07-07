@@ -42,7 +42,7 @@ class RegistryOfficeMRUTest(unittest.TestCase):
     """Test the Typed URLS plugin."""
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU')
-    plugin = officemru.MSWord2010FileMRU(None, None)
+    plugin = officemru.MSWord2010FileMRU(None, None, None)
     entries = list(plugin.Process(key))
 
     self.assertEquals(entries[0].timestamp, 1331663235083000)

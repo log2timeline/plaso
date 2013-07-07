@@ -44,7 +44,7 @@ class TestMRURegistry(unittest.TestCase):
 
   def testMRU(self):
     """Run a simple test against a mocked MRU list."""
-    plugin = mru.MRUPlugin(None, None)
+    plugin = mru.MRUPlugin(None, None, None)
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)
