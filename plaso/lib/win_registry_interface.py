@@ -25,9 +25,7 @@ projects that may want to use the registry plugin system in Plaso.
 import abc
 import logging
 
-from plaso.lib import errors
 from plaso.lib import registry
-from plaso.lib import utils
 
 
 class RegistryPlugin(object):
@@ -54,7 +52,7 @@ class RegistryPlugin(object):
   # prioritization to registry plugins.
   WEIGHT = 3
 
-  def __init__(self, hive, pre_obj):
+  def __init__(self, hive, pre_obj, reg_cache):
     """Constructor for a registry plugin.
 
     Args:
@@ -62,9 +60,11 @@ class RegistryPlugin(object):
       to get values from other keys in the hive.
       pre_obj: The pre-processing object that contains information gathered
       during preprocessing of data.
+      rec_cache: A Windows registry cache object.
     """
     self._hive = hive
     self._config = pre_obj
+    self._reg_cache = reg_cache
 
   @property
   def plugin_name(self):
@@ -104,12 +104,16 @@ class KeyPlugin(RegistryPlugin):
 
   def Process(self, key):
     """Process the key based plugin."""
+    key_fixed = u''
     try:
-      key_fixed = utils.PathReplacer(self._config, self.REG_KEY).GetPath()
-    except errors.PathNotFound as e:
+      key_fixed = ExpandRegistryPath(
+          self.REG_KEY, self._config, self._reg_cache)
+    except KeyError as e:
       logging.warning(u'Unable to use plugin %s, error message: %s',
                       self.plugin_name, e)
-      return None
+
+    if not key_fixed:
+      return
 
     # Special case of Wow6432 registry redirection.
     # URL:  http://msdn.microsoft.com/en-us/library/windows/desktop/\
@@ -180,17 +184,13 @@ class PluginList(object):
     _ = map(ret.extend, self._value_plugins.values())
     return ret
 
-  def _GetPlugins(self, plugin_dict, plugin_type):
-    """Return all plugins as a list for a specific plugin type."""
-    return plugin_dict.get(plugin_type, []) + plugin_dict.get('any', [])
-
   def GetValuePlugins(self, plugin_type):
     """Returns a list of all value plugins for a given type of registry."""
-    return self._GetPlugins(self._value_plugins, plugin_type)
+    return GetPlugins(self._value_plugins, plugin_type)
 
   def GetKeyPlugins(self, plugin_type):
     """Returns a list of all key plugins for a given type of registry."""
-    return self._GetPlugins(self._key_plugins, plugin_type)
+    return GetPlugins(self._key_plugins, plugin_type)
 
   def GetWeightPlugins(self, weight, plugin_type=''):
     """Return a list of all plugins for a given weight or priority.
@@ -232,6 +232,11 @@ class PluginList(object):
     return set(self._key_plugins).union(self._value_plugins)
 
 
+def GetPlugins(plugin_dict, plugin_type):
+  """Return all plugins as a list for a specific plugin type."""
+  return plugin_dict.get(plugin_type, []) + plugin_dict.get('any', [])
+
+
 def GetRegistryPlugins():
   """Build a list of all available plugins capable of parsing the registry.
 
@@ -251,3 +256,53 @@ def GetRegistryPlugins():
 
   return plugins
 
+
+def ExpandRegistryPath(key_str, pre_obj=None, reg_cache=None):
+  """Expand a registry path based on attributes in pre calculated values.
+
+  A registry key path may contain paths that are attributes, based on
+  calculations from either preprocessing or based on each individual
+  registry file.
+
+  An attribute is defined as anything within a curly bracket, eg.
+  "\\System\\{my_attribute}\\Path\\Keyname". If the attribute my_attribute
+  is defined in either the pre processing object or the registry cache
+  it's value will be replaced with the attribute name, eg
+  "\\System\\MyValue\\Path\\Keyname".
+
+  If the registry path needs to have curly brackets in the path then
+  they need to be escaped with another curly bracket, eg
+  "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
+  case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
+
+  Args:
+    key_str: The registry key string before being expanded.
+    pre_obj: The PlasoPreprocess object that contains stored values from
+    the image.
+    reg_cache: A registry cache object.
+
+  Raises:
+    KeyError: If an attribute name is in the key path yet not set in
+    either the registry cache nor in the pre processing object a KeyError
+    will be raised.
+
+  Returns:
+    A registry key path that's expanded based on attribute values.
+  """
+  key_fixed = u''
+  key_dict = {}
+  if reg_cache:
+    key_dict.update(reg_cache.attributes.items())
+
+  if pre_obj:
+    key_dict.update(pre_obj.__dict__.items())
+
+  try:
+    key_fixed = key_str.format(**key_dict)
+  except KeyError as e:
+    raise KeyError(u'Unable to expand string, %s' % e)
+
+  if not key_fixed:
+    raise KeyError(u'Unable expand string, no string returned.')
+
+  return key_fixed

@@ -22,6 +22,12 @@ EXIT_SUCCESS=0;
 
 SCRIPTNAME=`basename $0`;
 
+BROWSER_PARAM="";
+if [ "$1" == "--nobrowser" ];
+then
+  BROWSER_PARAM="--no_oauth2_webbrowser";
+fi
+
 if [ -f ._code_review_number ];
 then
   CL_NUMBER=`cat ._code_review_number`
@@ -73,6 +79,6 @@ fi
 
 echo "All came out clean, let's update the code review.";
 
-python utils/upload.py --oauth2 -y -i ${CL_NUMBER} -t "." -m ".";
+python utils/upload.py --oauth2 $BROWSER_PARAM -y -i ${CL_NUMBER} -t "." -m ".";
 
 exit ${EXIT_SUCCESS};

@@ -24,7 +24,7 @@ import pytz
 from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 from plaso import preprocessors
-from plaso import registry
+from plaso import registry    # pylint: disable-msg=W0611
 
 from plaso.lib import errors
 from plaso.lib import pfile
@@ -34,6 +34,7 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.lib import vss
 from plaso.lib import win_registry_interface
+from plaso.winreg import cache
 from plaso.winreg import winpyregf
 
 import pytz
@@ -48,6 +49,7 @@ class RegCache(object):
   hive_type = 'UNKNOWN'
   pre_obj = None
   fscache = None
+  reg_cache = None
 
   REG_TYPES = {
       'NTUSER': ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
@@ -76,6 +78,13 @@ class RegCache(object):
         break
 
     cls.hive_type = registry_type
+
+  @classmethod
+  def BuildCache(cls):
+    """Build the registry cache."""
+    # Calculate the registry cache.
+    cls.reg_cache = cache.WinRegistryCache(cls.hive, cls.hive_type)
+    cls.reg_cache.BuildCache()
 
   @classmethod
   def GetHiveName(cls):
@@ -151,7 +160,7 @@ def cd(key):
 
     # Set the registry key and the prompt.
     RegCache.cur_key = registry_key
-    ip = get_ipython()
+    ip = get_ipython()    # pylint: disable-msg=E0602
     ip.prompt_manager.in_template = u'{}->{} [\\#] '.format(
         StripCurlyBrace(RegCache.GetHiveName()),
         StripCurlyBrace(path))
@@ -233,6 +242,7 @@ def OpenHive(filename, collector=None, codepage='cp1252'):
   # directly invoked here.
   RegCache.hive = winpyregf.WinRegistry(fh, use_codepage)
   RegCache.SetHiveType()
+  RegCache.BuildCache()
   RegCache.cur_key = RegCache.hive.GetKey('\\')
 
 
@@ -259,6 +269,7 @@ def PrintEvent(event_object, show_hex=False):
     print fmt.format(attribute, value)
 
   if show_hex:
+    # pylint: disable-msg=W0212
     event_object.pathspec = RegCache.hive._fh.pathspec
     print utils.FormatHeader('Hex Output From Event.', '-')
     print putils.GetEventData(event_object, RegCache.fscache)
@@ -287,10 +298,24 @@ def ParseHive(hive_path, collectors, keys, use_plugins, verbose):
     print u'{:>15} : {}{}'.format('Hive File', hive_path, name)
     OpenHive(hive_path, collector)
     for key_str in keys:
-      key = RegCache.hive.GetKey(key_str)
-      print u'{:>15} : {}'.format('Key Name', key_str)
+      key_str_use = key_str
+      key_dict = {}
+      if RegCache.reg_cache:
+        key_dict.update(RegCache.reg_cache.attributes.items())
+
+      if RegCache.pre_obj:
+        key_dict.update(RegCache.pre_obj.__dict__.items())
+
+      try:
+        key_str_use = key_str.format(**key_dict)
+      except KeyError as e:
+        logging.warning(
+            u'Unable to format key string %s, error message: %s', key_str, e)
+
+      key = RegCache.hive.GetKey(key_str_use)
+      print u'{:>15} : {}'.format('Key Name', key_str_use)
       if not key:
-        print 'Unable to open key: {}'.format(key_str)
+        print 'Unable to open key: {}'.format(key_str_use)
         continue
       print u'{:>15} : {}'.format('Subkeys', key.GetSubkeyCount())
       print u'{:>15} : {}'.format('Values', key.GetValueCount())
@@ -339,11 +364,12 @@ def ParseKey(key, verbose=False, use_plugins=None):
     plugins[weight] = []
     for plugin in plugin_list:
       if use_plugins:
-        plugin_obj = plugin(RegCache.hive, RegCache.pre_obj)
+        plugin_obj = plugin(RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
         if plugin_obj.plugin_name in use_plugins:
           plugins[weight].append(plugin_obj)
       else:
-        plugins[weight].append(plugin(RegCache.hive, RegCache.pre_obj))
+        plugins[weight].append(plugin(
+            RegCache.hive, RegCache.pre_obj, RegCache.reg_cache))
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:
@@ -517,7 +543,7 @@ def Main():
 
   key_plugin_names = []
   for plugin in plugins.GetAllKeyPlugins():
-    temp_obj = plugin(None, None)
+    temp_obj = plugin(None, None, None)
     key_plugin_names.append(temp_obj.plugin_name)
 
   # TODO: Add the option of selecting registry types instead of a key name.
@@ -539,7 +565,7 @@ def Main():
     types = []
     for plugin in plugins_to_run:
       for reg_plugin in plugins.GetAllKeyPlugins():
-        temp_obj = reg_plugin(None, None)
+        temp_obj = reg_plugin(None, None, None)
         if plugin is temp_obj.plugin_name:
           if temp_obj.REG_KEY not in keys:
             keys.append(temp_obj.REG_KEY)
@@ -586,8 +612,8 @@ def Main():
         try:
           plugin.Run()
         except (IOError, errors.PreProcessFail) as e:
-          logging.warning(u'Unable to run plugin: {}, reason {}',
-                          plugin.plugin_name, e)
+          logging.warning(u'Unable to run plugin: {}, reason {}'.format(
+              plugin.plugin_name, e))
 
     if options.regfile:
       hives = FindRegistryPaths(options.regfile, collector)

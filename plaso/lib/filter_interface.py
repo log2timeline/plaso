@@ -20,6 +20,8 @@ import logging
 
 from plaso.lib import errors
 from plaso.lib import registry
+# Suppress all warnings about changing functions to methods.
+# pylint: disable-msg=R0201
 
 
 class FilterObject(object):
@@ -60,7 +62,7 @@ class FilterObject(object):
     return 0
 
   @abc.abstractmethod
-  def CompileFilter(self, filter_string):
+  def CompileFilter(self, filter_string):   # pylint: disable-msg=W0613
     """Verify filter string and prepare the filter for later usage.
 
     This function verifies the filter string matches the definition of
@@ -72,12 +74,12 @@ class FilterObject(object):
                      class.
 
     Raises:
-      errors.WrongFilterPlugin: If this filter string does not match the filter
-                                class.
+      errors.WrongPlugin: If this filter string does not match the filter
+                          class.
     """
-    raise errors.WrongFilterPlugin('Not the correct filter for this string.')
+    raise errors.WrongPlugin('Not the correct filter for this string.')
 
-  def Match(self, event_object):
+  def Match(self, event_object):    # pylint: disable-msg=W0613
     """Compare an EventObject to the filter expression and return a boolean.
 
     This function returns True if the filter should be passed through the filter
@@ -107,6 +109,6 @@ def GetFilter(filter_string):
     try:
       filter_obj.CompileFilter(filter_string)
       return filter_obj
-    except errors.WrongFilterPlugin:
+    except errors.WrongPlugin:
       logging.debug(u'Filterstring [{}] is not a filter: {}'.format(
           filter_string, filter_obj.filter_name))
