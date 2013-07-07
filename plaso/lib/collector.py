@@ -378,7 +378,12 @@ class SimpleImageCollector(Collector):
       # Get a stat object and send timestamps for the directory to the storage.
       directory_stat = GetTskDirectoryStat(directory)
       directory_stat.full_path = path
-      directory_stat.display_path = u'{}:{}'.format(self._image, path)
+      directory_stat.display_path = '{}:{}'.format(self._image, path)
+      try:
+        directory_stat.display_path.decode('utf-8')
+      except UnicodeDecodeError:
+        directory_stat.display_path = utils.GetUnicodeString(
+            directory_stat.display_path)
       SendContainerToStorage(
           filestat.GetEventContainerFromStat(directory_stat),
           directory_stat, self._storage_queue)

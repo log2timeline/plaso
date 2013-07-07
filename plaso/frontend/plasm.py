@@ -51,10 +51,11 @@ from plaso import filters   # pylint: disable-msg=W0611
 
 from plaso.lib import event
 from plaso.lib import filter_interface
+from plaso.lib import preprocess
 from plaso.lib import storage
 
 
-def SetupStorage(input_file_path):
+def SetupStorage(input_file_path, pre_obj=None):
   """Sets up the storage object.
 
   Attempts to initialize the storage object from the PlasoStorage library.  If
@@ -63,12 +64,14 @@ def SetupStorage(input_file_path):
 
   Args:
     input_file_path: Filesystem path to the plaso storage container.
+    pre_obj: A plaso preprocessing object.
 
   Returns:
     A storage.PlasoStorage object.
   """
   try:
-    return storage.PlasoStorage(input_file_path, read_only=False)
+    return storage.PlasoStorage(
+        input_file_path, pre_obj=pre_obj, read_only=False)
   except IOError as details:
     logging.error('IO ERROR: %s', details)
   else:
@@ -164,10 +167,16 @@ def TaggingEngine(my_args):
     my_args: configuration object containing at least 'storagefile' and
              'tag_input' properties.
 """
+  pre_obj = preprocess.PlasoPreprocess()
+  pre_obj.collection_information = {}
+  pre_obj.collection_information['file_processed'] = my_args.storagefile
+  pre_obj.collection_information['method'] = 'Applying tags.'
+  pre_obj.collection_information['tag_file'] = my_args.tag_input
+  pre_obj.collection_information['tagging_engine'] = 'plasm'
 
   if not my_args.quiet:
     sys.stdout.write('Applying tags...\n')
-  with SetupStorage(my_args.storagefile) as store:
+  with SetupStorage(my_args.storagefile, pre_obj) as store:
     tags = ParseTaggingFile(my_args.tag_input)
     num_tags = 0
     event_tags = []

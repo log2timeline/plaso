@@ -51,7 +51,7 @@ def ReadUtf16Stream(filehandle, offset=None, byte_size=0):
     size_counter += 2
     char_raw = filehandle.read(2)
 
-  return ReadUtf16(u''.join(char_buffer))
+  return ReadUtf16(''.join(char_buffer))
 
 
 def ReadUtf16(string_buffer):
