@@ -29,6 +29,8 @@ from plaso.lib import plist_interface
 from plaso.lib import putils
 from plaso.lib import registry
 from plaso.lib import utils
+from plaso.lib import win_registry_interface
+from plaso.winreg import cache
 from plaso.winreg import winpyregf
 
 from plaso.proto import plaso_storage_pb2
@@ -108,25 +110,6 @@ class PreprocessPlugin(object):
 class PlasoPreprocess(object):
   """Object used to store all information gained from preprocessing."""
 
-  def _DictToProto(self, dict_obj):
-    """Return a dict message to a protobuf from a dict object."""
-    proto_dict = plaso_storage_pb2.Dict()
-
-    for dict_key, dict_value in dict_obj.items():
-      sub_proto = proto_dict.attributes.add()
-      event.AttributeToProto(sub_proto, dict_key, dict_value)
-
-    return proto_dict
-
-  def _ProtoToDict(self, proto):
-    """Return a dict object from a Dict message."""
-    dict_obj = {}
-    for proto_dict in proto.attributes:
-      dict_key, dict_value = event.AttributeFromProto(proto_dict)
-      dict_obj[dict_key] = dict_value
-
-    return dict_obj
-
   def FromProto(self, proto):
     """Unserializes the PlasoPreprocess from a protobuf.
 
@@ -150,7 +133,7 @@ class PlasoPreprocess(object):
 
     if proto.HasField('counter'):
       self.counter = collections.Counter()
-      dict_obj = self._ProtoToDict(proto.counter)
+      dict_obj = ProtoToDict(proto.counter)
       for title, value in dict_obj.items():
         self.counter[title] = value
 
@@ -162,7 +145,7 @@ class PlasoPreprocess(object):
       self.store_range = (range_list[0], range_list[-1])
 
     if proto.HasField('collection_information'):
-      self.collection_information = self._ProtoToDict(
+      self.collection_information = ProtoToDict(
           proto.collection_information)
       zone = self.collection_information.get('configure_zone')
       if zone:
@@ -177,10 +160,10 @@ class PlasoPreprocess(object):
         zone = value.get('configured_zone', '')
         if zone and hasattr(zone, 'zone'):
           value['configured_zone'] = zone.zone
-        proto.collection_information.MergeFrom(self._DictToProto(value))
+        proto.collection_information.MergeFrom(DictToProto(value))
       elif attribute == 'counter':
         value_dict = dict(value.items())
-        proto.counter.MergeFrom(self._DictToProto(value_dict))
+        proto.counter.MergeFrom(DictToProto(value_dict))
       elif attribute == 'store_range':
         range_proto = plaso_storage_pb2.Array()
         range_start = range_proto.values.add()
@@ -367,6 +350,9 @@ class WinRegistryPreprocess(PreprocessPlugin):
       raise errors.PreProcessFail(
           u'Unable to open the registry: {} [{}] (library version:{}'.format(
               file_name[0], e, winpyregf.GetLibraryVersion()))
+
+    self._reg_cache = cache.WinRegistryCache(reg, self.REG_FILE)
+    self._reg_cache.BuildCache()
     key_path = self.ExpandKeyPath()
 
     try:
@@ -384,8 +370,13 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
   def ExpandKeyPath(self):
     """Expand the key path with key words."""
-    path = utils.PathReplacer(self._obj_store, self.REG_KEY)
-    return path.GetPath()
+    try:
+      path = win_registry_interface.ExpandRegistryPath(
+          self.REG_KEY, self._obj_store, self._reg_cache)
+    except KeyError:
+      return ''
+
+    return path
 
   @abc.abstractmethod
   def ParseKey(self, key):
@@ -487,9 +478,10 @@ class Collector(object):
       A string containing the extended path.
     """
     try:
-      path_replacer = utils.PathReplacer(self._pre_obj, path)
-      return path_replacer.GetPath()
-    except errors.PathNotFound as e:
+      path_replacer = win_registry_interface.ExpandRegistryPath(
+          path, self._pre_obj)
+      return path_replacer
+    except KeyError as e:
       logging.error(u'Unable to extend path %s, reason: %s', path, e)
 
   @abc.abstractmethod
@@ -548,7 +540,7 @@ class FileSystemCollector(Collector):
               found_path = True
         if not found_path:
           raise errors.PathNotFound(
-              u'Path not found inside %s/%s', self._mount_point, paths)
+              u'Path not found inside %s/%s' % (self._mount_point, paths))
 
     for real_path in paths:
       if not os.path.isdir(os.path.join(self._mount_point, real_path)):
@@ -624,8 +616,8 @@ class TSKFileCollector(Collector):
         for real_path in old_paths:
           try:
             directory = self._fs_obj.fs.open_dir(real_path)
-          except IOError:
-            raise errors.PathNotFound(u'Path not found inside: %s', real_path)
+          except IOError as e:
+            continue
           for f in directory:
             try:
               name = f.info.name.name
@@ -646,8 +638,7 @@ class TSKFileCollector(Collector):
               paths.append(append_path)
 
         if not found_path:
-          raise errors.PathNotFound(
-              u'Path not found inside %s' % real_path)
+          raise errors.PathNotFound(u'Path not found inside')
 
     for real_path in paths:
       yield real_path
@@ -735,3 +726,24 @@ def GuessOS(col_obj):
     pass
 
   return 'None'
+
+
+def DictToProto(dict_obj):
+  """Return a dict message to a protobuf from a dict object."""
+  proto_dict = plaso_storage_pb2.Dict()
+
+  for dict_key, dict_value in dict_obj.items():
+    sub_proto = proto_dict.attributes.add()
+    event.AttributeToProto(sub_proto, dict_key, dict_value)
+
+  return proto_dict
+
+
+def ProtoToDict(proto):
+  """Return a dict object from a Dict message."""
+  dict_obj = {}
+  for proto_dict in proto.attributes:
+    dict_key, dict_value = event.AttributeFromProto(proto_dict)
+    dict_obj[dict_key] = dict_value
+
+  return dict_obj

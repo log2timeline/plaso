@@ -36,7 +36,7 @@ class FilterTestHelper(unittest.TestCase):
       self.test_filter.CompileFilter(query)
       # And a success.
       self.assertTrue(True)
-    except errors.WrongFilterPlugin:
+    except errors.WrongPlugin:
       # Let the test fail.
       self.assertTrue(False)
 
@@ -45,6 +45,6 @@ class FilterTestHelper(unittest.TestCase):
     if not self.test_filter:
       self.assertTrue(False)
 
-    with self.assertRaises(errors.WrongFilterPlugin):
+    with self.assertRaises(errors.WrongPlugin):
       self.test_filter.CompileFilter(query)
 

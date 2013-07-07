@@ -22,6 +22,12 @@ EXIT_SUCCESS=0;
 
 SCRIPTNAME=`basename $0`;
 
+BROWSER_PARAM="";
+if [ "$1" == "--nobrowser" ];
+then
+  BROWSER_PARAM="--no_oauth2_webbrowser";
+fi
+
 if [ -f ._code_review_number ];
 then
   CL_NUMBER=`cat ._code_review_number`
@@ -117,7 +123,7 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-python utils/upload.py --oauth2 -y -i ${CL_NUMBER} -t "Submitted." -m "Code Submitted." --send_mail
+python utils/upload.py --oauth2 $BROWSER_PARAM -y -i ${CL_NUMBER} -t "Submitted." -m "Code Submitted." --send_mail
 
 git commit -a -m "Code review: ${CL_NUMBER}: ${DESCRIPTION}";
 git push

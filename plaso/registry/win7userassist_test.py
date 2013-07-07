@@ -43,7 +43,7 @@ class RegistryWin7UserAssistTest(unittest.TestCase):
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         'Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}\\Count')
-    plugin = win7userassist.Win7UserAssistPlugin2(None, None)
+    plugin = win7userassist.Win7UserAssistPlugin2(None, None, None)
     entries = list(plugin.Process(key))
 
     self.assertEquals(entries[0].timestamp, 1289375377078067)

@@ -49,7 +49,7 @@ class TestServicesRegistry(unittest.TestCase):
 
   def testServices(self):
     """Test the ServicesPlugin."""
-    plugin = services.ServicesPlugin(None, None)
+    plugin = services.ServicesPlugin(None, None, None)
     entries = list(plugin.Process(self.regkey))
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.

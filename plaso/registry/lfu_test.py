@@ -21,6 +21,7 @@ from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.registry import lfu
+from plaso.winreg import cache
 from plaso.winreg import test_lib
 
 
@@ -55,10 +56,11 @@ class TestBootExecuteRegistry(unittest.TestCase):
         '\\ControlSet001\\Control\\Session Manager', 1346445929000000, values,
         153)
     self.preprocess = preprocess.PlasoPreprocess()
-    self.preprocess.current_control_set = 'ControlSet001'
+    self.registry_cache = cache.WinRegistryCache(None, 'SYSTEM')
+    self.registry_cache.attributes['current_control_set'] = 'ControlSet001'
 
   def testBootExecute(self):
-    plugin = lfu.BootExecutePlugin(None, self.preprocess)
+    plugin = lfu.BootExecutePlugin(None, self.preprocess, self.registry_cache)
     entries = list(plugin.Process(self.regkey))
 
     line1 = (u'[\\ControlSet001\\Control\\Session Manager] BootExecute: '
@@ -92,10 +94,12 @@ class TestBootVerificationRegistry(unittest.TestCase):
         '\\ControlSet001\\Control\\BootVerificationProgram',
         1346445929000000, values, 153)
     self.preprocess = preprocess.PlasoPreprocess()
-    self.preprocess.current_control_set = 'ControlSet001'
+    self.registry_cache = cache.WinRegistryCache(None, 'SYSTEM')
+    self.registry_cache.attributes['current_control_set'] = 'ControlSet001'
 
   def testBootVerification(self):
-    plugin = lfu.BootVerificationPlugin(None, self.preprocess)
+    plugin = lfu.BootVerificationPlugin(
+        None, self.preprocess, self.registry_cache)
     entries = list(plugin.Process(self.regkey))
 
     line = (u'[\\ControlSet001\\Control\\BootVerificationProgram] Boot'

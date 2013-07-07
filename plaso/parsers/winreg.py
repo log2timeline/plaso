@@ -20,6 +20,7 @@ import logging
 from plaso.lib import errors
 from plaso.lib import parser
 from plaso.lib import win_registry_interface
+from plaso.winreg import cache
 from plaso.winreg import winpyregf
 
 
@@ -41,6 +42,9 @@ class WinRegistryParser(parser.PlasoParser):
     """Default constructor for the Windows registry."""
     super(WinRegistryParser, self).__init__(pre_obj)
     self._plugins = win_registry_interface.GetRegistryPlugins()
+
+  def Scan(self, filehandle):
+    pass
 
   def Parse(self, filehandle):
     """Return a generator for events extracted from registry files."""
@@ -84,13 +88,16 @@ class WinRegistryParser(parser.PlasoParser):
     logging.debug(u'Registry file %s detected as <%s>', filehandle.name,
                   registry_type)
 
+    registry_cache = cache.WinRegistryCache(reg, registry_type)
+    registry_cache.BuildCache()
+
     plugins = {}
     counter = 0
     for weight in self._plugins.GetWeights():
       plist = self._plugins.GetWeightPlugins(weight, registry_type)
       plugins[weight] = []
       for plugin in plist:
-        plugins[weight].append(plugin(reg, self._pre_obj))
+        plugins[weight].append(plugin(reg, self._pre_obj, registry_cache))
         counter += 1
 
     logging.debug('Number of plugins for this registry file: %d', counter)

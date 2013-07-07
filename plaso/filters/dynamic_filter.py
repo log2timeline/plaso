@@ -48,31 +48,29 @@ class SelectiveLexer(lexer.Lexer):
 
   def __init__(self, data=''):
     """Initialize the lexer."""
-    self._fields = []
-    self._limit = 0
-    self._filter = None
-    self._separator = u','
+    self.fields = []
+    self.limit = 0
+    self.lex_filter = None
+    self.separator = u','
     super(SelectiveLexer, self).__init__(data)
 
-  __pychecker__ = 'unusednames=kwargs'
-  def SetFilter(self, match, **kwargs):
+  def SetFilter(self, match, **_):
     """Set the filter query."""
     filter_match = match.group(1)
     if 'LIMIT' in filter_match:
       # This only occurs in the case where we have "LIMIT X SEPARATED BY".
-      self._filter, _, push_back = filter_match.rpartition('LIMIT')
+      self.lex_filter, _, push_back = filter_match.rpartition('LIMIT')
       self.PushBack('LIMIT {} SEPARATED BY '.format(push_back))
     else:
-      self._filter = filter_match
+      self.lex_filter = filter_match
 
-  def SetSeparator(self, match, **kwargs):
+  def SetSeparator(self, match, **_):
     """Set the separator of the output, only uses the first char."""
     separator = match.group(1)
     if separator:
-      self._separator = separator[0]
+      self.separator = separator[0]
 
-  __pychecker__ = 'unusednames=kwargs'
-  def SetLimit(self, match, **kwargs):
+  def SetLimit(self, match, **_):
     """Set the row limit."""
     try:
       limit = int(match.group(1))
@@ -81,19 +79,18 @@ class SelectiveLexer(lexer.Lexer):
           type(match.group(1)), match.group(1)))
       limit = 0
 
-    self._limit = limit
+    self.limit = limit
 
-  __pychecker__ = 'unusednames=kwargs'
-  def SetFields(self, match, **kwargs):
+  def SetFields(self, match, **_):
     """Set the selective fields."""
     text = match.group(1).lower()
     field_text, _, _ = text.partition(' from ')
 
     use_field_text = field_text.replace(' ', '')
     if ',' in use_field_text:
-      self._fields = use_field_text.split(',')
+      self.fields = use_field_text.split(',')
     else:
-      self._fields = [use_field_text]
+      self.fields = [use_field_text]
 
 
 class DynamicFilter(eventfilter.EventObjectFilter):
@@ -138,28 +135,28 @@ class DynamicFilter(eventfilter.EventObjectFilter):
 
     _ = lex.NextToken()
     if lex.error:
-      raise errors.WrongFilterPlugin('Malformed filter string.')
+      raise errors.WrongPlugin('Malformed filter string.')
 
     _ = lex.NextToken()
     if lex.error:
-      raise errors.WrongFilterPlugin('No fields defined.')
+      raise errors.WrongPlugin('No fields defined.')
 
     if lex.state is not 'END':
       while lex.state is not 'END':
         _ = lex.NextToken()
         if lex.error:
-          raise errors.WrongFilterPlugin('No filter defined for DynamicFilter.')
+          raise errors.WrongPlugin('No filter defined for DynamicFilter.')
 
     if lex.state != 'END':
-      raise errors.WrongFilterPlugin(
+      raise errors.WrongPlugin(
           'Malformed DynamicFilter, end state not reached.')
 
-    self._fields = lex._fields
-    self._limit = lex._limit
-    self._separator = unicode(lex._separator)
+    self._fields = lex.fields
+    self._limit = lex.limit
+    self._separator = unicode(lex.separator)
 
-    if lex._filter:
-      super(DynamicFilter, self).CompileFilter(lex._filter)
+    if lex.lex_filter:
+      super(DynamicFilter, self).CompileFilter(lex.lex_filter)
     else:
       self.matcher = None
 

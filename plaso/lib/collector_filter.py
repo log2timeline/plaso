@@ -81,7 +81,8 @@ class CollectionFilter(object):
       try:
         paths = list(self._collector.FindPaths(filter_path))
       except errors.PathNotFound as e:
-        logging.warning(u'Unable to find path: [{}]'.format(filter_path))
+        logging.warning(u'Unable to find path: [{}] {}'.format(
+            filter_path, e))
         continue
       try:
         for path in paths:
