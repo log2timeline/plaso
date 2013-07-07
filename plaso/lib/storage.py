@@ -68,6 +68,7 @@ import heapq
 import logging
 import struct
 import sys
+import time
 import zipfile
 
 from plaso.lib import errors
@@ -681,6 +682,16 @@ class PlasoStorage(object):
       tags: A list or an object providing an iterator that contains
       EventTag objects.
     """
+    if not self._pre_obj:
+      self._pre_obj = preprocess.PlasoPreprocess()
+
+    if not hasattr(self._pre_obj, 'collection_information'):
+      self._pre_obj.collection_information = {}
+
+    self._pre_obj.collection_information['Action'] = 'Adding tags to storage.'
+    self._pre_obj.collection_information['time_of_run'] = time.time()
+    self._pre_obj.counter = collections.Counter()
+
     tag_number = 1
     if self.HasTagging():
       for name in self.zipfile.namelist():
@@ -693,6 +704,10 @@ class PlasoStorage(object):
     tag_index = []
     size = 0
     for tag in tags:
+      self._pre_obj.counter['Total'] += 1
+      if hasattr(tag, 'tags'):
+        for tag_entry in tag.tags:
+          self._pre_obj.counter[tag_entry] += 1
       tag_str = tag.ToProtoString()
       packed = struct.pack('<I', len(tag_str)) + tag_str
       ofs = struct.pack('<I', size)

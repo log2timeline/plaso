@@ -14,7 +14,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A simple dump information gathered from a plaso storage container."""
+"""A simple dump information gathered from a plaso storage container.
+
+pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
+"""
 # To make YAML loading work.
 __pychecker__ = 'no-import'
 import argparse
