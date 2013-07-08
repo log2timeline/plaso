@@ -669,7 +669,7 @@ class EventPathBundle(object):
       by parsers to match if the bundle is the correct one for the parser.
     """
     self._pathspecs = []
-    self.pattern = ''
+    self.pattern = pattern
 
   def ToProto(self):
     """Serialize an EventPathBundle to PathBundle protobuf."""
@@ -755,7 +755,6 @@ class EventPathBundle(object):
     """Return a string representation of the bundle."""
     out_write = []
     out_write.append(u'+-' * 40)
-    hashes = list(self.ListFiles())
 
     out_write.append(utils.FormatOutputString('Pattern', self.pattern, 10))
 
@@ -1022,11 +1021,7 @@ class WinRegistryEvent(EventObject):
   """Convenience class for a Windows Registry-based event."""
   DATA_TYPE = 'windows:registry:key_value'
 
-  # Add few class variables so they don't get defined as special attributes.
-  keyvalue_dict = u''
-  source_append = u''
-
-  def __init__(self, key, value_dict, timestamp=None, usage=None):
+  def __init__(self, key, value_dict, timestamp=None, usage=None, append=None):
     """Initializes a Windows registry event.
 
     Args:
@@ -1035,6 +1030,7 @@ class WinRegistryEvent(EventObject):
       timestamp: Optional timestamp time value. The timestamp contains the
                  number of microseconds since Jan 1, 1970 00:00:00 UTC.
       usage: The description of the usage of the time value.
+      append: To append values to the source_long of an event.
     """
     super(WinRegistryEvent, self).__init__()
     self.timestamp = timestamp
@@ -1046,6 +1042,8 @@ class WinRegistryEvent(EventObject):
     for value in value_dict.values():
       if type(value) in (str, unicode) and value[0:4] == 'REGA':
         self.regalert = True
+    if append:
+      self.source_append = append
 
 
 class TextEvent(EventObject):

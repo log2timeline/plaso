@@ -242,7 +242,7 @@ class WinRegistry(object):
   def GetRoot(self):
     """Return the root key of the registry hive."""
     key = WinPyregKey(self._pyregf_file.get_root_key())
-    # We need change the root key name otherwise key based plugins will fail.
+    # Change root key name to avoid key based plugins failing.
     key.path = ''
     return key
 
