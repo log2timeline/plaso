@@ -56,7 +56,8 @@ class WinRegistryGenericFormatter(eventdata.EventFormatter):
     self.source_string = getattr(
         event_object, 'source_long', u'{} key'.format(
             getattr(event_object, 'registry_type', 'UNKNOWN')))
+
     if hasattr(event_object, 'source_append'):
-      self.source_string += u'%s' % event_object.source_append
+      self.source_string += u' %s' % event_object.source_append
 
     return super(WinRegistryGenericFormatter, self).GetSources(event_object)
