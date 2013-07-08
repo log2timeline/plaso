@@ -39,9 +39,14 @@ class WinPyregKey(interface.WinRegKey):
     self._path = self.PATH_SEPARATOR.join([parent_path, self._pyregf_key.name])
 
   @property
-  def path(self):
+  def path(self):   # pylint: disable-msg=E0202
     """The path of the key."""
     return self._path
+
+  @path.setter
+  def path(self, value):    # pylint: disable-msg=E0102,W0221,E0202
+    """Set the value of the path explicitly."""
+    self._path = value
 
   @property
   def name(self):
@@ -236,7 +241,10 @@ class WinRegistry(object):
 
   def GetRoot(self):
     """Return the root key of the registry hive."""
-    return WinPyregKey(self._pyregf_file.get_root_key())
+    key = WinPyregKey(self._pyregf_file.get_root_key())
+    # We need change the root key name otherwise key based plugins will fail.
+    key.path = ''
+    return key
 
   def GetKey(self, key):
     """Return a registry key as a WinPyregKey object."""
