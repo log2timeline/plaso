@@ -20,7 +20,7 @@ import logging
 
 from plaso.lib import event
 from plaso.lib import lexer
-from plaso.lib import parser
+from plaso.lib import text_parser
 from plaso.lib import timelib
 
 
@@ -41,7 +41,7 @@ class SyslogLineEvent(event.TextEvent):
     self.offset = offset
 
 
-class SyslogParser(parser.TextParser):
+class SyslogParser(text_parser.SlowLexicalTextParser):
   """Parse text based syslog files."""
 
   # TODO: can we change this similar to SQLite where create an
@@ -86,7 +86,7 @@ class SyslogParser(parser.TextParser):
     self.attributes['reporter'] = ''
     self.attributes['pid'] = ''
 
-  def GetYear(self, stat, zone):
+  def GetYear(self, stat, zone):    # pylint: disable-msg=R0201
     """Retrieves the year either from the input file or from the settings."""
     time = stat.attributes.get('crtime', 0)
     if not time:
@@ -140,8 +140,7 @@ class SyslogParser(parser.TextParser):
 
     return super(SyslogParser, self).ParseLine(zone)
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseHostname(self, match, **kwargs):
+  def ParseHostname(self, match, **_):
     """Parses the hostname.
 
        This is a callback function for the text parser (lexer) and is
@@ -153,8 +152,7 @@ class SyslogParser(parser.TextParser):
     """
     self.attributes['hostname'] = match.group(1)
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParsePid(self, match, **kwargs):
+  def ParsePid(self, match, **_):
     """Parses the process identifier (PID).
 
        This is a callback function for the text parser (lexer) and is
@@ -181,7 +179,6 @@ class SyslogParser(parser.TextParser):
     else:
       self.attributes['reporter'] = line
 
-  __pychecker__ = 'unusednames=kwargs'
   def ParseString(self, match, **kwargs):
     """Parses a (body text) string.
 

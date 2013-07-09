@@ -16,7 +16,7 @@
 # limitations under the License.
 """This file contains a Symantec parser in plaso."""
 from plaso.lib import event
-from plaso.lib import parser
+from plaso.lib import text_parser
 from plaso.lib import timelib
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -27,7 +27,7 @@ class SymantecEvent(event.TextEvent):
   DATA_TYPE = 'av:symantec:scanlog'
 
 
-class Symantec(parser.TextCSVParser):
+class Symantec(text_parser.TextCSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
   # Define the columns that make up the structure of a Symantec log file.
