@@ -140,7 +140,12 @@ def Main():
             ' and it\'s usage can be found here: http://plaso.kiddaland.'
             'net/usage/filters'))
 
+  # Properly prepare the attributes according to local encoding.
+  preferred_encoding = locale.getpreferredencoding()
+  u_argv = [x.decode(preferred_encoding) for x in sys.argv]
+  sys.argv = u_argv
   options = arg_parser.parse_args()
+  options.preferred_encoding = preferred_encoding
 
   if options.tzone == 'list':
     print '=' * 40
@@ -226,16 +231,6 @@ def Main():
     logging.error(u'No input file supplied.')
     sys.exit(1)
 
-  # "Adjust" the filename
-  preferred_encoding = locale.getpreferredencoding()
-  try:
-    filename = options.filename.decode(preferred_encoding)
-    options.filename = filename
-    options.preferred_encoding = preferred_encoding
-  except UnicodeDecodeError:
-    logging.warning(
-        u'Unable to properly decode filename using: %s' % preferred_encoding)
-
   options.recursive = os.path.isdir(options.filename)
 
   if options.filter and not pfilter.GetMatcher(options.filter):
@@ -303,7 +298,7 @@ def Main():
   try:
     l2t = engine.Engine(options)
   except errors.BadConfigOption as e:
-    logging.warning('Unable to run tool, bad configuration: %s', e)
+    logging.warning(u'Unable to run tool, bad configuration: %s', e)
     sys.exit(1)
 
   try:
