@@ -23,7 +23,7 @@ import re
 
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.lib import text_parser
 
 
 class MactimeEvent(event.PosixTimeEvent):
@@ -39,7 +39,7 @@ class MactimeEvent(event.PosixTimeEvent):
     super(MactimeEvent, self).__init__(posix_time, usage, 'fs:mactime:line')
 
 
-class MactimeParser(parser.TextCSVParser):
+class MactimeParser(text_parser.TextCSVParser):
   """Parses TSK's mactime bodyfiles."""
 
   COLUMNS = [

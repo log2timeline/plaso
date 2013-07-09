@@ -45,7 +45,7 @@ import re
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
-from plaso.lib import parser
+from plaso.lib import text_parser
 from plaso.lib import timelib
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
@@ -68,7 +68,7 @@ class SELinuxLineEvent(event.TextEvent):
     self.offset = offset
 
 
-class SELinux(parser.TextParser):
+class SELinux(text_parser.SlowLexicalTextParser):
   """Parse SELinux audit log files."""
 
   PID_RE = re.compile(r'pid=([0-9]+)[\s]+', re.DOTALL)
@@ -133,7 +133,7 @@ class SELinux(parser.TextParser):
     except IndexError:
       self.attributes['body'] += match.group(0).strip('\n')
 
-  def ParseFailed(self, match, **_):
+  def ParseFailed(self, **_):   # pylint: disable-msg=R0201
     """Entry parsing failed callback."""
     raise lexer.ParseError(u'Not a proper SELinux line.')
 
