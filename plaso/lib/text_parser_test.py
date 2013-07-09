@@ -23,6 +23,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
+from plaso.lib import text_parser
 
 __pychecker__ = 'no-funcdoc'
 
@@ -132,7 +133,7 @@ class TestTextEventFormatter(eventdata.EventFormatter):
   SOURCE_LONG = 'Test Text Parser'
 
 
-class TestTextParser(parser.TextParser):
+class TestTextParser(text_parser.SlowLexicalTextParser):
   """Implement a text parser object that can successfully parse a text file.
 
   To be able to achieve that one function has to be implemented, the ParseDate
@@ -184,18 +185,18 @@ class TextParserTest(unittest.TestCase):
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
-    text_parser = TestTextParser(self._pre_obj)
+    my_text_parser = TestTextParser(self._pre_obj)
     fn = FakeFile()
 
-    text_generator = text_parser.Parse(fn)
+    text_generator = my_text_parser.Parse(fn)
     self.assertRaises(errors.UnableToParseFile, list, text_generator)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
-    text_parser = TestTextParser(self._pre_obj)
+    my_text_parser = TestTextParser(self._pre_obj)
     fn = FakeBetterFile()
 
-    text_generator = text_parser.Parse(fn)
+    text_generator = my_text_parser.Parse(fn)
 
     first_entry = text_generator.next()
     second_entry = text_generator.next()

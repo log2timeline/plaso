@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains utility functions."""
+import logging
+
 from plaso.lib import errors
 from plaso.lib import lexer
 
@@ -23,6 +25,66 @@ RESERVED_VARIABLES = frozenset(
      'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
      'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
      'tag', 'data_type', 'metadata', 'http_headers', 'query', 'mapped_files'])
+
+
+def IsText(bytes_in, encoding=None):
+  """Examing the bytes in and determine if they are indicative of a text.
+
+  Parsers need quick and at least semi reliable method of discovering whether
+  or not a particular byte stream is a text or resembles text or not. This can
+  be used in text parsers to determine if a file is a text file or not for
+  instance.
+
+  The method assumes the byte sequence is either ASCII, UTF-8, UTF-16 or method
+  supplied character encoding. Otherwise it will make the assumption the byte
+  sequence is not text, but a byte sequence.
+
+  Args:
+    bytes_in: The byte sequence passed to the method that needs examination.
+    encoding: Optional encoding to test, if not defined only ASCII, UTF-8 and
+    UTF-16 are tried.
+
+  Returns:
+    Boolean value indicating whether or not the byte sequence is a text or not.
+  """
+  # TODO: Improve speed and accuracy of this method.
+  # Start with the assumption we are dealing with a text.
+  is_ascii = True
+
+  # Check if this is ASCII string.
+  for char in bytes_in:
+    if not 31 < ord(char) < 128:
+      is_ascii = False
+      break
+
+  # We have an ASCII string.
+  if is_ascii:
+    return is_ascii
+
+  # Check if this is UTF-8
+  try:
+    _ = bytes_in.encode('utf-8')
+    return True
+  except UnicodeError:
+    pass
+
+  try:
+    _ = bytes_in.encode('utf-16')
+    return True
+  except UnicodeError:
+    pass
+
+  if encoding:
+    try:
+      _ = bytes_in.encode(encoding)
+      return True
+    except UnicodeError:
+      pass
+    except LookupError:
+      logging.error(
+          u'Character encoding not recognized: %s', encoding)
+
+  return False
 
 
 def GetBaseName(path):
@@ -120,7 +182,6 @@ def FormatOutputString(name, description, col_length=25):
   words = description.split()
 
   current = 0
-  line_count = len(description) / line_length + 1
 
   lines = []
   word_buffer = []
