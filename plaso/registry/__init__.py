@@ -18,6 +18,7 @@
 
 from plaso.registry import default
 from plaso.registry import ietypedurls
+from plaso.registry import internetsettings
 from plaso.registry import lfu
 from plaso.registry import mru
 from plaso.registry import mrux
@@ -31,4 +32,3 @@ from plaso.registry import win7userassist
 from plaso.registry import winrar
 from plaso.registry import winver
 from plaso.registry import xpuserassist
-
