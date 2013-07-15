@@ -18,7 +18,6 @@
 import tempfile
 import unittest
 
-from plaso.lib import event
 from plaso.lib import output
 
 __pychecker__ = 'no-funcdoc'
@@ -39,7 +38,7 @@ class DummyEvent(object):
 
 
 class TestOutput(output.LogOutputFormatter):
-  """A very simple implementation of the output formatter."""
+  """This is a dummy test module that provides a simple XML."""
 
   def __init__(self, filehandle):
     """Fake the store."""
@@ -58,7 +57,7 @@ class TestOutput(output.LogOutputFormatter):
   def EndEvent(self):
     self.filehandle.write('</Event>\n')
 
-  def FetchEntry(self, unused_number, unused_index):
+  def FetchEntry(self, **_):
     pass
 
   def Start(self):
@@ -66,9 +65,6 @@ class TestOutput(output.LogOutputFormatter):
 
   def End(self):
     self.filehandle.write('</EventFile>\n')
-
-  def Usage(self):
-    return 'This is a dummy test module that provides a simple XML.'
 
 
 class PlasoOutputUnitTest(unittest.TestCase):
@@ -131,6 +127,7 @@ class EventBufferTest(unittest.TestCase):
       def CheckBufferLength(event_buffer, expected):
         if not event_buffer.check_dedups:
           expected = 0
+        # pylint: disable-msg=W0212
         self.assertEquals(len(event_buffer._buffer_dict), expected)
 
       formatter = TestOutput(fh)

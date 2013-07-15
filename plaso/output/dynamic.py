@@ -26,7 +26,7 @@ from plaso.output import helper
 
 
 class Dynamic(output.FileLogOutputFormatter):
-  """Contains functions for outputting as the dynamic output."""
+  """Dynamic selection of fields for a separated value output format."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -184,11 +184,6 @@ class Dynamic(output.FileLogOutputFormatter):
     """Return a legacy MACB representation."""
     return helper.GetLegacy(event_object)
 
-  def Usage(self):
-    """Returns a short descrition of what this formatter outputs."""
-    return ('dynamic format. CSV with default of X fields, can be dynamically '
-            'changed.')
-
   def Start(self):
     """Returns a header for the output."""
     # Start by finding out which fields are to be used.
@@ -242,5 +237,5 @@ class Dynamic(output.FileLogOutputFormatter):
     out_write = u'{0}\n'.format(
         self.separator.join(unicode(x).replace(
             self.separator, ' ') for x in row))
-    self.filehandle.write(out_write.encode('utf-8'))
+    self.filehandle.write(out_write.encode(self.encoding))
 

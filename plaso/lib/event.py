@@ -21,7 +21,6 @@ which are core components of the storage mechanism of plaso.
 
 """
 import heapq
-import pprint
 import pytz
 import uuid
 
@@ -508,7 +507,6 @@ class EventObject(object):
 
   def __str__(self):
     """Print a human readable string from the EventObject."""
-    printer = pprint.PrettyPrinter(indent=8)
     out_write = []
 
     out_write.append(u'+-' * 40)
@@ -530,14 +528,14 @@ class EventObject(object):
           utils.GetUnicodeString(source_long), 'Source Short', 'Source Long'))
 
     if hasattr(self, 'pathspec'):
-      pathspec_string = str(self.pathspec.ToProto()).rstrip()
+      pathspec_string = unicode(self.pathspec.ToProto()).rstrip()
       out_write.append(
           u'{1}:\n  {0}\n'.format(
-              pathspec_string.replace('\n', '\n  '), '[Pathspec]'))
+              pathspec_string.replace('\n', '\n  '), u'[Pathspec]'))
 
     out_additional = []
-    out_write.append('[Reserved attributes]:')
-    out_additional.append('[Additional attributes]:')
+    out_write.append(u'[Reserved attributes]:')
+    out_additional.append(u'[Additional attributes]:')
 
     for attr_key, attr_value in sorted(self.GetValues().items()):
       if attr_key in utils.RESERVED_VARIABLES:
@@ -545,17 +543,17 @@ class EventObject(object):
           continue
         else:
           out_write.append(u'  {{{key}}} {value}'.format(
-                key=attr_key, value=printer.pformat(attr_value)))
+                key=attr_key, value=attr_value))
       else:
         out_additional.append(u'  {{{key}}} {value}'.format(
-              key=attr_key, value=printer.pformat(attr_value)))
+              key=attr_key, value=attr_value))
 
-    out_write.append('\n')
-    out_additional.append('')
+    out_write.append(u'\n')
+    out_additional.append(u'')
 
-    return u'{}{}'.format(utils.GetUnicodeString(
-        u'\n'.join(out_write)), utils.GetUnicodeString(
-            u'\n'.join(out_additional)))
+    part_1 = u'\n'.join(out_write)
+    part_2 = u'\n'.join(out_additional)
+    return part_1 + part_2
 
   def FromProto(self, proto):
     """Unserializes the event object from a protobuf.

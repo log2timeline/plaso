@@ -24,7 +24,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
-from plaso.formatters import winreg
+from plaso.formatters import winreg   # pylint: disable-msg=W0611
 
 __pychecker__ = 'no-funcdoc'
 
@@ -262,12 +262,12 @@ class StoreStorageTest(unittest.TestCase):
     The test will be to read the TestEventBuffer storage and check to see
     if it matches the known good sort order.
     """
-
+    pfilter.TimeRangeCache.ResetTimeConstraints()
+    pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
+    pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
     store = storage.PlasoStorage(self.test_file, read_only=True)
 
     store.store_range = [2, 5]
-    pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
-    pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
 
     read_list = []
     event_object = store.GetSortedEntry()
