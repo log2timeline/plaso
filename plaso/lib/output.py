@@ -67,6 +67,8 @@ class LogOutputFormatter(object):
     self.store = store
     self._filter = filter_use
 
+    self.encoding = getattr(config, 'preferred_encoding', 'utf-8')
+
   def FetchEntry(self, store_number=-1, store_index=-1):
     """Fetches an entry from the storage.
 
@@ -146,11 +148,8 @@ class LogOutputFormatter(object):
     """
     self.filehandle.write('')
 
-  def Usage(self):
-    """Return a quick help message that describes the output provided."""
-    return 'This is a generic output module that provides no context.'
 
-
+# pylint: disable-msg=W0223
 class FileLogOutputFormatter(LogOutputFormatter):
   """A simple file based output formatter."""
 
@@ -294,4 +293,6 @@ def GetOutputFormatter(output_string):
 def ListOutputFormatters():
   """Generate a list of all available output formatters."""
   for cl in LogOutputFormatter.classes:
-    yield cl, LogOutputFormatter.classes[cl](None).Usage()
+    formatter_class = LogOutputFormatter.classes[cl](None)
+    doc_string, _, _ = formatter_class.__doc__.partition('\n')
+    yield cl, doc_string

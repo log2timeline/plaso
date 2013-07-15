@@ -185,6 +185,9 @@ class WinRegValue(object):
     Returns:
       A Python object representation of the data.
     """
+    if not data:
+      return
+
     if data_type in [cls.REG_SZ, cls.REG_EXPAND_SZ, cls.REG_LINK]:
       try:
         return unicode(data.decode('utf-16-le'))

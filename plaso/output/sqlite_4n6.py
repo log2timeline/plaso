@@ -32,7 +32,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class Sql4n6(output.LogOutputFormatter):
-  """Contains functions for outputing as 4n6time sqlite database."""
+  """Saves the data in a SQLite database, used by the tool 4n6Time."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -58,10 +58,6 @@ class Sql4n6(output.LogOutputFormatter):
     self.append = getattr(config, 'append', False)
     self.fields = getattr(config, 'fields', [
         'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color'])
-
-  def Usage(self):
-    """Return a quick help message that describes the output provided."""
-    return '4n6time sqlite database format.'
 
   # Override LogOutputFormatter methods so it won't write to the file
   # handle any more.

@@ -24,9 +24,8 @@ import sys
 
 from plaso.lib import errors
 from plaso.lib import engine
+from plaso.lib import info
 from plaso.lib import pfilter
-from plaso.lib import putils
-from plaso.lib import utils
 
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024
@@ -114,7 +113,7 @@ def Main():
       help='Show the current version of the backend.')
 
   arg_parser.add_argument(
-      '--info', dest='info', action='store_true', default=False,
+      '--info', dest='show_info', action='store_true', default=False,
       help='Print out information about supported plugins and parsers.')
 
   arg_parser.add_argument(
@@ -156,53 +155,8 @@ def Main():
     print '=' * 40
     sys.exit(0)
 
-  if options.info:
-    # Import all plugins and parsers to print out the necessary information.
-    # This is not import at top since this is only required if this parameter
-    # is set, otherwise these libraries get imported in their respected
-    # locations.
-    from plaso import filters as _
-    from plaso import parsers as _
-    from plaso import registry as _
-    from plaso import output as _
-    from plaso.frontend import presets
-    from plaso.lib import filter_interface
-    from plaso.lib import output
-    from plaso.lib import win_registry_interface
-
-    print '{:=^80}'.format(' log2timeline/plaso information. ')
-
-    print utils.FormatHeader('Versions')
-    print utils.FormatOutputString('plaso engine', engine.__version__)
-    print utils.FormatOutputString('python', sys.version)
-    # TODO: Add here a list of all the parsing library versions.
-
-    print utils.FormatHeader('Parsers')
-    for parser in sorted(putils.FindAllParsers()['all']):
-      doc_string, _, _ = parser.__doc__.partition('\n')
-      print utils.FormatOutputString(parser.parser_name, doc_string)
-
-    print utils.FormatHeader('Parser Lists')
-    for category, parsers in sorted(presets.categories.items()):
-      print utils.FormatOutputString(category, ', '.join(parsers))
-
-    print utils.FormatHeader('Output Modules')
-    for name, description in sorted(output.ListOutputFormatters()):
-      print utils.FormatOutputString(name, description)
-
-    print utils.FormatHeader('Registry Plugins')
-    reg_plugins = win_registry_interface.GetRegistryPlugins()
-    a_plugin = reg_plugins.GetAllKeyPlugins()[0]
-
-    for plugin, obj in sorted(a_plugin.classes.items()):
-      doc_string, _, _ = obj.__doc__.partition('\n')
-      print utils.FormatOutputString(plugin, doc_string)
-
-    print utils.FormatHeader('Filters')
-    for filter_obj in sorted(filter_interface.ListFilters()):
-      doc_string, _, _ = filter_obj.__doc__.partition('\n')
-      print utils.FormatOutputString(filter_obj.filter_name, doc_string)
-
+  if options.show_info:
+    print info.GetPluginInformation()
     sys.exit(0)
 
   # This frontend only deals with local setup of the tool.
