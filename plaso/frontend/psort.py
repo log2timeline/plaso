@@ -25,6 +25,7 @@ import argparse
 import collections
 import datetime
 import os
+import locale
 import logging
 import pdb
 import sys
@@ -256,6 +257,9 @@ def Main():
 
   if not my_args.write:
     my_args.write = sys.stdout
+
+  # Add local encoding settings.
+  my_args.preferred_encoding = locale.getpreferredencoding()
 
   try:
     counter = ParseStorage(my_args)

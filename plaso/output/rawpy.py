@@ -24,11 +24,6 @@ class Rawpy(output.FileLogOutputFormatter):
   # something more closely similar to what it is doing now, as in
   # "native" or something else.
 
-  def Usage(self):
-    """Return usage information."""
-    return ('Returns a raw representation of the EventObject. Useful for'
-            ' debugging.')
-
   def EventBody(self, event_object):
     """Prints out to a filehandle string representation of an EventObject.
 
@@ -40,5 +35,4 @@ class Rawpy(output.FileLogOutputFormatter):
     Args:
       event_object: The EventObject.
     """
-    out_write = u'%s' % event_object
-    self.filehandle.write(out_write.encode('utf-8'))
+    self.filehandle.write(unicode(event_object).encode(self.encoding))

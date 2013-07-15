@@ -30,13 +30,9 @@ from plaso.output import helper
 
 
 class L2tcsv(output.FileLogOutputFormatter):
-  """A L2T CSV output formatter, a CSV output with 17 fixed fields defined."""
+  """The CSV format used by log2timeline, with 17 fixed fields."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
-
-  def Usage(self):
-    """Returns a short descrition of what this formatter outputs."""
-    return 'l2t_csv format. CSV with 17 fields e.g. user, host, date, etc.'
 
   def Start(self):
     """Returns a header for the output."""
@@ -83,14 +79,14 @@ class L2tcsv(output.FileLogOutputFormatter):
 
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
-    extra = []
+    extras = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         event_formatter.format_string)
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append(u'%s: %s ' % (key, getattr(event_object, key)))
-    extra = ' '.join(extra)
+      extras.append(u'%s: %s ' % (key, getattr(event_object, key)))
+    extra = ' '.join(extras)
 
     inode = getattr(event_object, 'inode', '-')
     if inode == '-':
@@ -127,9 +123,9 @@ class L2tcsv(output.FileLogOutputFormatter):
            inode,
            getattr(event_object, 'notes', '-'),  # Notes field placeholder.
            getattr(event_object, 'parser', '-'),
-           extra)
+           extra.replace('\n','-'))
 
     out_write = u'{0}\n'.format(
         u','.join(unicode(x).replace(',', ' ') for x in row))
-    self.filehandle.write(out_write.encode('utf-8'))
+    self.filehandle.write(out_write.encode(self.encoding))
 

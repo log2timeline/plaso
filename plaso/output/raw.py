@@ -21,11 +21,6 @@ from plaso.lib import output
 class Raw(output.FileProtoLogOutputFormatter):
   """Prints out a "raw" interpretation of the EventObject protobuf."""
 
-  def Usage(self):
-    """Return usage information."""
-    return ('Returns a raw representation of the EventObject protobuf. '
-            'Useful for debugging.')
-
   def EventBody(self, proto):
     """String representation of an EventObject protobuf.
 
@@ -37,4 +32,4 @@ class Raw(output.FileProtoLogOutputFormatter):
     """
 
     out_write = u'%s' % proto
-    self.filehandle.write(out_write.encode('utf-8'))
+    self.filehandle.write(out_write.encode(self.encoding))

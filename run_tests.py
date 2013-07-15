@@ -80,3 +80,5 @@ if __name__ == '__main__':
   results = RunTests()
 
   PrintResults(results)
+  if not results.wasSuccessful():
+    sys.exit(1)
