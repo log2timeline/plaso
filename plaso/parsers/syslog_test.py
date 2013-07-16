@@ -53,12 +53,19 @@ class SyslogUnitTest(unittest.TestCase):
     self.assertEquals(
         msg, '[client, pid: 30840] : INFO No new content.')
 
-    self.assertEquals(len(events), 12)
+    self.assertEquals(len(events), 13)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(events[10])
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(events[11])
     self.assertEquals(msg, (
         '[aprocess, pid: 101001] : This is a multi-line message that screws up'
         'many syslog parsers.'))
+
+    # Mon Feb 29 01:15:43 UTC 2012.
+    self.assertEquals(events[6].timestamp, 1330478143000000)
+
+    # Sat Mar 23 23:01:18 UTC 2013 - testing year increment.
+    self.assertEquals(events[8].timestamp, 1364079678000000)
+
 
 if __name__ == '__main__':
   unittest.main()
