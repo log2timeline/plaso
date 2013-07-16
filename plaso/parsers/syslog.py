@@ -131,7 +131,8 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
         # TODO: Make this sensible, not have the year permanent.
         self._year_use = 2012
 
-    if self._last_month > int(self.attributes['imonth']):
+    month_compare = int(self.attributes['imonth'])
+    if month_compare and self._last_month > month_compare:
       self._year_use += 1
 
     self._last_month = int(self.attributes['imonth'])
@@ -179,7 +180,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     else:
       self.attributes['reporter'] = line
 
-  def ParseString(self, match, **kwargs):
+  def ParseString(self, match, **_):
     """Parses a (body text) string.
 
        This is a callback function for the text parser (lexer) and is

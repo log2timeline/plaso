@@ -1035,7 +1035,6 @@ class WinRegistryEvent(EventObject):
     self.timestamp_desc = usage or 'Last Written'
     if key:
       self.keyname = key
-    self.keyvalue_dict = value_dict
     self.regvalue = value_dict
     for value in value_dict.values():
       if type(value) in (str, unicode) and value[0:4] == 'REGA':
