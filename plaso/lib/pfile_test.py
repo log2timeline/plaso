@@ -170,7 +170,7 @@ class PlasoPFileTest(unittest.TestCase):
     self.RunTest(pfile.TarFile, path)
 
   def testOsFile(self):
-    test_file = os.path.join('test_data', 'syslog')
+    test_file = os.path.join('test_data', 'syslog_copy')
 
     path = event.EventPathSpec()
     path.type = 'OS'
