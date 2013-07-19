@@ -17,7 +17,6 @@
 """This file contains few methods for Plaso."""
 import binascii
 import logging
-import os
 import tempfile
 
 from plaso.lib import event
@@ -55,11 +54,6 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
   Returns:
     A PFile object.
   """
-  if not os.path.isfile(image_path):
-    logging.error(
-        u'The image path is wrong, file does not exist: %s',
-        image_path)
-    return
   pathspec = event.EventPathSpec()
   if image_type == 'vss':
     pathspec.type = 'VSS'
