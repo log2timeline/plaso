@@ -110,3 +110,17 @@ class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
       event_object.extra_string = transition_str
 
     return super(FirefoxPageVisitFormatter, self).GetMessages(event_object)
+
+
+class FirefoxDowloadFormatter(eventdata.EventFormatter):
+  """Formatter for a Firefox dowloads.sqlite dowload."""
+  DATA_TYPE = 'firefox:downloads:download'
+
+  FORMAT_STRING = (u'{url} ({full_path}). Received: {received_bytes} bytes '
+                   u'out of: {total_bytes} bytes.')
+  FORMAT_STRING_SHORT = u'{full_path} downloaded ({received_bytes} bytes)'
+
+  SOURCE_LONG = 'Firefox History'
+  SOURCE_SHORT = 'WEBHIST'
+
+

@@ -20,6 +20,10 @@
    The Google Drive snapshots are stored in SQLite database files named
    snapshot.db.
 """
+# Shut up pylint
+# * R0924: Badly implemented Container
+# pylint: disable=R0924
+
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
@@ -105,9 +109,9 @@ class GoogleDriveParser(parser.SQLiteParser):
               'ParseLocalEntryRow')]
 
   # The required tables.
-  REQUIRED_TABLES = (
+  REQUIRED_TABLES = frozenset([
       'cloud_entry', 'cloud_relations', 'local_entry', 'local_relations',
-      'mapping', 'overlay_status')
+      'mapping', 'overlay_status'])
 
   def GetLocalPath(self, inode, path):
     """Return local path for a given inode.
@@ -159,8 +163,7 @@ class GoogleDriveParser(parser.SQLiteParser):
 
     return self.GetCloudPath(new_resource_id, path)
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseCloudEntryRow(self, row, **kwargs):
+  def ParseCloudEntryRow(self, row, **dummy_kwargs):
     """Parses a cloud entry row.
 
     Args:
@@ -194,8 +197,7 @@ class GoogleDriveParser(parser.SQLiteParser):
     # TODO: shouldn't this be yield?
     return container
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseLocalEntryRow(self, row, **kwargs):
+  def ParseLocalEntryRow(self, row, **dummy_kwargs):
     """Parses a local entry row.
 
     Args:

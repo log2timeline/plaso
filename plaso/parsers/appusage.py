@@ -19,6 +19,10 @@
    The application usage is stored in SQLite database files named
    /var/db/application_usage.sqlite
 """
+# Shut up pylint
+# * R0201: Method could be a function
+# pylint: disable=R0201
+
 from plaso.lib import event
 from plaso.lib import parser
 from plaso.lib import timelib
@@ -75,10 +79,9 @@ class ApplicationUsageParser(parser.SQLiteParser):
               'ParseApplicationUsageRow')]
 
   # The required tables.
-  REQUIRED_TABLES = ('application_usage',)
+  REQUIRED_TABLES = frozenset(['application_usage'])
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseApplicationUsageRow(self, row, **kwargs):
+  def ParseApplicationUsageRow(self, row, **dummy_kwargs):
     """Parses an application usage row.
 
     Args:
