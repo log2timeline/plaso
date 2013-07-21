@@ -19,6 +19,10 @@
    The Chrome histroy is stored in SQLite database files named History
    and Archived History.
 """
+# Shut up pylint
+# * R0201: Method could be a function
+# pylint: disable=R0201
+
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
@@ -102,7 +106,7 @@ class ChromeHistoryParser(parser.SQLiteParser):
                'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
 
   # The required tables.
-  REQUIRED_TABLES = ('urls', 'visits', 'downloads')
+  REQUIRED_TABLES = frozenset(['urls', 'visits', 'downloads'])
 
   # The following definition for values can be found here:
   # http://src.chromium.org/svn/trunk/src/content/public/common/ \
@@ -141,8 +145,7 @@ class ChromeHistoryParser(parser.SQLiteParser):
 
   CORE_MASK = 0xff
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseFileDownloadedRow(self, row, **kwargs):
+  def ParseFileDownloadedRow(self, row, **dummy_kwargs):
     """Parses a file downloaded row.
 
     Args:
@@ -157,8 +160,7 @@ class ChromeHistoryParser(parser.SQLiteParser):
         timestamp, row['id'], row['url'], row['full_path'],
         row['received_bytes'], row['total_bytes'])
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseNewFileDownloadedRow(self, row, **kwargs):
+  def ParseNewFileDownloadedRow(self, row, **dummy_kwargs):
     """Parses a file downloaded row.
 
     Args:
@@ -173,8 +175,7 @@ class ChromeHistoryParser(parser.SQLiteParser):
         timestamp, row['id'], row['url'], row['target_path'],
         row['received_bytes'], row['total_bytes'])
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseLastVisitedRow(self, row, **kwargs):
+  def ParseLastVisitedRow(self, row, **dummy_kwargs):
     """Parses a last visited row.
 
     Args:

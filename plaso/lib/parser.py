@@ -20,6 +20,10 @@ This class contains a base framework class for parsing fileobjects, and
 also some implementations that extend it to provide a more comprehensive
 parser.
 """
+# Shut up pylint
+# * R0201: Method could be a function
+# pylint: disable=R0201
+
 import abc
 import logging
 import os
@@ -81,29 +85,6 @@ class PlasoParser(object):
     """
     raise NotImplementedError
 
-  def Scan(self, filehandle):
-    """Scans the file without verifying it, extracting EventObjects from it.
-
-    Unlike the Parse() method it is not required to implement this method.
-    This method skips the verification portion that is included in the Parse()
-    method and automatically assumes that the file may not be correctly formed,
-    potentially corrupted or only contains portion of the format that this
-    parser provides support for.
-
-    If the parser has the potential to scan the file and extract potential
-    EventObjects from it, then this method should be implemented. It will never
-    been called during the normal runtime of the tool, it is only called
-    against a single file (for instance unallocated) using a single parser.
-
-    Args:
-      filehandle: A filehandle/file-like-object that is seekable to the file
-      needed to be checked.
-
-    Raises:
-      NotImplementedError when not implemented.
-    """
-    raise NotImplementedError
-
 
 class SQLiteParser(PlasoParser):
   """A SQLite assistance parser for Plaso."""
@@ -116,7 +97,7 @@ class SQLiteParser(PlasoParser):
   QUERIES = []
 
   # List of tables that should be present in the database, for verification.
-  REQUIRED_TABLES = ()
+  REQUIRED_TABLES = frozenset([])
 
   def __init__(self, pre_obj, local_zone=False):
     """Constructor for the SQLite parser."""
@@ -180,7 +161,7 @@ class SQLiteParser(PlasoParser):
       for row in sql_results:
         tables.append(row[0])
 
-      if not set(tables) >= set(self.REQUIRED_TABLES):
+      if not frozenset(tables) >= self.REQUIRED_TABLES:
         self._RemoveTempFile(name, filehandle.name)
         raise errors.UnableToParseFile(
             u'File %s not a %s (wrong tables).' % (filehandle.name,
