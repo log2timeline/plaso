@@ -111,7 +111,7 @@ class FirefoxHistoryParserTest(unittest.TestCase):
     self.assertEquals(event_object.title, expected_title)
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, dummy_msg_short = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = (
@@ -155,7 +155,7 @@ class FirefoxHistoryParserTest(unittest.TestCase):
     self.assertEquals(event_object.title, expected_title)
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, dummy_msg_short = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = (
@@ -188,12 +188,57 @@ class FirefoxHistoryParserTest(unittest.TestCase):
     self.assertEquals(event_object.title, expected_title)
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, dummy_msg_short = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = u'%s' % expected_title
 
     self.assertEquals(msg, expected_msg)
+
+
+class FirefoxDownloadsParserTest(unittest.TestCase):
+  """Tests for the Mozilla Firefox downloads parser."""
+
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj.zone = pytz.UTC
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
+    self.maxDiff = None
+
+    self.test_parser = firefox.FirefoxDownloadsParser(pre_obj)
+
+  def testParseFile(self):
+    """Read a Firefox History file and run a few tests."""
+    test_file = os.path.join('test_data', 'downloads.sqlite')
+
+    events = None
+    with open(test_file, 'rb') as file_object:
+      events = list(self.test_parser.Parse(file_object))
+
+    # The downloads.sqlite file contains 2 events (1 donwloads)
+    self.assertEquals(len(events), 2)
+
+    # Check the first page visited event.
+    event_object = events[0]
+
+    self.assertEquals(event_object.data_type, 'firefox:downloads:download')
+
+    self.assertEquals(event_object.timestamp_desc,
+                      eventdata.EventTimestamp.START_TIME)
+
+    self.assertEquals(event_object.timestamp, 1374173999312000)
+
+    expected_url = ('https://plaso.googlecode.com/files/'
+                    'plaso-static-1.0.1-win32-vs2008.zip')
+    self.assertEquals(event_object.url, expected_url)
+
+    expected_full_path = ('file:///D:/plaso-static-1.0.1-win32-vs2008.zip')
+    self.assertEquals(event_object.full_path, expected_full_path)
+
+    self.assertEquals(event_object.received_bytes, 15974599)
+    self.assertEquals(event_object.total_bytes, 15974599)
 
 
 if __name__ == '__main__':

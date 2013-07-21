@@ -15,6 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for the Mozilla Firefox history."""
+
+# Shut up pylint
+# * R0201: Method could be a function
+# * R0924: Badly implemented Container
+# * W0622: Redefining built-in 'type'
+# pylint: disable=R0201, R0924, W0622
+
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
@@ -129,6 +136,38 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
       self.extra = extra
 
 
+class FirefoxDownload(event.EventContainer):
+  """Convenience class for a Firefox download event container."""
+
+  def __init__(self, row_id, name, url, referrer, full_path, temporary_location,
+               received_bytes, total_bytes, mime_type):
+    """Initializes the event object.
+
+    Args:
+      row_id: The identifier of the corresponding row.
+      name: The name of the download.
+      url: The source URL of the download.
+      referrer: The referrer URL of the download.
+      full_path: The full path of the target of the download.
+      temporary_location: The temporary location of the download.
+      received_bytes: The number of bytes received.
+      total_bytes: The total number of bytes of the download.
+      mime_type: The mime type of the download.
+    """
+    super(FirefoxDownload, self).__init__()
+    self.data_type = 'firefox:downloads:download'
+
+    self.offset = row_id
+    self.name = name
+    self.url = url
+    self.referrer = referrer
+    self.full_path = full_path
+    self.temporary_location = temporary_location
+    self.received_bytes = received_bytes
+    self.total_bytes = total_bytes
+    self.mime_type = mime_type
+
+
 class FirefoxHistoryParser(parser.SQLiteParser):
   """Parses a Firefox history file.
 
@@ -165,11 +204,10 @@ class FirefoxHistoryParser(parser.SQLiteParser):
        'ParseBookmarkFolderRow')]
 
   # The required tables.
-  REQUIRED_TABLES = ('moz_places', 'moz_historyvisits', 'moz_bookmarks',
-                     'moz_items_annos')
+  REQUIRED_TABLES = frozenset([
+      'moz_places', 'moz_historyvisits', 'moz_bookmarks', 'moz_items_annos'])
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseBookmarkAnnotationRow(self, row, **kwargs):
+  def ParseBookmarkAnnotationRow(self, row, **dummy_kwargs):
     """Parses a bookmark annotation row.
 
     Args:
@@ -192,8 +230,7 @@ class FirefoxHistoryParser(parser.SQLiteParser):
 
     return container
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseBookmarkFolderRow(self, row, **kwargs):
+  def ParseBookmarkFolderRow(self, row, **dummy_kwargs):
     """Parses a bookmark folder row.
 
     Args:
@@ -216,8 +253,7 @@ class FirefoxHistoryParser(parser.SQLiteParser):
 
     return container
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseBookmarkRow(self, row, **kwargs):
+  def ParseBookmarkRow(self, row, **dummy_kwargs):
     """Parses a bookmark row.
 
     Args:
@@ -241,8 +277,7 @@ class FirefoxHistoryParser(parser.SQLiteParser):
 
     return container
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParsePageVisitedRow(self, row, **kwargs):
+  def ParsePageVisitedRow(self, row, **dummy_kwargs):
     """Parses a page visited row.
 
     Args:
@@ -309,3 +344,46 @@ class FirefoxHistoryParser(parser.SQLiteParser):
       return u'%s (%s)' % (row['url'], hostname)
     return u''
 
+
+class FirefoxDownloadsParser(parser.SQLiteParser):
+  """Parses a Firefox downloads file.
+
+     The Firefox downloads history is stored in a SQLite database file named
+     downloads.sqlite.
+  """
+
+  # Define the needed queries.
+  QUERIES = [
+      (('SELECT moz_downloads.id, moz_downloads.name, moz_downloads.source, '
+        'moz_downloads.target, moz_downloads.tempPath, '
+        'moz_downloads.startTime, moz_downloads.endTime, moz_downloads.state, '
+        'moz_downloads.referrer, moz_downloads.currBytes, '
+        'moz_downloads.maxBytes, moz_downloads.mimeType '
+        'FROM moz_downloads'),
+       'ParseDownloadsRow')]
+
+  # The required tables.
+  REQUIRED_TABLES = frozenset(['moz_downloads'])
+
+  def ParseDownloadsRow(self, row, **dummy_kwargs):
+    """Parses a downloads row.
+
+    Args:
+      row: The row resulting from the query.
+
+    Returns:
+      An event container (FirefoxDownload) containing the event data.
+    """
+    container = FirefoxDownload(
+        row['id'], row['name'], row['source'], row['referrer'], row['target'],
+        row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
+
+    container.Append(event.TimestampEvent(
+        row['startTime'], eventdata.EventTimestamp.START_TIME,
+        container.data_type))
+
+    container.Append(event.TimestampEvent(
+        row['endTime'], eventdata.EventTimestamp.END_TIME,
+        container.data_type))
+
+    return container

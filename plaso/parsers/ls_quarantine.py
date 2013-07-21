@@ -15,6 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for the Mac OS X launch services quarantine events."""
+# Shut up pylint
+# * R0201: Method could be a function
+# pylint: disable=R0201
+
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
@@ -63,10 +67,9 @@ class LsQuarantineParser(parser.SQLiteParser):
                'ORDER BY Epoch'), 'ParseLSQuarantineRow')]
 
   # The required tables.
-  REQUIRED_TABLES = ('LSQuarantineEvent',)
+  REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
 
-  __pychecker__ = 'unusednames=kwargs'
-  def ParseLSQuarantineRow(self, row, **kwargs):
+  def ParseLSQuarantineRow(self, row, **dummy_kwargs):
     """Parses a launch services quarantine event row.
 
     Args:
@@ -77,4 +80,3 @@ class LsQuarantineParser(parser.SQLiteParser):
     """
     yield LsQuarantineEvent(
         row['Epoch'], row['URL'], row['Agent'], row['Data'])
-

@@ -46,6 +46,8 @@ class EventTimestamp(object):
   LAST_VISITED_TIME = u'Last Visited Time'
 
   EXPIRATION_TIME = u'Expiration Time'
+  START_TIME = u'Start Time'
+  END_TIME = u'End Time'
 
 
 class EventFormatterManager(object):
