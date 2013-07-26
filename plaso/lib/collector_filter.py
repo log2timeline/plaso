@@ -84,21 +84,24 @@ class CollectionFilter(object):
         logging.warning(u'Unable to find path: [{}] {}'.format(
             filter_path, e))
         continue
-      try:
-        for path in paths:
+      for path in paths:
+        # TODO: Need to make sure "path" is a directory (easier using pyVFS
+        # ideas). Until then have a quick "try" attempt, remove that once
+        # proper stats are implemented.
+        try:
           for file_path in self._collector.GetFilePaths(path, filter_file):
             fh = self._collector.OpenFile(file_path)
             yield fh.pathspec_root.ToProtoString()
-      except errors.PreProcessFail as e:
-        logging.warning(
-            u'Unable to parse the filter: {}|{} - path not found [{}].'.format(
-                filter_path, filter_file, e))
-        continue
-      except sre_constants.error:
-        logging.warning(
-            (u'Unable to parse the filter: {}|{} - illegal regular '
-             'expression.').format(filter_path, filter_file))
-        continue
+        except errors.PreProcessFail as e:
+          logging.warning(
+              u'Unable to parse filter: {}|{} - path not found [{}].'.format(
+                  filter_path, filter_file, e))
+          continue
+        except sre_constants.error:
+          logging.warning(
+              (u'Unable to parse the filter: {}|{} - illegal regular '
+               'expression.').format(filter_path, filter_file))
+          continue
 
 
 def BuildFromSerializedProto(filter_serialized):
