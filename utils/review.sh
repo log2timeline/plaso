@@ -17,13 +17,26 @@
 # limitations under the License.
 
 # Check usage
-if [ $# -ne 1 ]
+if [ $# -lt 1 ]
 then
-  echo "Wrong USAGE: `basename $0` REVIEWER"
+  echo "Wrong USAGE: `basename $0` [--nobrowser] REVIEWER"
   exit 1
 fi
 
-REVIEWER=$1
+BROWSER_PARAM=""
+while `test $# -gt 0`;
+do
+  case $1 in
+  --nobrowser)
+    BROWSER_PARAM="--no_oauth2_webbrowser";
+    shift;
+    ;;
+  *)
+    REVIEWER=$1
+    shift
+    ;;
+  esac
+done
 
 if [ ! -f "utils/common.sh" ]
 then
@@ -77,7 +90,14 @@ fi
 echo -n "Short description of code review request: "
 read DESC
 T1=`mktemp .tmp_plaso_code_review.XXXXXX`
-python utils/upload.py --oauth2 -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER -m "$M" -t "$DESC" --send_mail | tee $T1
+
+if [ "x$BROWSER_PARAM" != "x" ];
+then
+  echo "You need to visit: https://codereview.appspot.com/get-access-token"
+  echo "and copy+paste the access token to the window (no prompt)"
+fi
+
+python utils/upload.py --oauth2 $BROWSER_PARAM -y --cc log2timeline-dev@googlegroups.com -r $REVIEWER -m "$M" -t "$DESC" --send_mail | tee $T1
 
 CL=`cat $T1 | grep codereview.appspot.com | awk -F '/' '/created/ {print $NF}'`
 cat $T1
