@@ -412,11 +412,18 @@ class EventObject(object):
               the EventObjects are equal
     """
 
-    fields = list(self.GetAttributes().difference(self.COMPARE_EXCLUDE))
-    fields.sort()
+    fields = sorted(list(self.GetAttributes().difference(self.COMPARE_EXCLUDE)))
 
     basic = [self.timestamp, self.data_type]
-    attributes = [getattr(self, attribute) for attribute in fields]
+    attributes = []
+    for attribute in fields:
+      value = getattr(self, attribute)
+      if type(value) is dict:
+        attributes.append(sorted(value.items()))
+      elif type(value) is set:
+        attributes.append(sorted(list(value)))
+      else:
+        attributes.append(value)
     identity = basic + [x for pair in zip(fields, attributes) for x in pair]
 
     if 'PfileStatParser' in getattr(self, 'parser', ''):

@@ -95,8 +95,8 @@ def EventObjectGenerator(plaso_storage, quiet=False):
 
   if not quiet:
     total_events = 0
-    if hasattr(plaso_storage, 'GetInformation'):
-      for store_info in plaso_storage.GetInformation():
+    if hasattr(plaso_storage, 'GetStorageInformation'):
+      for store_info in plaso_storage.GetStorageInformation():
         if hasattr(store_info, 'stores'):
           stores = store_info.stores.values()
           for store_file in stores:
@@ -275,7 +275,7 @@ def Main():
 
   parser.add_argument(
       '-t', '--tag', metavar='FILE', dest='tag_input',
-      help='Tagging input file (ascii protobuff).')
+      help='Tagging input file.')
 
   parser.add_argument(
       '-g', '--group', action='store_true', dest='group', default=False,
