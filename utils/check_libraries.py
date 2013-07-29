@@ -21,6 +21,50 @@ import OleFileIO_PL
 
 LIBRARIES = ['pyevt', 'pyevtx', 'pylnk', 'pymsiecf', 'pyregf', 'pyvshadow']
 
+LIBYAL_URLS = {
+  'libevt': 'https://googledrive.com/host/0B3fBvzttpiiSYm01VnUtLXNUZ2M/',
+  'libevtx': 'https://googledrive.com/host/0B3fBvzttpiiSRnQ0SExzX3JjdFE/',
+  'liblnk': 'https://googledrive.com/host/0B3fBvzttpiiSQmluVC1YeDVvZWM/',
+  'libmsiecf': 'https://googledrive.com/host/0B3fBvzttpiiSVm1MNkw5cU1mUG8/',
+  'libregf': 'https://googledrive.com/host/0B3fBvzttpiiSSC1yUDZpb3l0UHM/',
+  'libvshadow': 'https://googledrive.com/host/0B3fBvzttpiiSZDZXRFVMdnZCeHc/',
+}
+
+
+def CheckLibyalGoogleDriveVersion(library_name):
+  """Returns the version number for a given libyal library on Google Drive.
+
+  Args:
+    library_name: the name of the libyal library.
+
+  Returns:
+    The latest version for a given libyal library on Google Drive
+    or 0 on error.
+  """
+  # TODO: get the downloads link based on:
+  # http://code.google.com/p/{library_name} instead of LIBYAL_URLS.
+  if library_name not in LIBYAL_URLS:
+    return 0
+
+  url = urllib2.urlopen(LIBYAL_URLS[library_name])
+
+  if url.code != 200:
+    return 0
+
+  data = url.read()
+
+  # The format of the library download URL is:
+  # /host/{random string}/{library name}-{status-}{version}.tar.gz
+  # Note that the status is optional and will be: beta, alpha or experimental.
+  expression_string = '/host/[^/]*/{0}-[a-z-]*([0-9]+)[.]tar[.]gz'.format(
+      library_name)
+  matches = re.findall(expression_string, data)
+
+  if not matches:
+    return 0
+
+  return int(max(matches))
+
 
 def CheckVersion(library):
   """Return the version number for a given library."""
@@ -89,16 +133,16 @@ if __name__ == '__main__':
   print 'Loading libraries'
   parser_libraries = map(__import__, LIBRARIES)
 
-  for library in parser_libraries:
-    name = 'lib{}'.format(library.__name__[2:])
-    installed_version = int(library.get_version())
-    available_version = CheckVersion(name)
+  for python_binding in parser_libraries:
+    libname = 'lib{}'.format(python_binding.__name__[2:])
+    installed_version = int(python_binding.get_version())
+    available_version = CheckLibyalGoogleDriveVersion(libname)
 
     if installed_version != available_version:
       print '[{}] Version mismatch: installed {}, available: {}'.format(
-          name, installed_version, available_version)
+          libname, installed_version, available_version)
     else:
-      print '[{}] OK'.format(name)
+      print '[{}] OK'.format(libname)
 
   latest_ole_version = GetOleIOVersion()
   installed_ole_version = float(OleFileIO_PL.__version__)
