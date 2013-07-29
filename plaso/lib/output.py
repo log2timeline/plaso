@@ -66,6 +66,7 @@ class LogOutputFormatter(object):
     self.filehandle = filehandle
     self.store = store
     self._filter = filter_use
+    self._config = config
 
     self.encoding = getattr(config, 'preferred_encoding', 'utf-8')
 
@@ -286,7 +287,6 @@ def GetOutputFormatter(output_string):
 
   format_str = ''.join(
       [output_string[0].upper(), output_string[1:].lower()])
-
   return LogOutputFormatter.classes.get(format_str, None)
 
 
