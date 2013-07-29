@@ -24,7 +24,11 @@ from plaso.winreg import interface
 import pyregf
 
 
-class WinPyregKey(interface.WinRegKey):
+if pyregf.get_version() < '20130716':
+  raise ImportWarning('WinPyregf requires at least pyregf 20130716.')
+
+
+class WinPyregfKey(interface.WinRegKey):
   """Implementation of a Windows Registry Key using pyregf."""
 
   def __init__(self, pyregf_key, parent_path=u''):
@@ -34,7 +38,7 @@ class WinPyregKey(interface.WinRegKey):
       pyregf_key: An instance of a pyregf.key object.
       parent_path: The path of the parent key.
     """
-    super(WinPyregKey, self).__init__()
+    super(WinPyregfKey, self).__init__()
     self._pyregf_key = pyregf_key
     self._path = self.PATH_SEPARATOR.join([parent_path, self._pyregf_key.name])
 
@@ -84,7 +88,7 @@ class WinPyregKey(interface.WinRegKey):
     # for a given name.
     pyregf_value = self._pyregf_key.get_value_by_name(name)
     if pyregf_value:
-      return WinPyregValue(pyregf_value)
+      return WinPyregfValue(pyregf_value)
     return None
 
   def GetValues(self):
@@ -95,7 +99,7 @@ class WinPyregKey(interface.WinRegKey):
       the values stored within the key.
     """
     for pyregf_value in self._pyregf_key.values:
-      yield WinPyregValue(pyregf_value)
+      yield WinPyregfValue(pyregf_value)
 
   def GetSubkey(self, name):
     """Retrive a subkey by name.
@@ -109,12 +113,12 @@ class WinPyregKey(interface.WinRegKey):
     subkey = self._pyregf_key.get_sub_key_by_name(name)
 
     if subkey:
-      return WinPyregKey(subkey, self.path)
+      return WinPyregfKey(subkey, self.path)
 
     path_subkey = self._pyregf_key.get_sub_key_by_path(name)
     if path_subkey:
       path, _, _ = name.rpartition('\\')
-      return WinPyregKey(path_subkey, self.path + u'\\%s' % path)
+      return WinPyregfKey(path_subkey, self.path + u'\\%s' % path)
 
   def GetSubkeyCount(self):
     """Retrieves the number of subkeys within the key."""
@@ -132,10 +136,10 @@ class WinPyregKey(interface.WinRegKey):
       the subkeys stored within the key.
     """
     for pyregf_key in self._pyregf_key.sub_keys:
-      yield WinPyregKey(pyregf_key, self.path)
+      yield WinPyregfKey(pyregf_key, self.path)
 
 
-class WinPyregValue(interface.WinRegValue):
+class WinPyregfValue(interface.WinRegValue):
   """Implementation of a Windows Registry Value using pyregf."""
 
   def __init__(self, pyregf_value):
@@ -144,7 +148,7 @@ class WinPyregValue(interface.WinRegValue):
     Args:
       pyregf_value: An instance of a pyregf.value object.
     """
-    super(WinPyregValue, self).__init__()
+    super(WinPyregfValue, self).__init__()
     self._pyregf_value = pyregf_value
     self._type_str = ''
 
@@ -241,13 +245,13 @@ class WinRegistry(object):
 
   def GetRoot(self):
     """Return the root key of the registry hive."""
-    key = WinPyregKey(self._pyregf_file.get_root_key())
+    key = WinPyregfKey(self._pyregf_file.get_root_key())
     # Change root key name to avoid key based plugins failing.
     key.path = ''
     return key
 
   def GetKey(self, key):
-    """Return a registry key as a WinPyregKey object."""
+    """Return a registry key as a WinPyregfKey object."""
     if not key:
       return None
 
@@ -257,7 +261,7 @@ class WinRegistry(object):
 
     path, _, _ = key.rpartition('\\')
 
-    return WinPyregKey(my_key, path)
+    return WinPyregfKey(my_key, path)
 
   def __contains__(self, key):
     """Check if a certain registry key exists within the hive."""
@@ -270,10 +274,10 @@ class WinRegistry(object):
     """Generator that returns all sub keys of any given registry key.
 
     Args:
-      key: A Windows Registry key string or a WinPyregKey object.
+      key: A Windows Registry key string or a WinPyregfKey object.
 
     Yields:
-      A WinPyregKey for each registry key underneath the input key.
+      A WinPyregfKey for each registry key underneath the input key.
     """
     if not hasattr(key, 'GetSubkeys'):
       key = self.GetKey(key)
