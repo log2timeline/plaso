@@ -38,7 +38,8 @@ class Options(object):
 
 
 def _OpenImageFile(file_to_open, image_path, image_type='tsk',
-                   image_offset=0, store_nr=0, fscache=None):
+                   image_offset=0, store_nr=0, fscache=None,
+                   sector_size=512):
   """Return a PFile like object for a file in a raw disk image.
 
   Args:
@@ -50,6 +51,7 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
     store_nr: Applicaple only in the VSS sense, indicates the
     store number.
     fscache: A FilesystemCache object that stores cached fs objects.
+    sector_size: The size in bytes, defaults to 512.
 
   Returns:
     A PFile object.
@@ -66,7 +68,7 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
     return
 
   pathspec.container_path = utils.GetUnicodeString(image_path)
-  pathspec.image_offset = image_offset * 512
+  pathspec.image_offset = image_offset * sector_size
   if isinstance(file_to_open, (int, long)):
     pathspec.image_inode = file_to_open
   else:
@@ -77,7 +79,8 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
   return pfile.OpenPFile(pathspec, fscache=fscache)
 
 
-def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None):
+def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None,
+                sector_size=512):
   """Return a PFile like object for a file in a raw disk image.
 
   Args:
@@ -85,12 +88,14 @@ def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None):
     image_path: Full path to the image itself.
     image_offset: Offset in sectors if this is a disk image.
     fscache: A FilesystemCache object that stores cached fs objects.
+    sector_size: The size in bytes, defaults to 512.
 
   Returns:
     A PFile object.
   """
-  return _OpenImageFile(file_to_open, image_path, 'tsk', image_offset,
-                        fscache=fscache)
+  return _OpenImageFile(
+      file_to_open, image_path, 'tsk', image_offset, fscache=fscache,
+      sector_size=sector_size)
 
 
 def OpenOSFile(path):
@@ -103,7 +108,7 @@ def OpenOSFile(path):
 
 
 def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0,
-                fscache=None):
+                fscache=None, sector_size=512):
   """Return a PFile like object for a file in an image inside a VSS.
 
   Args:
@@ -112,12 +117,14 @@ def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0,
     store_nr: The store number (VSS store).
     image_offset: Offset in sectors if this is a disk image.
     fscache: A FilesystemCache object that stores cached fs objects.
+    sector_size: The size in bytes, defaults to 512.
 
   Returns:
     A PFile object.
   """
   return _OpenImageFile(
-      file_to_open, image_path, 'vss', image_offset, store_nr, fscache=fscache)
+      file_to_open, image_path, 'vss', image_offset, store_nr, fscache=fscache,
+      sector_size=sector_size)
 
 
 def Pfile2File(fh_in, path=None):

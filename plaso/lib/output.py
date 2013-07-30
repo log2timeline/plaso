@@ -121,7 +121,7 @@ class LogOutputFormatter(object):
     This method does all pre-processing or output before each event
     is printed, for instance to surround XML events with tags, etc.
     """
-    self.filehandle.write('')
+    pass
 
   def EndEvent(self):
     """This should be extended by specific implementations.
@@ -129,7 +129,7 @@ class LogOutputFormatter(object):
     This method does all the post-processing or output after
     each event has been printed, such as closing XML tags, etc.
     """
-    self.filehandle.write('')
+    pass
 
   def Start(self):
     """This should be extended by specific implementations.
@@ -138,7 +138,7 @@ class LogOutputFormatter(object):
     a header. This method should return a header if one is
     defined in that output format.
     """
-    self.filehandle.write('')
+    pass
 
   def End(self):
     """This should be extended by specific implementations.
@@ -147,7 +147,7 @@ class LogOutputFormatter(object):
     a footer. This method should return a footer if one is
     defined in that output format.
     """
-    self.filehandle.write('')
+    pass
 
 
 # pylint: disable-msg=W0223

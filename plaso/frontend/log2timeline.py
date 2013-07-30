@@ -46,8 +46,10 @@ def Main():
 
   arg_parser.add_argument(
       '-p', '--preprocess', dest='preprocess', action='store_true',
-      default=False, help=('Turn on pre-processing. Pre-processing is turned '
-                           'on by default in image parsing'))
+      default=False, help=(
+          'Turn on pre-processing. Pre-processing is turned on by default '
+          'when parsing image files, however if a mount point is being '
+          'parsed then this parameter needs to be set manually.'))
 
   arg_parser.add_argument(
       '--buffer-size', '--bs', dest='buffer_size', action='store', default=0,
@@ -60,7 +62,11 @@ def Main():
 
   arg_parser.add_argument(
       '-i', '--image', dest='image', action='store_true', default=False,
-      help='Indicates that this is an image instead of a regular file.')
+      help=(
+          'Indicates that this is an image instead of a regular file. It is '
+          'not necessary to include this option if -o (offset) is used, then '
+          'this option is assumed. Use this when parsing an image with an '
+          'offset of zero.'))
 
   arg_parser.add_argument(
       '--vss', dest='parse_vss', action='store_true', default=False,
@@ -91,7 +97,7 @@ def Main():
       '--scan-archives', dest='open_files', action='store_true', default=False,
       help=('Indicate that the tool should try to open files to extract embedd'
             'ed files within them, for instance to extract files from compress'
-            'ed containers, etc.'))
+            'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
 
   arg_parser.add_argument(
       '--noscan-archives', dest='open_files', action='store_false',
@@ -100,8 +106,11 @@ def Main():
 
   arg_parser.add_argument(
       '-o', '--offset', dest='image_offset', action='store', default=0,
-      type=int, help=('The sector offset to the image in sector sizes (512'
-                      ' bytes).'))
+      type=int, help=(
+          'The sector offset to the image in sector sizes (default to 512 '
+          'bytes, possible to overwrite with --sector_size). '
+          'If this option is used, then it is assumed we have an image '
+          'file to parse, and using -i is not necessary.'))
 
   arg_parser.add_argument(
       '--ob', '--offset_bytes', dest='image_offset_bytes', action='store',
@@ -115,6 +124,10 @@ def Main():
   arg_parser.add_argument(
       '--info', dest='show_info', action='store_true', default=False,
       help='Print out information about supported plugins and parsers.')
+
+  arg_parser.add_argument(
+      '--sector_size', dest='bytes_per_sector', action='store', type=int,
+      default=512, help='The sector size, by default set to 512.')
 
   arg_parser.add_argument(
       '-d', '--debug', dest='debug', action='store_true', default=False,
