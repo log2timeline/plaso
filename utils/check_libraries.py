@@ -21,15 +21,6 @@ import OleFileIO_PL
 
 LIBRARIES = ['pyevt', 'pyevtx', 'pylnk', 'pymsiecf', 'pyregf', 'pyvshadow']
 
-LIBYAL_URLS = {
-  'libevt': 'https://googledrive.com/host/0B3fBvzttpiiSYm01VnUtLXNUZ2M/',
-  'libevtx': 'https://googledrive.com/host/0B3fBvzttpiiSRnQ0SExzX3JjdFE/',
-  'liblnk': 'https://googledrive.com/host/0B3fBvzttpiiSQmluVC1YeDVvZWM/',
-  'libmsiecf': 'https://googledrive.com/host/0B3fBvzttpiiSVm1MNkw5cU1mUG8/',
-  'libregf': 'https://googledrive.com/host/0B3fBvzttpiiSSC1yUDZpb3l0UHM/',
-  'libvshadow': 'https://googledrive.com/host/0B3fBvzttpiiSZDZXRFVMdnZCeHc/',
-}
-
 
 def CheckLibyalGoogleDriveVersion(library_name):
   """Returns the version number for a given libyal library on Google Drive.
@@ -41,17 +32,30 @@ def CheckLibyalGoogleDriveVersion(library_name):
     The latest version for a given libyal library on Google Drive
     or 0 on error.
   """
-  # TODO: get the downloads link based on:
-  # http://code.google.com/p/{library_name} instead of LIBYAL_URLS.
-  if library_name not in LIBYAL_URLS:
+  url = 'https://code.google.com/p/{0}/'.format(library_name)
+
+  url_object = urllib2.urlopen(url)
+
+  if url_object.code != 200:
+    return None
+
+  data = url_object.read()
+
+  # The format of the library downloads URL is:
+  # https://googledrive.com/host/{random string}/
+  expression_string = (
+      '<a href="(https://googledrive.com/host/[^/]*/)"[^>]*>Downloads</a>')
+  matches = re.findall(expression_string, data)
+
+  if not matches or len(matches) != 1:
     return 0
 
-  url = urllib2.urlopen(LIBYAL_URLS[library_name])
+  url_object = urllib2.urlopen(matches[0])
 
-  if url.code != 200:
+  if url_object.code != 200:
     return 0
 
-  data = url.read()
+  data = url_object.read()
 
   # The format of the library download URL is:
   # /host/{random string}/{library name}-{status-}{version}.tar.gz
