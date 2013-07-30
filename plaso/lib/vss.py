@@ -21,8 +21,6 @@ import os
 import pytsk3
 import pyvshadow
 
-__pychecker__ = 'no-funcdoc'
-
 
 class VShadowImgInfo(pytsk3.Img_Info):
   """Extending the TSK Img_Info to allow VSS images to be read in."""
@@ -49,21 +47,20 @@ class VShadowVolume(object):
   an interface that exposes volumes inside of a disk image.
   """
 
-  SECTOR_SIZE = 512
-
-  def __init__(self, file_path, offset=0):
+  def __init__(self, file_path, offset=0, sector_size=512):
     """Provide a file like object of a volume inside a disk image.
 
     Args:
       file_path: String, denoting the file path to the disk image.
       offset: An offset in bytes to the volume within the disk.
+      sector_size: The size in bytes of a single sector, defaults to 512.
     """
     self._block_size = 0
     self._offset_start = 0
     self._orig_offset = offset
 
-    ofs = int(offset / self.SECTOR_SIZE)
-    self._block_size, self._image_size = self.GetImageSize(file_path, ofs)
+    ofs = int(offset / sector_size)
+    self._block_size, self._image_size = GetImageSize(file_path, ofs)
 
     self._fh = open(file_path, 'rb')
     self._fh.seek(0, 2)
@@ -73,28 +70,6 @@ class VShadowVolume(object):
     if self._block_size:
       self._offset_start = self._image_offset * self._block_size
       self._fh.seek(self._offset_start, 0)
-
-  def GetImageSize(self, file_path, offset):
-    """Read the partition information to gather volume size."""
-    if not offset:
-      return 0, 0
-
-    __pychecker__ = 'unusednames=self'
-    img = pytsk3.Img_Info(file_path)
-    try:
-      volume = pytsk3.Volume_Info(img)
-    except IOError:
-      return 0, 0
-
-    size = 0
-    for vol in volume:
-      if vol.start == offset:
-        size = vol.len
-        break
-
-    __pychecker__ = 'no-objattrs'
-    size *= volume.info.block_size
-    return volume.info.block_size, size
 
   def read(self, size=None):
     """"Return read bytes from volume as denoted by the size parameter."""
@@ -168,3 +143,24 @@ def GetVssStoreCount(image, offset=0):
     logging.warning('Error while trying to read VSS information: %s', e)
 
   return 0
+
+
+def GetImageSize(file_path, offset):
+  """Read the partition information to gather volume size."""
+  if not offset:
+    return 0, 0
+
+  img = pytsk3.Img_Info(file_path)
+  try:
+    volume = pytsk3.Volume_Info(img)
+  except IOError:
+    return 0, 0
+
+  size = 0
+  for vol in volume:
+    if vol.start == offset:
+      size = vol.len
+      break
+
+  size *= volume.info.block_size
+  return volume.info.block_size, size

@@ -85,6 +85,9 @@ class Engine(object):
     if not dirname:
       dirname = '.'
 
+    if not hasattr(config, 'bytes_per_sector'):
+      config.bytes_per_sector = 512
+
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
           'Unable to write to location: %s' % config.output)
@@ -104,7 +107,9 @@ class Engine(object):
     logging.info('Filename: %s', self.config.filename)
 
     if self.config.image:
-      ofs = self.config.image_offset_bytes or self.config.image_offset * 512
+      sector_size = self.config.bytes_per_sector
+      calculated_offset = self.config.image_offset * sector_size
+      ofs = self.config.image_offset_bytes or calculated_offset
       pre_collector = preprocess.TSKFileCollector(
           pre_obj, self.config.filename, ofs)
     elif self.config.recursive:
@@ -400,7 +405,9 @@ class Engine(object):
 
     if self.config.image:
       obj.collection_information['method'] = 'imaged processed'
-      ofs = self.config.image_offset_bytes or self.config.image_offset * 512
+      sector_size = self.config.bytes_per_sector
+      calculated_offset = self.config.image_offset * sector_size
+      ofs = self.config.image_offset_bytes or calculated_offset
       obj.collection_information['image_offset'] = ofs
     else:
       obj.collection_information['method'] = 'OS collection'

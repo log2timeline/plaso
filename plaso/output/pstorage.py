@@ -32,8 +32,9 @@ class Pstorage(output.LogOutputFormatter):
     pre_obj.collection_information['time_of_run'] = time.time()
     if hasattr(self._config, 'filter') and self._config.filter:
       pre_obj.collection_information['filter'] = self._config.filter
-    if hasattr(self._config, 'filename') and self._config.filename:
-      pre_obj.collection_information['file_processed'] = self._config.filename
+    if hasattr(self._config, 'storagefile') and self._config.storagefile:
+      pre_obj.collection_information[
+          'file_processed'] = self._config.storagefile
     self._storage = storage.PlasoStorage(self.filehandle, pre_obj=pre_obj)
 
   def EventBody(self, event_object):
