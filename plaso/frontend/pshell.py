@@ -21,6 +21,7 @@ __pychecker__ = 'unusednames=pyvshadow'
 
 import logging
 import os
+import sys
 import tempfile
 
 from IPython.frontend.terminal.embed import InteractiveShellEmbed
@@ -105,6 +106,15 @@ def Main():
 
   namespace.update(globals())
   namespace.update({'l2t': l2t, 'fscache': fscache, 'pre_obj': pre_obj})
+
+  if len(sys.argv) > 1:
+    test_file = sys.argv[1]
+    if os.path.isfile(test_file):
+      try:
+        store = storage.PlasoStorage(test_file, read_only=True)
+        namespace.update({'store': store})
+      except IOError:
+        print 'Unable to load storage file, not a storage file?'
 
   banner = ('--------------------------------------------------------------\n'
             ' Welcome to Plaso console - home of the Plaso adventure land.\n'
