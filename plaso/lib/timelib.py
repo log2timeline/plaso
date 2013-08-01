@@ -83,6 +83,9 @@ class Timestamp(object):
   # The difference between Jan 1, 1601 and Jan 1, 1970 in 100th of nano seconds.
   FILETIME_TO_POSIX_BASE = 11644473600L * 10000000
 
+  # The difference between January 1, 1904 and Jan 1, 1970.
+  HFSTIME_TO_POSIX_BASE = 978307200
+
   __pychecker__ = 'unusednames=cls'
   @classmethod
   def IsLeapYear(cls, year):
@@ -177,6 +180,42 @@ class Timestamp(object):
     """
     dt = StringToDatetime(time_string, zone, fmt)
     return cls.FromPythonDatetime(dt)
+
+  @classmethod
+  def FromHfsTime(cls, hfs_time, timezone=pytz.utc, is_dst=False):
+    """Converts a HFS time to a timestamp.
+
+    HFS time is the same as HFS+ time, except stored in the local
+    timezone of the user.
+
+    Args:
+      hfs_time: Timestamp in the hfs format (32 bit unsigned int).
+      timezone: The timezone object of the system's local time.
+      is_dst: A boolean to indicate the timestamp is corrected for daylight
+              savings time (DST) only used for the DST transition period.
+              The default is false.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    timestamp_unmodified = cls.FromHfsPlusTime(hfs_time)
+    return cls.LocaltimeToUTC(timestamp_unmodified, timezone, is_dst)
+
+  @classmethod
+  def FromHfsPlusTime(cls, hfs_time):
+    """Converts a HFS+ time to a timestamp.
+
+    In HFS+ date and time values are stored in an unsigned 32-bit integer
+    containing the number of seconds since January 1, 1904 at 00:00:00
+    (midnight) UTC (GMT).
+
+    Args:
+      hfs_time: The timestamp in HFS+ format.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    return cls.FromPosixTime(hfs_time + cls.HFSTIME_TO_POSIX_BASE)
 
   @classmethod
   def FromFatDateTime(cls, fat_date_time):

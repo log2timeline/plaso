@@ -25,6 +25,27 @@ from plaso.lib import timelib
 class TimeLibUnitTest(unittest.TestCase):
   """A unit test for the timelib."""
 
+  def testHfsTime(self):
+    """Test the HFS and HFSplus functions."""
+    # TODO: Add more edge case tests.
+
+    # date -u -d "Mon Jul  8 21:30:45 UTC 2013" +"%s.%N"
+    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(395011845),
+                      1373319045000000)
+    # date -u -d "Fri Jul 12 20:19:02 UTC 2013" +"%s.%N"
+    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(395353142),
+                      1373660342000000)
+
+    # date -u -d "Mon Jul  8 16:27:49 UTC 2013" + "%s.%N"
+    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(394993669),
+                      1373300869000000)
+
+    # date -d "Thu Aug  1 15:25:28 EDT 2013" +"%s.%N"
+    # date -u -d @1375385128
+    # Thu Aug  1 19:25:28 UTC 2013
+    self.assertEquals(timelib.Timestamp.FromHfsTime(
+        397063528, pytz.timezone('EST5EDT'), True), 1375385128000000)
+
   def testTimestampIsLeapYear(self):
     """Test the is leap year check."""
     self.assertEquals(timelib.Timestamp.IsLeapYear(2012), True)

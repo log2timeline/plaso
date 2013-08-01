@@ -23,6 +23,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
+# TODO: Add a test for LS Quarantine event. THIS NEEDS TO BE DONE ASAP.
 
 
 class LsQuarantineEvent(event.EventObject):
@@ -42,7 +43,7 @@ class LsQuarantineEvent(event.EventObject):
     """
     super(LsQuarantineEvent, self).__init__()
 
-    self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
+    self.timestamp = timelib.Timestamp.FromHfsPlusTime(timestamp)
     self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
 
     self.url = url
@@ -59,12 +60,10 @@ class LsQuarantineParser(parser.SQLiteParser):
   """
 
   # Define the needed queries.
-  # TODO: move the timestamp adjustment into code and make sure to change
-  # the corresponding docstring of LsQuarantineEvent.
-  QUERIES = [(('SELECT LSQuarantineTimestamp+978328800 AS Epoch, LSQuarantine'
+  QUERIES = [(('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
                'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
                'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
-               'ORDER BY Epoch'), 'ParseLSQuarantineRow')]
+               'ORDER BY Time'), 'ParseLSQuarantineRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
@@ -79,4 +78,4 @@ class LsQuarantineParser(parser.SQLiteParser):
       An event object (LsQuarantineEvent) containing the event data.
     """
     yield LsQuarantineEvent(
-        row['Epoch'], row['URL'], row['Agent'], row['Data'])
+        row['Time'], row['URL'], row['Agent'], row['Data'])
