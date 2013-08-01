@@ -20,11 +20,10 @@ import os
 import tempfile
 import unittest
 
-from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import output
+from plaso.lib import pfilter
 from plaso.lib import storage
-from plaso.output import pstorage
+from plaso.output import pstorage   # pylint: disable-msg=W0611
 
 __pychecker__ = 'no-funcdoc'
 
@@ -36,6 +35,7 @@ class PstorageTest(unittest.TestCase):
 
   def testOutput(self):
     # copy events to Pstorage dump
+    pfilter.TimeRangeCache.ResetTimeConstraints()
     with storage.PlasoStorage(self.test_filename, read_only=True) as store:
       formatter_cls = output.GetOutputFormatter('Pstorage')
       formatter = formatter_cls(store, self.dump_file)
