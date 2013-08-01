@@ -19,31 +19,32 @@
 categories = {
     'winxp': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'MsiecfParser', 'OLECF', 'PfileStatParser', 'Symantec',
+        'MsiecfParser', 'OLECF', 'PfileStatParser', 'SkypeParser', 'Symantec',
         'WinEvtParser', 'WinInfo2Parser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRegistryParser'],
     'winxp_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Hachoir', 'MsiecfParser', 'OLECF', 'PfileStatParser',
+        'Hachoir', 'MsiecfParser', 'OLECF', 'PfileStatParser', 'SkypeParser',
         'Symantec', 'WinEvtParser', 'WinInfo2Parser', 'WinLnkParser',
         'WinPrefetchParser', 'WinRegistryParser'],
     'win7': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'MsiecfParser', 'OLECF', 'PfileStatParser', 'Symantec',
+        'MsiecfParser', 'OLECF', 'PfileStatParser', 'SkypeParser', 'Symantec',
         'WinEvtxParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRecycleParser', 'WinRegistryParser'],
     'win7_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Hachoir', 'MsiecfParser', 'OLECF', 'PfileStatParser',
+        'Hachoir', 'MsiecfParser', 'OLECF', 'PfileStatParser', 'SkypeParser',
         'Symantec','WinEvtxParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRecycleParser', 'WinRegistryParser'],
     'webhist': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'MsiecfParser'],
     'linux': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'OLECF', 'PfileStatParser', 'SELinux', 'SyslogParser'],
+        'OLECF', 'PfileStatParser', 'SELinux', 'SkypeParser', 'SyslogParser'],
     'macosx': [
         'ApplicationUsageParser', 'ChromeHistoryParser',
-        'FirefoxHistoryParser', 'GoogleDriveParser','LsQuarantineParser',
-        'OLECF', 'PfileStatParser', 'PlistParser', 'SyslogParser'],
+        'FirefoxHistoryParser', 'GoogleDriveParser', 'MacKeeperCacheParser',
+        'LsQuarantineParser', 'OLECF', 'PfileStatParser', 'PlistParser',
+        'SkypeParser', 'SyslogParser'],
 }
