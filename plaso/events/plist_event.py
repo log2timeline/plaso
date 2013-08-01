@@ -25,7 +25,13 @@ class PlistEvent(event.EventObject):
   DATA_TYPE = 'plist:key'
 
   def __init__(self, root, key, timestamp, desc=None, host=None, user=None):
-    """Initializes a plist event.
+    """Template for creating a Plist EventObject for returning data to Plaso.
+
+    All events extracted from files get passed around Plaso internally as an
+    EventObject. PlistEvent is an EventObject with attributes specifically
+    relevant to data extracted from a Plist file.  The attribute DATA_TYPE
+    'plist:key' allows the formatter used during output to identify
+    the appropriate formatter for converting these attributes to output.
 
     Args:
       root: A string representing the path from the root to this key.
