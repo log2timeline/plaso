@@ -23,6 +23,7 @@ from plaso.parsers import firefox
 from plaso.parsers import gdrive
 from plaso.parsers import hachoir
 from plaso.parsers import ls_quarantine
+from plaso.parsers import mackeeper_cache
 from plaso.parsers import mactime
 from plaso.parsers import msiecf
 from plaso.parsers import olecf
