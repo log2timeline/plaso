@@ -19,7 +19,8 @@
 import os
 import unittest
 
-from plaso import plist
+# Always import plist to force plugin registration.
+from plaso import plist  # pylint: disable=W0611
 from plaso.events import plist_event
 from plaso.lib import errors
 from plaso.lib import plist_interface
@@ -36,14 +37,22 @@ class MockPlugin(plist_interface.PlistPlugin):
         1351827808261762)
 
 
-class TestPlistInterface(unittest.TestCase):
-  """The unit test for default plist parser."""
+class TestPlistInterface(unittest.TestCase): # pylint: disable=R0923
+  """The unittests for plist interface and components."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self.base_path = 'test_data'
     self.fd = os.path.join(self.base_path, 'plist_binary')
     self.plugins = plist_interface.GetPlistPlugins()
+    self.top_level_dict = {
+        'DeviceCache': {
+            '44-00-00-00-00-04': {
+                'Name': 'Apple Magic Trackpad 2', 'LMPSubversion': 796,
+                'Services': '', 'BatteryPercent': 0.61},
+            '44-00-00-00-00-02': {
+                'Name': 'test-macpro', 'ClockOffset': 28180,
+                'PageScanPeriod': 2, 'PageScanRepetitionMode': 1}}}
 
   def testGetPlistPlugins(self):
     self.assertTrue(self.plugins)
@@ -70,6 +79,37 @@ class TestPlistInterface(unittest.TestCase):
     # Test not enough required keys.
     with self.assertRaises(errors.WrongPlistPlugin):
       plugin.Process('plist_binary', {'Useless_Key': 0, 'PairedDevices': 1})
+
+  def testRecurseKey(self):
+    # Ensure with a depth of 1 we only return the root key.
+    result = list(plist_interface.RecurseKey(self.top_level_dict, depth=1))
+    self.assertEquals(len(result), 1)
+
+    # Trying again with depth limit of 2 this time.
+    result = list(plist_interface.RecurseKey(self.top_level_dict, depth=2))
+    self.assertEquals(len(result), 3)
+
+    # A depth of two should gives us root plus the two devices. Let's check.
+    my_keys = []
+    for root, key, value in result:
+      my_keys.append(key)
+    expected = set(['DeviceCache', '44-00-00-00-00-04', '44-00-00-00-00-02'])
+    self.assertTrue(expected == set(my_keys))
+
+  def testGetKey(self):
+    # Match DeviceCache from the root level.
+    key = ['DeviceCache']
+    result = plist_interface.GetKeys(self.top_level_dict, key)
+    self.assertEquals(len(result), 1)
+
+    # Look for a key nested a layer beneath DeviceCache from root level.
+    # Note: overriding the default depth to look deeper.
+    key = ['44-00-00-00-00-02']
+    result = plist_interface.GetKeys(self.top_level_dict, key, depth=2)
+    self.assertEquals(len(result), 1)
+
+    # Check the value of the result was extracted as expected.
+    self.assertTrue('test-macpro' == result[key[0]]['Name'])
 
 
 if __name__ == '__main__':
