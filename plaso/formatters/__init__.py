@@ -29,6 +29,7 @@ from plaso.formatters import msiecf
 from plaso.formatters import olecf
 from plaso.formatters import recycler
 from plaso.formatters import selinux
+from plaso.formatters import skype
 from plaso.formatters import syslog
 from plaso.formatters import symantec
 from plaso.formatters import volatility
