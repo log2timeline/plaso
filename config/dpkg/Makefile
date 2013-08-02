@@ -6,7 +6,7 @@ PYINSTALLER=../pyinstaller/pyinstaller.py
 
 prefix=debian/tmp/usr
 
-all: build_log2timeline build_pinfo build_pprof build_preg build_pshell build_psort
+all: build_log2timeline build_pinfo build_plasm build_pprof build_preg build_pshell build_psort
 
 build_log2timeline: plaso/frontend/log2timeline.py
 	$(PYINSTALLER) \
@@ -21,6 +21,14 @@ build_pinfo: plaso/frontend/pinfo.py
 	  --onedir \
 	  --console \
 	  --name=pinfo \
+	  --paths=./ \
+	  $<
+
+build_plasm: plaso/frontend/plasm.py
+	$(PYINSTALLER) \
+	  --onedir \
+	  --console \
+	  --name=plasm \
 	  --paths=./ \
 	  $<
 
@@ -65,6 +73,8 @@ install:
 	@install -m 0755 dist/log2timeline/log2timeline $(prefix)/lib/plaso
 	@install -m 0755 dist/pinfo/*.* $(prefix)/lib/plaso
 	@install -m 0755 dist/pinfo/pinfo $(prefix)/lib/plaso
+	@install -m 0755 dist/plasm/*.* $(prefix)/lib/plaso
+	@install -m 0755 dist/plasm/plasm $(prefix)/lib/plaso
 	@install -m 0755 dist/pprof/*.* $(prefix)/lib/plaso
 	@install -m 0755 dist/pprof/pprof $(prefix)/lib/plaso
 	@install -m 0755 dist/preg/*.* $(prefix)/lib/plaso
