@@ -49,6 +49,9 @@ class EventTimestamp(object):
   START_TIME = u'Start Time'
   END_TIME = u'End Time'
 
+  FIRST_CONNECTED = u'First Connection Time'
+  LAST_CONNECTED = u'Last Connection Time'
+
 
 class EventFormatterManager(object):
   """Class to manage the event formatters."""
