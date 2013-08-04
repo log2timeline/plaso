@@ -26,6 +26,7 @@ BROWSER_PARAM="";
 if [ "$1" == "--nobrowser" ];
 then
   BROWSER_PARAM="--no_oauth2_webbrowser";
+  shift
 fi
 
 if [ -f ._code_review_number ];

@@ -16,6 +16,7 @@
 # limitations under the License.
 """This file contains a parser for MS Office MRUs for Plaso."""
 import logging
+import re
 
 from plaso.lib import event
 from plaso.lib import timelib
@@ -32,48 +33,62 @@ class OfficeMRU(win_registry_interface.KeyPlugin):
 
   DESCRIPTION = 'Office MRU'
 
-  def GetTimeStamp(self, stringdata):
-    """Get timestamp from string data."""
-    if len(stringdata) >= 29:
-      try:
-        # Get Timestamp from string.
-        datetime = stringdata[13:29]
-        return timelib.Timestamp.FromFiletime(int(datetime, 16))
-      except ValueError:
-        logging.warning('Datetime value not correct')
-        return 0
+  _RE_VALUE_NAME = re.compile(r'^Item [0-9]+$', re.I)
+
+  # The Office 12 item MRU is formatted as:
+  # [F00000000][T%FILETIME%]*\\%FILENAME%
+
+  # The Office 14 item MRU is formatted as:
+  # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
+  _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
   def GetEntries(self):
     """Collect Values under Office 2010 MRUs and return events for each one."""
     # TODO: Test other Office versions to makesure this plugin is applicable.
     for value in self._key.GetValues():
-      if not value.name:
+      # Ignore any value not in the form: 'Item [0-9]+'.
+      if not value.name or not self._RE_VALUE_NAME.search(value.name):
         continue
 
-      # TODO: Registry refactor, replace GetStringData().
-      stringdata = value.GetStringData()
-
-      if not stringdata.startswith('[F00000000'):
+      # Ignore any value that is empty or that does not contain a string.
+      if not value.data or not value.DataIsString():
         continue
+
+      values = self._RE_VALUE_DATA.findall(value.data)
+
+      # Values will contain a list containing a tuple containing 2 values.
+      if len(values) != 1 or len(values[0]) != 2:
+        continue
+
+      try:
+        filetime = int(values[0][0], 16)
+      except ValueError:
+        logging.warning('Unable to convert filetime string to an integer.')
+        filetime = 0
+
+      # TODO: why this behavior? Only the first Item is stored with its
+      # timestamp. Shouldn't this be: Store all the Item # values with
+      # their timestamp and store the entire MRU as one event with the
+      # registry key last written time?
+      if value.name == 'Item 1':
+        timestamp = timelib.Timestamp.FromFiletime(filetime)
+      else:
+        timestamp = 0
 
       text_dict = {}
-      text_dict[value.name] = stringdata
+      text_dict[value.name] = value.data
 
-      if value.name == 'Item 1':
-        reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict,
-            timestamp=self.GetTimeStamp(stringdata))
-      else:
-        reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, timestamp=0)
+      event_object = event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=timestamp)
 
-      reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
-      yield reg_evt
+      event_object.source_append = ': {}'.format(self.DESCRIPTION)
+
+      yield event_object
 
 
 # TODO: Address different MS Office versions.
 class MSWord2010PlaceMRU(OfficeMRU):
-  """Gathers the MS Word Place 2010 MRU keys for the NTUSER hive."""
+  """Gathers the MS Word Place 2010 MRU keys for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Word\\Place MRU'
   REG_TYPE = 'NTUSER'
@@ -81,7 +96,7 @@ class MSWord2010PlaceMRU(OfficeMRU):
 
 
 class MSWord2010FileMRU(OfficeMRU):
-  """Gathers the MS Word File 2010 MRU keys for the NTUSER hive."""
+  """Gathers the MS Word File 2010 MRU keys for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU'
   REG_TYPE = 'NTUSER'
@@ -89,7 +104,7 @@ class MSWord2010FileMRU(OfficeMRU):
 
 
 class MSExcel2010PlaceMRU(OfficeMRU):
-  """Gathers the MS Excel 2010 Place MRU keys for the NTUSER hive."""
+  """Gathers the MS Excel 2010 Place MRU keys for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Excel\\Place MRU'
   REG_TYPE = 'NTUSER'
@@ -97,7 +112,7 @@ class MSExcel2010PlaceMRU(OfficeMRU):
 
 
 class MSExcel2010FileMRU(OfficeMRU):
-  """Gathers the MS Excel 2010 File MRU keys for the NTUSER hive."""
+  """Gathers the MS Excel 2010 File MRU keys for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Excel\\File MRU'
   REG_TYPE = 'NTUSER'
@@ -105,7 +120,7 @@ class MSExcel2010FileMRU(OfficeMRU):
 
 
 class MSPowerPoint2010PlaceMRU(OfficeMRU):
-  """Gathers the MS PowerPoint Place 2010 MRU keys for the NTUSER hive."""
+  """Gathers the MS PowerPoint Place 2010 MRU keys for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\PowerPoint\\Place MRU'
   REG_TYPE = 'NTUSER'
@@ -113,7 +128,7 @@ class MSPowerPoint2010PlaceMRU(OfficeMRU):
 
 
 class MSPowerPoint2010FileMRU(OfficeMRU):
-  """Gathers the MS PowerPoint File 2010 MRU keys for the NTUSER hive."""
+  """Gathers the MS PowerPoint File 2010 MRU keys for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\PowerPoint\\File MRU'
   REG_TYPE = 'NTUSER'
@@ -121,7 +136,7 @@ class MSPowerPoint2010FileMRU(OfficeMRU):
 
 
 class MSAccess2010PlaceMRU(OfficeMRU):
-  """Gathers the MS Access Place 2010 MRU keys for the NTUSER hive."""
+  """Gathers the MS Access Place 2010 MRU keys for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Access\\Place MRU'
   REG_TYPE = 'NTUSER'
@@ -129,7 +144,7 @@ class MSAccess2010PlaceMRU(OfficeMRU):
 
 
 class MSAccess2010FileMRU(OfficeMRU):
-  """Gathers the MS Access File 2010 MRU keys for the NTUSER hive."""
+  """Gathers the MS Access File 2010 MRU keys for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Access\\File MRU'
   REG_TYPE = 'NTUSER'

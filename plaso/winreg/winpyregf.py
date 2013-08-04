@@ -195,23 +195,6 @@ class WinPyregfValue(interface.WinRegValue):
       raise errors.WinRegistryValueError(
           'Unable to read raw data from value: %s' % self._pyregf_value.name)
 
-  # TODO: Registry refactor, replace GetStringData().
-  def GetStringData(self):
-    """Return a string value from the data, if it is a string type."""
-    if not self._type_str:
-      self._type_str = self.GetTypeStr()
-    if self._type_str == 'SZ' or self._type_str == 'EXPAND_SZ':
-      try:
-        ret = self._pyregf_value.data_as_string
-      except IOError:
-        ret = interface.GetRegistryStringValue(
-            self.GetRawData(), self._type_str)
-
-      return ret
-
-    return interface.GetRegistryStringValue(
-        self.GetRawData(), self._type_str)
-
 
 class WinRegistry(object):
   """Provides access to the Windows registry file."""

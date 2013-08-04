@@ -307,7 +307,7 @@ class Win7UserAssistPlugin(win_registry_interface.KeyPlugin):
 
 
 class Win7UserAssistPlugin1(Win7UserAssistPlugin):
-  """Gathers Win7 UserAssist Plugin values from the NTUSER hive."""
+  """Gathers Win7 UserAssist Plugin values from the User hive."""
 
   REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
              '\\UserAssist\\{{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}}\\Count')
@@ -315,7 +315,7 @@ class Win7UserAssistPlugin1(Win7UserAssistPlugin):
 
 
 class Win7UserAssistPlugin2(Win7UserAssistPlugin):
-  """Gathers Win7 UserAssist Plugin values from the NTUSER hive."""
+  """Gathers Win7 UserAssist Plugin values from the User hive."""
 
   REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
              '\\UserAssist\\{{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}}\\Count')
