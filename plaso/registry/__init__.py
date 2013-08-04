@@ -23,6 +23,7 @@ from plaso.registry import mru
 from plaso.registry import mrux
 from plaso.registry import officemru
 from plaso.registry import outlook
+from plaso.registry import rdp
 from plaso.registry import run
 from plaso.registry import services
 from plaso.registry import typedurls
