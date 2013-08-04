@@ -32,10 +32,9 @@ class BootVerificationPlugin(win_registry_interface.KeyPlugin):
     text_dict = {}
     text_dict['BootVerification'] = u'REGALERT'
     for value in self._key.GetValues():
-      text_dict[value.name] = value.GetData()
-    event_object = event.WinRegistryEvent(self._key.path, text_dict,
-                                          self._key.timestamp)
-    yield event_object
+      text_dict[value.name] = value.data
+    yield event.WinRegistryEvent(
+        self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
 
 
 class BootExecutePlugin(win_registry_interface.KeyPlugin):
@@ -59,12 +58,11 @@ class BootExecutePlugin(win_registry_interface.KeyPlugin):
         else:
           boot_dict['BootExecute'] = boot
 
-        event_object = event.WinRegistryEvent(
-            self._key.path, boot_dict, self._key.timestamp)
-        yield event_object
+        yield event.WinRegistryEvent(
+            self._key.path, boot_dict,
+            timestamp=self._key.last_written_timestamp)
       else:
-        text_dict[value.name] = value.GetData()
+        text_dict[value.name] = value.data
 
-    event_object = event.WinRegistryEvent(
-        self._key.path, text_dict, self._key.timestamp)
-    yield event_object
+    yield event.WinRegistryEvent(
+        self._key.path, text_dict, timestamp=self._key.last_written_timestamp)

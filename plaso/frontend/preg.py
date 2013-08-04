@@ -317,8 +317,8 @@ def ParseHive(hive_path, collectors, keys, use_plugins, verbose):
       if not key:
         print 'Unable to open key: {}'.format(key_str_use)
         continue
-      print u'{:>15} : {}'.format('Subkeys', key.GetSubkeyCount())
-      print u'{:>15} : {}'.format('Values', key.GetValueCount())
+      print u'{:>15} : {}'.format('Subkeys', key.number_of_subkeys)
+      print u'{:>15} : {}'.format('Values', key.number_of_values)
       print ''
 
       if verbose:

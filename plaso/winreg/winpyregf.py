@@ -63,13 +63,13 @@ class WinPyregfKey(interface.WinRegKey):
     return self._pyregf_key.offset
 
   @property
-  def timestamp(self):
+  def last_written_timestamp(self):
     """The last written time of the key represented as a timestamp."""
     return timelib.Timestamp.FromFiletime(
         self._pyregf_key.get_last_written_time_as_integer())
 
-  def GetValueCount(self):
-    """Retrieves the number of values within the key."""
+  def number_of_values(self):
+    """The number of values within the key."""
     return self._pyregf_key.number_of_values
 
   def GetValue(self, name):
@@ -90,6 +90,10 @@ class WinPyregfKey(interface.WinRegKey):
     if pyregf_value:
       return WinPyregfValue(pyregf_value)
     return None
+
+  def number_of_subkeys(self):
+    """The number of subkeys within the key."""
+    return self._pyregf_key.number_of_sub_keys
 
   def GetValues(self):
     """Retrieves all values within the key.
@@ -119,14 +123,6 @@ class WinPyregfKey(interface.WinRegKey):
     if path_subkey:
       path, _, _ = name.rpartition('\\')
       return WinPyregfKey(path_subkey, self.path + u'\\%s' % path)
-
-  def GetSubkeyCount(self):
-    """Retrieves the number of subkeys within the key."""
-    return self._pyregf_key.number_of_sub_keys
-
-  def HasSubkeys(self):
-    """Determines if the key has subkeys."""
-    return self._pyregf_key.number_of_sub_keys != 0
 
   def GetSubkeys(self):
     """Retrieves all subkeys within the key.
@@ -199,6 +195,7 @@ class WinPyregfValue(interface.WinRegValue):
       raise errors.WinRegistryValueError(
           'Unable to read raw data from value: %s' % self._pyregf_value.name)
 
+  # TODO: Registry refactor, replace GetStringData().
   def GetStringData(self):
     """Return a string value from the data, if it is a string type."""
     if not self._type_str:
@@ -279,17 +276,19 @@ class WinRegistry(object):
     Yields:
       A WinPyregfKey for each registry key underneath the input key.
     """
+    # TODO: refactor this function.
+    # TODO: remove the hasattr check.
     if not hasattr(key, 'GetSubkeys'):
       key = self.GetKey(key)
 
     for subkey in key.GetSubkeys():
       yield subkey
-      if subkey.HasSubkeys():
+      if subkey.number_of_subkeys != 0:
         for s in self.GetAllSubkeys(subkey):
           yield s
 
   def __iter__(self):
-    """Default iterator, returns all subkeys of the registry hive."""
+    """Default iterator, returns all subkeys of the Registry file."""
     root = self.GetRoot()
     for key in self.GetAllSubkeys(root):
       yield key

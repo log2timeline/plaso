@@ -64,13 +64,15 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
       service_type: Integer expressing the type of service or driver.
 
     Returns:
-      None when Driver does not have an ImagePath.
-      String when the ImagePath is set.
+      A Unicode string when the ImagePath value is set in service.
+      A driver does not have an ImagePath so None is returned.
+      A REGALERT Unicode string is returned when an anomaly is detected.
     """
     image_path = subkey.GetValue('ImagePath')
     if service_type > 0 and service_type < 15:
       if not image_path:
         return None
+      # TODO: Registry refactor, replace GetStringData().
       image_path_str = image_path.GetStringData()
       if 'system32\\drivers' not in image_path_str.lower():
         return u'REGALERT Driver not in system32: {}'.format(image_path_str)
@@ -78,8 +80,9 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
     elif service_type > 15 and service_type < 257:
       if image_path:
         # Add '' around Services Image path for readability of arguments.
-        return '\'{}\''.format(image_path.GetStringData())
-      return 'REGALERT: Service does not have ImagePath.'
+        # TODO: Registry refactor, replace GetStringData().
+        return u'\'{}\''.format(image_path.GetStringData())
+      return u'REGALERT: Service does not have ImagePath.'
     return None
 
   def GetObjectName(self, subkey, service_type):
@@ -104,11 +107,13 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
     if service_type > 0 and service_type < 15:
       if not object_name:
         return None
+      # TODO: Registry refactor, replace GetStringData().
       return u'REGALERT Driver has ObjectName: {}'.format(
           object_name.GetStringData())
     elif service_type > 15 and service_type < 257:
       if not object_name:
         return u'REGALERT Service has no ObjectName'
+      # TODO: Registry refactor, replace GetStringData().
       object_name_str = object_name.GetStringData()
       if object_name_str.lower() not in self.OBJECT_NAME:
         # There are 3 primary owners, all others are noteworthy.
@@ -124,45 +129,49 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
     of C:/Windows/system32/drivers.
     """
     text_dict = {}
-    service_type = self._key.GetValue('Type').GetData()
-    service_start = self._key.GetValue('Start').GetData()
 
-    service_type_str = self.SERVICE_TYPE.get(service_type, service_type)
-    service_start_str = self.SERVICE_START.get(service_start, service_start)
+    service_type_value = self._key.GetValue('Type')
+    service_start_value = self._key.GetValue('Start')
 
-    # Check for unusal Type/Start pairs.
-    if service_type > 0 and service_type < 15 and service_start == 2:
-      service_start_str = 'REGALERT Unusual Start for Driver: {}'.format(
-          self.SERVICE_START[service_start])
-    if service_type > 15 and service_type < 257 and service_start in [0, 1]:
-      service_start_str = 'REGALERT Unusal Start for Service: {}'.format(
-          self.SERVICE_START[service_start])
+    if service_type_value and service_start_value:
+      service_type = service_type_value.data
+      text_dict['Type'] = self.SERVICE_TYPE.get(service_type, service_type)
 
-    text_dict['Type'] = service_type_str
-    text_dict['Start'] = service_start_str
+      service_start = service_start_value.data
+      service_start_str = self.SERVICE_START.get(service_start, service_start)
 
-    # Convert ErrorControl to Human Readable.
-    if self._key.GetValue('ErrorControl'):
-      error_control = self._key.GetValue('ErrorControl').GetData()
-      text_dict['ErrorControl'] = self.SERVICE_ERROR.get(error_control,
-                                                         error_control)
+      # Check for unusal Type/Start pairs.
+      if service_type > 0 and service_type < 15 and service_start == 2:
+        service_start_str = 'REGALERT Unusual Start for Driver: {}'.format(
+            self.SERVICE_START[service_start])
 
-    object_name = self.GetObjectName(self._key, service_type)
-    if object_name:
-      text_dict['ObjectName'] = object_name
+      if service_type > 15 and service_type < 257 and service_start in [0, 1]:
+        service_start_str = 'REGALERT Unusal Start for Service: {}'.format(
+            self.SERVICE_START[service_start])
 
-    image_path = self.GetImagePath(self._key, service_type)
-    if image_path:
-      text_dict['ImagePath'] = image_path
+      text_dict['Start'] = service_start_str
 
-    # Gather all the other values and insert as they are.
-    for value in self._key.GetValues():
-      if not value.name:
-        continue
-      if value.name not in text_dict:
-        text_dict[value.name] = value.GetData()
+      # Convert ErrorControl to Human Readable.
+      if self._key.GetValue('ErrorControl'):
+        error_control = self._key.GetValue('ErrorControl').data
+        text_dict['ErrorControl'] = self.SERVICE_ERROR.get(
+            error_control, error_control)
 
-    event_object = event.WinRegistryEvent(self._key.path, text_dict,
-                                          self._key.timestamp)
-    yield event_object
+      object_name = self.GetObjectName(self._key, service_type)
+      if object_name:
+        text_dict['ObjectName'] = object_name
 
+      image_path = self.GetImagePath(self._key, service_type)
+      if image_path:
+        text_dict['ImagePath'] = image_path
+
+      # Gather all the other values and insert as they are.
+      for value in self._key.GetValues():
+        if not value.name:
+          continue
+        if value.name not in text_dict:
+          text_dict[value.name] = value.data
+
+      event_object = event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+      yield event_object

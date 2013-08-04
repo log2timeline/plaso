@@ -303,7 +303,7 @@ class Win7UserAssistPlugin(win_registry_interface.KeyPlugin):
         'focus_duration: {3}]').format(
             userassist_entry,count,app_focus_count,focus_duration)
       yield event.WinRegistryEvent(
-          u'', text_dict, timelib.Timestamp.FromFiletime(timestamp))
+          u'', text_dict, timestamp=timelib.Timestamp.FromFiletime(timestamp))
 
 
 class Win7UserAssistPlugin1(Win7UserAssistPlugin):

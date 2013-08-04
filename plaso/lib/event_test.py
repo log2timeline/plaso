@@ -31,6 +31,10 @@ The tests involve:
 Error handling. The following tests are performed for error handling:
  + Access attributes that are not set.
 """
+# Shut up pylint
+# * R0924: EventContainer: Badly implemented Container
+# pylint: disable=R0924
+
 import unittest
 
 from plaso.lib import errors
@@ -90,18 +94,19 @@ class TestEventContainer(event.EventContainer):
     container.filename = 'c:/Users/joesmith/NTUSER.DAT'
 
     event_object = event.WinRegistryEvent(
-        u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'}, 1334961526929596)
+        u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'},
+        timestamp=1334961526929596)
     container.Append(event_object)
 
     event_object = event.WinRegistryEvent(
         u'//HKCU/Secret/EvilEmpire/Malicious_key',
         {u'Value': u'REGALERT: send all the exes to the other world'},
-        1334966206929596)
+        timestamp=1334966206929596)
     container.Append(event_object)
 
     event_object = event.WinRegistryEvent(
         u'//HKCU/Windows/Normal', {u'Value': u'run all the benign stuff'},
-        1334940286000000)
+        timestamp=1334940286000000)
     container.Append(event_object)
 
     self.Append(container)
@@ -545,6 +550,7 @@ class EventPathBundleTest(unittest.TestCase):
     bundle = event.EventPathBundle()
     bundle.FromProto(proto)
 
+    # pylint: disable=W0212
     self.assertEquals(len(bundle._pathspecs), 3)
     self.assertEquals(len(list(bundle.ListFiles())), 3)
     self.assertEquals(bundle.pattern, pattern)

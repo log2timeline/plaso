@@ -118,7 +118,11 @@ class InternetSettingsZonesBase(win_registry_interface.KeyPlugin):
   }
 
   def GetEntries(self):
-    """Add info to the values of the the Internet Settings Zones."""
+    """Add info to the values of the the Internet Settings Zones.
+
+    Yields:
+      Event objects of the individual Internet Setting Registry keys.
+    """
     # Store values of the Internet Settings/[Lockdown_]Zones key.
     text_dict = {}
     for value in self._key.GetValues():
@@ -128,47 +132,47 @@ class InternetSettingsZonesBase(win_registry_interface.KeyPlugin):
 
     if not text_dict:
       text_dict[u'Value'] = u'No values stored in key'
-    reg_evt = event.WinRegistryEvent(
-        self._key.path, text_dict, self._key.timestamp)
-    reg_evt.offset = self._key.offset
-    yield reg_evt
+
+    yield event.WinRegistryEvent(
+        self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
+        offset=self._key.offset)
 
     # REGALERT if there are no Zone SubKeys.
-    if not self._key.HasSubkeys():
-      logging.info('No Subkeys for Internet Settings/Zones')
+    if self._key.number_of_subkeys == 0:
+      logging.info('No subkeys for Internet Settings/Zones')
       text_dict = {
         'Zone Subkeys': 'REGALERT No Zones set for Internet Settings'
       }
 
-      reg_evt = event.WinRegistryEvent(
-          self._key.path, text_dict, self._key.timestamp)
-      reg_evt.offset = self._key.offset
-      yield reg_evt
-      return
+      yield event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
+          offset=self._key.offset)
 
-    # Process the Zones.
-    for zone in self._key.GetSubkeys():
-      path = u'%s\\%s' % (self._key.path, self.ZONE_NAMES[zone.name])
-      text_dict = {}
-      for value in zone.GetValues():
-        if not value.name:
-          continue
-        # Matched and Unmatched actions need the data parsed the same way.
-        data_type = value.GetTypeStr()
-        if 'DWORD' in data_type or 'SZ' in data_type:
-          data = value.GetData(unicode)
-        else:
-          # Some values contain BINARY data, default plugin prints this way.
-          data = u'[DATA TYPE %s]' % data_type
+    else:
+      # Process the Zone subkeys.
+      for zone_key in self._key.GetSubkeys():
+        path = u'%s\\%s' % (self._key.path, self.ZONE_NAMES[zone_key.name])
+        text_dict = {}
+        for value in zone_key.GetValues():
+          if not value.name:
+            continue
+          # Matched and Unmatched actions need the data parsed the same way.
+          data_type = value.GetTypeStr()
+          if 'DWORD' in data_type or 'SZ' in data_type:
+            data = value.GetData(unicode)
+          else:
+            # Some values contain BINARY data, default plugin prints this way.
+            data = u'[DATA TYPE %s]' % data_type
 
-        # Now see if we know what Action the Zone is setting.
-        action = u'[{}] {}'.format(value.name,
-                                   self.ACTIONS.get(value.name, ''))
-        # TODO(eschwein) some actions have more complicated permissions.
-        data_value = self.PERMISSIONS.get(data, data)
-        text_dict[action] = data_value
-      reg_evt = event.WinRegistryEvent(path, text_dict, zone.timestamp)
-      yield reg_evt
+          # Now see if we know what Action the Zone is setting.
+          action = u'[{}] {}'.format(value.name,
+                                     self.ACTIONS.get(value.name, ''))
+          # TODO(eschwein) some actions have more complicated permissions.
+          data_value = self.PERMISSIONS.get(data, data)
+          text_dict[action] = data_value
+        event_object = event.WinRegistryEvent(
+            path, text_dict, timestamp=zone_key.last_written_timestamp)
+        yield event_object
 
 
 class InternetSettingsZonesNtuserPlugin(InternetSettingsZonesBase):

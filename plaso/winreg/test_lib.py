@@ -21,7 +21,8 @@ from plaso.winreg import interface
 class TestRegKey(interface.WinRegKey):
   """Implementation of the Registry key interface for testing."""
 
-  def __init__(self, path, timestamp, values, offset=0, subkeys=None):
+  def __init__(self, path, last_written_timestamp, values, offset=0,
+               subkeys=None):
     """An abstract object for a Windows registry key.
 
     This implementation is more a manual one, so it can be used for
@@ -30,15 +31,16 @@ class TestRegKey(interface.WinRegKey):
 
     Args:
       path: The full key name and path.
-      timestamp: An integer, indicating the last written timestamp of
-      the registry key.
+      last_written_timestamp: An integer containing the the last written
+                              timestamp of the Registry key.
       values: A list of TestRegValue values this key holds.
       offset: A byte offset into the registry file where the entry lies.
       subkeys: A list of subkeys this key has.
     """
     super(TestRegKey, self).__init__()
+    self._name = None
     self._path = path
-    self._timestamp = timestamp
+    self._last_written_timestamp = last_written_timestamp
     self._values = values
     self._offset = offset
     self._subkeys = subkeys
@@ -61,12 +63,12 @@ class TestRegKey(interface.WinRegKey):
     return self._offset
 
   @property
-  def timestamp(self):
+  def last_written_timestamp(self):
     """The last written time of the key represented as a timestamp."""
-    return self._timestamp
+    return self._last_written_timestamp
 
-  def GetValueCount(self):
-    """Return the number of values stored."""
+  def number_of_values(self):
+    """The number of values within the key."""
     return len(self._values)
 
   def GetValue(self, name):
@@ -79,13 +81,9 @@ class TestRegKey(interface.WinRegKey):
     """Return a list of all values from the registry key."""
     return self._values
 
-  def GetSubkeyCount(self):
-    """Returns the number of sub keys for this particular registry key."""
+  def number_of_subkeys(self):
+    """The number of subkeys within the key."""
     return len(self._subkeys)
-
-  def HasSubkeys(self):
-    """Return a boolean value indicating whether or not the key has subkeys."""
-    return bool(self._subkeys)
 
   def GetSubkeys(self):
     """Return a list of all subkeys."""
@@ -129,6 +127,7 @@ class TestRegValue(interface.WinRegValue):
     """Return the raw value data of the key."""
     return self._data
 
+  # TODO: Registry refactor, replace GetStringData().
   def GetStringData(self):
     """Return a string data."""
     if self._data_type in [self.REG_SZ, self.REG_EXPAND_SZ]:
