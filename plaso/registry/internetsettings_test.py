@@ -14,7 +14,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a test for Internet Settings formatting in Plaso."""
+"""This file contains the tests for the MSIE Zone settings plugin."""
+# TODO: rename this file to msie_zones_test.py in a separate CL.
+
 import os
 import unittest
 
@@ -25,8 +27,8 @@ from plaso.registry import internetsettings
 from plaso.winreg import winpyregf
 
 
-class RegistrySoftwareZonesTest(unittest.TestCase):
-  """The unit test for Internet Settings formatting."""
+class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
+  """The unit test for MSIE Zone settings plugin in the Software hive."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -36,28 +38,38 @@ class RegistrySoftwareZonesTest(unittest.TestCase):
     # directly invoked here.
     self.registry = winpyregf.WinRegistry(file_object)
 
-  def testInternetSettingsZonesSoftware(self):
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
+    self.maxDiff = None
+
+  def testMsieZoneSettingsSoftwareZonesPlugin(self):
     """Test the Internet Settings Zones plugin for the Software hive."""
     key = self.registry.GetKey(
         '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones')
-    plugin = internetsettings.InternetSettingsZonesSoftwarePlugin(
+    plugin = internetsettings.MsieZoneSettingsSoftwareZonesPlugin(
         None, None, None)
     entries = list(plugin.Process(key))
 
-    line = (u'[\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\'
-            '0 (My Computer)] [1001] Download signed ActiveX controls: 0 (Allow'
-            ') [1004] Download unsigned ActiveX controls: 0 (Allow) [1200] Run'
-            ' ActiveX controls and plug-ins: 0 (Allow) [1201] Initialize and'
-            ' script ActiveX controls not marked as safe: 1 (Prompt User) [1206'
-            '] Allow scripting of IE Web browser control: 0 (Allow) [1207]'
-            ' Reserved: 0 (Allow) [1208] Allow previously unused ActiveX contro'
-            'ls to run without prompt: 0 (Allow) [1209] Allow Scriptlets: 0 (Al'
-            'low) [120A] Override Per-Site (domain-based) ActiveX restrictions:'
-            ' 0 (Allow) [120B] Override Per-Site (domain-based) ActiveX'
-            ' restrictions: 0 (Allow) [1400] Active scripting: 0 (Allow) [1402]'
-            ' Scripting of Java applets: 0 (Allow) [1405] Script ActiveX contro'
-            'ls marked as safe for scripting: 0 (Allow) [1406] Access data sour'
-            'ces across domains: 0 (Allow)')
+    expected_line = (
+        u'[\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\0 '
+        u'(My Computer)] '
+        u'[1001] Download signed ActiveX controls: 0 (Allow) '
+        u'[1004] Download unsigned ActiveX controls: 0 (Allow) '
+        u'[1200] Run ActiveX controls and plug-ins: 0 (Allow) '
+        u'[1201] Initialize and script ActiveX controls not marked as safe: 1 '
+        u'(Prompt User) '
+        u'[1206] Allow scripting of IE Web browser control: 0 '
+        u'[1207] Reserved: 0 '
+        u'[1208] Allow previously unused ActiveX controls to run without '
+        u'prompt: 0 '
+        u'[1209] Allow Scriptlets: 0 '
+        u'[120A] Override Per-Site (domain-based) ActiveX restrictions: 0 '
+        u'[120B] Override Per-Site (domain-based) ActiveX restrictions: 0 '
+        u'[1400] Active scripting: 0 (Allow) '
+        u'[1402] Scripting of Java applets: 0 (Allow) '
+        u'[1405] Script ActiveX controls marked as safe for scripting: 0 '
+        u'(Allow) '
+        u'[1406] Access data sources across domains: 0 (Allow)')
 
     # [1200] Run ActiveX controls and plug-ins: Allow (0)
     self.assertEquals(entries[1].timestamp, 1314567164937675)
@@ -67,45 +79,40 @@ class RegistrySoftwareZonesTest(unittest.TestCase):
         entries[1].regvalue[u'[1200] Run ActiveX controls and plug-ins'],
         u'0 (Allow)')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
-    self.assertEquals(msg[0:len(line)], line)
+    self.assertEquals(msg[0:len(expected_line)], expected_line)
 
-
-class RegistrySoftwareLockdownZonesTest(unittest.TestCase):
-  """The unit test for Internet Settings/Lockdown_Zones formatting."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'SOFTWARE')
-    file_object = open(test_file, 'rb')
-    # TODO: create a factory not have a specific back-end implementation
-    # directly invoked here.
-    self.registry = winpyregf.WinRegistry(file_object)
-
-  def testInternetSettingsLockdownZonesSoftware(self):
+  def testMsieZoneSettingsSoftwareLockdownZonesPlugin(self):
     """Test the Internet Settings Lockdown Zones plugin for Software hive."""
     key = self.registry.GetKey(
         '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Lockdown_Zones')
-    plugin = internetsettings.InternetSettingsLockdownZonesSoftwarePlugin(
+    plugin = internetsettings.MsieZoneSettingsSoftwareLockdownZonesPlugin(
         None, None, None)
     entries = list(plugin.Process(key))
 
-    line = (u'[\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\'
-            'Lockdown_Zones\\0 (My Computer)] [1001] Download signed ActiveX'
-            ' controls: 1 (Prompt User) [1004] Download unsigned ActiveX contro'
-            'ls: 3 (Not Allowed) [1200] Run ActiveX controls and plug-ins: 3 (N'
-            'ot Allowed) [1201] Initialize and script ActiveX controls not mark'
-            'ed as safe: 3 (Not Allowed) [1206] Allow scripting of IE Web brows'
-            'er control: 0 (Allow) [1207] Reserved: 3 (Not Allowed) [1208] Allo'
-            'w previously unused ActiveX controls to run without prompt: 3 (Not'
-            ' Allowed) [1209] Allow Scriptlets: 3 (Not Allowed) [120A] Override'
-            ' Per-Site (domain-based) ActiveX restrictions: 3 (Not Allowed) [12'
-            '0B] Override Per-Site (domain-based) ActiveX restrictions: 0 (Allo'
-            'w) [1400] Active scripting: 1 (Prompt User) [1402] Scripting of Ja'
-            'va applets: 0 (Allow) [1405] Script ActiveX controls marked as saf'
-            'e for scripting: 0 (Allow) [1406] Access data sources across domai'
-            'ns: 0 (Allow) [1407] Allow Programmatic clipboard access: 1 (Promp'
-            't User) [1408] Reserved: 3 (Not Allowed) [1409] : 3 (Not Allowed)')
+    expected_line = (
+        u'[\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\'
+        u'Lockdown_Zones\\0 (My Computer)] '
+        u'[1001] Download signed ActiveX controls: 1 (Prompt User) '
+        u'[1004] Download unsigned ActiveX controls: 3 (Not Allowed) '
+        u'[1200] Run ActiveX controls and plug-ins: 3 (Not Allowed) '
+        u'[1201] Initialize and script ActiveX controls not marked as safe: 3 '
+        u'(Not Allowed) '
+        u'[1206] Allow scripting of IE Web browser control: 0 '
+        u'[1207] Reserved: 3 '
+        u'[1208] Allow previously unused ActiveX controls to run without '
+        u'prompt: 3 '
+        u'[1209] Allow Scriptlets: 3 '
+        u'[120A] Override Per-Site (domain-based) ActiveX restrictions: 3 '
+        u'[120B] Override Per-Site (domain-based) ActiveX restrictions: 0 '
+        u'[1400] Active scripting: 1 (Prompt User) '
+        u'[1402] Scripting of Java applets: 0 (Allow) '
+        u'[1405] Script ActiveX controls marked as safe for scripting: 0 '
+        u'(Allow) '
+        u'[1406] Access data sources across domains: 0 (Allow) '
+        u'[1407] Allow Programmatic clipboard access: 1 (Prompt User) '
+        u'[1408] Reserved: 3 '
+        u'[1409] UNKNOWN: 3')
 
     # [1200] Run ActiveX controls and plug-ins: Allow (0)
     self.assertEquals(entries[1].timestamp, 1314567164937675)
@@ -115,11 +122,11 @@ class RegistrySoftwareLockdownZonesTest(unittest.TestCase):
         entries[1].regvalue[u'[1200] Run ActiveX controls and plug-ins'],
         u'3 (Not Allowed)')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
-    self.assertEquals(msg[0:len(line)], line)
+    self.assertEquals(msg[0:len(expected_line)], expected_line)
 
 
-class RegistryNtuserZonesTest(unittest.TestCase):
-  """The unit test for Internet Settings formatting."""
+class UserMsieZoneSettingsPluginTest(unittest.TestCase):
+  """The unit test for MSIE Zone settings plugin in the User hive."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -129,24 +136,36 @@ class RegistryNtuserZonesTest(unittest.TestCase):
     # directly invoked here.
     self.registry = winpyregf.WinRegistry(file_object)
 
-  def testInternetSettingsZonesNtuser(self):
-    """Test the Internet Settings Zones plugin for the NTUser hive."""
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
+    self.maxDiff = None
+
+  def testMsieZoneSettingsUserZonesPlugin(self):
+    """Test the plugin for the Zones."""
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Zones')
-    plugin = internetsettings.InternetSettingsZonesNtuserPlugin(
+    plugin = internetsettings.MsieZoneSettingsUserZonesPlugin(
         None, None, None)
     entries = list(plugin.Process(key))
 
-    line = (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet'
-            ' Settings\\Zones\\0 (My Computer)] [1200] Run ActiveX contro'
-            'ls and plug-ins: 0 (Allow) [1400] Active scripting: 0 (Allow) [200'
-            '1] .NET: Run components signed with Authenticode: 3 (Not Allowed)'
-            ' [2004] .NET: Run components not signed with Authenticode: 3 (Not'
-            ' Allowed) [2007] : 3 (Not Allowed) [CurrentLevel] : 0 (Allow) [Des'
-            'cription] : Your computer [DisplayName] : Computer [Flags] : 33 [I'
-            'con] : shell32.dll#0016 [LowIcon] : inetcpl.cpl#005422 [PMDisplayN'
-            'ame] : Computer [Protected Mode]')
+    expected_line = (
+        u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet '
+        u'Settings\\Zones\\0 (My Computer)] '
+        u'[1200] Run ActiveX controls and plug-ins: 0 (Allow) '
+        u'[1400] Active scripting: 0 (Allow) '
+        u'[2001] .NET: Run components signed with Authenticode: 3 (Not '
+        u'Allowed) '
+        u'[2004] .NET: Run components not signed with Authenticode: 3 (Not '
+        u'Allowed) '
+        u'[2007] UNKNOWN: 3 '
+        u'[CurrentLevel]: 0 '
+        u'[Description]: Your computer '
+        u'[DisplayName]: Computer '
+        u'[Flags]: 33 [Icon]: shell32.dll#0016 '
+        u'[LowIcon]: inetcpl.cpl#005422 '
+        u'[PMDisplayName]: Computer '
+        u'[Protected Mode]')
 
     # [1200] Run ActiveX controls and plug-ins: Allow (0)
     self.assertEquals(entries[1].timestamp, 1316207560145514)
@@ -156,36 +175,30 @@ class RegistryNtuserZonesTest(unittest.TestCase):
         entries[1].regvalue[u'[1200] Run ActiveX controls and plug-ins'],
         u'0 (Allow)')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
-    self.assertEquals(msg[0:len(line)], line)
+    self.assertEquals(msg[0:len(expected_line)], expected_line)
 
-
-class RegistryNtuserLockdownZonesTest(unittest.TestCase):
-  """The unit test for Internet Settings formatting."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
-    file_object = open(test_file, 'rb')
-    # TODO: create a factory not have a specific back-end implementation
-    # directly invoked here.
-    self.registry = winpyregf.WinRegistry(file_object)
-
-  def testInternetSettingsLockdownZonesNtuser(self):
-    """Test the Internet Settings Lockdown Zones plugin for the NTUser hive."""
+  def testMsieZoneSettingsUserLockdownZonesPlugin(self):
+    """Test the plugin for the Lockdown Zones."""
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Lockdown_Zones')
-    plugin = internetsettings.InternetSettingsLockdownZonesNtuserPlugin(
+    plugin = internetsettings.MsieZoneSettingsUserLockdownZonesPlugin(
         None, None, None)
     entries = list(plugin.Process(key))
 
-    line = (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet'
-            ' Settings\\Lockdown_Zones\\0 (My Computer)] [1200] Run ActiveX'
-            ' controls and plug-ins: 3 (Not Allowed) [1400] Active scripting: 1'
-            ' (Prompt User) [CurrentLevel] : 0 (Allow) [Description] : Your'
-            ' computer [DisplayName] : Computer [Flags] : 33 [Icon] :'
-            ' shell32.dll#0016 [LowIcon] : inetcpl.cpl#005422 [PMDisplayName] :'
-            ' Computer [Protected Mode]')
+    expected_line = (
+        u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet '
+        u'Settings\\Lockdown_Zones\\0 (My Computer)] '
+        u'[1200] Run ActiveX controls and plug-ins: 3 (Not Allowed) '
+        u'[1400] Active scripting: 1 (Prompt User) '
+        u'[CurrentLevel]: 0 '
+        u'[Description]: Your computer '
+        u'[DisplayName]: Computer '
+        u'[Flags]: 33 '
+        u'[Icon]: shell32.dll#0016 '
+        u'[LowIcon]: inetcpl.cpl#005422 '
+        u'[PMDisplayName]: Computer '
+        u'[Protected Mode]')
 
     # [1200] Run ActiveX controls and plug-ins: Allow (0)
     self.assertEquals(entries[1].timestamp, 1316207560145514)
@@ -195,7 +208,7 @@ class RegistryNtuserLockdownZonesTest(unittest.TestCase):
         entries[1].regvalue[u'[1200] Run ActiveX controls and plug-ins'],
         u'3 (Not Allowed)')
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
-    self.assertEquals(msg, line)
+    self.assertEquals(msg, expected_line)
 
 
 if __name__ == '__main__':

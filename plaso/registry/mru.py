@@ -14,56 +14,69 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a simple MRU plugin for Plaso."""
+"""This file contains a MRUList Registry plugin."""
+# TODO rename this file to mrulist.py in a separate CL.
 
 from plaso.lib import event
 from plaso.lib import win_registry_interface
-from plaso.winreg import interface
 
 
-class MRUPlugin(win_registry_interface.ValuePlugin):
-  """A simple generic MRU plugin for entries with a MRUList."""
+class MRUListPlugin(win_registry_interface.ValuePlugin):
+  """A Registry plugin for keys that contain a MRUList value."""
 
   REG_TYPE = 'any'
   REG_VALUES = frozenset(['MRUList', 'a'])
   URLS = [u'http://forensicartifacts.com/tag/mru/']
 
-  def GetText(self, mru_entry):
-    """Returns a unicode string extracted from key value.
-
-    Args:
-      mru_entry: The name of the MRU entry to be read, it should correspond
-                 directly to a value name in the registry key.
-
-    Returns:
-      A unicode string containing extracted value from the registry value.
-    """
-    value = self._key.GetValue(mru_entry)
-    if not value:
-      return u''
-
-    if value.DataIsString():
-      string = value.data
-    else:
-      # TODO: refactor this, interface should not be directly invoked
-      # this should be moved to a module factory class or equiv.
-      string = interface.GetRegistryStringValue(
-          value.GetRawData(), value.GetTypeStr())
-    return string
-
   def GetEntries(self):
-    """Extract EventObjects from a MRU list."""
-    value = self._key.GetValue('MRUList')
+    """Extract EventObjects from a MRU list.
 
-    event_timestamp = self._key.last_written_timestamp
+    Yields:
+      An event object for every item in the MRU list.
+    """
+    mru_list_value = self._key.GetValue('MRUList')
 
-    for nr, entry in enumerate(value.data):
+    if not mru_list_value:
       text_dict = {}
-      text_dict[u'MRUList Entry %d' % (nr + 1)] = self.GetText(entry)
-      evt = event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=event_timestamp)
-      # TODO: add comment why this timestamp is set to 0.
-      event_timestamp = 0
-      evt.source_append = ': MRU List'
-      yield evt
+      text_dict['MRUList'] = 'REGALERT: Internal error missing MRUList value.'
 
+      yield event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+
+    else:
+      timestamp = self._key.last_written_timestamp
+
+      # TODO: shouldn't this behavior be, put all the values
+      # into a single event object with the last written time of the key?
+      for entry_index, mru_value_name in enumerate(mru_list_value.data):
+        value = self._key.GetValue(mru_value_name)
+
+        if not value:
+          mru_value_string = 'REGALERT: No such MRU value: {0}.'.format(
+              mru_value_name)
+
+        # Ignore any value is empty.
+        elif not value.data:
+          mru_value_string = 'REGALERT: Missing MRU value: {0} data.'.format(
+              mru_value_name)
+
+        # TODO: add support for shell item based MRU value data.
+        elif not value.DataIsString():
+          mru_value_string = (
+              'REGALERT: Unsupported MRU value: {0} data type.').format(
+              mru_value_name)
+
+        else:
+          mru_value_string = value.data
+
+        text_dict = {}
+        text_dict[u'MRUList Entry %d' % (entry_index + 1)] = mru_value_string
+
+        event_object = event.WinRegistryEvent(
+            self._key.path, text_dict, timestamp=timestamp)
+        event_object.source_append = ': MRU List'
+
+        yield event_object
+
+        # TODO: add comment why this timestamp is set to 0.
+        timestamp = 0
