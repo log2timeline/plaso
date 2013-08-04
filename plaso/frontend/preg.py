@@ -185,25 +185,24 @@ def ls(verbose=False):
 
   sub = []
   for key in RegCache.cur_key.GetSubkeys():
-    sub.append((u'{:>10}  {}'.format('[KEY]', key.name), True))
+    sub.append((u'{0:s>10}  {1:s}'.format('[KEY]', key.name), True))
 
   for value in RegCache.cur_key.GetValues():
-    if verbose:
-      data_type = value.GetTypeStr()
-      if 'SZ' in data_type or 'DWORD' in data_type:
-        try:
-          data = value.GetData(unicode)
-        except UnicodeDecodeError:
-          data = '{Unable to read in data}'
-        except ValueError as e:
-          data = u'[Error while reading data: {}]'.format(e)
-      else:
-        data = ''
-      sub.append((u'{:>10}  {:<25}  {}'.format(
-          u'[%s]' % data_type, value.name, data), False))
+    if not verbose:
+      sub.append((u'[{0:s>10}]  {1:s}'.format(
+          value.data_type_string, value.name), False))
     else:
-      sub.append((u'{:>10}  {}'.format(
-          u'[%s]' % value.GetTypeStr(), value.name), False))
+      if value.DataIsString():
+        value_string = u'{0:s}'.format(value.data)
+      elif value.DataIsInteger():
+        value_string = u'{0:d}'.format(value.data)
+      elif value.data_type == value.REG_MULTI_SZ:
+        value_string = u'{0:s}'.format( u''.join(value.data))
+      else:
+        value_string = u''
+
+      sub.append((u'[{0:s>10}]  {1:s<25}  {2:s}'.format(
+          value.data_type_string, value.name, value_string), False))
 
   for entry, subkey in sorted(sub):
     if subkey:

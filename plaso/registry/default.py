@@ -38,23 +38,29 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
     """Returns an event object based on a Registry key name and values."""
     text_dict = {}
 
-    for value in self._key.GetValues():
-      if not value.name:
-        value_name = '(default)'
-      else:
-        value_name = u'%s' % value.name
-
-      if value.DataIsString():
-        text_dict[value_name] = value.data
-      elif value.DataIsInteger():
-        text_dict[value_name] = u'{0!d}'.format(value.data)
-      elif value.data_type == value.REG_MULTI_SZ:
-        text_dict[value_name] = u''.join(value.data)
-      else:
-        text_dict[value_name] = u'[DATA TYPE %s]' % value.GetTypeStr()
-
-    if not text_dict:
+    if self._key.number_of_values == 0:
       text_dict[u'Value'] = u'No values stored in key.'
+
+    else:
+      for value in self._key.GetValues():
+        if not value.name:
+          value_name = '(default)'
+        else:
+          value_name = u'{0:s}'.format(value.name)
+
+        if value.DataIsString():
+          value_string = u'[{0:s}] {1:s}'.format(
+              value.data_type_string, value.data)
+        elif value.DataIsInteger():
+          value_string = u'[{0:s}] {1:d}'.format(
+              value.data_type_string, value.data)
+        elif value.data_type == value.REG_MULTI_SZ:
+          value_string = u'[{0:s}] {1:s}'.format(
+              value.data_type_string, u''.join(value.data))
+        else:
+          value_string = u'[{0:s}]'.format(value.data_type_string)
+
+        text_dict[value_name] = value_string
 
     yield event.WinRegistryEvent(
         self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
