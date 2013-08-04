@@ -25,13 +25,16 @@ Thanks to contributors (alphabetically based on last name):
 * David Nides (davnads.blogspot.com)
   * 4n6time output generator with thanks to Eric Wong for assistance
   * Google Drive parser
-  * Symantec Log parser
+  * Symantec AV Log parser
   * Hachoir (meta data) parser
   * OLECF parser
   * Typed Paths registry parser
   * Typed URLs registry parser
   * Win7 Userassist registry parser
   * timelib StringToDatetime function
+  * USBStor parser
+  * Office MRU parser
+  * Outlook Parser
 * Francesco Picasso
   * SELinux parser
 * Jordi Sanchez
