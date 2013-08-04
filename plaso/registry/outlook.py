@@ -57,15 +57,15 @@ class Outlook(win_registry_interface.KeyPlugin):
 
 # TODO: Address different MS Office versions.
 class MSOutlook2010Search(Outlook):
-  """Gathers MS Outlook 2010 Data File locations from the NTUSER hive."""
+  """Gathers MS Outlook 2010 Data File locations from the User hive."""
 
-  REG_KEY = ('\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search')
+  REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search'
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'PST Paths'
 
 
 class MSOutlook2010Catalog(Outlook):
-  """Gathers MS Outlook 2010 Data File locations from the NTUSER hive."""
+  """Gathers MS Outlook 2010 Data File locations from the User hive."""
 
   REG_KEY = (
     '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search\\Catalog')
@@ -74,8 +74,8 @@ class MSOutlook2010Catalog(Outlook):
 
 
 class MSOutlook2003Catalog(Outlook):
-  """Gathers MS Outlook 2003 Data File locations from the NTUSER hive."""
+  """Gathers MS Outlook 2003 Data File locations from the User hive."""
 
-  REG_KEY = ('\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog')
+  REG_KEY = '\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog'
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'PST Paths'

@@ -126,10 +126,3 @@ class TestRegValue(interface.WinRegValue):
   def GetRawData(self):
     """Return the raw value data of the key."""
     return self._data
-
-  # TODO: Registry refactor, replace GetStringData().
-  def GetStringData(self):
-    """Return a string data."""
-    if self._data_type in [self.REG_SZ, self.REG_EXPAND_SZ]:
-      return self._data.decode('utf_16_le', 'ignore')
-    return u''

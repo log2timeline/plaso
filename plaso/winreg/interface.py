@@ -273,11 +273,6 @@ class WinRegValue(object):
   def GetRawData(self):
     """Return the raw value data of the key."""
 
-  # TODO: Registry refactor, replace GetStringData().
-  @abc.abstractmethod
-  def GetStringData(self):
-    """Return a string value from the value."""
-
 
 def GetRegistryStringValue(raw_string, key_type='SZ'):
   """Return a string value stored in UTF-16 le.
