@@ -49,15 +49,18 @@ class TestDefaultRegistry(unittest.TestCase):
     self.assertTrue(generator)
     entries = list(generator)
 
-    line = (u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] MRUList: acb '
-            'a: Some random text here b: [DATA TYPE BINARY] c: C:/looks_leg'
-            'it.exe')
+    expected_line = (
+        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
+        u'MRUList: [REG_SZ] acb '
+        u'a: [REG_SZ] Some random text here '
+        u'b: [REG_BINARY] '
+        u'c: [REG_SZ] C:/looks_legit.exe')
 
     self.assertEquals(len(entries), 1)
     self.assertEquals(entries[0].timestamp, 1346145829002031)
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     eventdata.EventFormatterManager.GetFormatter(entries[0])
-    self.assertEquals(msg, line)
+    self.assertEquals(msg, expected_line)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the tests for the MRU registry parsing plugins."""
+"""This file contains the tests for the MRUList Registry plugins."""
+# TODO rename this file to mrulist_test.py in a separate CL.
+
 import unittest
 
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
@@ -23,8 +25,8 @@ from plaso.registry import mru
 from plaso.winreg import test_lib
 
 
-class TestMRURegistry(unittest.TestCase):
-  """The unit test for MRU registry parsing."""
+class TestMRUListRegistry(unittest.TestCase):
+  """The unit test for MRUList registry parsing."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -46,22 +48,22 @@ class TestMRURegistry(unittest.TestCase):
         '\\Microsoft\\Some Windows\\InterestingApp\\MRU', 1346145829002031,
         values, 1456)
 
-  def testMRU(self):
+  def testMRUListPlugin(self):
     """Run a simple test against a mocked key with values."""
-    plugin = mru.MRUPlugin(None, None, None)
+    plugin = mru.MRUListPlugin(None, None, None)
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)
 
     expected_line1 = (
-        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] MRUList Entry '
-        u'1: Some random text here')
+        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
+        u'MRUList Entry 1: Some random text here')
     expected_line2 = (
-        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] MRUList Entry '
-        u'2: C:/looks_legit.exe')
+        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
+        u'MRUList Entry 2: C:/looks_legit.exe')
     expected_line3 = (
-        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] MRUList Entry '
-        u'3: c:/evil.exe')
+        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
+        u'MRUList Entry 3: REGALERT: Unsupported MRU value: b data type.')
 
     self.assertEquals(len(entries), 3)
     self.assertEquals(entries[0].timestamp, 1346145829002031)

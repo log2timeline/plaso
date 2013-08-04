@@ -108,21 +108,19 @@ class WinRegValue(object):
   REG_RESOURCE_REQUIREMENT_LIST = 10
   REG_QWORD = 11
 
-  # TODO: refactor the string representations, if no longer needed remove
-  # otherwise change to a frozenset of a list of strings.
-  TYPES = {
-      0: 'NONE',
-      1: 'SZ',
-      2: 'EXPAND_SZ',
-      3: 'BINARY',
-      4: 'DWORD_LE',
-      5: 'DWORD_BE',
-      6: 'LINK',
-      7: 'MULTI_SZ',
-      8: 'RESOURCE_LIST',
-      9: 'FULL_RESOURCE_DESCRIPTOR',
-      10: 'RESOURCE_REQUIREMENT_LIST',
-      11: 'QWORD'
+  _DATA_TYPE_STRINGS = {
+      0: u'REG_NONE',
+      1: u'REG_SZ',
+      2: u'REG_EXPAND_SZ',
+      3: u'REG_BINARY',
+      4: u'REG_DWORD_LE',
+      5: u'REG_DWORD_BE',
+      6: u'REG_LINK',
+      7: u'REG_MULTI_SZ',
+      8: u'REG_RESOURCE_LIST',
+      9: u'REG_FULL_RESOURCE_DESCRIPTOR',
+      10: u'REG_RESOURCE_REQUIREMENT_LIST',
+      11: u'REG_QWORD'
   }
 
   def __init__(self):
@@ -142,6 +140,10 @@ class WinRegValue(object):
     """Numeric value that contains the data type."""
 
   @property
+  def data_type_string(self):
+    """String representation of the data type."""
+    return self._DATA_TYPE_STRINGS.get(self.data_type, u'UNKNOWN')
+
   @abc.abstractproperty
   def data(self):
     """The value data as a native Python object."""
@@ -225,10 +227,6 @@ class WinRegValue(object):
 
     return data
 
-  def GetTypeStr(self):
-    """Returns the registry value type."""
-    return self.TYPES.get(self.data_type, 'NONE')
-
   # TODO: refactor this to a data property.
   def GetData(self, data_type=None):
     """Return a Python interpreted data from the value.
@@ -265,7 +263,7 @@ class WinRegValue(object):
       try:
         data = unicode(data)
       except UnicodeDecodeError:
-        data = GetRegistryStringValue(data, self.GetTypeStr())
+        data = GetRegistryStringValue(data, self.data_type_string)
     return data
 
   # TODO: refactor this to a raw_data property.
@@ -274,7 +272,7 @@ class WinRegValue(object):
     """Return the raw value data of the key."""
 
 
-def GetRegistryStringValue(raw_string, key_type='SZ'):
+def GetRegistryStringValue(raw_string, key_type='REG_SZ'):
   """Return a string value stored in UTF-16 le.
 
   This method takes a raw value from a key and it's type
@@ -289,7 +287,7 @@ def GetRegistryStringValue(raw_string, key_type='SZ'):
     An unicode string.
   """
   # TODO: refactor this function away.
-  if key_type == 'BINARY':
+  if key_type == 'REG_BINARY':
     try:
       str_ret = raw_string.decode('utf_16_le')
     except UnicodeDecodeError:
@@ -298,7 +296,7 @@ def GetRegistryStringValue(raw_string, key_type='SZ'):
 
     return str_ret
 
-  if key_type == 'MULTI_SZ':
+  if key_type == 'REG_MULTI_SZ':
     if type(raw_string) == list:
       return u' '.join(raw_string)
 

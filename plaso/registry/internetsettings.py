@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file is a Internet Settings parser for Windows registry."""
+# TODO: rename this file to msie_zones.py in a separate CL.
 
 import logging
 
@@ -25,105 +26,138 @@ from plaso.lib import win_registry_interface
 __author__ = 'Elizabeth Schweinsberg (beth@bethlogic.net)'
 
 
-class InternetSettingsZonesBase(win_registry_interface.KeyPlugin):
-  """Base class for formatting the Internet Settings-Zones."""
+class MsieZoneSettingsPlugin(win_registry_interface.KeyPlugin):
+  """Base class for parsing the MSIE Zones settings."""
 
   __abstract = True
 
   URLS = ['http://support.microsoft.com/kb/182569']
 
   ZONE_NAMES = {
-    '0': '0 (My Computer)',
-    '1': '1 (Local Intranet Zone)',
-    '2': '2 (Trusted sites Zone)',
-    '3': '3 (Internet Zone)',
-    '4': '4 (Restricted Sites Zone)',
-    '5': '5 (Custom)'
+      '0': '0 (My Computer)',
+      '1': '1 (Local Intranet Zone)',
+      '2': '2 (Trusted sites Zone)',
+      '3': '3 (Internet Zone)',
+      '4': '4 (Restricted Sites Zone)',
+      '5': '5 (Custom)'
   }
 
-  PERMISSIONS = {
-    '0': '0 (Allow)',
-    '1': '1 (Prompt User)',
-    '3': '3 (Not Allowed)'
+  KNOWN_PERMISSIONS_VALUE_NAMES = [
+      '1001', '1004', '1200', '1201', '1400', '1402', '1405', '1406', '1407',
+      '1601', '1604', '1606', '1607', '1608', '1609', '1800', '1802', '1803',
+      '1804', '1809', '1A04', '2000', '2001', '2004', '2100', '2101', '2102',
+      '2200', '2201', '2300' ]
+
+  CONTROL_VALUES_PERMISSIONS = {
+      0x00000000: '0 (Allow)',
+      0x00000001: '1 (Prompt User)',
+      0x00000003: '3 (Not Allowed)',
+      0x00010000: '0x00010000 (Administrator approved)'
   }
 
-  ACTIONS = {
-    '1200': 'Run ActiveX controls and plug-ins',
-    '1400': 'Active scripting',
-    '1001': 'Download signed ActiveX controls',
-    '1004': 'Download unsigned ActiveX controls',
-    '1201': 'Initialize and script ActiveX controls not marked as safe',
-    '1206': 'Allow scripting of IE Web browser control',
-    '1207': 'Reserved',
-    '1208': 'Allow previously unused ActiveX controls to run without prompt',
-    '1209': 'Allow Scriptlets',
-    '120A': 'Override Per-Site (domain-based) ActiveX restrictions',
-    '120B': 'Override Per-Site (domain-based) ActiveX restrictions',
-    '1402': 'Scripting of Java applets',
-    '1405': 'Script ActiveX controls marked as safe for scripting',
-    '1406': 'Access data sources across domains',
-    '1407': 'Allow Programmatic clipboard access',
-    '1408': 'Reserved',
-    '1601': 'Submit non-encrypted form data',
-    '1604': 'Font download',
-    '1605': 'Run Java',
-    '1606': 'Userdata persistence',
-    '1607': 'Navigate sub-frames across different domains',
-    '1608': 'Allow META REFRESH',
-    '1609': 'Display mixed content',
-    '160A': 'Include local directory path when uploading files to a server',
-    '1800': 'Installation of desktop items',
-    '1802': 'Drag and drop or copy and paste files',
-    '1803': 'File Download',
-    '1804': 'Launching programs and files in an IFRAME',
-    '1805': 'Launching programs and files in webview',
-    '1806': 'Launching applications and unsafe files',
-    '1807': 'Reserved',
-    '1808': 'Reserved',
-    '1809': 'Use Pop-up Blocker',
-    '180A': 'Reserved',
-    '180B': 'Reserved',
-    '180C': 'Reserved',
-    '180D': 'Reserved',
-    '1A00': 'User Authentication: Logon',
-    '1A02': 'Allow persistent cookies that are stored on your computer',
-    '1A03': 'Allow per-session cookies (not stored)',
-    '1A04': 'Don\'t prompt for client cert selection when no certs exists',
-    '1A05': 'Allow 3rd party persistent cookies',
-    '1A06': 'Allow 3rd party session cookies',
-    '1A10': 'Privacy Settings',
-    '1C00': 'Java permissions',
-    '1E05': 'Software channel permissions',
-    '1F00': 'Reserved',
-    '2000': 'Binary and script behaviors',
-    '2001': '.NET: Run components signed with Authenticode',
-    '2004': '.NET: Run components not signed with Authenticode',
-    '2100': 'Open files based on content, not file extension',
-    '2101': 'Web sites in less privileged zone can navigate into this zone',
-    '2102': 'Allow script initiated windows without size/position constraints',
-    '2103': 'Allow status bar updates via script',
-    '2104': 'Allow websites to open windows without address or status bars',
-    '2105': 'Allow websites to prompt for information using scripted windows',
-    '2200': 'Automatic prompting for file downloads',
-    '2201': 'Automatic prompting for ActiveX controls',
-    '2300': 'Allow web pages to use restricted protocols for active content',
-    '2301': 'Use Phishing Filter',
-    '2400': '.NET: XAML browser applications',
-    '2401': '.NET: XPS documents',
-    '2402': '.NET: Loose XAML',
-    '2500': 'Turn on Protected Mode',
-    '2600': 'Enable .NET Framework setup',
-    '{AEBA21FA-782A-4A90-978D-B72164C80120}': 'First Party Cookie',
-    '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
+  CONTROL_VALUES_SAFETY = {
+      0x00010000: '0x00010000 (High safety)',
+      0x00020000: '0x00020000 (Medium safety)',
+      0x00030000: '0x00030000 (Low safety)'
+  }
+
+  CONTROL_VALUES_1A00 = {
+      0x00000000: ('0x00000000 (Automatic logon with current user name and '
+                   'password)'),
+      0x00010000: '0x00010000 (Prompt for user name and password)',
+      0x00020000: '0x00020000 (Automatic logon only in Intranet zone)',
+      0x00030000: '0x00030000 (Anonymous logon)'
+  }
+
+  CONTROL_VALUES_1C00 = {
+      0x00000000: '0x00000000 (Disable Java)',
+      0x00010000: '0x00010000 (High safety)',
+      0x00020000: '0x00020000 (Medium safety)',
+      0x00030000: '0x00030000 (Low safety)',
+      0x00800000: '0x00800000 (Custom)'
+  }
+
+  FEATURE_CONTROLS = {
+      '1200': 'Run ActiveX controls and plug-ins',
+      '1400': 'Active scripting',
+      '1001': 'Download signed ActiveX controls',
+      '1004': 'Download unsigned ActiveX controls',
+      '1201': 'Initialize and script ActiveX controls not marked as safe',
+      '1206': 'Allow scripting of IE Web browser control',
+      '1207': 'Reserved',
+      '1208': 'Allow previously unused ActiveX controls to run without prompt',
+      '1209': 'Allow Scriptlets',
+      '120A': 'Override Per-Site (domain-based) ActiveX restrictions',
+      '120B': 'Override Per-Site (domain-based) ActiveX restrictions',
+      '1402': 'Scripting of Java applets',
+      '1405': 'Script ActiveX controls marked as safe for scripting',
+      '1406': 'Access data sources across domains',
+      '1407': 'Allow Programmatic clipboard access',
+      '1408': 'Reserved',
+      '1601': 'Submit non-encrypted form data',
+      '1604': 'Font download',
+      '1605': 'Run Java',
+      '1606': 'Userdata persistence',
+      '1607': 'Navigate sub-frames across different domains',
+      '1608': 'Allow META REFRESH',
+      '1609': 'Display mixed content',
+      '160A': 'Include local directory path when uploading files to a server',
+      '1800': 'Installation of desktop items',
+      '1802': 'Drag and drop or copy and paste files',
+      '1803': 'File Download',
+      '1804': 'Launching programs and files in an IFRAME',
+      '1805': 'Launching programs and files in webview',
+      '1806': 'Launching applications and unsafe files',
+      '1807': 'Reserved',
+      '1808': 'Reserved',
+      '1809': 'Use Pop-up Blocker',
+      '180A': 'Reserved',
+      '180B': 'Reserved',
+      '180C': 'Reserved',
+      '180D': 'Reserved',
+      '1A00': 'User Authentication: Logon',
+      '1A02': 'Allow persistent cookies that are stored on your computer',
+      '1A03': 'Allow per-session cookies (not stored)',
+      '1A04': 'Don\'t prompt for client cert selection when no certs exists',
+      '1A05': 'Allow 3rd party persistent cookies',
+      '1A06': 'Allow 3rd party session cookies',
+      '1A10': 'Privacy Settings',
+      '1C00': 'Java permissions',
+      '1E05': 'Software channel permissions',
+      '1F00': 'Reserved',
+      '2000': 'Binary and script behaviors',
+      '2001': '.NET: Run components signed with Authenticode',
+      '2004': '.NET: Run components not signed with Authenticode',
+      '2100': 'Open files based on content, not file extension',
+      '2101': 'Web sites in less privileged zone can navigate into this zone',
+      '2102': ('Allow script initiated windows without size/position '
+               'constraints'),
+      '2103': 'Allow status bar updates via script',
+      '2104': 'Allow websites to open windows without address or status bars',
+      '2105': 'Allow websites to prompt for information using scripted windows',
+      '2200': 'Automatic prompting for file downloads',
+      '2201': 'Automatic prompting for ActiveX controls',
+      '2300': 'Allow web pages to use restricted protocols for active content',
+      '2301': 'Use Phishing Filter',
+      '2400': '.NET: XAML browser applications',
+      '2401': '.NET: XPS documents',
+      '2402': '.NET: Loose XAML',
+      '2500': 'Turn on Protected Mode',
+      '2600': 'Enable .NET Framework setup',
+      '{AEBA21FA-782A-4A90-978D-B72164C80120}': 'First Party Cookie',
+      '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
   }
 
   def GetEntries(self):
-    """Add info to the values of the the Internet Settings Zones.
+    """Retrieves information of the Internet Settings Zones values.
+
+    The MSIE Feature controls are stored in the Zone specific subkeys in:
+      Internet Settings\\Zones key
+      Internet Settings\\Lockdown_Zones key
 
     Yields:
-      Event objects of the individual Internet Setting Registry keys.
+      An event object of the an individual Internet Setting Registry key.
     """
-    # Store values of the Internet Settings/[Lockdown_]Zones key.
     text_dict = {}
     for value in self._key.GetValues():
       if not value.name:
@@ -137,72 +171,110 @@ class InternetSettingsZonesBase(win_registry_interface.KeyPlugin):
         self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
         offset=self._key.offset)
 
-    # REGALERT if there are no Zone SubKeys.
     if self._key.number_of_subkeys == 0:
       logging.info('No subkeys for Internet Settings/Zones')
-      text_dict = {
-        'Zone Subkeys': 'REGALERT No Zones set for Internet Settings'
-      }
+
+      text_dict = {}
+      text_dict['Zone Subkeys'] = u'REGALERT No Zones set for Internet Settings'
 
       yield event.WinRegistryEvent(
           self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
           offset=self._key.offset)
 
     else:
-      # Process the Zone subkeys.
       for zone_key in self._key.GetSubkeys():
-        path = u'%s\\%s' % (self._key.path, self.ZONE_NAMES[zone_key.name])
+        # TODO: these values are stored in the Description value of the
+        # zone key. This solution will break on zone values that are larger
+        # than 5.
+        path = u'{0:s}\\{1:s}'.format(
+            self._key.path, self.ZONE_NAMES[zone_key.name])
+
         text_dict = {}
+
+        # TODO: this plugin currently just dumps the values and does not
+        # distinguish between what is a feature control or not.
         for value in zone_key.GetValues():
+          # Ignore the default value.
           if not value.name:
             continue
-          # Matched and Unmatched actions need the data parsed the same way.
-          data_type = value.GetTypeStr()
-          if 'DWORD' in data_type or 'SZ' in data_type:
-            data = value.GetData(unicode)
+
+          if value.DataIsString():
+            value_string = value.data
+
+          elif value.DataIsInteger():
+            if value.name in self.KNOWN_PERMISSIONS_VALUE_NAMES:
+              value_string = self.CONTROL_VALUES_PERMISSIONS[value.data]
+            elif value.name == '1A00':
+              value_string = self.CONTROL_VALUES_1A00[value.data]
+            elif value.name == '1C00':
+              value_string = self.CONTROL_VALUES_1C00[value.data]
+            elif value.name == '1E05':
+              value_string = self.CONTROL_VALUES_SAFETY[value.data]
+            else:
+              value_string = u'{0:d}'.format(value.data)
+
           else:
-            # Some values contain BINARY data, default plugin prints this way.
-            data = u'[DATA TYPE %s]' % data_type
+            value_string = u'[{0:s}]'.format(value.data_type_string)
 
-          # Now see if we know what Action the Zone is setting.
-          action = u'[{}] {}'.format(value.name,
-                                     self.ACTIONS.get(value.name, ''))
-          # TODO(eschwein) some actions have more complicated permissions.
-          data_value = self.PERMISSIONS.get(data, data)
-          text_dict[action] = data_value
-        event_object = event.WinRegistryEvent(
+          if len(value.name) == 4 and value.name != 'Icon':
+            value_description = self.FEATURE_CONTROLS.get(value.name, 'UNKNOWN')
+          else:
+            value_description = self.FEATURE_CONTROLS.get(value.name, '')
+
+          if value_description:
+            feature_control = u'[{0:s}] {1:s}'.format(
+                value.name, value_description)
+          else:
+            feature_control = u'[{0:s}]'.format(value.name)
+
+          text_dict[feature_control] = value_string
+
+        yield event.WinRegistryEvent(
             path, text_dict, timestamp=zone_key.last_written_timestamp)
-        yield event_object
 
 
-class InternetSettingsZonesNtuserPlugin(InternetSettingsZonesBase):
-  """Gathers and formats the NTUser settings for Internet Settings-Zones."""
+class MsieZoneSettingsUserZonesPlugin(MsieZoneSettingsPlugin):
+  """Parses the Zones key in the User hive."""
 
   REG_TYPE = 'NTUSER'
   REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
              '\\Zones')
 
 
-class InternetSettingsLockdownZonesNtuserPlugin(InternetSettingsZonesBase):
-  """Formats the NTUser settings for Internet Settings-Lockdown_Zones."""
+class MsieZoneSettingsUserLockdownZonesPlugin(MsieZoneSettingsPlugin):
+  """Parses the Lockdown Zones key in the User hive."""
 
   REG_TYPE = 'NTUSER'
   REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
              '\\Lockdown_Zones')
 
 
-class InternetSettingsZonesSoftwarePlugin(InternetSettingsZonesBase):
-  """Gathers and formats the Software settings for Internet Settings-Zones."""
+class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):
+  """Parses the Zones key in the Software hive."""
 
   REG_TYPE = 'SOFTWARE'
   REG_KEY = '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones'
 
 
-class InternetSettingsLockdownZonesSoftwarePlugin(InternetSettingsZonesBase):
-  """Formats the Software settings for Internet Settings-Lockdown_Zones."""
+class MsieZoneSettingsSoftwareLockdownZonesPlugin(MsieZoneSettingsPlugin):
+  """Parses the Lockdown Zones key in the Software hive."""
 
   REG_TYPE = 'SOFTWARE'
   REG_KEY = ('\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
              '\\Lockdown_Zones')
 
 
+class MsieZoneSettingsWow64SoftwareZonesPlugin(MsieZoneSettingsPlugin):
+  """Parses the Zones key in the Wow6432Node key the Software hive."""
+
+  REG_TYPE = 'SOFTWARE'
+  REG_KEY = ('\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion'
+             '\\Internet Settings\\Zones')
+
+
+class MsieZoneSettingsWow64SoftwareLockdownZonesPlugin(MsieZoneSettingsPlugin):
+  """Parses the Lockdown Zones key in the Wow6432Node key the Software hive."""
+
+  REG_TYPE = 'SOFTWARE'
+  REG_KEY = ('\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion'
+             '\\Internet Settings\\Lockdown_Zones')
