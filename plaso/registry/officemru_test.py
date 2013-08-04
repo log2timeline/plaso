@@ -45,20 +45,30 @@ class RegistryOfficeMRUTest(unittest.TestCase):
     plugin = officemru.MSWord2010FileMRU(None, None, None)
     entries = list(plugin.Process(key))
 
-    self.assertEquals(entries[0].timestamp, 1331663235083000)
+    # Tue Mar 13 18:27:15.083000 UTC 2012
+    expected_timestamp = 1331663235083000
+
+    self.assertEquals(entries[0].timestamp, expected_timestamp)
+
     self.assertTrue(
         u'Item 1' in entries[0].regvalue)
 
-    self.assertEquals(entries[0].regvalue[u'Item 1'],
-                      u'[F00000000][T01CD0146EA1EADB0][O00000000]*'
-                      'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
-                      'SA-23E Mitchell-Hyundyne Starfury.docx')
+    expected_value_data = (
+        u'[F00000000][T01CD0146EA1EADB0][O00000000]*'
+        u'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
+        u'SA-23E Mitchell-Hyundyne Starfury.docx')
+
+    self.assertEquals(entries[0].regvalue[u'Item 1'], expected_value_data)
+
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(
-        msg, u'[\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU] '
-        'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*C:\\'
-        'Users\\nfury\\Documents\\StarFury\\StarFury\\SA-23E Mitchell'
-        '-Hyundyne Starfury.docx')
+
+    expected_string = (
+        u'[\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU] '
+        u'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*'
+        u'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
+        u'SA-23E Mitchell-Hyundyne Starfury.docx')
+
+    self.assertEquals(msg, expected_string)
 
 
 if __name__ == '__main__':

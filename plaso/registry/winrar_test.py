@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2012 The Plaso Project Authors.
+# Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,67 +14,55 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the tests for the MRU registry parsing plugins."""
+"""This file contains the tests for the WinRAR Registry plugins."""
 import unittest
 
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
-from plaso.registry import mru
+from plaso.registry import winrar
 from plaso.winreg import test_lib
 
 
-class TestMRURegistry(unittest.TestCase):
-  """The unit test for MRU registry parsing."""
+class TestWinRarRegistry(unittest.TestCase):
+  """The unit test for WinRAR registry parsing."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     values = []
     values.append(test_lib.TestRegValue(
-        'MRUList', 'acb'.encode('utf_16_le'),
-        test_lib.TestRegValue.REG_SZ, offset=123))
-    values.append(test_lib.TestRegValue(
-        'a', 'Some random text here'.encode('utf_16_le'),
+        '0', 'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode('utf_16_le'),
         test_lib.TestRegValue.REG_SZ, offset=1892))
     values.append(test_lib.TestRegValue(
-        'b', 'c:/evil.exe'.encode('utf_16_le'),
-        test_lib.TestRegValue.REG_BINARY, offset=612))
-    values.append(test_lib.TestRegValue(
-        'c', 'C:/looks_legit.exe'.encode('utf_16_le'),
-        test_lib.TestRegValue.REG_SZ, offset=1001))
+        '1', 'C:\\Downloads\\plaso-static.rar'.encode('utf_16_le'),
+        test_lib.TestRegValue.REG_SZ, 612))
 
     self.regkey = test_lib.TestRegKey(
-        '\\Microsoft\\Some Windows\\InterestingApp\\MRU', 1346145829002031,
+        '\\Software\\WinRAR\\ArcHistory', 1346145829002031,
         values, 1456)
 
-  def testMRU(self):
+  def testWinRarArcHistoryPluging(self):
     """Run a simple test against a mocked key with values."""
-    plugin = mru.MRUPlugin(None, None, None)
+    plugin = winrar.WinRarArcHistoryPlugin(None, None, None)
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)
 
     expected_line1 = (
-        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] MRUList Entry '
-        u'1: Some random text here')
+        u'[\\Software\\WinRAR\\ArcHistory] '
+        u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso')
     expected_line2 = (
-        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] MRUList Entry '
-        u'2: C:/looks_legit.exe')
-    expected_line3 = (
-        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] MRUList Entry '
-        u'3: c:/evil.exe')
+        u'[\\Software\\WinRAR\\ArcHistory] '
+        u'1: C:\\Downloads\\plaso-static.rar')
 
-    self.assertEquals(len(entries), 3)
+    self.assertEquals(len(entries), 2)
     self.assertEquals(entries[0].timestamp, 1346145829002031)
     self.assertEquals(entries[1].timestamp, 0)
-    self.assertEquals(entries[2].timestamp, 0)
 
     msg1, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     msg2, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
-    msg3, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[2])
 
     self.assertEquals(msg1, expected_line1)
     self.assertEquals(msg2, expected_line2)
-    self.assertEquals(msg3, expected_line3)
 
 
 if __name__ == '__main__':

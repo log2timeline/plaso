@@ -31,21 +31,29 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
 
   INT_STRUCT = construct.ULInt32('install')
 
-  def GetText(self, value):
-    """Return the text value from the registry key."""
-    val = self._key.GetValue(value)
-    if val:
-      # TODO: Registry refactor, replace GetStringData().
-      return val.GetStringData()
+  # TODO: refactor remove this function in a later CL.
+  def GetValueString(self, value_name):
+    """Retrieves a specific string value from the Registry key.
 
-    return ''
+    Args:
+      value_name: The name of the value.
+
+    Returns:
+      A string containing the value data if the value data is
+      a string type otherwise an empty string.
+    """
+    value = self._key.GetValue(value_name)
+
+    if not value.data or not value.DataIsString():
+      return ''
+    return value.data
 
   def GetEntries(self):
     """Gather minimal information about system install and return an event."""
     text_dict = {}
-    text_dict[u'Owner'] = self.GetText('RegisteredOwner')
-    text_dict[u'sp'] = self.GetText('CSDBuildNumber')
-    text_dict[u'Product name'] = self.GetText('ProductName')
+    text_dict[u'Owner'] = self.GetValueString('RegisteredOwner')
+    text_dict[u'sp'] = self.GetValueString('CSDBuildNumber')
+    text_dict[u'Product name'] = self.GetValueString('ProductName')
     text_dict[u' Windows Version Information'] = u''
     install_raw = self._key.GetValue('InstallDate').GetRawData()
     # TODO: move this to a function in utils with a more descriptive name

@@ -49,8 +49,9 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
     3: 'Critical (3)'
   }
 
-  OBJECT_NAME = ['localsystem', 'nt authority\\localservice',
-                 'nt authority\\networkservice']
+  OBJECT_NAMES = [
+      'localsystem', 'nt authority\\localservice',
+      'nt authority\\networkservice']
 
   def GetImagePath(self, subkey, service_type):
     """Returns the Image Path String with alerts for unusual settings.
@@ -69,20 +70,27 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
       A REGALERT Unicode string is returned when an anomaly is detected.
     """
     image_path = subkey.GetValue('ImagePath')
+
     if service_type > 0 and service_type < 15:
       if not image_path:
         return None
-      # TODO: Registry refactor, replace GetStringData().
-      image_path_str = image_path.GetStringData()
+
+      if not image_path.data or not image_path.DataIsString():
+        return 'REGALERT: Driver does not have a valid ImagePath.'
+
+      image_path_str = image_path.data
       if 'system32\\drivers' not in image_path_str.lower():
         return u'REGALERT Driver not in system32: {}'.format(image_path_str)
       return image_path_str
+
     elif service_type > 15 and service_type < 257:
-      if image_path:
-        # Add '' around Services Image path for readability of arguments.
-        # TODO: Registry refactor, replace GetStringData().
-        return u'\'{}\''.format(image_path.GetStringData())
-      return u'REGALERT: Service does not have ImagePath.'
+      if not image_path:
+        return 'REGALERT: Service does not have ImagePath.'
+
+      if not image_path.data or not image_path.DataIsString():
+        return 'REGALERT: Service does not have a valid ImagePath.'
+
+      return u'\'{}\''.format(image_path.data)
     return None
 
   def GetObjectName(self, subkey, service_type):
@@ -107,15 +115,24 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
     if service_type > 0 and service_type < 15:
       if not object_name:
         return None
-      # TODO: Registry refactor, replace GetStringData().
+
+      if object_name.data and object_name.DataIsString():
+        object_name_str = object_name.data
+      else:
+        object_name_str = u'UNKNOWN'
+
       return u'REGALERT Driver has ObjectName: {}'.format(
-          object_name.GetStringData())
+          object_name_str)
+
     elif service_type > 15 and service_type < 257:
       if not object_name:
-        return u'REGALERT Service has no ObjectName'
-      # TODO: Registry refactor, replace GetStringData().
-      object_name_str = object_name.GetStringData()
-      if object_name_str.lower() not in self.OBJECT_NAME:
+        return u'REGALERT Service does not have ObjectName'
+
+      if not object_name.data or not object_name.DataIsString():
+        return u'REGALERT Service does not have a valid ObjectName'
+
+      object_name_str = object_name.data
+      if object_name_str.lower() not in self.OBJECT_NAMES:
         # There are 3 primary owners, all others are noteworthy.
         return u'REGALERT Unusual Owner: {}'.format(
             object_name_str)
