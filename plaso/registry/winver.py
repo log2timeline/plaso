@@ -35,6 +35,7 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
     """Return the text value from the registry key."""
     val = self._key.GetValue(value)
     if val:
+      # TODO: Registry refactor, replace GetStringData().
       return val.GetStringData()
 
     return ''
@@ -55,7 +56,8 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
       install = 0
 
     event_object = event.WinRegistryEvent(
-        self._key.path, text_dict, timelib.Timestamp.FromPosixTime(install))
+        self._key.path, text_dict,
+        timestamp=timelib.Timestamp.FromPosixTime(install))
     event_object.prodname = text_dict[u'Product name']
     event_object.source_long = 'SOFTWARE WinVersion key'
     if text_dict[u'Owner']:

@@ -38,30 +38,31 @@ class MRUPlugin(win_registry_interface.ValuePlugin):
     Returns:
       A unicode string containing extracted value from the registry value.
     """
+    value = self._key.GetValue(mru_entry)
+    if not value:
+      return u''
 
-    val = self._key.GetValue(mru_entry)
-    if val:
-      if val.GetTypeStr() == 'SZ' or val.GetTypeStr() == 'EXPAND_SZ':
-        string = val.GetData()
-      else:
-        # TODO: refactor this, interface should not be directly invoked
-        # this should be moved to a module factory class or equiv.
-        string = interface.GetRegistryStringValue(
-            val.GetRawData(), val.GetTypeStr())
-      return string
-    return u''
+    if value.DataIsString():
+      string = value.data
+    else:
+      # TODO: refactor this, interface should not be directly invoked
+      # this should be moved to a module factory class or equiv.
+      string = interface.GetRegistryStringValue(
+          value.GetRawData(), value.GetTypeStr())
+    return string
 
   def GetEntries(self):
     """Extract EventObjects from a MRU list."""
-    mru_list_data = self._key.GetValue('MRUList')
-    mru_list = mru_list_data.GetData()
+    value = self._key.GetValue('MRUList')
 
-    event_timestamp = self._key.timestamp
+    event_timestamp = self._key.last_written_timestamp
 
-    for nr, entry in enumerate(mru_list):
+    for nr, entry in enumerate(value.data):
       text_dict = {}
       text_dict[u'MRUList Entry %d' % (nr + 1)] = self.GetText(entry)
-      evt = event.WinRegistryEvent(self._key.path, text_dict, event_timestamp)
+      evt = event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=event_timestamp)
+      # TODO: add comment why this timestamp is set to 0.
       event_timestamp = 0
       evt.source_append = ': MRU List'
       yield evt

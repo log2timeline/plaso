@@ -35,30 +35,27 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
     return self.GetEntries()
 
   def GetEntries(self):
-    """Return a single EventObject based on key name and values."""
+    """Returns an event object based on a Registry key name and values."""
     text_dict = {}
 
     for value in self._key.GetValues():
       if not value.name:
-        continue
-
-      data_type = value.GetTypeStr()
-
-      if 'SZ' in data_type or 'DWORD' in data_type:
-        entry = u'%s' % value.name
-        try:
-          text_dict[entry] = u'%s' % value.GetData(unicode)
-        except UnicodeDecodeError:
-          text_dict[entry] = u'[unicode error encountered] %s' % value.GetData(
-              unicode).decode('utf_16_le', 'ignore')
+        value_name = '(default)'
       else:
-        text_dict[u'%s' % value.name] = u'[DATA TYPE %s]' % data_type
+        value_name = u'%s' % value.name
+
+      if value.DataIsString():
+        text_dict[value_name] = value.data
+      elif value.DataIsInteger():
+        text_dict[value_name] = u'{0!d}'.format(value.data)
+      elif value.data_type == value.REG_MULTI_SZ:
+        text_dict[value_name] = u''.join(value.data)
+      else:
+        text_dict[value_name] = u'[DATA TYPE %s]' % value.GetTypeStr()
 
     if not text_dict:
       text_dict[u'Value'] = u'No values stored in key.'
 
-    evt = event.WinRegistryEvent(
-        self._key.path, text_dict, self._key.timestamp)
-    evt.offset = self._key.offset
-    yield evt
-
+    yield event.WinRegistryEvent(
+        self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
+        offset=self._key.offset)

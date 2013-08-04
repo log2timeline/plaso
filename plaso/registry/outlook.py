@@ -44,14 +44,15 @@ class Outlook(win_registry_interface.KeyPlugin):
 
       if value_count == 0:
         reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, self._key.timestamp)
+            self._key.path, text_dict,
+            timestamp=self._key.last_written_timestamp)
       else:
         reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, 0)
+            self._key.path, text_dict, timestamp=0)
 
       reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
       yield reg_evt
-      value = value_count+1
+      value = value_count + 1
 
 
 # TODO: Address different MS Office versions.
@@ -60,7 +61,7 @@ class MSOutlook2010Search(Outlook):
 
   REG_KEY = ('\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search')
   REG_TYPE = 'NTUSER'
-  DESCRIPTION = "PST Paths"
+  DESCRIPTION = 'PST Paths'
 
 
 class MSOutlook2010Catalog(Outlook):
@@ -69,7 +70,7 @@ class MSOutlook2010Catalog(Outlook):
   REG_KEY = (
     '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search\\Catalog')
   REG_TYPE = 'NTUSER'
-  DESCRIPTION = "PST Paths"
+  DESCRIPTION = 'PST Paths'
 
 
 class MSOutlook2003Catalog(Outlook):
@@ -77,4 +78,4 @@ class MSOutlook2003Catalog(Outlook):
 
   REG_KEY = ('\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog')
   REG_TYPE = 'NTUSER'
-  DESCRIPTION = "PST Paths"
+  DESCRIPTION = 'PST Paths'

@@ -50,6 +50,7 @@ class OfficeMRU(win_registry_interface.KeyPlugin):
       if not value.name:
         continue
 
+      # TODO: Registry refactor, replace GetStringData().
       stringdata = value.GetStringData()
 
       if not stringdata.startswith('[F00000000'):
@@ -61,10 +62,10 @@ class OfficeMRU(win_registry_interface.KeyPlugin):
       if value.name == 'Item 1':
         reg_evt = event.WinRegistryEvent(
             self._key.path, text_dict,
-            self.GetTimeStamp(stringdata))
+            timestamp=self.GetTimeStamp(stringdata))
       else:
         reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, 0)
+            self._key.path, text_dict, timestamp=0)
 
       reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
       yield reg_evt
