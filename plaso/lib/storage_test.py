@@ -71,17 +71,19 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.events = []
 
     event_1 = event.WinRegistryEvent(
-        u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'}, 13349615269295969)
+        u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'},
+        timestamp=13349615269295969)
     event_1.parser = 'UNKNOWN'
 
     event_2 = event.WinRegistryEvent(
         u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
-        {u'Value': u'send all the exes to the other world'}, 13359662069295961)
+        {u'Value': u'send all the exes to the other world'},
+        timestamp=13359662069295961)
     event_2.parser = 'UNKNOWN'
 
     event_3 = event.WinRegistryEvent(
         u'\\HKCU\\Windows\\Normal', {u'Value': u'run all the benign stuff'},
-        13349402860000000)
+        timestamp=13349402860000000)
     event_3.parser = 'UNKNOWN'
 
     text_dict = {'text': (

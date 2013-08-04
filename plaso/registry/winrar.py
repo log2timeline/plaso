@@ -38,16 +38,18 @@ class WinRAR(win_registry_interface.KeyPlugin):
       if not value.name:
         continue
       text_dict = {}
+      # TODO: Registry refactor, replace GetStringData().
       text_dict[value.name] = value.GetStringData()
       if not text_dict[value.name]:
         continue
 
       if value.name == '0':
         reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, self._key.timestamp)
+            self._key.path, text_dict,
+            timestamp=self._key.last_written_timestamp)
       else:
         reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, 0)
+            self._key.path, text_dict, timestamp=0)
 
       reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
       yield reg_evt

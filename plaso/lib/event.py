@@ -20,6 +20,10 @@ This file contains the definition for the EventObject and EventContainer,
 which are core components of the storage mechanism of plaso.
 
 """
+# Shut up pylint
+# * R0924: EventContainer: Badly implemented Container
+# pylint: disable=R0924
+
 import heapq
 import pytz
 import uuid
@@ -1026,7 +1030,8 @@ class WinRegistryEvent(EventObject):
   """Convenience class for a Windows Registry-based event."""
   DATA_TYPE = 'windows:registry:key_value'
 
-  def __init__(self, key, value_dict, timestamp=None, usage=None, append=None):
+  def __init__(self, key, value_dict, timestamp=None, usage=None, offset=None,
+               append=None):
     """Initializes a Windows registry event.
 
     Args:
@@ -1035,17 +1040,28 @@ class WinRegistryEvent(EventObject):
       timestamp: Optional timestamp time value. The timestamp contains the
                  number of microseconds since Jan 1, 1970 00:00:00 UTC.
       usage: The description of the usage of the time value.
+      offset: The (data) offset of the Registry key or value.
       append: To append values to the source_long of an event.
     """
     super(WinRegistryEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = usage or 'Last Written'
+
     if key:
       self.keyname = key
+
+    # TODO: why is regalert handled in this way? See if this can be
+    # changed in a better solution.
     self.regvalue = value_dict
     for value in value_dict.values():
       if type(value) in (str, unicode) and value[0:4] == 'REGA':
         self.regalert = True
+
+    if offset or type(offset) in [int, long]:
+      self.offset = offset
+
+    # TODO: change the code where source_append is accessed directly to
+    # pass it via the call to init.
     if append:
       self.source_append = append
 

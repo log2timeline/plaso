@@ -16,7 +16,10 @@
 # limitations under the  License.
 """This file contains preprocessors for Windows."""
 
+import logging
+
 from plaso.lib import preprocess
+from plaso.winreg import utils
 
 
 class WinGetSystemPath(preprocess.PreprocessGetPath):
@@ -50,9 +53,9 @@ class WinVersion(preprocess.WinRegistryPreprocess):
 
   def ParseKey(self, key):
     """Extract the version information from the key."""
-    product = key.GetValue('ProductName')
-    if product:
-      return u'{}'.format(product.GetData())
+    value = key.GetValue('ProductName')
+    if value:
+      return u'{}'.format(value.data)
 
 
 class WinUsers(preprocess.WinRegistryPreprocess):
@@ -72,8 +75,8 @@ class WinUsers(preprocess.WinRegistryPreprocess):
       user['sid'] = sid.name
       value = sid.GetValue('ProfileImagePath')
       if value:
-        user['path'] = value.GetData()
-        user['name'] = value.GetData().split('\\')[-1]
+        user['path'] = value.data
+        user['name'] = utils.WinRegBasename(user['path'])
 
       users.append(user)
 
@@ -93,12 +96,13 @@ class WinHostName(preprocess.WinRegistryPreprocess):
 
   def ParseKey(self, key):
     """Extract the hostname from the registry."""
-    val = key.GetValue('ComputerName')
-    return val.GetData()
+    value = key.GetValue('ComputerName')
+    if value and type(value.data) == unicode:
+      return value.data
 
 
 class WinRegCodePage(preprocess.WinRegistryPreprocess):
-  """A preprocessing class that fetches code page information."""
+  """A preprocessing class that fetches codepage information."""
 
   # Defines the preprocess attribute to be set.
   ATTRIBUTE = 'code_page'
@@ -110,9 +114,14 @@ class WinRegCodePage(preprocess.WinRegistryPreprocess):
   REG_FILE = 'SYSTEM'
 
   def ParseKey(self, key):
-    """Extract code page information from the registry."""
-    val = key.GetValue('ACP')
-    return u'cp%s' % val.GetData()
+    """Retrieves the codepage or cp1252 by default."""
+    value = key.GetValue('ACP')
+    if value and type(value.data) == unicode:
+      return u'cp%s' % value.data
+
+    logging.warning('Unable to determine ASCII string codepage, '
+                    'defaulting to cp1252.')
+    return 'cp1252'
 
 
 class WinRegTimeZone(preprocess.WinRegistryPreprocess):
@@ -324,7 +333,6 @@ class WinRegTimeZone(preprocess.WinRegistryPreprocess):
   def ParseKey(self, key):
     """Extract timezone information from the registry."""
     value = key.GetValue('StandardName')
-    data = value.GetData()
-    # do mapping to "true" value as determined by Olson database.
-    return self.ZONE_LIST.get(data.replace(' ', ''), data)
-
+    if value and type(value.data) == unicode:
+      # Do a mapping to a value defined as in the Olson database.
+      return self.ZONE_LIST.get(value.data.replace(' ', ''), value.data)

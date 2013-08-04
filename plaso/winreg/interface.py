@@ -37,15 +37,13 @@ class WinRegKey(object):
   def offset(self):
     """The offset of the key within the Registry File."""
 
-  # TODO: have a more descriptive name for this property.
   @abc.abstractproperty
-  def timestamp(self):
+  def last_written_timestamp(self):
     """The last written time of the key represented as a timestamp."""
 
-  # TODO: refactor this to a number of values or values count property.
-  @abc.abstractmethod
-  def GetValueCount(self):
-    """Retrieves the number of values within the key."""
+  @abc.abstractproperty
+  def number_of_values(self):
+    """The number of values within the key."""
 
   @abc.abstractmethod
   def GetValue(self, name):
@@ -59,7 +57,6 @@ class WinRegKey(object):
       a corresponding value was found or None if not.
     """
 
-  # TODO: refactor this to a values property.
   @abc.abstractmethod
   def GetValues(self):
     """Retrieves all values within the key.
@@ -69,15 +66,9 @@ class WinRegKey(object):
       the values stored within the key.
     """
 
-  # TODO: refactor this to a number of subkeys or subkeys count property.
-  @abc.abstractmethod
-  def GetSubkeyCount(self):
-    """Retrieves the number of subkeys within the key."""
-
-  @abc.abstractmethod
-  def HasSubkeys(self):   # pylint: disable-msg=R0201
-    """Determines if the key has subkeys."""
-    return False
+  @abc.abstractproperty
+  def number_of_subkeys(self):
+    """The number of subkeys within the key."""
 
   @abc.abstractmethod
   def GetSubkey(self, name):
@@ -90,7 +81,6 @@ class WinRegKey(object):
       The subkey with the relative path of name or None if not found.
     """
 
-  # TODO: refactor this to a subkeys property.
   @abc.abstractmethod
   def GetSubkeys(self):
     """Retrieves all subkeys within the key.
@@ -151,9 +141,32 @@ class WinRegValue(object):
   def data_type(self):
     """Numeric value that contains the data type."""
 
+  @property
   @abc.abstractproperty
   def data(self):
     """The value data as a native Python object."""
+
+  def DataIsInteger(self):
+    """Determines, based on the data type, if the data is an integer.
+
+    The data types considered strings are: REG_DWORD (REG_DWORD_LITTLE_ENDIAN),
+    REG_DWORD_BIG_ENDIAN and REG_QWORD.
+
+    Returns:
+      True if the data is a string, false otherwise.
+    """
+    return self.data_type in [
+        self.REG_DWORD, self.REG_DWORD_BIG_ENDIAN, self.REG_QWORD]
+
+  def DataIsString(self):
+    """Determines, based on the data type, if the data is a string.
+
+    The data types considered strings are: REG_SZ, REG_EXPAND_SZ and REG_LINK.
+
+    Returns:
+      True if the data is a string, false otherwise.
+    """
+    return self.data_type in [self.REG_SZ, self.REG_EXPAND_SZ, self.REG_LINK]
 
   # TODO: temporary solution as the data fallback functionality
   # refactor this function away.
@@ -212,11 +225,6 @@ class WinRegValue(object):
 
     return data
 
-  # TODO: refactor this function away.
-  def GetType(self):
-    """Return the type of data this value returns."""
-    return type(self.data)
-
   def GetTypeStr(self):
     """Returns the registry value type."""
     return self.TYPES.get(self.data_type, 'NONE')
@@ -265,7 +273,7 @@ class WinRegValue(object):
   def GetRawData(self):
     """Return the raw value data of the key."""
 
-  # TODO: not sure what the use-case of this function is.
+  # TODO: Registry refactor, replace GetStringData().
   @abc.abstractmethod
   def GetStringData(self):
     """Return a string value from the value."""
@@ -285,6 +293,7 @@ def GetRegistryStringValue(raw_string, key_type='SZ'):
   Returns:
     An unicode string.
   """
+  # TODO: refactor this function away.
   if key_type == 'BINARY':
     try:
       str_ret = raw_string.decode('utf_16_le')
@@ -299,3 +308,6 @@ def GetRegistryStringValue(raw_string, key_type='SZ'):
       return u' '.join(raw_string)
 
   return raw_string
+
+
+# TODO: refactor add a registry file interface.

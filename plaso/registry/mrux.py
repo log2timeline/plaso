@@ -33,14 +33,18 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
 
   def GetText(self, mru_entry):
     """Return a string from a MRU value."""
-    val = self._key.GetValue(mru_entry)
-    if val:
-      string = u''
-      if val.GetTypeStr() == 'SZ' or val.GetTypeStr() == 'EXPAND_SZ':
-        string = val.GetData()
-      elif val.GetTypeStr() == 'BINARY':
-        string = val.GetRawData().decode('utf_16_le', 'ignore').split('\x00')[0]
-      return string
+    value = self._key.GetValue(mru_entry)
+    if not value:
+      return u''
+
+    # TODO: refactor this into a function of value?
+    if value.DataIsString():
+      return value.data
+
+    if value.data_type == value.REG_BINARY:
+      # TODO: refactor this into an extract text from binary function.
+      return value.data.decode('utf_16_le', 'ignore').split('\x00')[0]
+
     return u''
 
   def GetEntries(self):
@@ -54,7 +58,7 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
       logging.warning(u'Unable to parse the MRU key: %s', self._key.path)
       return
 
-    event_timestamp = self._key.timestamp
+    event_timestamp = self._key.last_written_timestamp
 
     for nr, entry in enumerate(mru_list):
       # MRU lists are terminated with 0xFFFFFFFF.
@@ -63,7 +67,8 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
       text_dict = {}
       value_text = u'MRUListEx Entry %s (nr. %d)' % (unicode(entry), nr + 1)
       text_dict[value_text] = self.GetText(unicode(entry))
-      evt = event.WinRegistryEvent(self._key.path, text_dict, event_timestamp)
+      evt = event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=event_timestamp)
       evt.source_append = ': MRUx List'
       event_timestamp = 0
       yield evt

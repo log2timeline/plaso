@@ -74,4 +74,4 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
       text_dict = {}
       text_dict[name] = u'[Count: {0}]'.format(count)
       yield event.WinRegistryEvent(
-          u'', text_dict, timelib.Timestamp.FromFiletime(filetime))
+          u'', text_dict, timestamp=timelib.Timestamp.FromFiletime(filetime))
