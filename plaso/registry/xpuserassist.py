@@ -14,65 +14,240 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a simple UserAssist plugin for Plaso."""
+"""This file contains the UserAssist plugins."""
+# TODO rename this file to userassist.py in a separate CL.
+
 import construct
 import logging
 
 from plaso.lib import event
 from plaso.lib import timelib
 from plaso.lib import win_registry_interface
+from plaso.winnt import knownfolderid
 
 
-class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
-  """A registry plugin that parses XP UserAssist entries."""
+class UserAssistPlugin(win_registry_interface.KeyPlugin):
+  """Base class for UserAssist plugins."""
 
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{75048700-EF1F-11D0-9888-006097DEACF9}}\\Count')
-  REG_TYPE = 'NTUSER'
-  URLS = [u'http://blog.didierstevens.com/programs/userassist/']
+  __abstract = True
 
-  USERASSIST_STRUCT = construct.Struct(
-      'userassist_entry', construct.Padding(4), construct.ULInt32('count'),
+  DESCRIPTION = 'UserAssistPlugin'
+
+  URL = [
+      u'http://blog.didierstevens.com/programs/userassist/',
+      u'https://code.google.com/p/winreg-kb/wiki/UserAssistKeys',
+      u'http://intotheboxes.files.wordpress.com/2010/04'
+      u'/intotheboxes_2010_q1.pdf' ]
+
+  # UserAssist format version used in Windows 2000, XP, 2003, Vista.
+  USERASSIST_V3_STRUCT = construct.Struct(
+      'userassist_entry',
+      construct.Padding(4),
+      construct.ULInt32('count'),
       construct.ULInt64('timestamp'))
 
+  # UserAssist format version used in Windows 2008, 7, 8.
+  USERASSIST_V5_STRUCT = construct.Struct(
+    'userassist_entry',
+    construct.Padding(4),
+    construct.ULInt32('count'),
+    construct.ULInt32('app_focus_count'),
+    construct.ULInt32('focus_duration'),
+    construct.Padding(44),
+    construct.ULInt64('timestamp'))
+
   def GetEntries(self):
-    """Retrieves the values in the UserAssist Registry key."""
-    for value in self._key.GetValues():
-      # TODO: there is no need to use raw data refactor to use data.
-      data = value.raw_data
-      name_raw = value.name
+    """Parses a UserAssist Registry key.
 
-      if len(data) != 16:
-        logging.debug('[UserAssist] Value entry is not of correct length.')
-        continue
+    Yields:
+      An event object for every entry in the UserAssist key.
+    """
+    version_value = self._key.GetValue('Version')
+    count_subkey = self._key.GetSubkey('Count')
+    regalert_string = ''
 
-      try:
-        name = name_raw.decode('rot-13')
-      except UnicodeEncodeError as e:
-        logging.warning(
-            (u'Unable to decode UserAssist string in whole (piecewise '
-             'decoding instead): {} - [{}]').format(name_raw, e))
+    if not version_value:
+      regalert_string = 'missing version value'
+    elif not version_value.DataIsInteger():
+      regalert_string = 'unsupported version value data type'
+    elif version_value.data not in [3, 5]:
+      regalert_string = 'unsupported version: {0:d}'.format(
+          version_value.data)
+    elif not count_subkey:
+      regalert_string = 'missing count subkey'
 
-        characters = []
-        for char in name_raw:
-          if ord(char) < 128:
-            try:
-              characters.append(char.decode('rot-13'))
-            except UnicodeEncodeError:
-              characters.append(char)
-          else:
-            characters.append(char)
-
-        name = u''.join(characters)
-
-      data_parsed = self.USERASSIST_STRUCT.parse(data)
-      filetime = data_parsed.get('timestamp', 0)
-      count = data_parsed.get('count', 0)
-
-      if count > 5:
-        count -= 5
-
+    if regalert_string:
       text_dict = {}
-      text_dict[name] = u'[Count: {0}]'.format(count)
+      text_dict['Version'] = 'REGALERT {0:s}.'.format(regalert_string)
+      regalert_string = ''
       yield event.WinRegistryEvent(
-          u'', text_dict, timestamp=timelib.Timestamp.FromFiletime(filetime))
+          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+
+    else:
+      for value in count_subkey.GetValues():
+        try:
+          value_name = value.name.decode('rot-13')
+        except UnicodeEncodeError as e:
+          logging.warning(
+              (u'Unable to decode UserAssist string in whole (piecewise '
+               'decoding instead): {0:s} - [{1!s}]').format(value.name, e))
+
+          characters = []
+          for char in value.name:
+            if ord(char) < 128:
+              try:
+                characters.append(char.decode('rot-13'))
+              except UnicodeEncodeError:
+                characters.append(char)
+            else:
+              characters.append(char)
+
+          value_name = u''.join(characters)
+
+        if version_value.data == 5:
+          path_segments = value_name.split('\\')
+
+          for segment_index in range(0, len(path_segments)):
+            path_segments[segment_index] = knownfolderid.IDENTIFIERS.get(
+                path_segments[segment_index], path_segments[segment_index])
+
+        if not value.DataIsBinaryData():
+          regalert_string = 'unsupported value data type: {0:s}'.format(
+              value.data_type_string)
+
+        elif version_value.data == 3:
+          if len(value.data) != self.USERASSIST_V3_STRUCT.sizeof():
+            regalert_string = 'unsupported value data size: {0:d}'.format(
+                len(value.data))
+          else:
+            parsed_data = self.USERASSIST_V3_STRUCT.parse(value.data)
+            filetime = parsed_data.get('timestamp', 0)
+            count = parsed_data.get('count', 0)
+
+            if count > 5:
+              count -= 5
+
+            text_dict = {}
+            text_dict[value_name] = u'[Count: {0}]'.format(count)
+            yield event.WinRegistryEvent(
+                count_subkey.path, text_dict,
+                timestamp=timelib.Timestamp.FromFiletime(filetime),
+                offset=value.offset)
+
+        elif version_value.data == 5:
+          if len(value.data) != self.USERASSIST_V5_STRUCT.sizeof():
+            regalert_string = 'unsupported value data size: {0:d}'.format(
+                len(value.data))
+
+          parsed_data = self.USERASSIST_V5_STRUCT.parse(value.data)
+
+          userassist_entry = parsed_data.get('userassist_entry', None)
+          count = parsed_data.get('count', None)
+          app_focus_count = parsed_data.get('app_focus_count', None)
+          focus_duration = parsed_data.get('focus_duration', None)
+          timestamp = parsed_data.get('timestamp', 0)
+
+          text_dict = {}
+          text_dict[value_name] = (
+              u'[userassist_entry: {0}, Count: {1}, app_focus_count: {2}, '
+              u'focus_duration: {3}]').format(
+              userassist_entry, count, app_focus_count, focus_duration)
+
+          yield event.WinRegistryEvent(
+              count_subkey.path, text_dict,
+              timestamp=timelib.Timestamp.FromFiletime(timestamp))
+
+    if regalert_string:
+      text_dict = {}
+      text_dict[value_name] = 'REGALERT {0:s}.'.format(regalert_string)
+      regalert_string = ''
+      yield event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+
+
+class UserAssistPlugin1(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{0D6D4F41-2994-4BA0-8FEF-620E43CD2812}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin2(UserAssistPlugin):
+  """Plugin that parses the Microsoft Internet Toolbar UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{5E6AB780-7743-11CF-A12B-00AA004AE837}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin3(UserAssistPlugin):
+  """Plugin that parses the ActiveDesktop UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{75048700-EF1F-11D0-9888-006097DEACF9}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin4(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{9E04CAB2-CC14-11DF-BB8C-A2F1DED72085}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin5(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{A3D53349-6E61-4557-8FC7-0028EDCEEBF6}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin6(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{B267E3AD-A825-4A09-82B9-EEC22AA3B847}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin7(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{CAA59E3C-4792-41A5-9909-6A6A8D32490E}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin8(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin9(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{F2A1CB5A-E3CC-4A2E-AF9D-505A7009D442}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin10(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}}')
+  REG_TYPE = 'NTUSER'
+
+
+class UserAssistPlugin11(UserAssistPlugin):
+  """Plugin that parses an UserAssist key."""
+
+  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+             '\\UserAssist\\{{FA99DFC7-6AC2-453A-A5E2-5E2AFF4507BD}}')
+  REG_TYPE = 'NTUSER'
