@@ -38,13 +38,15 @@ linter()
   if [ "x`which pylint`" == "x" ]
   then
     LINTER="pychecker -Q -f --only -6 --unusednames"
+
+    echo "Run through pychecker.";
   else
     # TODO: Re-enable pylint again, disabling for a while to not make lint CL
     # larger than it already is.
     LINTER="pylint --rcfile=utils/pylintrc"
-  fi
 
-  echo "Run through pychecker.";
+    echo "Run through pylint.";
+  fi
 
   for FILE in ${FILES};
   do
