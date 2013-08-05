@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a simple MRUx plugin for Plaso."""
+# TODO rename this file to mrulistex.py in a separate CL.
+
 import construct
 import logging
 
@@ -50,7 +52,9 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
   def GetEntries(self):
     """Extract EventObjects from a MRU list."""
     mru_list_data = self._key.GetValue('MRUListEx')
-    raw_data = mru_list_data.GetRawData()
+
+    # TODO: there is no need to use raw data refactor to use data.
+    raw_data = mru_list_data.raw_data
 
     try:
       mru_list = self.LIST_STRUCT.parse(raw_data)

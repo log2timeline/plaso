@@ -14,7 +14,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the RDP Connections plugin for Plaso."""
+"""This file contains the Terminal Server Connections plugins."""
+# TODO: rename to terminal_service.py since RDP is the protocol not
+# the Terminal Server Client.
+# TODO: add tests.
 
 
 from plaso.lib import event
@@ -24,41 +27,36 @@ from plaso.lib import win_registry_interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class RDP(win_registry_interface.KeyPlugin):
-  """Base class for all RDP Connections Key plugins."""
+class TerminalServerClientPlugin(win_registry_interface.KeyPlugin):
+  """Base class for Terminal Server Client Connection plugins."""
 
   __abstract = True
 
-
-  DESCRIPTION = 'RDP Connetion'
-
+  DESCRIPTION = 'RDP Connection'
 
   def GetEntries(self):
     """Collect Values in Servers and return event for each one."""
     for subkey in self._key.GetSubkeys():
-      if not subkey.name:
-        continue
-      for value in subkey.GetValues():
-        username_value = subkey.GetValue('UsernameHint')
-        if username_value:
-          username = username_value.GetStringData()
-        else:
-          username = 'None'
+      username_value = subkey.GetValue('UsernameHint')
+
+      if (username_value and username_value.data and
+          username_value.DataIsString()):
+        username = username_value.data
+      else:
+        username = u'None'
+
       text_dict = {}
-      text_dict[value.name] = username
-      
-      if not text_dict[value.name]:
-        continue
+      text_dict['UsernameHint'] = username
 
-      reg_evt = event.WinRegistryEvent(
-          self._key.path, text_dict, self._key.timestamp)
+      event_object = event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
 
-      reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
-      yield reg_evt
+      event_object.source_append = ': {}'.format(self.DESCRIPTION)
+      yield event_object
 
 
-class RDPMRU(win_registry_interface.KeyPlugin):
-  """Base class for all RDP Connection MRUs plugins."""
+class TerminalServerClientMRUPlugin(win_registry_interface.KeyPlugin):
+  """Base class for Terminal Server Client Connection MRUs plugins."""
 
   __abstract = True
 
@@ -67,33 +65,39 @@ class RDPMRU(win_registry_interface.KeyPlugin):
   def GetEntries(self):
     """Collect MRU Values and return event for each one."""
     for value in self._key.GetValues():
-      text_dict = {}
-      data = value.GetStringData()
-      if not data:
+      # TODO: add a check for the value naming scheme.
+      # Ignore the default value.
+      if not value.name:
         continue
-      text_dict[value.name] = data
+
+      # Ignore any value that is empty or that does not contain a string.
+      if not value.data or not value.DataIsString():
+        continue
+
+      text_dict = {}
+      text_dict[value.name] = value.data
 
       if value.name == 'MRU0':
-        reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, self._key.timestamp)
+        timestamp = self._key.last_written_timestamp
       else:
-        reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, 0)
+        timestamp = 0
 
-      reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
-      yield reg_evt
-      
+      event_object = event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=timestamp)
+      event_object.source_append = ': {}'.format(self.DESCRIPTION)
+      yield event_object
 
-class ServerPlugin(RDP):
-  """Gathers the Servers key for the NTUSER hive."""
+
+class ServersTerminalServerClientPlugin(TerminalServerClientPlugin):
+  """Gathers the Servers key for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Terminal Server Client\\Servers'
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'RDP Connection'
 
 
-class RDPDRPlugin(RDP):
-  """Gathers the RDPDR key for the NTUSER hive."""
+class RDPDRTerminalServerClientPlugin(TerminalServerClientPlugin):
+  """Gathers the RDPDR key for the User hive."""
 
   REG_KEY = ('\\Software\\Microsoft\\Terminal Server Client\\',
              'Default\\AddIns\\RDPDR')
@@ -101,16 +105,16 @@ class RDPDRPlugin(RDP):
   DESCRIPTION = 'RDP Connection'
 
 
-class DefaultPlugin(RDPMRU):
-  """Gathers the Default key for the NTUSER hive."""
+class DefaulTerminalServerClientMRUPlugin(TerminalServerClientMRUPlugin):
+  """Gathers the Default key for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Terminal Server Client\\Default'
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'RDP Connection'
 
 
-class LocalDevicesPlugin(RDPMRU):
-  """Gathers the LocalDevices key for the NTUSER hive."""
+class LocalDevicesTerminalServerClientMRUPlugin(TerminalServerClientMRUPlugin):
+  """Gathers the LocalDevices key for the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Terminal Server Client\\LocalDevices'
   REG_TYPE = 'NTUSER'

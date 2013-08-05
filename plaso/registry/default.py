@@ -54,7 +54,7 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
         elif value.DataIsInteger():
           value_string = u'[{0:s}] {1:d}'.format(
               value.data_type_string, value.data)
-        elif value.data_type == value.REG_MULTI_SZ:
+        elif value.DataIsMultiString():
           value_string = u'[{0:s}] {1:s}'.format(
               value.data_type_string, u''.join(value.data))
         else:

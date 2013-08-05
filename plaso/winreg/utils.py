@@ -41,4 +41,3 @@ def WinRegBasename(path):
 # this function should replace the repeated code blocks in multiple plugins.
 
 # TODO: create a function to extract string data from a registry value.
-# this function should replace GetStringData().

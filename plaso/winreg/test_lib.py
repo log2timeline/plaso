@@ -15,6 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Implementation of Windows Registry related objects for testing."""
+
+# TODO: replace struct by construct to improve readability.
+import struct
+
 from plaso.winreg import interface
 
 
@@ -118,11 +122,36 @@ class TestRegValue(interface.WinRegValue):
     return self._data_type
 
   @property
+  def raw_data(self):
+    """The value data as a byte string."""
+    return self._data
+
+  @property
   def data(self):
     """The value data as a native Python object."""
-    return interface.WinRegValue.CopyDataToObject(
-        self._data, self._data_type)
+    if not self._data:
+      return None
 
-  def GetRawData(self):
-    """Return the raw value data of the key."""
+    if self._data_type in [self.REG_SZ, self.REG_EXPAND_SZ, self.REG_LINK]:
+      try:
+        return unicode(self._data.decode('utf-16-le'))
+      except UnicodeError:
+        pass
+
+    elif self._data_type == self.REG_DWORD and len(self._data) == 4:
+      return struct.unpack('<i', self._data)[0]
+
+    elif self._data_type == self.REG_DWORD_BIG_ENDIAN and len(self._data) == 4:
+      return struct.unpack('>i', self._data)[0]
+
+    elif self._data_type == self.REG_QWORD and len(self._data) == 8:
+      return struct.unpack('<q', self._data)[0]
+
+    elif self._data_type == self.REG_MULTI_SZ:
+      try:
+        utf16_string = unicode(self._data.decode('utf-16-le'))
+        return filter(None, utf16_string.split('\x00'))
+      except UnicodeError:
+        pass
+
     return self._data
