@@ -38,7 +38,8 @@ class XPUserAssistPlugin(win_registry_interface.KeyPlugin):
   def GetEntries(self):
     """Retrieves the values in the UserAssist Registry key."""
     for value in self._key.GetValues():
-      data = value.GetRawData()
+      # TODO: there is no need to use raw data refactor to use data.
+      data = value.raw_data
       name_raw = value.name
 
       if len(data) != 16:

@@ -51,16 +51,29 @@ class BootExecutePlugin(win_registry_interface.KeyPlugin):
 
     for value in self._key.GetValues():
       if value.name == 'BootExecute':
-        boot_dict = {}
-        boot = value.GetData(unicode)
-        if boot != u'autocheck autochk *':
-          boot_dict['BootExecute'] = u'REGALERT: {}'.format(boot)
+        # MSDN: claims that the data type of this value is REG_BINARY
+        # although REG_MULTI_SZ is known to be used as well.
+        if value.DataIsString():
+          value_string = value.data
+        elif value.DataIsMultiString():
+          value_string = u''.join(value.data)
+        elif value.DataIsBinaryData():
+          value_string = value.data
         else:
-          boot_dict['BootExecute'] = boot
+          value_string = (
+             u'unuspported value data type: {0:s}.').format(
+             value.data_type_string)
+
+        boot_dict = {}
+        if value_string != u'autocheck autochk *':
+          boot_dict['BootExecute'] = u'REGALERT: {0:s}'.format(value_string)
+        else:
+          boot_dict['BootExecute'] = value_string
 
         yield event.WinRegistryEvent(
             self._key.path, boot_dict,
             timestamp=self._key.last_written_timestamp)
+
       else:
         text_dict[value.name] = value.data
 

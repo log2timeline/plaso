@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a test for MRUx registry parsing in Plaso."""
+# TODO rename this file to mrulistex_test.py in a separate CL.
+
 import unittest
 
 from plaso.formatters import winreg   # pylint: disable-msg=W0611

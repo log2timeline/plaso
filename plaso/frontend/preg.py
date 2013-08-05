@@ -196,7 +196,7 @@ def ls(verbose=False):
         value_string = u'{0:s}'.format(value.data)
       elif value.DataIsInteger():
         value_string = u'{0:d}'.format(value.data)
-      elif value.data_type == value.REG_MULTI_SZ:
+      elif value.DataIsMultiString():
         value_string = u'{0:s}'.format( u''.join(value.data))
       else:
         value_string = u''
