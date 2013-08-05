@@ -257,7 +257,8 @@ class Win7UserAssistPlugin(win_registry_interface.KeyPlugin):
     """Retrieves the values in the UserAssist Registry key."""
 
     for value in self._key.GetValues():
-      data = value.GetRawData()
+      # TODO: there is no need to use raw data refactor to use data.
+      data = value.raw_data
 
       if len(data) != 72:
         logging.debug('[UserAssist] Value entry is not of correct length.')

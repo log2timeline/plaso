@@ -159,13 +159,30 @@ class MsieZoneSettingsPlugin(win_registry_interface.KeyPlugin):
       An event object of the an individual Internet Setting Registry key.
     """
     text_dict = {}
-    for value in self._key.GetValues():
-      if not value.name:
-        continue
-      text_dict[value.name] = value.GetData(unicode)
 
-    if not text_dict:
+    if self._key.number_of_values == 0:
       text_dict[u'Value'] = u'No values stored in key'
+
+    else:
+      for value in self._key.GetValues():
+        if not value.name:
+          value_name = '(default)'
+        else:
+          value_name = u'{0:s}'.format(value.name)
+
+        if value.DataIsString():
+          value_string = u'[{0:s}] {1:s}'.format(
+              value.data_type_string, value.data)
+        elif value.DataIsInteger():
+          value_string = u'[{0:s}] {1:d}'.format(
+              value.data_type_string, value.data)
+        elif value.DataIsMultiString():
+          value_string = u'[{0:s}] {1:s}'.format(
+              value.data_type_string, u''.join(value.data))
+        else:
+          value_string = u'[{0:s}]'.format(value.data_type_string)
+
+        text_dict[value_name] = value_string
 
     yield event.WinRegistryEvent(
         self._key.path, text_dict, timestamp=self._key.last_written_timestamp,

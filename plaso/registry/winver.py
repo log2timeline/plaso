@@ -55,7 +55,8 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
     text_dict[u'sp'] = self.GetValueString('CSDBuildNumber')
     text_dict[u'Product name'] = self.GetValueString('ProductName')
     text_dict[u' Windows Version Information'] = u''
-    install_raw = self._key.GetValue('InstallDate').GetRawData()
+
+    install_raw = self._key.GetValue('InstallDate').raw_data
     # TODO: move this to a function in utils with a more descriptive name
     # e.g. CopyByteStreamToInt32BigEndian.
     try:

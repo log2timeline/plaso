@@ -164,10 +164,20 @@ class WinPyregfValue(interface.WinRegValue):
     return self._pyregf_value.type
 
   @property
+  def raw_data(self):
+    """The value data as a byte string."""
+    try:
+      return self._pyregf_value.data
+    except IOError:
+      raise errors.WinRegistryValueError(
+          'Unable to read data from value: {0:s}'.format(
+          self._pyregf_value.name))
+
+  @property
   def data(self):
     """The value data as a native Python object."""
-    # TODO: add support for REG_LINK to pyregf.
-    if self._pyregf_value.type in [self.REG_SZ, self.REG_EXPAND_SZ]:
+    if self._pyregf_value.type in [
+        self.REG_SZ, self.REG_EXPAND_SZ, self.REG_LINK]:
       try:
         return self._pyregf_value.data_as_string
       except IOError:
@@ -181,19 +191,14 @@ class WinPyregfValue(interface.WinRegValue):
         pass
 
     # TODO: add support for REG_MULTI_SZ to pyregf.
-    elif self._pyregf_value.type in [self.REG_LINK, self.REG_MULTI_SZ]:
-      return interface.WinRegValue.CopyDataToObject(
-          self._pyregf_value.data, self._pyregf_value.type)
+    elif self._pyregf_value.type == self.REG_MULTI_SZ:
+      try:
+        utf16_string = unicode(self._pyregf_value.data.decode('utf-16-le'))
+        return filter(None, utf16_string.split('\x00'))
+      except UnicodeError:
+        pass
 
     return self._pyregf_value.data
-
-  def GetRawData(self):
-    """Return the raw value data of the key."""
-    try:
-      return self._pyregf_value.data
-    except IOError:
-      raise errors.WinRegistryValueError(
-          'Unable to read raw data from value: %s' % self._pyregf_value.name)
 
 
 class WinRegistry(object):

@@ -13,9 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the USBStor keys plugin for Plaso."""
+"""This file contains the USBStor keys plugins."""
 
 import logging
+
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import win_registry_interface
@@ -24,26 +25,26 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class USBStor(win_registry_interface.KeyPlugin):
-  """Base class for all USBStor keys."""
+  """USBStor key plugin."""
 
   REG_KEY = '\\{current_control_set}\\Enum\\USBSTOR'
   REG_TYPE = 'SYSTEM'
   DESCRIPTION = 'USBStor Entries'
 
   def GetEntries(self):
-    """Collect Values under USBStor & return event for each one."""
+    """Collect Values under USBStor and return event for each one."""
     for subkey in self._key.GetSubkeys():
 
       text_dict = {}
       text_dict['subkey_name'] = subkey.name
 
       # Time last USB device of this class was first inserted.
-      reg_evt = event.WinRegistryEvent(
-          self._key.path, text_dict, subkey.timestamp,
+      event_object = event.WinRegistryEvent(
+          self._key.path, text_dict, subkey.last_written_timestamp,
           eventdata.EventTimestamp.FIRST_CONNECTED)
 
-      reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
-      yield reg_evt
+      event_object.source_append = ': {}'.format(self.DESCRIPTION)
+      yield event_object
 
       # TODO: Determine if these 4 fields always exist.
       try:
@@ -62,7 +63,7 @@ class USBStor(win_registry_interface.KeyPlugin):
 
         friendly_name = devicekey.GetValue('FriendlyName')
         if friendly_name:
-            text_dict['friendly_name'] = friendly_name.data
+          text_dict['friendly_name'] = friendly_name.data
 
         # ParentIdPrefix applies to Windows XP Only.
         parent_id_prefix = devicekey.GetValue('ParentIdPrefix')
@@ -71,32 +72,32 @@ class USBStor(win_registry_interface.KeyPlugin):
 
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
-        reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, devicekey.timestamp,
+        event_object = event.WinRegistryEvent(
+            self._key.path, text_dict, devicekey.last_written_timestamp,
             eventdata.EventTimestamp.LAST_CONNECTED)
 
-        reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
-        yield reg_evt
+        event_object.source_append = ': {}'.format(self.DESCRIPTION)
+        yield event_object
 
         # Build list of first Insertion times.
         first_insert = []
         device_parameter = devicekey.GetSubkey('Device Parameters')
         if device_parameter:
-          first_insert.append(device_parameter.timestamp)
+          first_insert.append(device_parameter.last_written_timestamp)
         log_configuration = devicekey.GetSubkey('LogConf')
         if log_configuration:
-          if log_configuration.timestamp not in first_insert:
-              first_insert.append(log_configuration.timestamp)
+          if log_configuration.last_written_timestamp not in first_insert:
+            first_insert.append(log_configuration.last_written_timestamp)
         properties = devicekey.GetSubkey('Properties')
         if properties:
-          if properties.timestamp not in first_insert:
-              first_insert.append(properties.timestamp)
+          if properties.last_written_timestamp not in first_insert:
+            first_insert.append(properties.last_written_timestamp)
 
         # Add first Insertion times.
         for timestamp in first_insert:
-          reg_evt = event.WinRegistryEvent(
+          event_object = event.WinRegistryEvent(
               self._key.path, text_dict, timestamp,
                   eventdata.EventTimestamp.LAST_CONNECTED)
 
-          reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
-          yield reg_evt
+          event_object.source_append = ': {}'.format(self.DESCRIPTION)
+          yield event_object

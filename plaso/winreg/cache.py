@@ -109,8 +109,12 @@ class CurrentControl(WinRegCachePlugin):
   def GetValue(self, key):
     """Extract current control set information."""
     value = key.GetValue('Current')
-    if not value:
-      return
 
-    return 'ControlSet%.3d' % value.GetData()
+    if not value and not value.DataIsInteger():
+      return None
+
+    if value.data <= 0 or value.data > 999:
+      return None
+
+    return u'ControlSet{0:3d}'.format(value.data)
 
