@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for plaso.frontend.psort."""
+
 import os
 import StringIO
 import tempfile
@@ -27,8 +28,6 @@ from plaso.lib import output
 from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
-
-__pychecker__ = 'no-funcdoc'
 
 
 class TestEvent1(event.EventObject):

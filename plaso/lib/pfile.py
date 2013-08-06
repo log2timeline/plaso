@@ -193,7 +193,6 @@ class PlasoFile(object):
   def __str__(self):
     """Return a string representation of the file object, the display name."""
     if hasattr(self, 'display_name'):
-      __pychecker__ = 'missingattrs=display_name'
       return self.display_name
     else:
       return 'Unknown File'

@@ -14,16 +14,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the PFile implementation in Plaso."""
+"""This file contains the tests for PFile."""
+
 import os
 import unittest
 
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfile
-
-# Don't complain about lack of doc strings for functions.
-__pychecker__ = 'no-funcdoc'
 
 
 class PlasoPFileTest(unittest.TestCase):

@@ -205,7 +205,6 @@ class SQLiteParser(PlasoParser):
 
   def Default(self, **kwarg):
     """Default callback method for SQLite events, does nothing."""
-    __pychecker__ = 'unusednames=self'
     logging.debug('Default handler: %s', kwarg)
 
 

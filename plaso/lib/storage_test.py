@@ -14,7 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the storage mechanism of Plaso."""
+"""This file contains the tests for the event storage."""
+
 import os
 import tempfile
 import unittest
@@ -25,8 +26,6 @@ from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
-
-__pychecker__ = 'no-funcdoc'
 
 
 class DummyObject(object):
