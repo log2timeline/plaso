@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains tests for the UserAssist plugin."""
-# TODO rename this file to userassist_test.py in a separate CL.
 
 import os
 import unittest
@@ -23,7 +22,7 @@ import unittest
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
-from plaso.registry import xpuserassist
+from plaso.registry import userassist
 from plaso.winreg import winpyregf
 
 
@@ -47,7 +46,7 @@ class WindowsXPUserAssistTest(unittest.TestCase):
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         '\\{75048700-EF1F-11D0-9888-006097DEACF9}')
-    plugin = xpuserassist.UserAssistPlugin3(None, None, None)
+    plugin = userassist.UserAssistPlugin3(None, None, None)
     entries = list(plugin.Process(key))
 
     self.assertEquals(len(entries), 15)
@@ -91,7 +90,7 @@ class Windows7UserAssistTest(unittest.TestCase):
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         '\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
-    plugin = xpuserassist.UserAssistPlugin8(None, None, None)
+    plugin = userassist.UserAssistPlugin8(None, None, None)
     entries = list(plugin.Process(key))
 
     self.assertEquals(len(entries), 63)

@@ -14,8 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file is a Internet Settings parser for Windows registry."""
-# TODO: rename this file to msie_zones.py in a separate CL.
+"""This file contains the MSIE zone settings plugin."""
 
 import logging
 

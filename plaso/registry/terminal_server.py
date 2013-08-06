@@ -14,11 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the Terminal Server Connections plugins."""
-# TODO: rename to terminal_service.py since RDP is the protocol not
-# the Terminal Server Client.
+"""This file contains the Terminal Server plugins."""
 # TODO: add tests.
-
 
 from plaso.lib import event
 from plaso.lib import win_registry_interface
