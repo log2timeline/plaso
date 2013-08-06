@@ -41,12 +41,9 @@ class RunBase(win_registry_interface.KeyPlugin):
       text_dict = {}
       text_dict[value.name] = value.data
 
-      event_object = event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
-
-      event_object.source_append = ': {}'.format(self.DESCRIPTION)
-
-      yield event_object
+      yield event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
+          source_append=': {0:s}'.format(self.DESCRIPTION))
 
 
 class RunNtuserPlugin(RunBase):

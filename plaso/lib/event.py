@@ -1028,7 +1028,7 @@ class WinRegistryEvent(EventObject):
   DATA_TYPE = 'windows:registry:key_value'
 
   def __init__(self, key, value_dict, timestamp=None, usage=None, offset=None,
-               append=None):
+               source_append=None):
     """Initializes a Windows registry event.
 
     Args:
@@ -1038,7 +1038,7 @@ class WinRegistryEvent(EventObject):
                  number of microseconds since Jan 1, 1970 00:00:00 UTC.
       usage: The description of the usage of the time value.
       offset: The (data) offset of the Registry key or value.
-      append: To append values to the source_long of an event.
+      source_append: To append values to the source_long of an event.
     """
     super(WinRegistryEvent, self).__init__()
     self.timestamp = timestamp
@@ -1057,10 +1057,8 @@ class WinRegistryEvent(EventObject):
     if offset or type(offset) in [int, long]:
       self.offset = offset
 
-    # TODO: change the code where source_append is accessed directly to
-    # pass it via the call to init.
-    if append:
-      self.source_append = append
+    if source_append:
+      self.source_append = source_append
 
 
 class TextEvent(EventObject):
