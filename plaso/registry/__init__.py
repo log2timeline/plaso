@@ -17,17 +17,17 @@
 """This file contains the import statements for the Registry plugins."""
 
 from plaso.registry import default
-from plaso.registry import internetsettings
 from plaso.registry import lfu
 from plaso.registry import mru
 from plaso.registry import mrux
+from plaso.registry import msie_zones
 from plaso.registry import officemru
 from plaso.registry import outlook
-from plaso.registry import rdp
 from plaso.registry import run
 from plaso.registry import services
+from plaso.registry import terminal_server
 from plaso.registry import typedurls
+from plaso.registry import userassist
 from plaso.registry import usbstor
 from plaso.registry import winrar
 from plaso.registry import winver
-from plaso.registry import xpuserassist
