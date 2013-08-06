@@ -72,11 +72,9 @@ class MRUListPlugin(win_registry_interface.ValuePlugin):
         text_dict = {}
         text_dict[u'MRUList Entry %d' % (entry_index + 1)] = mru_value_string
 
-        event_object = event.WinRegistryEvent(
-            self._key.path, text_dict, timestamp=timestamp)
-        event_object.source_append = ': MRU List'
-
-        yield event_object
+        yield event.WinRegistryEvent(
+            self._key.path, text_dict, timestamp=timestamp,
+            source_append=': MRU List')
 
         # TODO: add comment why this timestamp is set to 0.
         timestamp = 0

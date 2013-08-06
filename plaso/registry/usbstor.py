@@ -39,12 +39,10 @@ class USBStor(win_registry_interface.KeyPlugin):
       text_dict['subkey_name'] = subkey.name
 
       # Time last USB device of this class was first inserted.
-      event_object = event.WinRegistryEvent(
-          self._key.path, text_dict, subkey.last_written_timestamp,
-          eventdata.EventTimestamp.FIRST_CONNECTED)
-
-      event_object.source_append = ': {}'.format(self.DESCRIPTION)
-      yield event_object
+      yield event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=subkey.last_written_timestamp,
+          usage=eventdata.EventTimestamp.FIRST_CONNECTED,
+          source_append=': {0:s}'.format(self.DESCRIPTION))
 
       # TODO: Determine if these 4 fields always exist.
       try:
@@ -72,12 +70,11 @@ class USBStor(win_registry_interface.KeyPlugin):
 
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
-        event_object = event.WinRegistryEvent(
-            self._key.path, text_dict, devicekey.last_written_timestamp,
-            eventdata.EventTimestamp.LAST_CONNECTED)
-
-        event_object.source_append = ': {}'.format(self.DESCRIPTION)
-        yield event_object
+        yield event.WinRegistryEvent(
+            self._key.path, text_dict,
+            timestamp=devicekey.last_written_timestamp,
+            usage=eventdata.EventTimestamp.LAST_CONNECTED,
+            source_append=': {0:s}'.format(self.DESCRIPTION))
 
         # Build list of first Insertion times.
         first_insert = []
@@ -95,9 +92,7 @@ class USBStor(win_registry_interface.KeyPlugin):
 
         # Add first Insertion times.
         for timestamp in first_insert:
-          event_object = event.WinRegistryEvent(
-              self._key.path, text_dict, timestamp,
-                  eventdata.EventTimestamp.LAST_CONNECTED)
-
-          event_object.source_append = ': {}'.format(self.DESCRIPTION)
-          yield event_object
+          yield event.WinRegistryEvent(
+              self._key.path, text_dict, timestamp=timestamp,
+              usage=eventdata.EventTimestamp.LAST_CONNECTED,
+              source_append=': {0:s}'.format(self.DESCRIPTION))

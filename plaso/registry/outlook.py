@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for MS Outlook for Plaso."""
-
+# TODO: Needs test, create NTUSER.DAT test file with Outlook data or
+# use winreg testlib.
 
 from plaso.lib import event
 from plaso.lib import win_registry_interface
@@ -26,7 +27,6 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 class Outlook(win_registry_interface.KeyPlugin):
   """Base class for all Data File locations plugins."""
-  ## TODO: Create NTUSER.DAT test file with Outlook data.
 
   __abstract = True
 
@@ -36,23 +36,29 @@ class Outlook(win_registry_interface.KeyPlugin):
     """Collect Values under Outlook and return event for each one."""
     value_count = 0
     for value in self._key.GetValues():
+      # Ignore the default value.
       if not value.name:
         continue
+
+      # Ignore any value that is empty or that does not contain an integer.
+      if not value.data or not value.DataIsInteger():
+        continue
+
+      # TODO: change this 32-bit integer into something meaningful, for now
+      # the value name is the most interesting part.
       text_dict = {}
-      # TODO: Decode Data in key. Only pulls PST path as-is.
-      text_dict[value.name] = ''
+      text_dict[value.name] = '0x{0:08x}'.format(value.data)
 
       if value_count == 0:
-        reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict,
-            timestamp=self._key.last_written_timestamp)
+        timestamp = self._key.last_written_timestamp
       else:
-        reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, timestamp=0)
+        timestamp = 0
 
-      reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
-      yield reg_evt
-      value = value_count + 1
+      yield event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=timestamp,
+          source_append=': {0:s}'.format(self.DESCRIPTION))
+
+      value_count += 1
 
 
 # TODO: Address different MS Office versions.

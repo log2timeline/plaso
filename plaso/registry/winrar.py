@@ -56,12 +56,9 @@ class WinRarHistoryPlugin(win_registry_interface.KeyPlugin):
 
       # TODO: shouldn't this behavior be, put all the values
       # into a single event object with the last written time of the key?
-      event_object = event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=timestamp)
-
-      event_object.source_append = ': {}'.format(self.DESCRIPTION)
-
-      yield event_object
+      yield event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=timestamp,
+          source_append=': {0:s}'.format(self.DESCRIPTION))
 
 
 class WinRarArcHistoryPlugin(WinRarHistoryPlugin):
