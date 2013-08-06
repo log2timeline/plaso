@@ -16,9 +16,6 @@
 # limitations under the License.
 """This file contains a console, the CLI friendly front-end to plaso."""
 
-# Pychecker supressions
-__pychecker__ = 'unusednames=pyvshadow'
-
 import logging
 import os
 import sys

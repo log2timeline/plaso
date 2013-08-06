@@ -55,7 +55,6 @@ class EventTimestamp(object):
 
 class EventFormatterManager(object):
   """Class to manage the event formatters."""
-  __pychecker__ = 'unusednames=cls'
   @classmethod
   def GetFormatter(cls, event_object):
     """Retrieves the formatter for a specific event object.

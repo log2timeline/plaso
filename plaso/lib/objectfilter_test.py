@@ -13,12 +13,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for plaso.lib.objectfilter."""
+"""This file contains tests for the object filter."""
+
 import unittest
 
 from plaso.lib import objectfilter
-
-__pychecker__ = 'no-funcdoc'
 
 attr1 = "Backup"
 attr2 = "Archive"
@@ -272,7 +271,6 @@ class ObjectFilterTest(unittest.TestCase):
       values = list()
 
       def Operation(self, x, _):
-        __pychecker__ = 'missingattrs=values'
         return self.values.append(x)
 
     # Test a common binary operator

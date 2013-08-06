@@ -14,13 +14,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a unit test for the output formatter of plaso."""
+"""This file contains tests for the output formatter."""
+
 import tempfile
 import unittest
 
 from plaso.lib import output
-
-__pychecker__ = 'no-funcdoc'
 
 
 class DummyEvent(object):

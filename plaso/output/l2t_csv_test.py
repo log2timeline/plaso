@@ -22,8 +22,6 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.output import l2t_csv
 
-__pychecker__ = 'no-funcdoc'
-
 
 class L2tTestEvent(event.EventObject):
   DATA_TYPE = 'test:l2t_csv'

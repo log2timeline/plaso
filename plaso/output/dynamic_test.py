@@ -22,8 +22,6 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.output import dynamic
 
-__pychecker__ = 'no-funcdoc'
-
 
 class TestEvent(event.EventObject):
   DATA_TYPE = 'test:dynamic'
