@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the tests for the MSIE Zone settings plugin."""
-# TODO: rename this file to msie_zones_test.py in a separate CL.
 
 import os
 import unittest
@@ -23,7 +22,7 @@ import unittest
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
-from plaso.registry import internetsettings
+from plaso.registry import msie_zones
 from plaso.winreg import winpyregf
 
 
@@ -46,7 +45,7 @@ class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
     """Test the Internet Settings Zones plugin for the Software hive."""
     key = self.registry.GetKey(
         '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones')
-    plugin = internetsettings.MsieZoneSettingsSoftwareZonesPlugin(
+    plugin = msie_zones.MsieZoneSettingsSoftwareZonesPlugin(
         None, None, None)
     entries = list(plugin.Process(key))
 
@@ -86,7 +85,7 @@ class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
     key = self.registry.GetKey(
         '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Lockdown_Zones')
-    plugin = internetsettings.MsieZoneSettingsSoftwareLockdownZonesPlugin(
+    plugin = msie_zones.MsieZoneSettingsSoftwareLockdownZonesPlugin(
         None, None, None)
     entries = list(plugin.Process(key))
 
@@ -145,7 +144,7 @@ class UserMsieZoneSettingsPluginTest(unittest.TestCase):
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Zones')
-    plugin = internetsettings.MsieZoneSettingsUserZonesPlugin(
+    plugin = msie_zones.MsieZoneSettingsUserZonesPlugin(
         None, None, None)
     entries = list(plugin.Process(key))
 
@@ -182,7 +181,7 @@ class UserMsieZoneSettingsPluginTest(unittest.TestCase):
     key = self.registry.GetKey(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Lockdown_Zones')
-    plugin = internetsettings.MsieZoneSettingsUserLockdownZonesPlugin(
+    plugin = msie_zones.MsieZoneSettingsUserLockdownZonesPlugin(
         None, None, None)
     entries = list(plugin.Process(key))
 

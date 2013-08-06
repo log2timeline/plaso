@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the UserAssist plugins."""
-# TODO rename this file to userassist.py in a separate CL.
 
 import construct
 import logging
