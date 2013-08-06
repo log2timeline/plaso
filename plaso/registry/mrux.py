@@ -71,11 +71,11 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
       text_dict = {}
       value_text = u'MRUListEx Entry %s (nr. %d)' % (unicode(entry), nr + 1)
       text_dict[value_text] = self.GetText(unicode(entry))
-      evt = event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=event_timestamp)
-      evt.source_append = ': MRUx List'
+      yield event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=event_timestamp,
+          source_append=': MRUx List')
+
       event_timestamp = 0
-      yield evt
 
   def Process(self, key):
     """Determine if we can process this registry key or not."""
