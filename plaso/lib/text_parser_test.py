@@ -14,7 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the parser library in plaso."""
+"""This file contains the tests for the generic text parser."""
+
 import pytz
 import unittest
 
@@ -24,8 +25,6 @@ from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 from plaso.lib import text_parser
-
-__pychecker__ = 'no-funcdoc'
 
 
 class EmtpyObject(object):

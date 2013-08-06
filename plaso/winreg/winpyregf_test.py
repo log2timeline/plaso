@@ -14,13 +14,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the winpyregf library in plaso."""
+"""This file contains tests for the pyregf Windows Registry back-end."""
+
 import os
 import unittest
 
 from plaso.winreg import winpyregf
-
-__pychecker__ = 'no-funcdoc'
 
 
 class RegistryUnitTest(unittest.TestCase):

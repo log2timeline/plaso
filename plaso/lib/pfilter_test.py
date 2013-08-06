@@ -14,7 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for plaso.lib.pfilter."""
+"""Tests for the filters."""
+
 import unittest
 import pytz
 
@@ -24,8 +25,6 @@ from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfilter
 from plaso.lib import putils
-
-__pychecker__ = 'no-funcdoc'
 
 
 class Empty(object):

@@ -86,7 +86,6 @@ class Timestamp(object):
   # The difference between January 1, 1904 and Jan 1, 1970.
   HFSTIME_TO_POSIX_BASE = 978307200
 
-  __pychecker__ = 'unusednames=cls'
   @classmethod
   def IsLeapYear(cls, year):
     """Determines if a year is a leap year.

@@ -19,7 +19,6 @@
 pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
 """
 # To make YAML loading work.
-__pychecker__ = 'no-import'
 import argparse
 import datetime
 import logging

@@ -14,7 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for plaso.frontend.plasm."""
+"""Tests for the Plaso front-end plasm."""
 
 import tempfile
 
@@ -24,8 +24,6 @@ from plaso.frontend import plasm
 from plaso.lib import event
 from plaso.lib import pfilter
 from plaso.lib import storage
-
-__pychecker__ = 'no-funcdoc'
 
 
 class TestEvent(event.EventObject):

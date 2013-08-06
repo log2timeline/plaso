@@ -633,7 +633,6 @@ class EventObject(object):
 
     for attribute_name in self.GetAttributes():
       if attribute_name == 'source_short':
-        __pychecker__ = ('missingattrs=source_short,pathspec,tag')
         proto.source_short = self._SOURCE_SHORT_TO_PROTO_MAP[self.source_short]
 
       elif attribute_name == 'pathspec':
@@ -894,8 +893,6 @@ class EventTag(object):
     """Define a string representation of the event."""
     ret = []
     ret.append('-' * 50)
-    __pychecker__ = (
-        'missingattrs=store_number,store_index,comment,color,tags')
     ret.append('{0:>7}:\n\tNumber: {1}\n\tIndex: {2}'.format(
         'Store', self.store_number, self.store_index))
     if hasattr(self, 'comment'):

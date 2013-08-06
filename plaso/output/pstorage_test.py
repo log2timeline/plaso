@@ -25,8 +25,6 @@ from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.output import pstorage   # pylint: disable-msg=W0611
 
-__pychecker__ = 'no-funcdoc'
-
 
 class PstorageTest(unittest.TestCase):
   def setUp(self):
