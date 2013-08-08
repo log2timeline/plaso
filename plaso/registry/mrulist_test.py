@@ -14,49 +14,55 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a test for MRUx registry parsing in Plaso."""
-# TODO rename this file to mrulistex_test.py in a separate CL.
+"""This file contains the tests for the MRUList Registry plugins."""
 
 import unittest
 
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
-from plaso.registry import mrux
+from plaso.registry import mrulist
 from plaso.winreg import test_lib
 
 
-class TestMRUxRegistry(unittest.TestCase):
-  """The unit test for MRU registry parsing."""
+class TestMRUListRegistry(unittest.TestCase):
+  """The unit test for MRUList registry parsing."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     values = []
-    # The order is: 201
     values.append(test_lib.TestRegValue(
-        'MRUListEx', '\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00',
-        3, 123))
+        'MRUList', 'acb'.encode('utf_16_le'),
+        test_lib.TestRegValue.REG_SZ, offset=123))
     values.append(test_lib.TestRegValue(
-        '0', 'Some random text here'.encode('utf_16_le'), 1, 1892))
+        'a', 'Some random text here'.encode('utf_16_le'),
+        test_lib.TestRegValue.REG_SZ, offset=1892))
     values.append(test_lib.TestRegValue(
-        '1', 'c:/evil.exe'.encode('utf_16_le'), 3, 612))
+        'b', 'c:/evil.exe'.encode('utf_16_le'),
+        test_lib.TestRegValue.REG_BINARY, offset=612))
     values.append(test_lib.TestRegValue(
-        '2', 'C:/looks_legit.exe'.encode('utf_16_le'), 1, 1001))
+        'c', 'C:/looks_legit.exe'.encode('utf_16_le'),
+        test_lib.TestRegValue.REG_SZ, offset=1001))
 
     self.regkey = test_lib.TestRegKey(
-        '\\Microsoft\\Some Windows\\InterestingApp\\MRUlist', 1346145829002031,
+        '\\Microsoft\\Some Windows\\InterestingApp\\MRU', 1346145829002031,
         values, 1456)
 
-  def testMRUX(self):
-    """Test the MRUexPlugin."""
-    plugin = mrux.MRUexPlugin(None, None, None)
-    entries = list(plugin.Process(self.regkey))
+  def testMRUListPlugin(self):
+    """Run a simple test against a mocked key with values."""
+    plugin = mrulist.MRUListPlugin(None, None, None)
+    generator = plugin.Process(self.regkey)
+    self.assertTrue(generator)
+    entries = list(generator)
 
-    line0 = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] MRUListEx '
-             'Entry 0 (nr. 2): Some random text here')
-    line1 = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] MRUListEx '
-             'Entry 1 (nr. 3): c:/evil.exe')
-    line2 = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] MRUListEx '
-             'Entry 2 (nr. 1): C:/looks_legit.exe')
+    expected_line1 = (
+        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
+        u'MRUList Entry 1: Some random text here')
+    expected_line2 = (
+        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
+        u'MRUList Entry 2: C:/looks_legit.exe')
+    expected_line3 = (
+        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
+        u'MRUList Entry 3: REGALERT: Unsupported MRU value: b data type.')
 
     self.assertEquals(len(entries), 3)
     self.assertEquals(entries[0].timestamp, 1346145829002031)
@@ -67,9 +73,9 @@ class TestMRUxRegistry(unittest.TestCase):
     msg2, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
     msg3, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[2])
 
-    self.assertEquals(msg1, line2)
-    self.assertEquals(msg2, line0)
-    self.assertEquals(msg3, line1)
+    self.assertEquals(msg1, expected_line1)
+    self.assertEquals(msg2, expected_line2)
+    self.assertEquals(msg3, expected_line3)
 
 
 if __name__ == '__main__':

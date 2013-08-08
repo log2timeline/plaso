@@ -18,8 +18,8 @@
 
 from plaso.registry import default
 from plaso.registry import lfu
-from plaso.registry import mru
-from plaso.registry import mrux
+from plaso.registry import mrulist
+from plaso.registry import mrulistex
 from plaso.registry import msie_zones
 from plaso.registry import officemru
 from plaso.registry import outlook
