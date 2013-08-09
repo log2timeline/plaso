@@ -201,8 +201,69 @@ class WinPyregfValue(interface.WinRegValue):
     return self._pyregf_value.data
 
 
+class WinPyregfFile(interface.WinRegFile):
+  """Implementation of a Windows Registry File using pyregf."""
+
+  def __init__(self):
+    """Initializes a Windows Registry Key object."""
+    super(WinPyregfFile, self).__init__()
+    self._pyregf_file = pyregf.file()
+
+  def Open(self, file_object, codepage='cp1252'):
+    """Opens the Registry file.
+
+    Args:
+      file_object: The file-like object of the Registry file.
+      codepage: Optional codepage for ASCII strings, default is cp1252.
+    """
+    # TODO: Add a more elegant error handling to this issue. There are some
+    # code pages that are not supported by the parent library. However we
+    # need to properly set the codepage so the library can properly interpret
+    # values in the registry.
+    try:
+      self._pyregf_file.set_ascii_codepage(codepage)
+
+    except (TypeError, IOError):
+      logging.error((
+          u'Unable to set the Registry file codepage: {0:s}. '
+          u'Ignoring provided value.').format(codepage))
+
+    # Keeping a copy of the volume due to limitation of the python bindings
+    # for VSS.
+    # TODO: this no longer applies and we should test to remove this.
+    self._file_object = file_object
+
+    self._pyregf_file.open_file_object(file_object)
+
+  def Close(self):
+    """Closes the Registry file."""
+    self._pyregf_file.close()
+    self._file_object = None
+
+  def GetKeyByPath(self, path):
+    """Retrieves a specific key defined by the Registry path.
+
+    Args:
+      path: the Registry path.
+
+    Returns:
+      The key (an instance of WinRegKey) if available or None otherwise.
+    """
+    if not path:
+      return None
+
+    pyregf_key = self._pyregf_file.get_key_by_path(path)
+
+    if not pyregf_key:
+      return None
+
+    parent_path, _, _ = path.rpartition(interface.WinRegKey.PATH_SEPARATOR)
+    return WinPyregfKey(pyregf_key, parent_path)
+
+
 class WinRegistry(object):
   """Provides access to the Windows registry file."""
+  # TODO: deprecate this class.
 
   def __init__(self, hive, codepage='cp1252'):
     """Constructor for the registry object.

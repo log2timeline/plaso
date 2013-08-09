@@ -61,7 +61,7 @@ from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
 from plaso.winreg import interface as win_registry_interface
-from plaso.winreg import winpyregf
+from plaso.winreg import winregistry
 
 import pytz
 import pyvshadow
