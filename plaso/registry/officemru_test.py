@@ -22,7 +22,7 @@ from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.registry import officemru
-from plaso.winreg import winpyregf
+from plaso.winreg import winregistry
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -32,15 +32,16 @@ class RegistryOfficeMRUTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
     test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
     file_object = open(test_file, 'rb')
-    # TODO: create a factory not have a specific back-end implementation
-    # directly invoked here.
-    self.registry = winpyregf.WinRegistry(file_object)
+    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
 
   def testOfficeMRU(self):
     """Test the Typed URLS plugin."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU')
     plugin = officemru.MSWord2010FileMRU(None, None, None)
     entries = list(plugin.Process(key))

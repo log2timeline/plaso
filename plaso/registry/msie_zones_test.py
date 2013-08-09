@@ -23,7 +23,7 @@ from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.registry import msie_zones
-from plaso.winreg import winpyregf
+from plaso.winreg import winregistry
 
 
 class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
@@ -31,11 +31,12 @@ class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
     test_file = os.path.join('test_data', 'SOFTWARE')
     file_object = open(test_file, 'rb')
-    # TODO: create a factory not have a specific back-end implementation
-    # directly invoked here.
-    self.registry = winpyregf.WinRegistry(file_object)
+    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
@@ -43,10 +44,9 @@ class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
 
   def testMsieZoneSettingsSoftwareZonesPlugin(self):
     """Test the Internet Settings Zones plugin for the Software hive."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones')
-    plugin = msie_zones.MsieZoneSettingsSoftwareZonesPlugin(
-        None, None, None)
+    plugin = msie_zones.MsieZoneSettingsSoftwareZonesPlugin(None, None, None)
     entries = list(plugin.Process(key))
 
     expected_line = (
@@ -82,7 +82,7 @@ class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
 
   def testMsieZoneSettingsSoftwareLockdownZonesPlugin(self):
     """Test the Internet Settings Lockdown Zones plugin for Software hive."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Lockdown_Zones')
     plugin = msie_zones.MsieZoneSettingsSoftwareLockdownZonesPlugin(
@@ -129,11 +129,12 @@ class UserMsieZoneSettingsPluginTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
     test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
     file_object = open(test_file, 'rb')
-    # TODO: create a factory not have a specific back-end implementation
-    # directly invoked here.
-    self.registry = winpyregf.WinRegistry(file_object)
+    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
@@ -141,11 +142,10 @@ class UserMsieZoneSettingsPluginTest(unittest.TestCase):
 
   def testMsieZoneSettingsUserZonesPlugin(self):
     """Test the plugin for the Zones."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Zones')
-    plugin = msie_zones.MsieZoneSettingsUserZonesPlugin(
-        None, None, None)
+    plugin = msie_zones.MsieZoneSettingsUserZonesPlugin(None, None, None)
     entries = list(plugin.Process(key))
 
     expected_line = (
@@ -178,7 +178,7 @@ class UserMsieZoneSettingsPluginTest(unittest.TestCase):
 
   def testMsieZoneSettingsUserLockdownZonesPlugin(self):
     """Test the plugin for the Lockdown Zones."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Lockdown_Zones')
     plugin = msie_zones.MsieZoneSettingsUserLockdownZonesPlugin(

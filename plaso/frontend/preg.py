@@ -35,7 +35,7 @@ from plaso.lib import utils
 from plaso.lib import vss
 from plaso.lib import win_registry_interface
 from plaso.winreg import cache
-from plaso.winreg import winpyregf
+from plaso.winreg import winregistry
 
 import pytz
 
@@ -121,13 +121,13 @@ def cd(key):
   key_path = key
 
   if key.startswith('\\'):
-    registry_key = RegCache.hive.GetKey(key)
+    registry_key = RegCache.hive.GetKeyByPath(key)
   elif key == '.':
     return
   elif key.startswith('.\\'):
     current_path = RegCache.hive.cur_key.path
     _, _, key_path = key.partition('\\')
-    registry_key = RegCache.hive.GetKey(u'{}\\{}'.format(
+    registry_key = RegCache.hive.GetKeyByPath(u'{}\\{}'.format(
         current_path, key_path))
   elif key.startswith('..'):
     parent_path, _, _ = RegCache.cur_key.path.rpartition('\\')
@@ -137,9 +137,9 @@ def cd(key):
         path = u'{}\\{}'.format(parent_path, key_path)
       else:
         path = parent_path
-      registry_key = RegCache.hive.GetKey(path)
+      registry_key = RegCache.hive.GetKeyByPath(path)
     else:
-      registry_key = RegCache.hive.GetKey(u'\\{}'.format(key_path))
+      registry_key = RegCache.hive.GetKeyByPath(u'\\{}'.format(key_path))
 
   else:
     # Check if key is not set at all, then assume traversal from root.
@@ -150,7 +150,7 @@ def cd(key):
       key_path = u'\\{}'.format(key)
     else:
       key_path = u'{}\\{}'.format(RegCache.cur_key.path, key)
-    registry_key = RegCache.hive.GetKey(key_path)
+    registry_key = RegCache.hive.GetKeyByPath(key_path)
 
   if registry_key:
     if key_path == '\\':
@@ -232,17 +232,19 @@ def IsLoaded():
 def OpenHive(filename, collector=None, codepage='cp1252'):
   """Open a registry hive based on a collector or a filename."""
   if not collector:
-    fh = putils.OpenOSFile(filename)
+    file_object = putils.OpenOSFile(filename)
   else:
-    fh = collector.OpenFile(filename)
+    file_object = collector.OpenFile(filename)
 
   use_codepage = getattr(RegCache.pre_obj, 'code_page', codepage)
-  # TODO: create a factory not have a specific back-end implementation
-  # directly invoked here.
-  RegCache.hive = winpyregf.WinRegistry(fh, use_codepage)
+
+  win_registry = winregistry.WinRegistry(
+      winregistry.WinRegistry.BACKEND_PYREGF)
+
+  RegCache.hive = win_registry.OpenFile(file_object, codepage=use_codepage)
   RegCache.SetHiveType()
   RegCache.BuildCache()
-  RegCache.cur_key = RegCache.hive.GetKey('\\')
+  RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
 
 
 def PrintEvent(event_object, show_hex=False):
@@ -311,7 +313,7 @@ def ParseHive(hive_path, collectors, keys, use_plugins, verbose):
         logging.warning(
             u'Unable to format key string %s, error message: %s', key_str, e)
 
-      key = RegCache.hive.GetKey(key_str_use)
+      key = RegCache.hive.GetKeyByPath(key_str_use)
       print u'{:>15} : {}'.format('Key Name', key_str_use)
       if not key:
         print 'Unable to open key: {}'.format(key_str_use)
@@ -346,7 +348,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
     return
 
   if type(key) in (unicode, str):
-    key = RegCache.hive.GetKey(key)
+    key = RegCache.hive.GetKeyByPath(key)
 
   if not key:
     return

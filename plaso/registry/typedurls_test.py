@@ -23,7 +23,7 @@ from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.registry import typedurls
-from plaso.winreg import winpyregf
+from plaso.winreg import winregistry
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -33,15 +33,16 @@ class RegistryTypedURLsTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
     test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
     file_object = open(test_file, 'rb')
-    # TODO: create a factory not have a specific back-end implementation
-    # directly invoked here.
-    self.registry = winpyregf.WinRegistry(file_object)
+    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
 
   def testMsieTypedURLs(self):
     """Test the MISE Typed URLs plugin."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Internet Explorer\\TypedURLs')
     plugin = typedurls.MsieTypedURLsPlugin(None, None, None)
     entries = list(plugin.Process(key))
@@ -64,7 +65,7 @@ class RegistryTypedURLsTest(unittest.TestCase):
 
   def testTypedPaths(self):
     """Test the Typed Paths plugin."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
         '\\TypedPaths')
     plugin = typedurls.TypedPathsPlugin(None, None, None)

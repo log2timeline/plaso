@@ -194,4 +194,33 @@ class WinRegValue(object):
     return self.data_type == self.REG_BINARY
 
 
-# TODO: refactor add a registry file interface.
+class WinRegFile(object):
+  """Abstract class to represent the Windows Registry File interface."""
+
+  def __init__(self):
+    """Default constructor for the Registry file."""
+    self._mounted_key_path = u''
+
+  @abc.abstractmethod
+  def Open(self, file_object, codepage='cp1252'):
+    """Opens the Registry file.
+
+    Args:
+      file_object: The file-like object of the Registry file.
+      codepage: Optional codepage for ASCII strings, default is cp1252.
+    """
+
+  @abc.abstractmethod
+  def Close(self):
+    """Closes the Registry file."""
+
+  @abc.abstractmethod
+  def GetKeyByPath(self, registry_path):
+    """Retrieves a specific key defined by the Registry path.
+
+    Args:
+      path: the Registry path.
+
+    Returns:
+      The key (an instance of WinRegKey) if available or None otherwise.
+    """
