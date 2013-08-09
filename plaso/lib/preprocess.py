@@ -31,7 +31,7 @@ from plaso.lib import registry
 from plaso.lib import utils
 from plaso.lib import win_registry_interface
 from plaso.winreg import cache
-from plaso.winreg import winpyregf
+from plaso.winreg import winregistry
 
 from plaso.proto import plaso_storage_pb2
 
@@ -342,25 +342,26 @@ class WinRegistryPreprocess(PreprocessPlugin):
           u'Unable to open file: {} [{}]'.format(file_name[0], e))
 
     codepage = getattr(self._obj_store, 'code_page', 'cp1252')
+
+    win_registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
     try:
-      # TODO: create a factory not have a specific back-end implementation
-      # directly invoked here.
-      reg = winpyregf.WinRegistry(hive_fh, codepage)
+      winreg_file = self.winreg_file = win_registry.OpenFile(
+          hive_fh, codepage=codepage)
     except IOError as e:
       raise errors.PreProcessFail(
-          u'Unable to open the registry: {} [{}] (library version:{}'.format(
-              file_name[0], e, winpyregf.GetLibraryVersion()))
+          u'Unable to open the registry: {} [{}]'.format(file_name[0], e))
 
-    self._reg_cache = cache.WinRegistryCache(reg, self.REG_FILE)
+    self._reg_cache = cache.WinRegistryCache(winreg_file, self.REG_FILE)
     self._reg_cache.BuildCache()
     key_path = self.ExpandKeyPath()
 
     try:
-      key = reg.GetKey(key_path)
+      key = winreg_file.GetKeyByPath(key_path)
     except IOError as e:
       raise errors.PreProcessFail(
-          u'Error fetching registry key: {} Error {} (library: {}'.format(
-              key_path, e, winpyregf.GetLibraryVersion()))
+          u'Error fetching registry key: {} Error {}'.format(key_path, e))
 
     if not key:
       raise errors.PreProcessFail(

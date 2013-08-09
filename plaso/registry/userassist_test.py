@@ -23,7 +23,7 @@ from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.registry import userassist
-from plaso.winreg import winpyregf
+from plaso.winreg import winregistry
 
 
 class WindowsXPUserAssistTest(unittest.TestCase):
@@ -31,11 +31,12 @@ class WindowsXPUserAssistTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
     test_file = os.path.join('test_data', 'NTUSER.DAT')
     file_object = open(test_file, 'rb')
-    # TODO: create a factory not have a specific back-end implementation
-    # directly invoked here.
-    self.registry = winpyregf.WinRegistry(file_object)
+    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
@@ -43,7 +44,7 @@ class WindowsXPUserAssistTest(unittest.TestCase):
 
   def testUserAssistPlugin3(self):
     """Test the Active Desktop (version 3) UserAssist plugin."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         '\\{75048700-EF1F-11D0-9888-006097DEACF9}')
     plugin = userassist.UserAssistPlugin3(None, None, None)
@@ -75,11 +76,12 @@ class Windows7UserAssistTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
     test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
     file_object = open(test_file, 'rb')
-    # TODO: create a factory not have a specific back-end implementation
-    # directly invoked here.
-    self.registry = winpyregf.WinRegistry(file_object)
+    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
@@ -87,7 +89,7 @@ class Windows7UserAssistTest(unittest.TestCase):
 
   def testUserAssistPlugin8(self):
     """Test the user assist plugin."""
-    key = self.registry.GetKey(
+    key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         '\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
     plugin = userassist.UserAssistPlugin8(None, None, None)
