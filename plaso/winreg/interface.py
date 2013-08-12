@@ -158,7 +158,7 @@ class WinRegValue(object):
     REG_DWORD_BIG_ENDIAN and REG_QWORD.
 
     Returns:
-      True if the data is a string, false otherwise.
+      True if the data is an integer, false otherwise.
     """
     return self.data_type in [
         self.REG_DWORD, self.REG_DWORD_BIG_ENDIAN, self.REG_QWORD]
