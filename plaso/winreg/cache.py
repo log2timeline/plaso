@@ -14,7 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Interface and plugins for registry caching."""
+"""Interface and plugins for caching of Windows Registry objects."""
+
 import abc
 
 from plaso.lib import errors
@@ -86,7 +87,7 @@ class WinRegCachePlugin(object):
     if not self.REG_KEY:
       return
 
-    key = self._hive.GetKey(self.REG_KEY)
+    key = self._hive.GetKeyByPath(self.REG_KEY)
 
     if not key:
       return
@@ -116,5 +117,4 @@ class CurrentControl(WinRegCachePlugin):
     if value.data <= 0 or value.data > 999:
       return None
 
-    return u'ControlSet{0:3d}'.format(value.data)
-
+    return u'ControlSet{0:03d}'.format(value.data)
