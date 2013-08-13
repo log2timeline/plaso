@@ -76,12 +76,15 @@ class WinRegistryParser(parser.PlasoParser):
     for reg_type in self.REG_TYPES:
       if reg_type == 'UNKNOWN':
         continue
-      found = True
-      for key in self.REG_TYPES[reg_type]:
-        if not key in winreg_file:
-          found = False
+
+      # Check if all the known keys for a certain Registry file exist.
+      known_keys_found = True
+      for known_key_path in self.REG_TYPES[reg_type]:
+        if not winreg_file.GetKeyByPath(known_key_path):
+          known_keys_found = False
           break
-      if found:
+
+      if known_keys_found:
         registry_type = reg_type
         break
 
