@@ -627,7 +627,7 @@ class ClusteringEngine:
       sys.stdout.write('\n')
     return (evttypes, evttype_indeces)
 
-  def run(self):
+  def Run(self):
     """Iterates through a tagged Plaso Store file, attempting to cluster events
     into groups that tend to happen together, to help creating Tag Input files.
     Future work includes the ability to parse multiple Plaso Store files at
