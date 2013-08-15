@@ -235,6 +235,18 @@ class PlasoStorage(object):
 
     return information
 
+  def GetNumberOfEvents(self):
+    """Retrieves the number of event objects in a storage file."""
+    total_events = 0
+    if hasattr(self, 'GetStorageInformation'):
+      for store_info in self.GetStorageInformation():
+        if hasattr(store_info, 'stores'):
+          stores = store_info.stores.values()
+          for store_file in stores:
+            if type(store_file) is dict and 'count' in store_file:
+              total_events += store_file['count']
+    return total_events
+
   def _GetEntry(self, number, entry_index=-1):
     """Return a serialized EventObject protobuf read from filehandle.
 
