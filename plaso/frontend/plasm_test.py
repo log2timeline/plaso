@@ -70,7 +70,6 @@ class PlasmTest(unittest.TestCase):
     dumper.Close()
     dumper.Run()
 
-    self.my_args = TestArgs(self.storage_name, self.tag_input_name)
     self.storage = storage.PlasoStorage(self.storage_file)
     pfilter.TimeRangeCache.ResetTimeConstraints()
     self.storage.SetStoreLimit()
@@ -128,7 +127,9 @@ class PlasmTest(unittest.TestCase):
   def testTaggingEngine(self):
     """Tests the Tagging engine's functionality."""
     self.assertFalse(self.storage.HasTagging())
-    plasm.TaggingEngine(self.my_args)
+    tagging_engine = plasm.TaggingEngine(
+        self.storage_name, self.tag_input_name, quiet=True)
+    tagging_engine.Run()
     test = storage.PlasoStorage(self.storage_name)
     self.assertTrue(test.HasTagging())
     tagging = test.GetTagging()
@@ -140,13 +141,17 @@ class PlasmTest(unittest.TestCase):
 
   def testGroupingEngineUntagged(self):
     """Grouping engine should do nothing if dealing with untagged storage."""
-    plasm.GroupingEngine(self.my_args)
+    grouping_engine = plasm.GroupingEngine(self.storage_name, quiet=True)
+    grouping_engine.Run()
     self.assertFalse(self.storage.HasGrouping())
 
   def testGroupingEngine(self):
     """Tests the Grouping engine's functionality."""
-    plasm.TaggingEngine(self.my_args)
-    plasm.GroupingEngine(self.my_args)
+    tagging_engine = plasm.TaggingEngine(
+        self.storage_name, self.tag_input_name, quiet=True)
+    grouping_engine = plasm.GroupingEngine(self.storage_name, quiet=True)
+    tagging_engine.Run()
+    grouping_engine.Run()
     test = storage.PlasoStorage(self.storage_name)
     pfilter.TimeRangeCache.ResetTimeConstraints()
     test.SetStoreLimit()
