@@ -1,0 +1,16 @@
+Application Execution
+  data_type is 'macosx:application_usage'
+  data_type is 'syslog:line' AND body contains 'COMMAND=/bin/launchctl'
+
+Application Install
+  data_type is 'plist:key' AND key is 'InstallDate'
+
+AutoRun
+  data_type is 'fs:stat' AND filename contains 'LaunchAgents/' AND timestamp_desc is 'HFS_DETECT crtime' AND filename contains '.plist'
+
+File Downloaded
+  data_type is 'chrome:history:file_downloaded'
+  timestamp_desc is 'File Downloaded'
+
+Document Printed
+  (data_type is 'metadata:hachoir' OR data_type is 'metadata:OLECF') AND timestamp_desc contains 'Printed'

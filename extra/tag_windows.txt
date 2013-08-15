@@ -1,0 +1,22 @@
+Application Execution
+  data_type is 'windows:prefetch:prefetch'
+  data_type is 'windows:lnk:link' and filename contains 'Recent' and (local_path contains '.exe' or network_path contains '.exe' or relative_path contains '.exe')
+  data_type is 'windows:registry:key_value' AND (plugin contains 'userassist' or plugin contains 'mru') AND regvalue.__all__ contains '.exe'
+  data_type is 'windows:evtx:record' and strings contains 'user mode service' and strings contains 'demand start'
+  data_type is 'fs:stat' and filename contains 'Windows/Tasks/At'
+
+Document Opened
+  data_type is 'windows:registry:key_value' AND plugin contains 'mru' AND regvalue.__all__ not contains '.exe' AND timestamp > 0
+
+AutoRun
+  data_type is 'windows:registry:key_value' and plugin contains 'Run'
+
+File Downloaded
+  data_type is 'chrome:history:file_downloaded'
+  timestamp_desc is 'File Downloaded'
+
+Document Printed
+  (data_type is 'metadata:hachoir' OR data_type is 'metadata:OLECF') AND timestamp_desc contains 'Printed'
+
+Startup Application
+  data_type is 'windows:registry:key_value' AND (plugin contains 'run' or plugin contains 'lfu') AND (regvalue.__all__ contains '.exe' OR regvalue.__all__ contains '.dll')
