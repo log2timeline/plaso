@@ -53,7 +53,6 @@ Options:
 """
 import hashlib
 import logging
-import numpy
 import operator
 import os
 import pickle
@@ -451,7 +450,7 @@ class ClusteringEngine:
     with SetupStorage(filename) as store:
       for event_object in EventObjectGenerator(store):
         if not self.ignore:
-          self.ignore = event_object.COMPARE_EXCLUDE.union(IGNORE_BASE)
+          self.ignore = event_object.COMPARE_EXCLUDE.union(self.IGNORE_BASE)
         yield ClusteringEngine.EventRepresentation(
             event_object, self.ignore, frequent_words)
 
@@ -519,7 +518,7 @@ class ClusteringEngine:
       vector = pickle.load(x)
       x.close()
     else:
-      vector = numpy.zeros(vector_size);
+      vector = [0]*vector_size
       for representation in self.EventObjectRepresentationGenerator(
           nodup_filename):
         for field_name, attribute in representation.iteritems():
