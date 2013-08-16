@@ -30,7 +30,7 @@ linter()
   # R utils/common.sh -> utils/uncommon.sh
   # If a file is modified and renamed:
   # RM utils/common.sh -> utils/uncommon.sh
-  AWK_SCRIPT="if (\$1 == \"A\" || \$1 == \"M\") { print \$2; } else if (\$1 == \"R\" || \$1 == \"RM\") { print \$4; }";
+  AWK_SCRIPT="if (\$1 == \"A\" || \$1 == \"AM\" || \$1 == \"M\") { print \$2; } else if (\$1 == \"R\" || \$1 == \"RM\") { print \$4; }";
 
   # First find all files that need linter
   FILES=`git status -s | grep -v "^?" | awk "{ ${AWK_SCRIPT} }" | grep "\.py$"`;
