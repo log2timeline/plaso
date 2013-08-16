@@ -23,9 +23,9 @@ EXIT_SUCCESS=0;
 # in binary form. Leave the formatter because it does not link in the
 # hachoir code.
 
-rm -f parsers/hachoir*
+rm -f plaso/parsers/hachoir*
 
-sed -i -e "/import hachoir/d" parsers/__init__.py
+sed -i -e "/import hachoir/d" plaso/parsers/__init__.py
 
 SED_SCRIPT="
 /_slow': \[/ {
@@ -37,7 +37,7 @@ SED_SCRIPT="
   d
 }";
 
-sed -i -e "${SED_SCRIPT}" frontend/presets.py
+sed -i -e "${SED_SCRIPT}" plaso/frontend/presets.py
 
 exit ${EXIT_SUCCESS};
 

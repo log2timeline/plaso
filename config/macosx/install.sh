@@ -16,7 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FOLDER=/usr/local/share/plaso
+FOLDER=/usr/share/plaso
+OLD_FOLDER=/usr/local/share/plaso
 LNK_PATH=/usr/bin
 
 link()
@@ -42,14 +43,9 @@ folder()
 uninstall_tool()
 {
   echo -n "Uninstalling $1..."
-  if [ -d "$FOLDER/$1" ]
+  if [ -d "$1" ]
   then
-    sudo /bin/rm -rf "$FOLDER/$1"
-  fi
-
-  if [ -h "$LNK_PATH/$1" ]
-  then
-    sudo rm "$LNK_PATH/$1"
+    sudo /bin/rm -rf "$1"
   fi
 }
 
@@ -67,8 +63,7 @@ then
 fi
 
 echo "Uninstalling previous versions."
-uninstall_tool plaso_console
-uninstall_tool plaso_information
+old_uninstall_tool $OLD_FOLDER
 
 echo "Installing tools."
 install_tool log2timeline
