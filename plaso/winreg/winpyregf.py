@@ -187,10 +187,13 @@ class WinPyregfValue(interface.WinRegValue):
         self.REG_DWORD, self.REG_DWORD_BIG_ENDIAN, self.REG_QWORD]:
       try:
         return self._pyregf_value.data_as_integer
-      except IOError:
-        pass
+      except (IOError, OverflowError):
+        # TODO: Rethink this approach. The value is not -1, but we cannot
+        # return the raw data, since the calling plugin expects an integer
+        # here.
+        return -1
 
-    # TODO: add support for REG_MULTI_SZ to pyregf.
+    # TODO: Add support for REG_MULTI_SZ to pyregf.
     elif self._pyregf_value.type == self.REG_MULTI_SZ:
       try:
         utf16_string = unicode(self._pyregf_value.data.decode('utf-16-le'))

@@ -48,7 +48,10 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
         else:
           value_name = u'{0:s}'.format(value.name)
 
-        if value.DataIsString():
+        if value.data is None:
+          value_string = u'[{0:s}] Empty'.format(
+              value.data_type_string)
+        elif value.DataIsString():
           value_string = u'[{0:s}] {1:s}'.format(
               value.data_type_string, value.data)
         elif value.DataIsInteger():

@@ -93,7 +93,7 @@ class ServersTerminalServerClientPlugin(TerminalServerClientPlugin):
 class RDPDRTerminalServerClientPlugin(TerminalServerClientPlugin):
   """Gathers the RDPDR key for the User hive."""
 
-  REG_KEY = ('\\Software\\Microsoft\\Terminal Server Client\\',
+  REG_KEY = ('\\Software\\Microsoft\\Terminal Server Client\\'
              'Default\\AddIns\\RDPDR')
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'RDP Connection'
