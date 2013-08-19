@@ -43,6 +43,8 @@ Thanks to contributors (alphabetically based on last name):
   * multiple Registry plugins
 * Keith Wall
   * updates to the timezone transformation
+* Dominique Kilman
+  * PCAP parser
 
 Test data:
 
