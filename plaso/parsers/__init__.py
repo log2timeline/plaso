@@ -27,6 +27,7 @@ from plaso.parsers import mackeeper_cache
 from plaso.parsers import mactime
 from plaso.parsers import msiecf
 from plaso.parsers import olecf
+from plaso.parsers import pcap
 from plaso.parsers import plist
 from plaso.parsers import recycler
 from plaso.parsers import selinux
