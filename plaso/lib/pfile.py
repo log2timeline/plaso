@@ -178,6 +178,8 @@ class PlasoFile(object):
     if proto.type != self.TYPE:
       raise errors.UnableToOpenFile('Unable to handle this file type.')
 
+    self._stat = None
+
   def __enter__(self):
     """Make it work with the with statement."""
     return self
@@ -204,6 +206,25 @@ class PlasoFile(object):
       self.fh.seek(offset, whence)
     else:
       raise RuntimeError('Unable to seek into a file that is not open.')
+
+  # Implementing an interface.
+  def fileno(self):
+    """Return the integer file descriptor if possible.
+
+    This function should not be defined by any file like object
+    unless it really can return a reliable file descriptor. That is
+    by nature not really possible when dealing with files inside
+    containers such as image files or compressed archives. However
+    some parsers specifically require this function to be implemented
+    despite never really using it.
+
+    Returns:
+      An integer file descriptor if possible, -1 otherwise.
+    """
+    if not self.fh:
+      return -1
+
+    return getattr(self.fh, 'fileno', -1)
 
   # Implementing an interface.
   def read(self, size=None):
@@ -304,7 +325,7 @@ class TskFile(PlasoFile):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
-    if hasattr(self, '_stat'):
+    if getattr(self, '_stat', None):
       return self._stat
 
     ret = Stats()
@@ -423,6 +444,9 @@ class OsFile(PlasoFile):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
     ret = Stats()
     if not self.fh:
       return ret
@@ -444,6 +468,7 @@ class OsFile(PlasoFile):
     ret.fs_type = 'Unknown'
     ret.allocated = True
 
+    self._stat = ret
     return ret
 
 
@@ -453,6 +478,9 @@ class ZipFile(PlasoFile):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
     ret = Stats()
 
     if not self.fh:
@@ -466,6 +494,8 @@ class ZipFile(PlasoFile):
     ret.ino = self.inode
     ret.size = self.zipinfo.file_size
     ret.fs_type = 'ZIP Container'
+
+    self._stat = ret
     return ret
 
   def Open(self, filehandle=None):
@@ -598,6 +628,9 @@ class GzipFile(PlasoFile):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
     ret = Stats()
     if not self.fh:
       return ret
@@ -606,6 +639,7 @@ class GzipFile(PlasoFile):
     ret.ino = self.inode
     ret.fs_type = 'GZ File'
 
+    self._stat = ret
     return ret
 
   def seek(self, offset, whence=0):
@@ -680,12 +714,16 @@ class Bz2File(PlasoFile):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
     ret = Stats()
     if not self.fh:
       return ret
 
     ret.ino = self.inode
     ret.fs_type = 'BZ2 container'
+    self._stat = ret
     return ret
 
   def readline(self, size=-1):
@@ -727,12 +765,16 @@ class TarFile(PlasoFile):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
     ret = Stats()
     if not self.fh:
       return ret
 
     ret.ino = self.inode
     ret.fs_type = 'Tar container'
+    self._stat = ret
     return ret
 
   def Open(self, filehandle=None):

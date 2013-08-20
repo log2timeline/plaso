@@ -533,11 +533,7 @@ class PcapParser(parser.PlasoParser):
     """
 
     try:
-      # TODO: Do not use the fileobject.fh since that brakes the codebase,
-      # switch as soon as fileno has been implemented.
-      # DISCLAIMER! This only works on OS files, it will brake horribly on
-      # all other files. FIX ASAP!!!
-      pcap_reader = dpkt.pcap.Reader(file_object.fh)
+      pcap_reader = dpkt.pcap.Reader(file_object)
     except ValueError as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
         self.parser_name, file_object.name, exception))
