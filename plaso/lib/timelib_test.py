@@ -291,6 +291,14 @@ class TimeLibUnitTest(unittest.TestCase):
     expected = 471953580
     self.CompareTimestamps(expected, timestring, zone)
 
+    # Swap day and month.
+    zone = pytz.timezone('EST')
+    # This is Oct 12th 1984, since we have DD-MM-YYYY.
+    timestring = '12-10-1984 05:13:00'
+    # date -u -d "Oct 12, 1984 05:13:00-05:00" +"%s"
+    expected = 466423980
+    self.CompareTimestamps(expected, timestring, zone, True)
+
     timestring = '12-15-1984 10:13:00Z'
     expected = 471953580
     self.CompareTimestamps(expected, timestring, zone)
@@ -322,21 +330,19 @@ class TimeLibUnitTest(unittest.TestCase):
     self.CompareTimestamps(expected, timestring, zone)
 
   def CompareTimestamps(self, expected, timestring,
-                        timezone=pytz.utc, fmt=''):
+                        timezone=pytz.utc, dayfirst=False):
     """Compare epoch values derived from StringToDatetime.
 
     Args:
       expected: Excpected integer value of timestring.
       timestring: A string formatted as a timestamp.
       timezone: The timezone (pytz.timezone) object.
-      fmt: Optional argument that defines the format of a string
-           representation of a timestamp. By default the parser
-           tries to "guess" the proper format.
+      dayfirst: Change precedence of day vs. month.
     Returns:
       A result object.
 
     """
-    dt = timelib.StringToDatetime(timestring, timezone, fmt)
+    dt = timelib.StringToDatetime(timestring, timezone, dayfirst)
     calculated = timelib.Timetuple2Timestamp(dt.timetuple())
     self.assertEquals(calculated, expected)
 

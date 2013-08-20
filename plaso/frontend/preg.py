@@ -70,7 +70,7 @@ class RegCache(object):
         continue
       found = True
       for reg_key in cls.REG_TYPES[reg_type]:
-        if not reg_key in RegCache.hive:
+        if not RegCache.hive.GetKeyByPath(reg_key):
           found = False
           break
       if found:
@@ -89,12 +89,10 @@ class RegCache(object):
   @classmethod
   def GetHiveName(cls):
     """Return the name of the registry hive file."""
-    hive_fh = getattr(cls.hive, '_fh', None)
-    name = 'N/A'
-    if hive_fh:
-      name = getattr(hive_fh, 'name')
+    if not hasattr(cls, 'hive'):
+      return 'N/A'
 
-    return name
+    return getattr(cls.hive, 'name', 'N/A')
 
 
 # Lowercase name since this is used inside the python console shell.
@@ -144,9 +142,9 @@ def cd(key):
   else:
     # Check if key is not set at all, then assume traversal from root.
     if not RegCache.cur_key:
-      RegCache.cur_key = RegCache.hive.GetRoot()
+      RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
 
-    if RegCache.cur_key.name == RegCache.hive.GetRoot().name:
+    if RegCache.cur_key.name == RegCache.hive.GetKeyByPath('\\').name:
       key_path = u'\\{}'.format(key)
     else:
       key_path = u'{}\\{}'.format(RegCache.cur_key.path, key)
@@ -271,7 +269,7 @@ def PrintEvent(event_object, show_hex=False):
 
   if show_hex:
     # pylint: disable-msg=W0212
-    event_object.pathspec = RegCache.hive._fh.pathspec
+    event_object.pathspec = RegCache.hive.file_object.pathspec
     print utils.FormatHeader('Hex Output From Event.', '-')
     print putils.GetEventData(event_object, RegCache.fscache)
 

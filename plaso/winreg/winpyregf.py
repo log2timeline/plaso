@@ -211,6 +211,8 @@ class WinPyregfFile(interface.WinRegFile):
     """Initializes a Windows Registry Key object."""
     super(WinPyregfFile, self).__init__()
     self._pyregf_file = pyregf.file()
+    self.name = ''
+    self.file_object = None
 
   def Open(self, file_object, codepage='cp1252'):
     """Opens the Registry file.
@@ -231,17 +233,18 @@ class WinPyregfFile(interface.WinRegFile):
           u'Unable to set the Registry file codepage: {0:s}. '
           u'Ignoring provided value.').format(codepage))
 
-    # Keeping a copy of the volume due to limitation of the python bindings
-    # for VSS.
-    # TODO: this no longer applies and we should test to remove this.
-    self._file_object = file_object
+    # Keeping a copy of the original file object in case attributes from
+    # it are needed (preg uses it for instance to get the pathspec attribute
+    # directly from the file object).
+    self.file_object = file_object
 
     self._pyregf_file.open_file_object(file_object)
+    self.name = getattr(file_object, 'name', '')
 
   def Close(self):
     """Closes the Registry file."""
     self._pyregf_file.close()
-    self._file_object = None
+    self.file_object = None
 
   def GetKeyByPath(self, path):
     """Retrieves a specific key defined by the Registry path.
