@@ -22,6 +22,10 @@ and others involved with these projects:
 * Hachoir (not included in binary release)
 
 Thanks to contributors (alphabetically based on last name):
+* Brian Baskin
+  * Java IDX parser
+* Dominique Kilman
+  * PCAP parser
 * David Nides (davnads.blogspot.com)
   * 4n6time output generator with thanks to Eric Wong for assistance
   * Google Drive parser
@@ -43,8 +47,6 @@ Thanks to contributors (alphabetically based on last name):
   * multiple Registry plugins
 * Keith Wall
   * updates to the timezone transformation
-* Dominique Kilman
-  * PCAP parser
 
 Test data:
 
