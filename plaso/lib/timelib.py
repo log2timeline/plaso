@@ -164,20 +164,21 @@ class Timestamp(object):
     return epoch + datetime_object.microsecond
 
   @classmethod
-  def FromTimeString(cls, time_string, zone=pytz.utc, fmt=''):
+  def FromTimeString(cls, time_string, zone=pytz.utc, dayfirst=False):
     """Converts a string representation of a timestamp into a timestamp.
 
     Args:
       time_string: A string formatted as a timestamp.
       zone: The timezone (pytz.timezone) object.
-      fmt: Optional argument that defines the format of a string
-           representation of a timestamp. By default the parser
-           tries to "guess" the proper format.
+      dayfirst: An optional boolean argument. If set to true then the
+                parser will change the precedence in which it parses timestamps
+                from MM-DD-YYYY to DD-MM-YYYY (and YYYY-MM-DD will be
+                YYYY-DD-MM, etc).
 
     Returns:
       An integer containing the timestamp or 0 on error.
     """
-    dt = StringToDatetime(time_string, zone, fmt)
+    dt = StringToDatetime(time_string, zone, dayfirst)
     return cls.FromPythonDatetime(dt)
 
   @classmethod
@@ -430,24 +431,22 @@ def Timetuple2Timestamp(time_tuple):
   return int(calendar.timegm(time_tuple))
 
 
-def StringToDatetime(timestring, timezone=pytz.utc, fmt=''):
+def StringToDatetime(timestring, timezone=pytz.utc, dayfirst=False):
   """Converts a string timestamp into a datetime object.
 
   Args:
     timestring: A string formatted as a timestamp.
     timezone: The timezone (pytz.timezone) object.
-    fmt: Optional argument that defines the format of a string
-         representation of a timestamp. By default the parser
-         tries to "guess" the proper format.
+    dayfirst: An optional boolean argument. If set to true then the
+              parser will change the precedence in which it parses timestamps
+              from MM-DD-YYYY to DD-MM-YYYY (and YYYY-MM-DD will be YYYY-DD-MM,
+              etc).
 
   Returns:
     A datetime object.
   """
   try:
-    if fmt:
-      datetimeobject = dateutil.parser.parse(timestring, fmt)
-    else:
-      datetimeobject = dateutil.parser.parse(timestring)
+    datetimeobject = dateutil.parser.parse(timestring, dayfirst=dayfirst)
 
   except ValueError as error_msg:
     logging.error(
