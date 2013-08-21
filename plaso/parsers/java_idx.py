@@ -132,7 +132,7 @@ class JavaIDXParser(parser.PlasoParser):
     """
     try:
       magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
-    except IOError as e:
+    except (IOError, construct.FieldError) as e:
       raise errors.UnableToParseFile(
           u'Not a Java IDX file, unable to parse. ',
           u'Reason given: {}'.format(e))
