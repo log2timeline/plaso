@@ -16,6 +16,7 @@
 # limitations under the License.
 """This file contains the import statements for the Registry plugins."""
 
+from plaso.registry import ccleaner
 from plaso.registry import default
 from plaso.registry import lfu
 from plaso.registry import mrulist
