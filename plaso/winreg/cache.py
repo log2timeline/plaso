@@ -114,7 +114,26 @@ class CurrentControl(WinRegCachePlugin):
     if not value and not value.DataIsInteger():
       return None
 
-    if value.data <= 0 or value.data > 999:
+    key_number = value.data
+
+    # If the value is Zero then we need to check
+    # other keys.
+    # The default behavior is:
+    #   1. Use the "Current" value.
+    #   2. Use the "Default" value.
+    #   3. Use the "LastKnownGood" value.
+    if key_number == 0:
+      default_value = key.GetValue('Default')
+      lastgood_value = key.GetValue('LastKnownGood')
+
+      if default_value and default_value.DataIsInteger():
+        key_number = default_value.data
+
+      if not key_number:
+        if lastgood_value and lastgood_value.DataIsInteger():
+          key_number = lastgood_value.data
+
+    if key_number <= 0 or key_number > 999:
       return None
 
-    return u'ControlSet{0:03d}'.format(value.data)
+    return u'ControlSet{0:03d}'.format(key_number)
