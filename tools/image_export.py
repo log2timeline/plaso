@@ -22,17 +22,52 @@ import logging
 
 from plaso import preprocessors
 
+from plaso.lib import collector
 from plaso.lib import collector_filter
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import pfile
 from plaso.lib import preprocess
 from plaso.lib import putils
+from plaso.lib import queue
 from plaso.lib import vss
 
 
+def RunExtensionExtraction(options, extensions, fscache):
+  """Extracts files based on file extensions.
+
+  Args:
+    options: A configuration object, an argparse like object.
+    fscache: A FileSystemCache object.
+  """
+  input_queue = queue.SingleThreadedQueue()
+  output_queue = queue.SingleThreadedQueue()
+
+  my_collector = collector.SimpleImageCollector(
+      input_queue, output_queue, options.image, options.offset, 0,
+      options.vss, fscache=fscache)
+
+  my_collector.Collect()
+
+  # Configure filesaver.
+  FileSaver.calc_md5 = options.remove_duplicates
+
+  for pathspec_string in input_queue.PopItems():
+    pathspec = event.EventPathSpec()
+    pathspec.FromProtoString(pathspec_string)
+
+    _, _, extension = pathspec.file_path.rpartition('.')
+    if extension.lower() in extensions:
+      fh = pfile.OpenPFile(pathspec, fscache=fscache)
+      if getattr(pathspec, 'vss_store_number', None):
+        FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number
+      else:
+        FileSaver.prefix = ''
+      FileSaver.SaveFile(fh, options.path)
+
+
 def ExtractFiles(
-    my_collector, filter_definition, export_path, fscache=None, prefix='',
-    calc_md5=False, md5_dict=None):
+    my_collector, filter_definition, export_path, fscache=None):
   """Extracts files that match the filter.
 
   Args:
@@ -42,60 +77,61 @@ def ExtractFiles(
     of entries, where each entry is a single path.
     export_path: The path to where the files should be stored.
     fscache: A filesystem cache object, if applicable.
-    prefix: If the filename should be prepended by a prefix value.
-    calc_md5: Boolean value indicating if a MD5 value should be returned.
-    md5_dict: None, unless calc_md5 is set, then it should be a dict.
 
   Returns:
     None, unless calc_md5 is set then it returns a dict with MD5 sums.
   """
   col_fil = collector_filter.CollectionFilter(my_collector, filter_definition)
 
-  if calc_md5:
-    if md5_dict:
-      md5s = md5_dict
-    else:
-      md5s = {}
-
   for pathspec_string in col_fil.GetPathSpecs():
     with pfile.OpenPFile(pathspec_string, fscache=fscache) as fh:
-      directory = ''
-      if '/' in fh.name:
-        directory_string, _, filename = fh.name.rpartition('/')
-        if directory_string:
-          directory = os.path.join(export_path, *directory_string.split('/'))
-      else:
-        filename = fh.name
+      FileSaver.SaveFile(fh, export_path)
 
-      if prefix:
-        extracted_filename = '{}_{}'.format(prefix, filename)
-      else:
-        extracted_filename = filename
 
-      if directory:
-        if not os.path.isdir(directory):
-          os.makedirs(directory)
-      else:
-        directory = export_path
+class FileSaver(object):
+  """A simple class that is used to save files."""
+  md5_dict = {}
+  calc_md5 = False
+  prefix = ''
 
-      save_file = True
-      if calc_md5:
-        stat = fh.Stat()
-        inode = stat.attributes.get('ino', 0)
-        md5sum = CalculateHash(fh)
-        if inode in md5s:
-          if md5sum in md5s[inode]:
-            save_file = False
-          else:
-            md5s[inode].append(md5sum)
+  @classmethod
+  def SaveFile(cls, fh, export_path):
+    """Take a filehandle and an export path and save the file."""
+    directory = ''
+    filename = ''
+    if '/' in fh.name:
+      directory_string, _, filename = fh.name.rpartition('/')
+      if directory_string:
+        directory = os.path.join(export_path, *directory_string.split('/'))
+    else:
+      filename = fh.name
+
+    if cls.prefix:
+      extracted_filename = '{}_{}'.format(cls.prefix, filename)
+    else:
+      extracted_filename = filename
+
+    if directory:
+      if not os.path.isdir(directory):
+        os.makedirs(directory)
+    else:
+      directory = export_path
+
+    save_file = True
+    if cls.calc_md5:
+      stat = fh.Stat()
+      inode = stat.attributes.get('ino', 0)
+      md5sum = CalculateHash(fh)
+      if inode in cls.md5_dict:
+        if md5sum in cls.md5_dict[inode]:
+          save_file = False
         else:
-          md5s[inode] = [md5sum]
+          cls.md5_dict[inode].append(md5sum)
+      else:
+        cls.md5_dict[inode] = [md5sum]
 
-      if save_file:
-        putils.Pfile2File(fh, os.path.join(directory, extracted_filename))
-
-  if calc_md5:
-    return md5s
+    if save_file:
+      putils.Pfile2File(fh, os.path.join(directory, extracted_filename))
 
 
 def CalculateHash(file_object):
@@ -165,10 +201,8 @@ def RunExtraction(options, tsk_col, pre_obj, fscache):
     fscache: A filesystem cache object.
   """
   # Save the regular files.
-  ret_dict = ExtractFiles(
-      tsk_col, options.filter, options.path, fscache=fscache,
-      calc_md5=options.remove_duplicates)
-  logging.info('Files extracted.')
+  FileSaver.calc_md5 = options.remove_duplicates
+  ExtractFiles(tsk_col, options.filter, options.path, fscache=fscache)
 
   # Go through VSS if desired.
   if options.vss:
@@ -178,10 +212,8 @@ def RunExtraction(options, tsk_col, pre_obj, fscache):
       logging.info('Extracting files from VSS %d/%d', store_nr + 1, vss_numbers)
       vss_col = preprocess.VSSFileCollector(
           pre_obj, options.image, store_nr, options.offset * 512)
-      ret_dict_back = ExtractFiles(
-          vss_col, options.filter, options.path, fscache, 'vss_%d' % store_nr,
-          calc_md5=options.remove_duplicates, md5_dict=ret_dict)
-      ret_dict = ret_dict_back
+      FileSaver.prefix = 'vss_%d' % store_nr
+      ExtractFiles(vss_col, options.filter, options.path, fscache)
 
 
 def Main():
@@ -206,6 +238,20 @@ def Main():
       help='The directory in which extracted files should be stored in.')
 
   arg_parser.add_argument(
+      '-x', '--extensions', dest='extension_string', action='store',
+      type=str, metavar='EXTENSION_STRING', help=(
+          'If the purpose is to find all files given a certain extension'
+          'this options should be used. This option accepts a comma separated'
+          'string denoting all file extensions, eg: -x "csv,docx,pst".'))
+
+  arg_parser.add_argument(
+      '-f', '--filter', action='store', dest='filter', metavar='FILTER_FILE',
+      type=str, help=(
+          'Full path to the file that contains the collection filter, '
+          'the file can use variables that are defined in preprocesing'
+          ', just like any other log2timeline/plaso collection filter.'))
+
+  arg_parser.add_argument(
       '--include_duplicates', dest='include_duplicates', action='store_true',
       default=False, help=(
           'By default if VSS is turned on all files saved will have their'
@@ -220,21 +266,24 @@ def Main():
           ' from, it should be a raw image or another image that plaso '
           'supports.'))
 
-  arg_parser.add_argument(
-      'filter', action='store', metavar='FILTERFILE', type=str, help=(
-          'Full path to the file that contains the collection filter, '
-          'the file can use variables that are defined in preprocesing'
-          ', just like any other log2timeline/plaso collection filter.'))
-
   options = arg_parser.parse_args()
 
   format_str = '[%(levelname)s] %(message)s'
   logging.basicConfig(level=logging.INFO, format=format_str)
 
-  if not os.path.isfile(options.filter):
-    raise RuntimeError('Unable to proceed, filter file does not exist.')
   if not os.path.isfile(options.image):
     raise RuntimeError('Unable to proceed, image file does not exist.')
+
+  if not (options.filter and options.extension_string):
+    raise RuntimeError('Neither extension string nor filter defined.')
+
+  if options.filter:
+    if not os.path.isfile(options.filter):
+      raise RuntimeError('Unable to proceed, filter file does not exist.')
+
+  if options.extension_string:
+    extensions = options.extension_string.split(',')
+
   if not os.path.isdir(options.path):
     os.makedirs(options.path)
 
@@ -246,8 +295,16 @@ def Main():
   else:
     options.remove_duplicates = False
 
-  collector, fscache, pre_obj = RunPreprocess(options.image, options.offset)
-  RunExtraction(options, collector, pre_obj, fscache)
+  collector_use, fscache, pre_obj = RunPreprocess(options.image, options.offset)
+
+  # The option of running both options.
+  if options.filter:
+    RunExtraction(options, collector_use, pre_obj, fscache)
+    logging.info('Files from filters extracted.')
+
+  if options.extension_string:
+    RunExtensionExtraction(options, extensions, fscache)
+    logging.info('Files based on extension extracted.')
 
 
 if __name__ == '__main__':
