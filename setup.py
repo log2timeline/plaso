@@ -38,14 +38,23 @@ if sys.version < '2.7':
 
 def GetTools():
   """List up all scripts that should be runable from the command line."""
+  tools = []
+  tools.extend(GetToolsFrom(os.path.join('plaso', 'frontend')))
+  tools.extend(GetToolsFrom('tools'))
+
+  return tools
+
+
+def GetToolsFrom(path):
+  """Get tools from a given directory."""
   data = []
-  for _, _, filenames in os.walk(os.path.join('plaso', 'frontend')):
+  for _, _, filenames in os.walk(path):
     for filename in filenames:
       if '_test' in filename:
         continue
       if '.py' in filename and filename != '__init__.py':
-        if os.path.isfile(os.path.join('plaso', 'frontend', filename)):
-          data.append(os.path.join('plaso', 'frontend', filename))
+        if os.path.isfile(os.path.join(path, filename)):
+          data.append(os.path.join(path, filename))
 
   return data
 
