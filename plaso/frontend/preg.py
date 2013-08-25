@@ -22,11 +22,13 @@ import sys
 import pytz
 
 from IPython.frontend.terminal.embed import InteractiveShellEmbed
+from IPython.core import magic
 
 from plaso import preprocessors
 from plaso import registry    # pylint: disable-msg=W0611
 
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import pfile
 from plaso.lib import preprocess
 from plaso.lib import putils
@@ -38,6 +40,84 @@ from plaso.winreg import cache
 from plaso.winreg import winregistry
 
 import pytz
+
+
+class RegistryPluginHeader(eventdata.EventFormatter):
+  """A formatting class that prints some registry plugin header information."""
+  DATA_TYPE = 'windows:registry:key_value'
+  FMT_LENGTH = 15
+
+  # A list of attributes that do not need printing out.
+  SKIP_ATTRIBUTES = frozenset(
+      ['data_type', 'offset', 'timestamp', 'regvalue', 'source_append'])
+
+  # A small dictionary to map back attribute names to more
+  # friendly print names.
+  ATTRIBUTE_TO_NAME = {
+      'timestamp': 'Date',
+      'timestamp_desc': 'Type',
+      'keyname': 'Key Path',
+  }
+
+  def GetMessages(self, event_object):
+    """Return a list of short and long message string (short being empty)."""
+    ret_strings = []
+    fmt_length = self.FMT_LENGTH
+    for attribute in event_object.regvalue:
+      if len(attribute) > fmt_length:
+        fmt_length = len(attribute)
+
+    fmt = u'{:>%ds} : {}' % fmt_length
+    ret_strings.append(utils.FormatHeader('Attributes', '-'))
+    ret_strings.append(fmt.format(
+      'Date',
+      timelib.Timestamp.CopyToIsoFormat(event_object.timestamp, pytz.utc)))
+
+    for attribute, value in event_object.GetValues().items():
+      if attribute in self.SKIP_ATTRIBUTES:
+        continue
+      ret_strings.append(fmt.format(
+          self.ATTRIBUTE_TO_NAME.get(attribute, attribute), value))
+
+    ret_strings.append(utils.FormatHeader('Data', '-'))
+    return u'\n'.join(ret_strings), u''
+
+
+class RegistryFormatter(eventdata.EventFormatter):
+  """A formatting class for registry based events."""
+  DATA_TYPE = 'windows:registry:key_value'
+  FMT_LENGTH = 15
+
+  def GetMessages(self, event_object):
+    """Return a list of short and long message string (short being empty)."""
+    ret_strings = []
+    fmt_length = self.FMT_LENGTH
+    for attribute in event_object.regvalue:
+      if len(attribute) > fmt_length:
+        fmt_length = len(attribute)
+
+    fmt = u'{:>%ds} : {}' % fmt_length
+    for attribute, value in event_object.regvalue.items():
+      ret_strings.append(fmt.format(attribute, value))
+
+    return u'\n'.join(ret_strings), u''
+
+
+class RegistryHexFormatter(RegistryFormatter):
+  """A formatting class that adds hex data to printouts."""
+
+  def GetMessages(self, event_object):
+    """Return a list of short and long message strings (short being empty)."""
+    msg, _ = super(RegistryHexFormatter, self).GetMessages(event_object)
+
+    ret_strings = [msg]
+
+    # pylint: disable-msg=W0212
+    event_object.pathspec = RegCache.hive.file_object.pathspec
+    ret_strings.append(utils.FormatHeader('Hex Output From Event.', '-'))
+    ret_strings.append(putils.GetEventData(event_object, RegCache.fscache))
+
+    return u'\n'.join(ret_strings), u''
 
 
 class RegCache(object):
@@ -95,118 +175,136 @@ class RegCache(object):
     return getattr(cls.hive, 'name', 'N/A')
 
 
-# Lowercase name since this is used inside the python console shell.
-def parse(verbose=False):
-  """Parse the current key."""
-  if not IsLoaded():
-    return
+@magic.magics_class
+class MyMagics(magic.Magics):
+  """A simple class holding all magic functions for console."""
 
-  ParseKey(RegCache.cur_key, verbose=verbose)
+  # Lowercase name since this is used inside the python console shell.
+  @magic.line_magic
+  def parse(self, line):
+    """Parse the current key."""
+    if 'True' in line:
+      verbose = True
+    else:
+      verbose = False
 
+    if not IsLoaded():
+      return
 
-# Lowercase name since this is used inside the python console shell.
-def cd(key):
-  """Change between registry keys, like a directory tree.
+    ParseKey(RegCache.cur_key, verbose=verbose)
 
-  The key path can either be an absolute path or a relative one.
-  Absolute paths can use '.' and '..' to denote current and parent
-  directory/key path.
+  # Lowercase name since this is used inside the python console shell.
+  @magic.line_magic
+  def cd(self, key):
+    """Change between registry keys, like a directory tree.
 
-  Args:
-    key: The path to the key to traverse to.
-  """
-  registry_key = None
-  key_path = key
+    The key path can either be an absolute path or a relative one.
+    Absolute paths can use '.' and '..' to denote current and parent
+    directory/key path.
 
-  if key.startswith('\\'):
-    registry_key = RegCache.hive.GetKeyByPath(key)
-  elif key == '.':
-    return
-  elif key.startswith('.\\'):
-    current_path = RegCache.hive.cur_key.path
-    _, _, key_path = key.partition('\\')
-    registry_key = RegCache.hive.GetKeyByPath(u'{}\\{}'.format(
-        current_path, key_path))
-  elif key.startswith('..'):
-    parent_path, _, _ = RegCache.cur_key.path.rpartition('\\')
-    _, _, key_path = key.partition('\\')
-    if parent_path:
-      if key_path:
-        path = u'{}\\{}'.format(parent_path, key_path)
+    Args:
+      key: The path to the key to traverse to.
+    """
+    registry_key = None
+    key_path = key
+
+    if not key:
+      return
+
+    if key.startswith('\\'):
+      registry_key = RegCache.hive.GetKeyByPath(key)
+    elif key == '.':
+      return
+    elif key.startswith('.\\'):
+      current_path = RegCache.hive.cur_key.path
+      _, _, key_path = key.partition('\\')
+      registry_key = RegCache.hive.GetKeyByPath(u'{}\\{}'.format(
+          current_path, key_path))
+    elif key.startswith('..'):
+      parent_path, _, _ = RegCache.cur_key.path.rpartition('\\')
+      _, _, key_path = key.partition('\\')
+      if parent_path:
+        if key_path:
+          path = u'{}\\{}'.format(parent_path, key_path)
+        else:
+          path = parent_path
+        registry_key = RegCache.hive.GetKeyByPath(path)
       else:
-        path = parent_path
-      registry_key = RegCache.hive.GetKeyByPath(path)
+        registry_key = RegCache.hive.GetKeyByPath(u'\\{}'.format(key_path))
+
     else:
-      registry_key = RegCache.hive.GetKeyByPath(u'\\{}'.format(key_path))
+      # Check if key is not set at all, then assume traversal from root.
+      if not RegCache.cur_key:
+        RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
 
-  else:
-    # Check if key is not set at all, then assume traversal from root.
-    if not RegCache.cur_key:
-      RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
-
-    if RegCache.cur_key.name == RegCache.hive.GetKeyByPath('\\').name:
-      key_path = u'\\{}'.format(key)
-    else:
-      key_path = u'{}\\{}'.format(RegCache.cur_key.path, key)
-    registry_key = RegCache.hive.GetKeyByPath(key_path)
-
-  if registry_key:
-    if key_path == '\\':
-      path = '\\'
-    else:
-      path = registry_key.path
-
-    # Set the registry key and the prompt.
-    RegCache.cur_key = registry_key
-    ip = get_ipython()    # pylint: disable-msg=E0602
-    ip.prompt_manager.in_template = u'{}->{} [\\#] '.format(
-        StripCurlyBrace(RegCache.GetHiveName()),
-        StripCurlyBrace(path))
-  else:
-    print 'Unable to change to [{}]'.format(key_path)
-
-
-# Lowercase name since this is used inside the python console shell.
-def pwd():
-  """Print the current path."""
-  if not IsLoaded():
-    return
-
-  print RegCache.cur_key.path
-
-
-# Lowercase name since this is used inside the python console shell.
-def ls(verbose=False):
-  """List all subkeys and values of the current key."""
-  if not IsLoaded():
-    return
-
-  sub = []
-  for key in RegCache.cur_key.GetSubkeys():
-    sub.append((u'{0:s>10}  {1:s}'.format('[KEY]', key.name), True))
-
-  for value in RegCache.cur_key.GetValues():
-    if not verbose:
-      sub.append((u'[{0:s>10}]  {1:s}'.format(
-          value.data_type_string, value.name), False))
-    else:
-      if value.DataIsString():
-        value_string = u'{0:s}'.format(value.data)
-      elif value.DataIsInteger():
-        value_string = u'{0:d}'.format(value.data)
-      elif value.DataIsMultiString():
-        value_string = u'{0:s}'.format( u''.join(value.data))
+      if RegCache.cur_key.name == RegCache.hive.GetKeyByPath('\\').name:
+        key_path = u'\\{}'.format(key)
       else:
-        value_string = u''
+        key_path = u'{}\\{}'.format(RegCache.cur_key.path, key)
+      registry_key = RegCache.hive.GetKeyByPath(key_path)
 
-      sub.append((u'[{0:s>10}]  {1:s<25}  {2:s}'.format(
-          value.data_type_string, value.name, value_string), False))
+    if registry_key:
+      if key_path == '\\':
+        path = '\\'
+      else:
+        path = registry_key.path
 
-  for entry, subkey in sorted(sub):
-    if subkey:
-      print u'dr-xr-xr-x {}'.format(entry)
+      # Set the registry key and the prompt.
+      RegCache.cur_key = registry_key
+      ip = get_ipython()    # pylint: disable-msg=E0602
+      ip.prompt_manager.in_template = u'{}->{} [\\#] '.format(
+          StripCurlyBrace(RegCache.GetHiveName()),
+          StripCurlyBrace(path).replace('\\', '/'))
     else:
-      print u'-r-xr-xr-x {}'.format(entry)
+      print 'Unable to change to [{}]'.format(key_path)
+
+  # Lowercase name since this is used inside the python console shell.
+  @magic.line_magic
+  def pwd(self, dummy_line):
+    """Print the current path."""
+    if not IsLoaded():
+      return
+
+    print RegCache.cur_key.path
+
+  # Lowercase name since this is used inside the python console shell.
+  @magic.line_magic
+  def ls(self, line):
+    """List all subkeys and values of the current key."""
+    if not IsLoaded():
+      return
+
+    if 'true' in line.lower():
+      verbose = True
+    else:
+      verbose = False
+
+    sub = []
+    for key in RegCache.cur_key.GetSubkeys():
+      sub.append((u'{0:>10s}  {1:s}'.format('[KEY]', key.name), True))
+
+    for value in RegCache.cur_key.GetValues():
+      if not verbose:
+        sub.append((u'{0:>10s}]  {1:s}'.format(
+            '[' + value.data_type_string, value.name), False))
+      else:
+        if value.DataIsString():
+          value_string = u'{0:s}'.format(value.data)
+        elif value.DataIsInteger():
+          value_string = u'{0:d}'.format(value.data)
+        elif value.DataIsMultiString():
+          value_string = u'{0:s}'.format( u''.join(value.data))
+        else:
+          value_string = u''
+
+        sub.append((u'{0:>10s}]  {1:<25s}  {2:s}'.format(
+            '[' + value.data_type_string, value.name, value_string), False))
+
+    for entry, subkey in sorted(sub):
+      if subkey:
+        print u'dr-xr-xr-x {}'.format(entry)
+      else:
+        print u'-r-xr-xr-x {}'.format(entry)
 
 
 def StripCurlyBrace(string):
@@ -220,7 +318,6 @@ def IsLoaded():
     return True
 
   if RegCache.GetHiveName() != 'N/A':
-    cd('\\')
     return True
 
   print 'No hive loaded, cannot complete action. Use OpenHive to load a hive.'
@@ -245,33 +342,25 @@ def OpenHive(filename, collector=None, codepage='cp1252'):
   RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
 
 
+def PrintEventHeader(event_object):
+  """Print event header."""
+  event_formatter = RegistryPluginHeader()
+
+  msg, _ = event_formatter.GetMessages(event_object)
+
+  print msg
+
+
 def PrintEvent(event_object, show_hex=False):
   """Print information from an extracted EventObject."""
-  fmt_length = 15
-  for attribute in event_object.regvalue:
-    if len(attribute) > fmt_length:
-      fmt_length = len(attribute)
-
-  fmt = u'{:>%ds} : {}' % fmt_length
-  print utils.FormatHeader('Standard Attributes', '-')
-  print fmt.format(
-      'timestamp',
-      timelib.Timestamp.CopyToIsoFormat(event_object.timestamp, pytz.utc))
-
-  for attribute, value in event_object.GetValues().items():
-    if attribute in ('timestamp', 'regvalue'):
-      continue
-    print fmt.format(attribute, value)
-
-  print utils.FormatHeader('Attributes', '-')
-  for attribute, value in event_object.regvalue.items():
-    print fmt.format(attribute, value)
-
   if show_hex:
-    # pylint: disable-msg=W0212
-    event_object.pathspec = RegCache.hive.file_object.pathspec
-    print utils.FormatHeader('Hex Output From Event.', '-')
-    print putils.GetEventData(event_object, RegCache.fscache)
+    event_formatter = RegistryHexFormatter()
+  else:
+    event_formatter = RegistryFormatter()
+
+  msg, _ = event_formatter.GetMessages(event_object)
+
+  print msg
 
 
 def ParseHive(hive_path, collectors, keys, use_plugins, verbose):
@@ -376,7 +465,11 @@ def ParseKey(key, verbose=False, use_plugins=None):
       call_back = plugin.Process(key)
       if call_back:
         print u'{:^80}'.format(' ** Plugin : %s **' % plugin.plugin_name)
+        first = True
         for event_object in call_back:
+          if first:
+            PrintEventHeader(event_object)
+            first = False
           PrintEvent(event_object, verbose)
         print ''
 
@@ -660,15 +753,17 @@ def Main():
     banners.append('Some of the commands that are available for use are:')
     banners.append('')
     banners.append(utils.FormatOutputString(
-        'cd(key)', 'Navigate the registry like a directory structure.',
+        'cd key', 'Navigate the registry like a directory structure.',
         function_name_length))
     banners.append(utils.FormatOutputString(
-        'ls(verbose)', ('List all subkeys and values of a registry key. If '
-                        'verbose is True then values of keys will be included'
-                        ' in the output.'),
+        'ls', ('List all subkeys and values of a registry key. If called as '
+               'ls True then values of keys will be included in the output.'),
         function_name_length))
     banners.append(utils.FormatOutputString(
-        'parse(verbose)', 'Parse the current key using all plugins.',
+        'parse', 'Parse the current key using all plugins.',
+        function_name_length))
+    banners.append(utils.FormatOutputString(
+        'pwd', 'Print the working "directory" or the path of the current key.',
         function_name_length))
 
     banners.append('')
@@ -708,6 +803,7 @@ def Main():
     ipshell = InteractiveShellEmbed(
         user_ns=namespace, banner1=u'\n'.join(banners), exit_msg='')
     ipshell.confirm_exit = False
+    ipshell.register_magics(MyMagics)
     ipshell()
     sys.exit(0)
 
