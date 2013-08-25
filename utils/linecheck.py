@@ -64,7 +64,7 @@ if __name__ == '__main__':
                  're top level function declaration.') % line_counter
           error_counter += 1
 
-      if line != '\n' and not line.startswith('#'):
+      if line != '\n' and not (line.startswith('#') or line.startswith('@')):
         empty_line = 0
 
       if len(line) > 81:
