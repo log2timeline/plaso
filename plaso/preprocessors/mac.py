@@ -24,7 +24,7 @@ class OSXBuild(preprocess.MacXMLPlistPreprocess):
   ATTRIBUTE = 'build'
   PLIST_PATH = '/System/Library/CoreServices/SystemVersion.plist'
 
-  PLIST_KEY = 'ProductUserVisibleVersion'
+  PLIST_KEYS = ['ProductUserVisibleVersion']
 
 
 class OSXHostname(preprocess.MacXMLPlistPreprocess):
@@ -33,7 +33,7 @@ class OSXHostname(preprocess.MacXMLPlistPreprocess):
   ATTRIBUTE = 'hostname'
   PLIST_PATH = '/Library/Preferences/SystemConfiguration/preferences.plist'
 
-  PLIST_KEY = 'ComputerName'
+  PLIST_KEYS = ['ComputerName', 'LocalHostName']
 
 
 class OSXKeyboard(preprocess.MacPlistPreprocess):
@@ -42,11 +42,11 @@ class OSXKeyboard(preprocess.MacPlistPreprocess):
   ATTRIBUTE = 'keyboard_layout'
   PLIST_PATH = '/Library/Preferences/com.apple.HIToolbox.plist'
 
-  PLIST_KEY = 'AppleCurrentKeyboardLayoutInputSourceID'
+  PLIST_KEYS = ['AppleCurrentKeyboardLayoutInputSourceID']
 
-  def ParseKey(self, key):
+  def ParseKey(self, key, key_name):
     """Return the key value."""
-    value = super(OSXKeyboard, self).ParseKey(key)
+    value = super(OSXKeyboard, self).ParseKey(key, key_name)
     _, _, ret = value.rpartition('.')
 
     return ret
