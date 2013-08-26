@@ -205,8 +205,10 @@ class MacPlistPreprocess(PreprocessPlugin):
   # in previous preprocessors.
   PLIST_PATH = ''
 
-  # The key that's value should be returned back.
-  PLIST_KEY = ''
+  # The key that's value should be returned back. It is an ordered list
+  # of preference. If the first value is found it will be returned and no
+  # others will be searched.
+  PLIST_KEYS = ['']
 
   def GetValue(self):
     """Return the value gathered from a plist file for preprocessing."""
@@ -244,18 +246,25 @@ class MacPlistPreprocess(PreprocessPlugin):
           u'File is not a plist:{}'.format(utils.GetUnicodeString(
               filehandle.display_name)))
 
-    match = plist_interface.GetKeys(
-        top_level_object, frozenset([self.PLIST_KEY]))
+    match = None
+    key_name = ''
+    for plist_key in self.PLIST_KEYS:
+      match = plist_interface.GetKeys(
+          top_level_object, frozenset([plist_key]))
+      if match:
+        key_name = plist_key
+        break
 
     if not match:
       raise errors.PreProcessFail(
-          u'No plist keys found, trying to locate: {}'.format(self.PLIST_KEY))
+          u'No plist keys found, trying to locate: {}'.format(','.join(
+              self.PLIST_KEYS)))
 
-    return self.ParseKey(match)
+    return self.ParseKey(match, key_name)
 
-  def ParseKey(self, key):
-    """Fetch the first key as defined in the PLIST_KEY and return value."""
-    value = key.get(self.PLIST_KEY, None)
+  def ParseKey(self, key, key_name):
+    """Fetch the first discovered key from PLIST_KEYS and return value."""
+    value = key.get(key_name, None)
     if not value:
       raise errors.PreProcessFail('Value not found.')
 
@@ -276,21 +285,29 @@ class MacXMLPlistPreprocess(MacPlistPreprocess):
     except IOError:
       raise errors.PreProcessFail(u'File is not a XML file.')
 
-    match = self._GetKeys(xml.getroot())
+    xml_root = xml.getroot()
+    key_name = ''
+    match = None
+    for key in self.PLIST_KEYS:
+      match = self._GetKeys(xml_root, key)
+      if match:
+        key_name = key
+        break
 
     if not match:
       raise errors.PreProcessFail(
-          u'Keys not found inside plist file [{}].'.format(self.PLIST_KEY))
+          u'Keys not found inside plist file [{}].'.format(
+              ','.join(self.PLIST_KEYS)))
 
-    return self.ParseKey(match)
+    return self.ParseKey(match, key_name)
 
-  def _GetKeys(self, xml_root):
+  def _GetKeys(self, xml_root, key_name):
     """Return a dict with the requested keys."""
     match = {}
 
     generator = xml_root.iter()
     for key in generator:
-      if 'key' in key.tag and self.PLIST_KEY in key.text:
+      if 'key' in key.tag and key_name in key.text:
         value_key = generator.next()
         value = ''
         for subkey in value_key.iter():

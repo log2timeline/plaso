@@ -65,15 +65,14 @@ def DownloadPatchSet(cl_number):
 
   patch_data = patch_object.read()
   patch_file_name = ''
-  with tempfile.NamedTemporaryFile(delete=False) as patch_file:
-    patch_file.write(patch_data)
-    patch_file_name = patch_file.name
+  with tempfile.NamedTemporaryFile(delete=False) as patch_file_object:
+    patch_file_object.write(patch_data)
+    patch_file_name = patch_file_object.name
 
   return patch_file_name
 
 
 if __name__ == '__main__':
-  """Do all the magic."""
   if len(sys.argv) != 2:
     print 'Need to provide a CL number.'
     sys.exit(1)
@@ -108,7 +107,7 @@ if __name__ == '__main__':
     os.system('git add {}'.format(git_to_add))
 
   print 'Files added to git branch'
-  os.system('git commit -a "Committing CL to branch')
+  os.system('git commit -a "Committing CL to branch"')
 
   os.remove(patch_file)
 
