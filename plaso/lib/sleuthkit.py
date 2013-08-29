@@ -19,7 +19,9 @@
 This class provides a method to create a filehandle from an image file
 that is readable by TSK (Sleuthkit) and use like an ordinary file in Python.
 """
+
 import logging
+import platform
 import pytsk3
 
 
@@ -63,9 +65,14 @@ class TSKFile(object):
     self.inode = inode
     self.fs = filesystem
 
-    # We prefer opening up a file by it's inode number.
+    # We prefer opening up a file by it's inode number since its faster.
     if inode:
       self.fileobj = self.fs.open_meta(inode=inode)
+    # Ignore a leading path separator: \ on Windows.
+    # This prevents the cannot access \$MFT issue.
+    # TODO: this is a workaround for now and needs to be fixed in pyvfs.
+    elif platform.system() == 'Windows' and path.startswith('\\'):
+      self.fileobj = self.fs.open(path[1:])
     else:
       self.fileobj = self.fs.open(path)
 
