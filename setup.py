@@ -52,6 +52,8 @@ def GetToolsFrom(path):
     for filename in filenames:
       if '_test' in filename:
         continue
+      if 'presets.py' in filename:
+        continue
       if '.py' in filename and filename != '__init__.py':
         if os.path.isfile(os.path.join(path, filename)):
           data.append(os.path.join(path, filename))

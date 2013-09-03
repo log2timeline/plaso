@@ -99,10 +99,10 @@ class FileSaver(object):
     """Take a filehandle and an export path and save the file."""
     directory = ''
     filename = ''
-    if '/' in fh.name:
-      directory_string, _, filename = fh.name.rpartition('/')
+    if os.sep in fh.name:
+      directory_string, _, filename = fh.name.rpartition(os.sep)
       if directory_string:
-        directory = os.path.join(export_path, *directory_string.split('/'))
+        directory = os.path.join(export_path, *directory_string.split(os.sep))
     else:
       filename = fh.name
 
@@ -110,6 +110,9 @@ class FileSaver(object):
       extracted_filename = '{}_{}'.format(cls.prefix, filename)
     else:
       extracted_filename = filename
+
+    while extracted_filename.startswith(os.sep):
+      extracted_filename = extracted_filename[1:]
 
     if directory:
       if not os.path.isdir(directory):
@@ -131,7 +134,11 @@ class FileSaver(object):
         cls.md5_dict[inode] = [md5sum]
 
     if save_file:
-      putils.Pfile2File(fh, os.path.join(directory, extracted_filename))
+      try:
+        putils.Pfile2File(fh, os.path.join(directory, extracted_filename))
+      except IOError as e:
+        logging.error(u'Unable to save file: {} [skipping]. Error {}'.format(
+            fh.name, e))
 
 
 def CalculateHash(file_object):
@@ -274,7 +281,7 @@ def Main():
   if not os.path.isfile(options.image):
     raise RuntimeError('Unable to proceed, image file does not exist.')
 
-  if not (options.filter and options.extension_string):
+  if not (options.filter or options.extension_string):
     raise RuntimeError('Neither extension string nor filter defined.')
 
   if options.filter:
