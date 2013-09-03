@@ -61,7 +61,7 @@ class DynamicTest(unittest.TestCase):
     formatter = dynamic.Dynamic(None, output)
     correct_line = (
         'datetime,timestamp_desc,source,source_long,message,parser,'
-        'display_name,store_number,store_index\n')
+        'display_name,tag,store_number,store_index\n')
 
     formatter.Start()
     self.assertEquals(output.getvalue(), correct_line)
