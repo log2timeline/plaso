@@ -64,10 +64,10 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       WORD.setResultsName('path'))
 
   # Define the available log line structures.
-  LINE_STRUCTURES = {
-      'comment': text_parser.PyparsingConstants.COMMENT_LINE_HASH,
-      'logline': LOG_LINE,
-  }
+  LINE_STRUCTURES = [
+      ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
+      ('logline', LOG_LINE),
+  ]
 
   DATA_TYPE = 'windows:firewall:log_entry'
 
