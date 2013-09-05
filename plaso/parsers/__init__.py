@@ -37,6 +37,7 @@ from plaso.parsers import syslog
 from plaso.parsers import symantec
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
+from plaso.parsers import winfirewall
 from plaso.parsers import winlnk
 from plaso.parsers import winprefetch
 from plaso.parsers import winreg
