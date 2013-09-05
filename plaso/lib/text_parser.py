@@ -31,11 +31,17 @@ from plaso.lib import parser
 from plaso.lib import timelib
 from plaso.lib import utils
 
+import pyparsing
 import pytz
 
 
 class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
   """Generic text based parser that uses lexer to assist with parsing.
+
+  This text parser is based on a rather slow lexer, which makes the
+  use of this interface highly discouraged. Parsers that already
+  implement it will most likely all be rewritten to support faster
+  text parsing implementations.
 
   This text based parser needs to be extended to provide an accurate
   list of tokens that define the structure of the log file that the
@@ -53,7 +59,7 @@ class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
       ]
 
   def __init__(self, pre_obj, local_zone=True):
-    """Constructor for the TextParser.
+    """Constructor for the SlowLexicalTextParser.
 
     Args:
       pre_obj: A PlasoPreprocess object that may contain information gathered
@@ -139,10 +145,6 @@ class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
              by the lexer.
     """
     self.attributes['iyear'] = int(match.group(1))
-
-  def Scan(self, filehandle):
-    """Not implemented."""
-    pass
 
   def Parse(self, filehandle):
     """Try to parse each line in the file."""
@@ -342,10 +344,6 @@ class TextCSVParser(parser.PlasoParser):
     event_object.row_dict = row
     return event_object
 
-  def Scan(self, filehandle):
-    """Not implemented."""
-    pass
-
   def Parse(self, filehandle):
     """A generator that returns extracted EventObjects from the log file."""
     self.entry_offset = 0
@@ -399,3 +397,213 @@ class TextCSVParser(parser.PlasoParser):
 
     self.entry_offset += len(self.VALUE_SEPARATOR.join(row.values())) + 1
 
+
+def PyParseRangeCheck(lower_bound, upper_bound):
+  """Verify that a number is within a defined range.
+
+  This is a callback method for pyparsing setParseAction
+  that verifies that a read number is within a certain range.
+
+  To use this method it needs to be defined as a callback method
+  in setParseAction with the upper and lower bound set as parameters.
+
+  Args:
+    lower_bound: An integer representing the lower bound of the range.
+    upper_bound: An integer representing the upper bound of the range.
+
+  Returns:
+    A callback method that can be used by pyparsing setParseAction.
+  """
+  def CheckRange(dummy_string, dummy_location, tokens):
+    """Parse the arguments."""
+    try:
+      check_number = tokens[0]
+    except IndexError:
+      check_number = -1
+    if check_number < lower_bound:
+      raise pyparsing.ParseException('Value [{}] is lower than {}'.format(
+          check_number, lower_bound))
+    if check_number > upper_bound:
+      raise pyparsing.ParseException('Value [{}] is higher than {}'.format(
+          check_number, upper_bound))
+
+  # Since callback methods for pyparsing need to accept certain parameters
+  # and there is no way to define conditions, like upper and lower bounds
+  # we need to return here a method that accepts those pyparsing parameters.
+  return CheckRange
+
+
+def PyParseIntCast(dummy_string, dummy_location, tokens):
+  """Return an integer from a string.
+
+  This is a pyparsing callback method that converts the matched
+  string into an integer.
+
+  The method modifies the content of the tokens list and converts
+  them all to an integer value.
+
+  Args:
+    dummy_string: The original parsed string.
+    dummy_location: The location within the string where the match was made.
+    tokens: A list of extracted tokens (where the string to be converted is
+    stored).
+  """
+  for index, token in enumerate(tokens):
+    try:
+      tokens[index] = int(token)
+    except ValueError:
+      logging.error(u'Unable to cast [{}] to an int, returning -1'.format(
+          token))
+      tokens[index] = 0
+
+
+def PyParseJoinList(dummy_string, dummy_location, tokens):
+  """Return a joined token from a list of tokens.
+
+  This is a callback method for pyparsing setParseAction that modifies
+  the returned token list to join all the elements in the list to a single
+  token.
+
+  Args:
+    dummy_string: The original parsed string.
+    dummy_location: The location within the string where the match was made.
+    tokens: A list of extracted tokens. This is the list that should be joined
+    together and stored as a single token.
+  """
+  join_list = []
+  for token in tokens:
+    try:
+      join_list.append(str(token))
+    except UnicodeDecodeError:
+      join_list.append(repr(token))
+
+  tokens[0] = u''.join(join_list)
+  del tokens[1:]
+
+
+class PyparsingConstants(object):
+  """A class that maintains constants for pyparsing."""
+
+  # Numbers.
+  INTEGER = pyparsing.Word(pyparsing.nums)
+  IPV4_OCTET = pyparsing.Word(pyparsing.nums, min=1, max=3).setParseAction(
+      PyParseIntCast, PyParseRangeCheck(0, 255))
+  IPV4_ADDRESS = (IPV4_OCTET + ('.' + IPV4_OCTET) * 3).setParseAction(
+      PyParseJoinList)
+
+  # TODO: Fix the IPv6 address specification to be more accurate (8 :, correct
+  # size, etc).
+  IPV6_ADDRESS = pyparsing.Word(':' + pyparsing.hexnums).setParseAction(
+      PyParseJoinList)
+
+  # Common words.
+  MONTH = pyparsing.Word(
+      pyparsing.string.uppercase, pyparsing.string.lowercase,
+      exact=3)
+
+  COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
+      pyparsing.LineEnd())
+  # TODO: Add more commonly used structs that can be used by parsers.
+
+
+class PyparsingSingleLineTextParser(parser.PlasoParser):
+  """Single line text parser based on the pyparsing library."""
+  __abstract = True
+
+  # The actual structure, this needs to be defined by each parser.
+  # This is defined as a dict so that more then a single line structure can
+  # be defined. That way the parser can support more than a single type of log
+  # entry, despite them all having in common the constraint that each log entry
+  # is a single line.
+  # The key is a comment or an identification that is passed to the ParseRecord
+  # function so that the developer can identify which structure got parsed.
+  # The value is the actual pyparsing structure.
+  LINE_STRUCTURES = {}
+
+  # In order for the tool to not read too much data into a buffer to evaluate
+  # whether or not the parser is the right one for this file or not we
+  # specifically define a maximum amount of bytes a single line can occupy. This
+  # constant can be overwritten by implementations if their format might have a
+  # longer line than 400 bytes.
+  MAX_LINE_LENGTH = 400
+
+  @abc.abstractmethod
+  def VerifyStructure(self, line):
+    """Verify the structure of the file and return boolean based on that check.
+
+    This function should read enough text from the text file to confirm
+    that the file is the correct one for this particular parser.
+
+    Args:
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
+    if not line:
+      return False
+
+    return False
+
+  @abc.abstractmethod
+  def ParseRecord(self, key, structure):
+    """Parse a single extracted pyparsing structure.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
+
+    Args:
+      key: An identification string indicating the name of the parsed
+      structure.
+      structure: A pyparsing.ParseResults object from a line in the
+      log file.
+
+    Returns:
+      An EventObject if one can be extracted from the structure, otherwise
+      None.
+    """
+    pass
+
+  def Parse(self, filehandle):
+    """Parse a text file using a pyparsing definition."""
+    if not self.LINE_STRUCTURES:
+      raise errors.UnableToParseFile(
+          u'Line structure undeclared, unable to proceed.')
+
+    filehandle.seek(0)
+
+    line = filehandle.readline(self.MAX_LINE_LENGTH).strip()
+    if len(line) == self.MAX_LINE_LENGTH or len(
+        line) == self.MAX_LINE_LENGTH - 1:
+      logging.warning((
+          u'Trying to read a line and reached the maximum allowed length of '
+          '{}. The last few bytes of the line are: {} [parser {}]').format(
+              self.MAX_LINE_LENGTH, repr(line[-10:]), self.parser_name))
+    if not utils.IsText(line):
+      raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
+
+    if not self.VerifyStructure(line):
+      raise errors.UnableToParseFile('Wrong file structure.')
+
+    # Read every line in the text file.
+    while line:
+      parsed_structure = None
+      use_key = None
+      # Try to parse the line using all the line structures.
+      for key, structure in self.LINE_STRUCTURES.items():
+        try:
+          parsed_structure = structure.parseString(line)
+        except pyparsing.ParseException:
+          pass
+        if parsed_structure:
+          use_key = key
+          break
+
+      if parsed_structure:
+        parsed_event = self.ParseRecord(use_key, parsed_structure)
+        if parsed_event:
+          yield parsed_event
+      else:
+        logging.warning(u'Unable to parse log line: {}'.format(line))
+
+      line = filehandle.readline().strip()

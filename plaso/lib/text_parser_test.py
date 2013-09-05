@@ -16,7 +16,6 @@
 # limitations under the License.
 """This file contains the tests for the generic text parser."""
 
-import pytz
 import unittest
 
 from plaso.lib import errors
@@ -25,6 +24,9 @@ from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 from plaso.lib import text_parser
+
+import pyparsing
+import pytz
 
 
 class EmtpyObject(object):
@@ -211,6 +213,56 @@ class TextParserTest(unittest.TestCase):
     self.assertEquals(msg2, 'second line.')
     self.assertEquals(second_entry.hostname, 'myhost')
     self.assertEquals(second_entry.username, 'myuser')
+
+
+class PyParserTest(unittest.TestCase):
+  """Few unit tests for the pyparsing unit."""
+
+  def testPyConstantIPv4(self):
+    """Run few tests to make sure the constants are working."""
+    self.assertTrue(self._CheckIPv4('123.51.234.52'))
+    self.assertTrue(self._CheckIPv4('255.254.23.1'))
+    self.assertTrue(self._CheckIPv4('1.1.34.2'))
+    self.assertFalse(self._CheckIPv4('1.1.34.258'))
+    self.assertFalse(self._CheckIPv4('a.1.34.258'))
+    self.assertFalse(self._CheckIPv4('.34.258'))
+    self.assertFalse(self._CheckIPv4('34.258'))
+    self.assertFalse(self._CheckIPv4('10.52.34.258'))
+
+  def testPyConstantOctet(self):
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString('526')
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString('1026')
+
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString(
+          'a9', parseAll=True)
+
+  def testPyConstantOthers(self):
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.MONTH.parseString('MMo')
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.MONTH.parseString('M')
+    with self.assertRaises(pyparsing.ParseException):
+      text_parser.PyparsingConstants.MONTH.parseString('March', parseAll=True)
+
+    self.assertTrue(text_parser.PyparsingConstants.MONTH.parseString('Jan'))
+
+    line = '# This is a comment.'
+    parsed_line = text_parser.PyparsingConstants.COMMENT_LINE_HASH.parseString(
+        line)
+    self.assertEquals(parsed_line[-1], 'This is a comment.')
+    self.assertEquals(len(parsed_line), 2)
+
+  def _CheckIPv4(self, ip_address):
+    # TODO: Add a similar IPv6 check.
+    try:
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(ip_address)
+      return True
+    except pyparsing.ParseException:
+      return False
 
 
 if __name__ == '__main__':
