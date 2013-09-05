@@ -511,14 +511,16 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
   __abstract = True
 
   # The actual structure, this needs to be defined by each parser.
-  # This is defined as a dict so that more then a single line structure can
-  # be defined. That way the parser can support more than a single type of log
-  # entry, despite them all having in common the constraint that each log entry
-  # is a single line.
+  # This is defined as a list of tuples so that more then a single line
+  # structure can be defined. That way the parser can support more than a
+  # single type of log entry, despite them all having in common the constraint
+  # that each log entry is a single line.
+  # The tuple should have two entries, a key and a structure. This is done to
+  # keep the structures in an order of priority/preference.
   # The key is a comment or an identification that is passed to the ParseRecord
   # function so that the developer can identify which structure got parsed.
   # The value is the actual pyparsing structure.
-  LINE_STRUCTURES = {}
+  LINE_STRUCTURES = []
 
   # In order for the tool to not read too much data into a buffer to evaluate
   # whether or not the parser is the right one for this file or not we
@@ -590,7 +592,7 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
-      for key, structure in self.LINE_STRUCTURES.items():
+      for key, structure in self.LINE_STRUCTURES:
         try:
           parsed_structure = structure.parseString(line)
         except pyparsing.ParseException:
