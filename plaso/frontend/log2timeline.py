@@ -21,6 +21,7 @@ import logging
 import multiprocessing
 import os
 import sys
+import time
 
 from plaso.lib import errors
 from plaso.lib import engine
@@ -154,6 +155,16 @@ def Main():
 
   # Properly prepare the attributes according to local encoding.
   preferred_encoding = locale.getpreferredencoding()
+  if preferred_encoding.lower() == 'ascii':
+    logging.warning(
+        u'The preferred encoding of your system is ASCII, which is not optimal '
+        u'for the typically non-ASCII characters that need to be parsed and '
+        u'processed. The tool will most likely crash and die, perhaps in a way '
+        u'that may not be recoverable. A five second delay is introduced to '
+        'give you time to cancel the runtime and reconfigure your preferred '
+        'encoding, otherwise continue at own risk.')
+    time.sleep(5)
+
   u_argv = [x.decode(preferred_encoding) for x in sys.argv]
   sys.argv = u_argv
   options = arg_parser.parse_args()

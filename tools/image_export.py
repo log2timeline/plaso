@@ -85,6 +85,10 @@ def ExtractFiles(
 
   for pathspec_string in col_fil.GetPathSpecs():
     with pfile.OpenPFile(pathspec_string, fscache=fscache) as fh:
+      # There will be issues on systems that use a different separator than a
+      # forward slash. However a forward slash is always used in the pathspec.
+      if os.sep != '/':
+        fh.name = fh.name.replace('/', os.sep)
       FileSaver.SaveFile(fh, export_path)
 
 

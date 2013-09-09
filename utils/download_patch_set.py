@@ -102,10 +102,7 @@ if __name__ == '__main__':
     if git_line.startswith('??'):
       git_to_add.append(git_line[3:-1])
 
-  print git_to_add
-  for file_to_add in git_to_add:
-    os.system('git add {}'.format(git_to_add))
-
+  os.system('git add -A')
   print 'Files added to git branch'
   os.system('git commit -a "Committing CL to branch"')
 
