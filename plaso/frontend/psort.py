@@ -24,19 +24,19 @@ See additional details here: http://plaso.kiddaland.net/usage/psort
 import argparse
 import collections
 import datetime
+import time
 import os
 import locale
 import logging
 import pdb
 import sys
 
-from plaso import filters   # pylint: disable-msg=W0611
+from plaso import filters
 from plaso import formatters   # pylint: disable-msg=W0611
 from plaso import output   # pylint: disable-msg=W0611
 
 from plaso.lib import engine
 from plaso.lib import event
-from plaso.lib import filter_interface
 from plaso.lib import output as output_lib
 from plaso.lib import storage
 from plaso.lib import utils
@@ -112,7 +112,7 @@ def ParseStorage(my_args):
   filter_use = None
   counter = None
   if my_args.filter:
-    filter_use = filter_interface.GetFilter(my_args.filter)
+    filter_use = filters.GetFilter(my_args.filter)
     if not filter_use:
       logging.error(
           u'No filter found for the filter expression: {}'.format(
@@ -260,6 +260,15 @@ def Main():
 
   # Add local encoding settings.
   my_args.preferred_encoding = locale.getpreferredencoding()
+  if my_args.preferred_encoding.lower() == 'ascii':
+    logging.warning(
+        u'The preferred encoding of your system is ASCII, which is not optimal '
+        u'for the typically non-ASCII characters that need to be parsed and '
+        u'processed. The tool will most likely crash and die, perhaps in a way '
+        u'that may not be recoverable. A five second delay is introduced to '
+        'give you time to cancel the runtime and reconfigure your preferred '
+        'encoding, otherwise continue at own risk.')
+    time.sleep(5)
 
   try:
     counter = ParseStorage(my_args)

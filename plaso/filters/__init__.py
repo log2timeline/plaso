@@ -15,7 +15,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains an import statement for each filter."""
+import logging
 
 from plaso.filters import dynamic_filter
 from plaso.filters import eventfilter
 from plaso.filters import filterlist
+
+from plaso.lib import filter_interface
+from plaso.lib import errors
+
+
+def ListFilters():
+  """Generate a list of all available filters."""
+  filters = []
+  for cl in filter_interface.FilterObject.classes:
+    filters.append(filter_interface.FilterObject.classes[cl]())
+
+  return filters
+
+
+def GetFilter(filter_string):
+  """Evaluate filters against a filter string and return the first match."""
+  for filter_obj in ListFilters():
+    try:
+      filter_obj.CompileFilter(filter_string)
+      return filter_obj
+    except errors.WrongPlugin:
+      logging.debug(u'Filterstring [{}] is not a filter: {}'.format(
+          filter_string, filter_obj.filter_name))
