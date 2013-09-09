@@ -58,14 +58,14 @@ import os
 import pickle
 import sys
 
-from plaso import filters   # pylint: disable-msg=W0611
+from plaso import filters
 
 from plaso.lib import event
-from plaso.lib import filter_interface
 from plaso.lib import output as output_lib
 from plaso.lib import preprocess
 from plaso.lib import storage
 
+# pylint: disable-msg=W0611
 from plaso.output import pstorage
 
 from docopt import docopt
@@ -155,7 +155,7 @@ def ParseTaggingFile(tag_input):
       else:
         if not current_tag:
           continue
-        compiled_filter = filter_interface.GetFilter(line_strip)
+        compiled_filter = filters.GetFilter(line_strip)
         if compiled_filter:
           if compiled_filter not in tags[current_tag]:
             tags[current_tag].append(compiled_filter)
@@ -398,7 +398,7 @@ class ClusteringEngine:
     return hash(ClusteringEngine.PreHash(field_name, attribute)) % vector_size
 
   @staticmethod
-  def EventRepresentation(event_object, ignore, frequent_words=[]):
+  def EventRepresentation(event_object, ignore, frequent_words=None):
     """Constructs a consistent representation of an event_object.
 
     Returns a dict representing our view of an event_object, stripping out
@@ -412,6 +412,9 @@ class ClusteringEngine:
       ignore: a list or set of event_object attributes to ignore.
       frequent_words: (optional) whitelist of attributes not to ignore.
     """
+    if not frequent_words:
+      frequent_words = []
+
     event_field_names = event_object.GetAttributes().difference(ignore)
     representation = {}
     for field_name in event_field_names:
@@ -435,7 +438,7 @@ class ClusteringEngine:
           representation[field_name] = attribute
     return representation
 
-  def EventObjectRepresentationGenerator(self, filename, frequent_words=[]):
+  def EventObjectRepresentationGenerator(self, filename, frequent_words=None):
     """Yields event_representations.
 
     Yields event_representations from a plaso store. Essentially it simply wraps
@@ -476,7 +479,7 @@ class ClusteringEngine:
     else:
       with SetupStorage(dump_filename) as store:
         total_events = store.GetNumberOfEvents()
-        events_per_dot = operator.floordiv(total_events, 80);
+        events_per_dot = operator.floordiv(total_events, 80)
         formatter_cls = output_lib.GetOutputFormatter('Pstorage')
         store_dedup = open(nodup_filename, 'wb')
         formatter = formatter_cls(store, store_dedup)
@@ -530,7 +533,7 @@ class ClusteringEngine:
       sys.stdout.write('\n')
     return vector
 
-  def FindFrequentWords(self, nodup_filename, threshold, vector=[]):
+  def FindFrequentWords(self, nodup_filename, threshold, vector=None):
     """Constructs a list of attributes which appear "often".
 
     This goes through a plaso store, and finds all name-attribute pairs which
@@ -543,6 +546,9 @@ class ClusteringEngine:
       threshold: the support threshold value.
       vector: (optional) vector of hash tallies.
     """
+    if not vector:
+      vector = []
+
     sys.stdout.write('Constructing 1-dense clusters... \n')
     sys.stdout.flush()
     frequent_filename = '.{}_freq_{}'.format(self.plaso_hash,

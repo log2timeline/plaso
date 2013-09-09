@@ -529,6 +529,20 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
   # longer line than 400 bytes.
   MAX_LINE_LENGTH = 400
 
+  # Define an encoding. If a file is encoded using specific encoding it is
+  # advised to include it here. If this class constant is set all lines wil be
+  # decoded prior to being sent to parsing by pyparsing, if not properly set it
+  # could negatively affect parsing of the file.
+  # If this value needs to be calculated on the fly (not a fixed constant for
+  # this particular file type) it can be done by modifying the self.encoding
+  # attribute.
+  ENCODING = ''
+
+  def __init__(self, pre_obj):
+    """A constructor for the pyparsing assistant."""
+    super(PyparsingSingleLineTextParser, self).__init__(pre_obj)
+    self.encoding = self.ENCODING
+
   @abc.abstractmethod
   def VerifyStructure(self, line):
     """Verify the structure of the file and return boolean based on that check.
@@ -566,6 +580,25 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     """
     pass
 
+  def _ReadLine(self, filehandle, max_len=0):
+    """Read a single line from a text file and return it back."""
+    if max_len:
+      line = filehandle.readline(max_len).strip()
+    else:
+      line = filehandle.readline().strip()
+
+    if not self.encoding:
+      return line
+
+    try:
+      decoded_line = line.decode(self.encoding)
+      return decoded_line
+    except UnicodeDecodeError:
+      logging.warning(u'Unable to decode line [{}...] using {}'.format(
+          repr(line[1:30]), self.encoding))
+      return line
+
+
   def Parse(self, filehandle):
     """Parse a text file using a pyparsing definition."""
     if not self.LINE_STRUCTURES:
@@ -574,13 +607,14 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
 
     filehandle.seek(0)
 
-    line = filehandle.readline(self.MAX_LINE_LENGTH).strip()
+    line = self._ReadLine(filehandle, self.MAX_LINE_LENGTH)
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
-      logging.warning((
+      logging.debug((
           u'Trying to read a line and reached the maximum allowed length of '
           '{}. The last few bytes of the line are: {} [parser {}]').format(
               self.MAX_LINE_LENGTH, repr(line[-10:]), self.parser_name))
+
     if not utils.IsText(line):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
@@ -608,4 +642,4 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
       else:
         logging.warning(u'Unable to parse log line: {}'.format(line))
 
-      line = filehandle.readline().strip()
+      line = self._ReadLine(filehandle)

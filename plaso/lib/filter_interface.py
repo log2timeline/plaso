@@ -16,7 +16,6 @@
 # limitations under the License.
 """A definition of the filter interface for filters in plaso."""
 import abc
-import logging
 
 from plaso.lib import errors
 from plaso.lib import registry
@@ -93,22 +92,3 @@ class FilterObject(object):
     """
     return False
 
-
-def ListFilters():
-  """Generate a list of all available filters."""
-  filters = []
-  for cl in FilterObject.classes:
-    filters.append(FilterObject.classes[cl]())
-
-  return filters
-
-
-def GetFilter(filter_string):
-  """Evaluate filters against a filter string and return the first match."""
-  for filter_obj in ListFilters():
-    try:
-      filter_obj.CompileFilter(filter_string)
-      return filter_obj
-    except errors.WrongPlugin:
-      logging.debug(u'Filterstring [{}] is not a filter: {}'.format(
-          filter_string, filter_obj.filter_name))

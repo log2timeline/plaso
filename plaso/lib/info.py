@@ -30,13 +30,16 @@ def GetPluginInformation():
   # This is not import at top since this is only required if this parameter
   # is set, otherwise these libraries get imported in their respected
   # locations.
+  # The reason why some of these libraries are imported as '_' is to make sure
+  # all appropriate parsers and plugins are registered, yet we don't need to
+  # directly call these libraries, it is enough to load them up to get them
+  # registered.
   from plaso.lib import engine
-  from plaso import filters as _
+  from plaso import filters
   from plaso import parsers as _
   from plaso import registry as _
   from plaso import output as _
   from plaso.frontend import presets
-  from plaso.lib import filter_interface
   from plaso.lib import output
   from plaso.lib import win_registry_interface
 
@@ -76,7 +79,7 @@ def GetPluginInformation():
         utils.FormatOutputString(plugin, doc_string))
 
   return_string_pieces.append(utils.FormatHeader('Filters'))
-  for filter_obj in sorted(filter_interface.ListFilters()):
+  for filter_obj in sorted(filters.ListFilters()):
     doc_string, _, _ = filter_obj.__doc__.partition('\n')
     return_string_pieces.append(
         utils.FormatOutputString(filter_obj.filter_name, doc_string))
