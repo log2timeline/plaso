@@ -488,7 +488,6 @@ class PcapEventContainer(event.EventContainer):
 
 class PcapParser(parser.PlasoParser):
   """Parses PCAP files."""
-  PARSER_TYPE = 'META'
   DATA_TYPE = 'metadata:pcap'
 
   def _ParseStream(self, stream_record):
