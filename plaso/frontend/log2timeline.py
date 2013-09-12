@@ -84,6 +84,17 @@ def Main():
           'timeline (like c:\, or host_w_c:\)'))
 
   function_group.add_argument(
+      '--parsers', dest='parsers', type=str, action='store', default='',
+      metavar='PARSER_LIST', help=(
+          'Define a list of parsers to use by the tool. This is a comma '
+          'separated list where each entry can be either a name of a parser '
+          'or a parser list. Each entry can be prepended with a minus sign '
+          'to negate the selection (not include it). The list match is an '
+          'exact match while an individual parser matching can be a glob, '
+          'as in "*reg*" would choose all parsers that have the word "reg" '
+          'somewhere in it (matching is lowercase by default).'))
+
+  function_group.add_argument(
       '-p', '--preprocess', dest='preprocess', action='store_true',
       default=False, help=(
           'Turn on pre-processing. Pre-processing is turned on by default '

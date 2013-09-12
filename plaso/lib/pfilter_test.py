@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the filters."""
-
 import unittest
 import pytz
 
@@ -24,7 +23,6 @@ from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfilter
-from plaso.lib import putils
 
 
 class Empty(object):
@@ -47,7 +45,7 @@ class PfilterFakeParser(parser.PlasoParser):
 
   DATA_TYPE = 'Weirdo:Made up Source:Last Written'
 
-  def Parse(self, unused_filehandle):
+  def Parse(self, dummy_filehandle):
     """A parse method yields a single event."""
     evt = event.EventObject()
     # 2015-11-18T01:15:43
@@ -216,39 +214,6 @@ class PFilterTest(unittest.TestCase):
         pfilter.PlasoAttributeFilterImplementation)
 
     self.assertEqual(result, matcher.Matches(obj))
-
-  def testParserFilter(self):
-    query = (
-        'source is "REG" AND message CONTAINS "is" and parser contains '
-        '"Pfilter"')
-    parsers = putils.FindAllParsers(self._pre, query)['all']
-
-    self.assertEquals(len(parsers), 3)
-
-    query = (
-        'source is "REG" and parser is not "PfilterFakeParser" and parser '
-        'contains "Pfilter"')
-    parsers = putils.FindAllParsers(self._pre, query)['all']
-    self.assertEquals(len(parsers), 2)
-
-    query = 'parser contains "fake" and date > 0'
-    parsers = putils.FindAllParsers(self._pre, query)['all']
-    self.assertEquals(len(parsers), 1)
-
-    query = ('date > 0 AND message regexp "\sW\sW" AND parser '
-             'is not "PfilterFakeParser" and parser contains "PFilter"')
-    parsers = putils.FindAllParsers(self._pre, query)['all']
-    self.assertEquals(len(parsers), 2)
-
-    query = ('(parser contains "pfilter" or date < "2015-06-12") AND '
-             'message CONTAINS "weird"')
-    parsers = putils.FindAllParsers(self._pre, query)['all']
-
-    query = ('parser contains "pfilter" and (parser contains "pfilter" or '
-             'date < "2015-06-12") AND '
-             'metadata.author CONTAINS "weird"')
-    parsers = putils.FindAllParsers(self._pre, query)['all']
-    self.assertEquals(len(parsers), 3)
 
 
 if __name__ == "__main__":
