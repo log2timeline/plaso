@@ -103,6 +103,10 @@ message PathSpec {
 
   // Define which VSS store needs to be opened (in the case of a VSS file).
   optional uint64 vss_store_number = 12;
+
+  // Define a string that is prepended in the path name, for display reasons.
+  // This can be something like "C:\" to distinguish records from other drives.
+  optional string path_prepend = 13;
 };
 
 // A PathBundle is a group of PathSpec messages, a PathSpec dict sort of speak.
