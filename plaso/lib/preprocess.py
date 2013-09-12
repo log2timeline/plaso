@@ -728,19 +728,19 @@ def GuessOS(col_obj):
   try:
     if list(col_obj.FindPaths('/(Windows|WINNT)/System32')):
       return 'Windows'
-  except errors.PathNotFound:
+  except (OSError, errors.PathNotFound):
     pass
 
   try:
     if list(col_obj.FindPaths('/System/Library')):
       return 'MacOSX'
-  except errors.PathNotFound:
+  except (OSError, errors.PathNotFound):
     pass
 
   try:
     if list(col_obj.FindPaths('/etc')):
       return 'Linux'
-  except errors.PathNotFound:
+  except (OSError, errors.PathNotFound):
     pass
 
   return 'None'
