@@ -259,33 +259,27 @@ class Engine(object):
     if not self.config.filter:
       self.config.filter = u''
 
-    prepend_filter = u''
+    parser_filter_string = u''
 
-    if hasattr(pre_obj, 'osversion'):
-      if 'windows xp' in pre_obj.osversion.lower():
-        prepend_filter = 'winxp'
-      else:
-        prepend_filter = 'win7'
+    # If no parser filter is set, let's use our best guess of the OS
+    # to build that list.
+    if not getattr(self.config, 'parsers', ''):
+      if hasattr(pre_obj, 'osversion'):
+        if 'windows xp' in pre_obj.osversion.lower():
+          parser_filter_string = 'winxp'
+        else:
+          parser_filter_string = 'win7'
 
-    if hasattr(pre_obj, 'guessed_os'):
-      if pre_obj.guessed_os == 'MacOSX':
-        prepend_filter = u'macosx'
-      elif pre_obj.guessed_os == 'Linux':
-        prepend_filter = 'linux'
+      if hasattr(pre_obj, 'guessed_os'):
+        if pre_obj.guessed_os == 'MacOSX':
+          parser_filter_string = u'macosx'
+        elif pre_obj.guessed_os == 'Linux':
+          parser_filter_string = 'linux'
 
-    if 'parser ' in self.config.filter:
-      prepend_filter = ''
-
-    if prepend_filter:
-      old_filter = self.config.filter
-      if old_filter:
-        self.config.filter = 'parser inlist "{}" and ({})'.format(
-            prepend_filter, old_filter)
-      else:
-        self.config.filter = 'parser inlist "{}"'.format(prepend_filter)
-
-      logging.info(u'Filter expression changed from "{}" to: "{}"'.format(
-          old_filter, self.config.filter))
+      if parser_filter_string:
+        self.config.parsers = parser_filter_string
+        logging.info(u'Parser filter expression changed to: {}'.format(
+            self.config.parsers))
 
     # Save some information about the run time into the pre-processing object.
     self._StoreCollectionInformation(pre_obj)
@@ -375,7 +369,7 @@ class Engine(object):
     obj.collection_information['preferred_encoding'] = getattr(
         self.config, 'preferred_encoding', None)
     obj.collection_information['time_of_run'] = time.time()
-    filter_query = getattr(self.config, 'filter', None)
+    filter_query = getattr(self.config, 'parsers', None)
     obj.collection_information['parsers'] = [
         x.parser_name for x in putils.FindAllParsers(obj, filter_query)['all']]
 
@@ -518,4 +512,3 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
 
     return collector.SimpleFileCollector(
         collection_queue, storage_queue, config.filename)
-
