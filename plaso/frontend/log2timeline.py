@@ -22,11 +22,13 @@ import multiprocessing
 import os
 import sys
 import time
+import textwrap
 
 from plaso.lib import errors
 from plaso.lib import engine
 from plaso.lib import info
 from plaso.lib import pfilter
+from plaso.lib import preprocess
 
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024
@@ -35,33 +37,69 @@ BYTES_IN_A_MIB = 1024 * 1024
 def Main():
   """Start the tool."""
   multiprocessing.freeze_support()
+  epilog = (
+      """
+      Example usage:
+
+      Run the tool against an image (full kitchen sink)
+          log2timeline.py -o 63 /cases/mycase/plaso.dump image.dd
+
+      Same as before except this time include VSS information as well.
+          log2timeline.py -o 63 --vss /cases/mycase/plaso_vss.dump image.dd
+
+      And that's how you build a timeline using log2timeline...
+      """)
+  description = (
+      """
+      log2timeline is the main frontend to the plaso backend, used to
+      collect and correlate events extracted from a filesystem.
+
+      More information can be gathered from here:
+        http://plaso.kiddaland.net/usage/log2timeline
+      """)
   arg_parser = argparse.ArgumentParser(
-      description=('log2timeline is the main frontend to the plaso backend, us'
-                   'ed to collect and correlate events extracted from the file'
-                   'system'),
-      epilog='And that\'s how you build a timeline using log2timeline.')
+      description=textwrap.dedent(description),
+      formatter_class=argparse.RawDescriptionHelpFormatter,
+      epilog=textwrap.dedent(epilog))
 
-  arg_parser.add_argument(
+  # Create few argument groups to make formatting help messages clearer.
+  info_group = arg_parser.add_argument_group('Informational Arguments')
+  function_group = arg_parser.add_argument_group('Functional Arguments')
+  deep_group = arg_parser.add_argument_group('Deep Analysis Arguments')
+  performance_group = arg_parser.add_argument_group('Performance Arguments')
+
+  function_group.add_argument(
       '-z', '--zone', dest='tzone', action='store', type=str, default='UTC',
-      help='Define the timezone of the IMAGE (not the output).')
+      help=(
+          'Define the timezone of the IMAGE (not the output). This is usually '
+          'discovered automatically by pre processing but might need to be '
+          'specifically set if pre processing does not properly detect or to '
+          'overwrite the detected time zone.'))
 
-  arg_parser.add_argument(
+  function_group.add_argument(
+      '-t', '--text', dest='text_prepend', action='store', type=unicode,
+      default=u'', metavar='TEXT', help=(
+          'Define a free form text string that is prepended to each path '
+          'to make it easier to distinguish one record from another in a '
+          'timeline (like c:\, or host_w_c:\)'))
+
+  function_group.add_argument(
       '-p', '--preprocess', dest='preprocess', action='store_true',
       default=False, help=(
           'Turn on pre-processing. Pre-processing is turned on by default '
           'when parsing image files, however if a mount point is being '
           'parsed then this parameter needs to be set manually.'))
 
-  arg_parser.add_argument(
+  performance_group.add_argument(
       '--buffer-size', '--bs', dest='buffer_size', action='store', default=0,
       help='The buffer size for the output (defaults to 196MiB).')
 
-  arg_parser.add_argument(
+  performance_group.add_argument(
       '--workers', dest='workers', action='store', type=int, default=0,
       help=('The number of worker threads [defaults to available system '
             'CPU\'s minus three].'))
 
-  arg_parser.add_argument(
+  function_group.add_argument(
       '-i', '--image', dest='image', action='store_true', default=False,
       help=(
           'Indicates that this is an image instead of a regular file. It is '
@@ -69,24 +107,24 @@ def Main():
           'this option is assumed. Use this when parsing an image with an '
           'offset of zero.'))
 
-  arg_parser.add_argument(
+  deep_group.add_argument(
       '--vss', dest='parse_vss', action='store_true', default=False,
       help=('Collect data from VSS. Off by default, this should be used on Wi'
             'ndows systems that have active VSS (Volume Shadow Copies) that n'
             'eed to be included in the analysis.'))
 
-  arg_parser.add_argument(
+  deep_group.add_argument(
       '--vss-stores', dest='vss_stores', action='store', type=str, default=None,
       help=('List of stores to parse, format is X..Y where X and Y are intege'
             'rs, or a list of entries separated with a comma, eg: X,Y,Z or a '
             'list of ranges and entries, eg: X,Y-Z,G,H-J.'))
 
-  arg_parser.add_argument(
+  performance_group.add_argument(
       '--single-thread', dest='single_thread', action='store_true',
       default=False,
       help='Indicate that the tool should run in a single thread.')
 
-  arg_parser.add_argument(
+  function_group.add_argument(
       '-f', '--file_filter', dest='file_filter', action='store', type=str,
       default=None, help=('List of files to include for targeted collection of'
                           ' files to parse, one line per file path, setup is '
@@ -94,18 +132,18 @@ def Main():
                           ' a variable set in the preprocessing stage or a '
                           'regular expression'))
 
-  arg_parser.add_argument(
+  deep_group.add_argument(
       '--scan-archives', dest='open_files', action='store_true', default=False,
       help=('Indicate that the tool should try to open files to extract embedd'
             'ed files within them, for instance to extract files from compress'
             'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
 
-  arg_parser.add_argument(
+  deep_group.add_argument(
       '--noscan-archives', dest='open_files', action='store_false',
       help=('Indicate that the tool should NOT try to '
             'open files to extract embedded files within them.'))
 
-  arg_parser.add_argument(
+  function_group.add_argument(
       '-o', '--offset', dest='image_offset', action='store', default=0,
       type=int, help=(
           'The sector offset to the image in sector sizes (default to 512 '
@@ -113,24 +151,24 @@ def Main():
           'If this option is used, then it is assumed we have an image '
           'file to parse, and using -i is not necessary.'))
 
-  arg_parser.add_argument(
+  function_group.add_argument(
       '--ob', '--offset_bytes', dest='image_offset_bytes', action='store',
       default=0, type=int, help='The bytes offset to the image')
 
-  arg_parser.add_argument(
+  info_group.add_argument(
       '-v', '--version', action='version',
       version='log2timeline - plaso backend %s' % engine.__version__,
       help='Show the current version of the backend.')
 
-  arg_parser.add_argument(
+  info_group.add_argument(
       '--info', dest='show_info', action='store_true', default=False,
       help='Print out information about supported plugins and parsers.')
 
-  arg_parser.add_argument(
+  function_group.add_argument(
       '--sector_size', dest='bytes_per_sector', action='store', type=int,
       default=512, help='The sector size, by default set to 512.')
 
-  arg_parser.add_argument(
+  info_group.add_argument(
       '-d', '--debug', dest='debug', action='store_true', default=False,
       help='Turn on debug information in the tool.')
 
@@ -210,6 +248,26 @@ def Main():
     sys.exit(1)
 
   options.recursive = os.path.isdir(options.filename)
+
+  # Check to see if we are trying to parse a mount point.
+  if options.recursive:
+    file_collector = preprocess.FileSystemCollector(
+        preprocess.PlasoPreprocess(), options.filename)
+    guessed_os = preprocess.GuessOS(file_collector)
+    if guessed_os != 'None':
+      logging.info((
+          u'Running against a mount point [{}]. Turning on '
+          u'pre-processing.').format(
+              guessed_os))
+      options.preprocess = True
+      logging.info(
+          u'It is highly recommended to run the tool directly against '
+          'the image, instead of parsing a mount point (you may get '
+          'inconsistence results depending on the driver you use to mount '
+          'the image. Please consider running against the raw image. A '
+          '5 second wait has been introduced to give you time to read this '
+          'over.')
+      time.sleep(5)
 
   if options.filter and not pfilter.GetMatcher(options.filter):
     logging.error(

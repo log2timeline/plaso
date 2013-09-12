@@ -405,12 +405,15 @@ class TskFile(PlasoFile):
     self.fh = sleuthkit.Open(
         self._fs, inode, self.pathspec.file_path)
 
-    self.name = self.pathspec.file_path
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
     self.size = self.fh.size
-    self.display_name = u'%s:%s' % (self.pathspec.container_path,
-                                    self.pathspec.file_path)
+    self.display_name = u'{}:{}{}'.format(
+        self.pathspec.container_path, path_prepend,
+        self.pathspec.file_path)
     if filehandle:
-      self.display_name = u'%s:%s' % (filehandle.name, self.display_name)
+      self.display_name = u'{}:{}{}'.format(
+          filehandle.name, path_prepend, self.display_name)
 
 
 class OsFile(PlasoFile):
@@ -422,10 +425,12 @@ class OsFile(PlasoFile):
     """Open the file as it is described in the PathSpec protobuf."""
     self.fh = open(self.pathspec.file_path, 'rb')
     self.name = self.pathspec.file_path
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
     if filehandle:
-      self.display_name = u'%s:%s' % (filehandle.name, self.name)
+      self.display_name = u'{}:{}{}'.format(
+          filehandle.name, path_prepend, self.name)
     else:
-      self.display_name = self.name
+      self.display_name = u'{}{}'.format(path_prepend, self.name)
 
   def readline(self, size=-1):
     """Read a line from the file.
@@ -514,12 +519,14 @@ class ZipFile(PlasoFile):
       zf = zipfile.ZipFile(path_name, 'r')
       self.inode = os.stat(path_name).st_ino
 
-    self.name = self.pathspec.file_path
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
     if filehandle:
-      self.display_name = u'%s:%s' % (filehandle.display_name,
-                                      self.pathspec.file_path)
+      self.display_name = u'{}:{}{}'.format(
+          filehandle.display_name, path_prepend, self.pathspec.file_path)
     else:
-      self.display_name = u'%s:%s' % (path_name, self.pathspec.file_path)
+      self.display_name = u'{}:{}{}'.format(
+          path_name, path_prepend, self.pathspec.file_path)
     self.offset = 0
     self.orig_fh = filehandle
     self.zipinfo = zf.getinfo(self.pathspec.file_path)
@@ -688,11 +695,13 @@ class GzipFile(PlasoFile):
       self.fh = gzip.GzipFile(filename=self.pathspec.file_path, mode='rb')
       self.inode = os.stat(self.pathspec.file_path).st_ino
 
-    self.name = self.pathspec.file_path
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
     if filehandle:
-      self.display_name = u'%s_uncompressed' % filehandle.name
+      self.display_name = u'{}{}_uncompressed'.format(
+          path_prepend, filehandle.name)
     else:
-      self.display_name = self.name
+      self.display_name = u'{}{}'.format(path_prepend, self.name)
 
     # To get the size properly calculated.
     try:
@@ -743,6 +752,7 @@ class Bz2File(PlasoFile):
 
   def Open(self, filehandle=None):
     """Open the file as it is described in the PathSpec protobuf."""
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
     if filehandle:
       self.inode = getattr(filehandle.Stat(), 'ino', 0)
       try:
@@ -750,13 +760,14 @@ class Bz2File(PlasoFile):
       except NotImplementedError:
         pass
       self.fh = bz2.BZ2File(filehandle, 'r')
-      self.display_name = u'%s:%s' % (filehandle.name, self.pathspec.file_path)
+      self.display_name = u'{}:{}{}'.format(
+          filehandle.name, path_prepend, self.pathspec.file_path)
     else:
-      self.display_name = self.pathspec.file_path
+      self.display_name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
       self.fh = bz2.BZ2File(self.pathspec.file_path, 'r')
       self.inode = os.stat(self.pathspec.file_path).st_ino
 
-    self.name = self.pathspec.file_path
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
 
 
 class TarFile(PlasoFile):
@@ -779,22 +790,25 @@ class TarFile(PlasoFile):
 
   def Open(self, filehandle=None):
     """Open the file as it is described in the PathSpec protobuf."""
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
     if filehandle:
       ft = tarfile.open(fileobj=filehandle, mode='r')
-      self.display_name = u'%s:%s' % (filehandle.name, self.pathspec.file_path)
+      self.display_name = u'{}:{}{}'.format(
+          filehandle.name, path_prepend, self.pathspec.file_path)
       self.inode = getattr(filehandle.Stat(), 'ino', 0)
     else:
-      self.display_name = u'%s:%s' % (self.pathspec.container_path,
-                                      self.pathspec.file_path)
+      self.display_name = u'{}:{}{}'.format(
+          self.pathspec.container_path, path_prepend,
+          self.pathspec.file_path)
       ft = tarfile.open(self.pathspec.container_path, 'r')
       self.inode = os.stat(self.pathspec.container_path).st_ino
 
     self.fh = ft.extractfile(self.pathspec.file_path)
     if not self.fh:
       raise IOError(
-          '[TAR] File %s empty or unable to open.' % self.pathspec.file_path)
+          u'[TAR] File %s empty or unable to open.' % self.pathspec.file_path)
     self.buffer = ''
-    self.name = self.pathspec.file_path
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
     self.size = self.fh.size
 
   def read(self, size=None):
