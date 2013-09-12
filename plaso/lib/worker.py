@@ -88,7 +88,8 @@ class PlasoWorker(object):
     self.config = config
     self._pre_obj = pre_obj
     filter_query = getattr(config, 'filter', None)
-    self._parsers = putils.FindAllParsers(pre_obj, filter_query)
+    self._parsers = putils.FindAllParsers(
+        pre_obj, getattr(config, 'parsers', ''))
     self._user_mapping = self._GetUserMapping()
 
     if hasattr(config, 'image') and config.image:

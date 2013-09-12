@@ -16,14 +16,15 @@
 # limitations under the License.
 """This file contains few methods for Plaso."""
 import binascii
+import fnmatch
 import logging
 import tempfile
 
+from plaso.frontend import presets
 from plaso.lib import event
 from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfile
-from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.lib import utils
 
@@ -154,34 +155,76 @@ def Pfile2File(fh_in, path=None):
   return path
 
 
-def FindAllParsers(pre_obj=None, filter_query=None):
+def FindAllParsers(pre_obj=None, parser_filter_string=''):
   """Find all available parser objects.
 
   A parser is defined as an object that implements the PlasoParser
   class and does not have the __abstract attribute set.
 
+  The parser_filter_string is a simple comma separated value string that
+  denotes a list of parser names to include. Each entry can have the value of:
+    + Exact match of a list of parsers, or a preset (see
+      plaso/frontend/presets.py for a full list of available presets).
+    + A name of a single parser (case insensitive), eg. msiecfparser.
+    + A glob name for a single parser, eg: '*msie*' (case insensitive).
+
+  Each entry in the list can be prepended with a minus sign to signify a
+  negative match against a parser, eg: 'winxp,-*lnk*' would select all the
+  parsers in the "winxp" preset, EXCEPT parsers that have the substring "lnk"
+  somewhere in the parser name.
+
   Args:
     pre_obj: A PlasoPreprocess object containing information collected from
-             image.
-    filter_query: A filter query.
+        an image.
+    parser_filter_string: A parser filter string, which is a comma
+        separated value containing a list of parsers to include or exclude
+        from the parser list.
 
   Returns:
-    A set of objects that implement the LogParser object.
+    A dict that contains a list of all detected parsers. The key values in the
+    dict will represent the type of the parser, eg 'all' will contain all
+    parsers, while other keys will contain a subset of them, eg: 'sqlite' will
+    contain parsers capable of parsing SQLite databases.
   """
   if not pre_obj:
     pre_obj = Options()
 
-  matcher = None
-  if filter_query:
-    matcher = pfilter.GetMatcher(filter_query)
+  # Process the filter string.
+  filter_strings_include = []
+  filter_strings_exclude = []
+  for filter_string in parser_filter_string.split(','):
+    if filter_string.startswith('-'):
+      filter_strings_use = filter_strings_exclude
+      filter_string = filter_string[1:]
+    else:
+      filter_strings_use = filter_strings_include
+
+    filter_string_lower = filter_string.lower()
+    if filter_string_lower in presets.categories:
+      for preset_parser in presets.categories.get(filter_string_lower):
+        filter_strings_use.append(preset_parser.lower())
+    else:
+      filter_strings_use.append(filter_string_lower)
 
   results = {}
   results['all'] = []
+  parser_dict = {}
   for parser_obj in _FindClasses(parser.PlasoParser, pre_obj):
-    add = True
-    if matcher:
-      obj = pfilter.MockTestFilter(filter_query, parser=parser_obj.parser_name)
-      add = matcher.Matches(obj)
+    parser_dict[parser_obj.parser_name.lower()] = parser_obj
+
+    add = False
+    if not (filter_strings_exclude or filter_strings_include):
+      add = True
+    else:
+      for include in filter_strings_include:
+        if fnmatch.fnmatch(
+            parser_obj.parser_name.lower(), include):
+          add = True
+
+      for exclude in filter_strings_exclude:
+        if fnmatch.fnmatch(
+            parser_obj.parser_name.lower(), exclude):
+          add = False
 
     if add:
       results['all'].append(parser_obj)
