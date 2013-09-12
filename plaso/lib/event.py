@@ -20,10 +20,6 @@ This file contains the definition for the EventObject and EventContainer,
 which are core components of the storage mechanism of plaso.
 
 """
-# Shut up pylint
-# * R0924: EventContainer: Badly implemented Container
-# pylint: disable=R0924
-
 import heapq
 import pytz
 import uuid
@@ -797,7 +793,7 @@ class EventPathSpec(object):
     if attr in ('type', 'file_path', 'container_path', 'image_offset',
                 'image_offset', 'image_inode', 'nested_pathspec', 'file_offset',
                 'file_size', 'transmit_options', 'ntfs_type', 'ntfs_id',
-                'vss_store_number'):
+                'vss_store_number', 'path_prepend'):
       object.__setattr__(self, attr, value)
     else:
       raise AttributeError(u'Not allowed attribute: {}'.format(attr))

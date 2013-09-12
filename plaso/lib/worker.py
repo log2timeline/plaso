@@ -32,7 +32,7 @@ import tarfile
 import zipfile
 import zlib
 
-from plaso import parsers
+from plaso import parsers   # pylint: disable-msg=W0611
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfile
@@ -138,6 +138,9 @@ class PlasoWorker(object):
   def ParsePathSpec(self, pathspec_string):
     """Parse a file given a serialized pathspec."""
     pathspec = event.EventPathSpec()
+    if hasattr(self.config, 'text_prepend'):
+      pathspec.path_prepend = self.config.text_prepend
+
     try:
       pathspec.FromProtoString(pathspec_string)
     except RuntimeError:
