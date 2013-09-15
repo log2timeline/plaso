@@ -37,6 +37,7 @@ class L2tcsv(output.FileLogOutputFormatter):
   def Start(self):
     """Returns a header for the output."""
     # Build a hostname and username dict objects.
+    self._hostnames = {}
     if self.store:
       self._hostnames = helper.BuildHostDict(self.store)
       self._preprocesses = {}

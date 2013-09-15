@@ -87,7 +87,6 @@ class PlasoWorker(object):
     self._stor_queue = stor_queue
     self.config = config
     self._pre_obj = pre_obj
-    filter_query = getattr(config, 'filter', None)
     self._parsers = putils.FindAllParsers(
         pre_obj, getattr(config, 'parsers', ''))
     self._user_mapping = self._GetUserMapping()
@@ -96,6 +95,7 @@ class PlasoWorker(object):
       self._fscache = pfile.FilesystemCache()
 
     self._filter = None
+    filter_query = getattr(config, 'filter', None)
     if filter_query:
       self._filter = pfilter.GetMatcher(filter_query)
 
@@ -105,6 +105,7 @@ class PlasoWorker(object):
     logging.info(
         u'Worker %d (PID: %d) started monitoring process queue.',
         self._identifier, self.pid)
+
     for item in self._proc_queue.PopItems():
       # TODO: Remove this "ugly" hack in favor of something more elegant
       # and one that makes more sense.
