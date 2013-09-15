@@ -179,6 +179,15 @@ def Main():
       '--sector_size', dest='bytes_per_sector', action='store', type=int,
       default=512, help='The sector size, by default set to 512.')
 
+  function_group.add_argument(
+      '--output', dest='output_module', action='store', type=unicode,
+      default='', help=(
+          'Bypass the storage module directly storing events according to '
+          'the output module. This means that the output will not be in the '
+          'pstorage format but in the format chosen by the output module. '
+          '[Please not this feature is EXPERIMENTAL at this time, use at '
+          'own risk (eg. sqlite output does not yet work)]'))
+
   info_group.add_argument(
       '-d', '--debug', dest='debug', action='store_true', default=False,
       help='Turn on debug information in the tool.')

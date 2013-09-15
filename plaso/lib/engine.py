@@ -31,6 +31,7 @@ import time
 import traceback
 
 from plaso import preprocessors
+from plaso import output as output_plugins   # pylint: disable-msg=W0611
 from plaso import registry as reg_plugins   # pylint: disable-msg=W0611
 
 from plaso.lib import collector
@@ -220,11 +221,20 @@ class Engine(object):
 
     # End with the storage.
     logging.debug('Starting storage.')
-    with storage.PlasoStorage(self.config.output,
-                              buffer_size=self.config.buffer_size,
-                              pre_obj=pre_obj) as storage_buffer:
+    if self.config.output_module:
+      my_storage = storage.BypassStorageDumper(
+          self.config.output, self.config.output_module, pre_obj)
+
       for item in storage_queue.PopItems():
-        storage_buffer.AddEntry(item)
+        my_storage.ProcessEntry(item)
+
+      my_storage.Close()
+    else:
+      with storage.PlasoStorage(
+          self.config.output, buffer_size=self.config.buffer_size,
+          pre_obj=pre_obj) as storage_buffer:
+        for item in storage_queue.PopItems():
+          storage_buffer.AddEntry(item)
     logging.debug('Storage done.')
 
   def _StartRuntime(self):
@@ -302,8 +312,12 @@ class Engine(object):
 
     collection_queue = queue.MultiThreadedQueue()
 
-    my_storage = storage.SimpleStorageDumper(
-        self.config.output, self.config.buffer_size, pre_obj)
+    if self.config.output_module:
+      my_storage = storage.BypassStorageDumper(
+          self.config.output, self.config.output_module, pre_obj)
+    else:
+      my_storage = storage.SimpleStorageDumper(
+          self.config.output, self.config.buffer_size, pre_obj)
 
     my_collector = GetCollector(
         self.config, pre_obj, collection_queue, my_storage)

@@ -75,6 +75,7 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import limit
 from plaso.lib import pfilter
+from plaso.lib import output
 from plaso.lib import preprocess
 from plaso.lib import queue
 from plaso.lib import utils
@@ -915,14 +916,14 @@ class SimpleStorageDumper(object):
       pre: A pre-processing object.
     """
     self._queue = queue.MultiThreadedQueue()
-    self.output = output_file
+    self.output_file = output_file
     self.buffer_size = buffer_size
     self._pre_obj = pre
 
   def Run(self):
     """Start the storage."""
     with PlasoStorage(
-        self.output, buffer_size=self.buffer_size,
+        self.output_file, buffer_size=self.buffer_size,
         pre_obj=self._pre_obj) as storage_buffer:
       for item in self._queue.PopItems():
         storage_buffer.AddEntry(item)
@@ -934,6 +935,55 @@ class SimpleStorageDumper(object):
   def Close(self):
     """Close the queue, indicating to the storage to flush and close."""
     self._queue.Close()
+
+
+class BypassStorageDumper(object):
+  """Watch a queue with EventObjects and send them directly to output."""
+
+  def __init__(self, output_file, output_module_string='lst2csv', pre=None):
+    """Initialize an object that bypasses the storage library."""
+    self.output_file = output_file
+    output_class = output.GetOutputFormatter(output_module_string)
+    self._queue = queue.MultiThreadedQueue()
+
+    self._pre_obj = pre
+    self._pre_obj.store_range = (1, 1)
+
+    if not output_class:
+      output_class = output.GetOutputFormatter('Lst2csv')
+
+    self.output_module = output_class(self, output_file, config=self._pre_obj)
+    self.output_module.Start()
+
+  def Run(self):
+    """Run the storage until no event comes in."""
+    for item in self._queue.PopItems():
+      self.ProcessEntry(item)
+
+  def AddEvent(self, item):
+    """Add an event to the output."""
+    self._queue.Queue(item)
+
+  def ProcessEntry(self, item):
+    """Process an event and send it to an output module."""
+    event_object = event.EventObject()
+    event_object.FromProtoString(item)
+    event_object.store_number = 1
+    event_object.store_index = -1
+
+    self.output_module.WriteEvent(event_object)
+
+  def GetStorageInformation(self):
+    """Return information about the storage object (used by output modules)."""
+    ret = []
+    ret.append(self._pre_obj)
+
+    return ret
+
+  def Close(self):
+    """Close the storage, in this case indicate the output that we are done."""
+    self._queue.Close()
+    self.output_module.End()
 
 
 def GetEventGroupProto(fh):
