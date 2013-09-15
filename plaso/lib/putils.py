@@ -193,6 +193,8 @@ def FindAllParsers(pre_obj=None, parser_filter_string=''):
   filter_strings_include = []
   filter_strings_exclude = []
   for filter_string in parser_filter_string.split(','):
+    if not filter_string:
+      continue
     if filter_string.startswith('-'):
       filter_strings_use = filter_strings_exclude
       filter_string = filter_string[1:]
