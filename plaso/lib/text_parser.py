@@ -583,20 +583,24 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
   def _ReadLine(self, filehandle, max_len=0):
     """Read a single line from a text file and return it back."""
     if max_len:
-      line = filehandle.readline(max_len).strip()
+      line = filehandle.readline(max_len)
     else:
-      line = filehandle.readline().strip()
+      line = filehandle.readline()
+
+    # If line is empty, skip it and go on.
+    if line == '\n' or line == '\r\n':
+      return self._ReadLine(filehandle, max_len)
 
     if not self.encoding:
-      return line
+      return line.strip()
 
     try:
       decoded_line = line.decode(self.encoding)
-      return decoded_line
+      return decoded_line.strip()
     except UnicodeDecodeError:
       logging.warning(u'Unable to decode line [{}...] using {}'.format(
           repr(line[1:30]), self.encoding))
-      return line
+      return line.strip()
 
 
   def Parse(self, filehandle):

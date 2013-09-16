@@ -17,9 +17,9 @@
 """This file contains a unit test for the timelib in Plaso."""
 import datetime
 import unittest
-import pytz
 
 from plaso.lib import timelib
+import pytz
 
 
 class TimeLibUnitTest(unittest.TestCase):
