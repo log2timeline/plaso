@@ -47,7 +47,7 @@ categories = {
     'linux': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
         'JavaIDXParser', 'OLECF', 'PfileStatParser', 'SELinux', 'SkypeParser',
-        'SyslogParser'],
+        'SyslogParser', 'XChatScrollbackParser'],
     'macosx': [
         'ApplicationUsageParser', 'ChromeHistoryParser',
         'FirefoxHistoryParser', 'GoogleDriveParser', 'JavaIDXParser',
