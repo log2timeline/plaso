@@ -15,17 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser Test for Windows Scheduled Task job files."""
-
 import os
-import pytz
 import unittest
 
 # pylint: disable=W0611
 from plaso.formatters import winjob as dummy_formatter
-from plaso.parsers import winjob
-
 from plaso.lib import eventdata
 from plaso.lib import preprocess
+from plaso.parsers import winjob
+
+import pytz
 
 
 class WinJobTest(unittest.TestCase):

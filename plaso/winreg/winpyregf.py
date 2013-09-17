@@ -195,6 +195,9 @@ class WinPyregfValue(interface.WinRegValue):
 
     # TODO: Add support for REG_MULTI_SZ to pyregf.
     elif self._pyregf_value.type == self.REG_MULTI_SZ:
+      if self._pyregf_value.data is None:
+        return u''
+
       try:
         utf16_string = unicode(self._pyregf_value.data.decode('utf-16-le'))
         return filter(None, utf16_string.split('\x00'))
