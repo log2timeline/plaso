@@ -18,12 +18,13 @@
 import os
 import unittest
 
-import pytz
-
+# pylint: disable-msg=W0611
 from plaso.formatters import mackeeper_cache as cache_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import mackeeper_cache
+
+import pytz
 
 
 class MacKeeperCacheTest(unittest.TestCase):

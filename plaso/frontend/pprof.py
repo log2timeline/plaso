@@ -54,7 +54,13 @@ from it and which parsers recognize it.
 
   arg_parser.add_argument(
       '-v', '--verbose', dest='verbose', action='store_true', default=False,
-      help='Be extra verbose in the information printed out.')
+      help=(
+          'Be extra verbose in the information printed out (include full '
+          'stats).'))
+
+  arg_parser.add_argument(
+      '-p', '--parsers', dest='parsers', action='store', default='', type=str,
+      help='A list of parsers to include (see log2timeline documentation).')
 
   # TODO: Add the option of dropping into a python shell that contains the
   # stats attribute and others, just print out basic information and do the

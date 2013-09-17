@@ -21,7 +21,6 @@ which are core components of the storage mechanism of plaso.
 
 """
 import heapq
-import pytz
 import uuid
 
 from plaso.lib import errors
@@ -30,6 +29,8 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
+
+import pytz
 
 
 class EventContainer(object):

@@ -16,7 +16,6 @@
 # limitations under the License.
 """This file contains a unit test for the selinux parser in plaso."""
 import os
-import pytz
 import unittest
 
 from plaso.formatters import selinux
@@ -24,6 +23,8 @@ from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.parsers import selinux
+
+import pytz
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 

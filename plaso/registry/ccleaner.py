@@ -15,11 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for CCleaner for Plaso."""
-
-
 from plaso.lib import event
 from plaso.lib import win_registry_interface
 from plaso.lib import timelib
+
 import pytz
 
 
