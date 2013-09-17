@@ -19,7 +19,6 @@ import argparse
 import logging
 import os
 import sys
-import pytz
 
 from IPython.frontend.terminal.embed import InteractiveShellEmbed
 from IPython.core import magic

@@ -16,13 +16,14 @@
 # limitations under the License.
 """Tests for the filters."""
 import unittest
-import pytz
 
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfilter
+
+import pytz
 
 
 class Empty(object):
