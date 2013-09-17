@@ -16,7 +16,6 @@
 # limitations under the License.
 """This file contains a unit test for the mactime parser in plaso."""
 import os
-import pytz
 import unittest
 
 from plaso.formatters import mactime
@@ -24,6 +23,8 @@ from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.parsers import mactime
+
+import pytz
 
 
 class MactimeUnitTest(unittest.TestCase):

@@ -18,12 +18,12 @@
 import os
 import unittest
 
-import pytz
-
 from plaso.formatters import chrome
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import chrome
+
+import pytz
 
 
 class ChromeHistoryParserTest(unittest.TestCase):
@@ -90,7 +90,7 @@ class ChromeHistoryParserTest(unittest.TestCase):
     self.assertEquals(event_object.full_path, expected_full_path)
 
     # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
     expected_msg = (

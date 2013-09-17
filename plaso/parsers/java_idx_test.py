@@ -17,7 +17,6 @@
 
 """Parser Test for Java Cache IDX files."""
 import os
-import pytz
 import unittest
 
 from plaso.formatters import java_idx
@@ -25,6 +24,8 @@ from plaso.parsers import java_idx
 
 from plaso.lib import eventdata
 from plaso.lib import preprocess
+
+import pytz
 
 
 class IDXTest(unittest.TestCase):
