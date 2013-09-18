@@ -24,7 +24,7 @@ from plaso.lib import win_registry_interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class USBStor(win_registry_interface.KeyPlugin):
+class USBStorPlugin(win_registry_interface.KeyPlugin):
   """USBStor key plugin."""
 
   REG_KEY = '\\{current_control_set}\\Enum\\USBSTOR'
@@ -32,7 +32,7 @@ class USBStor(win_registry_interface.KeyPlugin):
   DESCRIPTION = 'USBStor Entries'
 
   def GetEntries(self):
-    """Collect Values under USBStor and return event for each one."""
+    """Collect Values under USBStor and return an event object for each one."""
     for subkey in self._key.GetSubkeys():
 
       text_dict = {}
@@ -46,27 +46,32 @@ class USBStor(win_registry_interface.KeyPlugin):
 
       # TODO: Determine if these 4 fields always exist.
       try:
-        dtype, vendor, product, rev = subkey.name.split('&')
+        device_type, vendor, product, revision = subkey.name.split('&')
       except ValueError as exception:
         logging.warning(
             u'Unable to split string: {} - [{}]'.format(
               subkey.name, exception))
 
+      text_dict['device_type'] = device_type
+      text_dict['vendor'] = vendor
+      text_dict['product'] = product
+      text_dict['revision'] = revision
+
       for devicekey in subkey.GetSubkeys():
-        text_dict['device_type'] = dtype
-        text_dict['vendor'] = vendor
-        text_dict['product'] = product
-        text_dict['revison'] = rev
         text_dict['serial'] = devicekey.name
 
-        friendly_name = devicekey.GetValue('FriendlyName')
-        if friendly_name:
-          text_dict['friendly_name'] = friendly_name.data
+        friendly_name_value = devicekey.GetValue('FriendlyName')
+        if friendly_name_value:
+          text_dict['friendly_name'] = friendly_name_value.data
+        else:
+          text_dict.pop('friendly_name', None)
 
         # ParentIdPrefix applies to Windows XP Only.
-        parent_id_prefix = devicekey.GetValue('ParentIdPrefix')
-        if parent_id_prefix:
-          text_dict['parent_id_prefix'] = parent_id_prefix.data
+        parent_id_prefix_value = devicekey.GetValue('ParentIdPrefix')
+        if parent_id_prefix_value:
+          text_dict['parent_id_prefix'] = parent_id_prefix_value.data
+        else:
+          text_dict.pop('parent_id_prefix', None)
 
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
@@ -78,17 +83,19 @@ class USBStor(win_registry_interface.KeyPlugin):
 
         # Build list of first Insertion times.
         first_insert = []
-        device_parameter = devicekey.GetSubkey('Device Parameters')
-        if device_parameter:
-          first_insert.append(device_parameter.last_written_timestamp)
-        log_configuration = devicekey.GetSubkey('LogConf')
-        if log_configuration:
-          if log_configuration.last_written_timestamp not in first_insert:
-            first_insert.append(log_configuration.last_written_timestamp)
-        properties = devicekey.GetSubkey('Properties')
-        if properties:
-          if properties.last_written_timestamp not in first_insert:
-            first_insert.append(properties.last_written_timestamp)
+        device_parameter_key = devicekey.GetSubkey('Device Parameters')
+        if device_parameter_key:
+          first_insert.append(device_parameter_key.last_written_timestamp)
+
+        log_configuration_key = devicekey.GetSubkey('LogConf')
+        if (log_configuration_key and
+            log_configuration_key.last_written_timestamp not in first_insert):
+          first_insert.append(log_configuration_key.last_written_timestamp)
+
+        properties_key = devicekey.GetSubkey('Properties')
+        if (properties_key and
+            properties_key.last_written_timestamp not in first_insert):
+          first_insert.append(properties_key.last_written_timestamp)
 
         # Add first Insertion times.
         for timestamp in first_insert:
