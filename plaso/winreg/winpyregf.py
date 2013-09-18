@@ -31,16 +31,26 @@ if pyregf.get_version() < '20130716':
 class WinPyregfKey(interface.WinRegKey):
   """Implementation of a Windows Registry Key using pyregf."""
 
-  def __init__(self, pyregf_key, parent_path=u''):
+  def __init__(self, pyregf_key, parent_path=u'', root=False):
     """Initializes a Windows Registry Key object.
 
     Args:
       pyregf_key: An instance of a pyregf.key object.
       parent_path: The path of the parent key.
+      root: A boolean key indicating we are dealing with a root key.
     """
     super(WinPyregfKey, self).__init__()
     self._pyregf_key = pyregf_key
-    self._path = self.PATH_SEPARATOR.join([parent_path, self._pyregf_key.name])
+    # Adding few checks to make sure the root key is not
+    # invalid in plugin checks (root key is equal to the
+    # path separator).
+    if parent_path == self.PATH_SEPARATOR:
+      parent_path = u''
+    if root:
+      self._path = self.PATH_SEPARATOR
+    else:
+      self._path = self.PATH_SEPARATOR.join(
+          [parent_path, self._pyregf_key.name])
 
   @property
   def path(self):   # pylint: disable-msg=E0202
@@ -68,6 +78,7 @@ class WinPyregfKey(interface.WinRegKey):
     return timelib.Timestamp.FromFiletime(
         self._pyregf_key.get_last_written_time_as_integer())
 
+  @property
   def number_of_values(self):
     """The number of values within the key."""
     return self._pyregf_key.number_of_values
@@ -91,6 +102,7 @@ class WinPyregfKey(interface.WinRegKey):
       return WinPyregfValue(pyregf_value)
     return None
 
+  @property
   def number_of_subkeys(self):
     """The number of subkeys within the key."""
     return self._pyregf_key.number_of_sub_keys
@@ -216,6 +228,7 @@ class WinPyregfFile(interface.WinRegFile):
     self._pyregf_file = pyregf.file()
     self.name = ''
     self.file_object = None
+    self._base_key = None
 
   def Open(self, file_object, codepage='cp1252'):
     """Opens the Registry file.
@@ -243,6 +256,7 @@ class WinPyregfFile(interface.WinRegFile):
 
     self._pyregf_file.open_file_object(file_object)
     self.name = getattr(file_object, 'name', '')
+    self._base_key = self._pyregf_file.get_root_key()
 
   def Close(self):
     """Closes the Registry file."""
@@ -261,13 +275,18 @@ class WinPyregfFile(interface.WinRegFile):
     if not path:
       return None
 
-    pyregf_key = self._pyregf_file.get_key_by_path(path)
+    pyregf_key = self._base_key.get_sub_key_by_path(path)
 
     if not pyregf_key:
       return None
 
+    if pyregf_key.name == self._base_key.name:
+      root = True
+    else:
+      root = False
+
     parent_path, _, _ = path.rpartition(interface.WinRegKey.PATH_SEPARATOR)
-    return WinPyregfKey(pyregf_key, parent_path)
+    return WinPyregfKey(pyregf_key, parent_path, root)
 
 
 class WinRegistry(object):
