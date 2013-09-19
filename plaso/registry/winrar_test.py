@@ -24,7 +24,7 @@ from plaso.winreg import test_lib
 
 
 class TestWinRarRegistry(unittest.TestCase):
-  """The unit test for WinRAR registry parsing."""
+  """The unit test for WinRAR Registry parsing."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -34,13 +34,13 @@ class TestWinRarRegistry(unittest.TestCase):
         test_lib.TestRegValue.REG_SZ, offset=1892))
     values.append(test_lib.TestRegValue(
         '1', 'C:\\Downloads\\plaso-static.rar'.encode('utf_16_le'),
-        test_lib.TestRegValue.REG_SZ, 612))
+        test_lib.TestRegValue.REG_SZ, offset=612))
 
     self.regkey = test_lib.TestRegKey(
         '\\Software\\WinRAR\\ArcHistory', 1346145829002031,
-        values, 1456)
+        values, offset=1456)
 
-  def testWinRarArcHistoryPluging(self):
+  def testWinRarArcHistoryPlugin(self):
     """Run a simple test against a mocked key with values."""
     plugin = winrar.WinRarArcHistoryPlugin(None, None, None)
     generator = plugin.Process(self.regkey)
