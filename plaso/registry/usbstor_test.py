@@ -27,7 +27,7 @@ from plaso.registry import usbstor
 from plaso.winreg import winregistry
 
 
-class USBStoreTest(unittest.TestCase):
+class TestUSBStor(unittest.TestCase):
   """Test for parsing a USBStor Registry key."""
 
   def setUp(self):
@@ -46,7 +46,7 @@ class USBStoreTest(unittest.TestCase):
     # conventions.
     self.maxDiff = None
 
-  def testUSBStorPluging(self):
+  def testUSBStorPlugin(self):
     """Test the user assist plugin."""
     key = self.winreg_file.GetKeyByPath(
         '\\ControlSet001\\Enum\\USBSTOR')
