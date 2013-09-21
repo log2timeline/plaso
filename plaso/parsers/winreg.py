@@ -129,6 +129,11 @@ class WinRegistryParser(parser.PlasoParser):
 
   def _RecurseKey(self, key):
     """A generator that takes a registry key and yields every subkey of it."""
+    # In the case of a Registry file not having a root key we will not be able
+    # to traverse the Registry, in which case we need to return here.
+    if not key:
+      return
+
     yield key
 
     for subkey in key.GetSubkeys():

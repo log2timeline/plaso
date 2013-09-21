@@ -153,8 +153,8 @@ def ParseStorage(my_args):
   return counter
 
 
-def Main():
-  """Start the tool."""
+def ProcessArguments(arguments):
+  """Process command line arguments."""
   parser = argparse.ArgumentParser(
       description=(
           u'PSORT - Application to read, filter and process '
@@ -205,7 +205,7 @@ def Main():
             ' and it\'s usage can be found here: http://plaso.kiddaland.'
             'net/usage/filters'))
 
-  my_args = parser.parse_args()
+  my_args = parser.parse_args(args=arguments)
 
   format_str = '[%(levelname)s] %(message)s'
   logging.basicConfig(level=logging.INFO, format=format_str)
@@ -270,6 +270,11 @@ def Main():
         'encoding, otherwise continue at own risk.')
     time.sleep(5)
 
+  return my_args
+
+
+def Main(my_args):
+  """Start the tool."""
   try:
     counter = ParseStorage(my_args)
 
@@ -292,4 +297,5 @@ def Main():
 
 
 if __name__ == '__main__':
-  Main()
+  my_options = ProcessArguments(sys.argv[1:])
+  Main(my_options)

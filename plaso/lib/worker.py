@@ -211,7 +211,7 @@ class PlasoWorker(object):
     if hasattr(self._pre_obj, 'hostname'):
       event_object.hostname = self._pre_obj.hostname
     if not hasattr(event_object, 'inode') and hasattr(stat_obj, 'ino'):
-      event_object.inode = stat_obj.ino
+      event_object.inode = utils.GetInodeValue(stat_obj.ino)
 
     # Set the username that is associated to the record.
     if getattr(event_object, 'user_sid', None) and self._user_mapping:
