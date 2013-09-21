@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for plaso.output.pstorage."""
-
 import os
 import tempfile
 import unittest
@@ -32,7 +31,7 @@ class PstorageTest(unittest.TestCase):
     self.dump_file = tempfile.NamedTemporaryFile(delete=True)
 
   def testOutput(self):
-    # copy events to Pstorage dump
+    # Copy events to Pstorage dump.
     pfilter.TimeRangeCache.ResetTimeConstraints()
     with storage.PlasoStorage(self.test_filename, read_only=True) as store:
       formatter_cls = output.GetOutputFormatter('Pstorage')
@@ -42,7 +41,8 @@ class PstorageTest(unittest.TestCase):
         while event_object:
           output_buffer.Append(event_object)
           event_object = formatter.FetchEntry()
-    # make sure original and dump have the same events
+
+    # Make sure original and dump have the same events.
     original = storage.PlasoStorage(self.test_filename, read_only=True)
     dump = storage.PlasoStorage(self.dump_file.name, read_only=True)
     event_object_original = original.GetSortedEntry()

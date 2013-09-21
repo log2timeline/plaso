@@ -295,6 +295,38 @@ class PlasoStorage(object):
       last_index = entry_index
       _ = fh.read(ofs)
 
+    if not last_index and  hasattr(
+        self, '_bound_first') and self._bound_first and entry_index == -1:
+      # We only get here if the following conditions are met:
+      #   1. last_index is not set (so this is the first read from this file).
+      #   2. There is a lower bound (so we have a date filter).
+      #   3. The lower bound is higher than zero (basically set to a value).
+      #   4. We are accessing this function using 'get me the next entry' as an
+      #      opposed to the 'get me entry X', where we just want to server entry
+      #      X.
+      #
+      # The purpose: speed seeking into the storage file based on time. Instead
+      # of spending precious time reading through the storage file and
+      # deserializing protobufs just to compare timestamps we read a much
+      # 'cheaper' file, one that only contains timestamps to find the proper
+      # entry into the storage file. That way we'll get to the right place in
+      # the file and can start reading protobufs from the right location.
+      index = 0
+      timestamp_filename = 'plaso_timestamps.%06d' % number
+
+      # Recent add-on to the storage file, not certain this file exists.
+      if timestamp_filename in self.zipfile.namelist():
+        timestamp_fh = self.zipfile.open(timestamp_filename, 'r')
+        timestamp_compare = 0
+        while timestamp_compare < self._bound_first:
+          timestamp_raw = timestamp_fh.read(8)
+          if len(timestamp_raw) != 8:
+            break
+          timestamp_compare = struct.unpack('<q', timestamp_raw)[0]
+          index += 1
+        return self._GetEntry(number, index)
+
+    # Now we've seeked to the proper location in code.
     unpacked = fh.read(4)
 
     if len(unpacked) != 4:
@@ -342,6 +374,8 @@ class PlasoStorage(object):
     # Retrieve set first and last timestamps.
     self._GetTimeBounds()
 
+    # TODO: Fetch a filter object from the filter query.
+
     for number in self.GetProtoNumbers():
       # TODO: Read more criteria from here.
       first, last = self.ReadMeta(number).get('range', (0, limit.MAX_INT64))
@@ -350,7 +384,11 @@ class PlasoStorage(object):
                       last, first, number)
 
       if first <= self._bound_last and self._bound_first <= last:
+        # TODO: Check at least parser and data_type (stored in metadata).
+        # Check whether these attributes exist in filter, if so use the filter
+        # to determine whether the stores should be included.
         self.store_range.append(number)
+
       else:
         logging.debug('Store [%d] not used', number)
 
@@ -558,9 +596,10 @@ class PlasoStorage(object):
     if not self._buffer_size:
       return
 
-    meta_fh = 'plaso_meta.%06d' % self._filenumber
-    proto_fh = 'plaso_proto.%06d' % self._filenumber
-    index_fh = 'plaso_index.%06d' % self._filenumber
+    meta_name = 'plaso_meta.%06d' % self._filenumber
+    proto_name = 'plaso_proto.%06d' % self._filenumber
+    index_name = 'plaso_index.%06d' % self._filenumber
+    timestamp_name = 'plaso_timestamps.%06d' % self._filenumber
 
     yaml_dict = {'range': (self._buffer_first_timestamp,
                            self._buffer_last_timestamp),
@@ -571,24 +610,27 @@ class PlasoStorage(object):
                  'type_count': self._count_data_type.most_common()}
     self._count_data_type = collections.Counter()
     self._count_parser = collections.Counter()
-    self.zipfile.writestr(meta_fh, yaml.safe_dump(yaml_dict))
+    self.zipfile.writestr(meta_name, yaml.safe_dump(yaml_dict))
 
     ofs = 0
     proto_str = []
     index_str = []
+    timestamp_str = []
     for _ in range(len(self._buffer)):
-      _, entry = heapq.heappop(self._buffer)
+      timestamp, entry = heapq.heappop(self._buffer)
       # TODO: Instead of appending to an array
       # which is not optimal (loads up the entire max file
       # size into memory) Zipfile should be extended to
       # allow appending to files (implement lock).
       index_str.append(struct.pack('<I', ofs))
+      timestamp_str.append(struct.pack('<q', timestamp))
       packed = struct.pack('<I', len(entry)) + entry
       ofs += len(packed)
       proto_str.append(packed)
 
-    self.zipfile.writestr(index_fh, ''.join(index_str))
-    self.zipfile.writestr(proto_fh, ''.join(proto_str))
+    self.zipfile.writestr(index_name, ''.join(index_str))
+    self.zipfile.writestr(proto_name, ''.join(proto_str))
+    self.zipfile.writestr(timestamp_name, ''.join(timestamp_str))
 
     self._filenumber += 1
     self._buffer_size = 0
