@@ -23,6 +23,7 @@ which are core components of the storage mechanism of plaso.
 import heapq
 import uuid
 
+from google.protobuf import message
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
@@ -600,11 +601,26 @@ class EventObject(object):
         continue
       else:
         # Register the attribute correctly.
+        # The attribute can be a 'regular' high level attribute or
+        # a message (Dict/Array) that need special handling.
+        if isinstance(value, message.Message):
+          if value.DESCRIPTOR.full_name.endswith('.Dict'):
+            value_dict = {}
+            for attribute in value.attributes:
+              value_dict[attribute.key] = AttributeFromProto(attribute)
+            value = value_dict
+          elif value.DESCRIPTOR.full_name.endswith('.Array'):
+            value_list = []
+            for value_item in value.values:
+              value_list.append(AttributeFromProto(value_item))
+            value = value_list
+          else:
+            value = AttributeFromProto(value)
         self.attributes.__setitem__(proto_attribute.name, value)
 
     # Make sure the old attributes are removed.
-    self.attributes.update(dict(AttributeFromProto(a) for a in
-                                proto.attributes))
+    self.attributes.update(dict(AttributeFromProto(
+        attr) for attr in proto.attributes))
 
   def ToProtoString(self):
     """Serialize an event object into a string value."""
@@ -643,9 +659,30 @@ class EventObject(object):
       elif hasattr(proto, attribute_name):
         attribute_value = getattr(self, attribute_name)
 
+        if attribute_value is None:
+          continue
+
         if isinstance(attribute_value, (str, unicode)):
           attribute_value = utils.GetUnicodeString(attribute_value)
-        setattr(proto, attribute_name, attribute_value)
+          if not attribute_value:
+            continue
+
+        if isinstance(attribute_value, dict):
+          dict_proto = plaso_storage_pb2.Dict()
+          for dict_key, dict_value in attribute_value.items():
+            sub_proto = dict_proto.attributes.add()
+            AttributeToProto(sub_proto, dict_key, dict_value)
+          dict_attribute = getattr(proto, attribute_name)
+          dict_attribute.MergeFrom(dict_proto)
+        elif isinstance(attribute_value, (list, tuple)):
+          list_proto = plaso_storage_pb2.Array()
+          for attribute in attribute_value:
+            sub_proto = list_proto.values.add()
+            AttributeToProto(sub_proto, '', attribute)
+          list_attribute = getattr(proto, attribute_name)
+          list_attribute.MergeFrom(list_proto)
+        else:
+          setattr(proto, attribute_name, attribute_value)
 
       else:
         attribute_value = getattr(self, attribute_name)

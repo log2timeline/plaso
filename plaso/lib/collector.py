@@ -135,7 +135,7 @@ def SendContainerToStorage(container, stat, storage_queue):
     event_object.display_name = getattr(
         stat, 'display_path', event_object.filename)
     event_object.parser = u'PfileStatParser'
-    event_object.inode = stat.ino
+    event_object.inode = utils.GetInodeValue(stat.ino)
     storage_queue.AddEvent(event_object.ToProtoString())
 
 

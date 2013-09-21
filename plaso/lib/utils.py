@@ -202,3 +202,28 @@ def FormatOutputString(name, description, col_length=25):
 
   return u'\n'.join(ret)
 
+
+def GetInodeValue(inode_raw):
+  """Read in a 'raw' inode value and try to convert it into an integer.
+
+  Args:
+    inode_raw: A string or an int inode value.
+
+  Returns:
+    An integer inode value.
+  """
+  if type(inode_raw) in (int, long):
+    return inode_raw
+
+  if type(inode_raw) is float:
+    return int(inode_raw)
+
+  try:
+    return int(inode_raw)
+  except ValueError:
+    # Let's do one more attempt.
+    inode_string, _, _ = str(inode_raw).partition('-')
+    try:
+      return int(inode_string)
+    except ValueError:
+      return -1

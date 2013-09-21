@@ -275,6 +275,9 @@ class WinPyregfFile(interface.WinRegFile):
     if not path:
       return None
 
+    if not self._base_key:
+      return None
+
     pyregf_key = self._base_key.get_sub_key_by_path(path)
 
     if not pyregf_key:

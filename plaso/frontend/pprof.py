@@ -24,6 +24,9 @@ import pstats
 import sys
 import time
 
+from IPython.frontend.terminal.embed import InteractiveShellEmbed
+
+from plaso.frontend import psort
 from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import preprocess
@@ -59,8 +62,19 @@ from it and which parsers recognize it.
           'stats).'))
 
   arg_parser.add_argument(
+      '-c', '--console', dest='console', action='store_true',
+      default=False, help='After processing drop to an interactive shell.')
+
+  arg_parser.add_argument(
       '-p', '--parsers', dest='parsers', action='store', default='', type=str,
       help='A list of parsers to include (see log2timeline documentation).')
+
+  arg_parser.add_argument(
+      '-s', '--storage', dest='storage', action='store', type=unicode,
+      metavar='PSORT_PARAMETER', default='', help=(
+          'Run the profiler against a storage file, with the parameters '
+          'provided with this option, eg: "-q /tmp/mystorage.dump"'))
+
 
   # TODO: Add the option of dropping into a python shell that contains the
   # stats attribute and others, just print out basic information and do the
@@ -94,13 +108,22 @@ from it and which parsers recognize it.
         options.file_to_parse)
     sys.exit(1)
 
-  try:
-    fh = putils.OpenOSFile(options.file_to_parse)
-  except IOError as e:
-    logging.error(u'Unable to open file: %s, error given %s',
-                  options.file_to_parse, e)
-    sys.exit(1)
+  PrintHeader(options)
+  # Stats attribute used for console sesssions.
+  # pylint: disable-msg=W0612
+  if options.storage:
+    stats = ProcessStorage(options)
+  else:
+    stats = ProcessFile(options)
 
+  if options.console:
+    ipshell = InteractiveShellEmbed()
+    ipshell.confirm_exit = False
+    ipshell()
+
+
+def PrintHeader(options):
+  """Print header information, including library versions."""
   print utils.FormatHeader('File Parsed')
   print u'{:>20s}'.format(options.file_to_parse)
 
@@ -116,6 +139,46 @@ from it and which parsers recognize it.
   if options.filter:
     print utils.FormatHeader('Filter Used')
     print utils.FormatOutputString('Filter String', options.filter)
+
+
+def ProcessStorage(options):
+  """Process a storage file and produce profile results."""
+  storage_parameters = options.storage.split()
+  storage_parameters.append(options.file_to_parse)
+  if options.filter:
+    storage_parameters.append(options.filter)
+
+  arguments = psort.ProcessArguments(storage_parameters)
+
+  if options.verbose:
+    profiler = cProfile.Profile()
+    profiler.enable()
+  else:
+    time_start = time.time()
+
+  # Call psort and process output.
+  psort.Main(arguments)
+
+  if options.verbose:
+    profiler.disable()
+  else:
+    time_end = time.time()
+
+  if options.verbose:
+    return GetStats(profiler)
+  else:
+    print utils.FormatHeader('Time Used')
+    print u'{:>20f}s'.format(time_end - time_start)
+
+
+def ProcessFile(options):
+  """Process a file and produce profile results."""
+  try:
+    fh = putils.OpenOSFile(options.file_to_parse)
+  except IOError as e:
+    logging.error(u'Unable to open file: %s, error given %s',
+                  options.file_to_parse, e)
+    sys.exit(1)
 
   pre_obj = preprocess.PlasoPreprocess()
   pre_obj.zone = pytz.UTC
@@ -160,16 +223,23 @@ from it and which parsers recognize it.
     print utils.FormatOutputString(key, value)
 
   if options.verbose:
-    stats = pstats.Stats(profiler, stream=sys.stdout)
-    print utils.FormatHeader('Profiler')
+    return GetStats(profiler)
 
-    print '\n{:-^20}'.format(' Top 10 Time Spent ')
-    stats.sort_stats('cumulative')
-    stats.print_stats(10)
 
-    print '\n{:-^20}'.format(' Sorted By Function Calls ')
-    stats.sort_stats('calls')
-    stats.print_stats()
+def GetStats(profiler):
+  """Print verbose information from profiler and return a stats object."""
+  stats = pstats.Stats(profiler, stream=sys.stdout)
+  print utils.FormatHeader('Profiler')
+
+  print '\n{:-^20}'.format(' Top 10 Time Spent ')
+  stats.sort_stats('cumulative')
+  stats.print_stats(10)
+
+  print '\n{:-^20}'.format(' Sorted By Function Calls ')
+  stats.sort_stats('calls')
+  stats.print_stats()
+
+  return stats
 
 
 if __name__ == '__main__':
