@@ -122,10 +122,11 @@ class PlasoStorageUnitTest(unittest.TestCase):
       dumper.Run()
 
       z_file = zipfile.ZipFile(fh, 'r', zipfile.ZIP_DEFLATED)
-      self.assertEquals(len(z_file.namelist()), 3)
+      self.assertEquals(len(z_file.namelist()), 4)
 
       self.assertEquals(sorted(z_file.namelist()), [
-          'plaso_index.000001', 'plaso_meta.000001', 'plaso_proto.000001'])
+          'plaso_index.000001', 'plaso_meta.000001', 'plaso_proto.000001',
+          'plaso_timestamps.000001'])
 
   def testStorage(self):
     """Test the storage object."""

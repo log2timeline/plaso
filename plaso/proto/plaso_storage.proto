@@ -155,6 +155,43 @@ message EventObject {
   //    Sophos AV Log
   // TODO: Remove this field from the EventObject message.
   optional string source_long = 14;
+
+  // Include common attribute names so they do not have to be defined
+  // in the arbitrary attribute store.
+
+  // The name of the parser used to extract this item.
+  optional string parser = 15;
+  optional int64 inode = 16;
+  optional string hostname = 17;
+  optional string plugin = 18;
+  optional string registry_type = 19;
+  optional bool allocated = 20;
+  optional string fs_type = 21;
+  optional bool recovered = 22;
+  optional int64 record_number = 23;
+  optional string source_name = 24;
+  optional string computer_name = 25;
+  optional int64 event_identifier = 26;
+  optional int64 event_level = 27;
+  optional string xml_string = 28;
+  optional Array strings = 29;
+  optional string username = 30;
+  optional string user_sid = 31;
+  optional int64 cached_file_size = 32;
+  optional int64 number_of_hits = 33;
+  optional int64 cache_directory_index = 34;
+  optional string title = 35;
+
+  // Several parsers extract metadata items from events and store them
+  // in a dictionary.
+  optional Dict metadata = 36;
+
+  // An URL extracted from things like browser history.
+  optional string url = 37;
+  // Windows registry keyname attribute.
+  optional string keyname = 38;
+  // Extracted values from a Windows registry key.
+  optional Dict regvalue = 39;
 };
 
 // The EventTagging is a simple message that describes comments,

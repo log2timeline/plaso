@@ -35,7 +35,18 @@ def ListFilters():
 
 
 def GetFilter(filter_string):
-  """Evaluate filters against a filter string and return the first match."""
+  """Returns the first filter that matches the filter string.
+
+  Args:
+    filter_string: A filter string for any of the avilable filters.
+
+  Returns:
+   The first FilterObject found matching the filter string. If no FilterObject
+   is available for this filter string None is returned.
+  """
+  if not filter_string:
+    return
+
   for filter_obj in ListFilters():
     try:
       filter_obj.CompileFilter(filter_string)

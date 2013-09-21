@@ -380,6 +380,8 @@ class Engine(object):
     obj.collection_information['file_processed'] = self.config.filename
     obj.collection_information['output_file'] = self.config.output
     obj.collection_information['protobuf_size'] = self.config.buffer_size
+    obj.collection_information['parser_selection'] = getattr(
+        self.config, 'parsers', '(no list set)')
     obj.collection_information['preferred_encoding'] = getattr(
         self.config, 'preferred_encoding', None)
     obj.collection_information['time_of_run'] = time.time()
