@@ -269,7 +269,7 @@ class StoreStorageTest(unittest.TestCase):
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
     store = storage.PlasoStorage(self.test_file, read_only=True)
 
-    store.store_range = [2, 5]
+    store.store_range = [6, 11, 12]
 
     read_list = []
     event_object = store.GetSortedEntry()
@@ -277,11 +277,13 @@ class StoreStorageTest(unittest.TestCase):
       read_list.append(event_object.timestamp)
       event_object = store.GetSortedEntry()
 
-    correct_order = [1342799054000000L,
-                     1342824253000000L,
-                     1342824299000000L,
+    correct_order = [1342824534000000L,
+                     1342824535000000L,
                      1342824546000000L,
                      1342824546000000L,
+                     1342824546000000L,
+                     1342824552000000L,
+                     1342824552000000L,
                      1342824552000000L,
                      1342824552000000L,
                      1342824552000000L]
