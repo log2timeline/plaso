@@ -133,7 +133,7 @@ class PsortTest(unittest.TestCase):
       timestamp_list.append(event_object.timestamp)
       event_object = store.GetSortedEntry()
 
-    self.assertEquals(len(timestamp_list), 9)
+    self.assertEquals(len(timestamp_list), 10)
     self.assertTrue(timestamp_list[0] >= self.first and
                     timestamp_list[-1] <= self.last)
 
