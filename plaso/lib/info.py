@@ -24,7 +24,24 @@ from plaso.lib import putils
 
 def GetPluginInformation():
   """Return a string with a list of all plugin and parser information."""
+  plugin_list = GetPluginData()
   return_string_pieces = []
+
+  return_string_pieces.append(
+      '{:=^80}'.format(' log2timeline/plaso information. '))
+
+  for header, data in plugin_list.items():
+    return_string_pieces.append(utils.FormatHeader(header))
+    for entry_header, entry_data in data:
+      return_string_pieces.append(
+          utils.FormatOutputString(entry_header, entry_data))
+
+  return u'\n'.join(return_string_pieces)
+
+
+def GetPluginData():
+  """Return a dict object with a list of all available parsers and plugins."""
+  return_dict = {}
 
   # Import all plugins and parsers to print out the necessary information.
   # This is not import at top since this is only required if this parameter
@@ -43,45 +60,34 @@ def GetPluginInformation():
   from plaso.lib import output
   from plaso.lib import win_registry_interface
 
-  return_string_pieces.append(
-      '{:=^80}'.format(' log2timeline/plaso information. '))
+  return_dict['Versions'] = [
+      ('plaso engine', engine.__version__),
+      ('python', sys.version)]
 
-  return_string_pieces.append(utils.FormatHeader('Versions'))
-  return_string_pieces.append(
-      utils.FormatOutputString('plaso engine', engine.__version__))
-  return_string_pieces.append(
-      utils.FormatOutputString('python', sys.version))
-
-  return_string_pieces.append(utils.FormatHeader('Parsers'))
+  return_dict['Parsers'] = []
   for parser in sorted(putils.FindAllParsers()['all']):
     doc_string, _, _ = parser.__doc__.partition('\n')
-    return_string_pieces.append(
-        utils.FormatOutputString(parser.parser_name, doc_string))
+    return_dict['Parsers'].append((parser.parser_name, doc_string))
 
-  return_string_pieces.append(utils.FormatHeader('Parser Lists'))
+  return_dict['Parser Lists'] = []
   for category, parsers in sorted(presets.categories.items()):
-    return_string_pieces.append(
-        utils.FormatOutputString(category, ', '.join(parsers)))
+    return_dict['Parser Lists'].append((category, ', '.join(parsers)))
 
-  return_string_pieces.append(
-      utils.FormatHeader('Output Modules'))
+  return_dict['Output Modules'] = []
   for name, description in sorted(output.ListOutputFormatters()):
-    return_string_pieces.append(
-        utils.FormatOutputString(name, description))
+    return_dict['Output Modules'].append((name, description))
 
-  return_string_pieces.append(utils.FormatHeader('Registry Plugins'))
+  return_dict['Registry Plugins'] = []
   reg_plugins = win_registry_interface.GetRegistryPlugins()
   a_plugin = reg_plugins.GetAllKeyPlugins()[0]
 
   for plugin, obj in sorted(a_plugin.classes.items()):
     doc_string, _, _ = obj.__doc__.partition('\n')
-    return_string_pieces.append(
-        utils.FormatOutputString(plugin, doc_string))
+    return_dict['Registry Plugins'].append((plugin, doc_string))
 
-  return_string_pieces.append(utils.FormatHeader('Filters'))
+  return_dict['Filters'] = []
   for filter_obj in sorted(filters.ListFilters()):
     doc_string, _, _ = filter_obj.__doc__.partition('\n')
-    return_string_pieces.append(
-        utils.FormatOutputString(filter_obj.filter_name, doc_string))
+    return_dict['Filters'].append((filter_obj.filter_name, doc_string))
 
-  return u'\n'.join(return_string_pieces)
+  return return_dict

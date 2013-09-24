@@ -35,4 +35,7 @@ class Rawpy(output.FileLogOutputFormatter):
     Args:
       event_object: The EventObject.
     """
-    self.filehandle.write(unicode(event_object).encode(self.encoding))
+    # TODO: Move the unicode cast into the event object itself, expose
+    # a ToString function or something similar that will send back the
+    # unicode string.
+    self.filehandle.WriteLine(unicode(event_object))

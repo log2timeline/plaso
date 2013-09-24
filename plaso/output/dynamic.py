@@ -210,7 +210,7 @@ class Dynamic(output.FileLogOutputFormatter):
           for store_number in range(info.store_range[0], info.store_range[1]):
             self._preprocesses[store_number] = info
 
-    self.filehandle.write('{}\n'.format(self.separator.join(self.fields)))
+    self.filehandle.WriteLine('{}\n'.format(self.separator.join(self.fields)))
 
   def WriteEvent(self, event_object):
     """Write a single event."""
@@ -237,5 +237,5 @@ class Dynamic(output.FileLogOutputFormatter):
     out_write = u'{0}\n'.format(
         self.separator.join(unicode(x).replace(
             self.separator, ' ') for x in row))
-    self.filehandle.write(out_write.encode(self.encoding))
+    self.filehandle.WriteLine(out_write)
 
