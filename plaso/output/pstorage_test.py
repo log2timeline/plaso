@@ -29,10 +29,13 @@ class PstorageTest(unittest.TestCase):
   def setUp(self):
     self.test_filename = os.path.join('test_data', 'psort_test.out')
     self.dump_file = tempfile.NamedTemporaryFile(delete=True)
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
+    self.maxDiff = None
+    pfilter.TimeRangeCache.ResetTimeConstraints()
 
   def testOutput(self):
-    # Copy events to Pstorage dump.
-    pfilter.TimeRangeCache.ResetTimeConstraints()
+    # Copy events to pstorage dump.
     with storage.PlasoStorage(self.test_filename, read_only=True) as store:
       formatter_cls = output.GetOutputFormatter('Pstorage')
       formatter = formatter_cls(store, self.dump_file)
@@ -49,14 +52,18 @@ class PstorageTest(unittest.TestCase):
     event_object_dump = dump.GetSortedEntry()
     original_list = []
     dump_list = []
+
     while event_object_original:
       original_list.append(event_object_original.EqualityString())
       dump_list.append(event_object_dump.EqualityString())
       event_object_original = original.GetSortedEntry()
       event_object_dump = dump.GetSortedEntry()
+
     self.assertFalse(event_object_dump)
+
     for original_str, dump_str in zip(sorted(original_list), sorted(dump_list)):
       self.assertEqual(original_str, dump_str)
+
 
 if __name__ == '__main__':
   unittest.main()

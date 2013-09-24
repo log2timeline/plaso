@@ -31,10 +31,6 @@ The tests involve:
 Error handling. The following tests are performed for error handling:
  + Access attributes that are not set.
 """
-# Shut up pylint
-# * R0924: EventContainer: Badly implemented Container
-# pylint: disable=R0924
-
 import unittest
 
 from plaso.lib import errors
@@ -199,11 +195,17 @@ class PlasoEventUnitTest(unittest.TestCase):
     event_e = event.EventObject()
 
     event_a.timestamp = 123
-    event_a.timestamp_desc = 'LAST WRITTEN'
-    event_a.data_type = 'mock:nothing'
+    event_a.timestamp_desc = u'LAST WRITTEN'
+    event_a.data_type = u'mock:nothing'
     event_a.inode = 124
-    event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
+    event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
+    event_a.metadata = {
+        u'author': u'Some Random Dude',
+        u'version': 1245L,
+        u'last_changed': u'Long time ago'}
+    event_a.strings = [
+        u'This ', u'is a ', u'long string']
 
     event_b.timestamp = 123
     event_b.timestamp_desc = 'LAST WRITTEN'
@@ -211,6 +213,12 @@ class PlasoEventUnitTest(unittest.TestCase):
     event_b.inode = 124
     event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
+    event_b.metadata = {
+        'author': 'Some Random Dude',
+        'version': 1245,
+        'last_changed': 'Long time ago'}
+    event_b.strings = [
+        'This ', 'is a ', 'long string']
 
     event_c.timestamp = 123
     event_c.timestamp_desc = 'LAST UPDATED'
@@ -232,11 +240,22 @@ class PlasoEventUnitTest(unittest.TestCase):
     event_e.inode = 623423
     event_e.filename = 'c:/afrit/onnurskra.txt'
     event_e.another_attribute = False
+    event_e.metadata = {
+        'author': 'Some Random Dude',
+        'version': 1245,
+        'last_changed': 'Long time ago'}
+    event_e.strings = [
+        'This ', 'is a ', 'long string']
 
     self.assertEquals(event_a, event_b)
     self.assertNotEquals(event_a, event_c)
     self.assertEquals(event_a, event_e)
     self.assertNotEquals(event_c, event_d)
+
+    serialized = event_a.ToProtoString()
+    test_event = event.EventObject()
+    test_event.FromProtoString(serialized)
+    self.assertEquals(event_a.EqualityString(), test_event.EqualityString())
 
   def testEqualityString(self):
     """Test the EventObject EqualityString."""

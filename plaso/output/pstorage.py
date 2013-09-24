@@ -38,14 +38,13 @@ class Pstorage(output.LogOutputFormatter):
     self._storage = storage.PlasoStorage(self.filehandle, pre_obj=pre_obj)
 
   def EventBody(self, event_object):
-    """Adds a protobuff to the storage file
+    """Add an EventObject protobuf to the storage file.
 
     Args:
       proto: The EventObject protobuf.
     """
-
     self._storage.AddEntry(event_object.ToProtoString())
 
   def End(self):
-    """Closes the storage file"""
+    """Closes the storage file."""
     self._storage.CloseStorage()

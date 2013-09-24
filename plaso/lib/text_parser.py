@@ -501,6 +501,17 @@ class PyparsingConstants(object):
       pyparsing.string.uppercase, pyparsing.string.lowercase,
       exact=3)
 
+  # Define date structures.
+  HYPHEN = pyparsing.Literal('-').suppress()
+  YEAR = pyparsing.Word(pyparsing.nums, exact=4)
+  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2)
+  DATE = pyparsing.Group(YEAR + '-' + TWO_DIGITS + '-' + TWO_DIGITS)
+  DATE_REV = pyparsing.Group(TWO_DIGITS + '-' + TWO_DIGITS + '-' + YEAR)
+  TIME = pyparsing.Group(TWO_DIGITS + ':' + TWO_DIGITS + ':' + TWO_DIGITS)
+  TIME_MSEC = TIME + '.' + INTEGER
+  DATE_TIME = DATE + TIME
+  DATE_TIME_MSEC = DATE + TIME_MSEC
+
   COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
       pyparsing.LineEnd())
   # TODO: Add more commonly used structs that can be used by parsers.
@@ -542,6 +553,7 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     """A constructor for the pyparsing assistant."""
     super(PyparsingSingleLineTextParser, self).__init__(pre_obj)
     self.encoding = self.ENCODING
+    self._current_offset = 0
 
   @abc.abstractmethod
   def VerifyStructure(self, line):
@@ -625,6 +637,8 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     if not self.VerifyStructure(line):
       raise errors.UnableToParseFile('Wrong file structure.')
 
+    # Set the offset to the beginning of the file.
+    self._current_offset = 0
     # Read every line in the text file.
     while line:
       parsed_structure = None
@@ -642,8 +656,10 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
       if parsed_structure:
         parsed_event = self.ParseRecord(use_key, parsed_structure)
         if parsed_event:
+          parsed_event.offset = self._current_offset
           yield parsed_event
       else:
         logging.warning(u'Unable to parse log line: {}'.format(line))
 
+      self._current_offset = filehandle.tell()
       line = self._ReadLine(filehandle)

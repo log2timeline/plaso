@@ -45,15 +45,10 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   IP = text_parser.PyparsingConstants.IPV4_ADDRESS | BLANK
   PORT = pyparsing.Word(pyparsing.nums, min=1, max=6) | BLANK
 
-  # Define date structures.
-  YEAR = pyparsing.Word(pyparsing.nums, exact=4)
-  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2)
-  DATE = pyparsing.Group(YEAR + '-' + TWO_DIGITS + '-' + TWO_DIGITS)
-  TIME = pyparsing.Group(TWO_DIGITS + ':' + TWO_DIGITS + ':' + TWO_DIGITS)
-
   # Define how a log line should look like.
   LOG_LINE = (
-      DATE.setResultsName('date') + TIME.setResultsName('time') +
+      text_parser.PyparsingConstants.DATE.setResultsName('date') +
+      text_parser.PyparsingConstants.TIME.setResultsName('time') +
       WORD.setResultsName('action') + WORD.setResultsName('protocol') +
       IP.setResultsName('source_ip') + IP.setResultsName('dest_ip') +
       PORT.setResultsName('source_port') + INT.setResultsName('dest_port') +
