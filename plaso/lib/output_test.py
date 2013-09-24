@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains tests for the output formatter."""
-
+import os
+import locale
+import sys
 import tempfile
 import unittest
 
@@ -150,6 +152,43 @@ class EventBufferTest(unittest.TestCase):
       CheckBufferLength(event_buffer, 2)
       event_buffer.Append(DummyEvent(123457, 'Now is different'))
       CheckBufferLength(event_buffer, 1)
+
+
+class OutputFilehandleTest(unittest.TestCase):
+  """Few unit tests for the OutputFilehandle."""
+
+  def setUp(self):
+    self.preferred_encoding = locale.getpreferredencoding()
+
+  def _GetLine(self):
+    # Time, Þorri allra landsmanna hlýddu á atburðinn.
+    return ('Time, \xc3\x9eorri allra landsmanna hl\xc3\xbdddu \xc3\xa1 '
+            'atbur\xc3\xb0inn.\n').decode('utf-8')
+
+  def testFilePath(self):
+    temp_path = ''
+    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+      temp_path = temp_file.name
+
+    with output.OutputFilehandle(self.preferred_encoding) as fh:
+      fh.Open(path=temp_path)
+      fh.WriteLine(self._GetLine())
+
+    line_read = u''
+    with open(temp_path, 'rb') as output_file:
+      line_read = output_file.read()
+
+    os.remove(temp_path)
+    self.assertEquals(line_read, self._GetLine().encode('utf-8'))
+
+  def testStdOut(self):
+    with output.OutputFilehandle(self.preferred_encoding) as fh:
+      fh.Open(sys.stdout)
+      try:
+        fh.WriteLine(self._GetLine())
+        self.assertTrue(True)
+      except (UnicodeEncodeError, UnicodeDecodeError):
+        self.assertTrue(False)
 
 
 if __name__ == '__main__':
