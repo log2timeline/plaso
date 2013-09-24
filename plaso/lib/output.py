@@ -162,13 +162,17 @@ class FileLogOutputFormatter(LogOutputFormatter):
     super(FileLogOutputFormatter, self).__init__(
         store, filehandle, config, filter_use)
     if not isinstance(filehandle, (file, StringIO.StringIO)):
-      self.filehandle = open(filehandle, 'w')
+      open_filehandle = open(filehandle, 'wb')
+    else:
+      open_filehandle = filehandle
+
+    self.filehandle = OutputFilehandle(self.encoding)
+    self.filehandle.Open(open_filehandle)
 
   def End(self):
     """Close the open filehandle after the last output."""
     super(FileLogOutputFormatter, self).End()
-    if self.filehandle is not sys.stdout:
-      self.filehandle.close()
+    self.filehandle.Close()
 
 
 class ProtoLogOutputFormatter(LogOutputFormatter):
@@ -273,6 +277,82 @@ class EventBuffer(object):
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
     self.End()
+
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
+
+
+class OutputFilehandle(object):
+  """A simple wrapper for filehandles to make character encoding easier.
+
+  All data is stored as an unicode text internally. However there are some
+  issues with clients that try to output unicode text to a non-unicode terminal.
+  Therefore a wrapper is created that checks if we are writing to a file, thus
+  using the default unicode encoding or if the attempt is to write to the
+  terminal, for which the default encoding of that terminal is used to encode
+  the text (if possible).
+  """
+
+  DEFAULT_ENCODING = 'utf-8'
+
+  def __init__(self, encoding='utf-8'):
+    """Initialize the output file handler.
+
+    Args:
+      encoding: The default terminal encoding, only used if attempted to write
+      to the terminal.
+    """
+    self._filehandle = None
+    self._encoding = encoding
+    # An attribute stating whether or not this is STDOUT.
+    self._standard_out = False
+
+  def Open(self, filehandle=sys.stdout, path=''):
+    """Open a filehandle to an output file.
+
+    Args:
+      filehandle: A file-like-object that is used to write data to.
+      path: If a file like object is not passed in it is possible
+      to pass in a path to a file, and a file-like-objec will be created.
+    """
+    if path:
+      self._filehandle = open(path, 'wb')
+    else:
+      self._filehandle = filehandle
+
+    if not hasattr(self._filehandle, 'name'):
+      self._standard_out = True
+    elif self._filehandle.name.startswith('<stdout>'):
+      self._standard_out = True
+
+  def WriteLine(self, line):
+    """Write a single line to the supplied filehandle."""
+    if not self._filehandle:
+      return
+
+    if self._standard_out:
+      # Write using preferred user encoding.
+      try:
+        self._filehandle.write(line.encode(self._encoding))
+      except UnicodeEncodeError:
+        logging.error(
+            u'Unable to properly write logline, save output to a file to '
+            u'prevent missing data.')
+        self._filehandle.write(line.encode(self._encoding, 'ignore'))
+
+    else:
+      # Write to a file, use unicode.
+      self._filehandle.write(line.encode(self.DEFAULT_ENCODING))
+
+  def Close(self):
+    """Close the filehandle, if applicable."""
+    if self._filehandle and not self._standard_out:
+      self._filehandle.close()
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    self.Close()
 
   def __enter__(self):
     """Make usable with "with" statement."""

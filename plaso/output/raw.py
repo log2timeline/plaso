@@ -32,4 +32,4 @@ class Raw(output.FileProtoLogOutputFormatter):
     """
 
     out_write = u'%s' % proto
-    self.filehandle.write(out_write.encode(self.encoding))
+    self.filehandle.WriteLine(out_write)

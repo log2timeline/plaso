@@ -46,7 +46,7 @@ class L2tcsv(output.FileLogOutputFormatter):
           for store_number in range(info.store_range[0], info.store_range[1]):
             self._preprocesses[store_number] = info
 
-    self.filehandle.write(
+    self.filehandle.WriteLine(
         'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         'version,filename,inode,notes,format,extra\n')
 
@@ -128,5 +128,5 @@ class L2tcsv(output.FileLogOutputFormatter):
 
     out_write = u'{0}\n'.format(
         u','.join(unicode(x).replace(',', ' ') for x in row))
-    self.filehandle.write(out_write.encode(self.encoding))
+    self.filehandle.WriteLine(out_write)
 
