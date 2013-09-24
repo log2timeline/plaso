@@ -607,12 +607,13 @@ class EventObject(object):
           if value.DESCRIPTOR.full_name.endswith('.Dict'):
             value_dict = {}
             for attribute in value.attributes:
-              value_dict[attribute.key] = AttributeFromProto(attribute)
+              _, value_dict[attribute.key] = AttributeFromProto(attribute)
             value = value_dict
           elif value.DESCRIPTOR.full_name.endswith('.Array'):
             value_list = []
             for value_item in value.values:
-              value_list.append(AttributeFromProto(value_item))
+              _, value_append = AttributeFromProto(value_item)
+              value_list.append(value_append)
             value = value_list
           else:
             value = AttributeFromProto(value)
@@ -1139,12 +1140,12 @@ def AttributeToProto(proto, name, value):
   if isinstance(value, (str, unicode)):
     proto.string = utils.GetUnicodeString(value)
 
+  elif isinstance(value, bool):
+    proto.boolean = value
+
   elif isinstance(value, (int, long)):
     # TODO: add some bounds checking.
     proto.integer = value
-
-  elif isinstance(value, bool):
-    proto.boolean = value
 
   elif isinstance(value, dict):
     proto_dict = plaso_storage_pb2.Dict()

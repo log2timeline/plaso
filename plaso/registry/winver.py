@@ -31,7 +31,7 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
 
   INT_STRUCT = construct.ULInt32('install')
 
-  # TODO: refactor remove this function in a later CL.
+  # TODO: Refactor remove this function in a later CL.
   def GetValueString(self, value_name):
     """Retrieves a specific string value from the Registry key.
 
@@ -39,10 +39,12 @@ class WinVerPlugin(win_registry_interface.KeyPlugin):
       value_name: The name of the value.
 
     Returns:
-      A string containing the value data if the value data is
-      a string type otherwise an empty string.
+      A string value if one is available, otherwise an empty string.
     """
     value = self._key.GetValue(value_name)
+
+    if not value:
+      return ''
 
     if not value.data or not value.DataIsString():
       return ''

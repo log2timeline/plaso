@@ -156,42 +156,71 @@ message EventObject {
   // TODO: Remove this field from the EventObject message.
   optional string source_long = 14;
 
-  // Include common attribute names so they do not have to be defined
-  // in the arbitrary attribute store.
+  /////////////////////////////////////////////////////////////////////
+  // Include common attribute names to flatten out the storage.
+  /////////////////////////////////////////////////////////////////////
 
   // The name of the parser used to extract this item.
   optional string parser = 15;
+  // The integer value of the inode of the file this entry is extracted from.
   optional int64 inode = 16;
+  // The extracted hostname this entry came from.
   optional string hostname = 17;
+  // The name of the plugin that was used, if applicable.
   optional string plugin = 18;
+  // For Windows Registry files, defines the type of registry, eg: NTUSER, SAM.
   optional string registry_type = 19;
+  // Boolean value that indicates whether the file was allocated or not.
   optional bool allocated = 20;
+  // For filesystem records, defines the type of filesystem, eg: NTFS, FAT.
   optional string fs_type = 21;
+  // Many parsers attempt to recover partially deleted entries, this boolean
+  // value is present in those parsers and indicates whether this particular
+  // entry is recovered or not.
   optional bool recovered = 22;
+  // Contains the record number in log files that contain sequential
+  // information, such as Windows EventLog.
   optional int64 record_number = 23;
+  // If the file being parsed contains different sources, such as "Security" or
+  // other similar source types it can be stored here.
   optional string source_name = 24;
+  // Some log files, such as the EventLog, stores information about from which
+  // computer this particular entry came from. Often used in log files that can
+  // consolidate entries from more than a single host.
   optional string computer_name = 25;
+  // Few entries that are specific to Windows EventLog entries, common enough
+  // to get specially defined attributes.
   optional int64 event_identifier = 26;
   optional int64 event_level = 27;
   optional string xml_string = 28;
   optional Array strings = 29;
+  // Some files contain information about the username that produced the
+  // extracted record.
   optional string username = 30;
+  // Sometimes the username is not available but a SID or a UID.
   optional string user_sid = 31;
+  // A field indicating the size of a cache file.
   optional int64 cached_file_size = 32;
+  // Mostly used in browser history plugins referencing the number of times
+  // someone visited that particular entry.
   optional int64 number_of_hits = 33;
+  // Used in MSIECF to indicate the index name of the cache directory.
   optional int64 cache_directory_index = 34;
+  // Mostly used in browser history plugins. Contains the title of the web
+  // visited web page (store in <head><title> tag).
   optional string title = 35;
-
   // Several parsers extract metadata items from events and store them
   // in a dictionary.
   optional Dict metadata = 36;
-
   // An URL extracted from things like browser history.
   optional string url = 37;
   // Windows registry keyname attribute.
   optional string keyname = 38;
   // Extracted values from a Windows registry key.
   optional Dict regvalue = 39;
+  // Some text based parsers define this attribute for their text
+  // representation.
+  optional string text = 40;
 };
 
 // The EventTagging is a simple message that describes comments,
