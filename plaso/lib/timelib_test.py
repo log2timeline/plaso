@@ -274,15 +274,19 @@ class TimeLibUnitTest(unittest.TestCase):
   def testTimestampFromTimeParts(self):
     """Test the FromTimeParts function."""
 
-    # Tue Jun 25 22:19:46 PDT 2013
+    # Tue Jun 25 22:19:46 PDT 2013.
     timestamp_pdt = timelib.Timestamp.FromTimeParts(
         2013, 6, 25, 22, 19, 46, 0, pytz.timezone('PST8PDT'))
-    # Wed Jun 26 05:19:46 UTC 2013
+    # Wed Jun 26 05:19:46 UTC 2013.
     timestamp_utc = timelib.Timestamp.FromTimeParts(
         2013, 6, 26, 5, 19, 46)
+    # Wed Jun 26 05:19:46 UTC 2013 (with microsecond precision).
+    timestamp_utc_micro = timelib.Timestamp.FromTimeParts(
+        2013, 6, 26, 5, 19, 46, 542)
 
     self.assertEquals(timestamp_pdt, 1372223986 * int(1e6))
     self.assertEquals(timestamp_utc, 1372223986 * int(1e6))
+    self.assertEquals(timestamp_utc_micro, 1372223986 * int(1e6) + 542)
 
   def testStringToDatetime(self):
     """Test the StringToDatetime function."""
