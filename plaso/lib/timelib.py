@@ -332,7 +332,7 @@ class Timestamp(object):
 
   @classmethod
   def FromTimeParts(
-      cls, year, month, day, hour, minute, second, microsecond=0,
+      cls, year, month, day, hour, minutes, seconds, microseconds=0,
       zone=pytz.utc):
     """Converts a list of time entries to a timestamp.
 
@@ -341,16 +341,16 @@ class Timestamp(object):
       month: An integer between 1 and 12.
       day: An integer representing the number of day in the month.
       hour: An integer representing the hour, 0 <= hour < 24.
-      minute: An integer, 0 <= minute < 60.
-      second: An integer, 0 <= second < 60.
-      microsecond: Number of microseconds, 0 <= microsecond < 1000000.
+      minutes: An integer, 0 <= minute < 60.
+      seconds: An integer, 0 <= second < 60.
+      microseconds: Number of microseconds, 0 <= microsecond < 1000000.
       zone: The timezone of the timestamp, defaults to UTC.
 
     Returns:
       An integer containing the timestamp or 0 on error.
     """
     date = datetime.datetime(
-        year, month, day, hour, minute, second, microsecond)
+        year, month, day, hour, minutes, seconds, microseconds)
 
     if type(zone) is str:
       zone = pytz.timezone(zone)
@@ -358,7 +358,7 @@ class Timestamp(object):
     date_use = zone.localize(date)
     epoch = Timetuple2Timestamp(date_use.utctimetuple())
 
-    return cls.FromPosixTime(epoch)
+    return cls.FromPosixTime(epoch) + microseconds
 
   @classmethod
   def LocaltimeToUTC(cls, timestamp, timezone, is_dst=False):

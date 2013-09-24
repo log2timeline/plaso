@@ -170,9 +170,10 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       text: The text obtained from the record entry.
 
-    Return:
-      nickname: The nickname if present.
-      text: The text written by nickname or service messages.
+    Returns:
+      A list containing two entries:
+        nickname: The nickname if present.
+        text: The text written by nickname or service messages.
     """
     stripped = self.STRIPPER.transformString(text)
     structure = self.MSG_ENTRY.parseString(stripped)

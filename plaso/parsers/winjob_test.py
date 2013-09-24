@@ -70,8 +70,9 @@ class WinJobTest(unittest.TestCase):
         u'no Google software using it.')
     self.assertEqual(event_object.comment, comment_expected)
 
-    # 2013-08-24T12:42:00+00:00
-    last_modified_date_expected = 1377348120000000
+    # 2013-08-24T12:42:00.112+00:00
+    # expr `date -u -d"2013-08-24T12:42:00+00:00" +"%s"` \* 1000000 + 112000
+    last_modified_date_expected = 1377348120112000
     self.assertEqual(event_object.timestamp,
         last_modified_date_expected)
 

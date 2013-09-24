@@ -485,7 +485,10 @@ class Engine(object):
       if hasattr(self, 'storage_thread'):
         self.storage_thread.terminate()
         logging.warning('Storage terminated.')
-      sys.exit(1)
+
+      # Sometimes the main thread will be unresponsive.
+      if not sys.platform.startswith('win'):
+        os.kill(os.getpid(), signal.SIGKILL)
 
 
 def GetCollector(config, pre_obj, collection_queue, storage_queue):
