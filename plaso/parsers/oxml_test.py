@@ -16,7 +16,6 @@
 # limitations under the License.
 """Tests for the OXML parser."""
 
-
 import os
 import unittest
 
