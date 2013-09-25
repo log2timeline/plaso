@@ -19,38 +19,38 @@
 categories = {
     'winxp': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'JavaIDXParser', 'MsiecfParser', 'OLECF', 'PfileStatParser',
+        'JavaIDXParser', 'MsiecfParser', 'OLECF', 'OXML', 'PfileStatParser',
         'SkypeParser', 'Symantec', 'WinEvtParser', 'WinInfo2Parser',
         'WinFirewallParser', 'WinJobParser', 'WinLnkParser',
         'WinPrefetchParser', 'WinRegistryParser'],
     'winxp_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Hachoir', 'JavaIDXParser', 'MsiecfParser', 'OLECF', 'PfileStatParser',
-        'SkypeParser', 'Symantec', 'WinEvtParser', 'WinInfo2Parser',
-        'WinFirewallParser', 'WinJobParser', 'WinLnkParser',
-        'WinPrefetchParser', 'WinRegistryParser'],
+        'Hachoir', 'JavaIDXParser', 'MsiecfParser', 'OLECF', 'OXML',
+        'PfileStatParser', 'SkypeParser', 'Symantec', 'WinEvtParser',
+        'WinInfo2Parser', 'WinFirewallParser', 'WinJobParser',
+        'WinLnkParser', 'WinPrefetchParser', 'WinRegistryParser'],
     'win7': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'JavaIDXParser', 'MsiecfParser', 'OLECF', 'PfileStatParser',
+        'JavaIDXParser', 'MsiecfParser', 'OLECF', 'OXML', 'PfileStatParser',
         'SkypeParser', 'Symantec', 'WinEvtxParser', 'WinFirewallParser',
         'WinJobParser', 'WinLnkParser', 'WinPrefetchParser',
         'WinRecycleParser', 'WinRegistryParser'],
     'win7_slow': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'Hachoir', 'JavaIDXParser', 'MsiecfParser', 'OLECF', 'PfileStatParser',
-        'SkypeParser', 'Symantec','WinEvtxParser', 'WinFirewallParser',
-        'WinJobParser', 'WinLnkParser', 'WinPrefetchParser',
-        'WinRecycleParser', 'WinRegistryParser'],
+        'Hachoir', 'JavaIDXParser', 'MsiecfParser', 'OLECF', 'OXML',
+        'PfileStatParser', 'SkypeParser', 'Symantec','WinEvtxParser',
+        'WinFirewallParser', 'WinJobParser', 'WinLnkParser',
+        'WinPrefetchParser', 'WinRecycleParser', 'WinRegistryParser'],
     'webhist': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'JavaIDXParser',
         'MsiecfParser'],
     'linux': [
         'ChromeHistoryParser', 'FirefoxHistoryParser', 'GoogleDriveParser',
-        'JavaIDXParser', 'OLECF', 'PfileStatParser', 'SELinux', 'SkypeParser',
-        'SyslogParser', 'XChatScrollbackParser'],
+        'JavaIDXParser', 'OLECF', 'OXML', 'PfileStatParser', 'SELinux',
+        'SkypeParser', 'SyslogParser', 'XChatScrollbackParser'],
     'macosx': [
         'ApplicationUsageParser', 'ChromeHistoryParser',
         'FirefoxHistoryParser', 'GoogleDriveParser', 'JavaIDXParser',
-        'MacKeeperCacheParser', 'LsQuarantineParser', 'OLECF',
+        'MacKeeperCacheParser', 'LsQuarantineParser', 'OLECF', 'OXML', 
         'PfileStatParser', 'PlistParser', 'SkypeParser', 'SyslogParser'],
 }
