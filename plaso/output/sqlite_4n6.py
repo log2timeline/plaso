@@ -55,6 +55,7 @@ class Sql4n6(output.LogOutputFormatter):
 
     # TODO: Revisit handeling this outside of plaso.
     self.dbname = filehandle
+    self.evidence = getattr(config, 'evidence', '-')
     self.append = getattr(config, 'append', False)
     self.fields = getattr(config, 'fields', [
         'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color'])
@@ -81,13 +82,13 @@ class Sql4n6(output.LogOutputFormatter):
       self.curs.execute(
           ('CREATE TABLE log2timeline (timezone TEXT, '
            'MACB TEXT, source TEXT, sourcetype TEXT, type TEXT, user TEXT, '
-           'host TEXT, desc TEXT, filename TEXT, inode TEXT, notes TEXT, '
+           'host TEXT, description TEXT, filename TEXT, inode TEXT, notes TEXT, '
            'format TEXT, extra TEXT, datetime datetime, reportnotes TEXT, '
            'inreport TEXT, tag TEXT, color TEXT, offset INT,'
            'store_number INT, store_index INT, vss_store_number INT,'
            'url TEXT, record_number TEXT,'
            'event_identifier TEXT, event_type TEXT,'
-           'source_name TEXT, user_sid TEXT, computer_name TEXT)'))
+           'source_name TEXT, user_sid TEXT, computer_name TEXT, evidence TEXT)'))
       if self.set_status:
         self.set_status('Created table log2timeline.')
 
@@ -269,18 +270,19 @@ class Sql4n6(output.LogOutputFormatter):
            getattr(event_object, 'event_type', '-'),
            getattr(event_object, 'source_name', '-'),
            getattr(event_object, 'user_sid', '-'),
-           getattr(event_object, 'computer_name', '-')
+           getattr(event_object, 'computer_name', '-'),
+           self.evidence
           )
 
     self.curs.execute(
         ('INSERT INTO log2timeline(timezone, MACB, source, '
-         'sourcetype, type, user, host, desc, filename, '
+         'sourcetype, type, user, host, description, filename, '
          'inode, notes, format, extra, datetime, reportnotes, inreport,'
          'tag, color, offset, store_number, store_index, vss_store_number,'
          'URL, record_number, event_identifier, event_type,'
-         'source_name, user_sid, computer_name)'
+         'source_name, user_sid, computer_name, evidence)'
          ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
+         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
 
     self.count += 1
 
