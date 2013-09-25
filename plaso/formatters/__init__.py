@@ -28,6 +28,7 @@ from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
 from plaso.formatters import msiecf
 from plaso.formatters import olecf
+from plaso.formatters import oxml
 from plaso.formatters import pcap
 from plaso.formatters import plist
 from plaso.formatters import recycler
