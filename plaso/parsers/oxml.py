@@ -61,16 +61,15 @@ class OpenXMLParser(parser.PlasoParser):
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
               self.parser_name, filehandle.name, 'Not a Zip file.'))
-  
+
     zip_container = zipfile.ZipFile(filehandle, 'r')
 
     zip_name_list = set(zip_container.namelist())
-    
+
     if not self._FILES_REQUIRED.issubset(zip_name_list):
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
-              self.parser_name, filehandle.name, 'OXML element(s) missing.'))  
-       
+              self.parser_name, filehandle.name, 'OXML element(s) missing.'))
     metadata = {}
 
     rels_xml = zip_container.read('_rels/.rels')
@@ -85,7 +84,7 @@ class OpenXMLParser(parser.PlasoParser):
           logging.warning(
             u'Unable to read property [%s].', exception)
           continue
-          
+
         for element in root.iter():
           if element.text:
             _, _, tag = element.tag.partition('}')
@@ -100,10 +99,10 @@ class OpenXMLParser(parser.PlasoParser):
 
     for key, value in metadata.items():
       if key in ('created', 'modified', 'lastPrinted'):
-        continue   
+        continue
       attribute_name = self._METAKEY_TRANSLATE.get(key, self.FixString(key))
       setattr(container, attribute_name, value)
-    
+
     if metadata.get('created', None):
       container.Append(OpenXMLParserEvent(
           metadata['created'], eventdata.EventTimestamp.CREATION_TIME))
@@ -111,7 +110,7 @@ class OpenXMLParser(parser.PlasoParser):
     if metadata.get('modified', None):
       container.Append(OpenXMLParserEvent(
           metadata['modified'], eventdata.EventTimestamp.MODIFICATION_TIME))
-    
+
     if metadata.get('lastPrinted', None):
       container.Append(OpenXMLParserEvent(
           metadata['lastPrinted'], eventdata.EventTimestamp.LAST_PRINTED))
@@ -120,9 +119,8 @@ class OpenXMLParser(parser.PlasoParser):
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
               self.parser_name, filehandle.name, 'No timestamps.'))
-      
-    return container
 
+    return container
 
   def FixString(self, key):
     """Convert CamelCase to lower_with_underscore."""
