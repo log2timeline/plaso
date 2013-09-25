@@ -71,7 +71,7 @@ class OLECF(parser.PlasoParser):
     container.template = self.SetValue(metadata.template)
     container.last_saved_by = self.SetValue(
         metadata.last_saved_by)
-    container.revision_number = self.SetValue(
+    container.revision_num = self.SetValue(
         metadata.revision_number)
     container.total_edit_time = self.SetValue(
         metadata.total_edit_time)
@@ -87,9 +87,9 @@ class OLECF(parser.PlasoParser):
     container.hidden_slides = self.SetValue(metadata.hidden_slides)
     container.version = self.SetValue(metadata.version)
     container.doc_version = self.SetValue(metadata.doc_version)
-    container.m_notes = self.SetValue(metadata.notes)
+    container.notes = self.SetValue(metadata.notes)
     container.dig_sig = self.SetValue(metadata.dig_sig)
-    container.shared_doc = self.SetValue(metadata.shared_doc)
+    container.shared = self.SetValue(metadata.shared_doc)
     container.language = self.SetValue(metadata.language)
     container.mm_clips = self.SetValue(metadata.mm_clips)
 
@@ -106,7 +106,7 @@ class OLECF(parser.PlasoParser):
     lastprinted_date = metadata.last_printed
     if isinstance(lastprinted_date, datetime.datetime):
       container.Append(OLE2Event(
-          lastprinted_date, 'Last Printed'))
+          lastprinted_date, eventdata.EventTimestamp.LAST_PRINTED))
 
     return container
 

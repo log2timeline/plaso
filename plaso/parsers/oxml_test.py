@@ -14,34 +14,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the OLECF parser."""
+"""Tests for the OXML parser."""
+
 
 import os
 import unittest
 
 # Shut up pylint.
-# * W0611: 28,0: Unused import olecf_formatter
+# * W0611: 28,0: Unused import oxml_formatter
 # pylint: disable=W0611
-from plaso.formatters import olecf as olecf_formatter
+from plaso.formatters import oxml as oxml_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import olecf
+from plaso.parsers import oxml
 
 
-class OLECFTest(unittest.TestCase):
-  """Tests for the OLECF parser."""
+class OXMLTest(unittest.TestCase):
+  """Tests for the OXML parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = olecf.OLECF(pre_obj)
+    self.test_parser = oxml.OpenXMLParser(pre_obj)
     # Show full diff results, part of TestCase so does not
     # follow our naming conventions.
     self.maxDiff = None
 
   def testParseFile(self):
     """Read a OLECF file and run a few tests."""
-    test_file = os.path.join('test_data', 'Document.doc')
+    test_file = os.path.join('test_data', 'Document.docx')
 
     events = None
     with open(test_file, 'rb') as file_object:
@@ -49,34 +50,32 @@ class OLECFTest(unittest.TestCase):
 
     self.assertEquals(len(events), 2)
 
-    # Date: 2012-12-10T18:38:00.000000+00:00.
-    self.assertEquals(events[0].timestamp, 1355164680000000)
+    # Date: 2012-11-07T23:29:00.000000+00:00.
+    self.assertEquals(events[0].timestamp, 1352330940000000)
     self.assertEquals(events[0].timestamp_desc,
                       eventdata.EventTimestamp.CREATION_TIME)
 
     event_object = events[1]
 
-    self.assertEquals(event_object.num_chars, 18)
-    self.assertEquals(event_object.revision_num, '4')
+    self.assertEquals(event_object.num_chars, '13')
+    self.assertEquals(event_object.total_time, '1385')
+    self.assertEquals(event_object.characters_with_spaces, '14')
+    self.assertEquals(event_object.i4, '1')
+    self.assertEquals(event_object.app_version, '14.0000')
+    self.assertEquals(event_object.num_lines, '1')
+    self.assertEquals(event_object.scale_crop, 'false')
+    self.assertEquals(event_object.num_pages, '1')
+    self.assertEquals(event_object.num_words, '2')
+    self.assertEquals(event_object.links_up_to_date, 'false')
+    self.assertEquals(event_object.num_paragraphs, '1')
+    self.assertEquals(event_object.doc_security, '0')
+    self.assertEquals(event_object.hyperlinks_changed, 'false')
+    self.assertEquals(event_object.revision_num, '3')
     self.assertEquals(event_object.last_saved_by, 'Nides')
-    self.assertEquals(event_object.author, 'DAVID NIDES')
-    self.assertEquals(event_object.title, 'Table of Context')
-    self.assertEquals(event_object.security, 0)
-    self.assertEquals(event_object.creating_application,
+    self.assertEquals(event_object.author, 'Nides')
+    self.assertEquals(event_object.creating_app,
                       'Microsoft Office Word')
-    self.assertEquals(event_object.codepage, 1252)
     self.assertEquals(event_object.template, 'Normal.dotm')
-    self.assertEquals(event_object.company, 'KPMG')
-    self.assertEquals(event_object.manager, None)
-    self.assertEquals(event_object.slides, None)
-    self.assertEquals(event_object.hidden_slides, None)
-    self.assertEquals(event_object.version, 917504)
-    self.assertEquals(event_object.doc_version, None)
-    self.assertEquals(event_object.notes, None)
-    self.assertEquals(event_object.dig_sig, None)
-    self.assertEquals(event_object.shared, False)
-    self.assertEquals(event_object.language, None)
-    self.assertEquals(event_object.mm_clips, None)
 
     # Test the event specific formatter.
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
@@ -84,13 +83,14 @@ class OLECFTest(unittest.TestCase):
 
     # TODO: Add test for msg_short.
     self.assertEquals(msg, (
-        u'Creating App: Microsoft Office Word '
-        'App version: 917504 '
-        'Title: Table of Context Last saved by: Nides Author: '
-        'DAVID NIDES Total edit time (secs): 0 Revision Num: '
-        '4 Template: Normal.dotm Num pages: '
-        '1 Num words: 3 Num chars: 18 Company: KPMG Security: '
-        '0 Codepage: 1252'))
+      u'Creating App: Microsoft Office Word App '
+      'version: 14.0000 Last saved by: Nides Author: Nides '
+      'Revision Num: 3 '
+      'Template: Normal.dotm Num pages: 1 '
+      'Num words: 2 Num chars: 13 Num lines: 1 '
+      'Hyperlinks changed: false '
+      'Links up to date: false '
+      'Scale crop: false'))
 
 
 if __name__ == '__main__':
