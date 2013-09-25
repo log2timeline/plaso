@@ -52,6 +52,8 @@ class EventTimestamp(object):
   FIRST_CONNECTED = u'First Connection Time'
   LAST_CONNECTED = u'Last Connection Time'
 
+  LAST_PRINTED = u'Last Printed Time'
+
 
 class EventFormatterManager(object):
   """Class to manage the event formatters."""
