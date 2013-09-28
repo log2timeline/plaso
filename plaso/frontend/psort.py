@@ -38,7 +38,9 @@ from plaso import output   # pylint: disable-msg=W0611
 from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import output as output_lib
+from plaso.lib import pfilter
 from plaso.lib import storage
+from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 import pytz
@@ -119,6 +121,28 @@ def ParseStorage(my_args):
               my_args.filter))
       sys.exit(1)
 
+  if my_args.slice:
+    if my_args.timezone == 'UTC':
+      zone = pytz.utc
+    else:
+      zone = pytz.timezone(my_args.timezone)
+
+    timestamp = timelib.Timestamp.FromTimeString(my_args.slice, zone)
+    # Convert number of minutes to microseconds.
+    range_operator = my_args.slice_size * int(1e6) * 60
+    # Set the time range.
+    pfilter.TimeRangeCache.SetLowerTimestamp(timestamp - range_operator)
+    pfilter.TimeRangeCache.SetUpperTimestamp(timestamp + range_operator)
+
+    # Check if the filter has a date filter built in and warn if so.
+    if my_args.filter:
+      if 'date' in my_args.filter or 'timestamp' in my_args.filter:
+        logging.warning(
+            'You are trying to use both a "slice" and a date filter, the '
+            'end results might not be what you want it to be... a small delay '
+            'is introduced to allow you to read this message')
+        time.sleep(5)
+
   with SetupStorage(my_args.storagefile) as store:
     # Identify which stores to use.
     store.SetStoreLimit(filter_use)
@@ -188,6 +212,20 @@ def ProcessArguments(arguments):
   parser.add_argument(
       '-w', '--write', metavar='OUTPUTFILE', dest='write',
       help='Output filename.  Defaults to stdout.')
+
+  parser.add_argument(
+      '--slice', metavar='DATE', dest='slice', type=str,
+      default='', action='store', help=(
+          'Create a time slice around a certain date. This parameter, if '
+          'defined will display all events that happened X minutes before and '
+          'after the defined date. X is controlled by the parameter '
+          '--slice_size but defaults to 5 minutes.'))
+
+  parser.add_argument(
+      '--slice_size', dest='slice_size', type=int, default=5, action='store',
+      help=(
+          'Defines the number of minutes the slice size should be [default '
+          '5]. See --slice for more details about this option.'))
 
   parser.add_argument(
       '-v', '--version', dest='version', action='version',
