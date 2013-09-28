@@ -63,6 +63,9 @@ def RunExtensionExtraction(options, extensions, fscache):
         FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number
       else:
         FileSaver.prefix = ''
+      if os.path.sep != '/':
+        fh.name = fh.name.replace('/', os.path.sep)
+
       FileSaver.SaveFile(fh, options.path)
 
 
@@ -87,8 +90,8 @@ def ExtractFiles(
     with pfile.OpenPFile(pathspec_string, fscache=fscache) as fh:
       # There will be issues on systems that use a different separator than a
       # forward slash. However a forward slash is always used in the pathspec.
-      if os.sep != '/':
-        fh.name = fh.name.replace('/', os.sep)
+      if os.path.sep != '/':
+        fh.name = fh.name.replace('/', os.path.sep)
       FileSaver.SaveFile(fh, export_path)
 
 
@@ -103,10 +106,11 @@ class FileSaver(object):
     """Take a filehandle and an export path and save the file."""
     directory = ''
     filename = ''
-    if os.sep in fh.name:
-      directory_string, _, filename = fh.name.rpartition(os.sep)
+    if os.path.sep in fh.name:
+      directory_string, _, filename = fh.name.rpartition(os.path.sep)
       if directory_string:
-        directory = os.path.join(export_path, *directory_string.split(os.sep))
+        directory = os.path.join(
+            export_path, *directory_string.split(os.path.sep))
     else:
       filename = fh.name
 
@@ -115,7 +119,7 @@ class FileSaver(object):
     else:
       extracted_filename = filename
 
-    while extracted_filename.startswith(os.sep):
+    while extracted_filename.startswith(os.path.sep):
       extracted_filename = extracted_filename[1:]
 
     if directory:

@@ -115,13 +115,15 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       logging.warning('Unable to extract timestamp from Winfirewall logline.')
       return
 
-    time_string = '{} {}'.format(''.join(date), ''.join(time))
+    year, month, day = date
+    hour, minute, second = time
     if self.use_local_zone:
       zone = self.local_zone
     else:
       zone = pytz.utc
 
-    timestamp = timelib.Timestamp.FromTimeString(time_string, zone)
+    timestamp = timelib.Timestamp.FromTimeParts(
+        year, month, day, hour, minute, second, 0, zone)
 
     if not timestamp:
       return

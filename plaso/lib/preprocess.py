@@ -535,7 +535,7 @@ class FileSystemCollector(Collector):
     for part in path_list:
       if isinstance(part, (str, unicode)):
         if part == '/':
-          part = os.sep
+          part = os.path.sep
 
         if len(paths):
           for index, path in enumerate(paths):
@@ -577,7 +577,7 @@ class FileSystemCollector(Collector):
     """Return a list of files given a path and a pattern."""
     ret = []
     file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
-    if path == os.sep:
+    if path == os.path.sep:
       directory = self._mount_point
       path_use = '.'
     else:
