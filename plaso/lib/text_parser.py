@@ -485,7 +485,7 @@ class PyparsingConstants(object):
   """A class that maintains constants for pyparsing."""
 
   # Numbers.
-  INTEGER = pyparsing.Word(pyparsing.nums)
+  INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(PyParseIntCast)
   IPV4_OCTET = pyparsing.Word(pyparsing.nums, min=1, max=3).setParseAction(
       PyParseIntCast, PyParseRangeCheck(0, 255))
   IPV4_ADDRESS = (IPV4_OCTET + ('.' + IPV4_OCTET) * 3).setParseAction(
@@ -503,12 +503,20 @@ class PyparsingConstants(object):
 
   # Define date structures.
   HYPHEN = pyparsing.Literal('-').suppress()
-  YEAR = pyparsing.Word(pyparsing.nums, exact=4)
-  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2)
-  DATE = pyparsing.Group(YEAR + '-' + TWO_DIGITS + '-' + TWO_DIGITS)
-  DATE_REV = pyparsing.Group(TWO_DIGITS + '-' + TWO_DIGITS + '-' + YEAR)
-  TIME = pyparsing.Group(TWO_DIGITS + ':' + TWO_DIGITS + ':' + TWO_DIGITS)
-  TIME_MSEC = TIME + '.' + INTEGER
+  YEAR = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      PyParseIntCast)
+  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      PyParseIntCast)
+  DATE = pyparsing.Group(
+      YEAR + pyparsing.Suppress('-') + TWO_DIGITS +
+      pyparsing.Suppress('-') + TWO_DIGITS)
+  DATE_REV = pyparsing.Group(
+      TWO_DIGITS + pyparsing.Suppress('-') + TWO_DIGITS +
+      pyparsing.Suppress('-') + YEAR)
+  TIME = pyparsing.Group(
+      TWO_DIGITS + pyparsing.Suppress(':') + TWO_DIGITS +
+      pyparsing.Suppress(':') + TWO_DIGITS)
+  TIME_MSEC = TIME + pyparsing.Suppress('.') + INTEGER
   DATE_TIME = DATE + TIME
   DATE_TIME_MSEC = DATE + TIME_MSEC
 
