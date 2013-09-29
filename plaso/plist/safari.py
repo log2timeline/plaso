@@ -37,7 +37,6 @@ class SafariHistoryEvent(event.EventObject):
     self.data_type = 'safari:history:visit'
     self.timestamp = timestamp
     self.timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
-
     self.url = history_entry.get('', None)
     self.title = history_entry.get('title', None)
     display_title = history_entry.get('displayTitle', None)
@@ -66,7 +65,7 @@ class SafariHistoryPlugin(plist_interface.PlistPlugin):
 
     for history_entry in self.match.get('WebHistoryDates', {}):
       try:
-        time = timelib.Timestamp.FromHfsTime(float(
+        time = timelib.Timestamp.FromCocoaTime(float(
             history_entry.get('lastVisitedDate', 0)))
       except ValueError:
         logging.warning(u'Unable to translate timestamp: {}'.format(
