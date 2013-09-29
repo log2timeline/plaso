@@ -43,7 +43,7 @@ class LsQuarantineEvent(event.EventObject):
     """
     super(LsQuarantineEvent, self).__init__()
 
-    self.timestamp = timelib.Timestamp.FromHfsPlusTime(timestamp)
+    self.timestamp = timelib.Timestamp.FromCocoaTime(timestamp)
     self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
 
     self.url = url
