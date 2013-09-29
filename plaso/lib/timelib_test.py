@@ -25,26 +25,36 @@ import pytz
 class TimeLibUnitTest(unittest.TestCase):
   """A unit test for the timelib."""
 
-  def testHfsTime(self):
-    """Test the HFS and HFSplus functions."""
-    # TODO: Add more edge case tests.
-
-    # date -u -d "Mon Jul  8 21:30:45 UTC 2013" +"%s.%N"
-    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(395011845),
+  def testCocoaTime(self):
+    """Test the processing of timestamps created by Cocoa."""
+    # date -u -d "Mon Jul  8 21:30:45 UTC 2013" +"%s.%N" = 1373319045.000000000
+    self.assertEquals(timelib.Timestamp.FromCocoaTime(395011845),
                       1373319045000000)
-    # date -u -d "Fri Jul 12 20:19:02 UTC 2013" +"%s.%N"
-    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(395353142),
+    # date -u -d "Fri Jul 12 20:19:02 UTC 2013" +"%s.%N" = 1373660342.000000000
+    self.assertEquals(timelib.Timestamp.FromCocoaTime(395353142),
                       1373660342000000)
 
-    # date -u -d "Mon Jul  8 16:27:49 UTC 2013" + "%s.%N"
-    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(394993669),
+    # date -u -d "Mon Jul  8 16:27:49 UTC 2013" +"%s.%N" = 1373300869.000000000
+    self.assertEquals(timelib.Timestamp.FromCocoaTime(394993669),
                       1373300869000000)
 
-    # date -d "Thu Aug  1 15:25:28 EDT 2013" +"%s.%N"
-    # date -u -d @1375385128
-    # Thu Aug  1 19:25:28 UTC 2013
+  def testHFSTimes(self):
+    # date -d "Thu Aug  1 15:25:28 EDT 2013" +"%s.%N" = 1375385128.000000000
+    # EDT is UTC-4, so 1375385128 - (4*60*60) = 1375370728
+    # 1375370728 + 2082844800 = 3458244328
     self.assertEquals(timelib.Timestamp.FromHfsTime(
-        397063528, pytz.timezone('EST5EDT'), True), 1375385128000000)
+        3458215528, pytz.timezone('EST5EDT'), True), 1375385128000000)
+
+    # date -d "Thu Aug  1 15:25:28 UTC 2013" +"%s.%N" = 1375370728.000000000
+    # 1375370728 + 2082844800 = 3458215528
+    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(
+        3458215528), 1375370728000000)
+
+    # date -d "Feb  29 15:25:28 UTC 2012" +"%s.%N" = 1330529128.000000000
+    # 1330529128 + 2082844800 = 3413373928
+    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(
+        3413373928), 1330529128000000)
+
 
   def testTimestampIsLeapYear(self):
     """Test the is leap year check."""
