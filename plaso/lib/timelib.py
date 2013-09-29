@@ -83,8 +83,17 @@ class Timestamp(object):
   # The difference between Jan 1, 1601 and Jan 1, 1970 in 100th of nano seconds.
   FILETIME_TO_POSIX_BASE = 11644473600L * 10000000
 
-  # The difference between January 1, 1904 and Jan 1, 1970.
-  HFSTIME_TO_POSIX_BASE = 978307200
+  # The number of seconds between January 1, 1904 and Jan 1, 1970.
+  # Value confirmed with sleuthkit:
+  #  http://svn.sleuthkit.org/repos/sleuthkit/trunk/tsk3/fs/tsk_hfs.h
+  # and linux source file linux/include/linux/hfsplus_fs.h
+  HFSTIME_TO_POSIX_BASE = 2082844800
+
+  # The number of seconds between January 1, 1970 and January 1, 2001.
+  # As specified in:
+  # https://developer.apple.com/library/ios/documentation/
+  #       cocoa/Conceptual/DatesAndTimes/Articles/dtDates.html
+  COCOA_TIME_TO_POSIX_BASE = 978307200
 
   @classmethod
   def IsLeapYear(cls, year):
@@ -198,8 +207,8 @@ class Timestamp(object):
     Returns:
       An integer containing the timestamp or 0 on error.
     """
-    timestamp_unmodified = cls.FromHfsPlusTime(hfs_time)
-    return cls.LocaltimeToUTC(timestamp_unmodified, timezone, is_dst)
+    timestamp_local= cls.FromHfsPlusTime(hfs_time)
+    return cls.LocaltimeToUTC(timestamp_local, timezone, is_dst)
 
   @classmethod
   def FromHfsPlusTime(cls, hfs_time):
@@ -215,7 +224,23 @@ class Timestamp(object):
     Returns:
       An integer containing the timestamp or 0 on error.
     """
-    return cls.FromPosixTime(hfs_time + cls.HFSTIME_TO_POSIX_BASE)
+    return cls.FromPosixTime(hfs_time - cls.HFSTIME_TO_POSIX_BASE)
+
+  @classmethod
+  def FromCocoaTime(cls, cocoa_time):
+    """Converts a Cocoa time to a timestamp.
+
+    In Cocoa, time and date values are stored in a unsigned 32-bit integer
+    containing the number of seconds since January 1, 2001 at 00:00:00
+    (midnight) UTC (GMT).
+
+    Args:
+      cocoa_time: The timestamp in Cocoa format.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    return cls.FromPosixTime(cocoa_time + cls.COCOA_TIME_TO_POSIX_BASE)
 
   @classmethod
   def FromFatDateTime(cls, fat_date_time):
