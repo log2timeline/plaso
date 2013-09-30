@@ -60,18 +60,27 @@ class WinLnkLinkEventContainer(event.EventContainer):
 class WinLnkParser(parser.PlasoParser):
   """Parses Windows Shortcut (LNK) files."""
 
+  def __init__(self, pre_obj):
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+    """
+    super(WinLnkParser, self).__init__(pre_obj)
+    self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
+
   def Parse(self, file_object):
     """Extract data from a Windows Shortcut (LNK) file.
 
     Args:
       file_object: a file-like object to read data from.
 
-    Returns:
-      an event container (EventContainer) that contains the parsed
+    Yields:
+      An event container (EventContainer) that contains the parsed
       attributes.
     """
     lnk_file = pylnk.file()
-    lnk_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
+    lnk_file.set_ascii_codepage(self._codepage)
 
     try:
       lnk_file.open_file_object(file_object)
@@ -99,5 +108,4 @@ class WinLnkParser(parser.PlasoParser):
     # TODO: add support for the distributed link tracker.
     # TODO: add support for the shell item.
 
-    return container
-
+    yield container

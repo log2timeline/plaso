@@ -15,12 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A definition of the filter interface for filters in plaso."""
+
 import abc
 
 from plaso.lib import errors
 from plaso.lib import registry
-# Suppress all warnings about changing functions to methods.
-# pylint: disable-msg=R0201
 
 
 class FilterObject(object):

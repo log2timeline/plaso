@@ -52,7 +52,7 @@ class PlistParser(parser.PlasoParser):
     super(PlistParser, self).__init__(pre_obj)
     self._plugins = plist_interface.GetPlistPlugins()
 
-  def GetTopLevel(self, filehandle):  # pylint: disable=R0201
+  def GetTopLevel(self, filehandle):
     """Returns the deserialized content of a plist as a dictionary object.
 
     Args:
