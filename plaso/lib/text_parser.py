@@ -279,7 +279,6 @@ class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
         timestamp, getattr(self, 'entry_offset', 0), self.attributes)
 
   # TODO: this is a rough initial implementation to get this working.
-  # pylint: disable-msg=R0201
   def CreateEvent(self, timestamp, offset, attributes):
     """Creates an event.
 
@@ -330,7 +329,7 @@ class TextCSVParser(parser.PlasoParser):
     """Return a bool indicating whether or not this is the correct parser."""
     pass
 
-  def ParseRow(self, row):    # pylint: disable-msg=R0201
+  def ParseRow(self, row):
     """Parse a line of the log file and return an extracted EventObject.
 
     Args:

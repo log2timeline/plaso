@@ -118,6 +118,13 @@ class EventContainer(object):
 
     return counter
 
+  @property
+  def number_of_events(self):
+    """The number of events in the container."""
+    # TODO: remove the sub containers support, which is not used and change
+    # into: return len(self.events)
+    return len(self)
+
   def GetValue(self, attr):
     """Determine if an attribute is set in container or in parent containers.
 

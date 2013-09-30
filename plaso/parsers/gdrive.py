@@ -14,15 +14,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This file contains a parser for the Google Drive snaphots.
 
    The Google Drive snapshots are stored in SQLite database files named
    snapshot.db.
 """
-# Shut up pylint
-# * R0924: Badly implemented Container
-# pylint: disable=R0924
 
 from plaso.lib import event
 from plaso.lib import eventdata

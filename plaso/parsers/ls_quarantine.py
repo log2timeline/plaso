@@ -15,9 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for the Mac OS X launch services quarantine events."""
-# Shut up pylint
-# * R0201: Method could be a function
-# pylint: disable=R0201
 
 from plaso.lib import event
 from plaso.lib import eventdata

@@ -53,10 +53,12 @@ class WinLnkParserTest(unittest.TestCase):
     # 	Icon location			: %windir%\system32\migwiz\migwiz.exe
     # 	Environment variables location	: %windir%\system32\migwiz\migwiz.exe
 
-    self.assertEquals(len(events), 3)
+    self.assertEquals(len(events), 1)
+
+    event_container = events[0]
 
     # The Last Accessed timestamp.
-    event_object = events[0]
+    event_object = event_container.events[0]
 
     expected_string = u'@%windir%\\system32\\migwiz\\wet.dll,-590'
     self.assertEquals(event_object.description, expected_string)
@@ -78,14 +80,14 @@ class WinLnkParserTest(unittest.TestCase):
                       (1247527742 * 1000000) + int(849131000 / 1000))
 
     # date -u -d"Jul 13, 2009 23:29:02.849131000" +"%s.%N"
-    event_object = events[1]
+    event_object = event_container.events[1]
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.CREATION_TIME)
     self.assertEquals(event_object.timestamp,
                       (1247527742 * 1000000) + int(849131000 / 1000))
 
     # date -u -d"Jul 14, 2009 01:39:18.220000000" +"%s.%N"
-    event_object = events[2]
+    event_object = event_container.events[2]
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.MODIFICATION_TIME)
     self.assertEquals(event_object.timestamp,
