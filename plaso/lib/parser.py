@@ -20,9 +20,6 @@ This class contains a base framework class for parsing fileobjects, and
 also some implementations that extend it to provide a more comprehensive
 parser.
 """
-# Shut up pylint
-# * R0201: Method could be a function
-# pylint: disable=R0201
 
 import abc
 import logging

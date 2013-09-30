@@ -73,6 +73,15 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
 class WinEvtxParser(parser.PlasoParser):
   """Parses Windows XML EventLog (EVTX) files."""
 
+  def __init__(self, pre_obj):
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+    """
+    super(WinEvtxParser, self).__init__(pre_obj)
+    self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
+
   def Parse(self, file_object):
     """Extract data from a Windows XML EventLog (EVTX) file.
 
@@ -83,7 +92,7 @@ class WinEvtxParser(parser.PlasoParser):
       An event object (WinEvtxRecordEvent) that contains the parsed data.
     """
     evtx_file = pyevtx.file()
-    evtx_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
+    evtx_file.set_ascii_codepage(self._codepage)
 
     try:
       evtx_file.open_file_object(file_object)

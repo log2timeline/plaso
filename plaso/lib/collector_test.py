@@ -47,7 +47,6 @@ class TempDirectory(object):
 class PlasoCollectorUnitTest(unittest.TestCase):
   """The unit test for plaso storage."""
 
-  # pylint: disable-msg=R0201
   def GetEvents(self, collector_queue):
     """Return all events."""
     events = []
