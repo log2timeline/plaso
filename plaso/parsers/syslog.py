@@ -86,7 +86,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     self.attributes['reporter'] = ''
     self.attributes['pid'] = ''
 
-  def GetYear(self, stat, zone):    # pylint: disable-msg=R0201
+  def GetYear(self, stat, zone):
     """Retrieves the year either from the input file or from the settings."""
     time = stat.attributes.get('crtime', 0)
     if not time:

@@ -39,8 +39,13 @@ class WinRegistryParser(parser.PlasoParser):
   }
 
   def __init__(self, pre_obj):
-    """Default constructor for the Windows registry."""
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+    """
     super(WinRegistryParser, self).__init__(pre_obj)
+    self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
     self._plugins = win_registry_interface.GetRegistryPlugins()
 
   def Scan(self, file_object):
@@ -54,8 +59,6 @@ class WinRegistryParser(parser.PlasoParser):
     magic = 'regf'
     data = file_object.read(len(magic))
 
-    codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
-
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
@@ -65,7 +68,7 @@ class WinRegistryParser(parser.PlasoParser):
 
     # Determine type, find all parsers
     try:
-      winreg_file = registry.OpenFile(file_object, codepage=codepage)
+      winreg_file = registry.OpenFile(file_object, codepage=self._codepage)
     except IOError as e:
       raise errors.UnableToParseFile(
           u'[%s] Unable to parse file %s: %s' % (

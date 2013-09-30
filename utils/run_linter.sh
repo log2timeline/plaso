@@ -19,8 +19,6 @@
 EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
-export PYTHONPATH=../
-
 if [ ! -f "utils/common.sh" ];
 then
   echo "Missing common functions, are you in the wrong directory?";
