@@ -33,6 +33,7 @@ from plaso.parsers import pcap
 from plaso.parsers import plist
 from plaso.parsers import recycler
 from plaso.parsers import selinux
+from plaso.parsers import skydrivelog
 from plaso.parsers import skype
 from plaso.parsers import syslog
 from plaso.parsers import symantec
