@@ -207,7 +207,7 @@ class Timestamp(object):
     Returns:
       An integer containing the timestamp or 0 on error.
     """
-    timestamp_local= cls.FromHfsPlusTime(hfs_time)
+    timestamp_local = cls.FromHfsPlusTime(hfs_time)
     return cls.LocaltimeToUTC(timestamp_local, timezone, is_dst)
 
   @classmethod
@@ -482,7 +482,7 @@ def StringToDatetime(timestring, timezone=pytz.utc, dayfirst=False):
   if datetimeobject.tzinfo:
     return datetimeobject.astimezone(pytz.utc)
 
-  return datetimeobject.replace(tzinfo=timezone).astimezone(pytz.utc)
+  return timezone.localize(datetimeobject)
 
 
 def GetCurrentYear():
