@@ -374,8 +374,15 @@ class Timestamp(object):
     Returns:
       An integer containing the timestamp or 0 on error.
     """
-    date = datetime.datetime(
-        year, month, day, hour, minutes, seconds, microseconds)
+    try:
+      date = datetime.datetime(
+          year, month, day, hour, minutes, seconds, microseconds)
+    except ValueError as error_msg:
+      logging.warning((
+          u'Unable to create timestamp from {}-{}-{} {}:{}:{}.{} Error: '
+          u'{}').format(year, month, day, hour, minutes, seconds, microseconds,
+                        error_msg))
+      return 0
 
     if type(zone) is str:
       zone = pytz.timezone(zone)
