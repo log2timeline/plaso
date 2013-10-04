@@ -199,6 +199,9 @@ def RecurseKey(recur_item, root='', depth=15):
     logging.debug(u'Recursion limit hit for key: %s', root)
     return
 
+  if type(recur_item) in (str, unicode):
+    return
+
   if type(recur_item) in (list, tuple):
     for recur in recur_item:
       for key in RecurseKey(recur, root, depth):
