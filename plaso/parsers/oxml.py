@@ -62,7 +62,12 @@ class OpenXMLParser(parser.PlasoParser):
           u'[%s] unable to parse file %s: %s' % (
               self.parser_name, filehandle.name, 'Not a Zip file.'))
 
-    zip_container = zipfile.ZipFile(filehandle, 'r')
+    try:
+      zip_container = zipfile.ZipFile(filehandle, 'r')
+    except zipfile.BadZipfile:
+      raise errors.UnableToParseFile(
+          u'[%s] unable to parse file %s: %s' % (
+              self.parser_name, filehandle.name, 'Bad Zip file.'))
 
     zip_name_list = set(zip_container.namelist())
 
