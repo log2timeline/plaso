@@ -57,8 +57,6 @@ class Dynamic(output.FileLogOutputFormatter):
       'zone': 'ParseZone',
   }
 
-  # Disable all message due to methods could be functions.
-  # pylint: disable-msg=R0201
   def ParseTimestampDescription(self, event_object):
     """Return the timestamp description."""
     return getattr(event_object, 'timestamp_desc', '-')

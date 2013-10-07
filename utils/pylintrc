@@ -40,9 +40,14 @@ load-plugins=
 # C0103: Invalid name ""
 # C0111: Missing docstring
 # C0302: Too many lines in module (N)
+#
+# F0401: Unable to import 'module'
+# pylint acting strangely: plaso/lib/event.py: F0401: 26,0: Unable to import 'google.protobuf'
+#
 # I0010: Unable to consider inline option ''
 # I0011: Locally disabling WNNNN
 #
+# R0201: Method could be a function
 # R0801: Similar lines in N files
 # R0901: Too many ancestors (8/7)
 # R0902: Too many instance attributes (N/7)
@@ -55,6 +60,7 @@ load-plugins=
 # R0915: Too many statements (N/50)
 # R0921: Abstract class not referenced
 # R0922: Abstract class is only referenced 1 times
+# This does not exist in every configuration, removing this.
 # R0924: Badly implemented Container, implements __len__ but not __getitem__ (incomplete-protocol) (Added by bbaskin, fails on Container classes)
 # W0122: Use of the exec statement
 # W0141: Used builtin function ''
@@ -65,10 +71,8 @@ load-plugins=
 # W0603: Using the global statement
 # W0703: Catch "Exception"
 # W1201: Specify string format arguments as logging function parameters
-# W0201: Variables defined initially outside the scope of __init__ (reconsider
-# this, added by Kristinn).
-# R0201: Method could be a function
-disable=C0103,C0111,C0302,I0010,I0011,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,W0122,W0141,W0142,W0402,W0404,W0511,W0603,W0703,W1201,W0201,R0201
+# W0201: Variables defined initially outside the scope of __init__ (reconsider this, added by Kristinn).
+disable=C0103,C0111,C0302,F0401,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,W0122,W0141,W0142,W0402,W0404,W0511,W0603,W0703,W1201,W0201
 
 
 [REPORTS]

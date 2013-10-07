@@ -73,6 +73,7 @@ install_tool pprof
 install_tool preg
 install_tool pshell
 install_tool psort
+install_tool image_export
 
 echo "Installing missing dylibs."
 sudo mv libevt.1.dylib /usr/lib/
@@ -81,3 +82,4 @@ sudo mv libmsiecf.1.dylib /usr/lib/
 sudo mv liblnk.1.dylib /usr/lib/
 sudo mv libregf.1.dylib /usr/lib/
 sudo mv libvshadow.1.dylib /usr/lib/
+sudo mv libolecf.1.dylib /usr/lib/

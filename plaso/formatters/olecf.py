@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,50 +15,78 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Formatter for OLECF events."""
+"""Formatters for OLE Compound File (OLECF) events."""
 
 from plaso.lib import eventdata
 
-__author__ = 'David Nides (david.nides@gmail.com)'
+
+class OleCfItemFormatter(eventdata.EventFormatter):
+  """Formatter for an OLECF item."""
+  DATA_TYPE = 'olecf:item'
+
+  FORMAT_STRING = u'Name: {name}'
+  FORMAT_STRING_SHORT = u'Name: {name}'
+
+  SOURCE_LONG = 'OLECF Item'
+  SOURCE_SHORT = 'OLECF'
 
 
-class OLECFFormatter(eventdata.ConditionalEventFormatter):
-  """Formatter for OLECF based events."""
-
-  DATA_TYPE = 'metadata:OLECF'
+class OleCfDocumentSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for an OLECF Summary Info property set stream."""
+  DATA_TYPE = 'olecf:document_summary_info'
 
   FORMAT_STRING_PIECES = [
-      u'Creating App: {creating_application}',
-      u'App version: {version}',
+      u'Number of bytes: {number_of_bytes}',
+      u'Number of lines: {number_of_lines}',
+      u'Number of paragraphs: {number_of_paragraphs}',
+      u'Number of slides: {number_of_slides}',
+      u'Number of notes: {number_of_notes}',
+      u'Number of hidden slides: {number_of_hidden_slides}',
+      u'Number of multi-media clips: {number_of_clips}',
+      u'Company: {company}',
+      u'Manager: {manager}']
+
+      # TODO: add support for the following properties.
+      # u'Is shared: {shared}',
+      # u'Document version: {document_version}',
+      # u'Language: {language}'
+      # u'Digital signature: {digital_signature}',
+      # u'Version: {version}',
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Company: {company}']
+
+  SOURCE_LONG = 'OLECF Document Summary Info'
+  SOURCE_SHORT = 'OLECF'
+
+
+class OleCfSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for an OLECF Summary Info property set stream."""
+  DATA_TYPE = 'olecf:summary_info'
+
+  FORMAT_STRING_PIECES = [
       u'Title: {title}',
       u'Subject: {subject}',
-      u'Last saved by: {last_saved_by}',
       u'Author: {author}',
-      u'Total edit time (secs): {total_edit_time}',
       u'Keywords: {keywords}',
       u'Comments: {comments}',
-      u'Revision Num: {revision_num}',
-      u'Doc version: {doc_version}',
       u'Template: {template}',
-      u'Num pages: {num_pages}',
-      u'Num words: {num_words}',
-      u'Num chars: {num_chars}',
-      u'Company: {company}',
-      u'Manager: {manager}',
-      u'Shared: {shared}',
-      u'Security: {security}',
-      u'Digital signature: {dig_sig}',
-      u'Codepage: {codepage}',
-      u'Language: {language}',
-      u'Slides: {slides}',
-      u'Hidden slides: {hidden_slides}',
-      u'MM clips: {mm_clips}',
-      u'Notes: {notes}']
+      u'Revision number: {revision_number}',
+      u'Last saved by: {last_saved_by}',
+      u'Total edit time: {total_edit_time}',
+      u'Number of pages: {number_of_pages}',
+      u'Number of words: {number_of_words}',
+      u'Number of characters: {number_of_characters}',
+      u'Application: {application}',
+      u'Security: {security}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'Title: {title}',
       u'Subject: {subject}',
-      u'Author: {author}']
+      u'Author: {author}',
+      u'Revision number: {revision_number}']
 
-  SOURCE_LONG = 'OLECF Metadata'
-  SOURCE_SHORT = 'META'
+  SOURCE_LONG = 'OLECF Summary Info'
+  SOURCE_SHORT = 'OLECF'
+
+  # TODO: add a function to print the security as a descriptive string.

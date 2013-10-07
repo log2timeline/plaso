@@ -35,10 +35,13 @@ from plaso import filters
 from plaso import formatters   # pylint: disable-msg=W0611
 from plaso import output   # pylint: disable-msg=W0611
 
+from plaso.lib import bufferlib
 from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import output as output_lib
+from plaso.lib import pfilter
 from plaso.lib import storage
+from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 import pytz
@@ -66,16 +69,20 @@ def SetupStorage(input_file_path):
   sys.exit(1)
 
 
-def ProcessOutput(output_buffer, formatter, my_filter=None):
+def ProcessOutput(
+    output_buffer, formatter, my_filter=None, filter_buffer=None):
   """Fetch EventObjects from storage and process and filter them.
 
   Args:
     output_buffer: output.EventBuffer object.
     formatter: An OutputFormatter.
     my_filter: A filter object.
+    filter_buffer: A filter buffer used to store previously discarded
+    events to store time slice history.
   """
   counter = collections.Counter()
   my_limit = getattr(my_filter, 'limit', 0)
+  forward_entries = 0
 
   event_object = formatter.FetchEntry()
   while event_object:
@@ -87,12 +94,35 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
 
       if my_filter.Match(event_match):
         counter['Events Included'] += 1
+        if filter_buffer:
+          # Indicate we want forward buffering.
+          forward_entries = 1
+          # Empty the buffer.
+          for event_in_buffer in filter_buffer.Flush():
+            counter['Events Added From Slice'] += 1
+            counter['Events Included'] += 1
+            counter['Events Filtered Out'] -= 1
+            output_buffer.Append(event_in_buffer)
         output_buffer.Append(event_object)
         if my_limit:
           if counter['Events Included'] == my_limit:
             break
       else:
-        counter['Events Filtered Out'] += 1
+        if filter_buffer and forward_entries:
+          if forward_entries <= filter_buffer.size:
+            output_buffer.Append(event_object)
+            forward_entries += 1
+            counter['Events Added From Slice'] += 1
+            counter['Events Included'] += 1
+          else:
+            # Reached the max, don't include other entries.
+            forward_entries = 0
+            counter['Events Filtered Out'] += 1
+        elif filter_buffer:
+          filter_buffer.Append(event_object)
+          counter['Events Filtered Out'] += 1
+        else:
+          counter['Events Filtered Out'] += 1
     else:
       counter['Events Included'] += 1
       output_buffer.Append(event_object)
@@ -110,6 +140,7 @@ def ProcessOutput(output_buffer, formatter, my_filter=None):
 def ParseStorage(my_args):
   """Open a storage file and parse through it."""
   filter_use = None
+  filter_buffer = None
   counter = None
   if my_args.filter:
     filter_use = filters.GetFilter(my_args.filter)
@@ -118,6 +149,33 @@ def ParseStorage(my_args):
           u'No filter found for the filter expression: {}'.format(
               my_args.filter))
       sys.exit(1)
+
+    if my_args.slicer:
+      # Check to see if we need to create a circular buffer.
+      filter_buffer = bufferlib.CircularBuffer(my_args.slice_size)
+
+  if my_args.slice:
+    if my_args.timezone == 'UTC':
+      zone = pytz.utc
+    else:
+      zone = pytz.timezone(my_args.timezone)
+
+    timestamp = timelib.Timestamp.FromTimeString(my_args.slice, zone)
+
+    # Convert number of minutes to microseconds.
+    range_operator = my_args.slice_size * int(1e6) * 60
+    # Set the time range.
+    pfilter.TimeRangeCache.SetLowerTimestamp(timestamp - range_operator)
+    pfilter.TimeRangeCache.SetUpperTimestamp(timestamp + range_operator)
+
+    # Check if the filter has a date filter built in and warn if so.
+    if my_args.filter:
+      if 'date' in my_args.filter or 'timestamp' in my_args.filter:
+        logging.warning(
+            'You are trying to use both a "slice" and a date filter, the '
+            'end results might not be what you want it to be... a small delay '
+            'is introduced to allow you to read this message')
+        time.sleep(5)
 
   with SetupStorage(my_args.storagefile) as store:
     # Identify which stores to use.
@@ -141,7 +199,8 @@ def ParseStorage(my_args):
       sys.exit(1)
 
     with output_lib.EventBuffer(formatter, my_args.dedup) as output_buffer:
-      counter = ProcessOutput(output_buffer, formatter, filter_use)
+      counter = ProcessOutput(
+          output_buffer, formatter, filter_use, filter_buffer)
 
     for information in store.GetStorageInformation():
       if hasattr(information, 'counter'):
@@ -188,6 +247,30 @@ def ProcessArguments(arguments):
   parser.add_argument(
       '-w', '--write', metavar='OUTPUTFILE', dest='write',
       help='Output filename.  Defaults to stdout.')
+
+  parser.add_argument(
+      '--slice', metavar='DATE', dest='slice', type=str,
+      default='', action='store', help=(
+          'Create a time slice around a certain date. This parameter, if '
+          'defined will display all events that happened X minutes before and '
+          'after the defined date. X is controlled by the parameter '
+          '--slice_size but defaults to 5 minutes.'))
+
+  parser.add_argument(
+      '--slicer', dest='slicer', action='store_true', default=False, help=(
+          'Create a time slice around every filter match. This parameter, if '
+          'defined will save all X events before and after a filter match has '
+          'been made. X is defined by the --slice_size parameter.'))
+
+  parser.add_argument(
+      '--slice_size', dest='slice_size', type=int, default=5, action='store',
+      help=(
+          'Defines the slice size. In the case of a regular time slice it '
+          'defines the number of minutes the slice size should be. In the '
+          'case of the --slicer it determines the number of events before '
+          'and after a filter match has been made that will be included in '
+          'the result set. The default value is 5]. See --slice or --slicer '
+          'for more details about this option.'))
 
   parser.add_argument(
       '-v', '--version', dest='version', action='version',

@@ -193,6 +193,7 @@ def FindAllParsers(pre_obj=None, parser_filter_string=''):
   filter_strings_include = []
   filter_strings_exclude = []
   for filter_string in parser_filter_string.split(','):
+    filter_string = filter_string.strip()
     if not filter_string:
       continue
     if filter_string.startswith('-'):
@@ -210,22 +211,19 @@ def FindAllParsers(pre_obj=None, parser_filter_string=''):
 
   results = {}
   results['all'] = []
-  parser_dict = {}
   for parser_obj in _FindClasses(parser.PlasoParser, pre_obj):
-    parser_dict[parser_obj.parser_name.lower()] = parser_obj
-
     add = False
     if not (filter_strings_exclude or filter_strings_include):
       add = True
     else:
       for include in filter_strings_include:
         if fnmatch.fnmatch(
-            parser_obj.parser_name.lower(), include):
+            parser_obj.parser_name.lower(), '*%s*' % include):
           add = True
 
       for exclude in filter_strings_exclude:
         if fnmatch.fnmatch(
-            parser_obj.parser_name.lower(), exclude):
+            parser_obj.parser_name.lower(), '*%s*' % exclude):
           add = False
 
     if add:

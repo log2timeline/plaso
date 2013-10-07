@@ -665,6 +665,12 @@ def Main():
 
   if arguments['tag']:
     tagfile = arguments['--tagfile']
+    if not os.path.isfile(tagfile):
+      print __doc__
+      print ''
+      logging.error(u'Tagfile [{}] does not exist.'.format(tagfile))
+      sys.exit(1)
+
     tagging_engine = TaggingEngine(plaso_store, tagfile, quiet)
     tagging_engine.Run()
 

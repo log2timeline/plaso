@@ -25,7 +25,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
-from lxml import etree
+from xml.etree import ElementTree
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -73,13 +73,13 @@ class OpenXMLParser(parser.PlasoParser):
     metadata = {}
 
     rels_xml = zip_container.read('_rels/.rels')
-    rels_root = etree.fromstring(rels_xml)
+    rels_root = ElementTree.fromstring(rels_xml)
 
     for properties in rels_root.iter():
       if 'properties' in repr(properties.get('Type')):
         try:
           xml = zip_container.read(properties.get('Target'))
-          root = etree.fromstring(xml)
+          root = ElementTree.fromstring(xml)
         except (OverflowError, IndexError, ValueError) as exception:
           logging.warning(
             u'Unable to read property [%s].', exception)

@@ -25,26 +25,36 @@ import pytz
 class TimeLibUnitTest(unittest.TestCase):
   """A unit test for the timelib."""
 
-  def testHfsTime(self):
-    """Test the HFS and HFSplus functions."""
-    # TODO: Add more edge case tests.
-
-    # date -u -d "Mon Jul  8 21:30:45 UTC 2013" +"%s.%N"
-    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(395011845),
+  def testCocoaTime(self):
+    """Test the processing of timestamps created by Cocoa."""
+    # date -u -d "Mon Jul  8 21:30:45 UTC 2013" +"%s.%N" = 1373319045.000000000
+    self.assertEquals(timelib.Timestamp.FromCocoaTime(395011845),
                       1373319045000000)
-    # date -u -d "Fri Jul 12 20:19:02 UTC 2013" +"%s.%N"
-    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(395353142),
+    # date -u -d "Fri Jul 12 20:19:02 UTC 2013" +"%s.%N" = 1373660342.000000000
+    self.assertEquals(timelib.Timestamp.FromCocoaTime(395353142),
                       1373660342000000)
 
-    # date -u -d "Mon Jul  8 16:27:49 UTC 2013" + "%s.%N"
-    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(394993669),
+    # date -u -d "Mon Jul  8 16:27:49 UTC 2013" +"%s.%N" = 1373300869.000000000
+    self.assertEquals(timelib.Timestamp.FromCocoaTime(394993669),
                       1373300869000000)
 
-    # date -d "Thu Aug  1 15:25:28 EDT 2013" +"%s.%N"
-    # date -u -d @1375385128
-    # Thu Aug  1 19:25:28 UTC 2013
+  def testHFSTimes(self):
+    # date -d "Thu Aug  1 15:25:28 EDT 2013" +"%s.%N" = 1375385128.000000000
+    # EDT is UTC-4, so 1375385128 - (4*60*60) = 1375370728
+    # 1375370728 + 2082844800 = 3458244328
     self.assertEquals(timelib.Timestamp.FromHfsTime(
-        397063528, pytz.timezone('EST5EDT'), True), 1375385128000000)
+        3458215528, pytz.timezone('EST5EDT'), True), 1375385128000000)
+
+    # date -d "Thu Aug  1 15:25:28 UTC 2013" +"%s.%N" = 1375370728.000000000
+    # 1375370728 + 2082844800 = 3458215528
+    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(
+        3458215528), 1375370728000000)
+
+    # date -d "Feb  29 15:25:28 UTC 2012" +"%s.%N" = 1330529128.000000000
+    # 1330529128 + 2082844800 = 3413373928
+    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(
+        3413373928), 1330529128000000)
+
 
   def testTimestampIsLeapYear(self):
     """Test the is leap year check."""
@@ -271,6 +281,38 @@ class TimeLibUnitTest(unittest.TestCase):
         timelib.Timestamp.CopyToDatetime(timestamp, timezone),
         datetime.datetime(2013, 3, 14, 21, 20, 8, 850041, tzinfo=timezone))
 
+  def testTimestampFromTimeString(self):
+    """The the FromTimeString function."""
+    # Test daylight savings.
+    # expr `date -u -d"Oct 1, 2013 12:00:00" +"%s"` \* 1000000
+    expected_timestamp = 1380628800000000
+
+    # Check certain variance of this timestamp.
+    self._CompareTimeString(
+        '2013-10-01 14:00:00', 'Europe/Rome', expected_timestamp)
+    self._CompareTimeString(
+        '2013-10-01 12:00:00', 'UTC', expected_timestamp)
+    self._CompareTimeString(
+        '2013-10-01 05:00:00', 'PST8PDT', expected_timestamp)
+
+    # Now to test outside of the daylight savings.
+    # expr `date -u -d"Feb 1, 2014 12:00:00" +"%s"` \* 1000000
+    expected_timestamp = 1391256000000000
+
+    self._CompareTimeString(
+        '2014-02-01 13:00:00', 'Europe/Rome', expected_timestamp)
+    self._CompareTimeString(
+        '2014-02-01 12:00:00', 'UTC', expected_timestamp)
+    self._CompareTimeString(
+        '2014-02-01 04:00:00', 'PST8PDT', expected_timestamp)
+
+  def _CompareTimeString(self, time_string, zone_string, expected):
+    """Compare a string generated timestamp to an expected value."""
+    test = timelib.Timestamp.FromTimeString(time_string, pytz.timezone(
+        zone_string))
+
+    self.assertEquals(expected, test)
+
   def testTimestampFromTimeParts(self):
     """Test the FromTimeParts function."""
 
@@ -290,17 +332,21 @@ class TimeLibUnitTest(unittest.TestCase):
 
   def testStringToDatetime(self):
     """Test the StringToDatetime function."""
-    zone = pytz.timezone('EST')
+    zone = pytz.timezone('EST5EDT')
     timestring = '12-15-1984 05:13:00'
+    # Sat Dec 15 10:13:00 UTC 1984.
+    # Sat Dec 15 05:13:00 EST 1984.
     expected = 471953580
     self.CompareTimestamps(expected, timestring, zone)
 
     # Swap day and month.
-    zone = pytz.timezone('EST')
+    zone = pytz.timezone('EST5EDT')
     # This is Oct 12th 1984, since we have DD-MM-YYYY.
     timestring = '12-10-1984 05:13:00'
-    # date -u -d "Oct 12, 1984 05:13:00-05:00" +"%s"
-    expected = 466423980
+    # Here there is no daylight savings.
+    # date -u -d "Oct 12, 1984 05:13:00-04:00" +"%s"
+    # date -u -d "Oct 12, 1984 09:13:00+00:00" +"%s"
+    expected = 466420380
     self.CompareTimestamps(expected, timestring, zone, True)
 
     timestring = '12-15-1984 10:13:00Z'
@@ -324,8 +370,16 @@ class TimeLibUnitTest(unittest.TestCase):
     self.CompareTimestamps(expected, timestring, zone)
 
     zone = pytz.timezone('America/Chicago')
-    timestring = '12-15-1984 05:13:00'
-    expected = 471957180
+    # Sat Dec 15 10:13:00 UTC 1984
+    # Sat Dec 15 04:13:00 CST 1984
+    timestring = '12-15-1984 04:13:00'
+    expected = 471953580
+    self.CompareTimestamps(expected, timestring, zone)
+
+    # date -u -d "Jul 15, 1984 04:13:00" +"%s"
+    # date -u -d "Jul 12, 1984 23:13:00-05:00" +"%s"
+    timestring = '07-14-1984 23:13:00'
+    expected = 458712780
     self.CompareTimestamps(expected, timestring, zone)
 
     zone = pytz.timezone('US/Pacific')
@@ -347,7 +401,7 @@ class TimeLibUnitTest(unittest.TestCase):
 
     """
     dt = timelib.StringToDatetime(timestring, timezone, dayfirst)
-    calculated = timelib.Timetuple2Timestamp(dt.timetuple())
+    calculated = timelib.Timetuple2Timestamp(dt.utctimetuple())
     self.assertEquals(calculated, expected)
 
 

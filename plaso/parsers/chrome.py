@@ -19,9 +19,6 @@
    The Chrome histroy is stored in SQLite database files named History
    and Archived History.
 """
-# Shut up pylint
-# * R0201: Method could be a function
-# pylint: disable=R0201
 
 from plaso.lib import event
 from plaso.lib import eventdata

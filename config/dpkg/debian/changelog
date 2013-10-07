@@ -1,3 +1,9 @@
+plaso-static (1.0.2-1) unstable; urgency=low
+
+  * Version 1.0.2.
+
+ -- Log2Timeline <log2timeline-dev@googlegroups.com>  Sat,  19 Oct 2013 09:15:00 +0200
+
 plaso-static (1.0-1) unstable; urgency=low
 
   * Initial release
