@@ -18,6 +18,10 @@
 
 from plaso.output import dynamic
 from plaso.output import l2t_csv
+try:
+  from plaso.output import mysql_4n6
+except ImportError:
+  pass
 from plaso.output import pstorage
 from plaso.output import raw
 from plaso.output import rawpy
