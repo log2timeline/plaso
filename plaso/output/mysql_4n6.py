@@ -15,24 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
 import re
 import sys
 
+from plaso.output import helper
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.lib import utils
-from plaso.output import helper
+
 from plaso import formatters
-import sqlite3
+import MySQLdb
+
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Sql4n6(output.LogOutputFormatter):
-  """Saves the data in a SQLite database, used by the tool 4n6Time."""
+class Mysql4n6(output.LogOutputFormatter):
+  """Contains functions for outputing as 4n6time MySQL database."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -50,71 +51,93 @@ class Sql4n6(output.LogOutputFormatter):
       filter_use: The filter object used.
     """
     # TODO: Add a unit test for this output module.
-    super(Sql4n6, self).__init__(store, filehandle, config, filter_use)
+    super(Mysql4n6, self).__init__(store, filehandle, config, filter_use)
     self.set_status = getattr(config, 'set_status', None)
 
-    # TODO: Revisit handeling this outside of plaso.
-    self.dbname = filehandle
+    # TODO: Revisit making compatible with plaso cmdline.
+    db_info = getattr(config, 'save_info', None)
+    if type(db_info) is dict:
+      self.host = db_info.get('db_host', '')
+      self.user = db_info.get('db_user', '')
+      self.password = db_info.get('db_pass', '')
+      self.dbname = db_info.get('db_name', '')
+
     self.evidence = getattr(config, 'evidence', '-')
     self.append = getattr(config, 'append', False)
     self.fields = getattr(config, 'fields', [
         'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color'])
 
-  # Override LogOutputFormatter methods so it won't write to the file
-  # handle any more.
   def Start(self):
     """Connect to the database and create the table before inserting."""
-    if self.filehandle == sys.stdout:
-      raise IOError('Can\'t connect to stdout as database, '
-                    'please specify a file.')
-
-    if (not self.append) and os.path.isfile(self.filehandle):
-      raise IOError(
-          (u'Unable to use an already existing file for output '
-           '[%s]' % self.filehandle))
-
-    self.conn = sqlite3.connect(self.dbname)
-    self.conn.text_factory = str
-    self.curs = self.conn.cursor()
-
-    # Create table in database.
-    if not self.append:
-      self.curs.execute(
-          ('CREATE TABLE log2timeline (timezone TEXT, '
-           'MACB TEXT, source TEXT, sourcetype TEXT, type TEXT, '
-           'user TEXT, host TEXT, description TEXT, filename TEXT, '
-           'inode TEXT, notes TEXT, format TEXT, extra TEXT, '
-           'datetime datetime, reportnotes TEXT, '
-           'inreport TEXT, tag TEXT, color TEXT, offset INT,'
-           'store_number INT, store_index INT, vss_store_number INT,'
-           'url TEXT, record_number TEXT, event_identifier TEXT, '
-           'event_type TEXT, source_name TEXT, user_sid TEXT, '
-           'computer_name TEXT, evidence TEXT)'))
-      if self.set_status:
-        self.set_status('Created table: log2timeline')
-
-      for field in self.META_FIELDS:
+    if self.dbname == '':
+      raise IOError('Specify a database name.')
+     
+    try:
+      if self.append:
+        self.conn = MySQLdb.connect(self.host, self.user,
+                                    self.password, self.dbname)
+        self.curs = self.conn.cursor()
+      else:
+        self.conn = MySQLdb.connect(self.host, self.user, self.password)
+        self.curs = self.conn.cursor()
+        self.curs.execute('SET GLOBAL innodb_large_prefix=ON')
+        self.curs.execute('SET GLOBAL innodb_file_format=barracuda')
+        self.curs.execute('SET GLOBAL innodb_file_per_table=ON')
+        self.curs.execute('CREATE DATABASE %s' % self.dbname)
+        self.curs.execute('USE %s' % self.dbname)
+        # Create tables.
         self.curs.execute(
-            'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
+            ('CREATE TABLE log2timeline ('
+             'rowid INT NOT NULL AUTO_INCREMENT, timezone VARCHAR(256), '
+             'MACB VARCHAR(256), source VARCHAR(256), sourcetype VARCHAR(256), '
+             'type VARCHAR(256), user VARCHAR(256), host VARCHAR(256), '
+             'description TEXT, filename VARCHAR(256), inode VARCHAR(256), '
+             'notes VARCHAR(256), format VARCHAR(256), '
+             'extra TEXT, datetime datetime, reportnotes VARCHAR(256), '
+             'inreport VARCHAR(256), tag VARCHAR(256), color VARCHAR(256), '
+             'offset INT, store_number INT, store_index INT, '
+             'vss_store_number INT, URL VARCHAR(256), '
+             'record_number VARCHAR(256), event_identifier VARCHAR(256), '
+             'event_type VARCHAR(256), source_name VARCHAR(256), '
+             'user_sid VARCHAR(256), computer_name VARCHAR(256), '
+             'evidence VARCHAR(256), '
+            'PRIMARY KEY (rowid)) ENGINE=InnoDB ROW_FORMAT=COMPRESSED'))
+        if self.set_status:
+          self.set_status('Created table: log2timeline.')
+
+        for field in self.META_FIELDS:
+          self.curs.execute(
+              'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT) '
+              'ENGINE=InnoDB ROW_FORMAT=COMPRESSED'.format(field))
         if self.set_status:
           self.set_status('Created table: l2t_%s' % field)
 
-      self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
-      if self.set_status:
-        self.set_status('Created table: l2t_tags')
+        self.curs.execute('CREATE TABLE l2t_tags (tag TEXT) '
+                          'ENGINE=InnoDB ROW_FORMAT=COMPRESSED')
+        if self.set_status:
+          self.set_status('Created table: l2t_tags')
 
-      self.curs.execute('CREATE TABLE l2t_saved_query (name TEXT, query TEXT)')
-      if self.set_status:
-        self.set_status('Created table: l2t_saved_query')
+        self.curs.execute('CREATE TABLE l2t_saved_query ('
+                          'name TEXT, query TEXT) '
+                          'ENGINE=InnoDB ROW_FORMAT=COMPRESSED')
+        if self.set_status:
+          self.set_status('Created table: l2t_saved_query')
 
-      self.curs.execute('CREATE TABLE l2t_disk (disk_type INT, mount_path TEXT,'
-                        ' dd_path TEXT, dd_offset TEXT, storage_file TEXT,'
-                        ' export_path TEXT)')
-      self.curs.execute('INSERT INTO l2t_disk (disk_type, mount_path, dd_path,'
-                        'dd_offset, storage_file, export_path) VALUES '
-                        '(0, "", "", "", "", "")')
-      if self.set_status:
-        self.set_status('Created table: l2t_disk')
+        self.curs.execute('CREATE TABLE l2t_disk ('
+                          'disk_type INT, mount_path TEXT, '
+                          'dd_path TEXT, dd_offset TEXT, '
+                          'storage_file TEXT, export_path TEXT) '
+                          'ENGINE=InnoDB ROW_FORMAT=COMPRESSED')
+        self.curs.execute('INSERT INTO l2t_disk ('
+                          'disk_type, mount_path, dd_path, '
+                          'dd_offset, storage_file, '
+                          'export_path) VALUES '
+                          '(0, "", "", "", "", "")')
+        if self.set_status:
+          self.set_status('Created table: l2t_disk')
+    except MySQLdb.Error as exception:
+      raise IOError('Can\'t insert to database, '
+                    '[%s]', exception)
 
     self.count = 0
 
@@ -142,7 +165,7 @@ class Sql4n6(output.LogOutputFormatter):
                 field, field, name, freq))
     self.curs.execute('DELETE FROM l2t_tags')
     for tag in self._ListTags():
-      self.curs.execute('INSERT INTO l2t_tags (tag) VALUES (?)', [tag])
+      self.curs.execute("INSERT INTO l2t_tags (tag) VALUES ('%s')" % tag)
 
     if self.set_status:
       self.set_status('Database created.')
@@ -178,13 +201,6 @@ class Sql4n6(output.LogOutputFormatter):
             all_tags.append(tag)
     return all_tags
 
-  def StartEvent(self):
-    """Do nothing, just override the parent's StartEvent method."""
-    pass
-
-  def EndEvent(self):
-    """Do nothing, just override the parent's EndEvent method."""
-    pass
 
   def EventBody(self, event_object):
     """Formats data as 4n6time database table format and writes to the db.
@@ -196,7 +212,7 @@ class Sql4n6(output.LogOutputFormatter):
       raise errors.NoFormatterFound: If no formatter for this event is found.
     """
 
-    if 'timestamp' not in event_object.GetAttributes():
+    if not hasattr(event_object, 'timestamp'):
       return
 
     formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
@@ -212,7 +228,7 @@ class Sql4n6(output.LogOutputFormatter):
       formatter.FORMAT_STRING_SEPARATOR = u'<|>'
     elif isinstance(formatter, eventdata.EventFormatter):
       formatter.format_string = formatter.format_string.replace('}', '}<|>')
-    msg, _ = formatter.GetMessages(event_object)
+    msg, msg_short = formatter.GetMessages(event_object)
     source_short, source_long = formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
@@ -235,7 +251,7 @@ class Sql4n6(output.LogOutputFormatter):
           hasattr(event_object.pathspec, 'image_inode')):
         inode = event_object.pathspec.image_inode
 
-    date_use_string = '%04d-%02d-%02d %02d:%02d:%02d' % (
+    date_use_string = '{0}-{1}-{2} {3}:{4}:{5}'.format(
         date_use.year, date_use.month, date_use.day, date_use.hour,
         date_use.minute, date_use.second)
 
@@ -264,7 +280,7 @@ class Sql4n6(output.LogOutputFormatter):
            getattr(event_object, 'offset', 0),
            event_object.store_number,
            event_object.store_index,
-           GetVSSNumber(event_object),
+           self.GetVSSNumber(event_object),
            getattr(event_object, 'url', '-'),
            getattr(event_object, 'record_number', 0),
            getattr(event_object, 'event_identifier', '-'),
@@ -272,31 +288,36 @@ class Sql4n6(output.LogOutputFormatter):
            getattr(event_object, 'source_name', '-'),
            getattr(event_object, 'user_sid', '-'),
            getattr(event_object, 'computer_name', '-'),
-           self.evidence
-          )
-
-    self.curs.execute(
-        ('INSERT INTO log2timeline(timezone, MACB, source, '
-         'sourcetype, type, user, host, description, filename, '
-         'inode, notes, format, extra, datetime, reportnotes, inreport,'
-         'tag, color, offset, store_number, store_index, vss_store_number,'
-         'URL, record_number, event_identifier, event_type,'
-         'source_name, user_sid, computer_name, evidence)'
-         ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'
-         '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'), row)
+           self.evidence)
+          
+    try:
+      self.curs.execute(
+          'INSERT INTO log2timeline(timezone, MACB, source, '
+          'sourcetype, type, user, host, description, filename, '
+          'inode, notes, format, extra, datetime, reportnotes, '
+          'inreport, tag, color, offset, store_number, '
+          'store_index, vss_store_number, URL, record_number, '
+          'event_identifier, event_type, source_name, user_sid, '
+          'computer_name, evidence) VALUES ('
+          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
+          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
+          '%s, %s, %s, %s)', row)
+    except MySQLdb.Error as exception:
+      logging.warning(
+        u'Error appending to Database [%s].', exception)
 
     self.count += 1
 
-    # Commit the current transaction every 10000 inserts.
+    # TODO: Experiment if committing the current transaction
+    # every 10000 inserts is the optimal approach.
     if self.count % 10000 == 0:
       self.conn.commit()
       if self.set_status:
         self.set_status('Inserting event: %s' % self.count)
 
+  def GetVSSNumber(self, event_object):
+    """Return the vss_store_number of the event."""
+    if not hasattr(event_object, 'pathspec'):
+      return -1
 
-def GetVSSNumber(event_object):
-  """Return the vss_store_number of the event."""
-  if not hasattr(event_object, 'pathspec'):
-    return -1
-
-  return getattr(event_object.pathspec, 'vss_store_number', -1)
+    return getattr(event_object.pathspec, 'vss_store_number', -1)
