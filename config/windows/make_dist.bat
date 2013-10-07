@@ -9,6 +9,7 @@ xcopy /q /y ACKNOWLEDGEMENT dist\plaso
 xcopy /q /y AUTHORS dist\plaso
 xcopy /q /y LICENSE.TXT dist\plaso
 
+xcopy /q /y /s dist\image_export\* dist\plaso
 xcopy /q /y /s dist\log2timeline\* dist\plaso
 xcopy /q /y /s dist\pinfo\* dist\plaso
 xcopy /q /y /s dist\plasm\* dist\plaso

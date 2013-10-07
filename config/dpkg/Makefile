@@ -6,7 +6,15 @@ PYINSTALLER=../pyinstaller/pyinstaller.py
 
 prefix=debian/tmp/usr
 
-all: build_log2timeline build_pinfo build_plasm build_pprof build_preg build_pshell build_psort
+all: build_log2timeline build_pinfo build_plasm build_pprof build_preg build_pshell build_psort build_image_export
+
+build_image_export: tools/image_export.py
+	$(PYINSTALLER) \
+	  --onedir \
+	  --console \
+	  --name=image_export \
+	  --paths=./ \
+	  $<
 
 build_log2timeline: plaso/frontend/log2timeline.py
 	$(PYINSTALLER) \
@@ -69,6 +77,8 @@ clean:
 
 install:
 	@mkdir -p $(prefix)/lib/plaso
+	@install -m 0755 dist/image_export/*.* $(prefix)/lib/plaso
+	@install -m 0755 dist/image_export/image_export $(prefix)/lib/plaso
 	@install -m 0755 dist/log2timeline/*.* $(prefix)/lib/plaso
 	@install -m 0755 dist/log2timeline/log2timeline $(prefix)/lib/plaso
 	@install -m 0755 dist/pinfo/*.* $(prefix)/lib/plaso
