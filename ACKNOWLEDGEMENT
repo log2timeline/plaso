@@ -18,7 +18,6 @@ and others involved with these projects:
 * PyInstaller
 * the SleuthKit
 * pytsk
-* OleFileIO_PL
 * Hachoir (not included in binary release)
 
 Thanks to contributors (alphabetically based on last name):
@@ -26,19 +25,23 @@ Thanks to contributors (alphabetically based on last name):
   * Java IDX parser
 * Dominique Kilman
   * PCAP parser
-* David Nides (davnads.blogspot.com)
-  * 4n6time output generator with thanks to Eric Wong for assistance
+* David Nides (@davnads)
+  * 4n6time SQLite output with thanks to Eric Wong for assistance
+  * 4n6time MySQL output
   * Google Drive parser
   * Symantec AV Log parser
   * Hachoir (meta data) parser
-  * OLECF parser
-  * Typed Paths registry parser
-  * Typed URLs registry parser
-  * Win7 Userassist registry parser
+  * OLECF parser (merged/deprecated)
+  * OMXL parser
+  * Typed Paths registry plugin
+  * Typed URLs registry plugin
+  * Win7 Userassist registry plugin(merged/deprecated)
   * timelib StringToDatetime function
-  * USBStor parser
-  * Office MRU parser
-  * Outlook Parser
+  * Terminal Server Client (RDP) registry plugin
+  * USBStor registry plugin
+  * Office MRU registry plugin
+  * Outlook registry plugin
+  * WinRar registry plugin
 * Francesco Picasso
   * SELinux parser
 * Jordi Sanchez
