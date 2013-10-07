@@ -27,6 +27,7 @@ import pyevt
 
 class WinEvtRecordEventContainer(event.EventContainer):
   """Convenience class for a Windows EventLog (EVT) record event container."""
+
   def __init__(self, evt_record, recovered=False):
     """Initializes the event container.
 
@@ -61,6 +62,15 @@ class WinEvtRecordEventContainer(event.EventContainer):
 
 class WinEvtParser(parser.PlasoParser):
   """Parses Windows EventLog (EVT) files."""
+
+  def __init__(self, pre_obj):
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+    """
+    super(WinEvtParser, self).__init__(pre_obj)
+    self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
   def _ParseRecord(self, evt_record, recovered=False):
     """Extract data from a Windows EventLog (EVT) record.
@@ -115,7 +125,7 @@ class WinEvtParser(parser.PlasoParser):
       the parsed data.
     """
     evt_file = pyevt.file()
-    evt_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
+    evt_file.set_ascii_codepage(self._codepage)
 
     try:
       evt_file.open_file_object(file_object)

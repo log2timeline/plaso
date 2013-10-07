@@ -279,7 +279,6 @@ class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
         timestamp, getattr(self, 'entry_offset', 0), self.attributes)
 
   # TODO: this is a rough initial implementation to get this working.
-  # pylint: disable-msg=R0201
   def CreateEvent(self, timestamp, offset, attributes):
     """Creates an event.
 
@@ -330,7 +329,7 @@ class TextCSVParser(parser.PlasoParser):
     """Return a bool indicating whether or not this is the correct parser."""
     pass
 
-  def ParseRow(self, row):    # pylint: disable-msg=R0201
+  def ParseRow(self, row):
     """Parse a line of the log file and return an extracted EventObject.
 
     Args:
@@ -485,7 +484,7 @@ class PyparsingConstants(object):
   """A class that maintains constants for pyparsing."""
 
   # Numbers.
-  INTEGER = pyparsing.Word(pyparsing.nums)
+  INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(PyParseIntCast)
   IPV4_OCTET = pyparsing.Word(pyparsing.nums, min=1, max=3).setParseAction(
       PyParseIntCast, PyParseRangeCheck(0, 255))
   IPV4_ADDRESS = (IPV4_OCTET + ('.' + IPV4_OCTET) * 3).setParseAction(
@@ -503,12 +502,20 @@ class PyparsingConstants(object):
 
   # Define date structures.
   HYPHEN = pyparsing.Literal('-').suppress()
-  YEAR = pyparsing.Word(pyparsing.nums, exact=4)
-  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2)
-  DATE = pyparsing.Group(YEAR + '-' + TWO_DIGITS + '-' + TWO_DIGITS)
-  DATE_REV = pyparsing.Group(TWO_DIGITS + '-' + TWO_DIGITS + '-' + YEAR)
-  TIME = pyparsing.Group(TWO_DIGITS + ':' + TWO_DIGITS + ':' + TWO_DIGITS)
-  TIME_MSEC = TIME + '.' + INTEGER
+  YEAR = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      PyParseIntCast)
+  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      PyParseIntCast)
+  DATE = pyparsing.Group(
+      YEAR + pyparsing.Suppress('-') + TWO_DIGITS +
+      pyparsing.Suppress('-') + TWO_DIGITS)
+  DATE_REV = pyparsing.Group(
+      TWO_DIGITS + pyparsing.Suppress('-') + TWO_DIGITS +
+      pyparsing.Suppress('-') + YEAR)
+  TIME = pyparsing.Group(
+      TWO_DIGITS + pyparsing.Suppress(':') + TWO_DIGITS +
+      pyparsing.Suppress(':') + TWO_DIGITS)
+  TIME_MSEC = TIME + pyparsing.Suppress('.') + INTEGER
   DATE_TIME = DATE + TIME
   DATE_TIME_MSEC = DATE + TIME_MSEC
 
@@ -592,8 +599,19 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     """
     pass
 
-  def _ReadLine(self, filehandle, max_len=0):
-    """Read a single line from a text file and return it back."""
+  def _ReadLine(self, filehandle, max_len=0, quiet=False):
+    """Read a single line from a text file and return it back.
+
+    Args:
+      filehandle: The file-like object to read the line from.
+      max_len: If defined determines the maximum number of bytes a single line
+      can take.
+      quiet: If True then a decode warning is not displayed.
+
+    Returns:
+      A single line read from the file-like object, or the maximum number of
+      characters (if max_len defined and line longer than the defined size).
+    """
     if max_len:
       line = filehandle.readline(max_len)
     else:
@@ -610,10 +628,10 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
       decoded_line = line.decode(self.encoding)
       return decoded_line.strip()
     except UnicodeDecodeError:
-      logging.warning(u'Unable to decode line [{}...] using {}'.format(
-          repr(line[1:30]), self.encoding))
+      if not quiet:
+        logging.warning(u'Unable to decode line [{}...] using {}'.format(
+            repr(line[1:30]), self.encoding))
       return line.strip()
-
 
   def Parse(self, filehandle):
     """Parse a text file using a pyparsing definition."""
@@ -623,7 +641,7 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
 
     filehandle.seek(0)
 
-    line = self._ReadLine(filehandle, self.MAX_LINE_LENGTH)
+    line = self._ReadLine(filehandle, self.MAX_LINE_LENGTH, True)
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
       logging.debug((

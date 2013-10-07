@@ -133,7 +133,7 @@ class SELinux(text_parser.SlowLexicalTextParser):
     except IndexError:
       self.attributes['body'] += match.group(0).strip('\n')
 
-  def ParseFailed(self, **_):   # pylint: disable-msg=R0201
+  def ParseFailed(self, **_):
     """Entry parsing failed callback."""
     raise lexer.ParseError(u'Not a proper SELinux line.')
 

@@ -15,9 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for the Mac OS X launch services quarantine events."""
-# Shut up pylint
-# * R0201: Method could be a function
-# pylint: disable=R0201
 
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -43,7 +40,7 @@ class LsQuarantineEvent(event.EventObject):
     """
     super(LsQuarantineEvent, self).__init__()
 
-    self.timestamp = timelib.Timestamp.FromHfsPlusTime(timestamp)
+    self.timestamp = timelib.Timestamp.FromCocoaTime(timestamp)
     self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
 
     self.url = url

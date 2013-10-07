@@ -1,7 +1,6 @@
-#!/bin/bash
-# A small script that runs the linter on all files.
-#
-# Copyright 2012 The Plaso Project Authors.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,25 +14,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This file contains a skydrivelog formatter in plaso."""
 
-EXIT_FAILURE=1;
-EXIT_SUCCESS=0;
+from plaso.lib import eventdata
 
-if [ ! -f "utils/common.sh" ];
-then
-  echo "Missing common functions, are you in the wrong directory?";
 
-  exit ${EXIT_FAILURE};
-fi
+class SkyDriveLogFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for SkyDrive log files events."""
 
-. utils/common.sh
+  DATA_TYPE = 'skydrive:log:line'
 
-if ! linter;
-then
-  echo "Aborted - fix the issues reported by the linter.";
+  FORMAT_STRING_PIECES = [
+    u'[{source_code}]',
+    u'({log_level})',
+    u'{text}']
 
-  exit ${EXIT_FAILURE};
-fi
+  FORMAT_STRING_SHORT_PIECES = [u'{text}']
 
-exit ${EXIT_SUCCESS};
-
+  SOURCE_LONG = 'SkyDrive Log File'
+  SOURCE_SHORT = 'LOG'

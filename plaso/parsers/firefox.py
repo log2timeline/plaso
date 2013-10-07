@@ -17,10 +17,8 @@
 """This file contains a parser for the Mozilla Firefox history."""
 
 # Shut up pylint
-# * R0201: Method could be a function
-# * R0924: Badly implemented Container
 # * W0622: Redefining built-in 'type'
-# pylint: disable=R0201, R0924, W0622
+# pylint: disable=W0622
 
 from plaso.lib import event
 from plaso.lib import eventdata

@@ -19,6 +19,7 @@ override_dh_auto_test:
 override_dh_installinit:
 	mkdir -p debian/plaso-static/usr/lib/plaso
 	install -D -p -m755 debian/tmp/usr/lib/plaso/*.* debian/plaso-static/usr/lib/plaso
+	install -D -p -m755 debian/tmp/usr/lib/plaso/image_export debian/plaso-static/usr/lib/plaso
 	install -D -p -m755 debian/tmp/usr/lib/plaso/log2timeline debian/plaso-static/usr/lib/plaso
 	install -D -p -m755 debian/tmp/usr/lib/plaso/pinfo debian/plaso-static/usr/lib/plaso
 	install -D -p -m755 debian/tmp/usr/lib/plaso/plasm debian/plaso-static/usr/lib/plaso
@@ -48,6 +49,7 @@ override_dh_installwm:
 override_dh_installxfonts:
 
 override_dh_link:
+	dh_link "/usr/lib/plaso/image_export" "/usr/bin/image_export"
 	dh_link "/usr/lib/plaso/log2timeline" "/usr/bin/log2timeline"
 	dh_link "/usr/lib/plaso/pinfo" "/usr/bin/pinfo"
 	dh_link "/usr/lib/plaso/plasm" "/usr/bin/plasm"

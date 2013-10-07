@@ -19,9 +19,6 @@
    The application usage is stored in SQLite database files named
    /var/db/application_usage.sqlite
 """
-# Shut up pylint
-# * R0201: Method could be a function
-# pylint: disable=R0201
 
 from plaso.lib import event
 from plaso.lib import parser

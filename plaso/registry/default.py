@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a default registry plugin in Plaso."""
+
 from plaso.lib import event
+from plaso.lib import utils
 from plaso.lib import win_registry_interface
 
 
@@ -52,14 +54,19 @@ class DefaultPlugin(win_registry_interface.KeyPlugin):
           value_string = u'[{0:s}] Empty'.format(
               value.data_type_string)
         elif value.DataIsString():
+          string_decode = utils.GetUnicodeString(value.data)
           value_string = u'[{0:s}] {1:s}'.format(
-              value.data_type_string, value.data)
+              value.data_type_string, string_decode)
         elif value.DataIsInteger():
           value_string = u'[{0:s}] {1:d}'.format(
               value.data_type_string, value.data)
         elif value.DataIsMultiString():
-          value_string = u'[{0:s}] {1:s}'.format(
-              value.data_type_string, u''.join(value.data))
+          if type(value.data) not in (list, tuple):
+            value_string = u'[{0:s}]'.format(value.data_type_string)
+            # TODO: Add a flag or some sort of an anomaly alert.
+          else:
+            value_string = u'[{0:s}] {1:s}'.format(
+                value.data_type_string, u''.join(value.data))
         else:
           value_string = u'[{0:s}]'.format(value.data_type_string)
 
