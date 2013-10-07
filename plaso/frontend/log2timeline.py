@@ -60,7 +60,7 @@ def Main():
   arg_parser = argparse.ArgumentParser(
       description=textwrap.dedent(description),
       formatter_class=argparse.RawDescriptionHelpFormatter,
-      epilog=textwrap.dedent(epilog))
+      epilog=textwrap.dedent(epilog), add_help=False)
 
   # Create few argument groups to make formatting help messages clearer.
   info_group = arg_parser.add_argument_group('Informational Arguments')
@@ -96,6 +96,15 @@ def Main():
           'all parser names or the glob pattern "sky[pd]" that would match '
           'all parsers that have the string "skyp" or "skyd" in it\'s name. '
           'All matching is case insensitive.'))
+
+  info_group.add_argument(
+      '-h', '--help', action='help', help='Show this help message and exit.')
+
+  info_group.add_argument(
+      '--logfile', action='store', metavar='FILENAME', dest='logfile',
+      type=unicode, default=u'', help=(
+          'If defined all log messages will be redirected to this file instead '
+          'the default STDERR.'))
 
   function_group.add_argument(
       '-p', '--preprocess', dest='preprocess', action='store_true',
@@ -249,7 +258,14 @@ def Main():
 
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   if options.debug:
-    logging.basicConfig(level=logging.DEBUG, format=format_str)
+    if options.logfile:
+      logging.basicConfig(
+          level=logging.DEBUG, format=format_str, filename=options.logfile)
+    else:
+      logging.basicConfig(level=logging.DEBUG, format=format_str)
+  elif options.logfile:
+    logging.basicConfig(
+        level=logging.INFO, format=format_str, filename=options.logfile)
   else:
     logging.basicConfig(level=logging.INFO, format=format_str)
 

@@ -168,14 +168,21 @@ class JavaIDXParser(parser.PlasoParser):
       # remaining data.
       section_one = self.IDX_605_SECTION_ONE_STRUCT.parse_stream(file_object)
       last_modified_date = section_one.last_modified_date
-      file_object.seek(128)  # Static offset for section 2.
-      section_two = self.IDX_605_SECTION_TWO_STRUCT.parse_stream(file_object)
-      url = section_two.url
-      ip_address = section_two.ip_address
-      http_header_count = section_two.FieldCount
+      stat = file_object.Stat()
+      if stat.size > 128:
+        file_object.seek(128)  # Static offset for section 2.
+        section_two = self.IDX_605_SECTION_TWO_STRUCT.parse_stream(file_object)
+        url = section_two.url
+        ip_address = section_two.ip_address
+        http_header_count = section_two.FieldCount
+      else:
+        url = 'Unknown'
+        ip_address = 'Unknown'
+        http_header_count = 0
 
     # File offset is now just prior to HTTP headers. Make sure there
     # are headers, and then parse them to retrieve the download date.
+    download_date = None
     for field in range(0, http_header_count):
       field = self.JAVA_READUTF_STRING.parse_stream(file_object)
       value = self.JAVA_READUTF_STRING.parse_stream(file_object)
@@ -184,19 +191,24 @@ class JavaIDXParser(parser.PlasoParser):
             value.string, self.HTTP_DATE_FMT)
 
     if not url or not ip_address:
-      raise errors.UnableToParseFile(u'Unexpected Error:',
-                                     u' URL not found in file')
+      raise errors.UnableToParseFile(
+          u'Unexpected Error: URL or IP address not found in file.')
 
     container = JavaIDXEventContainer(magic.idx_version, url, ip_address)
 
     container.Append(event.TimestampEvent(
-        last_modified_date * 1000,
-        'File Hosted Date',
-        container.DATA_TYPE))
+        last_modified_date * 1000, 'File Hosted Date', container.DATA_TYPE))
 
-    container.Append(event.TimestampEvent(
-        download_date,
-        eventdata.EventTimestamp.FILE_DOWNLOADED,
-        container.DATA_TYPE))
+    if section_one:
+      expiration_date = section_one.get('expiration_date', None)
+      if expiration_date:
+        container.Append(event.TimestampEvent(
+            expiration_date * 1000, 'File Expiration Date',
+            container.DATA_TYPE))
+
+    if download_date:
+      container.Append(event.TimestampEvent(
+          download_date, eventdata.EventTimestamp.FILE_DOWNLOADED,
+          container.DATA_TYPE))
 
     return container
