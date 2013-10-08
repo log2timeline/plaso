@@ -27,6 +27,7 @@ import textwrap
 from plaso.lib import errors
 from plaso.lib import engine
 from plaso.lib import info
+from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import preprocess
 
@@ -187,9 +188,29 @@ def Main():
       '--info', dest='show_info', action='store_true', default=False,
       help='Print out information about supported plugins and parsers.')
 
+  info_group.add_argument(
+      '--partition_map', action='store_true', dest='partition_map',
+      default=False, help='Print out a partition map of a disk image.')
+
   function_group.add_argument(
       '--sector_size', dest='bytes_per_sector', action='store', type=int,
       default=512, help='The sector size, by default set to 512.')
+
+  function_group.add_argument(
+      '--partition', dest='partition_number', action='store', type=int,
+      default=0, help=(
+          'Choose a partition number from a disk image. This partition '
+          'number should correspond to the number displayed from the parameter'
+          ' --partition_map.'))
+
+  function_group.add_argument(
+      '--use_old_preprocess', dest='old_preprocess', action='store_true',
+      default=False, help=(
+          'Only used in conjunction when appending to a previous storage '
+          'file. When this option is used then a new pre processing object '
+          'is not calculated and instead the last one that got added to '
+          'the storage file is used. This can be handy when parsing an image '
+          'that contains more than a single partition.'))
 
   function_group.add_argument(
       '--output', dest='output_module', action='store', type=unicode,
@@ -278,6 +299,20 @@ def Main():
         'Wrong usage: need to define an output.')
     sys.exit(1)
 
+  if options.partition_map:
+    if options.filename:
+      file_use = options.filename
+    else:
+      file_use = options.output
+
+    partition_map = pfile.FilesystemCache.PartitionMap(file_use)
+    print u'Index  {:10s} {:10s} {}'.format('Offset', 'Length', 'Description')
+    for entry in partition_map:
+      print u'{:02d}:    {:010d} {:010d} {}'.format(
+          entry['address'], entry['offset'], entry['length'],
+          entry['description'])
+    sys.exit(0)
+
   if not options.filename:
     arg_parser.print_help()
     print ''
@@ -316,6 +351,17 @@ def Main():
 
   if options.image_offset or options.image_offset_bytes:
     options.image = True
+
+  if options.partition_number:
+    partition_map = pfile.FilesystemCache.PartitionMap(options.filename)
+    offset = 0
+    options.image = True
+    for entry in partition_map:
+      if options.partition_number == entry['address']:
+        offset = entry['offset']
+        break
+    options.image_offset = offset
+    logging.info(u'Offset set to: {}'.format(options.image_offset))
 
   if options.image:
     options.preprocess = True

@@ -72,6 +72,36 @@ class FilesystemCache(object):
     """Set up the filesystem cache."""
     self.cached_filesystems = {}
 
+  @classmethod
+  def PartitionMap(cls, path):
+    """Returns a list of dict objects representing partition information.
+
+    Args:
+      path: The path to the image file.
+
+    Returns:
+      A list that contains a dict object for each partition in the image. The
+      dict contains the partition number (address), description of it alongside
+      an offset and length of the partition size.
+    """
+    partition_map = []
+    try:
+      img = pytsk3.Img_Info(path)
+    except IOError as e:
+      raise errors.UnableToOpenFilesystem(
+          'Unable to open image file. [%s]' % e)
+
+    volume = pytsk3.Volume_Info(img)
+
+    for part in volume:
+      partition_map.append({
+          'address': part.addr,
+          'description': part.desc,
+          'offset': part.start,
+          'length': part.len})
+
+    return partition_map
+
   def OpenTskImage(self, path, offset=0):
     """Open and store a regular TSK image in cache.
 
