@@ -16,8 +16,9 @@
 # limitations under the License.
 """This file contains a parser for OXML files (i.e. MS Office 2007+)."""
 
-import re
 import logging
+import re
+import struct
 import zipfile
 
 from plaso.lib import errors
@@ -64,7 +65,7 @@ class OpenXMLParser(parser.PlasoParser):
 
     try:
       zip_container = zipfile.ZipFile(filehandle, 'r')
-    except zipfile.BadZipfile:
+    except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
           u'[%s] unable to parse file %s: %s' % (
               self.parser_name, filehandle.name, 'Bad Zip file.'))
