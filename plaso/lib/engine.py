@@ -239,10 +239,27 @@ class Engine(object):
 
   def _StartRuntime(self):
     """Run preprocessing and other actions needed before starting threads."""
-    pre_obj = preprocess.PlasoPreprocess()
+    run_preprocess = self.config.preprocess
+
+    pre_obj = None
+    if self.config.old_preprocess and os.path.isfile(self.config.output):
+      # Check if the storage file contains a pre processing object.
+      try:
+        with storage.PlasoStorage(
+            self.config.output, read_only=True) as store:
+          storage_information = store.GetStorageInformation()
+          if storage_information:
+            logging.info('Using preprocessing information from a prior run.')
+            pre_obj = storage_information[-1]
+            run_preprocess = False
+      except IOError:
+        logging.warning(u'Storage file does not exist, running pre process.')
+
+    if not pre_obj:
+      pre_obj = preprocess.PlasoPreprocess()
 
     # Run pre-processing if necessary.
-    if self.config.preprocess:
+    if run_preprocess:
       try:
         self._PreProcess(pre_obj)
       except errors.UnableToOpenFilesystem as e:
@@ -253,7 +270,8 @@ class Engine(object):
             (u'An IOError occurred while trying to pre-process, bailing out. '
              'The error given is: %s'), e)
         return
-    else:
+
+    if not hasattr(pre_obj, 'zone'):
       pre_obj.zone = self.config.zone
 
     # TODO: Make this more sane. Currently we are only checking against
