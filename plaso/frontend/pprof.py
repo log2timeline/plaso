@@ -140,6 +140,10 @@ def PrintHeader(options):
     print utils.FormatHeader('Filter Used')
     print utils.FormatOutputString('Filter String', options.filter)
 
+  if options.parsers:
+    print utils.FormatHeader('Parser Filter Used')
+    print utils.FormatOutputString('Parser String', options.parsers)
+
 
 def ProcessStorage(options):
   """Process a storage file and produce profile results."""
@@ -183,7 +187,8 @@ def ProcessFile(options):
   pre_obj = preprocess.PlasoPreprocess()
   pre_obj.zone = pytz.UTC
   simple_queue = queue.SingleThreadedQueue()
-  my_worker = worker.PlasoWorker('0', None, simple_queue, options, pre_obj)
+  my_worker = worker.PlasoWorker(
+      '0', None, simple_queue, config=options, pre_obj=pre_obj)
 
   if options.verbose:
     profiler = cProfile.Profile()
@@ -213,6 +218,12 @@ def ProcessFile(options):
   if not options.verbose:
     print utils.FormatHeader('Time Used')
     print u'{:>20f}s'.format(time_end - time_start)
+
+  print utils.FormatHeader('Parsers Loaded')
+  # Accessing protected member.
+  # pylint: disable-msg=W0212
+  for parser in sorted(my_worker._parsers['all']):
+    print utils.FormatOutputString('', parser.parser_name)
 
   print utils.FormatHeader('Parsers Used')
   for parser in sorted(parsers):
