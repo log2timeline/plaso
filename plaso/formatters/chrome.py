@@ -27,6 +27,7 @@ class ChromePageVisitedFormatter(eventdata.ConditionalEventFormatter):
       u'({title})',
       u'[count: {typed_count}]',
       u'Host: {host}',
+      u'Visit from: {from_visit}',
       u'{extra}']
 
   FORMAT_STRING_SHORT_PIECES = [
