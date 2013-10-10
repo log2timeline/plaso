@@ -14,10 +14,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a parser for the Google Chrome history.
+"""Parser for the Google Chrome History files.
 
-   The Chrome histroy is stored in SQLite database files named History
-   and Archived History.
+   The Chrome History is stored in SQLite database files named History
+   and Archived History. Where the Archived History does not contain
+   the downloads table.
 """
 
 from plaso.lib import event
@@ -60,7 +61,7 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
 
   # TODO: refactor extra to be conditional arguments.
   def __init__(self, timestamp, row_id, url, title, hostname, typed_count,
-               extra):
+               from_visit, extra):
     """Initializes the event object.
 
     Args:
@@ -71,6 +72,7 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
       title: The title of the visited page.
       hostname: The visited hostname.
       typed_count: The number of charcters of the URL that were typed.
+      from_visit: The URL where the visit originated from.
       extra: String containing extra event data.
     """
     super(ChromeHistoryPageVisitedEvent, self).__init__()
@@ -82,11 +84,12 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
     self.title = title
     self.host = hostname
     self.typed_count = typed_count
+    self.from_visit = from_visit
     self.extra = extra
 
 
 class ChromeHistoryParser(parser.SQLiteParser):
-  """Parse Chrome history files."""
+  """Parse Chrome Archived History and History files."""
 
   # Define the needed queries.
   QUERIES = [(('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
@@ -102,8 +105,9 @@ class ChromeHistoryParser(parser.SQLiteParser):
              (('SELECT id, full_path, url, start_time, received_bytes, '
                'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
 
-  # The required tables.
-  REQUIRED_TABLES = frozenset(['urls', 'visits', 'downloads'])
+  # The required tables common to Archived History and History.
+  REQUIRED_TABLES = frozenset([
+      'keyword_search_terms', 'meta', 'urls', 'visits', 'visit_source'])
 
   # The following definition for values can be found here:
   # http://src.chromium.org/svn/trunk/src/content/public/common/ \
@@ -183,11 +187,6 @@ class ChromeHistoryParser(parser.SQLiteParser):
     """
     extras = []
 
-    if row['from_visit']:
-      url = self._GetUrl(row['from_visit'])
-      if url:
-        extras.append(u'Visit from: %s ' % url)
-
     transition_nr = row['transition'] & self.CORE_MASK
     page_transition = self.PAGE_TRANSITION.get(transition_nr, '')
     if page_transition:
@@ -197,9 +196,8 @@ class ChromeHistoryParser(parser.SQLiteParser):
     if row['hidden'] == '1':
       extras.append(u'(url hidden)')
 
-    if int(row['typed_count']) >= 1:
-      count = int(row['typed_count'])
-
+    count = int(row['typed_count'])
+    if count >= 1:
       if count > 1:
         multi = u's'
       else:
@@ -215,7 +213,7 @@ class ChromeHistoryParser(parser.SQLiteParser):
     yield ChromeHistoryPageVisitedEvent(
         timelib.Timestamp.FromWebKitTime(int(row['visit_time'])),
         row['id'], row['url'], row['title'], self._GetHostname(row['url']),
-        row['typed_count'], u' '.join(extras))
+        row['typed_count'], self._GetUrl(row['from_visit']), u' '.join(extras))
 
   def _GetHostname(self, hostname):
     """Return a hostname from a full URL."""
@@ -230,8 +228,10 @@ class ChromeHistoryParser(parser.SQLiteParser):
 
   def _GetUrl(self, url):
     """Return an URL from a reference to an entry in the from_visit table."""
-    query = ('SELECT urls.url, urls.title, visits.visit_time FROM visits, urls'
-             ' WHERE urls.id = visits.url AND visits.id=:id')
+    if not url:
+      return u''
+    query = ('SELECT urls.url, urls.title, visits.visit_time FROM visits, urls '
+             'WHERE urls.id = visits.url AND visits.id=:id')
 
     cursor = self.db.cursor()
     result_set = cursor.execute(query, {'id': url})
@@ -239,6 +239,4 @@ class ChromeHistoryParser(parser.SQLiteParser):
 
     if row:
       return u'%s (%s)' % (row['url'], row['title'])
-
     return u''
-
