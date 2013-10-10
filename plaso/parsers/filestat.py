@@ -45,7 +45,8 @@ def GetEventContainerFromStat(stat, is_allocated=True):
     if item[-4:] == 'time':
       times.append(item)
 
-  event_container = PfileStatEventContainer(is_allocated)
+  event_container = PfileStatEventContainer(
+      is_allocated, stat.attributes.get('size', None))
 
   for time in times:
     evt = event.EventObject()
@@ -66,17 +67,19 @@ def GetEventContainerFromStat(stat, is_allocated=True):
 class PfileStatEventContainer(event.EventContainer):
   """File system stat event container."""
 
-  def __init__(self, allocated):
+  def __init__(self, allocated, size):
     """Initializes the event container.
 
     Args:
       allocated: Boolean value to indicate the file entry is allocated.
+      size: The file size in bytes.
     """
     super(PfileStatEventContainer, self).__init__()
 
     self.data_type = 'fs:stat'
 
     self.offset = 0
+    self.size = size
     self.allocated = allocated
 
 
