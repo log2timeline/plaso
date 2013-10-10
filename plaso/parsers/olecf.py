@@ -31,8 +31,8 @@ import pyolecf
 # for various types of OLECF based file formats.
 
 
-if pyolecf.get_version() < '20130928':
-  raise ImportWarning('OleCfParser requires at least pyolecf 20130928.')
+if pyolecf.get_version() < '20131009':
+  raise ImportWarning('OleCfParser requires at least pyolecf 20131009.')
 
 
 class OleDefinitions(object):
@@ -405,9 +405,13 @@ class OleCfParser(parser.PlasoParser):
     # to false if it does not contain events.
     if event_container != None:
       # If the event container does not contain any events
-      # make sure to add at least one.
-      if (creation_time != 0 or
+      # make sure to add at least one. Office template documents sometimes
+      # contain a creation time of -1 (0xffffffffffffffff).
+      if (creation_time not in [0, 0xffffffffffffffffL] or
           (modification_time == 0 and event_container.number_of_events == 0)):
+        if creation_time == 0xffffffffffffffffL:
+          creation_time = 0
+
         event_container.Append(event.FiletimeEvent(
             creation_time,
             eventdata.EventTimestamp.CREATION_TIME,
