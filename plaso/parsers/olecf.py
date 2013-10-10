@@ -392,11 +392,11 @@ class OleCfParser(parser.PlasoParser):
     # * W1401: Anomalous backslash in string: '\0'.
     #          String constant might be missing an r prefix.
     # pylint: disable-msg=W1401
-    if level == 0 and olecf_item.name == '\005SummaryInformation':
+    if level == 1 and olecf_item.name == '\005SummaryInformation':
       event_container = OleCfSummaryInfoEventContainer(olecf_item)
 
     # pylint: disable-msg=W1401
-    elif level == 0 and olecf_item.name == '\005DocumentSummaryInformation':
+    elif level == 1 and olecf_item.name == '\005DocumentSummaryInformation':
       event_container = OleCfDocumentSummaryInfoEventContainer(olecf_item)
 
     # Do not add other items without a useful time value.
