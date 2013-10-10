@@ -349,11 +349,13 @@ class OleCfParser(parser.PlasoParser):
     super(OleCfParser, self).__init__(pre_obj)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
-  def _ParseItem(self, olecf_item):
+  def _ParseItem(self, olecf_item, level=0):
     """Extracts data from an OLECF item.
 
     Args:
       olecf_item: an OLECF item (pyolecf.item).
+      level: optional level of depth (or height) of the items,
+             the default is 0 (root).
 
     Yields:
       An event container (EventContainer) that contains the parsed
@@ -383,15 +385,18 @@ class OleCfParser(parser.PlasoParser):
     # stream object has data and behaves like file-like object other
     # object might not.
 
+    # TODO: for now ignore Document Summary Information and Summary Information
+    # property streams outside of the root.
+
     # Shut up pylint
     # * W1401: Anomalous backslash in string: '\0'.
     #          String constant might be missing an r prefix.
     # pylint: disable-msg=W1401
-    if olecf_item.name == '\005SummaryInformation':
+    if level == 0 and olecf_item.name == '\005SummaryInformation':
       event_container = OleCfSummaryInfoEventContainer(olecf_item)
 
     # pylint: disable-msg=W1401
-    elif olecf_item.name == '\005DocumentSummaryInformation':
+    elif level == 0 and olecf_item.name == '\005DocumentSummaryInformation':
       event_container = OleCfDocumentSummaryInfoEventContainer(olecf_item)
 
     # Do not add other items without a useful time value.
@@ -428,7 +433,7 @@ class OleCfParser(parser.PlasoParser):
     for sub_item in olecf_item.sub_items:
       # Need to yield every event container individually otherwise
       # a generator object is yielded.
-      for event_container in self._ParseItem(sub_item):
+      for event_container in self._ParseItem(sub_item, level=(level + 1)):
         yield event_container
 
   def Parse(self, file_object):
@@ -452,5 +457,5 @@ class OleCfParser(parser.PlasoParser):
 
     # Need to yield every event container individually otherwise
     # a generator object is yielded.
-    for event_container in self._ParseItem(olecf_file.root_item):
+    for event_container in self._ParseItem(olecf_file.root_item, level=0):
       yield event_container
