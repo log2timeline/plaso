@@ -53,7 +53,7 @@ class WinRecycleEvent(event.FiletimeEvent):
     else:
       self.orig_filename = filename_ascii
 
-    if filename_ascii != filename_utf and filename_ascii:
+    if filename_ascii and unicode(filename_ascii) != filename_utf:
       self.orig_filename_legacy = filename_ascii
 
 
