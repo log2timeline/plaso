@@ -73,24 +73,29 @@ def Main():
   temp_location = tempfile.gettempdir()
 
   options = Options()
-  options.tzone = 'UTC'
-  options.filename = '.'
-  options.recursive = False
-  options.preprocess = False
-  options.output = os.path.join(temp_location, 'wheredidmytimelinego.dump')
+
+  # Set the default options.
   options.buffer_size = 0
-  options.workers = 10
+  options.debug = False
+  options.filename = '.'
+  options.file_filter = ''
+  options.filter = ''
   options.image = False
   options.image_offset = 0
   options.image_offset_bytes = 0
-  options.single_thread = False
-  options.parse_vss = False
-  options.filter = ''
-  options.file_filter = ''
-  options.open_files = True
-  options.image_offset = 0
-  options.debug = False
   options.local = True
+  options.old_preprocess = False
+  options.open_files = False
+  options.output = os.path.join(temp_location, 'wheredidmytimelinego.dump')
+  options.output_module = ''
+  options.parsers = ''
+  options.parse_vss = False
+  options.preprocess = False
+  options.recursive = False
+  options.single_thread = False
+  options.tzone = 'UTC'
+  options.workers = 5
+
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   logging.basicConfig(format=format_str)
 
@@ -103,7 +108,8 @@ def Main():
   pre_obj.zone = pytz.UTC
 
   namespace.update(globals())
-  namespace.update({'l2t': l2t, 'fscache': fscache, 'pre_obj': pre_obj})
+  namespace.update({'l2t': l2t, 'fscache': fscache, 'pre_obj': pre_obj,
+                    'options': options})
 
   if len(sys.argv) > 1:
     test_file = sys.argv[1]

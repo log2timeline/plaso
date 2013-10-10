@@ -80,9 +80,9 @@ def Main():
   function_group.add_argument(
       '-t', '--text', dest='text_prepend', action='store', type=unicode,
       default=u'', metavar='TEXT', help=(
-          'Define a free form text string that is prepended to each path '
-          'to make it easier to distinguish one record from another in a '
-          'timeline (like c:\, or host_w_c:\)'))
+          r'Define a free form text string that is prepended to each path '
+          r'to make it easier to distinguish one record from another in a '
+          r'timeline (like c:\, or host_w_c:\)'))
 
   function_group.add_argument(
       '--parsers', dest='parsers', type=str, action='store', default='',
@@ -138,7 +138,7 @@ def Main():
             'eed to be included in the analysis.'))
 
   deep_group.add_argument(
-      '--vss-stores', dest='vss_stores', action='store', type=str, default=None,
+      '--vss_stores', dest='vss_stores', action='store', type=str, default=None,
       help=('List of stores to parse, format is X..Y where X and Y are intege'
             'rs, or a list of entries separated with a comma, eg: X,Y,Z or a '
             'list of ranges and entries, eg: X,Y-Z,G,H-J.'))

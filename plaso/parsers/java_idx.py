@@ -112,9 +112,6 @@ class JavaIDXParser(parser.PlasoParser):
       construct.PascalString(
           'string', length_field = construct.UBInt16('length')))
 
-  # Date/time format for HTTP Date field strings.
-  HTTP_DATE_FMT = '%a, %d %b %Y %H:%M:%S %Z'
-
   def Parse(self, file_object):
     """Extract data from a Java cache IDX file.
 
@@ -187,8 +184,11 @@ class JavaIDXParser(parser.PlasoParser):
       field = self.JAVA_READUTF_STRING.parse_stream(file_object)
       value = self.JAVA_READUTF_STRING.parse_stream(file_object)
       if field.string == 'date':
-        download_date = timelib.Timestamp.FromTimeString(
-            value.string, self.HTTP_DATE_FMT)
+        # Time string "should" be in UTC or have an associated time zone
+        # information in the string itself. If that is not the case then
+        # there is no reliable method for plaso to determine the proper
+        # timezone, so the assumption is that it is UTC.
+        download_date = timelib.Timestamp.FromTimeString(value.string)
 
     if not url or not ip_address:
       raise errors.UnableToParseFile(
