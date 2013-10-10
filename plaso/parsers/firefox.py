@@ -25,7 +25,6 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 
 
-# TODO: Add tests: firefox_test.py.
 class FirefoxPlacesBookmarkAnnotation(event.EventContainer):
   """Convenience class for a Firefox bookmark annotation event container."""
 
