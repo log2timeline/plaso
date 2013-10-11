@@ -408,6 +408,9 @@ class OleCfParser(parser.PlasoParser):
 
     # Need to check against None here since event container will evaluate
     # to false if it does not contain events.
+    # TODO: Instead of creating new events here we need to group these
+    # together and create a single Grouped Event. Since we still don't
+    # have the groups implemented this is pending that implementation.
     if event_container != None:
       # If the event container does not contain any events
       # make sure to add at least one. Office template documents sometimes
