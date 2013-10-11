@@ -54,28 +54,17 @@ class TestMRUListRegistry(unittest.TestCase):
     self.assertTrue(generator)
     entries = list(generator)
 
-    expected_line1 = (
+    expected_line = (
         u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
-        u'MRUList Entry 1: Some random text here')
-    expected_line2 = (
-        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
-        u'MRUList Entry 2: C:/looks_legit.exe')
-    expected_line3 = (
-        u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
-        u'MRUList Entry 3: REGALERT: Unsupported MRU value: b data type.')
+        u'1 [a]: Some random text here 2 [c]: C:/looks_legit.exe '
+        u'3 [b]: REGALERT: Unsupported MRU value: b data type.')
 
-    self.assertEquals(len(entries), 3)
+    self.assertEquals(len(entries), 1)
     self.assertEquals(entries[0].timestamp, 1346145829002031)
-    self.assertEquals(entries[1].timestamp, 0)
-    self.assertEquals(entries[2].timestamp, 0)
 
-    msg1, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    msg2, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
-    msg3, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[2])
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
 
-    self.assertEquals(msg1, expected_line1)
-    self.assertEquals(msg2, expected_line2)
-    self.assertEquals(msg3, expected_line3)
+    self.assertEquals(msg, expected_line)
 
 
 if __name__ == '__main__':

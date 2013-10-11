@@ -19,6 +19,7 @@ import argparse
 import hashlib
 import os
 import logging
+import sys
 
 from plaso import preprocessors
 
@@ -290,11 +291,17 @@ def Main():
     raise RuntimeError('Unable to proceed, image file does not exist.')
 
   if not (options.filter or options.extension_string):
-    raise RuntimeError('Neither extension string nor filter defined.')
+    arg_parser.print_help()
+    print ''
+    logging.error('Neither extension string nor filter defined.')
+    sys.exit(1)
 
   if options.filter:
     if not os.path.isfile(options.filter):
-      raise RuntimeError('Unable to proceed, filter file does not exist.')
+      arg_parser.print_help()
+      print ''
+      logging.error('Unable to proceed, filter file does not exist.')
+      sys.exit(1)
 
   if options.extension_string:
     extensions = options.extension_string.split(',')

@@ -50,25 +50,18 @@ class TestMRUxRegistry(unittest.TestCase):
     plugin = mrulistex.MRUexPlugin(None, None, None)
     entries = list(plugin.Process(self.regkey))
 
-    line0 = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] MRUListEx '
-             'Entry 0 (nr. 2): Some random text here')
-    line1 = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] MRUListEx '
-             'Entry 1 (nr. 3): c:/evil.exe')
-    line2 = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] MRUListEx '
-             'Entry 2 (nr. 1): C:/looks_legit.exe')
+    line = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] '
+            '1 [2]: C:/looks_legit.exe '
+            '2 [0]: Some random text here '
+            '3 [1]: c:/evil.exe')
 
-    self.assertEquals(len(entries), 3)
-    self.assertEquals(entries[0].timestamp, 1346145829002031)
-    self.assertEquals(entries[1].timestamp, 0)
-    self.assertEquals(entries[2].timestamp, 0)
+    self.assertEquals(len(entries), 1)
+    event_object = entries[0]
+    self.assertEquals(event_object.timestamp, 1346145829002031)
 
-    msg1, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    msg2, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
-    msg3, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[2])
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
 
-    self.assertEquals(msg1, line2)
-    self.assertEquals(msg2, line0)
-    self.assertEquals(msg3, line1)
+    self.assertEquals(msg, line)
 
 
 if __name__ == '__main__':

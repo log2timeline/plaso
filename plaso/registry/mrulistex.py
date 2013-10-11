@@ -64,18 +64,17 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
 
     event_timestamp = self._key.last_written_timestamp
 
+    text_dict = {}
     for nr, entry in enumerate(mru_list):
       # MRU lists are terminated with 0xFFFFFFFF.
       if entry == 0xFFFFFFFF:
         break
-      text_dict = {}
-      value_text = u'MRUListEx Entry %s (nr. %d)' % (unicode(entry), nr + 1)
+      value_text = u'{} [{}]'.format(nr + 1, unicode(entry))
       text_dict[value_text] = self.GetText(unicode(entry))
-      yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=event_timestamp,
-          source_append=': MRUx List')
 
-      event_timestamp = 0
+    yield event.WinRegistryEvent(
+        self._key.path, text_dict, timestamp=event_timestamp,
+        source_append=': MRUx List')
 
   def Process(self, key):
     """Determine if we can process this registry key or not."""
