@@ -31,7 +31,7 @@ class MRUListPlugin(win_registry_interface.ValuePlugin):
     """Extract EventObjects from a MRU list.
 
     Yields:
-      An event object for every item in the MRU list.
+      A single event object that contains a MRU list.
     """
     mru_list_value = self._key.GetValue('MRUList')
 
@@ -45,8 +45,8 @@ class MRUListPlugin(win_registry_interface.ValuePlugin):
     else:
       timestamp = self._key.last_written_timestamp
 
-      # TODO: shouldn't this behavior be, put all the values
-      # into a single event object with the last written time of the key?
+      entry_list = []
+      text_dict = {}
       for entry_index, mru_value_name in enumerate(mru_list_value.data):
         value = self._key.GetValue(mru_value_name)
 
@@ -54,7 +54,7 @@ class MRUListPlugin(win_registry_interface.ValuePlugin):
           mru_value_string = 'REGALERT: No such MRU value: {0}.'.format(
               mru_value_name)
 
-        # Ignore any value is empty.
+        # Ignore any value that is empty.
         elif not value.data:
           mru_value_string = 'REGALERT: Missing MRU value: {0} data.'.format(
               mru_value_name)
@@ -68,12 +68,12 @@ class MRUListPlugin(win_registry_interface.ValuePlugin):
         else:
           mru_value_string = value.data
 
-        text_dict = {}
-        text_dict[u'MRUList Entry %d' % (entry_index + 1)] = mru_value_string
+        entry_list.append(mru_value_string)
+        text_dict[u'{} [{}]'.format(
+            entry_index + 1, mru_value_name)] = mru_value_string
 
-        yield event.WinRegistryEvent(
-            self._key.path, text_dict, timestamp=timestamp,
-            source_append=': MRU List')
-
-        # TODO: add comment why this timestamp is set to 0.
-        timestamp = 0
+      event_object = event.WinRegistryEvent(
+          self._key.path, text_dict, timestamp=timestamp,
+          source_append=': MRU List')
+      event_object.mru_list = entry_list
+      yield event_object
