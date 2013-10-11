@@ -53,6 +53,9 @@ class WinRecycleEvent(event.FiletimeEvent):
     else:
       self.orig_filename = filename_ascii
 
+    # The unicode cast is done on the ASCII string to make
+    # comparison work better (sometimes a warning that a comparison
+    # could not be made due to the objects being of different type).
     if filename_ascii and unicode(filename_ascii) != filename_utf:
       self.orig_filename_legacy = filename_ascii
 
