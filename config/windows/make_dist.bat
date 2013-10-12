@@ -4,10 +4,12 @@ del /q /s dist\plaso 2> NUL
 rmdir /q /s dist\plaso 2> NUL
 
 mkdir dist\plaso
+mkdir dist\plaso\licenses
 
 xcopy /q /y ACKNOWLEDGEMENT dist\plaso
 xcopy /q /y AUTHORS dist\plaso
 xcopy /q /y LICENSE.TXT dist\plaso
+xcopy /q /y config\licenses\* dist\plaso\licences
 
 xcopy /q /y /s dist\image_export\* dist\plaso
 xcopy /q /y /s dist\log2timeline\* dist\plaso
