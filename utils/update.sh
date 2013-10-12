@@ -80,6 +80,6 @@ fi
 
 echo "All came out clean, let's update the code review.";
 
-python utils/upload.py --oauth2 $BROWSER_PARAM -y -i ${CL_NUMBER} -t "." -m ".";
+python utils/upload.py --oauth2 $BROWSER_PARAM -y -i ${CL_NUMBER} -t "Uploading changes made to code." -m "Code updated.";
 
 exit ${EXIT_SUCCESS};
