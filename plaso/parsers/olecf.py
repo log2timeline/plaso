@@ -31,8 +31,8 @@ import pyolecf
 # for various types of OLECF based file formats.
 
 
-if pyolecf.get_version() < '20131009':
-  raise ImportWarning('OleCfParser requires at least pyolecf 20131009.')
+if pyolecf.get_version() < '20131012':
+  raise ImportWarning('OleCfParser requires at least pyolecf 20131012.')
 
 
 class OleDefinitions(object):
@@ -40,7 +40,7 @@ class OleDefinitions(object):
 
   VT_I2 = 0x0002
   VT_I4 = 0x0003
-  VT_BOOLEAN = 0x000b
+  VT_BOOL = 0x000b
   VT_LPSTR = 0x001e
   VT_LPWSTR = 0x001e
   VT_FILETIME = 0x0040
@@ -225,6 +225,10 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
   """Convenience class for an OLECF Document Summary info event container."""
   _CLASS_IDENTIFIER = 'd5cdd502-2e9c-101b-9397-08002b2cf9ae'
 
+  _PROPERTY_NAMES_BOOL = {
+      0x0013: 'shared_document',  # PIDDSI_SHAREDDOC
+  }
+
   _PROPERTY_NAMES_INT32 = {
       0x0004: 'number_of_bytes',  # PIDDSI_BYTECOUNT
       0x0005: 'number_of_lines',  # PIDDSI_LINECOUNT
@@ -233,11 +237,17 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
       0x0008: 'number_of_notes',  # PIDDSI_NOTECOUNT
       0x0009: 'number_of_hidden_slides',  # PIDDSI_HIDDENCOUNT
       0x000a: 'number_of_clips',  # PIDDSI_MMCLIPCOUNT
+      0x0011: 'number_of_characters_with_white_space',  # PIDDSI_CCHWITHSPACES
+      0x0017: 'application_version',  # PIDDSI_VERSION
   }
 
   _PROPERTY_NAMES_STRING = {
       0x000e: 'manager',  # PIDDSI_MANAGER
       0x000f: 'company',  # PIDDSI_COMPANY
+      0x001a: 'content_type',  # PIDDSI_CONTENTTYPE
+      0x001b: 'content_status',  # PIDDSI_CONTENTSTATUS
+      0x001c: 'language',  # PIDDSI_LANGUAGE
+      0x001d: 'document_version',  # PIDDSI_DOCVERSION
   }
 
   PIDDSI_CODEPAGE = 0x0001
@@ -247,6 +257,7 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
   PIDDSI_HEADINGPAIR = 0x000c
   PIDDSI_DOCPARTS = 0x000d
   PIDDSI_LINKSDIRTY = 0x0010
+  PIDDSI_VERSION = 0x0017
 
   def __init__(self, olecf_item):
     """Initializes the event container.
@@ -293,6 +304,9 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
     elif property_value.type == OleDefinitions.VT_I4:
       self._InitFromPropertyValueTypeInt32(property_value)
 
+    elif property_value.type == OleDefinitions.VT_BOOL:
+      self._InitFromPropertyValueTypeBool(property_value)
+
     elif (property_value.type == OleDefinitions.VT_LPSTR or
           property_value.type == OleDefinitions.VT_LPWSTR):
       self._InitFromPropertyValueTypeString(property_value)
@@ -320,8 +334,29 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
     property_name = self._PROPERTY_NAMES_INT32.get(
         property_value.identifier, None)
 
-    if property_name and not hasattr(self.attributes, property_name):
+    # The application version consists of 2 16-bit values that make up
+    # the version number. Where the upper 16-bit is the major number
+    # and the lower 16-bit the minor number.
+    if property_value.identifier == self.PIDDSI_VERSION:
+      application_version = property_value.data_as_integer
+      self.attributes[property_name] = '{0:d}.{1:d}'.format(
+          application_version >> 16, application_version & 0xffff)
+
+    elif property_name and not hasattr(self.attributes, property_name):
       self.attributes[property_name] = property_value.data_as_integer
+
+  def _InitFromPropertyValueTypeBool(self, property_value):
+    """Initializes the event container from a boolean type property value.
+
+    Args:
+      property_value: The OLECF property value (pyolecf.property_value
+                      of type VT_BOOL).
+    """
+    property_name = self._PROPERTY_NAMES_BOOL.get(
+        property_value.identifier, None)
+
+    if property_name and not hasattr(self.attributes, property_name):
+      self.attributes[property_name] = property_value.data_as_boolean
 
   def _InitFromPropertyValueTypeString(self, property_value):
     """Initializes the event container from a string type property value.
