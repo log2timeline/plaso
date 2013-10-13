@@ -99,22 +99,29 @@ class WinEvtParserTest(unittest.TestCase):
                       eventdata.EventTimestamp.WRITTEN_TIME)
 
     # Test the event specific formatter.
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
-    expected_msg = (u'[2147524609 / 0x8000a001] '
-                    u'Record Number: 1392 '
-                    u'Event Type: Information event '
-                    u'Event Category: 3 '
-                    u'Source Name: LSASRV '
-                    u'Computer Name: WKS-WINXP32BIT '
-                    u'Strings: [u\'cifs/CONTROLLER\', '
-                    u'u\'"The system detected a possible attempt to '
-                    u'compromise security. Please ensure that you can '
-                    u'contact the server that authenticated you.\\r\\n '
-                    u'(0xc0000388)"\']')
+    expected_msg = (
+        u'[2147524609 / 0x8000a001] '
+        u'Record Number: 1392 '
+        u'Event Type: Information event '
+        u'Event Category: 3 '
+        u'Source Name: LSASRV '
+        u'Computer Name: WKS-WINXP32BIT '
+        u'Strings: [u\'cifs/CONTROLLER\', '
+        u'u\'"The system detected a possible attempt to '
+        u'compromise security. Please ensure that you can '
+        u'contact the server that authenticated you.\\r\\n '
+        u'(0xc0000388)"\']')
+
+    expected_msg_short = (
+        u'[0x8000a001] '
+        u'Strings: [u\'cifs/CONTROLLER\', '
+        u'u\'"The system detected a possible ...')
 
     self.assertEquals(msg, expected_msg)
+    self.assertEquals(msg_short, expected_msg_short)
 
 
 if __name__ == '__main__':

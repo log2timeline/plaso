@@ -307,8 +307,8 @@ class ConditionalEventFormatter(EventFormatter):
         # keep the index in the map equal to the format string pieces.
         self._format_string_short_pieces_map.append('')
       elif len(result) == 1:
-        # Strip the bounding { } from the attribute name.
-        attribute_name = result[0][1:-1]
+        # Extract the attribute name.
+        attribute_name = regexp_name.findall(result[0])[0]
         self._format_string_short_pieces_map.append(attribute_name)
       else:
         raise RuntimeError(
