@@ -44,14 +44,16 @@ class OleCfDocumentSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
       u'Number of hidden slides: {number_of_hidden_slides}',
       u'Number of multi-media clips: {number_of_clips}',
       u'Company: {company}',
-      u'Manager: {manager}']
+      u'Manager: {manager}',
+      u'Shared document: {shared_document}',
+      u'Application version: {application_version}',
+      u'Content type: {content_type}',
+      u'Content status: {content_status}',
+      u'Language: {language}',
+      u'Document version: {document_version}']
 
       # TODO: add support for the following properties.
-      # u'Is shared: {shared}',
-      # u'Document version: {document_version}',
-      # u'Language: {language}'
       # u'Digital signature: {digital_signature}',
-      # u'Version: {version}',
 
   FORMAT_STRING_SHORT_PIECES = [
       u'Company: {company}']
@@ -90,3 +92,10 @@ class OleCfSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'OLECF'
 
   # TODO: add a function to print the security as a descriptive string.
+  _SECURITY_VALUES = {
+      0x00000001: 'Password protected',
+      0x00000002: 'Read-only recommended',
+      0x00000004: 'Read-only enforced',
+      0x00000008: 'Locked for annotations',
+  }
+

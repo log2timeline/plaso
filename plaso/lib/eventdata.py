@@ -197,31 +197,37 @@ class EventFormatter(object):
       raise errors.WrongFormatter('Unsupported data type: %s.' % (
           event_object.data_type))
 
+    event_values = event_object.GetValues()
+
     try:
-      values = event_object.GetValues()
-      msg = self.format_string.format(**values)
+      msg = self.format_string.format(**event_values)
     except KeyError as error:
       msgs = []
-      msgs.append(u'Format error: [%s] for: <%s>' % (
+      msgs.append(u'Format error: [{0:s}] for: <{1:s}>'.format(
           error, self.format_string))
       for attr, value in event_object.attributes.items():
         msgs.append(u'{0}: {1}'.format(attr, value))
 
       msg = u' '.join(msgs)
 
-    # Strip carriage return and linefeed form the message string.
+    # Strip carriage return and linefeed form the message strings.
+    # Using replace function here because it is faster
+    # than re.sub() or string.strip().
     msg = msg.replace('\r', '').replace('\n', '')
 
-    if self.format_string_short:
-      try:
-        msg_short = self.format_string_short.format(
-            **event_object.attributes).replace('\r', '').replace('\n', '')
-      except KeyError:
-        msg_short = (
-            u'Unable to format string: %s') % self.format_string_short
-    else:
+    if not self.format_string_short:
       msg_short = msg
+    else:
+      try:
+        msg_short = self.format_string_short.format(**event_values)
+        # Using replace function here because it is faster
+        # than re.sub() or string.strip().
+        msg_short = msg_short.replace('\r', '').replace('\n', '')
+      except KeyError:
+        msg_short = u'Unable to format short message string: {0:s}'.format(
+            self.format_string_short)
 
+    # Truncate the short message string if necessary.
     if len(msg_short) > 80:
       msg_short = u'%s...' % msg_short[0:77]
 
@@ -330,7 +336,7 @@ class ConditionalEventFormatter(EventFormatter):
           # If an attribute is an int, yet has zero value we want to include
           # that in the format string, since that is still potentially valid
           # information. Otherwise we would like to skip it.
-          if type(attribute) not in (int, long, float) and not attribute:
+          if type(attribute) not in (bool, int, long, float) and not attribute:
             continue
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
     self.format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
