@@ -21,9 +21,6 @@
 # * W0611: 28,0: Unused import olecf_formatter
 # pylint: disable=W0611
 
-# TODO: remove when msg_short is fixed.
-# pylint: disable=W0612
-
 import os
 import unittest
 
@@ -76,8 +73,7 @@ class TestOleCfParser(unittest.TestCase):
          event_object)
 
     self.assertEquals(msg, expected_msg)
-    # TODO: the short string formatter is broken?
-    # self.assertEquals(msg_short, expected_msg_short)
+    self.assertEquals(msg_short, expected_msg_short)
 
     # Check the Summary Information.
     event_container = events[1]
@@ -122,8 +118,7 @@ class TestOleCfParser(unittest.TestCase):
          event_object)
 
     self.assertEquals(msg, expected_msg)
-    # TODO: the short string formatter is broken?
-    # self.assertEquals(msg_short, expected_msg_short)
+    self.assertEquals(msg_short, expected_msg_short)
 
     # Check the Document Summary Information.
     event_container = events[2]
@@ -131,7 +126,6 @@ class TestOleCfParser(unittest.TestCase):
     self.assertEquals(event_container.company, 'KPMG')
 
     # TODO: add support for:
-    # self.assertEquals(event_container.version, 917504)
     # self.assertEquals(event_container.is_shared, False)
 
     event_object = event_container.events[0]
@@ -139,10 +133,9 @@ class TestOleCfParser(unittest.TestCase):
     expected_msg = (
         u'Number of lines: 1 '
         u'Number of paragraphs: 1 '
-        u'Company: KPMG')
-
-    # TODO: add support for:
-    #    u'Version: 917504 '
+        u'Company: KPMG '
+        u'Shared document: False '
+        u'Application version: 14.0')
 
     expected_msg_short = (
         u'Company: KPMG')
@@ -152,8 +145,7 @@ class TestOleCfParser(unittest.TestCase):
          event_object)
 
     self.assertEquals(msg, expected_msg)
-    # TODO: the short string formatter is broken?
-    # self.assertEquals(msg_short, expected_msg_short)
+    self.assertEquals(msg_short, expected_msg_short)
 
 
 if __name__ == '__main__':
