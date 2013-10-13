@@ -121,19 +121,26 @@ class WinEvtxParserTest(unittest.TestCase):
     self.assertEquals(event_object.xml_string, expected_xml_string)
 
     # Test the event specific formatter.
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
+    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
          event_object)
 
-    expected_msg = (u'[7036 / 0x00001b7c] '
-                    u'Record Number: 12050 '
-                    u'Event Level: 4 '
-                    u'Source Name: Service Control Manager '
-                    u'Computer Name: WKS-WIN764BITB.shieldbase.local '
-                    u'Strings: [u\'Windows Modules Installer\', '
-                    u'u\'stopped\', u\'540072007500730074006500640049006E00'
-                    u'7300740061006C006C00650072002F0031000000\']')
+    expected_msg = (
+        u'[7036 / 0x00001b7c] '
+        u'Record Number: 12050 '
+        u'Event Level: 4 '
+        u'Source Name: Service Control Manager '
+        u'Computer Name: WKS-WIN764BITB.shieldbase.local '
+        u'Strings: [u\'Windows Modules Installer\', '
+        u'u\'stopped\', u\'540072007500730074006500640049006E00'
+        u'7300740061006C006C00650072002F0031000000\']')
+
+    expected_msg_short = (
+        u'[0x00001b7c] '
+        u'Strings: [u\'Windows Modules Installer\', '
+        u'u\'stopped\', u\'5400720075...')
 
     self.assertEquals(msg, expected_msg)
+    self.assertEquals(msg_short, expected_msg_short)
 
 
 if __name__ == '__main__':
