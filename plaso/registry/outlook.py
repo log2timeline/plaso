@@ -14,9 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a parser for MS Outlook for Plaso."""
-# TODO: Needs test, create NTUSER.DAT test file with Outlook data or
-# use winreg testlib.
+"""This file contains an Outlook Registry parser."""
 
 from plaso.lib import event
 from plaso.lib import win_registry_interface
@@ -25,16 +23,16 @@ from plaso.lib import win_registry_interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Outlook(win_registry_interface.KeyPlugin):
-  """Base class for all Data File locations plugins."""
+class OutlookSearchMRUPlugin(win_registry_interface.KeyPlugin):
+  """Base class for Outlook Search MRU Registry parsers."""
 
   __abstract = True
 
-  DESCRIPTION = 'Outlook'
+  DESCRIPTION = 'PST Paths'
 
   def GetEntries(self):
-    """Collect Values under Outlook and return event for each one."""
-    value_count = 0
+    """Collect the values under Outlook and return event for each one."""
+    value_index = 0
     for value in self._key.GetValues():
       # Ignore the default value.
       if not value.name:
@@ -49,7 +47,7 @@ class Outlook(win_registry_interface.KeyPlugin):
       text_dict = {}
       text_dict[value.name] = '0x{0:08x}'.format(value.data)
 
-      if value_count == 0:
+      if value_index == 0:
         timestamp = self._key.last_written_timestamp
       else:
         timestamp = 0
@@ -58,30 +56,47 @@ class Outlook(win_registry_interface.KeyPlugin):
           self._key.path, text_dict, timestamp=timestamp,
           source_append=': {0:s}'.format(self.DESCRIPTION))
 
-      value_count += 1
+      value_index += 1
 
 
 # TODO: Address different MS Office versions.
-class MSOutlook2010Search(Outlook):
+class MSOutlook2010SearchMRUPlugin(OutlookSearchMRUPlugin):
   """Gathers MS Outlook 2010 Data File locations from the User hive."""
 
   REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search'
   REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'PST Paths'
 
 
-class MSOutlook2010Catalog(Outlook):
-  """Gathers MS Outlook 2010 Data File locations from the User hive."""
+class MSOutlook2013SearchMRUPlugin(OutlookSearchMRUPlugin):
+  """Gathers MS Outlook 2013 Data File locations from the User hive."""
 
-  REG_KEY = (
-    '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search\\Catalog')
+  REG_KEY = '\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search'
   REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'PST Paths'
 
 
-class MSOutlook2003Catalog(Outlook):
-  """Gathers MS Outlook 2003 Data File locations from the User hive."""
+# TODO: The catalog for Office 2013 (15.0) contains binary values not
+# dword values. Check if Office 2007 and 2010 have the same. Re-enable the
+# plug-ins once confirmed and OutlookSearchMRUPlugin has been extended to
+# handle the binary data or create a OutlookSearchCatalogMRUPlugin.
 
-  REG_KEY = '\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'PST Paths'
+#class MSOutlook2007SearchCatalogMRUPlugin(OutlookSearchMRUPlugin):
+#  """Gathers MS Outlook 2007 Data File locations from the User hive."""
+#
+#  REG_KEY = '\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog'
+#  REG_TYPE = 'NTUSER'
+
+
+#class MSOutlook2010SearchCatalogMRUPlugin(OutlookSearchMRUPlugin):
+#  """Gathers MS Outlook 2010 Data File locations from the User hive."""
+#
+#  REG_KEY = (
+#    '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search\\Catalog')
+#  REG_TYPE = 'NTUSER'
+
+
+#class MSOutlook2013SearchCatalogMRUPlugin(OutlookSearchMRUPlugin):
+#  """Gathers MS Outlook 2013 Data File locations from the User hive."""
+#
+#  REG_KEY = (
+#    '\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog')
+#  REG_TYPE = 'NTUSER'
