@@ -37,7 +37,7 @@ class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
   """Formatter for a Firefox places.sqlite bookmark folder."""
   DATA_TYPE = 'firefox:places:bookmark_folder'
 
-  FORMAT_STRING = '{title}'
+  FORMAT_STRING = u'{title}'
 
   SOURCE_LONG = 'Firefox History'
   SOURCE_SHORT = 'WEBHIST'
