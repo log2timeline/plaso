@@ -165,10 +165,12 @@ class EventFormatter(object):
 
   def __init__(self):
     """Set up the formatter and determine if this is the right formatter."""
-    self.format_string = self.FORMAT_STRING
-    self.format_string_short = self.FORMAT_STRING_SHORT
-    self.source_string = self.SOURCE_LONG
-    self.source_string_short = self.SOURCE_SHORT
+    # Forcing the format string to be unicode to make sure we don't
+    # try to format it as an ASCII string.
+    self.format_string = unicode(self.FORMAT_STRING)
+    self.format_string_short = unicode(self.FORMAT_STRING_SHORT)
+    self.source_string = unicode(self.SOURCE_LONG)
+    self.source_string_short = unicode(self.SOURCE_SHORT)
 
   def GetMessages(self, event_object):
     """Return a list of messages extracted from an event object.
@@ -339,14 +341,16 @@ class ConditionalEventFormatter(EventFormatter):
           if type(attribute) not in (bool, int, long, float) and not attribute:
             continue
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
-    self.format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
+    self.format_string = unicode(
+        self.FORMAT_STRING_SEPARATOR.join(string_pieces))
 
     string_pieces = []
     for map_index, attribute_name in enumerate(
         self._format_string_short_pieces_map):
       if not attribute_name or getattr(event_object, attribute_name, None):
         string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
-    self.format_string_short = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
+    self.format_string_short = unicode(
+        self.FORMAT_STRING_SEPARATOR.join(string_pieces))
 
     return super(ConditionalEventFormatter, self).GetMessages(event_object)
 
