@@ -279,14 +279,15 @@ def ProcessArguments(arguments):
 
   parser.add_argument(
       'storagefile', metavar='PLASOFILE', default=None, nargs='?',
-      help='Path to the Plaso storage file')
+      type=unicode, help='Path to the Plaso storage file')
 
   parser.add_argument(
       'filter', nargs='?', action='store', metavar='FILTER', default=None,
-      help=('A filter that can be used to filter the dataset before it '
-            'is written into storage. More information about the filters'
-            ' and it\'s usage can be found here: http://plaso.kiddaland.'
-            'net/usage/filters'))
+      type=unicode, help=(
+          'A filter that can be used to filter the dataset before it '
+          'is written into storage. More information about the filters'
+          ' and it\'s usage can be found here: http://plaso.kiddaland.'
+          'net/usage/filters'))
 
   my_args = parser.parse_args(args=arguments)
 

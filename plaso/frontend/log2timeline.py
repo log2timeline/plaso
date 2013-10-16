@@ -149,7 +149,7 @@ def Main():
       help='Indicate that the tool should run in a single thread.')
 
   function_group.add_argument(
-      '-f', '--file_filter', dest='file_filter', action='store', type=str,
+      '-f', '--file_filter', dest='file_filter', action='store', type=unicode,
       default=None, help=('List of files to include for targeted collection of'
                           ' files to parse, one line per file path, setup is '
                           '/path|file - where each element can contain either'
@@ -227,22 +227,24 @@ def Main():
 
   arg_parser.add_argument(
       'output', action='store', metavar='STORAGE_FILE', nargs='?',
-      help=('The path to the output file, if the file exists it will get '
-            'appended to.'))
+      type=unicode, help=(
+          'The path to the output file, if the file exists it will get '
+          'appended to.'))
 
   arg_parser.add_argument(
       'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT',
-      nargs='?', help=(
+      nargs='?', type=unicode, help=(
           'The path to the file, directory, image file or mount point that the'
           ' tool should parse. If this is a directory it will recursively go '
           'through it, same with an image file.'))
 
   arg_parser.add_argument(
       'filter', action='store', metavar='FILTER', nargs='?', default=None,
-      help=('A filter that can be used to filter the dataset before it '
-            'is written into storage. More information about the filters'
-            ' and it\'s usage can be found here: http://plaso.kiddaland.'
-            'net/usage/filters'))
+      type=unicode, help=(
+          'A filter that can be used to filter the dataset before it '
+          'is written into storage. More information about the filters'
+          ' and it\'s usage can be found here: http://plaso.kiddaland.'
+          'net/usage/filters'))
 
   # Properly prepare the attributes according to local encoding.
   preferred_encoding = locale.getpreferredencoding()
