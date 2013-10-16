@@ -18,6 +18,7 @@
 """This file contains simple checks for versions of dependent tools."""
 
 import re
+import sys
 import urllib2
 
 LIBRARIES = [
@@ -93,15 +94,35 @@ def CheckVersion(library):
 
 if __name__ == '__main__':
   print 'Loading libraries'
-  parser_libraries = map(__import__, LIBRARIES)
+  library_url = (
+      'https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/libyal.html')
 
+  try:
+    parser_libraries = map(__import__, LIBRARIES)
+  except ImportError as error_message:
+    error_words = str(error_message).split()
+    py_library_name = error_words[-1]
+    lib_library_name = 'lib{}'.format(py_library_name[3:])
+
+    print (
+        u'Unable to proceed. You are missing an important library: {} '
+        u'[{}]').format(
+            lib_library_name, py_library_name)
+    print 'Libraries can be downloaded from here: {}'.format(library_url)
+    sys.exit(1)
+
+  mismatch = False
   for python_binding in parser_libraries:
     libname = 'lib{}'.format(python_binding.__name__[2:])
     installed_version = int(python_binding.get_version())
     available_version = CheckLibyalGoogleDriveVersion(libname)
 
     if installed_version != available_version:
-      print '[{}] Version mismatch: installed {}, available: {}'.format(
+      mismatch = True
+      print '  [{}] Version mismatch: installed {}, available: {}'.format(
           libname, installed_version, available_version)
     else:
-      print '[{}] OK'.format(libname)
+      print '  [{}] OK'.format(libname)
+
+  if mismatch:
+    print '\nLibraries can be downloaded from here: {}'.format(library_url)
