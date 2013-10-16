@@ -1,0 +1,16 @@
+Source: python-plaso
+Section: unknown
+Priority: extra
+Maintainer: Log2Timeline <log2timeline-dev@googlegroups.com>
+Build-Depends: debhelper (>= 7.0.0), python, python-setuptools
+Standards-Version: 3.9.2
+Homepage: http://code.google.com/p/plaso/
+
+Package: python-plaso
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-dateutil, python-setuptools, binplist, python-dpkt, docopt, python-hachoir-core, python-hachoir-metadata, python-hachoir-parser, libprotobuf7, python-protobuf, libyaml-0-2, python-yaml, libevt-python, libevtx-python, liblnk-python, libmsiecf-python, libolecf-python, libregf-python, libvshadow-python, libtsk, pytsk3, python-pyparsing, python-tz, ipython
+Recommends: libevt-tools, libevtx-tools, liblnk-tools, libmsiecf-tools, libolecf-tools, libregf-tools, libvshadow-tools, libtsk-dev, sleuthkit
+Description: Plaso Log2Timeline
+ Log2Timeline is a framework to create super timelines.
+ It is a framework to parse various files and collect time-based
+ digital artifacts that can be used in computer forensics.
