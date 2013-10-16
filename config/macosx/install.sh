@@ -63,7 +63,7 @@ then
 fi
 
 echo "Uninstalling previous versions."
-old_uninstall_tool $OLD_FOLDER
+uninstall_tool $OLD_FOLDER
 
 echo "Installing tools."
 install_tool log2timeline
