@@ -77,22 +77,14 @@ clean:
 
 install:
 	@mkdir -p $(prefix)/lib/plaso
-	@install -m 0755 dist/image_export/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/image_export/image_export $(prefix)/lib/plaso
-	@install -m 0755 dist/log2timeline/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/log2timeline/log2timeline $(prefix)/lib/plaso
-	@install -m 0755 dist/pinfo/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/pinfo/pinfo $(prefix)/lib/plaso
-	@install -m 0755 dist/plasm/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/plasm/plasm $(prefix)/lib/plaso
-	@install -m 0755 dist/pprof/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/pprof/pprof $(prefix)/lib/plaso
-	@install -m 0755 dist/preg/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/preg/preg $(prefix)/lib/plaso
-	@install -m 0755 dist/pshell/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/pshell/pshell $(prefix)/lib/plaso
-	@install -m 0755 dist/psort/*.* $(prefix)/lib/plaso
-	@install -m 0755 dist/psort/psort $(prefix)/lib/plaso
+	@cp -rf dist/image_export/* $(prefix)/lib/plaso
+	@cp -rf dist/log2timeline/* $(prefix)/lib/plaso
+	@cp -rf dist/pinfo/* $(prefix)/lib/plaso
+	@cp -rf dist/plasm/* $(prefix)/lib/plaso
+	@cp -rf dist/pprof/* $(prefix)/lib/plaso
+	@cp -rf dist/preg/* $(prefix)/lib/plaso
+	@cp -rf dist/pshell/* $(prefix)/lib/plaso
+	@cp -rf dist/psort/* $(prefix)/lib/plaso
 
 .py:
 
