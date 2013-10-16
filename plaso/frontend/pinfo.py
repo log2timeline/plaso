@@ -115,7 +115,7 @@ collected, what information was gained from the image, etc.
 
   arg_parser.add_argument(
       'storage_file', nargs='?', action='store', metavar='STORAGE FILE',
-      default=None, help='The storage file.')
+      default=None, type=unicode, help='The storage file.')
 
   options = arg_parser.parse_args()
 

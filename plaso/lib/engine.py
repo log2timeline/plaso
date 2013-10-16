@@ -537,7 +537,7 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
   elif config.recursive:
     logging.debug(u'Collection started from a directory.')
     return collector.SimpleFileCollector(
-        collection_queue, storage_queue, config.filename)
+        collection_queue, storage_queue, unicode(config.filename))
   else:
     # Parsing a single file, no need to have multiple workers.
     config.workers = 1
