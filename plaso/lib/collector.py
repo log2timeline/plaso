@@ -173,7 +173,7 @@ def CalculateNTFSTimeHash(meta):
 class Collector(object):
   """An interface for file collection in Plaso."""
 
-  def __init__(self, proc_queue, stor_queue):
+  def __init__(self, proc_queue, stor_queue, dir_stat=True):
     """Initialize the Collector.
 
     The collector takes care of discovering all the files that need to be
@@ -183,9 +183,12 @@ class Collector(object):
     Args:
       proc_queue: A Plaso queue object used as a processing queue of files.
       stor_queue: A Plaso queue object used as a buffer to the storage layer.
+      dir_stat: A boolean that determines whether or not we want to include
+      directory stat information into the storage queue.
     """
     self._queue = proc_queue
     self._storage_queue = stor_queue
+    self._dir_stat = dir_stat
 
   def Run(self):
     """Run the collector and then close the queue."""
@@ -213,15 +216,17 @@ class Collector(object):
 class SimpleFileCollector(Collector):
   """This is a simple collector that collects from a directory."""
 
-  def __init__(self, proc_queue, stor_queue, directory):
+  def __init__(self, proc_queue, stor_queue, directory, dir_stat=True):
     """Initialize the file collector.
 
     Args:
       proc_queue: A Plaso queue object used as a processing queue of files.
       stor_queue: A Plaso queue object used as a buffer to the storage layer.
       directory: Path to the directory that contains files to be collected.
+      dir_stat: A boolean that determines whether or not we want to include
+      directory stat information into the storage queue.
     """
-    super(SimpleFileCollector, self).__init__(proc_queue, stor_queue)
+    super(SimpleFileCollector, self).__init__(proc_queue, stor_queue, dir_stat)
     self._dir = directory
 
   def Collect(self):
@@ -251,6 +256,9 @@ class SimpleFileCollector(Collector):
   def ProcessDir(self, path):
     """Process a directory and extract timestamps from it."""
     # Get a stat object and send timestamps for the directory to the storage.
+    if not self._dir_stat:
+      return
+
     directory_stat = GetOsDirectoryStat(path)
     SendContainerToStorage(
         filestat.GetEventContainerFromStat(directory_stat),
@@ -270,7 +278,7 @@ class SimpleImageCollector(Collector):
   SECTOR_SIZE = 512
 
   def __init__(self, proc_queue, stor_queue, image, offset=0, offset_bytes=0,
-               parse_vss=False, vss_stores=None, fscache=None):
+               parse_vss=False, vss_stores=None, fscache=None, dir_stat=True):
     """Initialize the image collector.
 
     Args:
@@ -285,7 +293,8 @@ class SimpleImageCollector(Collector):
       vss_stores: If defined a range of VSS stores to include in vss parsing.
       fscache: A FilesystemCache object.
     """
-    super(SimpleImageCollector, self).__init__(proc_queue, stor_queue)
+    super(SimpleImageCollector, self).__init__(
+        proc_queue, stor_queue, dir_stat)
     self._image = image
     self._offset = offset
     self._offset_bytes = offset_bytes
@@ -376,17 +385,18 @@ class SimpleImageCollector(Collector):
     try:
       directory = fs.fs.open_dir(inode=cur_inode)
       # Get a stat object and send timestamps for the directory to the storage.
-      directory_stat = GetTskDirectoryStat(directory)
-      directory_stat.full_path = path
-      directory_stat.display_path = '{}:{}'.format(self._image, path)
-      try:
-        directory_stat.display_path.decode('utf-8')
-      except UnicodeDecodeError:
-        directory_stat.display_path = utils.GetUnicodeString(
-            directory_stat.display_path)
-      SendContainerToStorage(
-          filestat.GetEventContainerFromStat(directory_stat),
-          directory_stat, self._storage_queue)
+      if self._dir_stat:
+        directory_stat = GetTskDirectoryStat(directory)
+        directory_stat.full_path = path
+        directory_stat.display_path = '{}:{}'.format(self._image, path)
+        try:
+          directory_stat.display_path.decode('utf-8')
+        except UnicodeDecodeError:
+          directory_stat.display_path = utils.GetUnicodeString(
+              directory_stat.display_path)
+        SendContainerToStorage(
+            filestat.GetEventContainerFromStat(directory_stat),
+            directory_stat, self._storage_queue)
     except IOError:
       logging.error(u'IOError while trying to open a directory: %s [%d]',
                     path, cur_inode)
@@ -463,7 +473,8 @@ class TargetedFileSystemCollector(SimpleFileCollector):
   """This is a simple collector that collects using a targeted list."""
 
   def __init__(
-      self, proc_queue, stor_queue, pre_obj, mount_point, file_filter):
+      self, proc_queue, stor_queue, pre_obj, mount_point, file_filter,
+      dir_stat=True):
     """Initialize the targeted filesystem collector.
 
     Args:
@@ -472,9 +483,11 @@ class TargetedFileSystemCollector(SimpleFileCollector):
       pre_obj: The PlasoPreprocess object.
       mount_point: The path to the mount point or base directory.
       file_filter: The path of the filter file.
+      dir_stat: A boolean that determines whether or not we want to include
+      directory stat information into the storage queue.
     """
     super(TargetedFileSystemCollector, self).__init__(
-        proc_queue, stor_queue, mount_point)
+        proc_queue, stor_queue, mount_point, dir_stat)
     self._collector = preprocess.FileSystemCollector(
         pre_obj, mount_point)
     self._file_filter = file_filter
@@ -491,7 +504,7 @@ class TargetedImageCollector(SimpleImageCollector):
 
   def __init__(self, proc_queue, stor_queue, image, file_filter, pre_obj,
                sector_offset=0, byte_offset=0, parse_vss=False,
-               vss_stores=None):
+               vss_stores=None, dir_stat=True):
     """Initialize the image collector.
 
     Args:
@@ -507,10 +520,12 @@ class TargetedImageCollector(SimpleImageCollector):
       parse_vss: Boolean determining if we should collect from VSS as well
       (only applicaple in Windows with Volume Shadow Snapshot).
       vss_stores: If defined a range of VSS stores to include in vss parsing.
+      dir_stat: A boolean that determines whether or not we want to include
+      directory stat information into the storage queue.
     """
     super(TargetedImageCollector, self).__init__(
         proc_queue, stor_queue, image, sector_offset, byte_offset, parse_vss,
-        vss_stores)
+        vss_stores, dir_stat)
     self._file_filter = file_filter
     self._pre_obj = pre_obj
 

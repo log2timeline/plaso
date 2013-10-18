@@ -511,6 +511,15 @@ class Engine(object):
 
 def GetCollector(config, pre_obj, collection_queue, storage_queue):
   """Return back a collector based on config."""
+  # Indicate whether the collection agent should collect directory
+  # stat information - this depends on whether the stat parser is
+  # loaded or not.
+  include_directory_stat = False
+  if hasattr(pre_obj, 'collection_information'):
+    loaded_parsers = pre_obj.collection_information.get('parsers', [])
+    if 'PfileStatParser' in loaded_parsers:
+      include_directory_stat = True
+
   if config.file_filter:
     # Start a targeted collection filter.
     if config.image:
@@ -520,12 +529,13 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
           config.file_filter, pre_obj,
           sector_offset=config.image_offset,
           byte_offset=config.image_offset_bytes,
-          parse_vss=config.parse_vss, vss_stores=config.vss_stores)
+          parse_vss=config.parse_vss, vss_stores=config.vss_stores,
+          dir_stat=include_directory_stat)
     else:
       logging.debug(u'Starting a targeted recursive collection.')
       return collector.TargetedFileSystemCollector(
           collection_queue, storage_queue, pre_obj, config.filename,
-          config.file_filter)
+          config.file_filter, include_directory_stat)
 
   if config.image:
     logging.debug(u'Collection started from an image.')
@@ -533,11 +543,13 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
         collection_queue, storage_queue, config.filename,
         offset=config.image_offset,
         offset_bytes=config.image_offset_bytes,
-        parse_vss=config.parse_vss, vss_stores=config.vss_stores)
+        parse_vss=config.parse_vss, vss_stores=config.vss_stores,
+        dir_stat=include_directory_stat)
   elif config.recursive:
     logging.debug(u'Collection started from a directory.')
     return collector.SimpleFileCollector(
-        collection_queue, storage_queue, unicode(config.filename))
+        collection_queue, storage_queue, unicode(config.filename),
+        include_directory_stat)
   else:
     # Parsing a single file, no need to have multiple workers.
     config.workers = 1
@@ -548,4 +560,5 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
           u'Wrong usage: {%s} has to be a file.' % config.filename)
 
     return collector.SimpleFileCollector(
-        collection_queue, storage_queue, config.filename)
+        collection_queue, storage_queue, unicode(config.filename),
+        include_directory_stat)
