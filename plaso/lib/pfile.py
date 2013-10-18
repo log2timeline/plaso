@@ -89,9 +89,13 @@ class FilesystemCache(object):
       img = pytsk3.Img_Info(path)
     except IOError as e:
       raise errors.UnableToOpenFilesystem(
-          'Unable to open image file. [%s]' % e)
+          u'Unable to open image file. [%s]' % e)
 
-    volume = pytsk3.Volume_Info(img)
+    try:
+      volume = pytsk3.Volume_Info(img)
+    except IOError:
+      raise errors.UnableToOpenFilesystem(
+          u'Unable to open the disk image [%s]' % path)
 
     for part in volume:
       partition_map.append({
