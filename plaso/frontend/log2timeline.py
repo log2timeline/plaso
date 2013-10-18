@@ -307,7 +307,12 @@ def Main():
     else:
       file_use = options.output
 
-    partition_map = pfile.FilesystemCache.PartitionMap(file_use)
+    try:
+      partition_map = pfile.FilesystemCache.PartitionMap(file_use)
+    except errors.UnableToOpenFilesystem as e:
+      print e
+      sys.exit(1)
+
     print u'Index  {:10s} {:10s} {}'.format('Offset', 'Length', 'Description')
     for entry in partition_map:
       print u'{:02d}:    {:010d} {:010d} {}'.format(
