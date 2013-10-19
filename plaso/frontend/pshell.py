@@ -22,11 +22,11 @@ import sys
 import tempfile
 
 try:
-  from IPython.frontend.terminal.embed import InteractiveShellEmbed
-except ImportError:
   # Support version 1.X of IPython.
   # pylint: disable-msg=no-name-in-module
   from IPython.terminal.embed import InteractiveShellEmbed
+except ImportError:
+  from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 # pylint: disable-msg=W0611
 from plaso import filters

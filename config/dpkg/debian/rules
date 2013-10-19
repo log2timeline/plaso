@@ -21,6 +21,8 @@ override_dh_installinit:
 	mkdir -p debian/plaso-static/usr/share/doc/plaso/licenses
 	cp -rf debian/tmp/usr/lib/plaso/* debian/plaso-static/usr/lib/plaso
 	install -D -p -m644 config/licenses/LICENSE.* debian/plaso-static/usr/share/doc/plaso/licenses
+	# No need to include the Windows-only license files.
+	rm -f debian/plaso-static/usr/share/doc/plaso/licenses/LICENSE.pywin32
 
 override_dh_installmenu:
 
