@@ -319,22 +319,6 @@ def GetHexDump(fh, offset, length=20):
   hexdata = binascii.hexlify(data)
   data_out = []
 
-  def GetHexDumpLine(line, orig_ofs, entry_nr=0):
-    """Return a single line of 'xxd' dump like style."""
-    out = []
-    out.append('{0:07x}: '.format(orig_ofs + entry_nr * 16))
-
-    for bit in range(0, 8):
-      out.append('%s ' % line[bit * 4:bit * 4 + 4])
-
-    for bit in range(0, 16):
-      data = binascii.unhexlify(line[bit * 2: bit * 2 + 2])
-      if ord(data) > 31 and ord(data) < 128:
-        out.append(data)
-      else:
-        out.append('.')
-    return ''.join(out)
-
   for entry_nr in range(0, len(hexdata) / 32):
     point = 32 * entry_nr
     data_out.append(GetHexDumpLine(hexdata[point:point + 32], offset, entry_nr))
@@ -348,3 +332,19 @@ def GetHexDump(fh, offset, length=20):
 
   return '\n'.join(data_out)
 
+
+def GetHexDumpLine(line, orig_ofs, entry_nr=0):
+  """Return a single line of 'xxd' dump like style."""
+  out = []
+  out.append('{0:07x}: '.format(orig_ofs + entry_nr * 16))
+
+  for bit in range(0, 8):
+    out.append('%s ' % line[bit * 4:bit * 4 + 4])
+
+  for bit in range(0, 16):
+    data = binascii.unhexlify(line[bit * 2: bit * 2 + 2])
+    if ord(data) > 31 and ord(data) < 128:
+      out.append(data)
+    else:
+      out.append('.')
+  return ''.join(out)
