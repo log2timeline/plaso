@@ -21,7 +21,12 @@ import os
 import sys
 import tempfile
 
-from IPython.frontend.terminal.embed import InteractiveShellEmbed
+try:
+  from IPython.frontend.terminal.embed import InteractiveShellEmbed
+except ImportError:
+  # Support version 1.X of IPython.
+  # pylint: disable-msg=no-name-in-module
+  from IPython.terminal.embed import InteractiveShellEmbed
 
 # pylint: disable-msg=W0611
 from plaso import filters
@@ -140,8 +145,8 @@ def Main():
             'verification.\n\n'
             '\nHappy command line console fu-ing.')
 
-  ipshell = InteractiveShellEmbed(user_ns=namespace, banner1=banner,
-                                  exit_msg='')
+  ipshell = InteractiveShellEmbed(
+      user_ns=namespace, banner1=banner, exit_msg='')
   ipshell.confirm_exit = False
   ipshell()
 

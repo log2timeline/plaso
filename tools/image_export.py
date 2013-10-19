@@ -61,7 +61,7 @@ def RunExtensionExtraction(options, extensions, fscache):
     if extension.lower() in extensions:
       fh = pfile.OpenPFile(pathspec, fscache=fscache)
       if getattr(pathspec, 'vss_store_number', None):
-        FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number
+        FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number + 1
       else:
         FileSaver.prefix = ''
       if os.path.sep != '/':
@@ -304,7 +304,7 @@ def Main():
       sys.exit(1)
 
   if options.extension_string:
-    extensions = options.extension_string.split(',')
+    extensions = [x.strip() for x in options.extension_string.split(',')]
 
   if not os.path.isdir(options.path):
     os.makedirs(options.path)
