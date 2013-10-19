@@ -30,11 +30,11 @@ import sys
 import textwrap
 
 try:
-  from IPython.frontend.terminal.embed import InteractiveShellEmbed
-except ImportError:
-  # To support version 1.X of iPython.
+  # Support version 1.X of IPython.
   # pylint: disable-msg=no-name-in-module
   from IPython.terminal.embed import InteractiveShellEmbed
+except ImportError:
+  from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 from IPython.core import magic
 

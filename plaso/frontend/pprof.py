@@ -24,7 +24,12 @@ import pstats
 import sys
 import time
 
-from IPython.frontend.terminal.embed import InteractiveShellEmbed
+try:
+  # Support version 1.X of IPython.
+  # pylint: disable-msg=no-name-in-module
+  from IPython.terminal.embed import InteractiveShellEmbed
+except ImportError:
+  from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 from plaso.frontend import psort
 from plaso.lib import engine
