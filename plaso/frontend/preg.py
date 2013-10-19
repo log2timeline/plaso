@@ -28,7 +28,13 @@ import os
 import sys
 import textwrap
 
-from IPython.frontend.terminal.embed import InteractiveShellEmbed
+try:
+  from IPython.frontend.terminal.embed import InteractiveShellEmbed
+except ImportError:
+  # To support version 1.X of iPython.
+  # pylint: disable-msg=no-name-in-module
+  from IPython.terminal.embed import InteractiveShellEmbed
+
 from IPython.core import magic
 
 from plaso import preprocessors
@@ -47,10 +53,6 @@ from plaso.winreg import cache
 from plaso.winreg import winregistry
 
 import pytz
-
-
-# Global variable.
-argument_container = None
 
 
 class RegistryPluginHeader(eventdata.EventFormatter):
@@ -186,6 +188,23 @@ class RegCache(object):
     return getattr(cls.hive, 'name', 'N/A')
 
 
+def CdCompleter(dummy_self, dummy_event):
+  """Completer function for the cd command, returning back sub keys."""
+  return_list = []
+  for key in RegCache.cur_key.GetSubkeys():
+    return_list.append(key.name)
+
+  return return_list
+
+
+def VerboseCompleter(dummy_self, event):
+  """Completer function that suggests simple verbose settings."""
+  if '-v' in event.line:
+    return []
+  else:
+    return ['-v']
+
+
 @magic.magics_class
 class MyMagics(magic.Magics):
   """A simple class holding all magic functions for console."""
@@ -194,7 +213,9 @@ class MyMagics(magic.Magics):
   @magic.line_magic
   def parse(self, line):
     """Parse the current key."""
-    if 'True' in line:
+    if 'true' in line.lower():
+      verbose = True
+    elif '-v' in line.lower():
       verbose = True
     else:
       verbose = False
@@ -221,7 +242,7 @@ class MyMagics(magic.Magics):
     key_path = key
 
     if not key:
-      return
+      self.cd('\\')
 
     if key.startswith('\\'):
       registry_key = RegCache.hive.GetKeyByPath(key)
@@ -288,8 +309,11 @@ class MyMagics(magic.Magics):
 
     if 'true' in line.lower():
       verbose = True
+    elif '-v' in line.lower():
+      verbose = True
     else:
       verbose = False
+
 
     sub = []
     for key in RegCache.cur_key.GetSubkeys():
@@ -348,7 +372,10 @@ def OpenHive(filename, collector=None, codepage='cp1252'):
   win_registry = winregistry.WinRegistry(
       winregistry.WinRegistry.BACKEND_PYREGF)
 
-  RegCache.hive = win_registry.OpenFile(file_object, codepage=use_codepage)
+  try:
+    RegCache.hive = win_registry.OpenFile(file_object, codepage=use_codepage)
+  except IOError:
+    ErrorAndDie(u'Unable to open registry hive: {}'.format(filename))
   RegCache.SetHiveType()
   RegCache.BuildCache()
   RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
@@ -360,7 +387,7 @@ def PrintEventHeader(event_object):
 
   msg, _ = event_formatter.GetMessages(event_object)
 
-  print msg
+  return msg
 
 
 def PrintEvent(event_object, show_hex=False):
@@ -372,7 +399,7 @@ def PrintEvent(event_object, show_hex=False):
 
   msg, _ = event_formatter.GetMessages(event_object)
 
-  print msg
+  return msg
 
 
 def ParseHive(hive_path, collectors, keys, use_plugins, verbose):
@@ -473,9 +500,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
   registry_type = RegCache.hive_type
 
   plugins = {}
-  # THIS IS ALREADY DONE!!! REMOVE
   regplugins = win_registry_interface.GetRegistryPlugins()
-
   # Compile a list of plugins we are about to use.
   for weight in regplugins.GetWeights():
     plugin_list = regplugins.GetWeightPlugins(weight, registry_type)
@@ -499,9 +524,9 @@ def ParseKey(key, verbose=False, use_plugins=None):
         first = True
         for event_object in call_back:
           if first:
-            PrintEventHeader(event_object)
+            print_strings.append(PrintEventHeader(event_object))
             first = False
-          PrintEvent(event_object, verbose)
+          print_strings.append(PrintEvent(event_object, verbose))
         print_strings.append(u'')
 
   # Printing '*' 80 times.
@@ -540,9 +565,8 @@ def FindRegistryPaths(pattern, collector):
 
 def ErrorAndDie(error):
   """Print error message and a help message."""
-  global argument_container
-  if argument_container:
-    argument_container.print_help()
+  if argument_parser:
+    argument_parser.print_help()
   else:
     print 'Unable to print help message.'
   print ''
@@ -632,8 +656,8 @@ in a textual format.
       help='Print out information about supported plugins.')
 
   mode_options.add_argument(
-      '-p', '--plugins', dest='plugin_name', action='store', default='', type=str,
-      metavar='PLUGIN_NAME',
+      '-p', '--plugins', dest='plugin_name', action='store', default='',
+      type=str, metavar='PLUGIN_NAME',
       help='Substring match of the registry plugin to be used.')
 
   mode_options.add_argument(
@@ -652,8 +676,6 @@ in a textual format.
 
 def Main(arguments):
   """Run the tool."""
-  global argument_container
-  argment_container = arguments
   # Parse the command line arguments.
   options = arguments.parse_args()
 
@@ -666,7 +688,7 @@ def Main(arguments):
   # Detect run mode and run appropriate method calls.
   if options.info:
     print utils.FormatHeader('Supported Plugins')
-    key_plugin = plugins.GetAllKeyPlugins()[0]
+    key_plugin = options.plugins.GetAllKeyPlugins()[0]
 
     for plugin, obj in sorted(key_plugin.classes.items()):
       doc_string, _, _ = obj.__doc__.partition('\n')
@@ -751,7 +773,11 @@ def GetHivesAndCollectors(config):
     collectors = GetCollectorsFromAnImage(config)
     _, collector = collectors[0]
     # Find all the registry paths we need to check.
-    paths = GetRegistryFilePaths(config, config.regfile)
+    if config.regfile:
+      paths = GetRegistryFilePaths(config, config.regfile.upper())
+    else:
+      paths = GetRegistryFilePaths(config)
+
     hives = []
     for path in paths:
       hives.extend(FindRegistryPaths(path, collector))
@@ -837,7 +863,7 @@ def GetCollectorsFromAnImage(config):
     for store in config.vss_stores:
       vss_collector = preprocess.VSSFileCollector(
           RegCache.pre_obj, config.image, store, config.offset * 512)
-      collectors.append((':VSS Store {}'.format(store), vss_collector))
+      collectors.append((':VSS Store {}'.format(store + 1), vss_collector))
 
   return collectors
 
@@ -870,6 +896,7 @@ def GetRegistryTypes(config):
       if plugin is temp_obj.plugin_name:
         if temp_obj.REG_TYPE not in types:
           types.append(temp_obj.REG_TYPE)
+        break
 
   return types
 
@@ -877,11 +904,10 @@ def GetRegistryTypes(config):
 def GetRegistryKeysFromType(config, registry_type):
   """Return a list of all key plugins for a given registry type."""
   keys = []
-  for plugin in GetRegistryPlugins(config):
-    for reg_plugin in config.plugins.GetAllKeyPlugins():
-      temp_obj = reg_plugin(None, None, None)
-      if temp_obj.REG_TYPE == registry_type:
-        keys.append(temp_obj.REG_KEY)
+  for reg_plugin in config.plugins.GetAllKeyPlugins():
+    temp_obj = reg_plugin(None, None, None)
+    if temp_obj.REG_TYPE == registry_type:
+      keys.append(temp_obj.REG_KEY)
 
   return keys
 
@@ -938,11 +964,7 @@ def ExpandKeysRedirect(keys):
 def RunModeConsole(config):
   """Open up an iPython console."""
   namespace = {}
-  namespace.update(globals())
   hives, collectors = GetHivesAndCollectors(config)
-
-  namespace.update(
-      {'collectors': collectors, 'hives': hives})
 
   function_name_length = 15
   banners = []
@@ -976,11 +998,10 @@ def RunModeConsole(config):
   if len(collectors) == 1:
     collector = collectors[0][1]
     collectors = []
-    namespace.update({'collector': collector})
   else:
     collector = None
 
-  if hive and collector:
+  if hive and not collectors:
     OpenHive(hive, collector)
 
   if RegCache.hive and RegCache.GetHiveName() != 'N/A':
@@ -1006,6 +1027,8 @@ def RunModeConsole(config):
           'are:'))
       counter = 0
       for name, _ in collectors:
+        if not name:
+          name = 'Current Value'
         banners.append(' {} = {}'.format(counter, name))
         counter += 1
 
@@ -1019,15 +1042,41 @@ def RunModeConsole(config):
           ' To get the name of the loaded hive use RegCache.GetHiveName()'
           ' and RegCache.hive_type to get the '
           'type.') % (len(hives) + 1), len(text)))
+  else:
+    # We have a single hive but many collectors.
+    banners.append(
+        'There is more than one collector available for the hive that was '
+        'discovered. To open up a hive use:\nOpenHive(hive, collectors[NR][1])'
+        '\nWhere NR is one of the following values:')
 
+    counter = 0
+    for name, _ in collectors:
+      if not name:
+        name = 'Current Value'
+      banners.append(' {} = {}'.format(counter, name))
+      counter += 1
 
   banners.append('')
   banners.append('Happy command line console fu-ing.')
 
+  # Adding variables in scope.
+  namespace.update(globals())
+  namespace.update({
+      'hives': hives,
+      'hive': hive,
+      'collector': collector,
+      'collectors': collectors})
+
+  # Starting the shell.
   ipshell = InteractiveShellEmbed(
       user_ns=namespace, banner1=u'\n'.join(banners), exit_msg='')
   ipshell.confirm_exit = False
+  # Adding "magic" functions.
   ipshell.register_magics(MyMagics)
+  # Registering command completion for the magic commands.
+  ipshell.set_hook('complete_command', CdCompleter, str_key='%cd')
+  ipshell.set_hook('complete_command', VerboseCompleter, str_key='%ls')
+  ipshell.set_hook('complete_command', VerboseCompleter, str_key='%parse')
   ipshell()
 
 
