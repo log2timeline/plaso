@@ -23,6 +23,7 @@ runs the registry plugins of plaso against the registry hive and presents it
 in a textual format.
 """
 import argparse
+import binascii
 import logging
 import os
 import sys
@@ -317,12 +318,17 @@ class MyMagics(magic.Magics):
 
     sub = []
     for key in RegCache.cur_key.GetSubkeys():
-      sub.append((u'{0:>10s}  {1:s}'.format('[KEY]', key.name), True))
+      timestamp, _, _ = putils.PrintTimestamp(
+          key.last_written_timestamp).partition('.')
+
+      sub.append((u'{0:>19s} {1:>15s}  {2:s}'.format(
+          timestamp.replace('T', ' '), '[KEY]',
+          key.name), True))
 
     for value in RegCache.cur_key.GetValues():
       if not verbose:
-        sub.append((u'{0:>10s}]  {1:s}'.format(
-            '[' + value.data_type_string, value.name), False))
+        sub.append((u'{:>19s} {:>14s}]  {:s}'.format(
+            '', '[' + value.data_type_string, value.name), False))
       else:
         if value.DataIsString():
           value_string = u'{0:s}'.format(value.data)
@@ -330,11 +336,22 @@ class MyMagics(magic.Magics):
           value_string = u'{0:d}'.format(value.data)
         elif value.DataIsMultiString():
           value_string = u'{0:s}'.format( u''.join(value.data))
+        elif value.DataIsBinaryData():
+          hex_string = binascii.hexlify(value.data)
+          # We'll just print the first few bytes, but we need to pad them
+          # to make it fit in a single line if shorter.
+          if len(hex_string) % 32:
+            breakpoint = len(hex_string) / 32
+            leftovers = hex_string[breakpoint:]
+            pad = ' ' * (32 - len(leftovers))
+            hex_string += pad
+
+          value_string = putils.GetHexDumpLine(hex_string, 0)
         else:
           value_string = u''
 
-        sub.append((u'{0:>10s}]  {1:<25s}  {2:s}'.format(
-            '[' + value.data_type_string, value.name, value_string), False))
+        sub.append((u'{:>19s} {:>14s}]  {:<25s}  {:s}'.format(
+            '', '[' + value.data_type_string, value.name, value_string), False))
 
     for entry, subkey in sorted(sub):
       if subkey:
