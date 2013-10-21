@@ -198,6 +198,27 @@ def CdCompleter(dummy_self, dummy_event):
   return return_list
 
 
+def PluginCompleter(dummy_self, event):
+  """Completer function that returns a list of available plugins."""
+  ret_list = []
+
+  if not IsLoaded():
+    return ret_list
+
+  if not '-h' in event.line:
+    ret_list.append('-h')
+
+  plugin_obj = win_registry_interface.GetRegistryPlugins()
+
+  for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
+    plugin_obj = plugin_cls(RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
+    if plugin_obj.plugin_name == 'DefaultPlugin':
+      continue
+    ret_list.append(plugin_obj.plugin_name)
+
+  return ret_list
+
+
 def VerboseCompleter(dummy_self, event):
   """Completer function that suggests simple verbose settings."""
   if '-v' in event.line:
@@ -209,6 +230,75 @@ def VerboseCompleter(dummy_self, event):
 @magic.magics_class
 class MyMagics(magic.Magics):
   """A simple class holding all magic functions for console."""
+
+  # Lowercase name since this is used inside the python console shell.
+  @magic.line_magic
+  def plugin(self, line):
+    """Parse a registry key using a specific plugin."""
+    if not IsLoaded():
+      print 'No hive loaded, unable to parse.'
+      return
+
+    if not line:
+      print 'No plugin name added.'
+      return
+
+    plugin_name = line
+    if '-h' in line:
+      items = line.split()
+      if len(items) != 2:
+        print 'Wrong usage: plugin [-h] PluginName'
+        return
+      if items[0] == '-h':
+        plugin_name = items[1]
+      else:
+        plugin_name = items[0]
+
+    plugin_obj = win_registry_interface.GetRegistryPlugins()
+    plugin_found = False
+    for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
+      plugin = plugin_cls(RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
+      if plugin.plugin_name == plugin_name:
+        # If we found the correct plugin.
+        plugin_found = True
+        break
+
+    if not plugin_found:
+      print u'No plugin named [{}] available for registry type {}'.format(
+          plugin_name, RegCache.hive_type)
+      return
+
+    if not hasattr(plugin, 'REG_KEY'):
+      print 'Plugin {} has no key information.'.format(line)
+      return
+
+    try:
+      key_fixed = win_registry_interface.ExpandRegistryPath(
+          plugin.REG_KEY, RegCache.pre_obj, RegCache.reg_cache)
+    except KeyError:
+      print u'Unable to use plugin {}'.format(line)
+      return
+
+    if '-h' in line:
+      print utils.FormatHeader(plugin_name)
+      print utils.FormatOutputString('Registry Key', plugin.REG_KEY)
+      if plugin.REG_KEY != key_fixed:
+        print utils.FormatOutputString('Expanded Key', key_fixed)
+      print ''
+      print utils.FormatOutputString('Description', plugin.__doc__)
+      return
+
+    key = RegCache.hive.GetKeyByPath(key_fixed)
+    if not key:
+      print u'Key {} not found'.format(key_fixed)
+      return
+
+    # Move the current location to the key to be parsed.
+    self.cd(key_fixed)
+    # Parse the key.
+    print_strings = ParseKey(
+        RegCache.cur_key, verbose=True, use_plugins=[plugin_name])
+    print u'\n'.join(print_strings)
 
   # Lowercase name since this is used inside the python console shell.
   @magic.line_magic
@@ -226,6 +316,23 @@ class MyMagics(magic.Magics):
 
     print_strings = ParseKey(RegCache.cur_key, verbose=verbose)
     print u'\n'.join(print_strings)
+
+    # Print out a hex dump of all binary values.
+    if verbose:
+      header_shown = False
+      for value in RegCache.cur_key.GetValues():
+        if value.DataIsBinaryData():
+          if not header_shown:
+            header_shown = True
+            print utils.FormatHeader('Hex Dump')
+          # Print '-' 80 times.
+          print '-'*80
+          print utils.FormatOutputString('Attribute', value.name)
+          print '-'*80
+          print putils.GetHexDump(value.data)
+          print ''
+          print '+-'*40
+          print ''
 
   # Lowercase name since this is used inside the python console shell.
   @magic.line_magic
@@ -288,7 +395,7 @@ class MyMagics(magic.Magics):
       ip = get_ipython()    # pylint: disable-msg=E0602
       ip.prompt_manager.in_template = u'{}->{} [\\#] '.format(
           StripCurlyBrace(RegCache.GetHiveName()),
-          StripCurlyBrace(path).replace('\\', '/'))
+          StripCurlyBrace(path).replace('\\', '\\\\'))
     else:
       print 'Unable to change to [{}]'.format(key_path)
 
@@ -831,9 +938,6 @@ def StartPreProcess():
 
 def GetCollectorsFromAnImage(config):
   """Open up an image and return back a list of collectors."""
-  if not os.path.isfile(config.image):
-    ErrorAndDie('Image must be a file ({})'.format(config.image))
-
   collectors = []
   StartPreProcess()
   if config.vss_stores:
@@ -983,7 +1087,7 @@ def RunModeConsole(config):
   namespace = {}
   hives, collectors = GetHivesAndCollectors(config)
 
-  function_name_length = 15
+  function_name_length = 23
   banners = []
   banners.append(utils.FormatHeader(
       'Welcome to PREG - home of the Plaso Windows Registry Parsing.'))
@@ -994,14 +1098,20 @@ def RunModeConsole(config):
       'cd key', 'Navigate the registry like a directory structure.',
       function_name_length))
   banners.append(utils.FormatOutputString(
-      'ls', ('List all subkeys and values of a registry key. If called as '
-             'ls True then values of keys will be included in the output.'),
+      'ls [-v]', (
+          'List all subkeys and values of a registry key. If called as '
+          'ls True then values of keys will be included in the output.'),
       function_name_length))
   banners.append(utils.FormatOutputString(
-      'parse', 'Parse the current key using all plugins.',
+      'parse -[v]', 'Parse the current key using all plugins.',
       function_name_length))
   banners.append(utils.FormatOutputString(
       'pwd', 'Print the working "directory" or the path of the current key.',
+      function_name_length))
+  banners.append(utils.FormatOutputString(
+      'plugin [-h] plugin_name', (
+          'Run a particular key-based plugin on the loaded hive. The correct '
+          'registry key will be loaded, opened and then parsed.'),
       function_name_length))
 
   banners.append('')
@@ -1094,6 +1204,7 @@ def RunModeConsole(config):
   ipshell.set_hook('complete_command', CdCompleter, str_key='%cd')
   ipshell.set_hook('complete_command', VerboseCompleter, str_key='%ls')
   ipshell.set_hook('complete_command', VerboseCompleter, str_key='%parse')
+  ipshell.set_hook('complete_command', PluginCompleter, str_key='%plugin')
   ipshell()
 
 

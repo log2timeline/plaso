@@ -182,12 +182,13 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
       if image_path:
         text_dict['ImagePath'] = image_path
 
-      # Gather all the other values and insert as they are.
+      # Gather all the other string and integer values and insert as they are.
       for value in self._key.GetValues():
         if not value.name:
           continue
         if value.name not in text_dict:
-          text_dict[value.name] = value.data
+          if value.DataIsString() or value.DataIsInteger():
+            text_dict[value.name] = value.data
 
       event_object = event.WinRegistryEvent(
           self._key.path, text_dict, timestamp=self._key.last_written_timestamp)

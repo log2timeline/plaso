@@ -15,12 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains tests for Services registry parsing in Plaso."""
+import os
 import unittest
 
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
+from plaso.lib import putils
 from plaso.registry import services
 from plaso.winreg import test_lib
+from plaso.winreg import winregistry
 
 
 class TestServicesRegistry(unittest.TestCase):
@@ -68,6 +71,62 @@ class TestServicesRegistry(unittest.TestCase):
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, line)
     self.assertEquals(entries[0].regalert, True)
+
+  def testServicesOnAFile(self):
+    """Test the services plugin on a registry file."""
+    fh = putils.OpenOSFile(os.path.join('test_data', 'SYSTEM'))
+    plugin = services.ServicesPlugin(None, None, None)
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
+    hive = registry.OpenFile(fh)
+
+    entries = []
+    base_key_path = '\\ControlSet001\\services'
+    base_key = hive.GetKeyByPath(base_key_path)
+
+    self.assertTrue(base_key)
+
+    # Pick few service keys to make additional tests on.
+    bits_event = None
+    rdp_video_event = None
+    mc_task_manager = None
+
+    for subkey in base_key.GetSubkeys():
+      generator = plugin.Process(subkey)
+      if generator:
+        generator_list = list(generator)
+        if subkey.name == 'McTaskManager':
+          mc_task_manager = generator_list[0]
+        elif subkey.name == 'RdpVideoMiniport':
+          rdp_video_event = generator_list[0]
+        elif subkey.name == 'BITS':
+          bits_event = generator_list[0]
+
+        entries.extend(generator_list)
+
+    self.assertEquals(len(entries), 416)
+
+    # Start with RDP.
+    # '2011-09-17T13:37:59.347157.
+    self.assertEquals(rdp_video_event.timestamp, 1316266679347157)
+    self.assertEquals(rdp_video_event.regvalue['Start'], 'Manual (3)')
+    self.assertEquals(
+        rdp_video_event.regvalue['ImagePath'],
+        u'System32\\drivers\\rdpvideominiport.sys')
+
+    # 2011-09-16T20:49:16.877415.
+    self.assertEquals(mc_task_manager.timestamp, 1316206156877415)
+    self.assertEquals(
+        mc_task_manager.regvalue['DisplayName'], u'McAfee Task Manager')
+    self.assertEquals(
+        mc_task_manager.regvalue['Type'], 'Service - Own Process (0x10)')
+
+    # 2012-04-06T20:43:27.639075.
+    self.assertEquals(bits_event.timestamp, 1333745007639075)
+    self.assertEquals(
+        bits_event.regvalue['Type'], 'Service - Share Process (0x20)')
+    self.assertEquals(bits_event.regvalue['Start'], 'Manual (3)')
 
 
 if __name__ == '__main__':
