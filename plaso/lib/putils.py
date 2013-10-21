@@ -270,7 +270,7 @@ def GetEventData(evt, fscache=None, before=0, length=20):
 
   This function takes an event object protobuf, opens the file
   that produced the event at the correct position, and creates
-  a XXD like style dump of the data, with hexadecimal and ASCII
+  a hex dump of the data, with both hexadecimal and ASCII
   characters printed out on the screen.
 
   Args:
@@ -298,10 +298,10 @@ def GetEventData(evt, fscache=None, before=0, length=20):
   if offset - before > 0:
     offset -= before
 
-  return GetHexDump(fh, offset, length)
+  return GetHexDumpStream(fh, offset, length)
 
 
-def GetHexDump(fh, offset, length=20):
+def GetHexDumpStream(fh, offset, length=20):
   """Return a hex dump from a filehandle and an offset.
 
   Args:
@@ -316,6 +316,23 @@ def GetHexDump(fh, offset, length=20):
   """
   fh.seek(offset)
   data = fh.read(int(length) * 16)
+  return GetHexDump(data, offset)
+
+
+def GetHexDump(data, offset=0):
+  """Return a hex dump from a data.
+
+  Returns a hex dump of the data passed. Additionally all ASCII
+  characters in the hex dump get translated back to their characters.
+
+  Args:
+    data: The binary data to be dumped into a hex string.
+    offset: An optional start point in bytes where the data lies, for
+    presentation purposes.
+
+  Returns:
+    A string that contains the hex dump.
+  """
   hexdata = binascii.hexlify(data)
   data_out = []
 
