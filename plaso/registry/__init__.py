@@ -18,6 +18,7 @@
 
 from plaso.registry import ccleaner
 from plaso.registry import default
+from plaso.registry import internetsettings
 from plaso.registry import lfu
 from plaso.registry import mrulist
 from plaso.registry import mrulistex
