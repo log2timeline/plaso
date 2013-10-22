@@ -20,7 +20,7 @@ from plaso.lib import eventdata
 
 class WinPrefetchFormatter(eventdata.ConditionalEventFormatter):
   """Class that formats Windows Prefetch events."""
-  DATA_TYPE = 'windows:prefetch:prefetch'
+  DATA_TYPE = 'windows:prefetch'
 
   # The format string.
   FORMAT_STRING_PIECES = [
@@ -28,9 +28,10 @@ class WinPrefetchFormatter(eventdata.ConditionalEventFormatter):
       u'[{executable}] was executed -',
       u'run count {run_count}',
       u'path: {path}',
+      u'hash: 0x{prefetch_hash:08X}',
       u'[',
-      u'vol serial: {volume_serial}',
-      u'vol path: {volume_path}'
+      u'volume serial: 0x{volume_serial:08X}',
+      u'volume path: {volume_path}'
       u']']
 
   FORMAT_STRING_SHORT_PIECES = [
