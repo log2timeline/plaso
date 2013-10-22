@@ -36,6 +36,9 @@ from plaso import parsers
 from plaso import preprocessors
 from plaso import registry
 
+from plaso.frontend import preg
+from plaso.frontend import psort
+
 from plaso.lib import collector
 from plaso.lib import collector_filter
 from plaso.lib import engine

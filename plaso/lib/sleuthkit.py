@@ -183,6 +183,11 @@ class TSKFile(object):
     if self.next_read_offset < 0:
       raise IOError('Offset cannot be less than zero.')
 
+    # TODO: This needs to be fixed. Each time a seek operation is called
+    # the buffer is cleared. This really slows down parsing of several
+    # files, especially in parsers that perform a lot of seek operations.
+    # Need to re-design the buffering completely and not having it be lost
+    # with seek operations.
     self.readahead = ''
 
   def readline(self, size=None):
