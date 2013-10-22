@@ -959,8 +959,12 @@ def GetCollectorsFromAnImage(config):
     config.vss_stores = sorted(stores)
 
   RegCache.fscache = pfile.FilesystemCache()
-  main_collector = preprocess.TSKFileCollector(
-      RegCache.pre_obj, config.image, config.offset * 512)
+  try:
+    main_collector = preprocess.TSKFileCollector(
+        RegCache.pre_obj, config.image, config.offset * 512)
+  except errors.UnableToOpenFilesystem:
+    ErrorAndDie(
+        u'Unable to open the file system image: {}'.format(config.image))
   collectors.append(('', main_collector))
 
   # Run pre processing on image.
