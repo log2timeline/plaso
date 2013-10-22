@@ -45,3 +45,4 @@ from plaso.parsers import winlnk
 from plaso.parsers import winprefetch
 from plaso.parsers import winreg
 from plaso.parsers import xchatscrollback
+from plaso.parsers import zeitgeist
