@@ -47,3 +47,4 @@ from plaso.formatters import winlnk
 from plaso.formatters import winprefetch
 from plaso.formatters import winreg
 from plaso.formatters import xchatscrollback
+from plaso.formatters import zeitgeist
