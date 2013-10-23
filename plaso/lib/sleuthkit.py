@@ -19,7 +19,7 @@
 This class provides a method to create a filehandle from an image file
 that is readable by TSK (Sleuthkit) and use like an ordinary file in Python.
 """
-
+import os
 import logging
 import platform
 import pytsk3
@@ -171,24 +171,40 @@ class TSKFile(object):
     Raises:
       IOError:
     """
-    if whence == 1:
-      self.next_read_offset = self.tell() + offset
-    elif whence == 2:
+    # TODO: Buffering needs to be properly fixed. The current
+    # solution is to keep the buffer somewhat between seek operations
+    # but it can be improved even further. Buffering should also be
+    # a generic buffering, not specifically designed for TSK operations.
+    # And the seek function should not need to worry about the buffer
+    # at all, that should be moved to other layers, put in here as a
+    # temporary solution until PyVFS gets completed.
+    if whence == os.SEEK_CUR:
+      if offset > len(self.readahead):
+        self.readahead = ''
+        self.next_read_offset = self.tell() + offset
+      elif offset < 0:
+        self.readahead = ''
+        self.next_read_offset = self.tell() + offset
+      else:
+        self.readahead = self.readahead[offset:]
+    elif whence == os.SEEK_END:
       self.next_read_offset = self.size + offset
-    elif whence == 0:
-      self.next_read_offset = offset
+      self.readahead = ''
+    elif whence == os.SEEK_SET:
+      lower = self.tell()
+      upper = self.next_read_offset
+      if offset < lower or offset > upper:
+        self.readahead = ''
+        self.next_read_offset = offset
+      elif offset == lower:
+        pass
+      else:
+        self.readahead = self.readahead[offset - lower:]
     else:
       raise IOError('Invalid argument for whence.')
 
     if self.next_read_offset < 0:
       raise IOError('Offset cannot be less than zero.')
-
-    # TODO: This needs to be fixed. Each time a seek operation is called
-    # the buffer is cleared. This really slows down parsing of several
-    # files, especially in parsers that perform a lot of seek operations.
-    # Need to re-design the buffering completely and not having it be lost
-    # with seek operations.
-    self.readahead = ''
 
   def readline(self, size=None):
     """Read a line from the file.
