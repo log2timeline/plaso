@@ -73,11 +73,11 @@ class Engine(object):
     self.config = config
 
     # Do some initial verification here.
-    if not os.path.isfile(config.filename) and not os.path.isdir(
-        config.filename) and not (
-            os.path.exists(config.filename) and config.image):
-      raise errors.BadConfigOption(
-          'File [%s] does not exist.' % config.filename)
+    if not config.image:
+      if not os.path.isfile(config.filename) and not os.path.isdir(
+          config.filename):
+        raise errors.BadConfigOption(
+            'File [%s] does not exist.' % config.filename)
 
     if os.path.isfile(config.output):
       logging.warning('Appending to an already existing file.')

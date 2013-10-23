@@ -63,7 +63,7 @@ class VShadowVolume(object):
     self._block_size, self._image_size = GetImageSize(file_path, ofs)
 
     self._fh = open(file_path, 'rb')
-    self._fh.seek(0, 2)
+    self._fh.seek(0, os.SEEK_END)
     self._fh_size = self._fh.tell()
     self._image_offset = ofs
 

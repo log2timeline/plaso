@@ -189,6 +189,8 @@ class ServicesPlugin(win_registry_interface.ValuePlugin):
         if value.name not in text_dict:
           if value.DataIsString() or value.DataIsInteger():
             text_dict[value.name] = value.data
+          elif value.DataIsMultiString():
+            text_dict[value.name] = u', '.join(value.data)
 
       event_object = event.WinRegistryEvent(
           self._key.path, text_dict, timestamp=self._key.last_written_timestamp)

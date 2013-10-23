@@ -79,6 +79,10 @@ class SleuthkitUnitTest(unittest.TestCase):
     f.seek(0)
     _ = f.readline()
     self.assertEquals(f.tell(), 22)
+
+    f.seek(10)
+    self.assertEquals(f.read(5), 'other')
+    self.assertEquals(f.tell(), 15)
     f.close()
 
   def testReadLines(self):
