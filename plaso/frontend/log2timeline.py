@@ -115,7 +115,7 @@ def Main():
           'parsed then this parameter needs to be set manually.'))
 
   performance_group.add_argument(
-      '--buffer-size', '--bs', dest='buffer_size', action='store', default=0,
+      '--buffer_size', '--bs', dest='buffer_size', action='store', default=0,
       help='The buffer size for the output (defaults to 196MiB).')
 
   performance_group.add_argument(
@@ -144,7 +144,7 @@ def Main():
             'list of ranges and entries, eg: X,Y-Z,G,H-J.'))
 
   performance_group.add_argument(
-      '--single-thread', dest='single_thread', action='store_true',
+      '--single_thread', dest='single_thread', action='store_true',
       default=False,
       help='Indicate that the tool should run in a single thread.')
 
@@ -157,15 +157,13 @@ def Main():
                           'regular expression'))
 
   deep_group.add_argument(
-      '--scan-archives', dest='open_files', action='store_true', default=False,
-      help=('Indicate that the tool should try to open files to extract embedd'
-            'ed files within them, for instance to extract files from compress'
-            'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
-
-  deep_group.add_argument(
-      '--noscan-archives', dest='open_files', action='store_false',
-      help=('Indicate that the tool should NOT try to '
-            'open files to extract embedded files within them.'))
+      '--scan_archives', dest='open_files', action='store_true', default=False,
+      help=argparse.SUPPRESS)
+  # This option is "hidden" for the time being, still left in there for testing
+  # purposes, but hidden from the tool usage and help messages.
+  #    help=('Indicate that the tool should try to open files to extract embedd'
+  #          'ed files within them, for instance to extract files from compress'
+  #          'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
 
   function_group.add_argument(
       '-o', '--offset', dest='image_offset', action='store', default=0,
