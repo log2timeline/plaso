@@ -567,7 +567,7 @@ class ZipFile(PlasoFile):
     self.size = self.zipinfo.file_size
     try:
       self.fh = zf.open(self.pathspec.file_path, 'r')
-    except RuntimeError as e:
+    except (RuntimeError, zipfile.BadZipfile) as e:
       raise IOError(u'Unable to open ZIP file: {%s} -> %s' % (self.name, e))
 
   def read(self, size=None):
@@ -591,7 +591,11 @@ class ZipFile(PlasoFile):
       if size != self.size - self.offset:
         logging.debug('[ZIP] Not able to read in the entire file (too large).')
 
-    line = self.fh.read(size)
+    try:
+      line = self.fh.read(size)
+    except zipfile.error:
+      raise IOError
+
     self.offset += len(line)
     return line
 
