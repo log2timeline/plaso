@@ -617,6 +617,9 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     else:
       line = filehandle.readline()
 
+    if not line:
+      return
+
     # If line is empty, skip it and go on.
     if line == '\n' or line == '\r\n':
       return self._ReadLine(filehandle, max_len)
@@ -642,6 +645,9 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     filehandle.seek(0)
 
     line = self._ReadLine(filehandle, self.MAX_LINE_LENGTH, True)
+    if not line:
+      raise errors.UnableToParseFile(u'Not a text file.')
+
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
       logging.debug((
