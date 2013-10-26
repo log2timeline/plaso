@@ -27,6 +27,7 @@ import gzip
 import logging
 import os
 import tarfile
+import zlib
 import zipfile
 
 from plaso.lib import errors
@@ -593,7 +594,7 @@ class ZipFile(PlasoFile):
 
     try:
       line = self.fh.read(size)
-    except zipfile.error:
+    except zlib.error:
       raise IOError
 
     self.offset += len(line)

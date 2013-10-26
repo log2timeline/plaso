@@ -38,13 +38,19 @@ class ChromePageVisitedFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class ChromeFileDownloadFormatter(eventdata.EventFormatter):
+class ChromeFileDownloadFormatter(eventdata.ConditionalEventFormatter):
   """The event formatter for file downloaded data in Chrome History."""
   DATA_TYPE = 'chrome:history:file_downloaded'
 
-  FORMAT_STRING = (u'{url} ({full_path}). Received: {received_bytes} bytes '
-                   u'out of: {total_bytes} bytes.')
-  FORMAT_STRING_SHORT = u'{full_path} downloaded ({received_bytes} bytes)'
+  FORMAT_STRING_PIECES = [
+      u'{url}',
+      u'({full_path}).',
+      u'Received: {received_bytes} bytes',
+      u'out of: {total_bytes} bytes.']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'{full_path} downloaded',
+      u'({received_bytes} bytes)']
 
   SOURCE_LONG = 'Chrome History'
   SOURCE_SHORT = 'WEBHIST'
