@@ -480,7 +480,11 @@ class Engine(object):
           ctypes.windll.kernel32.TerminateProcess(handle, -1)
           ctypes.windll.kernel32.CloseHandle(handle)
         else:
-          os.kill(pid, signal.SIGKILL)
+          try:
+            os.kill(pid, signal.SIGKILL)
+          except OSError as exception:
+            logging.error(u'Unable to kill process {}: {}'.format(
+                pid, exception))
 
         logging.warning('Worker: %d CLOSED', pid)
 
