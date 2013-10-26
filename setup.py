@@ -90,7 +90,7 @@ class TestCommand(Command):
 
 
 setup(name='plaso',
-      version='1.0.2dev',
+      version='1.0.2alpha',
       description='The plaso backend as well as few front-ends.',
       license='Apache License, Version 2.0',
       url='https://sites.google.com/a/kiddaland.net/plaso',
