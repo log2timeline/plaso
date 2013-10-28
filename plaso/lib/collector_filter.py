@@ -94,12 +94,12 @@ class CollectionFilter(object):
             yield fh.pathspec_root.ToProtoString()
         except errors.PreProcessFail as e:
           logging.warning(
-              u'Unable to parse filter: {}|{} - path not found [{}].'.format(
+              u'Unable to parse filter: {}/{} - path not found [{}].'.format(
                   filter_path, filter_file, e))
           continue
         except sre_constants.error:
           logging.warning(
-              (u'Unable to parse the filter: {}|{} - illegal regular '
+              (u'Unable to parse the filter: {}/{} - illegal regular '
                'expression.').format(filter_path, filter_file))
           continue
 

@@ -98,6 +98,9 @@ class FilesystemCache(object):
       raise errors.UnableToOpenFilesystem(
           u'Unable to open the disk image [%s]' % path)
 
+    block_size = getattr(volume.info, 'block_size', 512)
+    partition_map.append(block_size)
+
     for part in volume:
       partition_map.append({
           'address': part.addr,
