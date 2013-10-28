@@ -87,7 +87,7 @@ class UserAssistPlugin(win_registry_interface.KeyPlugin):
         try:
           value_name = value.name.decode('rot-13')
         except UnicodeEncodeError as e:
-          logging.warning(
+          logging.debug(
               (u'Unable to decode UserAssist string in whole (piecewise '
                'decoding instead): {0:s} - [{1!s}]').format(value.name, e))
 
