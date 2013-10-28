@@ -311,8 +311,9 @@ def Main():
       print e
       sys.exit(1)
 
+    print 'Sector size: {}'.format(partition_map[0])
     print u'Index  {:10s} {:10s} {}'.format('Offset', 'Length', 'Description')
-    for entry in partition_map:
+    for entry in partition_map[1:]:
       print u'{:02d}:    {:010d} {:010d} {}'.format(
           entry['address'], entry['offset'], entry['length'],
           entry['description'])
@@ -361,7 +362,8 @@ def Main():
     partition_map = pfile.FilesystemCache.PartitionMap(options.filename)
     offset = 0
     options.image = True
-    for entry in partition_map:
+    options.bytes_per_sector = partition_map[0]
+    for entry in partition_map[1:]:
       if options.partition_number == entry['address']:
         offset = entry['offset']
         break
