@@ -100,6 +100,7 @@ class SQLiteParser(PlasoParser):
     """Constructor for the SQLite parser."""
     super(SQLiteParser, self).__init__(pre_obj)
     self._local_zone = local_zone
+    self.db = None
 
   def Parse(self, filehandle):
     """Return a generator for EventObjects extracted from SQLite db."""
@@ -138,67 +139,79 @@ class SQLiteParser(PlasoParser):
         fh.write(data)
         data = filehandle.read(65536)
 
-    with sqlite3.connect(name) as self.db:
-      try:
-        self.db.row_factory = sqlite3.Row
-        cursor = self.db.cursor()
-      except sqlite3.DatabaseError as e:
-        logging.debug('SQLite error occured: %s', e)
-
-      # Verify the table by reading in all table names and compare it to
-      # the list of required tables.
-      try:
-        sql_results = cursor.execute(
-            'SELECT name FROM sqlite_master WHERE type="table"')
-      except sqlite3.DatabaseError as e:
-        logging.debug('SQLite error occured: %s', e)
-        raise errors.UnableToParseFile(
-            u'Unable to open the database file: %s', e)
-      tables = []
-      for row in sql_results:
-        tables.append(row[0])
-
-      if not frozenset(tables) >= self.REQUIRED_TABLES:
-        self._RemoveTempFile(name, filehandle.name)
-        raise errors.UnableToParseFile(
-            u'File %s not a %s (wrong tables).' % (filehandle.name,
-            self.parser_name))
-
-      for query, action in self.QUERIES:
-        try:
-          call_back = getattr(self, action, self.Default)
-          sql_results = cursor.execute(query)
-          row = sql_results.fetchone()
-          while row:
-            evt_gen = call_back(row=row, zone=self._pre_obj.zone)
-            if evt_gen:
-              for evt in evt_gen:
-                if evt.timestamp < 0:
-                  # TODO: For now we dependend on the timestamp to be
-                  # set, change this soon so the timestamp does not need to
-                  # be set.
-                  evt.timestamp = 0
-                evt.query = query
-                if not hasattr(evt, 'offset'):
-                  if 'id' in row.keys():
-                    evt.offset = row['id']
-                  else:
-                    evt.offset = 0
-                yield evt
-            row = sql_results.fetchone()
-        except sqlite3.DatabaseError as e:
-          logging.debug('SQLite error occured: %s', e)
-
-    self._RemoveTempFile(name, filehandle.name)
-
-  def _RemoveTempFile(self, name, orig_name):
-    """Delete the temporary created db file from the system."""
     try:
-      os.remove(name)
-    except (OSError, IOError) as e:
-      logging.warning(
-          u'Unable to remove temporary file: %s [derived from %s] due to: %s',
-          name, orig_name, e)
+      for event_object in self._ParseDatabase(name, filehandle.name):
+        yield event_object
+    except Exception:
+      # We want to catch whatever exception is thrown here and raise
+      # it again, we just want to be sure that we go through the finally
+      # action to remove the file.
+      raise
+    finally:
+      # Close the database and delete the temporary file.
+      if hasattr(self.db, 'close'):
+        self.db.close()
+      try:
+        os.remove(name)
+      except (OSError, IOError) as e:
+        logging.warning(
+            u'Unable to remove temporary file: %s [derived from %s] due to: %s',
+            name, filehandle.name, e)
+
+  def _ParseDatabase(self, name, orig_name):
+    """Yields all records extracted from a SQLite database file."""
+    self.db = sqlite3.connect(name)
+    try:
+      self.db.row_factory = sqlite3.Row
+      cursor = self.db.cursor()
+    except sqlite3.DatabaseError as e:
+      logging.debug(u'SQLite error occured: {} in file {}'.format(e, orig_name))
+      raise errors.UnableToParseFile(
+          u'Unable to parse SQLite database due to an error: %s.' % e)
+
+    # Verify the table by reading in all table names and compare it to
+    # the list of required tables.
+    try:
+      sql_results = cursor.execute(
+          'SELECT name FROM sqlite_master WHERE type="table"')
+    except sqlite3.DatabaseError as e:
+      logging.debug(u'SQLite error occured: <{}> in file {}'.format(
+          e, orig_name))
+      raise errors.UnableToParseFile(
+          u'Unable to parse SQLite database due to an error: %s.' % e)
+
+    tables = []
+    for row in sql_results:
+      tables.append(row[0])
+
+    if not frozenset(tables) >= self.REQUIRED_TABLES:
+      raise errors.UnableToParseFile(
+          u'File %s not a %s (wrong tables).' % (orig_name, self.parser_name))
+
+    for query, action in self.QUERIES:
+      try:
+        call_back = getattr(self, action, self.Default)
+        sql_results = cursor.execute(query)
+        row = sql_results.fetchone()
+        while row:
+          evt_gen = call_back(row=row, zone=self._pre_obj.zone)
+          if evt_gen:
+            for evt in evt_gen:
+              if evt.timestamp < 0:
+                # TODO: For now we dependend on the timestamp to be
+                # set, change this soon so the timestamp does not need to
+                # be set.
+                evt.timestamp = 0
+              evt.query = query
+              if not hasattr(evt, 'offset'):
+                if 'id' in row.keys():
+                  evt.offset = row['id']
+                else:
+                  evt.offset = 0
+              yield evt
+          row = sql_results.fetchone()
+      except sqlite3.DatabaseError as e:
+        logging.debug('SQLite error occured: %s', e)
 
   def Default(self, **kwarg):
     """Default callback method for SQLite events, does nothing."""
