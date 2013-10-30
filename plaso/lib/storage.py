@@ -584,11 +584,12 @@ class PlasoStorage(object):
     """Return the current file number of the storage."""
     return self._filenumber
 
-  def AddEntry(self, event_str):
+  def AddEntry(self, event_str_or_obj):
     """Add an entry into the buffer.
 
     Args:
-      event_str: A serialized EventObject to append to the buffer.
+      event_str_or_obj: Either a serialized EventObject or an EventObject
+                        object that is appended to the buffer.
 
     Raises:
       IOError: When trying to write to a closed storage file.
@@ -596,8 +597,13 @@ class PlasoStorage(object):
     if not self._file_open:
       raise IOError('Trying to add an entry to a closed storage file.')
 
-    evt = event.EventObject()
-    evt.FromProtoString(event_str)
+    if type(event_str_or_obj) in (str, unicode):
+      evt = event.EventObject()
+      evt.FromProtoString(event_str_or_obj)
+      event_str = event_str_or_obj
+    else:
+      evt = event_str_or_obj
+      event_str = evt.ToProtoString()
 
     if evt.timestamp > self._buffer_last_timestamp:
       self._buffer_last_timestamp = evt.timestamp
