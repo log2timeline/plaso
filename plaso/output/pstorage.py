@@ -43,7 +43,19 @@ class Pstorage(output.LogOutputFormatter):
     Args:
       proto: The EventObject protobuf.
     """
-    self._storage.AddEntry(event_object.ToProtoString())
+    # Needed due to duplicate removals, if two events
+    # are merged then we'll just pick the first inode value.
+    inode = getattr(event_object, 'inode', None)
+    if type(inode) in (str, unicode):
+      inode_list = inode.split(';')
+      try:
+        new_inode = int(inode_list[0])
+      except (ValueError, IndexError):
+        new_inode = 0
+
+      event_object.inode = new_inode
+
+    self._storage.AddEntry(event_object)
 
   def End(self):
     """Closes the storage file."""
