@@ -20,6 +20,11 @@
 import re
 import sys
 import urllib2
+try:
+  import sqlite3
+except ImportError:
+  print 'MISSING sqlite3 bindings, need to install for tool to function.'
+  sys.exit(1)
 
 LIBRARIES = [
     'pyevt', 'pyevtx', 'pylnk', 'pymsiecf', 'pyolecf', 'pyregf', 'pyvshadow']
@@ -93,6 +98,22 @@ def CheckVersion(library):
 
 
 if __name__ == '__main__':
+  sqlite_release, sqlite_major, sqlite_minor = sqlite3.sqlite_version_info
+  sqlite_version = sqlite3.sqlite_version
+  if sqlite_release < 3:
+    print 'SQLite is old, needs to be at least 3.X [current version {}]'.format(
+        sqlite_version)
+
+  if sqlite_release == 3:
+    if sqlite_major < 7:
+      print (
+          'SQLite is old, needs to be at least version 3.7.X [current '
+          '{}]').format(sqlite_version)
+    if sqlite_major == 7 and sqlite_minor < 8:
+      print 'SQLite is old, needs to be at least version 3.7.8'
+      print 'Current {}'.format(sqlite_version)
+  print 'Checking SQLite3 library: [DONE]'
+
   print 'Loading libraries'
   library_url = (
       'https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/libyal.html')
