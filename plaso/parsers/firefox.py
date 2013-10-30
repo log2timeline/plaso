@@ -24,6 +24,21 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 
+# Check SQlite version, bail out early if too old.
+import sqlite3
+release, major, minor = sqlite3.sqlite_version_info
+if (release < 3):
+  raise ImportWarning(
+      'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
+elif release == 3:
+  if major < 7:
+    raise ImportWarning(
+        'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
+  elif major == 7:
+    if minor < 8:
+      raise ImportWarning(
+          'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
+
 
 class FirefoxPlacesBookmarkAnnotation(event.EventContainer):
   """Convenience class for a Firefox bookmark annotation event container."""
@@ -237,8 +252,13 @@ class FirefoxHistoryParser(parser.SQLiteParser):
       An event container (FirefoxPlacesBookmarkFolder) containing the event
       data.
     """
+    if not row['title']:
+      title = 'N/A'
+    else:
+      title = row['title']
+
     container = FirefoxPlacesBookmarkFolder(
-        row['id'], row['title'])
+        row['id'], title)
 
     container.Append(event.TimestampEvent(
         row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,

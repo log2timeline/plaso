@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Mozilla Firefox history parser."""
+import collections
 import os
 import unittest
 
@@ -192,6 +193,44 @@ class FirefoxHistoryParserTest(unittest.TestCase):
          event_object)
 
     expected_msg = u'%s' % expected_title
+
+    self.assertEquals(msg, expected_msg)
+
+  def testAnotherFile(self):
+    """Test another FF file."""
+    test_file = os.path.join('test_data', 'places_new.sqlite')
+
+    events = None
+    with open(test_file, 'rb') as file_object:
+      events = list(self.test_parser.Parse(file_object))
+
+    # The places.sqlite file contains 84 events:
+    #     34 page visits.
+    #     28 bookmarks
+    #     14 bookmark folders
+    #     8 annotations
+    self.assertEquals(len(events), 84)
+    c = collections.Counter()
+    for e in events:
+      c[e.data_type] += 1
+
+    self.assertEquals(c['firefox:places:bookmark'], 28)
+    self.assertEquals(c['firefox:places:page_visited'], 34)
+    self.assertEquals(c['firefox:places:bookmark_folder'], 14)
+    self.assertEquals(c['firefox:places:bookmark_annotation'], 8)
+
+    random_event = events[10]
+    # 2013-10-30T21:57:11.281942+00:00.
+    self.assertEquals(random_event.timestamp, 1383170231281942)
+
+    # Test the event specific formatter.
+    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+        random_event)
+
+    self.assertEquals(msg_short, u'URL: http://code.google.com/p/plaso')
+    expected_msg = (
+        u'http://code.google.com/p/plaso [count: 1] Host: code.google.com '
+        '(URL not typed directly) Transition: TYPED')
 
     self.assertEquals(msg, expected_msg)
 
