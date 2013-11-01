@@ -8,7 +8,7 @@ Homepage: http://code.google.com/p/plaso/
 
 Package: python-plaso
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python-dateutil, python-setuptools, binplist, python-dpkt, docopt, python-hachoir-core, python-hachoir-metadata, python-hachoir-parser, libprotobuf7, python-protobuf, libyaml-0-2, python-yaml, libevt-python, libevtx-python, liblnk-python, libmsiecf-python, libolecf-python, libregf-python, libvshadow-python, libtsk, pytsk3, python-pyparsing, python-tz, ipython
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-dateutil, python-setuptools, binplist, python-dpkt, python-hachoir-core, python-hachoir-metadata, python-hachoir-parser, libprotobuf7, python-protobuf, libyaml-0-2, python-yaml, libevt-python, libevtx-python, liblnk-python, libmsiecf-python, libolecf-python, libregf-python, libvshadow-python, libtsk, pytsk3, python-pyparsing, python-tz, ipython
 Recommends: libevt-tools, libevtx-tools, liblnk-tools, libmsiecf-tools, libolecf-tools, libregf-tools, libvshadow-tools, libtsk-dev, sleuthkit
 Description: Plaso Log2Timeline
  Log2Timeline is a framework to create super timelines.
