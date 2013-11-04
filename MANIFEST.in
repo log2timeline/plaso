@@ -1,0 +1,7 @@
+include ACKNOWLEDGEMENT
+exclude .gitignore
+exclude *.pyc
+recursive-include extra *
+recursive-include plaso *.proto
+recursive-exclude plaso *.pyc
+recursive-include test_data *
