@@ -317,7 +317,7 @@ class TimeLibUnitTest(unittest.TestCase):
     # using the 'gmt_is_utc' flag, which then should result to the same
     # results.
     if timestamp_utc != timestamp_gmt:
-      self.assertEquals(timestamp_utc, timelib.Timestamp.FromTimeString(
+      self.assertEquals(time_string_utc, timelib.Timestamp.FromTimeString(
           timestamp_gmt, gmt_as_timezone=False))
 
   def _CompareTimeString(self, time_string, zone_string, expected):
