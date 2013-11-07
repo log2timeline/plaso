@@ -114,6 +114,7 @@ class IDXTest(unittest.TestCase):
     description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
+    # expr `date -u -d"2010-05-05T03:52:31+00:00" +"%s"` \* 1000000
     download_date_expected = 1273031551 * 1000000
     self.assertEqual(event_object.timestamp, download_date_expected)
 

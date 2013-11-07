@@ -173,7 +173,8 @@ class Timestamp(object):
     return epoch + datetime_object.microsecond
 
   @classmethod
-  def FromTimeString(cls, time_string, zone=pytz.utc, dayfirst=False):
+  def FromTimeString(cls, time_string, zone=pytz.utc, dayfirst=False,
+                     gmt_as_timezone=True):
     """Converts a string representation of a timestamp into a timestamp.
 
     Args:
@@ -183,10 +184,18 @@ class Timestamp(object):
                 parser will change the precedence in which it parses timestamps
                 from MM-DD-YYYY to DD-MM-YYYY (and YYYY-MM-DD will be
                 YYYY-DD-MM, etc).
+      gmt_as_timezone: Sometimes the string parser will interpret GMT and UTC
+                       the same way, that is not make a distinction. By default
+                       this is set to true, that is GMT can be intepreted
+                       differently than UTC. If that is not the expected result
+                       this attribute can be set to false.
 
     Returns:
       An integer containing the timestamp or 0 on error.
     """
+    if not gmt_as_timezone and time_string.endswith(' GMT'):
+      time_string = u'{}UTC'.format(time_string[:-3])
+
     dt = StringToDatetime(time_string, zone, dayfirst)
     return cls.FromPythonDatetime(dt)
 

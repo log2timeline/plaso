@@ -188,7 +188,8 @@ class JavaIDXParser(parser.PlasoParser):
         # information in the string itself. If that is not the case then
         # there is no reliable method for plaso to determine the proper
         # timezone, so the assumption is that it is UTC.
-        download_date = timelib.Timestamp.FromTimeString(value.string)
+        download_date = timelib.Timestamp.FromTimeString(
+            value.string, gmt_as_timezone=False)
 
     if not url or not ip_address:
       raise errors.UnableToParseFile(
