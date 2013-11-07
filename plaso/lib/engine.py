@@ -86,8 +86,7 @@ class Engine(object):
     if not dirname:
       dirname = '.'
 
-    if not hasattr(config, 'bytes_per_sector'):
-      config.bytes_per_sector = 512
+    config.bytes_per_sector = getattr(config, 'bytes_per_sector', 512)
 
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
@@ -119,7 +118,7 @@ class Engine(object):
     else:
       return
 
-    if not hasattr(self.config, 'os'):
+    if not getattr(self.config, 'os', None):
       self.config.os = preprocess.GuessOS(pre_collector)
 
     plugin_list = preprocessors.PreProcessList(pre_obj, pre_collector)
@@ -271,7 +270,7 @@ class Engine(object):
              'The error given is: %s'), e)
         return
 
-    if not hasattr(pre_obj, 'zone'):
+    if not getattr(pre_obj, 'zone', None):
       pre_obj.zone = self.config.zone
 
     # TODO: Make this more sane. Currently we are only checking against
@@ -281,7 +280,7 @@ class Engine(object):
     # Also this is done by default, and no way for the user to turn off
     # this behavior, need to add a parameter to the frontend that takes
     # care of overwriting this behavior.
-    if not hasattr(self.config, 'filter'):
+    if not getattr(self.config, 'filter', None):
       self.config.filter = u''
 
     if not self.config.filter:
@@ -293,12 +292,20 @@ class Engine(object):
     # to build that list.
     if not getattr(self.config, 'parsers', ''):
       if hasattr(pre_obj, 'osversion'):
-        if 'windows xp' in pre_obj.osversion.lower():
+        os_version = pre_obj.osversion.lower()
+        # TODO: Improve this detection, this should be more 'intelligent', since
+        # there are quite a lot of versions out there that would benefit from
+        # loading up the set of 'winxp' parsers.
+        if 'windows xp' in os_version:
+          parser_filter_string = 'winxp'
+        elif 'windows server 2000' in os_version:
+          parser_filter_string = 'winxp'
+        elif 'windows server 2003' in os_version:
           parser_filter_string = 'winxp'
         else:
           parser_filter_string = 'win7'
 
-      if hasattr(pre_obj, 'guessed_os'):
+      if getattr(pre_obj, 'guessed_os', None):
         if pre_obj.guessed_os == 'MacOSX':
           parser_filter_string = u'macosx'
         elif pre_obj.guessed_os == 'Linux':
@@ -417,10 +424,10 @@ class Engine(object):
     obj.collection_information['vss parsing'] = bool(
         self.config.parse_vss)
 
-    if hasattr(self.config, 'filter') and self.config.filter:
+    if getattr(self.config, 'filter', None):
       obj.collection_information['filter'] = self.config.filter
 
-    if hasattr(self.config, 'file_filter') and self.config.file_filter:
+    if getattr(self.config, 'file_filter', None):
       if os.path.isfile(self.config.file_filter):
         filters = []
         with open(self.config.file_filter, 'rb') as fh:

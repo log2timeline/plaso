@@ -359,7 +359,11 @@ def GetHexDumpLine(line, orig_ofs, entry_nr=0):
     out.append('%s ' % line[bit * 4:bit * 4 + 4])
 
   for bit in range(0, 16):
-    data = binascii.unhexlify(line[bit * 2: bit * 2 + 2])
+    try:
+      data = binascii.unhexlify(line[bit * 2: bit * 2 + 2])
+    except TypeError:
+      data = '.'
+
     if ord(data) > 31 and ord(data) < 128:
       out.append(data)
     else:
