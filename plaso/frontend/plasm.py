@@ -23,6 +23,7 @@ import logging
 import operator
 import os
 import pickle
+import sets
 import sys
 import textwrap
 
@@ -35,8 +36,6 @@ from plaso.lib import storage
 
 # pylint: disable-msg=W0611
 from plaso.output import pstorage
-
-from sets import Set
 
 
 def SetupStorage(input_file_path, pre_obj=None):
@@ -132,7 +131,7 @@ def ParseTaggingFile(tag_input):
   return tags
 
 
-class TaggingEngine:
+class TaggingEngine(object):
   """Applies tags to the plaso store."""
   def __init__(self, target_filename, tag_input, quiet=False):
     """Constructor for the Tagging Engine.
@@ -183,7 +182,7 @@ class TaggingEngine:
       sys.stdout.write('DONE (applied {} tags)\n'.format(num_tags))
 
 
-class GroupingEngine:
+class GroupingEngine(object):
   """Applies groups to the plaso store."""
 
   def __init__(self, target_filename, quiet=False):
@@ -269,7 +268,7 @@ class GroupingEngine:
       sys.stdout.write('DONE\n')
 
 
-class ClusteringEngine:
+class ClusteringEngine(object):
   """Clusters events in a Plaso Store to assist Tag Input creation.
 
   Most methods in this class are staticmethods, to avoid relying excessively on
@@ -345,7 +344,7 @@ class ClusteringEngine:
       field_name: an event_object attribute name.
       attribute: the corresponding event_object attribute.
     """
-    if type(attribute) in [dict, Set]:
+    if type(attribute) in [dict, sets.Set]:
       value = repr(sorted(attribute.items()))
     else:
       value = unicode(attribute)
@@ -539,7 +538,7 @@ class ClusteringEngine:
             else:
               word_count[word] = 1
       wordlist = [word for word in word_count if word_count[word] >= threshold]
-      frequent_words = Set(wordlist)
+      frequent_words = sets.Set(wordlist)
       x = open(frequent_filename, 'wb')
       pickle.dump(frequent_words, x)
       x.close()
@@ -701,8 +700,8 @@ def Main():
 
   if arguments.subcommand == 'cluster':
     clustering_engine = ClusteringEngine(
-         arguments.storage_file, int(arguments.cluster_threshold, 10),
-         int(arguments.cluster_closeness, 10))
+        arguments.storage_file, int(arguments.cluster_threshold, 10),
+        int(arguments.cluster_closeness, 10))
     clustering_engine.Run()
 
   elif arguments.subcommand == 'group':

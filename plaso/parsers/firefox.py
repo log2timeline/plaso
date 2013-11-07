@@ -27,7 +27,7 @@ from plaso.lib import parser
 # Check SQlite version, bail out early if too old.
 import sqlite3
 release, major, minor = sqlite3.sqlite_version_info
-if (release < 3):
+if release < 3:
   raise ImportWarning(
       'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
 elif release == 3:
