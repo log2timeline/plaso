@@ -124,7 +124,7 @@ class L2tcsv(output.FileLogOutputFormatter):
            inode,
            getattr(event_object, 'notes', '-'),  # Notes field placeholder.
            getattr(event_object, 'parser', '-'),
-           extra.replace('\n','-'))
+           extra.replace('\n','-').replace('\r', ''))
 
     out_write = u'{0}\n'.format(
         u','.join(unicode(x).replace(',', ' ') for x in row))

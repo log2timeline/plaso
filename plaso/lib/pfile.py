@@ -27,8 +27,8 @@ import gzip
 import logging
 import os
 import tarfile
-import zlib
 import zipfile
+import zlib
 
 from plaso.lib import errors
 from plaso.lib import event
