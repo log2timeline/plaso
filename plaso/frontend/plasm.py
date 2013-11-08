@@ -676,6 +676,12 @@ def Main():
       dest='cluster_threshold', default=5,
       help='Support threshold for pruning attributes.')
 
+  cluster_subparser.add_argument(
+      'storage_file', action='store', type=unicode, metavar='STORAGE_FILE',
+      nargs='?', help=(
+          'The path to the storage file, if the file exists data will '
+          'get appended to it.'))
+
   subparsers.add_parser(
       'group', formatter_class=argparse.RawDescriptionHelpFormatter,
       epilog=textwrap.dedent(epilog_group))
@@ -690,13 +696,21 @@ def Main():
           'Name of the file containing a description of tags and rules '
           'for tagging events.'))
 
-  argument_parser.add_argument(
+  tag_subparser.add_argument(
       'storage_file', action='store', type=unicode, metavar='STORAGE_FILE',
       nargs='?', help=(
           'The path to the storage file, if the file exists data will '
           'get appended to it.'))
 
   arguments = argument_parser.parse_args()
+
+  if not os.path.isfile(getattr(arguments, 'storage_file', '')):
+    argument_parser.print_help()
+    print ''
+    argument_parser.print_usage()
+    print ''
+    logging.error(u'No storage file supplied.')
+    sys.exit(1)
 
   if arguments.subcommand == 'cluster':
     clustering_engine = ClusteringEngine(
@@ -710,13 +724,21 @@ def Main():
     grouping_engine.Run()
 
   elif arguments.subcommand == 'tag':
+    if not getattr(arguments, 'tag_filename', ''):
+      argument_parser.print_help()
+      print ''
+      argument_parser.print_usage()
+      print ''
+      logging.error(u'No tag file supplied.')
+      sys.exit(1)
+
     if not os.path.isfile(arguments.tag_filename):
       logging.error(u'Tag file [{0:s}] does not exist.'.format(
           arguments.tag_filename))
       sys.exit(1)
 
     tagging_engine = TaggingEngine(
-        arguments.plaso_store, arguments.tag_filename, arguments.quiet)
+        arguments.storage_file, arguments.tag_filename, arguments.quiet)
     tagging_engine.Run()
 
 if __name__ == '__main__':
