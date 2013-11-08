@@ -35,10 +35,47 @@ class SkypeChatFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'From: {from_account}',
       u'To: {to_account}',
-      u'Message: {text}',
-      u'[{title}]']
+      u'[{title}]',
+      u'Message: [{text}]']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{text}']
+  FORMAT_STRING_SHORT_PIECES = [u'From: {from_account}', u' To: {to_account}']
 
   SOURCE_LONG = 'Skype Chat MSG'
+  SOURCE_SHORT = 'LOG'
+
+
+class SkypeSMSFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for Skype SMS."""
+  DATA_TYPE = 'skype:event:sms'
+
+  FORMAT_STRING_PIECES = [u'To: {number}', u'[{text}]']
+
+  SOURCE_LONG = 'Skype SMS'
+  SOURCE_SHORT = 'LOG'
+
+
+class SkypeCallFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for Skype calls."""
+  DATA_TYPE = 'skype:event:call'
+
+  FORMAT_STRING_PIECES = [
+     u'From: {src_call}',
+     u'To: {dst_call}',
+     u'[{call_type}]']
+
+  SOURCE_LONG = 'Skype Call'
+  SOURCE_SHORT = 'LOG'
+
+
+class SkypeTransferFileFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for Skype transfer files"""
+  DATA_TYPE = 'skype:event:transferfile'
+
+  FORMAT_STRING_PIECES = [
+      u'Source: {source}',
+      u'Destination: {destination}',
+      u'File: {transferred_filename}',
+      u'[{action_type}]']
+
+  SOURCE_LONG = 'Skype Transfer Files'
   SOURCE_SHORT = 'LOG'
