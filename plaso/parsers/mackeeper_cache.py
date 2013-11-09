@@ -57,7 +57,7 @@ def ParseChatData(data):
     try:
       user_sid = int(user)
       data_store['sid'] = user_sid
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
       data_store['user'] = user
 
   return data_store
@@ -119,7 +119,7 @@ class MacKeeperCacheEvent(event.EventObject):
 
     # Two different types of timestamps stored in log files.
     if type(timestamp) in (int, long):
-      self.timestamp = timestamp * 1000
+      self.timestamp = timelib.Timestamp.FromJavaTime(timestamp)
     else:
       self.timestamp = timelib.Timestamp.FromTimeString(timestamp)
 
