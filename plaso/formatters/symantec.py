@@ -135,22 +135,29 @@ class SymantecFormatter(eventdata.ConditionalEventFormatter):
 
   # The indentifier for the formatter (a regular expression)
   DATA_TYPE = 'av:symantec:scanlog'
-  FORMAT_STRING_SEPARATOR = u';'
+  FORMAT_STRING_SEPARATOR = u'; '
   FORMAT_STRING_PIECES = [
-      u', Event Name: {event_map}',
-      u', Category Name: {category_map}',
-      u', Malware Name: {virus}',
-      u', Malware Path: {file}',
-      u', Action0: {action0_map}',
-      u', Action1: {action1_map}',
-      u', Action2: {action2_map}',
-      u', Descripton: {description}',
-      u', Scan ID: {scanid}',
-      u', Event Data: {event_data}',
-      u', Remote Machine: {remote_machine}',
-      u', Remote IP: {remote_machine_ip}']
+      u'Event Name: {event_map}',
+      u'Category Name: {category_map}',
+      u'Malware Name: {virus}',
+      u'Malware Path: {file}',
+      u'Action0: {action0_map}',
+      u'Action1: {action1_map}',
+      u'Action2: {action2_map}',
+      u'Descripton: {description}',
+      u'Scan ID: {scanid}',
+      u'Event Data: {event_data}',
+      u'Remote Machine: {remote_machine}',
+      u'Remote IP: {remote_machine_ip}']
 
-  SOURCE_LONG = 'AV Log Entry'
+  FORMAT_STRING_SHORT_PIECES = [
+      u'{file}',
+      u'{virus}',
+      u'{action0_map}',
+      u'{action1_map}',
+      u'{action2_map}']
+
+  SOURCE_LONG = 'Symantec AV Log'
   SOURCE_SHORT = 'LOG'
 
   def GetMessages(self, event_object):

@@ -15,123 +15,103 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains tests for Run Keys registry parsing in Plaso."""
+import os
 import unittest
 
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
 from plaso.registry import run
-from plaso.winreg import test_lib
+from plaso.winreg import winregistry
 
 
 class TestRunNtuserRegistry(unittest.TestCase):
-  """The unit test for NTUSER Run key registry parsing."""
+  """The unit tests for NTUSER Run[Once] key registry parsing."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    values = []
-    values.append(test_lib.TestRegValue(
-        'ctfmon.exe', 'C:\\WINDOWS\\system32\\ctfmon.exe'.encode('utf_16_le'),
-        1, 123))
-    self.regkey = test_lib.TestRegKey(
-        '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run',
-        1346445929000000, values, 153)
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
+    test_file = os.path.join('test_data', 'NTUSER-RunTests.DAT')
+    file_object = open(test_file, 'rb')
+    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
 
   def testRunNtuser(self):
+    key = self.winreg_file.GetKeyByPath(
+        '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run')
     plugin = run.RunNtuserPlugin(None, None, None)
-    entries = list(plugin.Process(self.regkey))
+    entries = list(plugin.Process(key))
 
-    line = (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Run] ctfmon.exe:'
-            ' C:\\WINDOWS\\system32\\ctfmon.exe')
+    expected_line = (
+        u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Run] '
+        u'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun')
 
     self.assertEquals(len(entries), 1)
-    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
-    self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
+    # Timestamp is: 2012-04-05T17:03:53.992061+00:00
+    self.assertEquals(entries[0].timestamp, 1333645433992061)
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(msg, line)
-
-
-class TestRunOnceNtuserRegistry(unittest.TestCase):
-  """The unit test for NTUSER RunOnce key registry parsing."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    values = []
-    values.append(test_lib.TestRegValue(
-        'googleupdater.exe',
-        'C:\\WINDOWS\\system32\\googleupdater.exe'.encode('utf_16_le'), 1,
-        123))
-    self.regkey = test_lib.TestRegKey(
-        '\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce',
-        1346445929000000, values, 153)
+    self.assertEquals(msg, expected_line)
 
   def testRunOnceNtuser(self):
+    key = self.winreg_file.GetKeyByPath(
+        '\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce')
     plugin = run.RunOnceNtuserPlugin(None, None, None)
-    entries = list(plugin.Process(self.regkey))
+    entries = list(plugin.Process(key))
 
-    line = (u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce] '
-            'googleupdater.exe: C:\\WINDOWS\\system32\\googleupdater.exe')
+    expected_line = (
+        u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce] '
+        u'mctadmin: C:\\Windows\\System32\\mctadmin.exe')
 
     self.assertEquals(len(entries), 1)
-    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
-    self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
+    # Timestamp is: 2012-04-05T17:03:53.992061+00:00
+    self.assertEquals(entries[0].timestamp, 1333645433992061)
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(msg, line)
+    self.assertEquals(msg, expected_line)
 
 
 class TestRunSoftwareRegistry(unittest.TestCase):
-  """The unit test for Software Run key registry parsing."""
+  """The unit tests for Software Run[Once] key registry parsing."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    values = []
-    values.append(test_lib.TestRegValue(
-        'ctfmon.exe', 'C:\\WINDOWS\\system32\\ctfmon.exe'.encode('utf_16_le'),
-        1, 123))
-    self.regkey = test_lib.TestRegKey(
-        '\\Microsoft\\Windows\\CurrentVersion\\Run', 1346445929000000, values,
-        153)
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
+    test_file = os.path.join('test_data', 'SOFTWARE-RunTests')
+    file_object = open(test_file, 'rb')
+    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
 
   def testRunSoftware(self):
+    key = self.winreg_file.GetKeyByPath(
+        '\\Microsoft\\Windows\\CurrentVersion\\Run')
     plugin = run.RunSoftwarePlugin(None, None, None)
-    entries = list(plugin.Process(self.regkey))
+    entries = list(plugin.Process(key))
 
-    line = (u'[\\Microsoft\\Windows\\CurrentVersion\\Run] ctfmon.exe: '
-            'C:\\WINDOWS\\system32\\ctfmon.exe')
+    expected_line = (
+        u'[\\Microsoft\\Windows\\CurrentVersion\\Run] VMware Tools: '
+        u'\"C:\\Program Files\\VMware\\VMware Tools\\VMwareTray.exe\"')
 
-    self.assertEquals(len(entries), 1)
-    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
-    self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
+    self.assertEquals(len(entries), 3)
+    # Timestamp is: 2011-09-16T20:57:09.067575+00:00
+    self.assertEquals(entries[0].timestamp, 1316206629067575)
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(msg, line)
-
-
-class TestRunOnceSoftwareRegistry(unittest.TestCase):
-  """The unit test for Software RunOnce key registry parsing."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    values = []
-    values.append(test_lib.TestRegValue(
-        'googleupdater.exe',
-        'C:\\WINDOWS\\system32\\googleupdater.exe'.encode('utf_16_le'), 1,
-        123))
-    self.regkey = test_lib.TestRegKey(
-        '\\Microsoft\\Windows\\CurrentVersion\\RunOnce', 1346445929000000,
-        values, 153)
+    self.assertEquals(msg, expected_line)
 
   def testRunOnceSoftware(self):
+    key = self.winreg_file.GetKeyByPath(
+        '\\Microsoft\\Windows\\CurrentVersion\\RunOnce')
     plugin = run.RunOnceSoftwarePlugin(None, None, None)
-    entries = list(plugin.Process(self.regkey))
+    entries = list(plugin.Process(key))
 
-    line = (
-        u'[\\Microsoft\\Windows\\CurrentVersion\\RunOnce] googleupdater.exe: '
-        'C:\\WINDOWS\\system32\\googleupdater.exe')
+    expected_line = (
+        u'[\\Microsoft\\Windows\\CurrentVersion\\RunOnce] '
+        u'*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq')
 
     self.assertEquals(len(entries), 1)
-    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT.
-    self.assertEquals(entries[0].timestamp, int(1346445929 * 1e6))
+    # Timestamp is: 2012-04-06T14:07:27.750000+00:00
+    self.assertEquals(entries[0].timestamp, 1333721247750000)
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(msg, line)
+    self.assertEquals(msg, expected_line)
 
 
 if __name__ == '__main__':
