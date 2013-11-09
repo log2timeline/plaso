@@ -1049,6 +1049,22 @@ class FiletimeEvent(TimestampEvent):
         timelib.Timestamp.FromFiletime(filetime), usage, data_type)
 
 
+class JavaTimeEvent(TimestampEvent):
+  """Convenience class for a Java time-based event."""
+
+  def __init__(self, java_time, usage, data_type=None):
+    """Initializes a Java time-based event object.
+
+    Args:
+      java_time: The Java time value.
+      usage: The description of the usage of the time value.
+      data_type: The event data type. If not set data_type is derived
+                 from DATA_TYPE.
+    """
+    super(JavaTimeEvent, self).__init__(
+        timelib.Timestamp.FromJavaTime(java_time), usage, data_type)
+
+
 class PosixTimeEvent(TimestampEvent):
   """Convenience class for a POSIX time-based event."""
 

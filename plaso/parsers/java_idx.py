@@ -197,15 +197,14 @@ class JavaIDXParser(parser.PlasoParser):
 
     container = JavaIDXEventContainer(magic.idx_version, url, ip_address)
 
-    container.Append(event.TimestampEvent(
-        last_modified_date * 1000, 'File Hosted Date', container.DATA_TYPE))
+    container.Append(event.JavaTimeEvent(
+        last_modified_date, 'File Hosted Date', container.DATA_TYPE))
 
     if section_one:
       expiration_date = section_one.get('expiration_date', None)
       if expiration_date:
-        container.Append(event.TimestampEvent(
-            expiration_date * 1000, 'File Expiration Date',
-            container.DATA_TYPE))
+        container.Append(event.JavaTimeEvent(
+            expiration_date, 'File Expiration Date', container.DATA_TYPE))
 
     if download_date:
       container.Append(event.TimestampEvent(
