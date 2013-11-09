@@ -599,7 +599,7 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     """
     pass
 
-  def _ReadLine(self, filehandle, max_len=0, quiet=False):
+  def _ReadLine(self, filehandle, max_len=0, quiet=False, depth=0):
     """Read a single line from a text file and return it back.
 
     Args:
@@ -607,6 +607,8 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
       max_len: If defined determines the maximum number of bytes a single line
       can take.
       quiet: If True then a decode warning is not displayed.
+      depth: A threshold of how many newlines we can encounter before bailing
+      out.
 
     Returns:
       A single line read from the file-like object, or the maximum number of
@@ -617,9 +619,16 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     else:
       line = filehandle.readline()
 
+    if not line:
+      return
+
     # If line is empty, skip it and go on.
     if line == '\n' or line == '\r\n':
-      return self._ReadLine(filehandle, max_len)
+      # Max 40 new lines in a row before we bail out.
+      if depth == 40:
+        return ''
+
+      return self._ReadLine(filehandle, max_len, depth=depth + 1)
 
     if not self.encoding:
       return line.strip()
@@ -642,6 +651,9 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
     filehandle.seek(0)
 
     line = self._ReadLine(filehandle, self.MAX_LINE_LENGTH, True)
+    if not line:
+      raise errors.UnableToParseFile(u'Not a text file.')
+
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
       logging.debug((

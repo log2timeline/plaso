@@ -71,6 +71,9 @@ class PlasoWorker(object):
   # This is only used temporary until files can be classified.
   magic_max_length = 0
 
+  # Defines the maximum depth into a file (for SmartOpenFiles).
+  MAX_FILE_DEPTH = 3
+
   def __init__(self, identifier, proc_queue, stor_queue, config, pre_obj):
     """Constructor for the class.
 
@@ -170,8 +173,8 @@ class PlasoWorker(object):
       filehandle: A PFile object.
     """
     try:
-      for fh in self.SmartOpenFiles(filehandle,
-                                    getattr(self, '_fscache', None)):
+      for fh in self.SmartOpenFiles(
+          filehandle, getattr(self, '_fscache', None)):
         self.ParseFile(fh)
     except IOError as e:
       logging.debug(('Unable to open file: {%s}, not sure if we can extract '
@@ -284,16 +287,22 @@ class PlasoWorker(object):
     logging.debug('[ParseFile] Parsing DONE: %s', filehandle.display_name)
 
   @classmethod
-  def SmartOpenFiles(cls, fh, fscache=None):
+  def SmartOpenFiles(cls, fh, fscache=None, depth=0):
     """Generate a list of all available PathSpecs extracted from a file.
 
     Args:
       fh: A PFile object that is used to extract PathSpecs from.
       fscache: A pfile.FilesystemCache object.
+      depth: Incrementing number that defines the current depth into
+             a file (file inside a ZIP file is depth 1, file inside a tar.gz
+             would be of depth 2).
 
     Yields:
       A Pfile file-like object.
     """
+    if depth >= cls.MAX_FILE_DEPTH:
+      return
+
     for pathspec in cls.SmartOpenFile(fh):
       try:
         pathspec_orig = copy.deepcopy(pathspec)
@@ -304,7 +313,7 @@ class PlasoWorker(object):
         logging.debug(('Unable to open file: {%s}, not sure if we can extract '
                        'further files from it. Msg: %s'), fh.display_name, e)
         continue
-      for new_filehandle in cls.SmartOpenFiles(new_fh, fscache):
+      for new_filehandle in cls.SmartOpenFiles(new_fh, fscache, depth + 1):
         yield new_filehandle
 
   @classmethod
@@ -413,7 +422,10 @@ class PlasoWorker(object):
         fh_tar = tarfile.open(fileobj=fh, mode='r')
         root_pathspec = fh.pathspec_root
         file_path = fh.pathspec.file_path
-        for name in fh_tar.getnames():
+        for name_info in fh_tar.getmembers():
+          if not name_info.isfile():
+            continue
+          name = name_info.path
           logging.debug(u'Including: %s from TAR into process queue.', name)
           pathspec = copy.deepcopy(root_pathspec)
           transfer_tar = event.EventPathSpec()

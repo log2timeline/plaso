@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,49 +15,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Plasm (Plaso Langar Að Safna Minna) - Groups and tags Plaso Storage files.
+"""This file contains the plasm front-end to plaso."""
 
-When applying tags, a tag input file must be given. Currently, the format of
-this file is simply the tag name, followed by indented lines indicating
-conditions for the tag, treating any lines beginning with # as comments. For
-example, a valid tagging input file might look like this:
-
-------------------------------
-Obvious Malware
-  # anything with 'malware' in the name or path
-  filename contains 'malware'
-
-  # anything with the malware datatype
-  datatype is 'windows:malware:this_is_not_a_real_datatype'
-
-File Download
-  timestamp_desc is 'File Downloaded'
-------------------------------
-
-When applying groups, the Plaso Storage file *must* contain tags, as only tagged
-events are grouped. Plasm can be run such that it both applies tags and applies
-groups, in which case an untagged Plaso Storage file may be used, since tags
-will be applied before the grouping is calculated.
-
-Usage:
-  plasm.py cluster [--threshold=<num>] [--closeness=<msec>] <plaso_store>
-  plasm.py [-q] tag --tagfile=<file> <plaso_store>
-  plasm.py [-q] group <plaso_store>
-
-Options:
-  --quiet -q          Suppress nonessential output.
-  --threshold=<num>   Support threshold for pruning attributes [default: 5].
-  --closeness=<msec>  Number of miliseconds before we stop considering two
-                      events to be at all "close" to each other [default: 5000].
-  --tagfile=<file>    File containing a description of tags and rules for tag
-                      application.
-"""
+import argparse
 import hashlib
 import logging
 import operator
 import os
 import pickle
+import sets
 import sys
+import textwrap
 
 from plaso import filters
 
@@ -67,9 +36,6 @@ from plaso.lib import storage
 
 # pylint: disable-msg=W0611
 from plaso.output import pstorage
-
-from docopt import docopt
-from sets import Set
 
 
 def SetupStorage(input_file_path, pre_obj=None):
@@ -165,13 +131,13 @@ def ParseTaggingFile(tag_input):
   return tags
 
 
-class TaggingEngine:
+class TaggingEngine(object):
   """Applies tags to the plaso store."""
   def __init__(self, target_filename, tag_input, quiet=False):
     """Constructor for the Tagging Engine.
 
     Args:
-      target_filename: filename for a Plaso Storage file to be tagged.
+      target_filename: filename for a Plaso storage file to be tagged.
       tag_input: filesystem path to the tagging input file.
       quiet: suppress the progress output (default: False).
     """
@@ -216,14 +182,14 @@ class TaggingEngine:
       sys.stdout.write('DONE (applied {} tags)\n'.format(num_tags))
 
 
-class GroupingEngine:
+class GroupingEngine(object):
   """Applies groups to the plaso store."""
 
   def __init__(self, target_filename, quiet=False):
     """Constructor for the Grouping Engine.
 
     Args:
-      target_filename: filename for a Plaso Storage file to be tagged.
+      target_filename: filename for a Plaso storage file to be tagged.
       quiet: suppress the progress output (default: False).
     """
     self.target_filename = target_filename
@@ -302,7 +268,7 @@ class GroupingEngine:
       sys.stdout.write('DONE\n')
 
 
-class ClusteringEngine:
+class ClusteringEngine(object):
   """Clusters events in a Plaso Store to assist Tag Input creation.
 
   Most methods in this class are staticmethods, to avoid relying excessively on
@@ -318,7 +284,7 @@ class ClusteringEngine:
     """Constructor for the Clustering Engine.
 
     Args:
-      target_filename: filename for a Plaso Storage file to be clustered.
+      target_filename: filename for a Plaso storage file to be clustered.
       threshold: support threshold for pruning attributes and event types.
       closeness: number of miliseconds to cut off the closeness function.
     """
@@ -378,7 +344,7 @@ class ClusteringEngine:
       field_name: an event_object attribute name.
       attribute: the corresponding event_object attribute.
     """
-    if type(attribute) in [dict, Set]:
+    if type(attribute) in [dict, sets.Set]:
       value = repr(sorted(attribute.items()))
     else:
       value = unicode(attribute)
@@ -460,7 +426,7 @@ class ClusteringEngine:
   def NoDuplicates(self, dump_filename):
     """Saves a de-duped Plaso Storage.
 
-    This goes through the Plaso Storage file, and saves a new dump with
+    This goes through the Plaso storage file, and saves a new dump with
     duplicates removed. The filename is '.[dump_hash]_dedup', and is returned
     at the end of the function. Note that if this function is interrupted,
     incomplete results are recorded and this file must be deleted or subsequent
@@ -572,7 +538,7 @@ class ClusteringEngine:
             else:
               word_count[word] = 1
       wordlist = [word for word in word_count if word_count[word] >= threshold]
-      frequent_words = Set(wordlist)
+      frequent_words = sets.Set(wordlist)
       x = open(frequent_filename, 'wb')
       pickle.dump(frequent_words, x)
       x.close()
@@ -651,32 +617,129 @@ class ClusteringEngine:
 
 
 def Main():
-  """Start the tool."""
+  """The main application function."""
+  epilog_tag = ("""
+      Notes:
 
-  arguments = docopt(__doc__, version='Plasm 0.1')
-  plaso_store = arguments['<plaso_store>']
-  quiet = arguments['--quiet']
+      When applying tags, a tag input file must be given. Currently,
+      the format of this file is simply the tag name, followed by
+      indented lines indicating conditions for the tag, treating any
+      lines beginning with # as comments. For example, a valid tagging
+      input file might look like this:'
 
-  if arguments['cluster']:
-    threshold = int(arguments['--threshold'])
-    closeness = int(arguments['--closeness'])
-    clustering_engine = ClusteringEngine(plaso_store, threshold, closeness)
+      ------------------------------
+      Obvious Malware
+          # anything with 'malware' in the name or path
+          filename contains 'malware'
+
+          # anything with the malware datatype
+          datatype is 'windows:malware:this_is_not_a_real_datatype'
+
+      File Download
+          timestamp_desc is 'File Downloaded'
+      ------------------------------
+      """)
+
+  epilog_group = ("""
+      When applying groups, the Plaso storage file *must* contain tags,
+      as only tagged events are grouped. Plasm can be run such that it
+      both applies tags and applies groups, in which case an untagged
+      Plaso storage file may be used, since tags will be applied before
+      the grouping is calculated.
+      """)
+
+  description = (
+      u'PLASM (Plaso Langar Að Safna Minna)- Application to group and tag '
+      u'Plaso storage files.')
+
+  argument_parser = argparse.ArgumentParser(
+      description=textwrap.dedent(description),
+      formatter_class=argparse.RawDescriptionHelpFormatter)
+
+  argument_parser.add_argument(
+      '-q', '--quiet', action='store_true', dest='quiet', default=False,
+      help='Suppress nonessential output.')
+
+  subparsers = argument_parser.add_subparsers(dest='subcommand')
+
+  cluster_subparser = subparsers.add_parser(
+      'cluster', formatter_class=argparse.RawDescriptionHelpFormatter)
+
+  cluster_subparser.add_argument(
+      '--closeness', action='store', type=int, metavar='MSEC',
+      dest='cluster_closeness', default=5000, help=(
+          'Number of miliseconds before we stop considering two '
+          'events to be at all "close" to each other'))
+
+  cluster_subparser.add_argument(
+      '--threshold', action='store', type=int, metavar='NUMBER',
+      dest='cluster_threshold', default=5,
+      help='Support threshold for pruning attributes.')
+
+  cluster_subparser.add_argument(
+      'storage_file', action='store', type=unicode, metavar='STORAGE_FILE',
+      nargs='?', help=(
+          'The path to the storage file, if the file exists data will '
+          'get appended to it.'))
+
+  subparsers.add_parser(
+      'group', formatter_class=argparse.RawDescriptionHelpFormatter,
+      epilog=textwrap.dedent(epilog_group))
+
+  tag_subparser = subparsers.add_parser(
+      'tag', formatter_class=argparse.RawDescriptionHelpFormatter,
+      epilog=textwrap.dedent(epilog_tag))
+
+  tag_subparser.add_argument(
+      '--tagfile', action='store', type=unicode, metavar='FILE',
+      dest='tag_filename', help=(
+          'Name of the file containing a description of tags and rules '
+          'for tagging events.'))
+
+  tag_subparser.add_argument(
+      'storage_file', action='store', type=unicode, metavar='STORAGE_FILE',
+      nargs='?', help=(
+          'The path to the storage file, if the file exists data will '
+          'get appended to it.'))
+
+  arguments = argument_parser.parse_args()
+
+  if not os.path.isfile(getattr(arguments, 'storage_file', '')):
+    argument_parser.print_help()
+    print ''
+    argument_parser.print_usage()
+    print ''
+    logging.error(u'No storage file supplied.')
+    sys.exit(1)
+
+  if arguments.subcommand == 'cluster':
+    clustering_engine = ClusteringEngine(
+        arguments.storage_file, int(arguments.cluster_threshold, 10),
+        int(arguments.cluster_closeness, 10))
     clustering_engine.Run()
 
-  if arguments['tag']:
-    tagfile = arguments['--tagfile']
-    if not os.path.isfile(tagfile):
-      print __doc__
+  elif arguments.subcommand == 'group':
+    grouping_engine = GroupingEngine(
+        arguments.storage_file, arguments.quiet)
+    grouping_engine.Run()
+
+  elif arguments.subcommand == 'tag':
+    if not getattr(arguments, 'tag_filename', ''):
+      argument_parser.print_help()
       print ''
-      logging.error(u'Tagfile [{}] does not exist.'.format(tagfile))
+      argument_parser.print_usage()
+      print ''
+      logging.error(u'No tag file supplied.')
       sys.exit(1)
 
-    tagging_engine = TaggingEngine(plaso_store, tagfile, quiet)
-    tagging_engine.Run()
+    if not os.path.isfile(arguments.tag_filename):
+      logging.error(u'Tag file [{0:s}] does not exist.'.format(
+          arguments.tag_filename))
+      sys.exit(1)
 
-  if arguments['group']:
-    grouping_engine = GroupingEngine(plaso_store, quiet)
-    grouping_engine.Run()
+    tagging_engine = TaggingEngine(
+        arguments.storage_file, arguments.tag_filename, arguments.quiet)
+    tagging_engine.Run()
 
 if __name__ == '__main__':
   Main()
