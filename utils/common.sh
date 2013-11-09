@@ -35,18 +35,9 @@ linter()
   # First find all files that need linter
   FILES=`git status -s | grep -v "^?" | awk "{ ${AWK_SCRIPT} }" | grep "\.py$"`;
 
-  if [ "x`which pylint`" == "x" ]
-  then
-    LINTER="pychecker -Q -f --only -6 --unusednames"
+  LINTER="pylint --rcfile=utils/pylintrc"
 
-    echo "Run through pychecker.";
-  else
-    # TODO: Re-enable pylint again, disabling for a while to not make lint CL
-    # larger than it already is.
-    LINTER="pylint --rcfile=utils/pylintrc"
-
-    echo "Run through pylint.";
-  fi
+  echo "Run through pylint.";
 
   for FILE in ${FILES};
   do
@@ -68,15 +59,6 @@ linter()
     if [ $? -ne 0 ];
     then
       echo "Fix linter errors before proceeding."
-      return ${EXIT_FAILURE};
-    fi
-
-    # Run through "line width" checker since that is not covered by the linter.
-    python utils/linecheck.py "${FILE}"
-
-    if [ $? -ne 0 ]
-    then
-      echo "Fix line width errors before proceeding."
       return ${EXIT_FAILURE};
     fi
   done
