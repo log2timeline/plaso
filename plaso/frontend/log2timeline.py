@@ -115,7 +115,7 @@ def Main():
           'parsed then this parameter needs to be set manually.'))
 
   performance_group.add_argument(
-      '--buffer-size', '--bs', dest='buffer_size', action='store', default=0,
+      '--buffer_size', '--bs', dest='buffer_size', action='store', default=0,
       help='The buffer size for the output (defaults to 196MiB).')
 
   performance_group.add_argument(
@@ -144,7 +144,7 @@ def Main():
             'list of ranges and entries, eg: X,Y-Z,G,H-J.'))
 
   performance_group.add_argument(
-      '--single-thread', dest='single_thread', action='store_true',
+      '--single_thread', dest='single_thread', action='store_true',
       default=False,
       help='Indicate that the tool should run in a single thread.')
 
@@ -157,15 +157,13 @@ def Main():
                           'regular expression'))
 
   deep_group.add_argument(
-      '--scan-archives', dest='open_files', action='store_true', default=False,
-      help=('Indicate that the tool should try to open files to extract embedd'
-            'ed files within them, for instance to extract files from compress'
-            'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
-
-  deep_group.add_argument(
-      '--noscan-archives', dest='open_files', action='store_false',
-      help=('Indicate that the tool should NOT try to '
-            'open files to extract embedded files within them.'))
+      '--scan_archives', dest='open_files', action='store_true', default=False,
+      help=argparse.SUPPRESS)
+  # This option is "hidden" for the time being, still left in there for testing
+  # purposes, but hidden from the tool usage and help messages.
+  #    help=('Indicate that the tool should try to open files to extract embedd'
+  #          'ed files within them, for instance to extract files from compress'
+  #          'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
 
   function_group.add_argument(
       '-o', '--offset', dest='image_offset', action='store', default=0,
@@ -313,8 +311,9 @@ def Main():
       print e
       sys.exit(1)
 
+    print 'Sector size: {}'.format(partition_map[0])
     print u'Index  {:10s} {:10s} {}'.format('Offset', 'Length', 'Description')
-    for entry in partition_map:
+    for entry in partition_map[1:]:
       print u'{:02d}:    {:010d} {:010d} {}'.format(
           entry['address'], entry['offset'], entry['length'],
           entry['description'])
@@ -363,7 +362,8 @@ def Main():
     partition_map = pfile.FilesystemCache.PartitionMap(options.filename)
     offset = 0
     options.image = True
-    for entry in partition_map:
+    options.bytes_per_sector = partition_map[0]
+    for entry in partition_map[1:]:
       if options.partition_number == entry['address']:
         offset = entry['offset']
         break

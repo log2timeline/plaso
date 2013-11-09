@@ -31,10 +31,12 @@ try:
 except ImportError:
   from distutils.core import find_packages, setup, Command
 
+
 if sys.version < '2.7':
   print ('Wrong Python Version, require version 2.7 or higher (and lower '
          'than 3.X).\n%s') % sys.version
   sys.exit(1)
+
 
 def GetTools():
   """List up all scripts that should be runable from the command line."""
@@ -61,20 +63,6 @@ def GetToolsFrom(path):
   return data
 
 
-def GetFileList(path, patterns):
-  file_list = []
-
-  for directory, sub_directories, files in os.walk(path):
-    for pattern in patterns:
-      directory_pattern = os.path.join(directory, pattern)
-
-      for pattern_match in glob.iglob(directory_pattern):
-        if os.path.isfile(pattern_match):
-          file_list.append(pattern_match)
-
-  return file_list
-
-
 class TestCommand(Command):
   """Run tests, implementing an interface."""
   user_options = []
@@ -89,22 +77,21 @@ class TestCommand(Command):
     results = run_tests.RunTests()
 
 
-setup(name='plaso',
-      version='1.0.2dev',
-      description='The plaso backend as well as few front-ends.',
-      license='Apache License, Version 2.0',
-      url='https://sites.google.com/a/kiddaland.net/plaso',
-      package_dir={'plaso': 'plaso'},
-      scripts=GetTools(),
-      cmdclass = {'test': TestCommand},
-      classifiers=[
-          'Development Status :: 4 - Beta',
-          'Environment :: Console',
-          'Operating System :: OS Independent',
-          'Programming Language :: Python',
-      ],
-      #include_package_data=True,
-      packages=find_packages('.'),
-      package_data={'plaso.test_data': GetFileList('test_data', ['*'])},
-     )
-
+setup(
+    name='plaso',
+    version='1.0.2alpha',
+    description='The plaso backend as well as few front-ends.',
+    license='Apache License, Version 2.0',
+    url='https://sites.google.com/a/kiddaland.net/plaso',
+    maintainer_email='log2timeline-dev@googlegroups.com',
+    scripts=GetTools(),
+    cmdclass = {'test': TestCommand},
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+    ],
+    package_dir={'plaso': 'plaso'},
+    packages=find_packages('.'),
+)

@@ -28,6 +28,7 @@ import logging
 import os
 import tarfile
 import zipfile
+import zlib
 
 from plaso.lib import errors
 from plaso.lib import event
@@ -96,6 +97,9 @@ class FilesystemCache(object):
     except IOError:
       raise errors.UnableToOpenFilesystem(
           u'Unable to open the disk image [%s]' % path)
+
+    block_size = getattr(volume.info, 'block_size', 512)
+    partition_map.append(block_size)
 
     for part in volume:
       partition_map.append({
@@ -567,7 +571,7 @@ class ZipFile(PlasoFile):
     self.size = self.zipinfo.file_size
     try:
       self.fh = zf.open(self.pathspec.file_path, 'r')
-    except RuntimeError as e:
+    except (RuntimeError, zipfile.BadZipfile) as e:
       raise IOError(u'Unable to open ZIP file: {%s} -> %s' % (self.name, e))
 
   def read(self, size=None):
@@ -591,7 +595,11 @@ class ZipFile(PlasoFile):
       if size != self.size - self.offset:
         logging.debug('[ZIP] Not able to read in the entire file (too large).')
 
-    line = self.fh.read(size)
+    try:
+      line = self.fh.read(size)
+    except zlib.error:
+      raise IOError
+
     self.offset += len(line)
     return line
 

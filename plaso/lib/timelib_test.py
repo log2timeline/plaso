@@ -306,6 +306,20 @@ class TimeLibUnitTest(unittest.TestCase):
     self._CompareTimeString(
         '2014-02-01 04:00:00', 'PST8PDT', expected_timestamp)
 
+    # Define two timestamps, one being GMT and the other UTC.
+    time_string_utc = 'Wed 05 May 2010 03:52:31 UTC'
+    time_string_gmt = 'Wed 05 May 2010 03:52:31 GMT'
+
+    timestamp_utc = timelib.Timestamp.FromTimeString(time_string_utc)
+    timestamp_gmt = timelib.Timestamp.FromTimeString(time_string_gmt)
+
+    # Test if these two are different, and if so, then we'll try again
+    # using the 'gmt_is_utc' flag, which then should result to the same
+    # results.
+    if timestamp_utc != timestamp_gmt:
+      self.assertEquals(timestamp_utc, timelib.Timestamp.FromTimeString(
+          time_string_gmt, gmt_as_timezone=False))
+
   def _CompareTimeString(self, time_string, zone_string, expected):
     """Compare a string generated timestamp to an expected value."""
     test = timelib.Timestamp.FromTimeString(time_string, pytz.timezone(

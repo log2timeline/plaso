@@ -227,14 +227,11 @@ def ProcessArguments(arguments):
       '-q', '--quiet', action='store_true', dest='quiet', default=False,
       help='Don\'t print out counter information after processing.')
 
-  # TODO: Change this behavior so by default it runs with dedups removed once
-  # the dedup process has been optimized and does not slow down the tool as
-  # much as the current implementation.
   parser.add_argument(
-      '-r', '--remove_dedup', action='store_true', dest='dedup', default=False,
+      '-a', '--include_all', action='store_false', dest='dedup', default=True,
       help=(
-          'Check and merge duplicate entries in the storage file '
-          '(experimental option at this stage).'))
+          'By default the tool removes duplicate entries from the output. '
+          'This parameter changes that behavior so all events are included.'))
 
   parser.add_argument(
       '-o', '--output_format', metavar='FORMAT', dest='output_format',
