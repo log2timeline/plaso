@@ -26,6 +26,7 @@ from plaso.formatters import java_idx
 from plaso.formatters import ls_quarantine
 from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
+from plaso.formatters import mcafeeav
 from plaso.formatters import msiecf
 from plaso.formatters import olecf
 from plaso.formatters import oxml
