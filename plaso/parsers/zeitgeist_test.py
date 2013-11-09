@@ -53,8 +53,8 @@ class ZeitgeistParserTest(unittest.TestCase):
     expected_subject_uri = 'application://rhythmbox.desktop'
     self.assertEquals(event_object.subject_uri, expected_subject_uri)
 
-    # date -u -d"2013-10-22T08:53:19+00:00" +"%s"
-    self.assertEquals(event_object.timestamp, 1382431999 * 1000000)
+    # expr `date -u -d"2013-10-22T08:53:19+00:00" +"%s"` \* 1000000 + 477000
+    self.assertEquals(event_object.timestamp, 1382431999477000)
 
     # Test the event specific formatter.
     expected_msg = u'application://rhythmbox.desktop'
