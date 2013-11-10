@@ -41,13 +41,13 @@ linter()
 
   for FILE in ${FILES};
   do
-    if [ "${FILE}" = "setup.py" ] || [ "${FILE}" = "utils/upload.py" ];
+    if test "${FILE}" = "setup.py" || test "${FILE}" = "utils/upload.py" ;
     then
       echo "  -- Skipping: ${FILE} --"
       continue
     fi
 
-    if [ `echo ${FILE} | tail -c8` == "_pb2.py" ];
+    if test `echo ${FILE} | tail -c8` == "_pb2.py" ;
     then
       echo "Skipping compiled protobufs: ${FILE}"
       continue
@@ -56,14 +56,14 @@ linter()
     echo "  -- Checking: ${FILE} --"
     $LINTER "${FILE}"
 
-    if [ $? -ne 0 ];
+    if test $? -ne 0 ;
     then
       echo "Fix linter errors before proceeding."
       return ${EXIT_FAILURE};
     fi
   done
 
-  if [ $? -ne 0 ]
+  if test $? -ne 0 ;
   then
     return ${EXIT_FAILURE};
   fi
