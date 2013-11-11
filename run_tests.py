@@ -20,16 +20,19 @@ import os
 import unittest
 import sys
 
-from plaso.lib import utils
+
+def FormatHeader(header, char='*'):
+  """Format and return a header for output."""
+  return ('\n{:%s^80}' % char).format(u' %s ' % header)
 
 
 def FindTestFiles():
   """Return a list of all test files in the project."""
   file_list = []
   pattern = '*_test.py'
-  plaso_root_dir = os.path.join('.', 'plaso')
+  module_dir = os.path.join('.', 'plaso')
 
-  for directory, _, _ in os.walk(plaso_root_dir):
+  for directory, _, _ in os.walk(module_dir):
     directory_pattern = os.path.join(directory, pattern)
 
     for pattern_match in glob.iglob(directory_pattern):
@@ -66,7 +69,7 @@ def PrintResults(my_results):
     failures = len(my_results.failures)
 
     print my_results.printErrors()
-    print utils.FormatHeader('Tests failed.')
+    print FormatHeader('Tests failed.')
     print '  {:>10s}: {}\n  {:>10s}: {}\n  {:>10s}: {}'.format(
         'Errors', errors, 'Failures', failures, 'Total',
         errors + failures)
