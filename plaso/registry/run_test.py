@@ -94,6 +94,7 @@ class TestRunSoftwareRegistry(unittest.TestCase):
     self.assertEquals(len(entries), 3)
     # Timestamp is: 2011-09-16T20:57:09.067575+00:00
     self.assertEquals(entries[0].timestamp, 1316206629067575)
+    self.assertEquals(entries[1].timestamp, 1316206629067575)
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
     self.assertEquals(msg, expected_line)
 
