@@ -23,36 +23,38 @@ EXIT_SUCCESS=0;
 SCRIPTNAME=`basename $0`;
 
 BROWSER_PARAM="";
-if [ "$1" == "--nobrowser" ];
+if test "$1" == "--nobrowser";
 then
   BROWSER_PARAM="--no_oauth2_webbrowser";
   shift
 fi
 
-if [ -f ._code_review_number ];
+if test $# -ne 1;
 then
-  CL_NUMBER=`cat ._code_review_number`
-  if [ "x`echo $CL_NUMBER | sed -e 's/[0-9]//g'`" != "x" ];
+  if test $# -eq 0 && test -f ._code_review_number;
   then
-    echo "File ._code_review_number exists but contains wrong CL number.";
-    exit 1;
-  fi
-else
-  # Check usage
-  if [ $# -ne 1 ];
-  then
-    echo "Usage: ./${SCRIPTNAME} CL#";
+    CL_NUMBER=`cat ._code_review_number`
+    if test "x`echo ${CL_NUMBER} | sed -e 's/[0-9]//g'`" != "x";
+    then
+      echo "File ._code_review_number exists but contains wrong CL number.";
+      exit ${EXIT_FAILURE};
+    fi
+  else
+    echo "Usage: ./${SCRIPTNAME} [CL_NUMBER]";
     echo "";
-    echo "       CL#: the change list number that is to be submitted.";
+    echo " CL_NUMBER: optional change list (CL) number that is to be updated.";
+    echo "            if no CL number is provided the value is read from:";
+    echo "            ._code_review_number";
     echo "";
 
     exit ${EXIT_MISSING_ARGS};
   fi
-
+else
   CL_NUMBER=$1;
 fi
 
-if [ ! -f "utils/common.sh" ];
+
+if ! test -f "utils/common.sh";
 then
   echo "Unable to find common functions, are you in the wrong directory?";
 
@@ -72,7 +74,7 @@ fi
 echo "Running tests."
 python run_tests.py
 
-if [ $? -ne 0 ]
+if test $? -ne 0;
 then
   echo "Sumbit aborted - fix the issues reported by the failing test.";
 
@@ -84,14 +86,14 @@ echo "All came out clean, let's submit the code."
 URL_CODEREVIEW="https://codereview.appspot.com";
 
 # Get the description of the change list
-if [ "x`which json_xs`" != "x" ];
+if test "x`which json_xs`" != "x";
 then
   DESCRIPTION=`curl -s ${URL_CODEREVIEW}/api/${CL_NUMBER} | json_xs | grep '"subject"' | awk -F '"' '{print $(NF-1)}'`;
 else
   DESCRIPTION=`curl ${URL_CODEREVIEW}/${CL_NUMBER}/ -s | grep "Issue ${CL_NUMBER}" | awk -F ':' '{print $2}' | tail -1`;
 fi
 
-if [ "x${DESCRIPTION}" == "x" ]
+if test "x${DESCRIPTION}" == "x";
 then
   echo "Submit aborted - unable to find change list with number: ${CL_NUMBER}.";
 
@@ -101,7 +103,7 @@ fi
 # Check if the local repo is in sync with the origin
 git fetch
 
-if [ $? -ne 0 ]
+if test $? -ne 0;
 then
   echo "Sumbit aborted - unable to fetch updates from origin repo";
 
@@ -110,14 +112,14 @@ fi
 
 NUMBER_OF_CHANGES=`git log HEAD..origin/master --oneline | wc -l`;
 
-if [ $? -ne 0 ]
+if test $? -ne 0;
 then
   echo "Sumbit aborted - unable to determine if local repo is in sync with origin";
 
   exit ${EXIT_FAILURE};
 fi
 
-if [ ${NUMBER_OF_CHANGES} -ne 0 ];
+if test ${NUMBER_OF_CHANGES} -ne 0;
 then
   echo "Sumbit aborted - local repo out of sync with origin, run: 'git stash && git pull && git stash pop' before sumbit.";
 
@@ -129,7 +131,7 @@ python utils/upload.py --oauth2 $BROWSER_PARAM -y -i ${CL_NUMBER} -t "Submitted.
 git commit -a -m "Code review: ${CL_NUMBER}: ${DESCRIPTION}";
 git push
 
-if [ -f "~/codereview_upload_cookies" ]
+if test -f "~/codereview_upload_cookies";
 then
   curl -b ~/.codereview_upload_cookies ${URL_CODEREVIEW}/${CL_NUMBER}/close -d  ''
 else
@@ -137,7 +139,7 @@ else
   echo "manually close the ticket on the code review site."
 fi
 
-if [ -f "._code_review_number" ];
+if test -f "._code_review_number";
 then
   rm -f ._code_review_number
 fi
