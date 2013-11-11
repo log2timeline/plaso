@@ -38,7 +38,7 @@ class ZeitgeistEvent(event.EventObject):
       subject_uri: The Zeitgeist event.
     """
     super(ZeitgeistEvent, self).__init__()
-    self.timestamp = timestamp
+    self.timestamp = timelib.Timestamp.FromJavaTime(timestamp)
     self.offset = row_id
     self.subject_uri = subject_uri
 
@@ -61,5 +61,4 @@ class ZeitgeistParser(parser.SQLiteParser):
       An event object (ZeitgeistEvent) containing the event
       data.
     """
-    timestamp = timelib.Timestamp.FromPosixTime(row['timestamp'] / 1000)
-    yield ZeitgeistEvent(timestamp, row['id'], row['subj_uri'])
+    yield ZeitgeistEvent(row['timestamp'], row['id'], row['subj_uri'])

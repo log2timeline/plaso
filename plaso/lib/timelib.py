@@ -74,6 +74,9 @@ class Timestamp(object):
   # The number of micro seconds per second
   MICRO_SECONDS_PER_SECOND = 1000000
 
+  # The multiplication factor to change milli seconds to micro seconds.
+  MILLI_SECONDS_TO_MICRO_SECONDS = 1000
+
   # The difference between Jan 1, 1980 and Jan 1, 1970 in seconds.
   FAT_DATE_TO_POSIX_BASE = 315532800
 
@@ -198,6 +201,24 @@ class Timestamp(object):
 
     dt = StringToDatetime(time_string, zone, dayfirst)
     return cls.FromPythonDatetime(dt)
+
+  @classmethod
+  def FromJavaTime(cls, java_time):
+    """Converts a Java time to a timestamp.
+
+    Jave time is the number of milliseconds since
+    January 1, 1970, 00:00:00 UTC.
+
+    URL: http://docs.oracle.com/javase/7/docs/api/
+         java/sql/Timestamp.html#getTime%28%29
+
+    Args:
+      java_time: The Java Timestamp.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    return java_time * cls.MILLI_SECONDS_TO_MICRO_SECONDS
 
   @classmethod
   def FromHfsTime(cls, hfs_time, timezone=pytz.utc, is_dst=False):

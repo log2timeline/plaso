@@ -1,7 +1,6 @@
-#!/bin/bash
-# A small script that runs the linter on all files.
-#
-# Copyright 2012 The Plaso Project Authors.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,25 +14,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Formatter for Android mmssms.db database events."""
+from plaso.lib import eventdata
 
-EXIT_FAILURE=1;
-EXIT_SUCCESS=0;
 
-if ! test -f "utils/common.sh" ;
-then
-  echo "Missing common functions, are you in the wrong directory?";
+class AndroidSmsFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for Android sms events."""
+  DATA_TYPE = 'android:messaging:sms'
 
-  exit ${EXIT_FAILURE};
-fi
+  FORMAT_STRING_PIECES = [
+      u'Type: {sms_type}',
+      u'Address: {address}',
+      u'Status: {sms_read}',
+      u'Message: {body}']
 
-. utils/common.sh
+  FORMAT_STRING_SHORT_PIECES = [u'{body}']
 
-if ! linter;
-then
-  echo "Aborted - fix the issues reported by the linter.";
-
-  exit ${EXIT_FAILURE};
-fi
-
-exit ${EXIT_SUCCESS};
-
+  SOURCE_LONG = 'Android SMS messages'
+  SOURCE_SHORT = 'SMS'
