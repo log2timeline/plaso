@@ -327,6 +327,18 @@ class TimeLibUnitTest(unittest.TestCase):
 
     self.assertEquals(expected, test)
 
+  def testRoundTimestamp(self):
+    """Test the RoundToSeconds function."""
+    # Should be rounded up.
+    test_one = 442813351785412
+    # Should be rounded down.
+    test_two = 1384381247271976
+
+    self.assertEquals(timelib.Timestamp.RoundToSeconds(test_one),
+                      442813352000000)
+    self.assertEquals(timelib.Timestamp.RoundToSeconds(test_two),
+                      1384381247000000)
+
   def testTimestampFromTimeParts(self):
     """Test the FromTimeParts function."""
 

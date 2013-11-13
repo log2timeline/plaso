@@ -57,6 +57,10 @@ class Elastic(output.LogOutputFormatter):
       del ret_list['pathspec']
     if 'tag' in ret_list:
       del ret_list['tag']
+      tag = getattr(event_object, 'tag', None)
+      if tag:
+        tags = tag.tags
+        ret_list['tag'] = tags
 
     # To not overload the index, remove the regvalue index.
     if 'regvalue' in ret_list:
@@ -94,8 +98,6 @@ class Elastic(output.LogOutputFormatter):
       username = getattr(event_object, 'user_sid', '-')
 
     ret_list['username'] = username
-
-    ret_list['tag'] = getattr(event_object, 'tag', [])
 
     return ret_list
 
