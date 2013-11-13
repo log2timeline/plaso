@@ -79,3 +79,7 @@ class WrongPlugin(Error):
 
 class WrongPlistPlugin(Error):
   """Error reporting wrong plist plugin used."""
+
+
+class NotAText(Error):
+  """Raised when trying to read a text on a non-text sample."""
