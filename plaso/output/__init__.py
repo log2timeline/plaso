@@ -17,6 +17,10 @@
 """This file contains an import statement for each output plugin."""
 
 from plaso.output import dynamic
+try:
+  from plaso.output import elastic
+except ImportError:
+  pass
 from plaso.output import l2t_csv
 try:
   from plaso.output import mysql_4n6
