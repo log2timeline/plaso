@@ -491,7 +491,7 @@ class Timestamp(object):
     scrubbed = timestamp - leftovers
     rounded = round(float(leftovers) / cls.MICRO_SECONDS_PER_SECOND)
 
-    return int(scrubbed + rounded)
+    return int(scrubbed + rounded * cls.MICRO_SECONDS_PER_SECOND)
 
 
 def Timetuple2Timestamp(time_tuple):
