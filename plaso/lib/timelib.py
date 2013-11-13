@@ -484,6 +484,15 @@ class Timestamp(object):
     dt = cls.CopyToDatetime(timestamp, timezone)
     return dt.isoformat()
 
+  @classmethod
+  def RoundToSeconds(cls, timestamp):
+    """Takes a timestamp value and rounds it to a second precision."""
+    leftovers = timestamp % cls.MICRO_SECONDS_PER_SECOND
+    scrubbed = timestamp - leftovers
+    rounded = round(float(leftovers) / cls.MICRO_SECONDS_PER_SECOND)
+
+    return int(scrubbed + rounded)
+
 
 def Timetuple2Timestamp(time_tuple):
   """Return a micro second precision timestamp from a timetuple."""
