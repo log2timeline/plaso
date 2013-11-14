@@ -31,15 +31,47 @@ import pyelasticsearch
 class Elastic(output.LogOutputFormatter):
   """Saves the events into an ElasticSearch database."""
 
+  # Add configuration data for this output module.
+  ARGUMENTS = [
+      ('--case_number', {
+          'dest': 'case_number',
+          'type': unicode,
+          'help': 'Add a case number where the index is built in [ELASTIC].',
+          'action': 'store',
+          'default': ''}),
+      ('--elastic_server_ip', {
+          'dest': 'elastic_server',
+          'type': unicode,
+          'help': (
+              'If the ElasticSearch database resides on a different server '
+              'than localhost this parameter needs to be passed in. This '
+              'should be the IP address or the hostname of the server.'),
+          'action': 'store',
+          'default': ''}),
+      ('--elastic_port', {
+          'dest': 'elastic_port',
+          'type': int,
+          'help': (
+              'By default ElasticSearch uses the port number 9200, if the '
+              'database is listening on a different port this parameter '
+              'can be defined.'),
+          'action': 'store',
+          'default': 9200})]
+
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
     """Constructor for the Elastic output module."""
     super(Elastic, self).__init__(store, filehandle, config, filter_use)
     self._counter = 0
     self._data = []
-    # TODO: Add support for defining the location of the database.
-    self._elastic_db = pyelasticsearch.ElasticSearch('http://127.0.0.1:9200')
-    self._case_number = u'Plaso_Case_{}'.format(uuid.uuid4().hex)
+
+    elastic_host = getattr(config, 'elastic_server', '127.0.0.1')
+    elastic_port = getattr(config, 'elastic_port', 9200)
+    self._elastic_db = pyelasticsearch.ElasticSearch(
+        u'http://{}:{}'.format(elastic_host, elastic_port))
+
+    self._case_number = getattr(
+        config, 'case_number', u'Plaso_{}'.format(uuid.uuid4().hex))
 
     # Build up a list of available hostnames in this storage file.
     self._hostnames = {}
@@ -47,44 +79,45 @@ class Elastic(output.LogOutputFormatter):
 
   def _EventToDict(self, event_object):
     """Returns a dict built from an EventObject."""
-    # TODO: Include more data.
-    ret_list = event_object.GetValues()
+    ret_dict = event_object.GetValues()
 
     # Get rid of few attributes that cause issues (and need correcting).
-    del ret_list['timestamp']
+    del ret_dict['timestamp']
 
-    if 'pathspec' in ret_list:
-      del ret_list['pathspec']
-    if 'tag' in ret_list:
-      del ret_list['tag']
+    if 'pathspec' in ret_dict:
+      del ret_dict['pathspec']
+    if 'tag' in ret_dict:
+      del ret_dict['tag']
       tag = getattr(event_object, 'tag', None)
       if tag:
         tags = tag.tags
-        ret_list['tag'] = tags
+        ret_dict['tag'] = tags
+        if getattr(tag, 'comment', ''):
+          ret_dict['comment'] = tag.comment
 
     # To not overload the index, remove the regvalue index.
-    if 'regvalue' in ret_list:
-      del ret_list['regvalue']
+    if 'regvalue' in ret_dict:
+      del ret_dict['regvalue']
 
     # Adding attributes in that are calculated/derived.
     # We want to remove millisecond precision (causes some issues in
     # conversion).
-    ret_list['datetime'] = putils.PrintTimestamp(
+    ret_dict['datetime'] = putils.PrintTimestamp(
         timelib.Timestamp.RoundToSeconds(event_object.timestamp))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
-    ret_list['message'] = msg
+    ret_dict['message'] = msg
 
     source_type, source = eventdata.EventFormatterManager.GetSourceStrings(
         event_object)
 
-    ret_list['source_short'] = source_type
-    ret_list['source_long'] = source
+    ret_dict['source_short'] = source_type
+    ret_dict['source_long'] = source
 
     hostname = getattr(event_object, 'hostname', '')
     if self.store and not not hostname:
       hostname = self._hostnames.get(event_object.store_number, '-')
 
-    ret_list['hostname'] = hostname
+    ret_dict['hostname'] = hostname
 
     username = getattr(event_object, 'username', '-')
     if self.store:
@@ -97,9 +130,9 @@ class Elastic(output.LogOutputFormatter):
     if username == '-' and hasattr(event_object, 'user_sid'):
       username = getattr(event_object, 'user_sid', '-')
 
-    ret_list['username'] = username
+    ret_dict['username'] = username
 
-    return ret_list
+    return ret_dict
 
   def EventBody(self, event_object):
     """Prints out to a filehandle string representation of an EventObject.

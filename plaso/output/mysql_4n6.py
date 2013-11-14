@@ -40,6 +40,61 @@ class Mysql4n6(output.LogOutputFormatter):
   META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
                  'color', 'type', 'record_number']
 
+  ARGUMENTS = [
+      ('--db_user', {
+          'dest': 'db_user',
+          'type': unicode,
+          'help': 'Defines the database user.',
+          'metavar': 'USERNAME',
+          'action': 'store',
+          'default': 'administrator'}),
+      ('--db_host', {
+          'dest': 'db_host',
+          'metavar': 'HOSTNAME',
+          'type': unicode,
+          'help': (
+              'Defines the IP address or the hostname of the database '
+              'server.'),
+          'action': 'store',
+          'default': '127.0.0.1'}),
+      ('--db_pass', {
+          'dest': 'db_pass',
+          'metavar': 'PASSWORD',
+          'type': unicode,
+          'help': 'The password for the database user.',
+          'action': 'store',
+          'default': 'letmein'}),
+      ('--db_name', {
+          'dest': 'db_name',
+          'type': unicode,
+          'help': 'The name of the database to connect to.',
+          'action': 'store',
+          'default': 'plaso'}),
+      ('--append', {
+          'dest': 'append',
+          'action': 'store_true',
+          'help': (
+              'Defines whether the intention is to append to an already '
+              'existing database or overwrite it. Defaults to overwrite.'),
+          'default': False}),
+      ('--fields', {
+          'dest': 'fields',
+          'action': 'store',
+          'type': unicode,
+          'nargs': '*',
+          'help': 'Defines which fields should be indexed in the database.',
+          'default': [
+              'host', 'user', 'source', 'sourcetype', 'type', 'datetime',
+              'color']}),
+      ('--evidence', {
+          'dest': 'evidence',
+          'action': 'store',
+          'help': (
+              'Set the evidence field to a specific value, defaults to '
+              'empty.'),
+          'type': unicode,
+          'default': '-'})]
+
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
     """Constructor for the output module.
@@ -54,13 +109,10 @@ class Mysql4n6(output.LogOutputFormatter):
     super(Mysql4n6, self).__init__(store, filehandle, config, filter_use)
     self.set_status = getattr(config, 'set_status', None)
 
-    # TODO: Revisit making compatible with plaso cmdline.
-    db_info = getattr(config, 'save_info', None)
-    if type(db_info) is dict:
-      self.host = db_info.get('db_host', '')
-      self.user = db_info.get('db_user', '')
-      self.password = db_info.get('db_pass', '')
-      self.dbname = db_info.get('db_name', '')
+    self.host = getattr(config, 'db_host', '127.0.0.1')
+    self.user = getattr(config, 'db_user', 'administrator')
+    self.password = getattr(config, 'db_pass', 'letmein')
+    self.dbname = getattr(config, 'db_name', 'plaso')
 
     self.evidence = getattr(config, 'evidence', '-')
     self.append = getattr(config, 'append', False)
@@ -71,7 +123,7 @@ class Mysql4n6(output.LogOutputFormatter):
     """Connect to the database and create the table before inserting."""
     if self.dbname == '':
       raise IOError('Specify a database name.')
-     
+
     try:
       if self.append:
         self.conn = MySQLdb.connect(self.host, self.user,
@@ -109,8 +161,8 @@ class Mysql4n6(output.LogOutputFormatter):
           self.curs.execute(
               'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT) '
               'ENGINE=InnoDB ROW_FORMAT=COMPRESSED'.format(field))
-        if self.set_status:
-          self.set_status('Created table: l2t_%s' % field)
+          if self.set_status:
+            self.set_status('Created table: l2t_%s' % field)
 
         self.curs.execute('CREATE TABLE l2t_tags (tag TEXT) '
                           'ENGINE=InnoDB ROW_FORMAT=COMPRESSED')
@@ -228,7 +280,7 @@ class Mysql4n6(output.LogOutputFormatter):
       formatter.FORMAT_STRING_SEPARATOR = u'<|>'
     elif isinstance(formatter, eventdata.EventFormatter):
       formatter.format_string = formatter.format_string.replace('}', '}<|>')
-    msg, msg_short = formatter.GetMessages(event_object)
+    msg, _ = formatter.GetMessages(event_object)
     source_short, source_long = formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
@@ -289,7 +341,7 @@ class Mysql4n6(output.LogOutputFormatter):
            getattr(event_object, 'user_sid', '-'),
            getattr(event_object, 'computer_name', '-'),
            self.evidence)
-          
+
     try:
       self.curs.execute(
           'INSERT INTO log2timeline(timezone, MACB, source, '
