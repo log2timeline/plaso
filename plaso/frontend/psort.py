@@ -217,35 +217,42 @@ def ProcessArguments(arguments):
   parser = argparse.ArgumentParser(
       description=(
           u'PSORT - Application to read, filter and process '
-          'output from a plaso storage file.'))
+          'output from a plaso storage file.'), add_help=False)
 
-  parser.add_argument(
+  tool_group = parser.add_argument_group('Optional Arguments For Psort')
+  output_group = parser.add_argument_group(
+      'Optional Arguments For Output Modules')
+
+  tool_group.add_argument(
       '-d', '--debug', action='store_true', dest='debug', default=False,
       help='Fall back to debug shell if psort fails.')
 
-  parser.add_argument(
+  tool_group.add_argument(
       '-q', '--quiet', action='store_true', dest='quiet', default=False,
       help='Don\'t print out counter information after processing.')
 
-  parser.add_argument(
+  tool_group.add_argument(
+      '-h', '--help', action='help', help='Show this help message and exit.')
+
+  tool_group.add_argument(
       '-a', '--include_all', action='store_false', dest='dedup', default=True,
       help=(
           'By default the tool removes duplicate entries from the output. '
           'This parameter changes that behavior so all events are included.'))
 
-  parser.add_argument(
+  tool_group.add_argument(
       '-o', '--output_format', metavar='FORMAT', dest='output_format',
       default='dynamic', help='Output format.  -o list to see loaded modules.')
 
-  parser.add_argument(
+  tool_group.add_argument(
       '-z', '--zone', metavar='TIMEZONE', default='UTC', dest='timezone',
       help='Timezone of output. list: "-z list"')
 
-  parser.add_argument(
+  tool_group.add_argument(
       '-w', '--write', metavar='OUTPUTFILE', dest='write',
       help='Output filename.  Defaults to stdout.')
 
-  parser.add_argument(
+  tool_group.add_argument(
       '--slice', metavar='DATE', dest='slice', type=str,
       default='', action='store', help=(
           'Create a time slice around a certain date. This parameter, if '
@@ -253,13 +260,13 @@ def ProcessArguments(arguments):
           'after the defined date. X is controlled by the parameter '
           '--slice_size but defaults to 5 minutes.'))
 
-  parser.add_argument(
+  tool_group.add_argument(
       '--slicer', dest='slicer', action='store_true', default=False, help=(
           'Create a time slice around every filter match. This parameter, if '
           'defined will save all X events before and after a filter match has '
           'been made. X is defined by the --slice_size parameter.'))
 
-  parser.add_argument(
+  tool_group.add_argument(
       '--slice_size', dest='slice_size', type=int, default=5, action='store',
       help=(
           'Defines the slice size. In the case of a regular time slice it '
@@ -269,22 +276,31 @@ def ProcessArguments(arguments):
           'the result set. The default value is 5]. See --slice or --slicer '
           'for more details about this option.'))
 
-  parser.add_argument(
+  tool_group.add_argument(
       '-v', '--version', dest='version', action='version',
       version='log2timeline - psort version %s' % engine.__version__,
       help='Show the current version of psort.')
 
-  parser.add_argument(
+  tool_group.add_argument(
       'storagefile', metavar='PLASOFILE', default=None, nargs='?',
       type=unicode, help='Path to the Plaso storage file')
 
-  parser.add_argument(
+  tool_group.add_argument(
       'filter', nargs='?', action='store', metavar='FILTER', default=None,
       type=unicode, help=(
           'A filter that can be used to filter the dataset before it '
           'is written into storage. More information about the filters'
           ' and it\'s usage can be found here: http://plaso.kiddaland.'
           'net/usage/filters'))
+
+  # Build output module parameters (but only if they are included).
+  for output_module_string, _ in output_lib.ListOutputFormatters():
+    if not output_module_string.lower() in [x.lower() for x in arguments]:
+      continue
+    output_module = output_lib.GetOutputFormatter(output_module_string)
+    if output_module.ARGUMENTS:
+      for parameter, config in output_module.ARGUMENTS:
+        output_group.add_argument(parameter, **config)
 
   my_args = parser.parse_args(args=arguments)
 

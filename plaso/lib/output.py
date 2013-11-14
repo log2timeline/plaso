@@ -46,6 +46,19 @@ class LogOutputFormatter(object):
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
+  # Optional arguments to be added to the argument parser.
+  # An example would be:
+  #   ARGUMENTS = [('--myparameter', {
+  #       'action': 'store',
+  #       'help': 'This is my parameter help',
+  #       'dest': 'myparameter',
+  #       'default': '',
+  #       'type': 'unicode'})]
+  #
+  # Where all arguments into the dict object have a direct translation
+  # into the argparse parser.
+  ARGUMENTS = []
+
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
     """Constructor for the output module.
