@@ -3,69 +3,38 @@
   "services": {
     "query": {
       "idQueue": [
-        0,
         1,
         2,
+        3,
         4
       ],
       "list": {
-        "3": {
-          "id": 3,
-          "color": "#614D93",
+        "0": {
           "query": "*",
           "alias": "",
+          "color": "#7EB26D",
+          "id": 0,
           "pin": false,
           "type": "lucene"
         }
       },
       "ids": [
-        3
+        0
       ]
     },
     "filter": {
-      "idQueue": [],
-      "list": {
-        "0": {
-          "type": "time",
-          "from": "1852-03-09T09:20:56.292Z",
-          "to": "2013-11-13T22:17:20.868Z",
-          "field": "datetime",
-          "mandate": "must",
-          "active": true,
-          "alias": "",
-          "id": 0
-        },
-        "1": {
-          "type": "time",
-          "from": "1965-10-11T22:13:25.123Z",
-          "to": "2013-11-13T22:17:20.868Z",
-          "field": "datetime",
-          "mandate": "must",
-          "active": true,
-          "alias": "",
-          "id": 1
-        },
-        "2": {
-          "type": "time",
-          "from": "1999-08-26T16:57:31.120Z",
-          "to": "2013-11-13T22:17:20.868Z",
-          "field": "datetime",
-          "mandate": "must",
-          "active": true,
-          "alias": "",
-          "id": 2
-        }
-      },
-      "ids": [
+      "idQueue": [
         0,
         1,
         2
-      ]
+      ],
+      "list": {},
+      "ids": []
     }
   },
   "rows": [
     {
-      "title": "histogram",
+      "title": "Histogram",
       "height": "200px",
       "editable": true,
       "collapse": false,
@@ -79,9 +48,9 @@
           "mode": "count",
           "time_field": "datetime",
           "queries": {
-            "mode": "unpinned",
+            "mode": "all",
             "ids": [
-              3
+              0
             ]
           },
           "value_field": null,
@@ -136,46 +105,14 @@
       "panels": [
         {
           "error": false,
-          "span": 3,
-          "editable": true,
-          "group": [
-            "default"
-          ],
-          "type": "terms",
-          "queries": {
-            "mode": "all",
-            "ids": [
-              3
-            ]
-          },
-          "field": "_type",
-          "exclude": [],
-          "missing": true,
-          "other": true,
-          "size": 10,
-          "order": "count",
-          "style": {
-            "font-size": "10pt"
-          },
-          "donut": false,
-          "tilt": false,
-          "labels": true,
-          "arrangement": "horizontal",
-          "chart": "table",
-          "counter_pos": "above",
-          "spyable": true,
-          "title": "Case Files"
-        },
-        {
-          "error": false,
           "span": 4,
           "editable": true,
           "type": "terms",
           "loadingEditor": false,
           "queries": {
-            "mode": "all",
+            "mode": "selected",
             "ids": [
-              3
+              0
             ]
           },
           "field": "source_short",
@@ -192,7 +129,7 @@
           "labels": true,
           "arrangement": "horizontal",
           "chart": "bar",
-          "counter_pos": "above",
+          "counter_pos": "below",
           "spyable": true,
           "title": "Source Distribution"
         },
@@ -203,10 +140,8 @@
           "type": "terms",
           "loadingEditor": false,
           "queries": {
-            "mode": "all",
-            "ids": [
-              3
-            ]
+            "mode": "selected",
+            "ids": []
           },
           "field": "parser",
           "exclude": [],
@@ -225,6 +160,34 @@
           "counter_pos": "above",
           "spyable": true,
           "title": "Parser Count"
+        },
+        {
+          "error": false,
+          "span": 4,
+          "editable": true,
+          "type": "terms",
+          "loadingEditor": false,
+          "queries": {
+            "mode": "selected",
+            "ids": []
+          },
+          "field": "hostname",
+          "exclude": [],
+          "missing": true,
+          "other": true,
+          "size": 10,
+          "order": "count",
+          "style": {
+            "font-size": "10pt"
+          },
+          "donut": false,
+          "tilt": false,
+          "labels": true,
+          "arrangement": "horizontal",
+          "chart": "bar",
+          "counter_pos": "above",
+          "spyable": true,
+          "title": "Hosts"
         }
       ],
       "notice": false
@@ -249,7 +212,7 @@
           "offset": 0,
           "sort": [
             "datetime",
-            "asc"
+            "desc"
           ],
           "style": {
             "font-size": "9pt"
@@ -262,14 +225,11 @@
             "username",
             "source_short",
             "source_long",
-            "parser",
             "message",
             "tag",
-            "filename"
+            "display_name"
           ],
-          "highlight": [
-            null
-          ],
+          "highlight": [],
           "sortable": true,
           "header": true,
           "paging": true,
@@ -277,7 +237,7 @@
           "queries": {
             "mode": "all",
             "ids": [
-              3
+              0
             ]
           },
           "field_list": true,
@@ -285,7 +245,7 @@
           "trimFactor": 300,
           "normTimes": true,
           "title": "Documents",
-          "all_fields": true
+          "all_fields": false
         }
       ],
       "notice": false
@@ -321,16 +281,14 @@
       "notice": false,
       "query": "*",
       "pinned": true,
-      "history": [
-        "*",
-      ],
+      "history": [],
       "remember": 10,
       "enable": true
     },
     {
       "type": "filtering",
       "collapse": true,
-      "notice": true,
+      "notice": false,
       "enable": true
     }
   ],
@@ -363,10 +321,8 @@
         "2h",
         "1d"
       ],
-      "timefield": "datetime",
-      "enable": true,
-      "now": false,
-      "filter_id": 0
+      "timefield": "@timestamp",
+      "enable": true
     }
   ],
   "refresh": false
