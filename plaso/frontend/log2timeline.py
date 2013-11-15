@@ -177,9 +177,14 @@ def Main():
       '--ob', '--offset_bytes', dest='image_offset_bytes', action='store',
       default=0, type=int, help='The bytes offset to the image')
 
+  # Build the version information.
+  version_string = u'log2timeline - plaso backend {}'.format(engine.__version__)
+  if engine.VERSION_DEV:
+    version_string = u'{}_{}'.format(
+        version_string, engine.VERSION_DATE)
+
   info_group.add_argument(
-      '-v', '--version', action='version',
-      version='log2timeline - plaso backend %s' % engine.__version__,
+      '-v', '--version', action='version', version=version_string,
       help='Show the current version of the backend.')
 
   info_group.add_argument(

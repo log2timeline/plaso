@@ -44,7 +44,10 @@ from plaso.lib import worker
 
 import pytz
 
-__version__ = '1.0.2_alpha'
+__version__ = '1.1_dev'
+
+VERSION_DEV = True
+VERSION_DATE = '20131114'
 
 
 def GetTimeZoneList():
