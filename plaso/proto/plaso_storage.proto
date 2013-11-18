@@ -221,6 +221,9 @@ message EventObject {
   // Some text based parsers define this attribute for their text
   // representation.
   optional string text = 40;
+
+  // The UUID is a hex string that uniquely identifies the EventObject.
+  optional string uuid = 41;
 };
 
 // The EventTagging is a simple message that describes comments,
@@ -229,10 +232,11 @@ message EventObject {
 // to add more context to certain events.
 message EventTagging {
   // Description of where the EventObject is stored that this
-  // tag is describing. This information is required and can be
-  // used to find and read in the EventObject.
-  required int64 store_number = 1;
-  required int64 store_index = 2;
+  // tag is describing. It is necessary to either define these
+  // two values or the event_uuid, otherwise it will not be
+  // possible to locate the event object this belongs to.
+  optional int64 store_number = 1;
+  optional int64 store_index = 2;
 
   // An arbitrary string that contains a comment describing
   // observations the investigator has about this EventObject.
@@ -252,6 +256,11 @@ message EventTagging {
   };
 
   repeated Tag tags = 5;
+
+  // An UUID value of the particular event object that this tag
+  // belongs to. This value has to be set if the store_number and
+  // store_index are not know at the time of tagging.
+  optional string event_uuid = 6;
 };
 
 // The EventGroup is a simple mechanism to describe a group of
@@ -343,4 +352,35 @@ message PreProcess {
   // All attributes that each preprocessing module produces gets stored
   // inside this field.
   repeated Attribute attributes = 4;
+};
+
+// The AnalysisReport object is a simple message describing a report
+// created from an analysis plugin.
+message AnalysisReport {
+  // Name of the analysis plugin that created this report.
+  optional string plugin_name = 1;
+  // The timestamp of when this report was created.
+  optional int64 time_compiled = 2;
+
+  // The actual report content, the free flowing text.
+  // The text will have few notations possible:
+  //    {image:X} - Where X is an integer, indicating the entry number
+  //                inside the images field (counter starting from zero).
+  //                This will indicate where images should be included in the
+  //                final displayed report.
+  //    {heading_start} / {heading_end}: An indication of main header.
+  //    {subheading_start} / {subheading_end}: An indication of a subheader.
+  // This is no way meant as a "HTML/XML look-alike" in terms of defintions.
+  // This is mearly a very simple implementation that only contains these
+  // "special" tags, meant to make it easier to export the final report in a
+  // HTML or any other format for later viewing.
+  optional string text = 3;
+
+  // Optional repeated field of images that can be saved as binary data.
+  repeated bytes images = 4;
+
+  // Some reports may contain counters, or some statistics that can be
+  // retrieved later on for additional analysis or processing.
+  optional Dict report_dict = 5;
+  optional Array report_array = 6;
 };

@@ -365,7 +365,7 @@ class EventObject(object):
   # attributes that should not be used during evaluation of whether two
   # EventObjects are the same.
   COMPARE_EXCLUDE = frozenset([
-      'timestamp', 'inode', 'pathspec', 'filename',
+      'timestamp', 'inode', 'pathspec', 'filename', 'uuid',
       'data_type', 'display_name', 'store_number', 'store_index'])
 
   parent_container = None
@@ -374,6 +374,7 @@ class EventObject(object):
   def __init__(self):
     """Initializes the event object."""
     self.attributes = {}
+    self.uuid = uuid.uuid4().get_hex()
     if self.DATA_TYPE:
       self.data_type = self.DATA_TYPE
 
@@ -917,14 +918,20 @@ class EventTag(object):
   (optional attributes surrounded with brackets)
     + store_number: An integer, pointing to the store the EventObject is.
     + store_index: An index into the store where the EventObject is.
+    + event_uuid: An UUID value of the event this tag belongs to.
     + [comment]: An arbitrary string containing comments about the event.
     + [color]: A string containing color information.
     + [tags]: A list of strings with tags, eg: 'Malware', 'Entry Point'.
+
+  The tag either needs to have an event_uuid defined or both the store_number
+  and store_index to be valid (not both, if both defined the store_number and
+  store_index will be used).
   """
 
   def __setattr__(self, attr, value):
     """Overwrite the set attribute function to limit it to right attributes."""
-    if attr in ('store_number', 'store_index', 'comment', 'color', 'tags'):
+    if attr in ('store_number', 'store_index', 'comment', 'color', 'tags',
+                'event_uuid'):
       if attr == 'tags' and not isinstance(value, (list, tuple)):
         raise AttributeError(u'Tags needs to be a list.')
       object.__setattr__(self, attr, value)
@@ -934,21 +941,36 @@ class EventTag(object):
   def __str__(self):
     """Define a string representation of the event."""
     ret = []
-    ret.append('-' * 50)
-    ret.append('{0:>7}:\n\tNumber: {1}\n\tIndex: {2}'.format(
-        'Store', self.store_number, self.store_index))
+    ret.append(u'-' * 50)
+    if getattr(self, 'store_index', 0):
+      ret.append(u'{0:>7}:\n\tNumber: {1}\n\tIndex: {2}'.format(
+          'Store', self.store_number, self.store_index))
+    else:
+      ret.append(u'{0:>7}:\n\tUUID: {1}'.format('Store', self.event_uuid))
     if hasattr(self, 'comment'):
-      ret.append('{:>7}: {}'.format('Comment', self.comment))
+      ret.append(u'{:>7}: {}'.format('Comment', self.comment))
     if hasattr(self, 'color'):
-      ret.append('{:>7}: {}'.format('Color', self.color))
+      ret.append(u'{:>7}: {}'.format('Color', self.color))
     if hasattr(self, 'tags'):
-      ret.append('{:>7}: {}'.format('Tags', u','.join(self.tags)))
+      ret.append(u'{:>7}: {}'.format('Tags', u','.join(self.tags)))
 
     return u'\n'.join(ret)
 
   def ToProto(self):
     """Serialize an EventTag to EventTagging protobuf."""
     proto = plaso_storage_pb2.EventTagging()
+
+    valid = False
+    if getattr(self, 'event_uuid', None):
+      valid = True
+    else:
+      if getattr(self, 'store_number', 0) and getattr(
+          self, 'store_index', -1) >= 0:
+        valid = True
+
+    if not valid:
+      raise RuntimeError(
+          u'Invalid tag object. Need to define UUID or store information')
 
     for attr in self.__dict__:
       if attr == 'tags':
@@ -959,6 +981,14 @@ class EventTag(object):
         attribute_value = getattr(self, attr, None)
         if attribute_value != None:
           setattr(proto, attr, attribute_value)
+
+    comment = getattr(self, 'comment', '')
+    if comment:
+      proto.comment = comment
+
+    color = getattr(self, 'color', '')
+    if color:
+      proto.color = color
 
     return proto
 
