@@ -126,9 +126,19 @@ class PlasoStorage(object):
   STORAGE_VERSION = 1
 
   # Define structs.
+  TAG_STORE_STRUCT = construct.Struct(
+      'tag_store', construct.ULInt32('store_number'),
+      construct.ULInt32('store_index'))
+
+  TAG_UUID_STRUCT = construct.Struct(
+      'tag_uuid', construct.PascalString('event_uuid'))
+
   TAG_INDEX_STRUCT = construct.Struct(
-      'tag_index', construct.ULInt32('offset'),
-      construct.ULInt32('store_number'), construct.ULInt32('store_index'))
+      'tag_index', construct.Byte('type'), construct.ULInt32('offset'),
+      construct.IfThenElse(
+          'tag', lambda ctx: ctx['type'] == 1, TAG_STORE_STRUCT,
+          TAG_UUID_STRUCT))
+
   INTEGER = construct.ULInt32('integer')
 
   source_short_map = {}
@@ -482,7 +492,8 @@ class PlasoStorage(object):
           self._merge_buffer,
           (new_event_object.timestamp, store_number, new_event_object))
 
-    tag = self.GetTag(event_read.store_number, event_read.store_index)
+    tag = self.GetTag(
+        event_read.store_number, event_read.store_index, event_read.uuid)
     if tag:
       event_read.tag = tag
 
@@ -803,9 +814,14 @@ class PlasoStorage(object):
       tag_str = tag.ToProtoString()
       packed = struct.pack('<I', len(tag_str)) + tag_str
       ofs = struct.pack('<I', size)
-      sn = struct.pack('<I', tag.store_number)
-      si = struct.pack('<I', tag.store_index)
-      tag_index.append('%s%s%s' % (ofs, sn, si))
+      if getattr(tag, 'store_number', 0):
+        struct_string = construct.Byte(
+            'type').build(1) + ofs + self.TAG_STORE_STRUCT.build(tag)
+      else:
+        struct_string = construct.Byte(
+            'type').build(2) + ofs + self.TAG_UUID_STRUCT.build(tag)
+
+      tag_index.append(struct_string)
       size += len(packed)
       tag_packed.append(packed)
 
@@ -827,12 +843,13 @@ class PlasoStorage(object):
           yield group_entry
           group_entry = GetEventGroupProto(fh)
 
-  def GetTag(self, store_number, store_index):
+  def GetTag(self, store_number, store_index, uuid):
     """Return a EventTagging proto if it exists from a store number and index.
 
     Args:
       store_number: The EventObject store number.
       store_index: The EventObject store index.
+      uuid: The EventObject UUID value.
 
     Returns:
       An EventTagging protobuf, if one exists.
@@ -841,6 +858,9 @@ class PlasoStorage(object):
       self._ReadTagInformationIntoMemory()
 
     key_index = '{}:{}'.format(store_number, store_index)
+
+    if key_index not in self._tag_memory:
+      key_index = uuid
 
     if key_index not in self._tag_memory:
       return
@@ -856,45 +876,31 @@ class PlasoStorage(object):
     self._tag_memory = {}
 
     for name in self.zipfile.namelist():
-      if 'plaso_tag_index.' in name:
-        fh = self.zipfile.open(name, 'r')
-        _, _, number_str = name.rpartition('.')
-        number = int(number_str)
-        while 1:
-          raw = fh.read(12)
-          if not raw:
-            break
-          if len(raw) != 12:
-            break
-          ofs, read_number, read_index = struct.unpack('<III', raw)
-          read_key = '{}:{}'.format(read_number, read_index)
-          self._tag_memory[read_key] = (number, ofs)
-
-  def _GetTagFromIndex(self, fh, store_number, store_index):
-    """Return an offset into a tag store for a given store number and index.
-
-    Search through an index file that maintains information about where
-    tag information lies in the plaso_tagging. files that store the actual
-    EventTagging protobuf.
-
-    Args:
-      fh: The filehandle to the tag index file.
-      store_number: The store number of the EventObject we are looking for.
-      store_index: The index into that store.
-
-    Returns:
-      An offset into where the EventTagging protobuf is stored.
-    """
-    while 1:
-      raw = fh.read(12)
-      if not raw:
-        break
-      data = self.TAG_INDEX_STRUCT.parse(raw)
-      if store_number != data['store_number']:
+      if not 'plaso_tag_index.' in name:
         continue
+      fh = self.zipfile.open(name, 'r')
+      _, _, number_str = name.rpartition('.')
+      number = int(number_str)
+      while 1:
+        try:
+          tag_index = self.TAG_INDEX_STRUCT.parse_stream(fh)
+        except (construct.FieldError, AttributeError):
+          break
 
-      if store_index == data['store_index']:
-        return data['offset']
+        tag_type = tag_index.get('type', 0)
+        tag_entry = tag_index.get('tag', {})
+        if tag_type == 1:
+          read_key = '{}:{}'.format(
+              tag_entry.get('store_number', 0),
+              tag_entry.get('store_index', 0))
+        elif tag_type == 2:
+          read_key = tag_entry.get('event_uuid', '0')
+        else:
+          logging.warning('Unknown tag type: {}'.format(tag_type))
+          break
+
+        offset = tag_index.get('offset')
+        self._tag_memory[read_key] = (number, offset)
 
   def GetTagging(self):
     """Return a generator that reads all tagging information from storage.
