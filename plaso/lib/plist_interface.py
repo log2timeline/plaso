@@ -260,6 +260,39 @@ def GetKeys(top_level, keys, depth=1):
   return match
 
 
+def GetKeysDefaultEmpty(top_level, keys, depth=1):
+  """Return keys nested in a plist dict, defaulting to an empty value.
+
+  The method GetKeys fails if the supplied key does not exist within the
+  plist object. This alternate method behaves the same way as GetKeys
+  except that instead of raising an error if the key doesn't exist it will
+  assign a default empty value ('') to the field.
+
+  Args:
+    top_level: Plist in dictionary form.
+    keys: A list of keys that should be returned.
+    depth: Defines how many levels deep to check for a match.
+
+  Returns:
+    A dictionary with just the keys requested.
+  """
+  keys = set(keys)
+  match = {}
+
+  if depth == 1:
+    for key in keys:
+      value = top_level.get(key, None)
+      if value is not None:
+        match[key] = value
+  else:
+    for _, parsed_key, parsed_value in RecurseKey(top_level, depth=depth):
+      if parsed_key in keys:
+        match[parsed_key] = parsed_value
+        if set(match.keys()) == keys:
+          return match
+  return match
+
+
 def GetPlistPlugins(pre_obj=None):
   """Build a list of all available plugins capable of parsing the plist files.
 
