@@ -176,8 +176,13 @@ class OperaGlobalHistoryParser(parser.PlasoParser):
     try:
       popularity_index = int(popularity_line, 10)
     except ValueError:
-      logging.debug(u'Unable to read in popularity index[{}]'.format(
-          popularity_line))
+      try:
+        logging.debug(u'Unable to read in popularity index[{}]'.format(
+            popularity_line))
+      except UnicodeDecodeError:
+        logging.debug(
+            u'Unable to read in popularity index [unable to print '
+            u'bad line]')
       return None, None, None, None
 
     # Try to get the data into unicode.
