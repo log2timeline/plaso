@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """An output module that saves data into an ElasticSearch database."""
+import logging
+import requests
 import sys
 import uuid
 
@@ -47,7 +49,7 @@ class Elastic(output.LogOutputFormatter):
               'than localhost this parameter needs to be passed in. This '
               'should be the IP address or the hostname of the server.'),
           'action': 'store',
-          'default': ''}),
+          'default': '127.0.0.1'}),
       ('--elastic_port', {
           'dest': 'elastic_port',
           'type': int,
@@ -70,8 +72,12 @@ class Elastic(output.LogOutputFormatter):
     self._elastic_db = pyelasticsearch.ElasticSearch(
         u'http://{}:{}'.format(elastic_host, elastic_port))
 
-    self._case_number = getattr(
-        config, 'case_number', u'Plaso_{}'.format(uuid.uuid4().hex))
+    case_number = getattr(config, 'case_number', u'')
+
+    if case_number:
+      self._case_number = case_number
+    else:
+      self._case_number = u'Plaso_{}'.format(uuid.uuid4().hex)
 
     # Build up a list of available hostnames in this storage file.
     self._hostnames = {}
@@ -152,6 +158,7 @@ class Elastic(output.LogOutputFormatter):
     if self._counter % 5000 == 0:
       self._elastic_db.bulk_index('plaso-index', self._case_number, self._data)
       self._data = []
+      print '.',
 
   def Start(self):
     """Create the necessary mapping."""
@@ -177,17 +184,27 @@ class Elastic(output.LogOutputFormatter):
       if self._case_number not in old_mapping:
         self._elastic_db.put_mapping(
             'plaso-index', self._case_number, mapping=mapping)
-    except pyelasticsearch.ElasticHttpNotFoundError:
+    except (pyelasticsearch.ElasticHttpNotFoundError,
+            pyelasticsearch.exceptions.ElasticHttpError):
       try:
         self._elastic_db.create_index('plaso-index', settings={
             'mappings': mapping})
       except pyelasticsearch.IndexAlreadyExistsError:
         raise RuntimeError(u'Unable to created the index')
+    except requests.exceptions.ConnectionError as e:
+      logging.error(
+          u'Unable to proceed, cannot connect to ElasticSearch '
+          u'backend, please verify ElasticSearch connection. Error '
+          u'message given: %s', e)
+      raise RuntimeError(u'Unable to connect to ElasticSearch backend.')
 
     # pylint: disable-msg=unexpected-keyword-arg
     self._elastic_db.health(wait_for_status='yellow')
+
+    print 'Inserting data',
 
   def End(self):
     """Flush on last time."""
     self._elastic_db.bulk_index('plaso-index', self._case_number, self._data)
     self._data = []
+    print '. [DONE]'
