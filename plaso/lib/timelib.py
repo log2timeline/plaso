@@ -386,6 +386,25 @@ class Timestamp(object):
     return int(posix_time) * cls.MICRO_SECONDS_PER_SECOND
 
   @classmethod
+  def FromPosixTimeWithMicrosecond(cls, posix_time, microsecond):
+    """Converts a POSIX timestamp with microsecond into a timestamp.
+
+    The POSIX time is a signed 32-bit or 64-bit value containing:
+      seconds since 1970-01-01 00:00:00
+
+    Args:
+      posix_time: The POSIX timestamp.
+      microsecond: The microseconds to add to the timestamp.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    timestamp = cls.FromPosixTime(posix_time)
+    if not timestamp:
+      return 0
+    return timestamp + microsecond
+
+  @classmethod
   def FromTimeParts(
       cls, year, month, day, hour, minutes, seconds, microseconds=0,
       zone=pytz.utc):
