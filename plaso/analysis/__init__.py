@@ -18,18 +18,21 @@
 from plaso.lib import analysis_interface
 from plaso.lib import errors
 
+# Import statements of analysis plugins.
+from plaso.analysis import browser_search
+
 
 def ListAllPluginNames():
-  """Return a list of all available plugin names."""
+  """Return a list of all available plugin names and it's doc string."""
   results = []
-  for cls_obj in analysis_interface.AnalysisPlugin.classes:
-    results.append(analysis_interface.AnalysisPlugin.classes[cls_obj](
-        None, None).plugin_name)
+  for cls_obj in analysis_interface.AnalysisPlugin.classes.itervalues():
+    doc_string, _, _ = cls_obj.__doc__.partition('\n')
+    results.append((cls_obj(None, None, None).plugin_name, doc_string))
 
   return sorted(results)
 
 
-def LoadPlugins(plugin_names, pre_obj, incoming_queue):
+def LoadPlugins(plugin_names, pre_obj, incoming_queues, outgoing_queue):
   """Yield analysis plugins for a given list of plugin names.
 
   Given a list of plugin names this method finds the analysis
@@ -39,8 +42,10 @@ def LoadPlugins(plugin_names, pre_obj, incoming_queue):
     plugin_names: A list of plugin names that should be loaded up. This
                   shold be a list of strings.
     pre_obj: The pre-processing object.
-    incoming_queue: A queue (QueueInterface object) that the plugin
-                    uses to read in incoming events to analyse.
+    incoming_queues: A list of queues (QueueInterface object) that the plugin
+                     uses to read in incoming events to analyse.
+    outgoing_queue: The queue that is used by all plugins to send in compiled
+                    data, including reports, tags and anamolies.
 
   Yields:
     A list of initialized analysis plugin objects.
@@ -54,6 +59,11 @@ def LoadPlugins(plugin_names, pre_obj, incoming_queue):
   except AttributeError:
     raise errors.BadConfigOption(u'Plugin names should be a list of strings.')
 
-  for name, obj in analysis_interface.AnalysisPlugin.classes.items():
-    if name.lower() in plugin_names_lower:
-      yield obj(pre_obj, incoming_queue)
+  for obj in analysis_interface.AnalysisPlugin.classes.itervalues():
+    if obj.NAME.lower() in plugin_names_lower:
+      queue_index = plugin_names_lower.index(obj.NAME.lower())
+      try:
+        incoming_queue = incoming_queues[queue_index]
+      except (TypeError, IndexError):
+        incoming_queue = None
+      yield obj(pre_obj, incoming_queue, outgoing_queue)

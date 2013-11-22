@@ -102,6 +102,7 @@ import sys
 import time
 import zipfile
 
+from plaso.lib import analysis_interface
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import limit
@@ -700,6 +701,46 @@ class PlasoStorage(object):
         return True
     return False
 
+  def HasReports(self):
+    """Return a bool indicating whether or not a Report file is stored."""
+    for name in self.zipfile.namelist():
+      if 'plaso_report.' in name:
+        return True
+
+    return False
+
+  def StoreReport(self, report):
+    """Store an analysis report.
+
+    Args:
+      report: An analysis report object.
+    """
+    report_number = 1
+    for name in self.zipfile.namelist():
+      if 'plaso_report.' in name:
+        _, _, number_string = name.partition('.')
+        try:
+          number = int(number_string, 10)
+        except ValueError:
+          logging.error(u'Unable to read in report number.')
+          number = 0
+        if number >= report_number:
+          report_number = number + 1
+
+    report_string = report.ToProtoString()
+    self.zipfile.writestr(
+        'plaso_report.%06d' % report_number, report_string)
+
+  def GetReports(self):
+    """Read in all stored analysis reports from storage and yield them."""
+    for name in self.zipfile.namelist():
+      if 'plaso_report.' in name:
+        report_fh = self.zipfile.open(name, 'r')
+        report_string = report_fh.read(1024 * 1024 * 24)
+        report = analysis_interface.AnalysisReport()
+        report.FromProtoString(report_string)
+        yield report
+
   def StoreGrouping(self, rows):
     """Store group information into the storage file.
 
@@ -793,7 +834,8 @@ class PlasoStorage(object):
 
     self._pre_obj.collection_information['Action'] = 'Adding tags to storage.'
     self._pre_obj.collection_information['time_of_run'] = time.time()
-    self._pre_obj.counter = collections.Counter()
+    if not hasattr(self._pre_obj, 'counter'):
+      self._pre_obj.counter = collections.Counter()
 
     tag_number = 1
     if self.HasTagging():
@@ -807,7 +849,7 @@ class PlasoStorage(object):
     tag_index = []
     size = 0
     for tag in tags:
-      self._pre_obj.counter['Total'] += 1
+      self._pre_obj.counter['Total Tags'] += 1
       if hasattr(tag, 'tags'):
         for tag_entry in tag.tags:
           self._pre_obj.counter[tag_entry] += 1

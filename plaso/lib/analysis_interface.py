@@ -16,11 +16,20 @@
 # limitations under the License.
 """This file contains basic interface for analysis plugins."""
 import abc
+import construct
 import time
 
 from plaso.lib import event
+from plaso.lib import putils
 from plaso.lib import registry
 from plaso.proto import plaso_storage_pb2
+
+# Constants representing the type of mesages the report deals with.
+MESSAGE_REPORT = 1
+MESSAGE_TAG = 2
+MESSAGE_ANOMALY = 3
+
+MESSAGE_STRUCT = construct.ULInt8('type')
 
 
 class AnalysisPlugin(object):
@@ -32,6 +41,11 @@ class AnalysisPlugin(object):
   # The URLS should contain a list of URL's with additional information about
   # this analysis plugin.
   URLS = []
+
+  # The name of the plugin. This is the name that is matced against when
+  # loading plugins, so it is important that this name is short, concise and
+  # explains the nature of the plugin easily. It also needs to be unique.
+  NAME = 'Plugin'
 
   # A flag indicating whether or not this is a "heavy" plugin. What defines
   # is something that is perhaps too computationally heavy to be run during
@@ -46,16 +60,32 @@ class AnalysisPlugin(object):
   TYPE_STATISTICS = 2
   TYPE_TAG = 3
 
-  def __init__(self, pre_obj, incoming_queue):
+  # Optional arguments to be added to the argument parser.
+  # An example would be:
+  #   ARGUMENTS = [('--myparameter', {
+  #       'action': 'store',
+  #       'help': 'This is my parameter help',
+  #       'dest': 'myparameter',
+  #       'default': '',
+  #       'type': 'unicode'})]
+  #
+  # Where all arguments into the dict object have a direct translation
+  # into the argparse parser.
+  ARGUMENTS = []
+
+  def __init__(self, pre_obj, incoming_queue, outgoing_queue):
     """Constructor for a registry plugin.
 
     Args:
       pre_obj: The pre-processing object that contains information gathered
       during preprocessing of data.
       incoming_queue: A queue that is used to listen to incoming events.
+      outgoing_queue: The queue used to send back reports, tags and anomaly
+                      related events.
     """
     self._config = pre_obj
     self._queue = incoming_queue
+    self._outgoing_queue = outgoing_queue
 
     # An AnalysisReport object.
     self._report = AnalysisReport()
@@ -72,11 +102,20 @@ class AnalysisPlugin(object):
   @property
   def plugin_name(self):
     """Return the name of the plugin."""
-    return self.__class__.__name__
+    return self.NAME
 
   @abc.abstractmethod
   def ExamineEvent(self, event_object):
     """Take an EventObject and send it through analysis."""
+
+  @abc.abstractmethod
+  def CompileReport(self):
+    """Compile a report object based on gathered information.
+
+    After the plugin has received every copy of an event to
+    analyze this function will be called so that the report
+    can be assembled.
+    """
 
   def ExamineSerializedEvent(self, serialized_event):
     """Take a serialized event and send it through analysis."""
@@ -88,20 +127,19 @@ class AnalysisPlugin(object):
   def RunPlugin(self):
     """For each item in the queue send the read event to analysis."""
     for item in self._queue.PopItems():
-      self.ExamineEvent(item)
+      self.ExamineSerializedEvent(item)
 
-  def GetReport(self):
-    """Return a report object back from the plugin."""
+    self.CompileReport()
     self._report.time_compiled = int(time.time() * 1e6)
-    return self._report
+    self._outgoing_queue.Queue(
+        MESSAGE_STRUCT.build(MESSAGE_REPORT) + self._report.ToProtoString())
 
-  def GetAnomalies(self):
-    """Return a list of anomalies produced by the plugin."""
-    return self._anomalies
+    for tag in self._tags:
+      self._outgoing_queue.Queue(
+          MESSAGE_STRUCT.build(MESSAGE_TAG) + tag.ToProtoString())
 
-  def GetTags(self):
-    """Return a list of tags produced by the plugin."""
-    return self._tags
+    # TODO: Add anomalies into the queue (need to implement anomalies
+    # first).
 
 
 class AnalysisReport(object):
@@ -144,7 +182,21 @@ class AnalysisReport(object):
       raise RuntimeError('Unsupported proto')
 
     for proto_attribute, value in proto.ListFields():
-      setattr(self, proto_attribute.name, value)
+      if proto_attribute.name == 'report_dict':
+        new_value = {}
+        for proto_dict in proto.report_dict.attributes:
+          dict_key, dict_value = event.AttributeFromProto(proto_dict)
+          new_value[dict_key] = dict_value
+        setattr(self, proto_attribute.name, new_value)
+      elif proto_attribute.name == 'report_array':
+        new_value = []
+
+        for proto_array in proto.report_array.values:
+          _, list_value = event.AttributeFromProto(proto_array)
+          new_value.append(list_value)
+        setattr(self, proto_attribute.name, new_value)
+      else:
+        setattr(self, proto_attribute.name, value)
 
   def ToProtoString(self):
     """Serialize the object into a string."""
@@ -158,6 +210,24 @@ class AnalysisReport(object):
     proto.ParseFromString(proto_string)
     self.FromProto(proto)
 
-  # TODO: Implement a __str__ function or some sort of textual
-  # representation of the analysis report. Even a HTML output function
-  # that would take into consideration the images tag, etc.
+  def String(self):
+    """Return an unicode string representation of the report."""
+    return unicode(self)
+
+  def __unicode__(self):
+    """Return an unicode string representation of the report."""
+    # TODO: Make this a more complete function that includes images
+    # and the option of saving as a full fledged HTML document.
+    string_list = []
+    string_list.append(u'Report generated from: {}'.format(self.plugin_name))
+    if getattr(self, 'time_compiled', 0):
+      string_list.append(u'Generated on: {}'.format(
+          putils.PrintTimestamp(self.time_compiled)))
+    if getattr(self, 'filter_string', ''):
+      string_list.append(u'Filter String: {}'.format(
+          getattr(self, 'filter_string', '')))
+    string_list.append(u'')
+    string_list.append(u'Report text:')
+    string_list.append(self.text)
+
+    return u'\n'.join(string_list)
