@@ -44,10 +44,10 @@ def GetInformation(params):
     return
 
   for info in infos:
-    yield DisplayInformation(info, params)
+    yield DisplayInformation(info, params, store)
 
 
-def DisplayInformation(info, params):
+def DisplayInformation(info, params, store):
   """Return information gathered from storage."""
   header = u''
   information = u''
@@ -94,8 +94,19 @@ def DisplayInformation(info, params):
   else:
     preprocessing = u'Preprocessing information omitted (run with verbose).'
 
-  return u'{0}\n{1}\n{2}\n{3}'.format(
-      header, information, preprocessing, '-+' * 40)
+  if store.HasReports():
+    reports = u'Reporting information omitted (run with verbose).'
+  else:
+    reports = u'No reports stored.'
+
+  if params.verbose and store.HasReports():
+    report_list = []
+    for report in store.GetReports():
+      report_list.append(report.String())
+    reports = u'\n'.join(report_list)
+
+  return u'{0}\n{1}\n{2}\n{3}\n{4}'.format(
+      header, information, preprocessing, reports, '-+' * 40)
 
 
 def Main():
