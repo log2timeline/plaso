@@ -383,4 +383,7 @@ message AnalysisReport {
   // retrieved later on for additional analysis or processing.
   optional Dict report_dict = 5;
   optional Array report_array = 6;
+
+  // If a filter string was used on the output, it's saved here.
+  optional string filter_string = 7;
 };

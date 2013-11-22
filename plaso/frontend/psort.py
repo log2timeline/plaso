@@ -26,20 +26,24 @@ import collections
 import datetime
 import time
 import os
+import multiprocessing
 import locale
 import logging
 import pdb
 import sys
 
+from plaso import analysis
 from plaso import filters
 from plaso import formatters   # pylint: disable-msg=W0611
 from plaso import output   # pylint: disable-msg=W0611
 
+from plaso.lib import analysis_interface
 from plaso.lib import bufferlib
 from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
+from plaso.lib import queue
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.lib import utils
@@ -47,7 +51,7 @@ from plaso.proto import plaso_storage_pb2
 import pytz
 
 
-def SetupStorage(input_file_path):
+def SetupStorage(input_file_path, read_only=True):
   """Sets up the storage object.
 
   Attempts to initialize the storage object from the PlasoStorage library.  If
@@ -56,12 +60,14 @@ def SetupStorage(input_file_path):
 
   Args:
     input_file_path: Filesystem path to the plaso storage container.
+    read_only: A boolean indicating whether we need read or write support to the
+               storage file.
 
   Returns:
     A storage.PlasoStorage object.
   """
   try:
-    return storage.PlasoStorage(input_file_path, read_only=True)
+    return storage.PlasoStorage(input_file_path, read_only=read_only)
   except IOError as details:
     logging.error('IO ERROR: %s', details)
   else:
@@ -70,7 +76,8 @@ def SetupStorage(input_file_path):
 
 
 def ProcessOutput(
-    output_buffer, formatter, my_filter=None, filter_buffer=None):
+    output_buffer, formatter, my_filter=None, filter_buffer=None,
+    analysis_queues=None):
   """Fetch EventObjects from storage and process and filter them.
 
   Args:
@@ -79,10 +86,13 @@ def ProcessOutput(
     my_filter: A filter object.
     filter_buffer: A filter buffer used to store previously discarded
     events to store time slice history.
+    analysis_queues: A list of analysis queues.
   """
   counter = collections.Counter()
   my_limit = getattr(my_filter, 'limit', 0)
   forward_entries = 0
+  if not analysis_queues:
+    analysis_queues = []
 
   event_object = formatter.FetchEntry()
   while event_object:
@@ -102,15 +112,15 @@ def ProcessOutput(
             counter['Events Added From Slice'] += 1
             counter['Events Included'] += 1
             counter['Events Filtered Out'] -= 1
-            output_buffer.Append(event_in_buffer)
-        output_buffer.Append(event_object)
+            _AppendEvent(event_in_buffer, output_buffer, analysis_queues)
+        _AppendEvent(event_object, output_buffer, analysis_queues)
         if my_limit:
           if counter['Events Included'] == my_limit:
             break
       else:
         if filter_buffer and forward_entries:
           if forward_entries <= filter_buffer.size:
-            output_buffer.Append(event_object)
+            _AppendEvent(event_object, output_buffer, analysis_queues)
             forward_entries += 1
             counter['Events Added From Slice'] += 1
             counter['Events Included'] += 1
@@ -125,7 +135,7 @@ def ProcessOutput(
           counter['Events Filtered Out'] += 1
     else:
       counter['Events Included'] += 1
-      output_buffer.Append(event_object)
+      _AppendEvent(event_object, output_buffer, analysis_queues)
 
     event_object = formatter.FetchEntry()
 
@@ -137,11 +147,33 @@ def ProcessOutput(
   return counter
 
 
+def _AppendEvent(event_object, output_buffer, analysis_queues):
+  """Append an event object to an output buffer and queues."""
+  output_buffer.Append(event_object)
+
+  # Needed due to duplicate removals, if two events
+  # are merged then we'll just pick the first inode value.
+  inode = getattr(event_object, 'inode', None)
+  if isinstance(inode, basestring):
+    inode_list = inode.split(';')
+    try:
+      new_inode = int(inode_list[0], 10)
+    except (ValueError, IndexError):
+      new_inode = 0
+
+    event_object.inode = new_inode
+
+  for analysis_queue in analysis_queues:
+    analysis_queue.Queue(event_object.ToProtoString())
+
+
 def ParseStorage(my_args):
   """Open a storage file and parse through it."""
   filter_use = None
   filter_buffer = None
   counter = None
+  analysis_processes = []
+
   if my_args.filter:
     filter_use = filters.GetFilter(my_args.filter)
     if not filter_use:
@@ -177,7 +209,12 @@ def ParseStorage(my_args):
             'is introduced to allow you to read this message')
         time.sleep(5)
 
-  with SetupStorage(my_args.storagefile) as store:
+  if my_args.analysis_plugins:
+    read_only = False
+  else:
+    read_only = True
+
+  with SetupStorage(my_args.storagefile, read_only) as store:
     # Identify which stores to use.
     store.SetStoreLimit(filter_use)
 
@@ -198,17 +235,120 @@ def ParseStorage(my_args):
       logging.error(u'Unable to proceed, output buffer not available.')
       sys.exit(1)
 
+    if my_args.analysis_plugins:
+      logging.info('Starting analysis plugins.')
+      pre_obj = store.GetStorageInformation()[-1]
+
+      # Fill in the collection information.
+      pre_obj.collection_information = {}
+      encoding = getattr(pre_obj, 'preferred_encoding', None)
+      if encoding:
+        cmd_line = ' '.join(sys.argv)
+        try:
+          pre_obj.collection_information['cmd_line'] = cmd_line.decode(encoding)
+        except UnicodeDecodeError:
+          pass
+      pre_obj.collection_information['file_processed'] = my_args.storagefile
+      pre_obj.collection_information['method'] = 'Running Analysis Plugins'
+      pre_obj.collection_information['plugins'] = my_args.analysis_plugins
+      pre_obj.collection_information['time_of_run'] = time.time()
+
+      pre_obj.counter = collections.Counter()
+
+      # Assign the preprocessing object to the storage.
+      # This is normally done in the construction of the storage object,
+      # however we cannot do that here since the pre processing object is
+      # stored inside the storage file, so we need to open it first to
+      # be able to read it in, before we make changes to it. Thus we need
+      # to access this protected member of the class.
+      # pylint: disable-msg=protected-access
+      store._pre_obj = pre_obj
+
+      # Start queues and load up plugins.
+      analysis_output_queue = queue.MultiThreadedQueue()
+      analysis_queues = []
+      analysis_plugins_list = [
+          x.strip() for x in my_args.analysis_plugins.split(',')]
+      for _ in xrange(0, len(analysis_plugins_list)):
+        analysis_queues.append(queue.MultiThreadedQueue())
+
+      analysis_plugins = analysis.LoadPlugins(
+          analysis_plugins_list, pre_obj, analysis_queues,
+          analysis_output_queue)
+
+      # Now we need to start all the plugins.
+      for analysis_plugin in analysis_plugins:
+        analysis_processes.append(multiprocessing.Process(
+            name='Analysis {}'.format(analysis_plugin.plugin_name),
+            target=analysis_plugin.RunPlugin))
+        analysis_processes[-1].start()
+        logging.info(
+            u'Plugin: [{}] started.'.format(analysis_plugin.plugin_name))
+    else:
+      analysis_queues = []
+
     with output_lib.EventBuffer(formatter, my_args.dedup) as output_buffer:
       counter = ProcessOutput(
-          output_buffer, formatter, filter_use, filter_buffer)
+          output_buffer, formatter, filter_use, filter_buffer,
+          analysis_queues)
 
     for information in store.GetStorageInformation():
       if hasattr(information, 'counter'):
         counter['Stored Events'] += information.counter['total']
 
+    logging.info('Output processing is done.')
+
+    # Get all reports and tags from analysis plugins.
+    if my_args.analysis_plugins:
+      logging.info('Processing data from analysis plugins.')
+      for analysis_queue in analysis_queues:
+        analysis_queue.Close()
+
+      # Wait for all analysis plugins to complete.
+      for number, analysis_process in enumerate(analysis_processes):
+        logging.debug(
+            u'Waiting for analysis plugin: {} to complete.'.format(number))
+        if analysis_process.is_alive():
+          analysis_process.join(10)
+        else:
+          logging.warning(u'Plugin {} already stopped.'.format(number))
+          analysis_process.terminate()
+      logging.debug(u'All analysis plugins are now stopped.')
+
+      # Go over each output.
+      analysis_output_queue.Close()
+      tags = []
+      for item in analysis_output_queue.PopItems():
+        item_type = analysis_interface.MESSAGE_STRUCT.parse(item[0:1])
+        item_str = item[1:]
+
+        if item_type == analysis_interface.MESSAGE_REPORT:
+          report = analysis_interface.AnalysisReport()
+          report.FromProtoString(item_str)
+          pre_obj.counter['Total Reports'] += 1
+          pre_obj.counter[u'Report: {}'.format(report.plugin_name)] += 1
+
+          if my_args.filter:
+            report.filter_string = my_args.filter
+
+          # For now we print the report to disk and then save it.
+          # TODO: Have the option of saving to a separate file and
+          # do something more here, for instance saving into a HTML
+          # file, or something else (including potential images).
+          print report.String()
+          store.StoreReport(report)
+        elif item_type == analysis_interface.MESSAGE_TAG:
+          tag = event.EventTag()
+          tag.FromProtoString(item_str)
+          tags.append(tag)
+
+      if tags:
+        store.StoreTagging(tags)
+
   if filter_use and not counter['Limited By']:
     counter['Filter By Date'] = counter['Stored Events'] - counter[
         'Events Included'] - counter['Events Filtered Out']
+
   return counter
 
 
@@ -222,6 +362,8 @@ def ProcessArguments(arguments):
   tool_group = parser.add_argument_group('Optional Arguments For Psort')
   output_group = parser.add_argument_group(
       'Optional Arguments For Output Modules')
+  analysis_group = parser.add_argument_group(
+      'Optional Arguments For Analysis Modules')
 
   tool_group.add_argument(
       '-d', '--debug', action='store_true', dest='debug', default=False,
@@ -243,6 +385,11 @@ def ProcessArguments(arguments):
   tool_group.add_argument(
       '-o', '--output_format', metavar='FORMAT', dest='output_format',
       default='dynamic', help='Output format.  -o list to see loaded modules.')
+
+  tool_group.add_argument(
+      '--analysis', metavar='PLUGIN_LIST', dest='analysis_plugins',
+      default='', action='store', type=unicode, help=(
+          'A comma separated list of analysis plugin names to be loaded.'))
 
   tool_group.add_argument(
       '-z', '--zone', metavar='TIMEZONE', default='UTC', dest='timezone',
@@ -302,6 +449,36 @@ def ProcessArguments(arguments):
       for parameter, config in output_module.ARGUMENTS:
         output_group.add_argument(parameter, **config)
 
+  # Build the analysis output module parameters (if included).
+  if '--analysis' in arguments:
+    analysis_index = arguments.index('--analysis')
+    # Get the list of plugins that should be loaded.
+    plugin_string = arguments[analysis_index + 1]
+    plugin_list = set([x.strip().lower() for x in plugin_string.split(',')])
+
+    # Get a list of all available plugins.
+    analysis_plugins = set(
+        [x.lower() for x, _ in analysis.ListAllPluginNames()])
+
+    # Get a list of the selected plugins (ignoring selections that did not have
+    # an actual plugin behind it).
+    plugins_to_load = analysis_plugins.intersection(plugin_list)
+
+    # Check to see if we are trying to load plugins that do not exist.
+    difference = plugin_list.difference(analysis_plugins)
+    if difference:
+      parser.print_help()
+      print ' '
+      print u'Trying to load plugins that do not exist: {}'.format(
+          u' '.join(difference))
+      sys.exit(1)
+
+    plugins = analysis.LoadPlugins(plugins_to_load, None, None, None)
+    for plugin in plugins:
+      if plugin.ARGUMENTS:
+        for parameter, config in plugin.ARGUMENTS:
+          analysis_group.add_argument(parameter, **config)
+
   my_args = parser.parse_args(args=arguments)
 
   format_str = '[%(levelname)s] %(message)s'
@@ -325,6 +502,13 @@ def ProcessArguments(arguments):
         _, _, diff = date_str.rpartition('-')
         diff_string = '-{}'.format(diff)
       print utils.FormatOutputString(zone, diff_string, max_length)
+    print '-' * 80
+    sys.exit(0)
+
+  if my_args.analysis_plugins == 'list':
+    print utils.FormatHeader('Analysis Modules')
+    for name, description in analysis.ListAllPluginNames():
+      print utils.FormatOutputString(name, description, 10)
     print '-' * 80
     sys.exit(0)
 
@@ -394,5 +578,6 @@ def Main(my_args):
 
 
 if __name__ == '__main__':
+  multiprocessing.freeze_support()
   my_options = ProcessArguments(sys.argv[1:])
   Main(my_options)
