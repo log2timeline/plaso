@@ -127,7 +127,12 @@ if __name__ == '__main__':
   for python_binding in parser_libraries:
     libname = 'lib{}'.format(python_binding.__name__[2:])
     installed_version = int(python_binding.get_version())
-    available_version = CheckLibyalGoogleDriveVersion(libname)
+    try:
+      available_version = CheckLibyalGoogleDriveVersion(libname)
+    except urllib2.URLError:
+      print ('Unable to verify libyal. Is this computer connected to the '
+             'Internet?')
+      break
 
     if installed_version != available_version:
       mismatch = True
