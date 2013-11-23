@@ -649,7 +649,7 @@ def Main():
       """)
 
   description = (
-      u'PLASM (Plaso Langar Að Safna Minna)- Application to group and tag '
+      u'PLASM (Plaso Langar Ad Safna Minna)- Application to group and tag '
       u'Plaso storage files.')
 
   argument_parser = argparse.ArgumentParser(
