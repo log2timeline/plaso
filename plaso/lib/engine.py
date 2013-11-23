@@ -47,7 +47,7 @@ import pytz
 __version__ = '1.1_dev'
 
 VERSION_DEV = True
-VERSION_DATE = '20131122'
+VERSION_DATE = '20131123'
 
 
 def GetTimeZoneList():
