@@ -134,8 +134,9 @@ class AnalyzeBrowserSearchPlugin(analysis_interface.AnalysisPlugin):
   """Analyze browser search entries from events."""
 
   NAME = 'browser_search'
-  # Indicate that we can run this plugin during regular extraction.
-  HEAVY = False
+
+  # Indicate that we do not want to run this plugin during regular extraction.
+  ENABLE_IN_EXTRACTION = False
 
   # Here we define filters and callback methods for all hits on each filter.
   FILTERS = (
@@ -198,7 +199,7 @@ class AnalyzeBrowserSearchPlugin(analysis_interface.AnalysisPlugin):
     for search_engine, terms in sorted(results.items()):
       text += u' == ENGINE: {} ==\n'.format(search_engine)
       for search_term, count in sorted(
-          terms.iteritems(), key=lambda x: x[1], reverse=True):
+          terms.iteritems(), key=lambda x: (x[1], x[0]), reverse=True):
         text += u'{} {}\n'.format(count, search_term)
       text += u'\n'
 
