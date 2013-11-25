@@ -21,6 +21,7 @@ pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
 # To make YAML loading work.
 import argparse
 import datetime
+import locale
 import logging
 import os
 import pprint
@@ -43,11 +44,15 @@ def GetInformation(params):
     yield ''
     return
 
-  for info in infos:
-    yield DisplayInformation(info, params, store)
+  last_entry = False
+
+  for index, info in enumerate(infos):
+    if index == len(infos) - 1:
+      last_entry = True
+    yield DisplayInformation(info, params, store, last_entry)
 
 
-def DisplayInformation(info, params, store):
+def DisplayInformation(info, params, store, last_entry=False):
   """Return information gathered from storage."""
   header = u''
   information = u''
@@ -94,12 +99,15 @@ def DisplayInformation(info, params, store):
   else:
     preprocessing = u'Preprocessing information omitted (run with verbose).'
 
-  if store.HasReports():
-    reports = u'Reporting information omitted (run with verbose).'
+  if last_entry:
+    if store.HasReports():
+      reports = u'Reporting information omitted (run with verbose).'
+    else:
+      reports = u'No reports stored.'
   else:
-    reports = u'No reports stored.'
+    reports = ''
 
-  if params.verbose and store.HasReports():
+  if params.verbose and last_entry and store.HasReports():
     report_list = []
     for report in store.GetReports():
       report_list.append(report.String())
@@ -144,10 +152,13 @@ collected, what information was gained from the image, etc.
         options.storage_file)
     sys.exit(1)
 
+  # Get preferred encoding values.
+  preferred_encoding = locale.getpreferredencoding()
+
   nothing = True
   for print_info in GetInformation(options):
     nothing = False
-    print print_info
+    print print_info.encode(preferred_encoding)
 
   if nothing:
     print u'No Plaso storage information found.'

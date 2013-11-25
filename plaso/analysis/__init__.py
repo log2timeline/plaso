@@ -20,14 +20,21 @@ from plaso.lib import errors
 
 # Import statements of analysis plugins.
 from plaso.analysis import browser_search
+from plaso.analysis import chrome_extension
 
 
-def ListAllPluginNames():
+def ListAllPluginNames(show_all=True):
   """Return a list of all available plugin names and it's doc string."""
   results = []
   for cls_obj in analysis_interface.AnalysisPlugin.classes.itervalues():
     doc_string, _, _ = cls_obj.__doc__.partition('\n')
-    results.append((cls_obj(None, None, None).plugin_name, doc_string))
+
+    obj = cls_obj(None, None, None)
+    if not show_all and cls_obj.ENABLE_IN_EXTRACTION:
+      results.append((obj.plugin_name, doc_string, obj.plugin_type))
+    elif show_all:
+      results.append((obj.plugin_name, doc_string, obj.plugin_type))
+
 
   return sorted(results)
 
