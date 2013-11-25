@@ -163,8 +163,11 @@ def _AppendEvent(event_object, output_buffer, analysis_queues):
 
     event_object.inode = new_inode
 
+  # TODO: Change this to some other form of serialization for
+  # faster speed (JSON).
+  event_serialized = event_object.ToProtoString()
   for analysis_queue in analysis_queues:
-    analysis_queue.Queue(event_object.ToProtoString())
+    analysis_queue.Queue(event_serialized)
 
 
 def ParseStorage(my_args):
@@ -237,7 +240,14 @@ def ParseStorage(my_args):
 
     if my_args.analysis_plugins:
       logging.info('Starting analysis plugins.')
-      pre_obj = store.GetStorageInformation()[-1]
+      # Within all pre processing objects, try to get the last one that has
+      # time zone information stored in it, the highest chance of it containing
+      # the information we are seeking (defaulting to the last one).
+      pre_objs = store.GetStorageInformation()
+      pre_obj = pre_objs[-1]
+      for obj in pre_objs:
+        if getattr(obj, 'time_zone_str', ''):
+          pre_obj = obj
 
       # Fill in the collection information.
       pre_obj.collection_information = {}
@@ -454,30 +464,31 @@ def ProcessArguments(arguments):
     analysis_index = arguments.index('--analysis')
     # Get the list of plugins that should be loaded.
     plugin_string = arguments[analysis_index + 1]
-    plugin_list = set([x.strip().lower() for x in plugin_string.split(',')])
+    if plugin_string != 'list':
+      plugin_list = set([x.strip().lower() for x in plugin_string.split(',')])
 
-    # Get a list of all available plugins.
-    analysis_plugins = set(
-        [x.lower() for x, _ in analysis.ListAllPluginNames()])
+      # Get a list of all available plugins.
+      analysis_plugins = set(
+          [x.lower() for x, _, _ in analysis.ListAllPluginNames()])
 
-    # Get a list of the selected plugins (ignoring selections that did not have
-    # an actual plugin behind it).
-    plugins_to_load = analysis_plugins.intersection(plugin_list)
+      # Get a list of the selected plugins (ignoring selections that did not
+      # have an actual plugin behind it).
+      plugins_to_load = analysis_plugins.intersection(plugin_list)
 
-    # Check to see if we are trying to load plugins that do not exist.
-    difference = plugin_list.difference(analysis_plugins)
-    if difference:
-      parser.print_help()
-      print ' '
-      print u'Trying to load plugins that do not exist: {}'.format(
-          u' '.join(difference))
-      sys.exit(1)
+      # Check to see if we are trying to load plugins that do not exist.
+      difference = plugin_list.difference(analysis_plugins)
+      if difference:
+        parser.print_help()
+        print ' '
+        print u'Trying to load plugins that do not exist: {}'.format(
+            u' '.join(difference))
+        sys.exit(1)
 
-    plugins = analysis.LoadPlugins(plugins_to_load, None, None, None)
-    for plugin in plugins:
-      if plugin.ARGUMENTS:
-        for parameter, config in plugin.ARGUMENTS:
-          analysis_group.add_argument(parameter, **config)
+      plugins = analysis.LoadPlugins(plugins_to_load, None, None, None)
+      for plugin in plugins:
+        if plugin.ARGUMENTS:
+          for parameter, config in plugin.ARGUMENTS:
+            analysis_group.add_argument(parameter, **config)
 
   my_args = parser.parse_args(args=arguments)
 
@@ -507,8 +518,25 @@ def ProcessArguments(arguments):
 
   if my_args.analysis_plugins == 'list':
     print utils.FormatHeader('Analysis Modules')
-    for name, description in analysis.ListAllPluginNames():
-      print utils.FormatOutputString(name, description, 10)
+    format_length = 10
+    for name, _, _ in analysis.ListAllPluginNames():
+      if len(name) > format_length:
+        format_length = len(name)
+
+    for name, description, plugin_type in analysis.ListAllPluginNames():
+      if plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANNOTATION:
+        type_string = 'Annotation/tagging plugin'
+      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANOMALY:
+        type_string = 'Anomaly plugin'
+      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_REPORT:
+        type_string = 'Summary/Report plugin'
+      elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_STATISTICS:
+        type_string = 'Statistics plugin'
+      else:
+        type_string = 'Unknown type'
+
+      text = u'{} [{}]'.format(description, type_string)
+      print utils.FormatOutputString(name, text, format_length)
     print '-' * 80
     sys.exit(0)
 
