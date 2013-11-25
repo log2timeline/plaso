@@ -83,9 +83,9 @@ class BrowserSearchAnalysisTest(unittest.TestCase):
 
     expected_text = """\
  == ENGINE: GoogleSearch ==
-1 funnycats.exe
 1 really really funny cats
 1 java plugin
+1 funnycats.exe
 1 funny cats
 
 """

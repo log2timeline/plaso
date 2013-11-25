@@ -47,18 +47,22 @@ class AnalysisPlugin(object):
   # explains the nature of the plugin easily. It also needs to be unique.
   NAME = 'Plugin'
 
-  # A flag indicating whether or not this is a "heavy" plugin. What defines
-  # is something that is perhaps too computationally heavy to be run during
-  # event extraction and should rather be run during post-processing.
+  # A flag indicating whether or not this plugin should be run during extraction
+  # phase or reserved entirely for post processing stage.
+  # Typically this would mean that the plugin is perhaps too computationally
+  # heavy to be run during event extraction and should rather be run during
+  # post-processing.
   # Since most plugins should perhaps rather be run during post-processing
-  # this is set to True by default and needs to be overwritten if the plugin
+  # this is set to False by default and needs to be overwritten if the plugin
   # should be able to run during the extraction phase.
-  HEAVY = True
+  ENABLE_IN_EXTRACTION = False
 
   # All the possible report types.
-  TYPE_ANOMALY = 1
-  TYPE_STATISTICS = 2
-  TYPE_TAG = 3
+  TYPE_ANOMALY = 1    # Plugin that is inspecting events for anomalies.
+  TYPE_STATISTICS = 2   # Statistical calculations.
+  TYPE_ANNOTATION = 3    # Inspecting events with the primary purpose of
+                         # annotating or tagging them.
+  TYPE_REPORT = 4    # Inspecting events to provide a summary information.
 
   # Optional arguments to be added to the argument parser.
   # An example would be:
@@ -91,7 +95,7 @@ class AnalysisPlugin(object):
     self._report = AnalysisReport()
     self._report.plugin_name = self.plugin_name
 
-    self.plugin_type = self.TYPE_STATISTICS
+    self.plugin_type = self.TYPE_REPORT
 
     # A list of of all discovered EventAnomaly objects.
     # TODO: Implement the EventAnomaly object.
