@@ -63,7 +63,7 @@ categories = {
         'LsQuarantineParser', 'MacKeeperCacheParser', 'OleCfParser',
         'OpenXMLParser', 'OperaGlobalHistoryParser', 'OperaTypedHistoryEvent',
         'PfileStatParser', 'PlistParser', 'SkypeParser',
-        'SyslogParser'],
+        'SyslogParser', 'UtmpxParser'],
     'android': [
         'AndroidSmsParser'],
 }

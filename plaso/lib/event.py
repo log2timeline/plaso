@@ -21,6 +21,7 @@ which are core components of the storage mechanism of plaso.
 
 """
 import heapq
+import json
 import uuid
 
 from google.protobuf import message
@@ -32,6 +33,18 @@ from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
 import pytz
+
+
+class EventJsonEncoder(json.JSONEncoder):
+  """A method that handles encoding EventObject into JSON."""
+
+  # pylint: disable-msg=method-hidden
+  def default(self, obj):
+    """Overwriting the default JSON encoder to handle EventObjects."""
+    if isinstance(obj, EventTag):
+      return obj.ToJson()
+    else:
+      return super(EventJsonEncoder, self).default(obj)
 
 
 class EventContainer(object):
@@ -444,6 +457,42 @@ class EventObject(object):
       identity.append(inode)
 
     return u'|'.join(map(unicode, identity))
+
+  def ToJson(self):
+    """Returns a serialized JSON object from the EventObject.
+
+    For faster transfer of serialized objects JSON might be preferred
+    over protobuf. However it should not be relied upon for long time
+    storage, since this JSON implementation lacks some serialization
+    capabilities that are in the protobuf implementation.
+
+    Returns:
+      A string containing the EventObject serialized as a JSON object.
+    """
+    # TODO: Move this to ToSerializedForm and FromSerializedForm or
+    # something similar. This function would accept serializing the
+    # event using different serialization, whether that is JSON,
+    # protobufs or something completely different.
+    # This would use a Serializer object interface.
+    attributes = self.GetValues()
+
+    # TODO: Support pathspecs in the JSON output.
+    if 'pathspec' in attributes:
+      del attributes['pathspec']
+
+    return json.dumps(attributes, cls=EventJsonEncoder)
+
+  def FromJson(self, json_string):
+    """Deserialize an EventObject from a JSON object."""
+    attributes = json.loads(json_string)
+
+    for key, value in attributes.iteritems():
+      if key == 'tag':
+        tag = EventTag()
+        tag.FromJson(value)
+        setattr(self, key, tag)
+      else:
+        setattr(self, key, value)
 
   def __eq__(self, event_object):
     """Return a boolean indicating if two EventObject are considered equal.
@@ -956,19 +1005,37 @@ class EventTag(object):
 
     return u'\n'.join(ret)
 
+  def ToJson(self):
+    """Serialize an EventTag to a JSON object."""
+    if not self._IsValidForSerialization():
+      raise RuntimeError(
+          u'Invalid tag object. Need to define UUID or store information')
+
+    return json.dumps(self.__dict__)
+
+  def FromJson(self, json_string):
+    """Deserialize a JSON dump into an EventTag."""
+    attributes = json.loads(json_string)
+
+    for key, value in attributes.iteritems():
+      setattr(self, key, value)
+
+  def _IsValidForSerialization(self):
+    """Return whether or not this is a valid tag object."""
+    if getattr(self, 'event_uuid', None):
+      return True
+
+    if getattr(self, 'store_number', 0) and getattr(
+        self, 'store_index', -1) >= 0:
+      return True
+
+    return False
+
   def ToProto(self):
     """Serialize an EventTag to EventTagging protobuf."""
     proto = plaso_storage_pb2.EventTagging()
 
-    valid = False
-    if getattr(self, 'event_uuid', None):
-      valid = True
-    else:
-      if getattr(self, 'store_number', 0) and getattr(
-          self, 'store_index', -1) >= 0:
-        valid = True
-
-    if not valid:
+    if not self._IsValidForSerialization():
       raise RuntimeError(
           u'Invalid tag object. Need to define UUID or store information')
 

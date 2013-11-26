@@ -17,6 +17,7 @@
 """This file contains basic interface for analysis plugins."""
 import abc
 import construct
+import logging
 import time
 
 from plaso.lib import event
@@ -124,7 +125,12 @@ class AnalysisPlugin(object):
   def ExamineSerializedEvent(self, serialized_event):
     """Take a serialized event and send it through analysis."""
     event_object = event.EventObject()
-    event_object.FromProtoString(serialized_event)
+    try:
+      event_object.FromJson(serialized_event)
+    except ValueError as error_message:
+      logging.warning(u'Unable to deserialize an event. Error: {}'.format(
+          error_message))
+      return
 
     self.ExamineEvent(event_object)
 
