@@ -57,7 +57,7 @@ class BrowserSearchAnalysisTest(unittest.TestCase):
 
     # Fill the incoming queue with events.
     for event_object in parser.Parse(file_object):
-      incoming_queue.AddEvent(event_object.ToProtoString())
+      incoming_queue.AddEvent(event_object.ToJson())
 
     incoming_queue.Close()
 
