@@ -215,7 +215,7 @@ class PlasoEventUnitTest(unittest.TestCase):
     event_b.another_attribute = False
     event_b.metadata = {
         'author': 'Some Random Dude',
-        'version': 1245,
+        'version': 1245L,
         'last_changed': 'Long time ago'}
     event_b.strings = [
         'This ', 'is a ', 'long string']
@@ -256,6 +256,38 @@ class PlasoEventUnitTest(unittest.TestCase):
     test_event = event.EventObject()
     test_event.FromProtoString(serialized)
     self.assertEquals(event_a.EqualityString(), test_event.EqualityString())
+
+    event_f = event.EventObject()
+    event_f.timestamp = 123123123
+    event_f.timestamp_desc = u'LAST TESTED'
+    event_f.data_type = u'mock:something'
+    event_f.inode = 12456
+    event_f.filename = u'/home/gaur/skjol/leyndo/ekkilesamig.txt'
+    event_f.lesamig = False
+    event_f.metadata = {
+        u'author': u'Some Random Dude',
+        u'version': u'2012-01-12beta',
+        u'number': 155234,
+        u'last_changed': u'Long time ago'}
+    event_f.strings = [
+        u'This ', u'is a ', u'long string', u'split up', 134]
+    event_f.store_number = 123
+    event_f.store_index = 5134
+
+    tag = event.EventTag()
+    tag.store_number = 123
+    tag.store_index = 5134
+    tag.comment = 'Made by this manual testing machine'
+    tag.color = 'red'
+    tag.tags = ['Evil', 'evel', 'vont', 'illt', 'probably fine']
+
+    event_f.tag = tag
+
+    serialized_json = event_f.ToJson()
+    test_event_json = event.EventObject()
+    test_event_json.FromJson(serialized_json)
+    self.assertEquals(
+        event_f.EqualityString(), test_event_json.EqualityString())
 
   def testEqualityString(self):
     """Test the EventObject EqualityString."""

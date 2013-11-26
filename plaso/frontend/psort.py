@@ -163,9 +163,7 @@ def _AppendEvent(event_object, output_buffer, analysis_queues):
 
     event_object.inode = new_inode
 
-  # TODO: Change this to some other form of serialization for
-  # faster speed (JSON).
-  event_serialized = event_object.ToProtoString()
+  event_serialized = event_object.ToJson()
   for analysis_queue in analysis_queues:
     analysis_queue.Queue(event_serialized)
 
