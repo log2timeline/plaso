@@ -123,7 +123,7 @@ class ChromeExtensionTest(unittest.TestCase):
     # Fill the incoming queue with events.
     for path in self.MAC_PATHS:
       event_object = self._CreateEvent(path)
-      incoming_queue.AddEvent(event_object.ToProtoString())
+      incoming_queue.AddEvent(event_object.ToJson())
     incoming_queue.Close()
 
     # Run the analysis plugin.
@@ -192,7 +192,7 @@ class ChromeExtensionTest(unittest.TestCase):
     # Fill the incoming queue with events.
     for path in self.WIN_PATHS:
       event_object = self._CreateEvent(path)
-      incoming_queue.AddEvent(event_object.ToProtoString())
+      incoming_queue.AddEvent(event_object.ToJson())
     incoming_queue.Close()
 
     # Run the analysis plugin.
