@@ -23,34 +23,53 @@ EXIT_SUCCESS=0;
 SCRIPTNAME=`basename $0`;
 
 BROWSER_PARAM="";
-if test "$1" == "--nobrowser";
-then
-  BROWSER_PARAM="--no_oauth2_webbrowser";
-  shift
-fi
+CACHE_PARAM="";
+CL_NUMBER=0;
 
-if test $# -ne 1;
+while test $# -gt 0;
+do
+  case $1 in
+  --cache )
+    CACHE_PARAM="--cache";
+    shift;
+    ;;
+
+  --nobrowser | --no-browser | --no_browser )
+    BROWSER_PARAM="--no_oauth2_webbrowser";
+    shift;
+    ;;
+
+  *)
+    CL_NUMBER=$1;
+    shift
+    ;;
+  esac
+done
+
+if test -z $CL_NUMBER;
 then
-  if test $# -eq 0 && test -f ._code_review_number;
+  if test -f ._code_review_number;
   then
     CL_NUMBER=`cat ._code_review_number`
+
     if test "x`echo ${CL_NUMBER} | sed -e 's/[0-9]//g'`" != "x";
     then
-      echo "File ._code_review_number exists but contains wrong CL number.";
+      echo "File ._code_review_number exists but contains an invalid CL number.";
       exit ${EXIT_FAILURE};
     fi
-  else
-    echo "Usage: ./${SCRIPTNAME} [CL_NUMBER]";
-    echo "";
-    echo " CL_NUMBER: optional change list (CL) number that is to be updated.";
-    echo "            if no CL number is provided the value is read from:";
-    echo "            ._code_review_number";
-    echo "";
-
-    exit ${EXIT_MISSING_ARGS};
   fi
-else
-  CL_NUMBER=$1;
+fi
+
+if test -z $CL_NUMBER;
+then
+  echo "Usage: ./${SCRIPTNAME} [--nobrowser] [CL_NUMBER]";
+  echo "";
+  echo "  CL_NUMBER: optional change list (CL) number that is to be updated.";
+  echo "             If no CL number is provided the value is read from:";
+  echo "             ._code_review_number";
+  echo "";
+
+  exit ${EXIT_MISSING_ARGS};
 fi
 
 if [ ! -f "utils/common.sh" ];
@@ -81,7 +100,7 @@ else
 fi
 
 python utils/upload.py \
-    --oauth2 ${BROWSER_PARAM} -y -i ${CL_NUMBER} \
+    --oauth2 ${BROWSER_PARAM} -y -i ${CL_NUMBER} ${CACHE_PARAM} \
     -t "Uploading changes made to code." -m "Code updated.";
 
 exit ${EXIT_SUCCESS};
