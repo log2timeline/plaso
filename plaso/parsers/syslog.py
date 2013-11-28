@@ -22,6 +22,7 @@ from plaso.lib import event
 from plaso.lib import lexer
 from plaso.lib import text_parser
 from plaso.lib import timelib
+from plaso.lib import utils
 
 
 class SyslogLineEvent(event.TextEvent):
@@ -190,7 +191,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
       match: A regular expression match group that contains the match
              by the lexer.
     """
-    self.attributes['body'] += match.group(1)
+    self.attributes['body'] += utils.GetUnicodeString(match.group(1))
 
   def PrintLine(self):
     """Prints a log line."""

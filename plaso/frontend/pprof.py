@@ -78,8 +78,11 @@ from it and which parsers recognize it.
       '-s', '--storage', dest='storage', action='store', type=unicode,
       metavar='PSORT_PARAMETER', default='', help=(
           'Run the profiler against a storage file, with the parameters '
-          'provided with this option, eg: "-q /tmp/mystorage.dump"'))
-
+          'provided with this option, eg: "-q -w /dev/null". The storage '
+          'file has to be passed in as the FILE_TO_PARSE argument to the '
+          'tool and filters are also optional. This is equivilant to calling '
+          'psort.py STORAGE_PARAMETER FILE_TO_PARSE [FILTER]. Where the '
+          'storage parameters are the ones defined with this parameter.'))
 
   # TODO: Add the option of dropping into a python shell that contains the
   # stats attribute and others, just print out basic information and do the
