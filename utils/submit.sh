@@ -23,8 +23,8 @@ EXIT_SUCCESS=0;
 SCRIPTNAME=`basename $0`;
 
 BROWSER_PARAM="";
-CL_NUMBER=0;
-USE_CL_FILE=0;
+CL_NUMBER="";
+USE_CL_FILE="";
 
 while test $# -gt 0;
 do
