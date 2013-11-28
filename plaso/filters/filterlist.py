@@ -54,7 +54,7 @@ class ObjectFilterList(filter_interface.FilterObject):
     with open(filter_string, 'rb') as fh:
       try:
         results = yaml.safe_load(fh)
-      except (yaml.ScannerError, IOError) as e:
+      except (yaml.scanner.ScannerError, IOError) as e:
         raise errors.WrongPlugin(
             u'Malformed YAML file: {}.'.format(e))
 
