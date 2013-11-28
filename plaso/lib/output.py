@@ -26,8 +26,8 @@ entry to an output formatter that takes care of parsing the output into
 a human readable format for easy human consumption/analysis.
 
 """
+import abc
 import logging
-import StringIO
 import sys
 
 from plaso.lib import registry
@@ -117,6 +117,7 @@ class LogOutputFormatter(object):
     self.EventBody(evt)
     self.EndEvent()
 
+  @abc.abstractmethod
   def EventBody(self, evt):
     """Writes the main body of an event to the output filehandle.
 
@@ -126,7 +127,6 @@ class LogOutputFormatter(object):
     Raises:
       NotImplementedError: When not implemented.
     """
-    raise NotImplementedError
 
   def StartEvent(self):
     """This should be extended by specific implementations.
@@ -163,7 +163,10 @@ class LogOutputFormatter(object):
     pass
 
 
-# pylint: disable-msg=W0223
+# Need to suppress this since these classes do not implement the
+# abstract method EventBody, classes that inherit from one of these
+# classes need to implement that function.
+# pylint: disable-msg=abstract-method
 class FileLogOutputFormatter(LogOutputFormatter):
   """A simple file based output formatter."""
 
@@ -174,10 +177,14 @@ class FileLogOutputFormatter(LogOutputFormatter):
     """Set up the formatter."""
     super(FileLogOutputFormatter, self).__init__(
         store, filehandle, config, filter_use)
-    if not isinstance(filehandle, (file, StringIO.StringIO)):
+    if isinstance(filehandle, basestring):
       open_filehandle = open(filehandle, 'wb')
-    else:
+    elif hasattr(filehandle, 'write'):
       open_filehandle = filehandle
+    else:
+      raise IOError(
+          u'Unable to determine how to use filehandle passed in: {}'.format(
+              type(filehandle)))
 
     self.filehandle = OutputFilehandle(self.encoding)
     self.filehandle.Open(open_filehandle)

@@ -571,7 +571,15 @@ class EventObject(object):
       values[attribute_name] = getattr(self, attribute_name)
     return values
 
+  def GetString(self):
+    """Return a unicode string representation of an EventObject."""
+    return unicode(self)
+
   def __str__(self):
+    """Return a string object of the EventObject."""
+    return unicode(self).encode('utf-8')
+
+  def __unicode__(self):
     """Print a human readable string from the EventObject."""
     out_write = []
 
