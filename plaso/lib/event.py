@@ -999,7 +999,7 @@ class EventTag(object):
     """Define a string representation of the event."""
     ret = []
     ret.append(u'-' * 50)
-    if getattr(self, 'store_index', 0):
+    if getattr(self, 'store_number', 0):
       ret.append(u'{0:>7}:\n\tNumber: {1}\n\tIndex: {2}'.format(
           'Store', self.store_number, self.store_index))
     else:
