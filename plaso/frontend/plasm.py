@@ -164,10 +164,12 @@ class TaggingEngine(object):
       event_tags = []
       for event_object in EventObjectGenerator(store, self.quiet):
         matched_tags = []
-        for tag, my_filters in tags.items():
+        for tag, my_filters in tags.iteritems():
           for my_filter in my_filters:
             if my_filter.Match(event_object):
               matched_tags.append(tag)
+              # Don't want to evaluate other tags once a tag is discovered.
+              break
         if len(matched_tags) > 0:
           event_tag = event.EventTag()
           event_tag.store_number = getattr(event_object, 'store_number')
