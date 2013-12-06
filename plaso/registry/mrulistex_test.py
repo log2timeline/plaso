@@ -51,9 +51,9 @@ class TestMRUxRegistry(unittest.TestCase):
     entries = list(plugin.Process(self.regkey))
 
     line = ('[\\Microsoft\\Some Windows\\InterestingApp\\MRUlist] '
-            '1 [2]: C:/looks_legit.exe '
-            '2 [0]: Some random text here '
-            '3 [1]: c:/evil.exe')
+            'Index: 1 [MRU Value 2]: C:/looks_legit.exe '
+            'Index: 2 [MRU Value 0]: Some random text here '
+            'Index: 3 [MRU Value 1]: c:/evil.exe')
 
     self.assertEquals(len(entries), 1)
     event_object = entries[0]

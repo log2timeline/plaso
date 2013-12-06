@@ -157,7 +157,7 @@ class PlasoStorageUnitTest(unittest.TestCase):
       tag_2 = event.EventTag()
       tag_2.store_index = 1
       tag_2.store_number = 1
-      tag_2.tags = ('Malware',)
+      tag_2.tags = ['Malware']
       tag_2.color = 'red'
       tags_mock.append(tag_2)
 
@@ -165,11 +165,19 @@ class PlasoStorageUnitTest(unittest.TestCase):
       tag_3.store_number = 1
       tag_3.store_index = 2
       tag_3.comment = 'This is interesting'
-      tag_3.tags = ('Malware', 'Benign')
+      tag_3.tags = ['Malware', 'Benign']
       tag_3.color = 'red'
       tags_mock.append(tag_3)
 
       store.StoreTagging(tags_mock)
+
+      # Add additional tagging, second round.
+      tag_4 = event.EventTag()
+      tag_4.store_index = 1
+      tag_4.store_number = 1
+      tag_4.tags = ['Interesting']
+
+      store.StoreTagging([tag_4])
 
       group_mock.AddGroup(
           'Malicious', [(1, 1), (1, 2)], desc='Events that are malicious',
@@ -205,7 +213,7 @@ class PlasoStorageUnitTest(unittest.TestCase):
       same_events.append(read_store.GetEntry(1, 2).ToProtoString())
 
     self.assertEquals(len(evts), 4)
-    self.assertEquals(len(tags), 3)
+    self.assertEquals(len(tags), 4)
 
     self.assertEquals(tags[0].timestamp, 12389344590000000)
     self.assertEquals(tags[0].store_number, 1)
@@ -225,6 +233,11 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(tags[2].tag.tags[1], 'Benign')
 
     self.assertEquals(tags[2].parser, 'UNKNOWN')
+
+    # Test the newly added fourth tag, which should include data from
+    # the first version as well.
+    self.assertEquals(tags[3].tag.tags[0], 'Interesting')
+    self.assertEquals(tags[3].tag.tags[1], 'Malware')
 
     self.assertEquals(timestamps, [12389344590000000, 13349402860000000,
                                    13349615269295969, 13359662069295961])

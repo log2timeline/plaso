@@ -69,7 +69,7 @@ class MRUListPlugin(win_registry_interface.ValuePlugin):
           mru_value_string = value.data
 
         entry_list.append(mru_value_string)
-        text_dict[u'{} [{}]'.format(
+        text_dict[u'Index: {} [MRU Value {}]'.format(
             entry_index + 1, mru_value_name)] = mru_value_string
 
       event_object = event.WinRegistryEvent(

@@ -343,8 +343,15 @@ def ParseStorage(my_args):
           # TODO: Have the option of saving to a separate file and
           # do something more here, for instance saving into a HTML
           # file, or something else (including potential images).
-          print report.String()
           store.StoreReport(report)
+          try:
+            print report.GetString().encode(my_args.preferred_encoding)
+          except UnicodeDecodeError:
+            logging.error((
+                u'Unable to print report due to an unicode decode error. '
+                u'The report is stored inside the storage file and can be '
+                u'viewed using pinfo [if unable to view please submit a '
+                u'bug report https://code.google.com/p/plaso/issues/list'))
         elif item_type == analysis_interface.MESSAGE_TAG:
           tag = event.EventTag()
           tag.FromProtoString(item_str)

@@ -69,7 +69,7 @@ class MRUexPlugin(win_registry_interface.ValuePlugin):
       # MRU lists are terminated with 0xFFFFFFFF.
       if entry == 0xFFFFFFFF:
         break
-      value_text = u'{} [{}]'.format(nr + 1, unicode(entry))
+      value_text = u'Index: {} [MRU Value {:d}]'.format(nr + 1, entry)
       text_dict[value_text] = self.GetText(unicode(entry))
 
     yield event.WinRegistryEvent(

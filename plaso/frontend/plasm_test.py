@@ -29,13 +29,14 @@ from plaso.lib import storage
 class TestEvent(event.EventObject):
   DATA_TYPE = 'test:plasm:1'
 
-  def __init__(self, timestamp, filename='/dev/null'):
+  def __init__(self, timestamp, filename='/dev/null', stuff='bar'):
     super(TestEvent, self).__init__()
     self.timestamp = timestamp
     self.filename = filename
     self.timestamp_desc = 'Last Written'
     self.parser = 'TestEvent'
     self.display_name = 'fake:{}'.format(filename)
+    self.stuff = stuff
 
 
 class TestArgs(object):
@@ -52,6 +53,7 @@ class PlasmTest(unittest.TestCase):
 
   def setUp(self):
     """Setup creates a Plaso Store to play with, as well as a basic filter."""
+    pfilter.TimeRangeCache.ResetTimeConstraints()
     self.storage_file = tempfile.NamedTemporaryFile()
     self.storage_name = self.storage_file.name
     self.tag_input_file = tempfile.NamedTemporaryFile()
@@ -59,6 +61,8 @@ class PlasmTest(unittest.TestCase):
 
     self.tag_input_file.write('Test Tag\n')
     self.tag_input_file.write('  filename contains \'/tmp/whoaaaa\'\n')
+    self.tag_input_file.write(
+        '  parser is \'TestEvent\' and stuff is \'dude\'\n')
     self.tag_input_file.flush()
 
     dumper = storage.SimpleStorageDumper(self.storage_file)
@@ -66,12 +70,11 @@ class PlasmTest(unittest.TestCase):
     dumper.AddEvent(TestEvent(1000).ToProtoString())
     dumper.AddEvent(TestEvent(2000000, '/tmp/whoaaaaa').ToProtoString())
     dumper.AddEvent(TestEvent(2500000, '/tmp/whoaaaaa').ToProtoString())
-    dumper.AddEvent(TestEvent(5000000, '/tmp/whoaaaaa').ToProtoString())
+    dumper.AddEvent(TestEvent(5000000, '/tmp/whoaaaaa', 'dude').ToProtoString())
     dumper.Close()
     dumper.Run()
 
     self.storage = storage.PlasoStorage(self.storage_file)
-    pfilter.TimeRangeCache.ResetTimeConstraints()
     self.storage.SetStoreLimit()
 
   def tearDown(self):
@@ -83,7 +86,7 @@ class PlasmTest(unittest.TestCase):
     tags = plasm.ParseTaggingFile(self.tag_input_name)
     self.assertEquals(len(tags), 1)
     self.assertTrue('Test Tag' in tags)
-    self.assertEquals(len(tags['Test Tag']), 1)
+    self.assertEquals(len(tags['Test Tag']), 2)
 
   def testInvalidTagParsing(self):
     """Test what happens when Tagging Input files contain invalid conditions."""
@@ -147,13 +150,13 @@ class PlasmTest(unittest.TestCase):
 
   def testGroupingEngine(self):
     """Tests the Grouping engine's functionality."""
+    pfilter.TimeRangeCache.ResetTimeConstraints()
     tagging_engine = plasm.TaggingEngine(
         self.storage_name, self.tag_input_name, quiet=True)
     grouping_engine = plasm.GroupingEngine(self.storage_name, quiet=True)
     tagging_engine.Run()
     grouping_engine.Run()
     test = storage.PlasoStorage(self.storage_name)
-    pfilter.TimeRangeCache.ResetTimeConstraints()
     test.SetStoreLimit()
     self.assertTrue(test.HasGrouping())
     groups = test.GetGrouping()
