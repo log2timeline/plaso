@@ -995,6 +995,18 @@ class EventTag(object):
     else:
       raise AttributeError(u'Not allowed attribute: {}'.format(attr))
 
+  @property
+  def string_key(self):
+    """Return a string index key for this tag."""
+    if not self._IsValidForSerialization():
+      return ''
+
+    uuid_string = getattr(self, 'event_uuid', None)
+    if uuid_string:
+      return uuid_string
+
+    return '{}:{}'.format(self.store_number, self.store_index)
+
   def __str__(self):
     """Define a string representation of the event."""
     ret = []

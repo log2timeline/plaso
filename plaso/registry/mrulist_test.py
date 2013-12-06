@@ -47,6 +47,10 @@ class TestMRUListRegistry(unittest.TestCase):
         '\\Microsoft\\Some Windows\\InterestingApp\\MRU', 1346145829002031,
         values, 1456)
 
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
+    self.maxDiff = None
+
   def testMRUListPlugin(self):
     """Run a simple test against a mocked key with values."""
     plugin = mrulist.MRUListPlugin(None, None, None)
@@ -56,8 +60,9 @@ class TestMRUListRegistry(unittest.TestCase):
 
     expected_line = (
         u'[\\Microsoft\\Some Windows\\InterestingApp\\MRU] '
-        u'1 [a]: Some random text here 2 [c]: C:/looks_legit.exe '
-        u'3 [b]: REGALERT: Unsupported MRU value: b data type.')
+        u'Index: 1 [MRU Value a]: Some random text here Index: 2 '
+        u'[MRU Value c]: C:/looks_legit.exe Index: 3 [MRU Value b]: '
+        'REGALERT: Unsupported MRU value: b data type.')
 
     self.assertEquals(len(entries), 1)
     self.assertEquals(entries[0].timestamp, 1346145829002031)
