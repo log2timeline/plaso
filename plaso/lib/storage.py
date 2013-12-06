@@ -461,12 +461,20 @@ class PlasoStorage(object):
       for store_number in number_range:
         if proto_out:
           event_object = self.GetProtoEntry(store_number)
+          if not event_object:
+            return
           while event_object.timestamp < self._bound_first:
             event_object = self.GetProtoEntry(store_number)
+            if not event_object:
+              return
         else:
           event_object = self.GetEntry(store_number)
+          if not event_object:
+            return
           while event_object.timestamp < self._bound_first:
             event_object = self.GetEntry(store_number)
+            if not event_object:
+              return
 
         heapq.heappush(
             self._merge_buffer,
@@ -609,7 +617,7 @@ class PlasoStorage(object):
     if not self._file_open:
       raise IOError('Trying to add an entry to a closed storage file.')
 
-    if type(event_str_or_obj) in (str, unicode):
+    if isinstance(event_str_or_obj, basestring):
       evt = event.EventObject()
       evt.FromProtoString(event_str_or_obj)
       event_str = event_str_or_obj
@@ -838,12 +846,13 @@ class PlasoStorage(object):
       self._pre_obj.counter = collections.Counter()
 
     tag_number = 1
-    if self.HasTagging():
-      for name in self.zipfile.namelist():
-        if 'plaso_tagging.' in name:
-          _, number = name.split('.')
-          if int(number) >= tag_number:
-            tag_number = int(number) + 1
+    for name in self.zipfile.namelist():
+      if 'plaso_tagging.' in name:
+        _, number = name.split('.')
+        if int(number) >= tag_number:
+          tag_number = int(number) + 1
+        if not hasattr(self, '_tag_memory'):
+          self._ReadTagInformationIntoMemory()
 
     tag_packed = []
     tag_index = []
@@ -853,6 +862,24 @@ class PlasoStorage(object):
       if hasattr(tag, 'tags'):
         for tag_entry in tag.tags:
           self._pre_obj.counter[tag_entry] += 1
+      if hasattr(self, '_tag_memory') and tag.string_key in self._tag_memory:
+        # This particular event has already been tagged on a previous
+        # occasion, we need to make sure we are appending to that particular
+        # tag.
+        tag_store, tag_offset = self._tag_memory[tag.string_key]
+        tag_fh = self.zipfile.open('plaso_tagging.%06d' % tag_store , 'r')
+        _  = tag_fh.read(tag_offset)
+        old_tag = self._GetTagEntry(tag_fh)
+        if hasattr(old_tag, 'tags'):
+          tag.tags.extend(old_tag.tags)
+        if hasattr(old_tag, 'comment'):
+          if hasattr(tag, 'comment'):
+            tag.comment += old_tag.comment
+          else:
+            tag.comment = old_tag.comment
+        if hasattr(old_tag, 'color') and not hasattr(tag, 'color'):
+          tag.color = old_tag.color
+
       tag_str = tag.ToProtoString()
       packed = struct.pack('<I', len(tag_str)) + tag_str
       ofs = struct.pack('<I', size)
@@ -871,6 +898,11 @@ class PlasoStorage(object):
                           ''.join(tag_index))
     self.zipfile.writestr('plaso_tagging.%06d' % tag_number,
                           ''.join(tag_packed))
+
+    # If we already built a list of tag in memory we need to clear that
+    # since the tags have changed.
+    if hasattr(self, '_tag_memory'):
+      del self._tag_memory
 
   def GetGrouping(self):
     """Return a generator that reads all grouping information from storage."""
@@ -956,9 +988,6 @@ class PlasoStorage(object):
     Yields:
       All EventTag objects stored inside the storage container.
     """
-    if not self.HasTagging():
-      return
-
     for name in self.zipfile.namelist():
       if 'plaso_tagging.' in name:
         fh = self.zipfile.open(name, 'r')

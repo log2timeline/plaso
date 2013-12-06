@@ -220,7 +220,7 @@ class AnalysisReport(object):
     proto.ParseFromString(proto_string)
     self.FromProto(proto)
 
-  def String(self):
+  def GetString(self):
     """Return an unicode string representation of the report."""
     return unicode(self)
 
