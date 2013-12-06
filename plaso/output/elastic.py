@@ -35,10 +35,10 @@ class Elastic(output.LogOutputFormatter):
 
   # Add configuration data for this output module.
   ARGUMENTS = [
-      ('--case_number', {
-          'dest': 'case_number',
+      ('--case_name', {
+          'dest': 'case_name',
           'type': unicode,
-          'help': 'Add a case number where the index is built in [ELASTIC].',
+          'help': 'Add a case name [ELASTIC].',
           'action': 'store',
           'default': ''}),
       ('--elastic_server_ip', {
@@ -72,12 +72,16 @@ class Elastic(output.LogOutputFormatter):
     self._elastic_db = pyelasticsearch.ElasticSearch(
         u'http://{}:{}'.format(elastic_host, elastic_port))
 
-    case_number = getattr(config, 'case_number', u'')
+    case_name = getattr(config, 'case_name', u'')
 
-    if case_number:
-      self._case_number = case_number
+    # case_name becomes the index name in Elastic.
+    if case_name:
+      self._index_name = case_name.lower()
     else:
-      self._case_number = u'Plaso_{}'.format(uuid.uuid4().hex)
+      self._index_name = uuid.uuid4().hex
+
+    # Name of the doc_type that holds the plaso events.
+    self._doc_type = u'plaso_event'
 
     # Build up a list of available hostnames in this storage file.
     self._hostnames = {}
@@ -88,18 +92,18 @@ class Elastic(output.LogOutputFormatter):
     ret_dict = event_object.GetValues()
 
     # Get rid of few attributes that cause issues (and need correcting).
-    del ret_dict['timestamp']
-
     if 'pathspec' in ret_dict:
       del ret_dict['pathspec']
-    if 'tag' in ret_dict:
-      del ret_dict['tag']
-      tag = getattr(event_object, 'tag', None)
-      if tag:
-        tags = tag.tags
-        ret_dict['tag'] = tags
-        if getattr(tag, 'comment', ''):
-          ret_dict['comment'] = tag.comment
+
+    #if 'tag' in ret_dict:
+    #  del ret_dict['tag']
+    #  tag = getattr(event_object, 'tag', None)
+    #  if tag:
+    #    tags = tag.tags
+    #    ret_dict['tag'] = tags
+    #    if getattr(tag, 'comment', ''):
+    #      ret_dict['comment'] = tag.comment
+    ret_dict['tag'] = []
 
     # To not overload the index, remove the regvalue index.
     if 'regvalue' in ret_dict:
@@ -156,9 +160,10 @@ class Elastic(output.LogOutputFormatter):
 
     # Check if we need to flush.
     if self._counter % 5000 == 0:
-      self._elastic_db.bulk_index('plaso-index', self._case_number, self._data)
+      self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
       self._data = []
-      print '.',
+      sys.stdout.write('.')
+      sys.stdout.flush()
 
   def Start(self):
     """Create the necessary mapping."""
@@ -170,24 +175,24 @@ class Elastic(output.LogOutputFormatter):
             self._preprocesses[store_number] = info
 
     mapping = {
-        self._case_number: {
-            u'_timestamp' : {
-                u'enabled' : True,
+        self._doc_type: {
+            u'_timestamp': {
+                u'enabled': True,
                 u'path': 'datetime',
                 u'format': 'date_time_no_millis'},
         }
     }
     # Check if the mappings exist (only create if not there).
     try:
-      old_mapping_index = self._elastic_db.get_mapping('plaso-index')
-      old_mapping = old_mapping_index.get('plaso-index', {})
-      if self._case_number not in old_mapping:
+      old_mapping_index = self._elastic_db.get_mapping(self._index_name)
+      old_mapping = old_mapping_index.get(self._index_name, {})
+      if self._doc_type not in old_mapping:
         self._elastic_db.put_mapping(
-            'plaso-index', self._case_number, mapping=mapping)
+            self._index_name, self._doc_type, mapping=mapping)
     except (pyelasticsearch.ElasticHttpNotFoundError,
             pyelasticsearch.exceptions.ElasticHttpError):
       try:
-        self._elastic_db.create_index('plaso-index', settings={
+        self._elastic_db.create_index(self._index_name, settings={
             'mappings': mapping})
       except pyelasticsearch.IndexAlreadyExistsError:
         raise RuntimeError(u'Unable to created the index')
@@ -201,10 +206,13 @@ class Elastic(output.LogOutputFormatter):
     # pylint: disable-msg=unexpected-keyword-arg
     self._elastic_db.health(wait_for_status='yellow')
 
-    print 'Inserting data',
+    sys.stdout.write('Inserting data')
+    sys.stdout.flush()
 
   def End(self):
     """Flush on last time."""
-    self._elastic_db.bulk_index('plaso-index', self._case_number, self._data)
+    self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
     self._data = []
-    print '. [DONE]'
+    sys.stdout.write('. [DONE]\n')
+    sys.stdout.write('ElasticSearch index name: %s\n' % self._index_name)
+    sys.stdout.flush()
