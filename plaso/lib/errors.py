@@ -81,5 +81,9 @@ class WrongPlistPlugin(Error):
   """Error reporting wrong plist plugin used."""
 
 
+class WrongBencodePlugin(Error):
+  """Error reporting wrong bencode plugin used."""
+
+
 class NotAText(Error):
   """Raised when trying to read a text on a non-text sample."""
