@@ -506,6 +506,8 @@ class PyparsingConstants(object):
       PyParseIntCast)
   TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       PyParseIntCast)
+  ONE_OR_TWO_DIGITS = pyparsing.Word(
+      pyparsing.nums, min=1, max=2).setParseAction(PyParseIntCast)
   DATE = pyparsing.Group(
       YEAR + pyparsing.Suppress('-') + TWO_DIGITS +
       pyparsing.Suppress('-') + TWO_DIGITS)

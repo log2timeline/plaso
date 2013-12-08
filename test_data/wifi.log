@@ -1,0 +1,10 @@
+Thu Nov 14 20:14:37.123 ***Starting Up***
+Thu Nov 14 20:36:37.222 <airportd[88]> airportdProcessDLILEvent: en0 attached (up)
+Thu Nov 14 20:36:43.818 <airportd[88]> _doAutoJoin: Already associated to “CampusNet”. Bailing on auto-join.
+Thu Nov 14 21:50:52.395 <airportd[88]> _handleLinkEvent: Unable to process link event, op mode request returned -3903 (Operation not supported)
+Thu Nov 14 21:52:04.230 <airportd[88]> _doAutoJoin: Already associated to “CampusNet”. Bailing on auto-join.
+Thu Nov 14 21:52:04.363 <airportd[88]> _doAutoJoin: Already associated to “CampusNet”. Bailing on auto-join.
+Thu Nov 14 21:52:09.883 <airportd[88]> _processSystemPSKAssoc: No password for network <CWNetwork: 0x7fdfe970b250> [ssid=AndroidAP, bssid=88:30:8a:7a:61:88, security=WPA2 Personal, rssi=-21, channel=<CWChannel: 0x7fdfe9712870> [channelNumber=11(2GHz), channelWidth={20MHz}], ibss=0] in the system keychain
+Thu Nov 14 21:52:30.737 <airportd[88]> _doAutoJoin: Already associated to “AndroidAP”. Bailing on auto-join.
+Tue Dec 31 23:59:38.165 <airportd[88]> _doAutoJoin: Already associated to “AndroidAP”. Bailing on auto-join.
+Wed Jan  1 01:12:17.311 <airportd[88]> _doAutoJoin: Already associated to “AndroidAP”. Bailing on auto-join.
