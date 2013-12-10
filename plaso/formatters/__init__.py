@@ -16,6 +16,7 @@
 # limitations under the License.
 """This file contains an import statement for each formatter."""
 
+from plaso.formatters import android_calls
 from plaso.formatters import android_sms
 from plaso.formatters import appusage
 from plaso.formatters import bencode_parser

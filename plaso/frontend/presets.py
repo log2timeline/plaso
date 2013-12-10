@@ -65,5 +65,5 @@ categories = {
         'PfileStatParser', 'PlistParser', 'SkypeParser',
         'SyslogParser', 'UtmpxParser'],
     'android': [
-        'AndroidSmsParser'],
+        'AndroidSmsParser', 'AndroidCallParser'],
 }
