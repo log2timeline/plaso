@@ -27,6 +27,7 @@ from plaso.formatters import gdrive
 from plaso.formatters import hachoir
 from plaso.formatters import java_idx
 from plaso.formatters import ls_quarantine
+from plaso.formatters import mac_wifi
 from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
 from plaso.formatters import mcafeeav
@@ -43,6 +44,7 @@ from plaso.formatters import skydrivelog
 from plaso.formatters import skype
 from plaso.formatters import syslog
 from plaso.formatters import symantec
+from plaso.formatters import utmpx
 from plaso.formatters import volatility
 from plaso.formatters import winevt
 from plaso.formatters import winevtx

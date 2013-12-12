@@ -27,9 +27,9 @@ from plaso.parsers import gdrive
 from plaso.parsers import hachoir
 from plaso.parsers import java_idx
 from plaso.parsers import ls_quarantine
+from plaso.parsers import mac_wifi
 from plaso.parsers import mackeeper_cache
 from plaso.parsers import mactime
-from plaso.parsers import macwifi
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
 from plaso.parsers import olecf
