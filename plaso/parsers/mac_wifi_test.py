@@ -14,18 +14,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a unit test for the Mac Wifi log parser."""
+"""This file contains a unit test for the Mac wifi.log parser."""
 
 import os
 import pytz
 import unittest
 
 # pylint: disable=W0611
-from plaso.formatters import macwifi as macwifi_formatter
+from plaso.formatters import mac_wifi as mac_wifi_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.lib import putils
-from plaso.parsers import macwifi as macwifi_parser
+from plaso.parsers import mac_wifi as mac_wifi_parser
 
 
 class MacWifiUnitTest(unittest.TestCase):
@@ -42,8 +42,8 @@ class MacWifiUnitTest(unittest.TestCase):
     pre_obj.year = 2013
     pre_obj.zone = pytz.timezone('UTC')
 
-    macwifi = macwifi_parser.MacWifiParser(pre_obj)
-    events = list(macwifi.Parse(self.filehandle))
+    mac_wifi = mac_wifi_parser.MacWifiParser(pre_obj)
+    events = list(mac_wifi.Parse(self.filehandle))
 
     self.assertEqual(len(events), 9)
 
@@ -98,7 +98,7 @@ class MacWifiUnitTest(unittest.TestCase):
     self.assertEqual(expected_msg, event.text)
 
     event = events[7]
-    # date -u -d"Tue, 31 Dic 2013 23:59:38" +"%s165000"
+    # date -u -d"Tue, 31 Dec 2013 23:59:38" +"%s165000"
     self.assertEqual(1388534378165000, event.timestamp)
 
     event = events[8]

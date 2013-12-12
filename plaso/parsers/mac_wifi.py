@@ -14,7 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a wifi.log (Mac OS X) parser."""
+"""This file contains the wifi.log (Mac OS X) parser."""
 
 import datetime
 import logging
