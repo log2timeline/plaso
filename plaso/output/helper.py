@@ -15,15 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Contains helper functions for output modules."""
-import re
 
-# Few regular expressions.
-# TODO: Remove these regular expressions in favor of a more clearly defined
-# ontology that strictly enforces certain keywords, perhaps changing the field
-# to an enum.
-MODIFIED_RE = re.compile(r'modif', re.I)
-ACCESS_RE = re.compile(r'visit', re.I)
-CREATE_RE = re.compile(r'(create|written)', re.I)
+from plaso.lib import eventdata
 
 
 def GetLegacy(evt):
@@ -47,31 +40,39 @@ def GetLegacy(evt):
     else:
       return '....'
 
-  letters = []
-  m = MODIFIED_RE.search(evt.timestamp_desc)
+  # Access time.
+  if evt.timestamp_desc in [
+      eventdata.EventTimestamp.ACCESS_TIME,
+      eventdata.EventTimestamp.PAGE_VISITED,
+      eventdata.EventTimestamp.LAST_VISITED_TIME,
+      eventdata.EventTimestamp.START_TIME,
+      eventdata.EventTimestamp.LAST_CONNECTED,
+      eventdata.EventTimestamp.LAST_RUNTIME,
+      eventdata.EventTimestamp.LAST_PRINTED]:
+    return '.A..'
 
-  if m:
-    letters.append('M')
-  else:
-    letters.append('.')
+  # Content modification.
+  if evt.timestamp_desc in [
+      eventdata.EventTimestamp.MODIFICATION_TIME,
+      eventdata.EventTimestamp.WRITTEN_TIME,
+      eventdata.EventTimestamp.DELETED_TIME]:
+    return 'M...'
 
-  m = ACCESS_RE.search(evt.timestamp_desc)
+  # Content creation time.
+  if evt.timestamp_desc in [
+      eventdata.EventTimestamp.CREATION_TIME,
+      eventdata.EventTimestamp.ADDED_TIME,
+      eventdata.EventTimestamp.FILE_DOWNLOADED,
+      eventdata.EventTimestamp.FIRST_CONNECTED]:
+    return '...B'
 
-  if m:
-    letters.append('A')
-  else:
-    letters.append('.')
+  # Metadata modification.
+  if evt.timestamp_desc in [
+      eventdata.EventTimestamp.CHANGE_TIME,
+      eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME]:
+    return '..C.'
 
-  m = CREATE_RE.search(evt.timestamp_desc)
-
-  if m:
-    letters.append('C')
-  else:
-    letters.append('.')
-
-  letters.append('.')
-
-  return ''.join(letters)
+  return '....'
 
 
 def GetUsernameFromPreProcess(pre_obj, id_value):
