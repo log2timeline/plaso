@@ -19,6 +19,7 @@
 from plaso.parsers import android_calls
 from plaso.parsers import android_sms
 from plaso.parsers import appusage
+from plaso.parsers import asl
 from plaso.parsers import bencode_parser
 from plaso.parsers import chrome
 from plaso.parsers import filestat
