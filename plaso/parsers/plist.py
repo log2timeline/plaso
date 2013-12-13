@@ -48,8 +48,10 @@ class PlistParser(parser.PlasoParser):
   implemented.
   """
 
-  def __init__(self, pre_obj):
-    super(PlistParser, self).__init__(pre_obj)
+  NAME = 'plist'
+
+  def __init__(self, pre_obj, config):
+    super(PlistParser, self).__init__(pre_obj, config)
     self._plugins = plist_interface.GetPlistPlugins(pre_obj)
 
   def GetTopLevel(self, filehandle):

@@ -60,13 +60,15 @@ class WinLnkLinkEventContainer(event.EventContainer):
 class WinLnkParser(parser.PlasoParser):
   """Parses Windows Shortcut (LNK) files."""
 
-  def __init__(self, pre_obj):
+  NAME = 'lnk'
+
+  def __init__(self, pre_obj, config):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
     """
-    super(WinLnkParser, self).__init__(pre_obj)
+    super(WinLnkParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
   def Parse(self, file_object):

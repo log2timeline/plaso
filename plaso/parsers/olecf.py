@@ -375,13 +375,15 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
 class OleCfParser(parser.PlasoParser):
   """Parses OLE Compound Files (OLECF)."""
 
-  def __init__(self, pre_obj):
+  NAME = 'olecf'
+
+  def __init__(self, pre_obj, config):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
     """
-    super(OleCfParser, self).__init__(pre_obj)
+    super(OleCfParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
   def _ParseItem(self, olecf_item, level=0):

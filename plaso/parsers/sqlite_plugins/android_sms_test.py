@@ -22,7 +22,8 @@ import unittest
 from plaso.formatters import android_sms as android_sms_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import android_sms
+from plaso.parsers.sqlite_plugins import android_sms
+from plaso.parsers.sqlite_plugins import interface
 
 import pytz
 
@@ -35,7 +36,7 @@ class AndroidSmsTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = android_sms.AndroidSmsParser(pre_obj)
+    self.test_parser = android_sms.AndroidSmsPlugin(pre_obj)
 
   def testParseFile(self):
     """Read an Android SMS mmssms.db file and run a few tests."""
@@ -43,7 +44,10 @@ class AndroidSmsTest(unittest.TestCase):
 
     events = None
     with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+      with interface.SQLiteDatabase(file_object) as database:
+        generator = self.test_parser.Process(database)
+        self.assertTrue(generator)
+        events = list(generator)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEquals(len(events), 9)

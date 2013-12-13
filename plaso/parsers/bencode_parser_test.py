@@ -39,12 +39,12 @@ class BencodeTest(unittest.TestCase):
     self.base_path = 'test_data'
     self.utorrent = os.path.join(self.base_path, 'bencode_utorrent')
     self.transmission = os.path.join(self.base_path, 'bencode_transmission')
-    self.test_parser = bencode_parser.BencodeParser(self.pre_obj)
+    self.test_parser = bencode_parser.BencodeParser(self.pre_obj, None)
 
   def _ParseBencodeFile(self, filename):
     """Open up a filehandle and yield all event objects."""
     fh = putils.OpenOSFile(filename)
-    parser = bencode_parser.BencodeParser(self.pre_obj)
+    parser = bencode_parser.BencodeParser(self.pre_obj, None)
     for event_object in parser.Parse(fh):
       yield event_object
     fh.close()

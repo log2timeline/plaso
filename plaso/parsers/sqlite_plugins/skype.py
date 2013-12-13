@@ -18,7 +18,7 @@
 import logging
 
 from plaso.lib import event
-from plaso.lib import parser
+from plaso.parsers.sqlite_plugins import interface
 
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
@@ -137,8 +137,11 @@ class SkypeTransferFileEvent(event.PosixTimeEvent):
       self.transferred_filesize = 0
 
 
-class SkypeParser(parser.SQLiteParser):
-  """Parse Skype main.db SQlite database file."""
+class SkypePlugin(interface.SQLitePlugin):
+  """SQLite plugin for Skype main.db SQlite database file."""
+
+  NAME = 'skype'
+
   QUERY_DEST_FROM_TRANSFER = (
       u'SELECT partner_handle AS skypeid, '
       u'partner_dispname AS skypename '
@@ -149,7 +152,7 @@ class SkypeParser(parser.SQLiteParser):
       u'FROM transfers WHERE pk_id =:parent_id')
 
   def __init__(self, pre_obj):
-    super(SkypeParser, self).__init__(pre_obj)
+    super(SkypePlugin, self).__init__(pre_obj)
     self._mainaccount = None
 
   # Define the needed queries.
@@ -340,7 +343,7 @@ class SkypeParser(parser.SQLiteParser):
       if row['pk_id']:
         id_query = row['pk_id']
         if type(id_query) in (int, long):
-          cursor = self.db.cursor()
+          cursor = self.db.cursor
           result_set = cursor.execute(
               self.QUERY_DEST_FROM_TRANSFER, {'pk_id': id_query})
           row = result_set.fetchone()
@@ -353,7 +356,7 @@ class SkypeParser(parser.SQLiteParser):
       if row['parent_id']:
         id_query = row['parent_id']
         if type(id_query) in (int, long):
-          cursor = self.db.cursor()
+          cursor = self.db.cursor
           result_set = cursor.execute(
               self.QUERY_SOURCE_FROM_TRANSFER, {'parent_id': id_query})
           row = result_set.fetchone()

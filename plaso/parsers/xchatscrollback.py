@@ -83,6 +83,8 @@ class XChatScrollbackEvent(event.PosixTimeEvent):
 class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat scrollback log files."""
 
+  NAME = 'xchatscrollback'
+
   ENCODING = 'UTF-8'
 
   # Define how a log line should look like.
@@ -110,9 +112,9 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   MSG_ENTRY = MSG_ENTRY_NICK + MSG_ENTRY_TEXT
   MSG_ENTRY.parseWithTabs()
 
-  def __init__(self, pre_obj):
+  def __init__(self, pre_obj, config):
     """XChatLog parser object constructor."""
-    super(XChatScrollbackParser, self).__init__(pre_obj)
+    super(XChatScrollbackParser, self).__init__(pre_obj, config)
     self.use_local_zone = False
     self.offset = 0
 

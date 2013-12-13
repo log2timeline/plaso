@@ -155,7 +155,7 @@ def Pfile2File(fh_in, path=None):
   return path
 
 
-def FindAllParsers(pre_obj=None, parser_filter_string=''):
+def FindAllParsers(pre_obj=None, config=None, parser_filter_string=''):
   """Find all available parser objects.
 
   A parser is defined as an object that implements the PlasoParser
@@ -176,6 +176,7 @@ def FindAllParsers(pre_obj=None, parser_filter_string=''):
   Args:
     pre_obj: A PlasoPreprocess object containing information collected from
         an image.
+    config: A configuration object, could be an argparse object.
     parser_filter_string: A parser filter string, which is a comma
         separated value containing a list of parsers to include or exclude
         from the parser list.
@@ -190,28 +191,12 @@ def FindAllParsers(pre_obj=None, parser_filter_string=''):
     pre_obj = Options()
 
   # Process the filter string.
-  filter_strings_include = []
-  filter_strings_exclude = []
-  for filter_string in parser_filter_string.split(','):
-    filter_string = filter_string.strip()
-    if not filter_string:
-      continue
-    if filter_string.startswith('-'):
-      filter_strings_use = filter_strings_exclude
-      filter_string = filter_string[1:]
-    else:
-      filter_strings_use = filter_strings_include
-
-    filter_string_lower = filter_string.lower()
-    if filter_string_lower in presets.categories:
-      for preset_parser in presets.categories.get(filter_string_lower):
-        filter_strings_use.append(preset_parser.lower())
-    else:
-      filter_strings_use.append(filter_string_lower)
+  filter_strings_include, filter_strings_exclude = GetParserListsFromString(
+      parser_filter_string)
 
   results = {}
   results['all'] = []
-  for parser_obj in _FindClasses(parser.PlasoParser, pre_obj):
+  for parser_obj in _FindClasses(parser.PlasoParser, pre_obj, config):
     add = False
     if not (filter_strings_exclude or filter_strings_include):
       add = True
@@ -232,6 +217,42 @@ def FindAllParsers(pre_obj=None, parser_filter_string=''):
       # group parsers together.
 
   return results
+
+
+def GetParserListsFromString(parser_string):
+  """Return a list of parsers to include and exclude from a string.
+
+  Takes a comma separated string and splits it up into two lists,
+  of parsers or plugins to include and to exclude from selection.
+  If a particular filter is prepended with a minus sign it will
+  be included int he exclude section, otherwise in the include.
+
+  Args:
+    parser_string: The comma separated string.
+
+  Returns:
+    A tuple of two lists, include and exclude.
+  """
+  include = []
+  exclude = []
+  for filter_string in parser_string.split(','):
+    filter_string = filter_string.strip()
+    if not filter_string:
+      continue
+    if filter_string.startswith('-'):
+      filter_strings_use = exclude
+      filter_string = filter_string[1:]
+    else:
+      filter_strings_use = include
+
+    filter_string_lower = filter_string.lower()
+    if filter_string_lower in presets.categories:
+      for preset_parser in presets.categories.get(filter_string_lower):
+        filter_strings_use.append(preset_parser.lower())
+    else:
+      filter_strings_use.append(filter_string_lower)
+
+  return include, exclude
 
 
 def _FindClasses(class_object, *args):

@@ -34,6 +34,8 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class OpenXMLParser(parser.PlasoParser):
   """Parse metadata from OXML files."""
 
+  NAME = 'openxml'
+
   DATA_TYPE = 'metadata:openxml'
 
   _METAKEY_TRANSLATE = {

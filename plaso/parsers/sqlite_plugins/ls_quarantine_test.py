@@ -22,12 +22,13 @@ import unittest
 from plaso.formatters import ls_quarantine as dummy_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import ls_quarantine
+from plaso.parsers.sqlite_plugins import interface
+from plaso.parsers.sqlite_plugins import ls_quarantine
 
 import pytz
 
 
-class LSQuarantineParserTest(unittest.TestCase):
+class LSQuarantinePluginTest(unittest.TestCase):
   """Tests for the LS Quarantine parser."""
 
   def setUp(self):
@@ -35,7 +36,7 @@ class LSQuarantineParserTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = ls_quarantine.LsQuarantineParser(pre_obj)
+    self.test_parser = ls_quarantine.LsQuarantinePlugin(pre_obj)
 
   def testParseFile(self):
     """Read a test LS Quarantine database."""
@@ -43,7 +44,10 @@ class LSQuarantineParserTest(unittest.TestCase):
 
     events = None
     with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+      with interface.SQLiteDatabase(file_object) as database:
+        generator = self.test_parser.Process(database)
+        self.assertTrue(generator)
+        events = list(generator)
 
     # The quarantine DB contains 14 events.
     self.assertEquals(len(events), 14)

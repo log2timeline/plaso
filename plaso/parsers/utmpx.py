@@ -67,6 +67,8 @@ class UtmpxMacOsXEvent(event.EventObject):
 class UtmpxParser(parser.PlasoParser):
   """Parser for UTMPX files. """
 
+  NAME = 'utmpx'
+
   MAC_UTMPX_HEADER = construct.Struct(
       'header',
       construct.Bytes('magic', 10),
@@ -106,8 +108,8 @@ class UtmpxParser(parser.PlasoParser):
 
   MAC_MAGIC = 'utmpx-1.00'
 
-  def __init__(self, pre_obj):
-    super(UtmpxParser, self).__init__(pre_obj)
+  def __init__(self, pre_obj, config):
+    super(UtmpxParser, self).__init__(pre_obj, config)
     self._utmpx_record_size = self.MAC_UTMPX_STRUCT.sizeof()
 
   def Parse(self, file_object):

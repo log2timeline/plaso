@@ -27,8 +27,10 @@ class SymantecEvent(event.TextEvent):
   DATA_TYPE = 'av:symantec:scanlog'
 
 
-class Symantec(text_parser.TextCSVParser):
+class SymantecParser(text_parser.TextCSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
+
+  NAME = 'symantec_scanlog'
 
   # Define the columns that make up the structure of a Symantec log file.
   # http://www.symantec.com/docs/TECH100099

@@ -33,6 +33,8 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     http://technet.microsoft.com/en-us/library/cc758040(v=ws.10).aspx
   """
 
+  NAME = 'winfirewall'
+
   # TODO: Add support for custom field names. Currently this parser only
   # supports the default fields, which are:
   #   date time action protocol src-ip dst-ip src-port dst-port size
@@ -66,9 +68,9 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
   DATA_TYPE = 'windows:firewall:log_entry'
 
-  def __init__(self, pre_obj):
+  def __init__(self, pre_obj, config):
     """Initialize the parser."""
-    super(WinFirewallParser, self).__init__(pre_obj)
+    super(WinFirewallParser, self).__init__(pre_obj, config)
     self.version = None
     self.use_local_zone = False
     self.software = None

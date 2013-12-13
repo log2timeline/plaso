@@ -14,14 +14,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser for the Zeitgeist SQLite database.
+"""Plugin for the Zeitgeist SQLite database.
 
    Zeitgeist is a service which logs the user activities and events, anywhere
    from files opened to websites visited and conversations.
 """
 from plaso.lib import event
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers.sqlite_plugins import interface
 
 
 class ZeitgeistEvent(event.EventObject):
@@ -43,8 +43,11 @@ class ZeitgeistEvent(event.EventObject):
     self.subject_uri = subject_uri
 
 
-class ZeitgeistParser(parser.SQLiteParser):
-  """Parse Zeitgeist database."""
+class ZeitgeistPlugin(interface.SQLitePlugin):
+  """SQLite plugin for Zeitgeist activity database."""
+
+  NAME = 'zeitgeist'
+
   # TODO: Explore the database more and make this parser cover new findings.
 
   QUERIES = [('SELECT id, timestamp, subj_uri FROM event_view',
