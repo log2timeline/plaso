@@ -38,12 +38,12 @@ class SymantecAccessProtectionUnitTest(unittest.TestCase):
 
     self.pre_obj = preprocess.PlasoPreprocess()
     self.pre_obj.zone = pytz.UTC
-    
+
     self.maxDiff = None
 
   def testParsing(self):
     """Test parsing of a Symantec AV Log file."""
-    parser = symantec.Symantec(self.pre_obj)
+    parser = symantec.SymantecParser(self.pre_obj, None)
 
     self.input_file.seek(0)
     events = list(parser.Parse(self.input_file))

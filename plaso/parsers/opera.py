@@ -82,6 +82,8 @@ class OperaGlobalHistoryEvent(event.PosixTimeEvent):
 class OperaTypedHistoryParser(parser.PlasoParser):
   """Parses the Opera typed_history.xml file."""
 
+  NAME = 'opera_typed_history'
+
   def Parse(self, file_like_object):
     """Parse the history file and yield extracted events."""
 
@@ -119,6 +121,8 @@ class OperaTypedHistoryParser(parser.PlasoParser):
 
 class OperaGlobalHistoryParser(parser.PlasoParser):
   """Parses the Opera global_history.dat file."""
+
+  NAME = 'opera_global'
 
   _SUPPORTED_URL_SCHEMES = frozenset(['file', 'http', 'https', 'ftp'])
 

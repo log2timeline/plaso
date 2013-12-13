@@ -30,7 +30,7 @@ class WinEvtParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = winevt.WinEvtParser(pre_obj)
+    self.test_parser = winevt.WinEvtParser(pre_obj, None)
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
     self.maxDiff = None

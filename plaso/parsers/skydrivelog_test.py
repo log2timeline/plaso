@@ -44,7 +44,7 @@ class SkyDriveLogUnitTest(unittest.TestCase):
     """Test parsing of a SkyDrive log file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.timezone('UTC')
-    myparser = skydrivelog_parser.SkyDriveLogParser(pre_obj)
+    myparser = skydrivelog_parser.SkyDriveLogParser(pre_obj, None)
     events = list(myparser.Parse(self.filehandle))
 
     self.assertEquals(len(events), 18)

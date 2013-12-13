@@ -42,7 +42,7 @@ class SELinuxUnitTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.year = 2013
     pre_obj.zone = pytz.UTC
-    sl = selinux.SELinux(pre_obj)
+    sl = selinux.SELinuxParser(pre_obj, None)
 
     self.filehandle.seek(0)
     sl_generator = sl.Parse(self.filehandle)

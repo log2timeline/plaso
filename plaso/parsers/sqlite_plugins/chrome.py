@@ -20,11 +20,10 @@
    and Archived History. Where the Archived History does not contain
    the downloads table.
 """
-
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers.sqlite_plugins import interface
 
 
 class ChromeHistoryFileDownloadedEvent(event.EventObject):
@@ -88,8 +87,10 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
     self.extra = extra
 
 
-class ChromeHistoryParser(parser.SQLiteParser):
+class ChromeHistoryPlugin(interface.SQLitePlugin):
   """Parse Chrome Archived History and History files."""
+
+  NAME = 'chrome_history'
 
   # Define the needed queries.
   QUERIES = [(('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
@@ -233,7 +234,7 @@ class ChromeHistoryParser(parser.SQLiteParser):
     query = ('SELECT urls.url, urls.title, visits.visit_time FROM visits, urls '
              'WHERE urls.id = visits.url AND visits.id=:id')
 
-    cursor = self.db.cursor()
+    cursor = self.db.cursor
     result_set = cursor.execute(query, {'id': url})
     row = result_set.fetchone()
 

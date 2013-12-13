@@ -30,7 +30,7 @@ class WinEvtxParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = winevtx.WinEvtxParser(pre_obj)
+    self.test_parser = winevtx.WinEvtxParser(pre_obj, None)
 
   def testWinEvtxParserFile(self):
     """Reads and parses a test Windows EventLog (EVT) file."""

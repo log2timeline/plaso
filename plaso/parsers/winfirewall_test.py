@@ -34,7 +34,7 @@ class WinFirewallParserTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.utc
-    self._parser = winfirewall.WinFirewallParser(pre_obj)
+    self._parser = winfirewall.WinFirewallParser(pre_obj, None)
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.

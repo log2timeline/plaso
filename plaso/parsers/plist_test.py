@@ -35,7 +35,7 @@ class PlistTest(unittest.TestCase):
 
   def testParse(self):
     """Parse sample BT Plist file there should be 12 events of known values."""
-    parser = plist.PlistParser(self.pre)
+    parser = plist.PlistParser(self.pre, None)
 
     with putils.OpenOSFile(self.plist_binary) as fd:
       timestamps, roots, keys = zip(*[(x.timestamp, x.root, x.key) for x in

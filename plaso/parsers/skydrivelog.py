@@ -52,6 +52,8 @@ class SkyDriveLogEvent(event.TimestampEvent):
 class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse SkyDrive log files."""
 
+  NAME = 'skydrive_log'
+
   ENCODING = 'UTF-8-SIG'
 
   # Common SDL (SkyDriveLog) pyparsing objects.
@@ -97,10 +99,9 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
       ('no_header_single_line', SDL_NO_HEADER_SINGLE_LINE),
   ]
 
-
-  def __init__(self, pre_obj):
+  def __init__(self, pre_obj, config):
     """SkyDrive parser object constructor."""
-    super(SkyDriveLogParser, self).__init__(pre_obj)
+    super(SkyDriveLogParser, self).__init__(pre_obj, config)
     self.offset = 0
     self.last_event = None
 

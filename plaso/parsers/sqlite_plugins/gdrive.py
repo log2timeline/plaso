@@ -22,8 +22,8 @@
 
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers.sqlite_plugins import interface
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -91,8 +91,10 @@ class GoogleDriveSnapshotLocalEntryEvent(event.EventObject):
     self.size = size
 
 
-class GoogleDriveParser(parser.SQLiteParser):
-  """Parser for Google Drive snapshot.db files."""
+class GoogleDrivePlugin(interface.SQLitePlugin):
+  """SQLite lugin for Google Drive snapshot.db files."""
+
+  NAME = 'google_drive'
 
   # Define the needed queries.
   QUERIES = [(('SELECT resource_id, filename, modified, '
@@ -120,10 +122,10 @@ class GoogleDriveParser(parser.SQLiteParser):
     Returns:
       A full path, including the filename of the given inode value.
     """
-    cursor = self.db.cursor()
     sql = ('SELECT e.filename, r.parent_inode_number FROM local_relations AS '
            'r, local_entry AS e WHERE r.child_inode_number = ? AND '
            'r.child_inode_number = e.inode_number')
+    cursor = self.db.cursor
     results = cursor.execute(sql, (inode,))
 
     try:
@@ -145,11 +147,10 @@ class GoogleDriveParser(parser.SQLiteParser):
     Returns:
       A full path, including the filename of the given resource value.
     """
-    cursor = self.db.cursor()
     sql = ('SELECT e.filename, r.parent_resource_id FROM cloud_relations AS '
            'r, cloud_entry AS e WHERE r.child_resource_id = ? AND '
            'r.child_resource_id = e.resource_id')
-    results = cursor.execute(sql, (resource_id,))
+    results = self.db.execute(sql, (resource_id,))
     new_path, new_resource_id = results.fetchone()
     path.append(new_path)
 

@@ -19,8 +19,8 @@ import json
 
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers.sqlite_plugins import interface
 
 
 def ParseChatData(data):
@@ -134,8 +134,10 @@ class MacKeeperCacheEvent(event.EventObject):
     self.url = url
 
 
-class MacKeeperCacheParser(parser.SQLiteParser):
-  """Parse the MacKeeper Cache database file."""
+class MacKeeperCachePlugin(interface.SQLitePlugin):
+  """Plugin for the MacKeeper Cache database file."""
+
+  NAME = 'mackeeper_cache'
 
   # Define the needed queries.
   QUERIES = [((

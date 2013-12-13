@@ -32,7 +32,7 @@ class TestBtPlugin(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self.plugin = bt.BtPlugin(None)
-    parser = plist.PlistParser(preprocess.PlasoPreprocess())
+    parser = plist.PlistParser(preprocess.PlasoPreprocess(), None)
 
     self.plist_binary = os.path.join('test_data', 'plist_binary')
 

@@ -14,13 +14,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser for the Mac OS X launch services quarantine events."""
+"""Plugin for the Mac OS X launch services quarantine events."""
 
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
-# TODO: Add a test for LS Quarantine event. THIS NEEDS TO BE DONE ASAP.
+from plaso.parsers.sqlite_plugins import interface
 
 
 class LsQuarantineEvent(event.EventObject):
@@ -48,13 +47,15 @@ class LsQuarantineEvent(event.EventObject):
     self.data = data
 
 
-class LsQuarantineParser(parser.SQLiteParser):
+class LsQuarantinePlugin(interface.SQLitePlugin):
   """Parses the launch services quarantine events database.
 
      The LS quarantine events are stored in SQLite database files named
      /Users/<username>/Library/Preferences/\
          QuarantineEvents.com.apple.LaunchServices
   """
+
+  NAME = 'ls_quarantine'
 
   # Define the needed queries.
   QUERIES = [(('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'

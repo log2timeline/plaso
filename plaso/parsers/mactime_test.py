@@ -39,7 +39,7 @@ class MactimeUnitTest(unittest.TestCase):
     """Test parsing of a mactime file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
-    parser = mactime.MactimeParser(pre_obj)
+    parser = mactime.MactimeParser(pre_obj, None)
 
     self.input_file.seek(0)
     events = list(parser.Parse(self.input_file))

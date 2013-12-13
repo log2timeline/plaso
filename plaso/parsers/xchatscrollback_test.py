@@ -44,7 +44,7 @@ class XChatScrollbackUnitTest(unittest.TestCase):
     """Test parsing of a XChat scrollback file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.timezone('UTC')
-    myparser = xchatscrollback_parser.XChatScrollbackParser(pre_obj)
+    myparser = xchatscrollback_parser.XChatScrollbackParser(pre_obj, None)
     events = list(myparser.Parse(self.filehandle))
 
     self.assertEquals(len(events), 10)

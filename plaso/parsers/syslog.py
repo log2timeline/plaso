@@ -45,6 +45,8 @@ class SyslogLineEvent(event.TextEvent):
 class SyslogParser(text_parser.SlowLexicalTextParser):
   """Parse text based syslog files."""
 
+  NAME = 'syslog'
+
   # TODO: can we change this similar to SQLite where create an
   # event specific object for different lines using a callback function.
   # Define the tokens that make up the structure of a syslog file.
@@ -66,7 +68,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
       lexer.Token('S[.]+', '(.+)', 'ParseString', ''),
       ]
 
-  def __init__(self, pre_obj):
+  def __init__(self, pre_obj, config):
     """Initializes the syslog parser.
 
     Args:
@@ -74,8 +76,9 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
                from the input the current year is assumed. The year
                can be set to a specific value by defining it in the
                preprocessor object, e.g. pre_obj.year = 2012.
+      config: A configuration object.
     """
-    super(SyslogParser, self).__init__(pre_obj, True)
+    super(SyslogParser, self).__init__(pre_obj, config, True)
     # Set the initial year to 0 (fixed in the actual Parse method)
     # TODO: this is a HACK to get the tests working let's discuss this
     self._year_use = getattr(pre_obj, 'year', 0)
