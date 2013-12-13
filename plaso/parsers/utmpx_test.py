@@ -39,7 +39,7 @@ class UtmpxParserTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = utmpx.UtmpxParser(pre_obj)
+    self.test_parser = utmpx.UtmpxParser(pre_obj, None)
 
   def testParseFile(self):
     """Read utmpx files and make few tests."""

@@ -60,6 +60,8 @@ class WinPrefetchEventContainer(event.EventContainer):
 class WinPrefetchParser(parser.PlasoParser):
   """A parser for Windows Prefetch files."""
 
+  NAME = 'prefetch'
+
   FILE_SIGNATURE = 'SCCA'
 
   FILE_HEADER_STRUCT = construct.Struct(

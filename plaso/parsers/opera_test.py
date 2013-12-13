@@ -31,7 +31,7 @@ class OperaTypedParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self._parser = opera.OperaTypedHistoryParser(pre_obj)
+    self._parser = opera.OperaTypedHistoryParser(pre_obj, None)
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
@@ -81,7 +81,7 @@ class OperaGlobalParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self._parser = opera.OperaGlobalHistoryParser(pre_obj)
+    self._parser = opera.OperaGlobalHistoryParser(pre_obj, None)
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.

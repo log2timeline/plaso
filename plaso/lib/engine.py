@@ -415,7 +415,8 @@ class Engine(object):
     obj.collection_information['time_of_run'] = time.time()
     filter_query = getattr(self.config, 'parsers', None)
     obj.collection_information['parsers'] = [
-        x.parser_name for x in putils.FindAllParsers(obj, filter_query)['all']]
+        x.parser_name for x in putils.FindAllParsers(
+            obj, self.config, filter_query)['all']]
 
     obj.collection_information['preprocess'] = bool(
         self.config.preprocess)

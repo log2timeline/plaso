@@ -63,13 +63,16 @@ class WinEvtRecordEventContainer(event.EventContainer):
 class WinEvtParser(parser.PlasoParser):
   """Parses Windows EventLog (EVT) files."""
 
-  def __init__(self, pre_obj):
+  NAME = 'winevt'
+
+  def __init__(self, pre_obj, config):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
+      config: Configuration object.
     """
-    super(WinEvtParser, self).__init__(pre_obj)
+    super(WinEvtParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
   def _ParseRecord(self, evt_record, recovered=False):

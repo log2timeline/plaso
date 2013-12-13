@@ -32,6 +32,7 @@ if pymsiecf.get_version() < '20130317':
 
 class MsiecfUrlEventContainer(event.EventContainer):
   """Convenience class for an MSIECF URL event container."""
+
   def __init__(self, msiecf_item, recovered=False):
     """Initializes the event container.
 
@@ -62,6 +63,8 @@ class MsiecfUrlEventContainer(event.EventContainer):
 
 class MsiecfParser(parser.PlasoParser):
   """Parses MSIE Cache Files (MSIECF)."""
+
+  NAME = 'msiecf'
 
   def _ParseUrl(self, pre_obj, msiecf_item, recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) URL item.

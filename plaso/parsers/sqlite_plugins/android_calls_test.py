@@ -22,12 +22,13 @@ import unittest
 from plaso.formatters import android_calls as android_calls_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import android_calls
+from plaso.parsers.sqlite_plugins import android_calls
+from plaso.parsers.sqlite_plugins import interface
 
 import pytz
 
 
-class AndroidCallTest(unittest.TestCase):
+class AndroidCallSQLitePluginTest(unittest.TestCase):
   """Tests for the Android Call History parser."""
 
   def setUp(self):
@@ -35,7 +36,7 @@ class AndroidCallTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = android_calls.AndroidCallParser(pre_obj)
+    self.test_parser = android_calls.AndroidCallPlugin(pre_obj)
 
   def testParseFile(self):
     """Read an Android contacts2.db file and run a few tests."""
@@ -43,7 +44,10 @@ class AndroidCallTest(unittest.TestCase):
 
     events = None
     with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+      with interface.SQLiteDatabase(file_object) as database:
+        generator = self.test_parser.Process(database)
+        self.assertTrue(generator)
+        events = list(generator)
 
     # The contacts2 database file contains 5 events (MISSED/OUTGOING/INCOMING).
     self.assertEquals(len(events), 5)

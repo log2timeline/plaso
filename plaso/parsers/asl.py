@@ -79,6 +79,8 @@ class AslEvent(event.EventObject):
 class AslParser(parser.PlasoParser):
   """Parser for ASL files. """
 
+  NAME = 'asl_log'
+
   ASL_MAGIC = 'ASL DB\x00\x00\x00\x00\x00\x00'
 
   # If not right assigned, the value is "-1".

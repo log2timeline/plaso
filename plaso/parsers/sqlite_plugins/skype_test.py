@@ -22,12 +22,13 @@ import unittest
 
 from plaso.lib import preprocess
 from plaso.formatters import skype as dummy_formatter
-from plaso.parsers import skype
+from plaso.parsers.sqlite_plugins import interface
+from plaso.parsers.sqlite_plugins import skype
 
 import pytz
 
 
-class SkypParserTest(unittest.TestCase):
+class SkypePluginTest(unittest.TestCase):
   """Tests for the Skye main.db history parser."""
 
   def setUp(self):
@@ -35,7 +36,7 @@ class SkypParserTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = skype.SkypeParser(pre_obj)
+    self.test_parser = skype.SkypePlugin(pre_obj)
 
   def testParseFile(self):
     """
@@ -58,7 +59,10 @@ class SkypParserTest(unittest.TestCase):
 
     events = None
     with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+      with interface.SQLiteDatabase(file_object) as database:
+        generator = self.test_parser.Process(database)
+        self.assertTrue(generator)
+        events = list(generator)
 
     calls = 0
     files = 0

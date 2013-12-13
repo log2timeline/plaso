@@ -58,19 +58,20 @@ class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
       lexer.Token('INITIAL', '(.+)\n', 'ParseString', ''),
       ]
 
-  def __init__(self, pre_obj, local_zone=True):
+  def __init__(self, pre_obj, config, local_zone=True):
     """Constructor for the SlowLexicalTextParser.
 
     Args:
       pre_obj: A PlasoPreprocess object that may contain information gathered
       from a preprocessing process.
+      config: A configuration object.
       local_zone: A boolean value that determines if the entries
                   in the log file are stored in the local time
                   zone of the computer that stored it or in a fixed
                   timezone, like UTC.
     """
     lexer.SelfFeederMixIn.__init__(self)
-    parser.PlasoParser.__init__(self, pre_obj)
+    parser.PlasoParser.__init__(self, pre_obj, config)
     self.line_ready = False
     self.attributes = {
         'body': '',
@@ -558,9 +559,9 @@ class PyparsingSingleLineTextParser(parser.PlasoParser):
   # attribute.
   ENCODING = ''
 
-  def __init__(self, pre_obj):
+  def __init__(self, pre_obj, config):
     """A constructor for the pyparsing assistant."""
-    super(PyparsingSingleLineTextParser, self).__init__(pre_obj)
+    super(PyparsingSingleLineTextParser, self).__init__(pre_obj, config)
     self.encoding = self.ENCODING
     self._current_offset = 0
 

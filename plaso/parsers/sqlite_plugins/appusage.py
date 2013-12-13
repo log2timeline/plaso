@@ -21,8 +21,8 @@
 """
 
 from plaso.lib import event
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers.sqlite_plugins import interface
 
 
 class MacOSXApplicationUsageEvent(event.EventObject):
@@ -55,7 +55,7 @@ class MacOSXApplicationUsageEvent(event.EventObject):
     self.count = number_of_times
 
 
-class ApplicationUsageParser(parser.SQLiteParser):
+class ApplicationUsagePlugin(interface.SQLitePlugin):
   """Parse Application Usage history files.
 
   Application usage is a SQLite database that logs down entries
@@ -69,6 +69,8 @@ class ApplicationUsageParser(parser.SQLiteParser):
 
   Default installation: /var/db/application_usage.sqlite
   """
+
+  NAME = 'appusage'
 
   # Define the needed queries.
   QUERIES = [(('SELECT last_time, event, bundle_id, app_version, app_path,'

@@ -40,7 +40,7 @@ class SyslogUnitTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.year = 2012
     pre_obj.zone = pytz.UTC
-    syslog_parser = syslog.SyslogParser(pre_obj)
+    syslog_parser = syslog.SyslogParser(pre_obj, None)
 
     self.input_file.seek(0)
     events = list(syslog_parser.Parse(self.input_file))

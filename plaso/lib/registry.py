@@ -22,35 +22,42 @@ import abc
 class MetaclassRegistry(abc.ABCMeta):
   """Automatic Plugin Registration through metaclasses."""
 
-  def __init__(self, name, bases, env_dict):
-    abc.ABCMeta.__init__(self, name, bases, env_dict)
+  def __init__(cls, name, bases, env_dict):
+    abc.ABCMeta.__init__(cls, name, bases, env_dict)
+
+    # Register the name of the immedient parent class.
+    if bases:
+      cls.parent_class = getattr(bases[0], 'NAME', bases[0])
 
     # Attach the classes dict to the baseclass and have all derived classes
     # use the same one:
     for base in bases:
       try:
-        self.classes = base.classes
-        self.plugin_feature = base.plugin_feature
-        self.top_level_class = base.top_level_class
+        cls.classes = base.classes
+        cls.plugin_feature = base.plugin_feature
+        cls.top_level_class = base.top_level_class
         break
       except AttributeError:
-        self.classes = {}
-        self.plugin_feature = self.__name__
+        cls.classes = {}
+        cls.plugin_feature = cls.__name__
         # Keep a reference to the top level class
-        self.top_level_class = self
+        cls.top_level_class = cls
 
     # The following should not be registered as they are abstract. Classes
     # are abstract if the have the __abstract attribute (note this is not
     # inheritable so each abstract class must be explicitely marked).
     abstract_attribute = '_%s__abstract' % name
-    if getattr(self, abstract_attribute, None):
+    if getattr(cls, abstract_attribute, None):
       return
 
-    if not self.__name__.startswith('Abstract'):
-      self.classes[self.__name__] = self
+    if not cls.__name__.startswith('Abstract'):
+      if hasattr(cls, 'NAME'):
+        cls.classes[cls.NAME] = cls
+      else:
+        cls.classes[cls.__name__] = cls
 
       try:
-        if self.top_level_class.include_plugins_as_attributes:
-          setattr(self.top_level_class, self.__name__, self)
+        if cls.top_level_class.include_plugins_as_attributes:
+          setattr(cls.top_level_class, cls.__name__, cls)
       except AttributeError:
         pass

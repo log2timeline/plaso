@@ -60,8 +60,10 @@ class WinRecycleEvent(event.FiletimeEvent):
       self.orig_filename_legacy = filename_ascii
 
 
-class WinRecycleParser(parser.PlasoParser):
+class WinRecycleBinParser(parser.PlasoParser):
   """Parses the Windows $I recycle files."""
+
+  NAME = 'recycle_bin'
 
   # Define a list of all structs needed.
   # Struct read from:
@@ -96,8 +98,10 @@ class WinRecycleParser(parser.PlasoParser):
     yield WinRecycleEvent('', filename_utf, record, 0)
 
 
-class WinInfo2Parser(parser.PlasoParser):
+class WinRecycleInfo2Parser(parser.PlasoParser):
   """Parses the Windows INFO2 recycle bin file."""
+
+  NAME = 'recycle_bin_info2'
 
   # Define a list of all structs used.
   INT32_LE = construct.ULInt32('my_int')
