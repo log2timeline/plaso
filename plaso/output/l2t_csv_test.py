@@ -29,7 +29,7 @@ class L2tTestEvent(event.EventObject):
   def __init__(self):
     super(L2tTestEvent, self).__init__()
     self.timestamp = 1340821021000000
-    self.timestamp_desc = 'Entry Written'
+    self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
     self.hostname = 'ubuntu'
     self.filename = 'log/syslog.1'
     self.display_name = 'log/syslog.1'
@@ -70,9 +70,10 @@ class L2tCsvTest(unittest.TestCase):
     self.assertEquals(self.output.getvalue(), header)
     self.formatter.EventBody(event_object)
     correct = (
-        '06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry Written,-,ubuntu,'
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
-        'for user root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
+        '06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
+        'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        'closed for user root),Reporter <CRON> PID: 8442 '
+        '(pam_unix(cron:session): '
         'session closed for user root),2,log/syslog.1,-,-,-,\n')
     self.assertEquals(self.output.getvalue(), header + correct)
 
@@ -82,10 +83,11 @@ class L2tCsvTest(unittest.TestCase):
 
     self.formatter.EventBody(event_object)
     correct = (
-        '06/27/2012,18:17:01,UTC,..C.,LOG,Syslog,Entry Written,-,ubuntu,'
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
-        'for user root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-        'session closed for user root),2,log/syslog.1,-,-,-,\n')
+        '06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
+        'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        'closed for user root),Reporter <CRON> PID: 8442 '
+        '(pam_unix(cron:session): session closed for user root),2,log/syslog.1'
+        ',-,-,-,\n')
     self.assertEquals(self.output.getvalue(), correct)
 
 

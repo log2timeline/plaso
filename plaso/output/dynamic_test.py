@@ -29,7 +29,7 @@ class TestEvent(event.EventObject):
   def __init__(self):
     super(TestEvent, self).__init__()
     self.timestamp = 1340821021000000
-    self.timestamp_desc = 'Entry Written'
+    self.timestamp_desc = eventdata.EventTimestamp.CHANGE_TIME
     self.hostname = 'ubuntu'
     self.filename = 'log/syslog.1'
     self.text = (
@@ -101,10 +101,11 @@ class DynamicTest(unittest.TestCase):
 
     formatter.EventBody(event_object)
     correct = (
-        '2012-06-27,18:17:01,UTC,..C.,LOG,Syslog,Entry Written,-,ubuntu,'
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
-        'for user root),Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-        'session closed for user root),log/syslog.1,-,-,-,-\n')
+        '2012-06-27,18:17:01,UTC,..C.,LOG,Syslog,Metadata Modification Time,-,'
+        'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        'closed for user root),Reporter <CRON> PID: 8442 '
+        '(pam_unix(cron:session): session closed for user root),log/syslog.1'
+        ',-,-,-,-\n')
     self.assertEquals(output.getvalue(), header + correct)
 
     output = StringIO.StringIO()
