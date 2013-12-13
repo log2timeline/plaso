@@ -42,7 +42,7 @@ class MacWifiUnitTest(unittest.TestCase):
     pre_obj.year = 2013
     pre_obj.zone = pytz.timezone('UTC')
 
-    mac_wifi = mac_wifi_parser.MacWifiParser(pre_obj)
+    mac_wifi = mac_wifi_parser.MacWifiLogParser(pre_obj, None)
     events = list(mac_wifi.Parse(self.filehandle))
 
     self.assertEqual(len(events), 9)

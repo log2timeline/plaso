@@ -53,6 +53,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 class SELinuxLineEvent(event.TextEvent):
   """Convenience class for a SELinux log line event."""
+
   DATA_TYPE = 'selinux:line'
 
   def __init__(self, timestamp, offset, attributes):
@@ -68,8 +69,10 @@ class SELinuxLineEvent(event.TextEvent):
     self.offset = offset
 
 
-class SELinux(text_parser.SlowLexicalTextParser):
+class SELinuxParser(text_parser.SlowLexicalTextParser):
   """Parse SELinux audit log files."""
+
+  NAME = 'selinux'
 
   PID_RE = re.compile(r'pid=([0-9]+)[\s]+', re.DOTALL)
 
@@ -93,10 +96,10 @@ class SELinux(text_parser.SlowLexicalTextParser):
     lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseFailed', 'INITIAL')
   ]
 
-  def __init__(self, pre_obj):
+  def __init__(self, pre_obj, config):
     """SELinux parser object constructor."""
     # Set local_zone to false, since timestamps are UTC.
-    super(SELinux, self).__init__(pre_obj, False)
+    super(SELinuxParser, self).__init__(pre_obj, config, False)
     self.attributes = {'audit_type': '', 'pid': '', 'body': ''}
     self.timestamp = 0
 

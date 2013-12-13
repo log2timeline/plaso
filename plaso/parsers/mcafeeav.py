@@ -46,6 +46,8 @@ class McafeeAVEvent(event.TextEvent):
 class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
+  NAME = 'mcafee_protection'
+
   VALUE_SEPARATOR = '\t'
   # Define the columns of the McAfee AV Access Protection Log.
   COLUMNS = ['date', 'time', 'status', 'username', 'filename',

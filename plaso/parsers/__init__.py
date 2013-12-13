@@ -16,20 +16,12 @@
 # limitations under the License.
 """This file contains an import statement for each parser."""
 
-from plaso.parsers import android_calls
-from plaso.parsers import android_sms
-from plaso.parsers import appusage
 from plaso.parsers import asl
 from plaso.parsers import bencode_parser
-from plaso.parsers import chrome
 from plaso.parsers import filestat
-from plaso.parsers import firefox
-from plaso.parsers import gdrive
 from plaso.parsers import hachoir
 from plaso.parsers import java_idx
-from plaso.parsers import ls_quarantine
 from plaso.parsers import mac_wifi
-from plaso.parsers import mackeeper_cache
 from plaso.parsers import mactime
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
@@ -41,7 +33,6 @@ from plaso.parsers import plist
 from plaso.parsers import recycler
 from plaso.parsers import selinux
 from plaso.parsers import skydrivelog
-from plaso.parsers import skype
 from plaso.parsers import syslog
 from plaso.parsers import symantec
 from plaso.parsers import utmpx
@@ -53,4 +44,3 @@ from plaso.parsers import winlnk
 from plaso.parsers import winprefetch
 from plaso.parsers import winreg
 from plaso.parsers import xchatscrollback
-from plaso.parsers import zeitgeist

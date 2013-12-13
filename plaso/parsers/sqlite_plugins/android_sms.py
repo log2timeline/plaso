@@ -24,8 +24,8 @@ Android SMS messages are stored in SQLite database files named mmssms.dbs.
 
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers.sqlite_plugins import interface
 
 
 class AndroidSmsEvent(event.EventObject):
@@ -51,8 +51,11 @@ class AndroidSmsEvent(event.EventObject):
     self.body = body
 
 
-class AndroidSmsParser(parser.SQLiteParser):
+class AndroidSmsPlugin(interface.SQLitePlugin):
   """Parse Android SMS database."""
+
+  NAME = 'android_sms'
+
   # Define the needed queries.
   QUERIES = [((u'SELECT _id AS id, address, date, read, type, '
                u'body FROM sms'), 'ParseSmsRow')]

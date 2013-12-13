@@ -56,6 +56,8 @@ class WinJobEventContainer(event.EventContainer):
 class WinJobParser(parser.PlasoParser):
   """Parse Windows Scheduled Task files for job events."""
 
+  NAME = 'winjob'
+
   PRODUCT_VERSIONS = {
       0x0400:'Windows NT 4.0',
       0x0500:'Windows 2000',

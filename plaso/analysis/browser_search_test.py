@@ -25,7 +25,8 @@ from plaso.lib import analysis_interface
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import queue
-from plaso.parsers import chrome
+from plaso.parsers import sqlite
+from plaso.parsers.sqlite_plugins import chrome
 
 import pytz
 
@@ -48,7 +49,7 @@ class BrowserSearchAnalysisTest(unittest.TestCase):
     pre_obj.zone = pytz.utc
 
     # Create a parser and open file.
-    parser = chrome.ChromeHistoryParser(pre_obj)
+    parser = sqlite.SQLiteParser(pre_obj, None)
     file_object = putils.OpenOSFile(os.path.join('test_data', 'History'))
 
     # Initialize plugin.

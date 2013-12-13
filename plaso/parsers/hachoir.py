@@ -37,10 +37,12 @@ import hachoir_metadata
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Hachoir(parser.PlasoParser):
+class HachoirParser(parser.PlasoParser):
   """Parse meta data from files."""
 
   DATA_TYPE = 'metadata:hachoir'
+
+  NAME = 'hachoir'
 
   def Parse(self, filehandle):
     """Extract EventObjects from a file."""

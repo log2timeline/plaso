@@ -22,7 +22,7 @@
 
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.parsers.sqlite_plugins import interface
 
 # Check SQlite version, bail out early if too old.
 import sqlite3
@@ -172,12 +172,14 @@ class FirefoxDownload(event.EventContainer):
     self.mime_type = mime_type
 
 
-class FirefoxHistoryParser(parser.SQLiteParser):
+class FirefoxHistoryPlugin(interface.SQLitePlugin):
   """Parses a Firefox history file.
 
      The Firefox history is stored in a SQLite database file named
      places.sqlite.
   """
+
+  NAME = 'firefox_history'
 
   # Define the needed queries.
   QUERIES = [
@@ -344,7 +346,7 @@ class FirefoxHistoryParser(parser.SQLiteParser):
              'moz_historyvisits WHERE moz_places.id = '
              'moz_historyvisits.place_id AND moz_historyvisits.id=:id')
 
-    cursor = self.db.cursor()
+    cursor = self.db.cursor
     result_set = cursor.execute(query, {'id': url_id})
     row = result_set.fetchone()
 
@@ -354,12 +356,14 @@ class FirefoxHistoryParser(parser.SQLiteParser):
     return u''
 
 
-class FirefoxDownloadsParser(parser.SQLiteParser):
+class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   """Parses a Firefox downloads file.
 
      The Firefox downloads history is stored in a SQLite database file named
      downloads.sqlite.
   """
+
+  NAME = 'firefox_downloads'
 
   # Define the needed queries.
   QUERIES = [

@@ -61,6 +61,8 @@ class JavaIDXParser(parser.PlasoParser):
   structures.
   """
 
+  NAME = 'java_idx'
+
   IDX_SHORT_STRUCT = construct.Struct(
       'magic',
       construct.UBInt8('busy'),

@@ -22,12 +22,13 @@ import unittest
 from plaso.formatters import mackeeper_cache as cache_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import mackeeper_cache
+from plaso.parsers.sqlite_plugins import interface
+from plaso.parsers.sqlite_plugins import mackeeper_cache
 
 import pytz
 
 
-class MacKeeperCacheTest(unittest.TestCase):
+class MacKeeperCachePluginTest(unittest.TestCase):
   """Tests for the MacKeeper Cache parser."""
 
   def setUp(self):
@@ -35,7 +36,7 @@ class MacKeeperCacheTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = mackeeper_cache.MacKeeperCacheParser(pre_obj)
+    self.test_parser = mackeeper_cache.MacKeeperCachePlugin(pre_obj)
 
   def testParseFile(self):
     """Read a Chrome History file and run a few tests."""
@@ -43,7 +44,10 @@ class MacKeeperCacheTest(unittest.TestCase):
 
     events = None
     with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+      with interface.SQLiteDatabase(file_object) as database:
+        generator = self.test_parser.Process(database)
+        self.assertTrue(generator)
+        events = list(generator)
 
     # The cache file contains 198 entries.
     self.assertEquals(len(events), 198)

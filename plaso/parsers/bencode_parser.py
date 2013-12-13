@@ -48,8 +48,10 @@ class BencodeParser(parser.PlasoParser):
   # Regex match for a bencode dictionary followed by a field size.
   BENCODE_RE = re.compile('d[0-9]')
 
-  def __init__(self, pre_obj):
-    super(BencodeParser, self).__init__(pre_obj)
+  NAME = 'bencode'
+
+  def __init__(self, pre_obj, config=None):
+    super(BencodeParser, self).__init__(pre_obj, config)
     self._plugins = bencode_interface.GetBencodePlugins()
 
   def GetTopLevel(self, file_object):

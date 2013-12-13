@@ -186,7 +186,7 @@ class TextParserTest(unittest.TestCase):
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
-    my_text_parser = TestTextParser(self._pre_obj)
+    my_text_parser = TestTextParser(self._pre_obj, None)
     fn = FakeFile()
 
     text_generator = my_text_parser.Parse(fn)
@@ -194,7 +194,7 @@ class TextParserTest(unittest.TestCase):
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
-    my_text_parser = TestTextParser(self._pre_obj)
+    my_text_parser = TestTextParser(self._pre_obj, None)
     fn = FakeBetterFile()
 
     text_generator = my_text_parser.Parse(fn)

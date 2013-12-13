@@ -55,8 +55,10 @@ class MacWifiLogEvent(event.TimestampEvent):
     self.action = action
 
 
-class MacWifiParser(text_parser.PyparsingSingleLineTextParser):
+class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on wifi.log file."""
+
+  NAME = 'macwifi'
 
   # Regular expressions for known actions.
   RE_CONNECTED = r'Already\sassociated\sto\s(.*)\.\sBailing'
@@ -89,9 +91,9 @@ class MacWifiParser(text_parser.PyparsingSingleLineTextParser):
       ('logline', WIFI_LINE),
       ('header', WIFI_HEADER)]
 
-  def __init__(self, pre_obj):
+  def __init__(self, pre_obj, config):
     """Initialize the parser."""
-    super(MacWifiParser, self).__init__(pre_obj)
+    super(MacWifiLogParser, self).__init__(pre_obj, config)
     self._year_use = getattr(pre_obj, 'year', 0)
     self.local_zone = getattr(pre_obj, 'zone', pytz.utc)
     self._last_month = None

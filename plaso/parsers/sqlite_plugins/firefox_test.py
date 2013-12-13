@@ -22,12 +22,13 @@ import unittest
 from plaso.formatters import firefox
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import firefox
+from plaso.parsers.sqlite_plugins import firefox
+from plaso.parsers.sqlite_plugins import interface
 
 import pytz
 
 
-class FirefoxHistoryParserTest(unittest.TestCase):
+class FirefoxHistoryPluginTest(unittest.TestCase):
   """Tests for the Mozilla Firefox history parser."""
 
   def setUp(self):
@@ -38,7 +39,7 @@ class FirefoxHistoryParserTest(unittest.TestCase):
     # conventions.
     self.maxDiff = None
 
-    self.test_parser = firefox.FirefoxHistoryParser(pre_obj)
+    self.test_parser = firefox.FirefoxHistoryPlugin(pre_obj)
 
   def testParseFile(self):
     """Read a Firefox History file and run a few tests."""
@@ -46,7 +47,10 @@ class FirefoxHistoryParserTest(unittest.TestCase):
 
     events = None
     with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+      with interface.SQLiteDatabase(file_object) as database:
+        generator = self.test_parser.Process(database)
+        self.assertTrue(generator)
+        events = list(generator)
 
     # The places.sqlite file contains 205 events (1 page visit,
     # 2 x 91 bookmark records, 2 x 3 bookmark annotations,
@@ -202,7 +206,10 @@ class FirefoxHistoryParserTest(unittest.TestCase):
 
     events = None
     with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+      with interface.SQLiteDatabase(file_object) as database:
+        generator = self.test_parser.Process(database)
+        self.assertTrue(generator)
+        events = list(generator)
 
     # The places.sqlite file contains 84 events:
     #     34 page visits.
@@ -235,7 +242,7 @@ class FirefoxHistoryParserTest(unittest.TestCase):
     self.assertEquals(msg, expected_msg)
 
 
-class FirefoxDownloadsParserTest(unittest.TestCase):
+class FirefoxDownloadsPluginTest(unittest.TestCase):
   """Tests for the Mozilla Firefox downloads parser."""
 
   def setUp(self):
@@ -246,7 +253,7 @@ class FirefoxDownloadsParserTest(unittest.TestCase):
     # conventions.
     self.maxDiff = None
 
-    self.test_parser = firefox.FirefoxDownloadsParser(pre_obj)
+    self.test_parser = firefox.FirefoxDownloadsPlugin(pre_obj)
 
   def testParseFile(self):
     """Read a Firefox History file and run a few tests."""
@@ -254,7 +261,10 @@ class FirefoxDownloadsParserTest(unittest.TestCase):
 
     events = None
     with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+      with interface.SQLiteDatabase(file_object) as database:
+        generator = self.test_parser.Process(database)
+        self.assertTrue(generator)
+        events = list(generator)
 
     # The downloads.sqlite file contains 2 events (1 donwloads)
     self.assertEquals(len(events), 2)

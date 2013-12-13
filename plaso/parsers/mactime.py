@@ -42,6 +42,8 @@ class MactimeEvent(event.PosixTimeEvent):
 class MactimeParser(text_parser.TextCSVParser):
   """Parses TSK's mactime bodyfiles."""
 
+  NAME = 'mactime'
+
   COLUMNS = [
       'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',
       'atime', 'mtime', 'ctime', 'crtime']

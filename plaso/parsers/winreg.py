@@ -27,6 +27,8 @@ from plaso.winreg import winregistry
 class WinRegistryParser(parser.PlasoParser):
   """Parses Windows NT Registry (REGF) files."""
 
+  NAME = 'regf'
+
   # List of types registry types and required keys to identify each of these
   # types.
   REG_TYPES = {
@@ -38,13 +40,14 @@ class WinRegistryParser(parser.PlasoParser):
       'UNKNOWN': (),
   }
 
-  def __init__(self, pre_obj):
+  def __init__(self, pre_obj, config=None):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
+      config: A configuration object.
     """
-    super(WinRegistryParser, self).__init__(pre_obj)
+    super(WinRegistryParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
     self._plugins = win_registry_interface.GetRegistryPlugins()
 
