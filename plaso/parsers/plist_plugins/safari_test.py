@@ -22,10 +22,10 @@ from plaso.lib import preprocess
 from plaso.lib import putils
 
 from plaso.parsers import plist
-from plaso.plist import safari
+from plaso.parsers.plist_plugins import safari
 
 
-class TestSafariPlugin(unittest.TestCase):
+class SafariPluginTest(unittest.TestCase):
   """The unit test for Safari history parser."""
 
   def setUp(self):

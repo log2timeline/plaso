@@ -18,7 +18,8 @@
 import datetime
 import unittest
 
-from plaso.plist import default
+from plaso.parsers.plist_plugins import default
+
 import pytz
 
 

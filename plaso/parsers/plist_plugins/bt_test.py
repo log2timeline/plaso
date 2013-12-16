@@ -23,7 +23,7 @@ from plaso.lib import preprocess
 from plaso.lib import putils
 
 from plaso.parsers import plist
-from plaso.plist import bt
+from plaso.parsers.plist_plugins import bt
 
 
 class TestBtPlugin(unittest.TestCase):
