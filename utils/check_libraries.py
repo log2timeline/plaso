@@ -15,23 +15,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains simple checks for versions of dependent tools."""
+"""Script to check for the availability and version of dependencies."""
 
 import re
-import sys
 import urllib2
-try:
-  import sqlite3
-except ImportError:
-  print 'MISSING sqlite3 bindings, need to install for tool to function.'
-  sys.exit(1)
-
-LIBRARIES = [
-    'pyevt', 'pyevtx', 'pylnk', 'pymsiecf', 'pyolecf', 'pyregf', 'pyvshadow']
 
 
-def CheckLibyalGoogleDriveVersion(library_name):
-  """Returns the version number for a given libyal library on Google Drive.
+def GetLibyalGoogleDriveVersion(library_name):
+  """Retrieves the version number for a given libyal library on Google Drive.
 
   Args:
     library_name: the name of the libyal library.
@@ -78,68 +69,173 @@ def CheckLibyalGoogleDriveVersion(library_name):
   return int(max(matches))
 
 
-def CheckVersion(library):
-  """Return the version number for a given library."""
-  url = urllib2.urlopen('http://code.google.com/p/{}/downloads/list'.format(
-      library))
-  if url.code != 200:
-    return 0
+def CheckLibyal(libyal_python_modules):
+  """Checks the availability of libyal libraries.
 
-  library_re = re.compile(' ({}.+tar.gz)'.format(library), re.I)
-  data = url.read()
-  m = library_re.search(data)
-  if not m:
-    return 0
+  Args:
+    libyal_python_modules: list of libyal python module names.
 
-  _, _, end_part = m.group(1).rpartition('-')
-  version, _, _ = end_part.partition('.')
+  Returns:
+    True if the libyal libraries are available, false otherwise.
+  """
+  result = True
+  for module_name in libyal_python_modules:
+    try:
+      module_object = map(__import__, [module_name])[0]
+    except ImportError:
+      print u'[FAILURE]\tmissing: {0:s}.'.format(module_name)
+      result = False
 
-  return int(version)
+    if result:
+      libyal_name = u'lib{}'.format(module_name[2:])
+
+      installed_version = int(module_object.get_version())
+      try:
+        latest_version = GetLibyalGoogleDriveVersion(libyal_name)
+      except urllib2.URLError:
+        print (
+            u'Unable to verify version of {0:s} ({1:s}).\n'
+            u'Does this system have Internet access?').format(
+                libyal_name, module_name)
+        result = False
+        break
+
+      version_mismatch = installed_version != latest_version
+      if version_mismatch:
+        print (
+            u'[WARNING]\t{0:s} ({1:s}) version mismatch: installed {2:d}, '
+            u'available: {3:d}').format(
+                libyal_name, module_name, installed_version, latest_version)
+      else:
+        print u'[OK]\t\t{0:s} ({1:s}) version: {2:d}'.format(
+            libyal_name, module_name, installed_version)
+
+  return result
+
+
+def CheckPythonModule(module_name, version_attribute_name, minimum_version):
+  """Checks the availability of a Python module.
+
+  Args:
+    module_name: the name of the module.
+    version_attribute_name: the name of the attribute that contains the module
+                            version.
+    minimum_version: the minimum required version.
+
+  Returns:
+    True if the Python module is available and conforms to the minimum required
+    version. False otherwise.
+  """
+  result = True
+  try:
+    module_object = map(__import__, [module_name])[0]
+  except ImportError:
+    print u'[FAILURE]\tmissing: {0:s}.'.format(module_name)
+    result = False
+
+  if result:
+    module_version = getattr(module_object, version_attribute_name, None)
+
+    # Split the version string and convert every digit into an integer.
+    # A string compare of both version strings will yield an incorrect result.
+    module_version_map = map(int, module_version.split('.'))
+    minimum_version_map = map(int, minimum_version.split('.'))
+    if module_version_map < minimum_version_map:
+      result = False
+      print (
+          u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
+          u'required.').format(module_name, module_version, minimum_version)
+    else:
+      print u'[OK]\t\t{0:s} version: {1:s}'.format(
+          module_name, module_version)
+
+  return result
+
+
+def CheckPytsk():
+  """Checks the availability of pytsk3.
+
+  Returns:
+    True if the pytsk3 Python module is available, false otherwise.
+  """
+  result = True
+  module_name = 'pytsk3'
+  minimum_version = '4.1.2'
+  try:
+    module_object = map(__import__, [module_name])[0]
+  except ImportError:
+    print u'[FAILURE]\tmissing: {0:s}.'.format(module_name)
+    result = False
+
+  if result:
+    module_version = module_object.TSK_VERSION_STR
+
+    # Split the version string and convert every digit into an integer.
+    # A string compare of both version strings will yield an incorrect result.
+    module_version_map = map(int, module_version.split('.'))
+    minimum_version_map = map(int, minimum_version.split('.'))
+    if module_version_map < minimum_version_map:
+      result = False
+      print (
+          u'[FAILURE]\tSleuthKit version: {0:s} is too old, {1:s} or later '
+          u'required.').format(module_version, minimum_version)
+    else:
+      print u'[OK]\t\t{0:s} version: {1:s}'.format(
+          module_name, module_version)
+
+  return result
 
 
 if __name__ == '__main__':
-  sqlite_version = sqlite3.sqlite_version
-  if sqlite3.sqlite_version_info < (3, 7, 8):
-    print 'SQLite version is too old, needs to be at least 3.7.8'
-    print 'Version is: {}'.format(sqlite_version)
-  else:
-    print 'SQLite: [OK]'
+  check_result = True
+  print u'Checking availability and versions of plaso dependencies.'
 
-  print 'Loading libraries'
-  library_url = (
-      'https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/libyal.html')
+  # TODO: determine the version of bencode.
 
-  try:
-    parser_libraries = map(__import__, LIBRARIES)
-  except ImportError as error_message:
-    error_words = str(error_message).split()
-    py_library_name = error_words[-1]
-    lib_library_name = 'lib{}'.format(py_library_name[3:])
+  if not CheckPythonModule('binplist', '__version__', '0.1.4'):
+    check_result = False
 
-    print (
-        u'Unable to proceed. You are missing an important library: {} '
-        u'[{}]').format(
-            lib_library_name, py_library_name)
-    print 'Libraries can be downloaded from here: {}'.format(library_url)
-    sys.exit(1)
+  if not CheckPythonModule('construct', '__version__', '2.5.1'):
+    check_result = False
 
-  mismatch = False
-  for python_binding in parser_libraries:
-    libname = 'lib{}'.format(python_binding.__name__[2:])
-    installed_version = int(python_binding.get_version())
-    try:
-      available_version = CheckLibyalGoogleDriveVersion(libname)
-    except urllib2.URLError:
-      print ('Unable to verify libyal. Is this computer connected to the '
-             'Internet?')
-      break
+  if not CheckPythonModule('dpkt', '__version__', '1.7'):
+    check_result = False
 
-    if installed_version != available_version:
-      mismatch = True
-      print '  [{}] Version mismatch: installed {}, available: {}'.format(
-          libname, installed_version, available_version)
-    else:
-      print '  [{}] OK'.format(libname)
+  if not CheckPythonModule('pyparsing', '__version__', '1.5.6'):
+    check_result = False
 
-  if mismatch:
-    print '\nLibraries can be downloaded from here: {}'.format(library_url)
+  # TODO: determine the version of pytz.
+  # pytz uses __version__ but has a different version indicator e.g. 2012d
+
+  # TODO: determine the version of protobuf.
+
+  if not CheckPythonModule('sqlite3', 'sqlite_version', '3.7.8'):
+    check_result = False
+
+  if not CheckPythonModule('yaml', '__version__', '3.10'):
+    check_result = False
+
+  if not CheckPytsk():
+    check_result = False
+
+  libyal_check_result = CheckLibyal([
+      'pyevt', 'pyevtx', 'pylnk', 'pymsiecf', 'pyolecf', 'pyregf',
+      'pyvshadow'])
+
+  if not check_result:
+    build_instructions_url = (
+        u'https://sites.google.com/a/kiddaland.net/plaso/developer'
+        u'/building-the-tool')
+
+    print u'See: {0:s} on how to set up plaso.'.format(
+        build_instructions_url)
+
+  if not libyal_check_result:
+    libyal_downloads_url = (
+        u'https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg'
+        u'/libyal.html')
+
+    print u'Libyal libraries can be downloaded from here: {0:s}'.format(
+        libyal_downloads_url)
+
+  print u''
