@@ -18,9 +18,9 @@
 import logging
 
 from plaso.lib import errors
-from plaso.lib import plist_interface
 from plaso.lib import preprocess
 from plaso.lib import utils
+from plaso.parsers.plist_plugins import interface
 
 from binplist import binplist
 
@@ -83,7 +83,7 @@ class OSXUsers(preprocess.PreprocessPlugin):
       top_level_object = self.OpenPlistFile(plist)
 
       try:
-        match = plist_interface.GetKeysDefaultEmpty(
+        match = interface.GetKeysDefaultEmpty(
             top_level_object, frozenset(['name', 'uid', 'home', 'realname']))
       except KeyError as e:
         user, _, _ = plist.partition('.')

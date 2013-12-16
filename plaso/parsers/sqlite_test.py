@@ -46,7 +46,7 @@ class SQLiteParserTest(unittest.TestCase):
     all_plugins = self.test_parser._GetPlugins()
     self.assertGreaterEqual(len(all_plugins), 10)
 
-    all_plugin_names = [x.plugin_name for x in all_plugins]
+    all_plugin_names = all_plugins.keys()
 
     self.assertTrue('skype' in all_plugin_names)
     self.assertTrue('chrome_history' in all_plugin_names)

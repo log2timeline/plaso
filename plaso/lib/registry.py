@@ -23,6 +23,18 @@ class MetaclassRegistry(abc.ABCMeta):
   """Automatic Plugin Registration through metaclasses."""
 
   def __init__(cls, name, bases, env_dict):
+    """Initialize a metaclass.
+
+    Args:
+      name: The interface class name.
+      bases: A tuple of base names.
+      env_dict: The namespace of the object.
+
+    Raises:
+      KeyError: If a classes given name is already registered, to make sure
+                no two classes that inherit from the same interface can have
+                the same name attribute.
+    """
     abc.ABCMeta.__init__(cls, name, bases, env_dict)
 
     # Register the name of the immedient parent class.
@@ -51,10 +63,13 @@ class MetaclassRegistry(abc.ABCMeta):
       return
 
     if not cls.__name__.startswith('Abstract'):
-      if hasattr(cls, 'NAME'):
-        cls.classes[cls.NAME] = cls
-      else:
-        cls.classes[cls.__name__] = cls
+      cls_name = getattr(cls, 'NAME', cls.__name__)
+
+      if cls_name in cls.classes:
+        raise KeyError(u'Class: {} already registered.'.format(
+            cls_name))
+
+      cls.classes[cls_name] = cls
 
       try:
         if cls.top_level_class.include_plugins_as_attributes:

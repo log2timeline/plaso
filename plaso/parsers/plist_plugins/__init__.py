@@ -16,6 +16,6 @@
 # limitations under the License.
 """This file contains an import statement for each plist related plugin."""
 
-from plaso.plist import bt
-from plaso.plist import safari
-from plaso.plist import default
+from plaso.parsers.plist_plugins import bt
+from plaso.parsers.plist_plugins import safari
+from plaso.parsers.plist_plugins import default

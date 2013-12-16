@@ -20,13 +20,14 @@ import os
 import unittest
 
 # Always import plist to force plugin registration.
-from plaso import plist  # pylint: disable=W0611
 from plaso.events import plist_event
 from plaso.lib import errors
-from plaso.lib import plist_interface
+from plaso.lib import plugin
+from plaso.parsers import plist  # pylint: disable=W0611
+from plaso.parsers.plist_plugins import interface
 
 
-class MockPlugin(plist_interface.PlistPlugin):
+class MockPlugin(interface.PlistPlugin):
   """Mock plugin."""
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
@@ -44,7 +45,7 @@ class TestPlistInterface(unittest.TestCase): # pylint: disable=R0923
     """Sets up the needed objects used throughout the test."""
     self.base_path = 'test_data'
     self.fd = os.path.join(self.base_path, 'plist_binary')
-    self.plugins = plist_interface.GetPlistPlugins()
+    self.plugins = plugin.GetRegisteredPlugins(interface.PlistPlugin)
     self.top_level_dict = {
         'DeviceCache': {
             '44-00-00-00-00-04': {
@@ -58,35 +59,39 @@ class TestPlistInterface(unittest.TestCase): # pylint: disable=R0923
     self.assertTrue(self.plugins)
 
   def testDefaultInList(self):
-    self.assertTrue('DefaultPlugin' in [x.plugin_name for x in self.plugins])
+    self.assertTrue('plist_default' in self.plugins.keys())
 
   def testMockPluginErrors(self):
     """Ensure plugin proceeds only if both correct filename and keys exist."""
-    plugin = MockPlugin(None)
+    mock_plugin = MockPlugin(None)
 
     # Test correct filename and keys.
     self.assertTrue(
-        plugin.Process('plist_binary', {'DeviceCache': 1, 'PairedDevices': 1}))
+        mock_plugin.Process(
+            'plist_binary', {'DeviceCache': 1, 'PairedDevices': 1}))
 
     # Correct filename with odd filename cAsinG.  Adding an extra useless key.
     self.assertTrue(
-        plugin.Process('pLiSt_BinAry', {'DeviceCache': 1, 'PairedDevices': 1,
-                                        'R@ndomExtraKey': 1}))
+        mock_plugin.Process(
+            'pLiSt_BinAry', {'DeviceCache': 1, 'PairedDevices': 1,
+            'R@ndomExtraKey': 1}))
     # Test wrong filename.
     with self.assertRaises(errors.WrongPlistPlugin):
-      plugin.Process('wrong_file.plist', {'DeviceCache': 1, 'PairedDevices': 1})
+      mock_plugin.Process(
+          'wrong_file.plist', {'DeviceCache': 1, 'PairedDevices': 1})
 
     # Test not enough required keys.
     with self.assertRaises(errors.WrongPlistPlugin):
-      plugin.Process('plist_binary', {'Useless_Key': 0, 'PairedDevices': 1})
+      mock_plugin.Process(
+          'plist_binary', {'Useless_Key': 0, 'PairedDevices': 1})
 
   def testRecurseKey(self):
     # Ensure with a depth of 1 we only return the root key.
-    result = list(plist_interface.RecurseKey(self.top_level_dict, depth=1))
+    result = list(interface.RecurseKey(self.top_level_dict, depth=1))
     self.assertEquals(len(result), 1)
 
     # Trying again with depth limit of 2 this time.
-    result = list(plist_interface.RecurseKey(self.top_level_dict, depth=2))
+    result = list(interface.RecurseKey(self.top_level_dict, depth=2))
     self.assertEquals(len(result), 3)
 
     # A depth of two should gives us root plus the two devices. Let's check.
@@ -99,13 +104,13 @@ class TestPlistInterface(unittest.TestCase): # pylint: disable=R0923
   def testGetKey(self):
     # Match DeviceCache from the root level.
     key = ['DeviceCache']
-    result = plist_interface.GetKeys(self.top_level_dict, key)
+    result = interface.GetKeys(self.top_level_dict, key)
     self.assertEquals(len(result), 1)
 
     # Look for a key nested a layer beneath DeviceCache from root level.
     # Note: overriding the default depth to look deeper.
     key = ['44-00-00-00-00-02']
-    result = plist_interface.GetKeys(self.top_level_dict, key, depth=2)
+    result = interface.GetKeys(self.top_level_dict, key, depth=2)
     self.assertEquals(len(result), 1)
 
     # Check the value of the result was extracted as expected.
