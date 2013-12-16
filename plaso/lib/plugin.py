@@ -25,6 +25,7 @@ projects that may want to use the Plaso plugin system.
 import abc
 
 from plaso.lib import registry
+from plaso.lib import putils
 
 
 class Plugin(object):
@@ -83,7 +84,7 @@ class Plugin(object):
     """Extract and return EventObjects from the data structure."""
 
   @abc.abstractmethod
-  def Process(self, item):
+  def Process(self, *kwargs):
     """Evaluate if this is the correct plugin and return a generator.
 
     The purpose of the process function is to evaluate if this particular
@@ -93,14 +94,17 @@ class Plugin(object):
     that can be used to evaluate if the plugin should be run or not.
 
     Args:
-      item: This could be any arbitrary value that might be needed.
+      kwargs: Depending on the plugin they may require different sets of
+      arguments to be able to evaluate whether or not this is the correct
+      plugin.
 
     Returns:
       A generator, self.GetEntries(), if the correct plugin, otherwise None.
     """
 
 
-def GetRegisteredPlugins(parent_class=Plugin):
+def GetRegisteredPlugins(
+    parent_class=Plugin, pre_obj=None, parser_filter_string=u''):
   """Build a list of all available plugins and return them.
 
   This method uses the class registration library to find all classes that have
@@ -112,9 +116,43 @@ def GetRegisteredPlugins(parent_class=Plugin):
 
   Args:
     parent_class: The top level class of the specific plugin to query.
+    pre_obj: The pre processing object or the knowledge base.
+    parser_filter_string: Optional comma separated list of parsers and plugins
+                          to include. The default is an empty string.
 
-  Yields:
-    Plugin name, plugin class.
+  Returns:
+    A dict with keys being the plugin names and values the plugin class.
+
+  Raises:
+    ValueError: If two plugins have the same name.
   """
+  if parser_filter_string:
+    parser_include, parser_exclude = putils.GetParserListsFromString(
+        parser_filter_string)
+
+  results = {}
+  all_plugins = {}
+
   for plugin_name, plugin_cls in parent_class.classes.iteritems():
-    yield plugin_name, plugin_cls
+    parent_name = getattr(plugin_cls, 'parent_class', 'NOTHERE')
+
+    if parent_name != parent_class.NAME:
+      continue
+
+    if plugin_name in all_plugins:
+      raise ValueError(
+          u'The plugin "{}" appears twice in the plugin list.'.format(
+              plugin_name))
+
+    if not parser_filter_string:
+      all_plugins[plugin_name] = plugin_cls(pre_obj)
+    else:
+      if plugin_name in parser_include and plugin_name not in parser_exclude:
+        results[plugin_name] = plugin_cls(pre_obj)
+      if plugin_name not in parser_exclude:
+        all_plugins[plugin_name] = plugin_cls(pre_obj)
+
+  if parser_filter_string and results:
+    return results
+
+  return all_plugins

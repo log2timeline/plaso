@@ -17,12 +17,14 @@
 """This file contains a default plist plugin in Plaso."""
 
 from plaso.events import plist_event
-from plaso.lib import plist_interface
 from plaso.lib import timelib
+from plaso.parsers.plist_plugins import interface
 
 
-class BtPlugin(plist_interface.PlistPlugin):
+class BtPlugin(interface.PlistPlugin):
   """Basic plugin to extract interesting bluetooth related keys."""
+
+  NAME = 'plist_bt'
 
   PLIST_PATH = 'com.apple.bluetooth.plist'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])

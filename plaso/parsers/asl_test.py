@@ -37,7 +37,7 @@ class AslParserTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = asl.AslParser(pre_obj)
+    self.test_parser = asl.AslParser(pre_obj, None)
 
   def testParseFile(self):
     """Read ASL files and make few tests."""

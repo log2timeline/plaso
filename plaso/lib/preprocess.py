@@ -25,11 +25,11 @@ import sre_constants
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfile
-from plaso.lib import plist_interface
 from plaso.lib import putils
 from plaso.lib import registry
 from plaso.lib import utils
 from plaso.lib import win_registry_interface
+from plaso.parsers.plist_plugins import interface as plist_interface
 from plaso.winreg import cache
 from plaso.winreg import winregistry
 

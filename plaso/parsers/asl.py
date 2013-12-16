@@ -178,8 +178,8 @@ class AslParser(parser.PlasoParser):
       construct.PascalString(
           'value', length_field = construct.UBInt32('length')))
 
-  def __init__(self, pre_obj):
-    super(AslParser, self).__init__(pre_obj)
+  def __init__(self, pre_obj, config):
+    super(AslParser, self).__init__(pre_obj, config)
     self._asl_record_struct_size = self.ASL_RECORD_STRUCT.sizeof()
 
   def Parse(self, file_object):
