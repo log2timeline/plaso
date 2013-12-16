@@ -100,7 +100,12 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
   ]
 
   def __init__(self, pre_obj, config):
-    """SkyDrive parser object constructor."""
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+      config: configuration object.
+    """
     super(SkyDriveLogParser, self).__init__(pre_obj, config)
     self.offset = 0
     self.last_event = None

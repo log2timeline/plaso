@@ -268,8 +268,12 @@ def _FindClasses(class_object, *args):
     A list of registered classes of that class.
   """
   results = []
-  for cl in class_object.classes:
-    results.append(class_object.classes[cl](*args))
+  for cls in class_object.classes:
+    try:
+      results.append(class_object.classes[cls](*args))
+    except Exception:
+      logging.error('_FindClasses: exception while appending: %s', cls)
+      raise
 
   return results
 

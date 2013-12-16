@@ -382,6 +382,7 @@ class OleCfParser(parser.PlasoParser):
 
     Args:
       pre_obj: pre-parsing object.
+      config: configuration object.
     """
     super(OleCfParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')

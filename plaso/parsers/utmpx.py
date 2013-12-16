@@ -109,6 +109,12 @@ class UtmpxParser(parser.PlasoParser):
   MAC_MAGIC = 'utmpx-1.00'
 
   def __init__(self, pre_obj, config):
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+      config: configuration object.
+    """
     super(UtmpxParser, self).__init__(pre_obj, config)
     self._utmpx_record_size = self.MAC_UTMPX_STRUCT.sizeof()
 

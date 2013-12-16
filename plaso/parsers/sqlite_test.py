@@ -25,7 +25,7 @@ class Configuration(object):
   """Config object."""
 
   def __init__(self):
-    """Initialize."""
+    """Initializes the configuration object."""
     self.parsers = ''
 
 class SQLiteParserTest(unittest.TestCase):
