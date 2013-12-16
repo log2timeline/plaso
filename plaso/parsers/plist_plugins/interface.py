@@ -24,14 +24,14 @@ PlistPlugin defines the attributes neccessary for registration, discovery
 and operation of plugins for plist files which will be used by PlistParser.
 """
 
-import abc
 import logging
 
 from plaso.lib import errors
+from plaso.lib import plugin
 from plaso.lib import registry
 
 
-class PlistPlugin(object):
+class PlistPlugin(plugin.Plugin):
   """This is an abstract class from which plugins should be based.
 
   The following are the attributes and methods expected to be overriden by a
@@ -66,6 +66,8 @@ class PlistPlugin(object):
   # __abstract prevents the interface itself from being registered as a plugin.
   __abstract = True
 
+  NAME = 'plist'
+
   # PLIST_PATH is a string for the filename this parser is designed to process.
   # This is expected to be overriden by the processing plugin.
   # Ex. 'com.apple.bluetooth.plist'
@@ -82,16 +84,45 @@ class PlistPlugin(object):
   # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
   URLS = []
 
-  def __init__(self, pre_obj):
-    """Constructor for a plist plugin.
+  # We need access to both the top_level object and the plist name in order to
+  # properly evaluate whether this is the corretct plugin or not.
+  # pylint: disable-msg=arguments-differ
+  def Process(self, plist_name, top_level):
+    """Determine if this is the correct plugin; if so proceed with processing.
+
+    Process() checks if the current plist being processed is a match for a
+    plugin by comparing the PATH and KEY requirements defined by a plugin.  If
+    both match processing continues; else raise WrongPlistPlugin.
+
+    This function also extracts the required keys as defined in self.PLIST_KEYS
+    from the plist and stores the result in self.match[key] and calls
+    self.GetEntries() which holds the processing logic implemented by the
+    plugin.
 
     Args:
-      pre_obj: This is a PlasoPreprocess object.
-    """
-    self._config = pre_obj
-    self.plugin_name = self.__class__.__name__
+      plist_name: Name of the plist file.
+      top_level: Plist in dictionary form.
 
-  @abc.abstractmethod
+    Raises:
+      WrongPlistPlugin: If this plugin is not able to process the given file.
+
+    Returns:
+      A generator of events processed by the plugin.
+    """
+
+    self._top_level = top_level
+
+    if plist_name.lower() != self.PLIST_PATH.lower():
+      raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+
+    if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
+      raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+
+    logging.debug(u'Plist Plugin Used: {} for: {}'.format(self.plugin_name,
+                                                          plist_name))
+    self.match = GetKeys(top_level, self.PLIST_KEYS)
+    return self.GetEntries()
+
   def GetEntries(self):
     """Yields PlistEvents from the values of entries within a plist.
 
@@ -129,42 +160,6 @@ class PlistPlugin(object):
     Yields:
       event.PlistEvent(root, key, time, desc) - An event from the plist.
     """
-
-  def Process(self, plist_name, top_level):
-    """Determine if this is the correct plugin; if so proceed with processing.
-
-    Process() checks if the current plist being processed is a match for a
-    plugin by comparing the PATH and KEY requirements defined by a plugin.  If
-    both match processing continues; else raise WrongPlistPlugin.
-
-    This function also extracts the required keys as defined in self.PLIST_KEYS
-    from the plist and stores the result in self.match[key] and calls
-    self.GetEntries() which holds the processing logic implemented by the
-    plugin.
-
-    Args:
-      plist_name: Name of the plist file.
-      top_level: Plist in dictionary form.
-
-    Raises:
-      WrongPlistPlugin: If this plugin is not able to process the given file.
-
-    Returns:
-      A generator of events processed by the plugin.
-    """
-
-    self._top_level = top_level
-
-    if plist_name.lower() != self.PLIST_PATH.lower():
-      raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
-
-    if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
-      raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
-
-    logging.debug(u'Plist Plugin Used: {} for: {}'.format(self.plugin_name,
-                                                          plist_name))
-    self.match = GetKeys(top_level, self.PLIST_KEYS)
-    return self.GetEntries()
 
 
 def RecurseKey(recur_item, root='', depth=15):
@@ -291,24 +286,3 @@ def GetKeysDefaultEmpty(top_level, keys, depth=1):
         if set(match.keys()) == keys:
           return match
   return match
-
-
-def GetPlistPlugins(pre_obj=None):
-  """Build a list of all available plugins capable of parsing the plist files.
-
-  This method uses the class registration library to find all classes that have
-  implemented the PlistPlugin class and compiles a list of plugin objects.
-
-  Args:
-    pre_obj: A PlasoPreprocess object containing information.
-
-  Returns:
-    A list of plist plugin objects.
-  """
-
-  plugins = []
-
-  for plugin_cls in PlistPlugin.classes.values():
-    plugins.append(plugin_cls(pre_obj))
-
-  return plugins

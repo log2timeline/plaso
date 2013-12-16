@@ -20,7 +20,6 @@ import logging
 from plaso.lib import errors
 from plaso.lib import parser
 from plaso.lib import plugin
-from plaso.lib import putils
 
 from plaso.parsers.sqlite_plugins import interface
 
@@ -47,26 +46,9 @@ class SQLiteParser(parser.PlasoParser):
   def _GetPlugins(self):
     """Return a list of all available plugins."""
     parser_filter_string = getattr(self._config, 'parsers', None)
-    if parser_filter_string:
-      parser_include, parser_exclude = putils.GetParserListsFromString(
-          parser_filter_string)
 
-    results = []
-    all_plugins = []
-
-    for name, cls in plugin.GetRegisteredPlugins(interface.SQLitePlugin):
-      if not parser_filter_string:
-        all_plugins.append(cls(self._pre_obj))
-      else:
-        if name in parser_include and name not in parser_exclude:
-          results.append(cls(self._pre_obj))
-        if name not in parser_exclude:
-          all_plugins.append(cls(self._pre_obj))
-
-    if parser_filter_string and results:
-      return results
-
-    return all_plugins
+    return plugin.GetRegisteredPlugins(
+        interface.SQLitePlugin, self._pre_obj, parser_filter_string)
 
   def Parse(self, filehandle):
     """Return a generator for EventObjects extracted from SQLite db."""
@@ -80,7 +62,7 @@ class SQLiteParser(parser.PlasoParser):
         raise errors.UnableToParseFile(
             u'Unable to parse SQLite database due to an error: %s.' % e)
 
-      for plugin_obj in self._plugins:
+      for plugin_obj in self._plugins.itervalues():
         try:
           for event_object in plugin_obj.Process(database):
             yield event_object

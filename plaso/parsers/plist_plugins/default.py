@@ -20,12 +20,14 @@ import datetime
 import logging
 
 from plaso.events import plist_event
-from plaso.lib import plist_interface
 from plaso.lib import timelib
+from plaso.parsers.plist_plugins import interface
 
 
-class DefaultPlugin(plist_interface.PlistPlugin):
+class DefaultPlugin(interface.PlistPlugin):
   """Basic plugin to extract keys with timestamps as values from plists."""
+
+  NAME = 'plist_default'
 
   def Process(self, plist_name, top_level):
     self._top_level = top_level
@@ -39,7 +41,7 @@ class DefaultPlugin(plist_interface.PlistPlugin):
     Yields:
       An EventObject from Plists values that are date objects.
     """
-    for root, key, value in plist_interface.RecurseKey(self._top_level):
+    for root, key, value in interface.RecurseKey(self._top_level):
       if isinstance(value, datetime.datetime):
         time = timelib.Timestamp.FromPythonDatetime(value)
         yield plist_event.PlistEvent(root, key, time)

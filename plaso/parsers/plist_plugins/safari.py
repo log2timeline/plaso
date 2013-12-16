@@ -19,8 +19,8 @@ import logging
 
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import plist_interface
 from plaso.lib import timelib
+from plaso.parsers.plist_plugins import interface
 
 
 class SafariHistoryEvent(event.EventObject):
@@ -46,8 +46,10 @@ class SafariHistoryEvent(event.EventObject):
     self.was_http_non_get = history_entry.get('lastVisitWasHTTPNonGet', None)
 
 
-class SafariHistoryPlugin(plist_interface.PlistPlugin):
+class SafariHistoryPlugin(interface.PlistPlugin):
   """Plugin to extract Safari history timestamps."""
+
+  NAME = 'safari_history'
 
   PLIST_PATH = 'History.plist'
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
