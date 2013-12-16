@@ -17,35 +17,17 @@
 """This file contains the unit tests for the collection mechanism of Plaso."""
 import os
 import logging
-import shutil
 import tempfile
 import unittest
 
-from plaso.lib import collector
 from plaso.lib import event
 from plaso.lib import preprocess
 from plaso.lib import queue
+from plaso.lib import tsk_collector
 
 
-class TempDirectory(object):
-  """A self cleaning temporary directory."""
-
-  def __enter__(self):
-    """Make this work with the 'with' statement."""
-    self.name = tempfile.mkdtemp()
-
-    return self.name
-
-  def __exit__(self, exc_type, exc_value, traceback):
-    """Make this work with the 'with' statement."""
-    _ = exc_type
-    _ = exc_value
-    _ = traceback
-    shutil.rmtree(self.name, True)
-
-
-class PlasoCollectorUnitTest(unittest.TestCase):
-  """The unit test for plaso storage."""
+class TskCollectorUnitTest(unittest.TestCase):
+  """The unit test for the TSK collector."""
 
   def GetEvents(self, collector_queue):
     """Return all events."""
@@ -82,35 +64,15 @@ class PlasoCollectorUnitTest(unittest.TestCase):
     # Start with a collector without opening files.
     my_queue = queue.SingleThreadedQueue()
     my_storage = queue.SingleThreadedQueue()
-    my_collect = collector.SimpleImageCollector(my_queue, my_storage, path, 0)
+    my_collect = tsk_collector.SimpleImageCollector(
+        my_queue, my_storage, path, 0)
     my_collect.Run()
     events = self.GetEvents(my_queue)
 
     self.assertEquals(len(events), 2)
 
-  def testFileCollector(self):
-    """Test collection from a simple file."""
-    files = []
-    files.append(os.path.join('test_data', 'syslog.tgz'))
-    files.append(os.path.join('test_data', 'syslog.zip'))
-    files.append(os.path.join('test_data', 'syslog.bz2'))
-    files.append(os.path.join('test_data', 'wtmp.1'))
 
-    with TempDirectory() as dirname:
-      for a_file in files:
-        shutil.copy(a_file, dirname)
-
-      my_queue = queue.SingleThreadedQueue()
-      my_store = queue.SingleThreadedQueue()
-      with collector.SimpleFileCollector(
-          my_queue, my_store, dirname) as my_collector:
-        my_collector.Collect()
-      events = self.GetEvents(my_queue)
-
-      self.assertEquals(len(events), 4)
-
-
-class PlasoTargetedImageTest(unittest.TestCase):
+class TargetedImageTest(unittest.TestCase):
   """Test targeted collection from an image."""
 
   def testImageCollection(self):
@@ -126,7 +88,7 @@ class PlasoTargetedImageTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     my_queue = queue.SingleThreadedQueue()
     my_store = queue.SingleThreadedQueue()
-    my_collector = collector.TargetedImageCollector(
+    my_collector = tsk_collector.TargetedImageCollector(
         my_queue, my_store, image_path, filter_name, pre_obj, sector_offset=0,
         byte_offset=0, parse_vss=False)
 
@@ -159,50 +121,6 @@ class PlasoTargetedImageTest(unittest.TestCase):
     # image_offset: 0
     # TODO: Remove this unnecessary buildup of slashes in front.
     self.assertEquals(pathspecs[0].file_path, '///passwords.txt')
-
-
-class PlasoTargetedDirectory(unittest.TestCase):
-  """Test targeted recursive directory check."""
-
-  def testDirectoryTarget(self):
-    """Run the tests."""
-    filter_name = ''
-    with tempfile.NamedTemporaryFile(delete=False) as fh:
-      filter_name = fh.name
-      fh.write('/plaso/lib/collector_.+.py\n')
-      fh.write('/test_data/.+evtx\n')
-      fh.write('/AUTHORS\n')
-      fh.write('/does_not_exist/some_file_[0-9]+txt\n')
-
-    pre_obj = preprocess.PlasoPreprocess()
-    my_queue = queue.SingleThreadedQueue()
-    my_store = queue.SingleThreadedQueue()
-    my_collector = collector.TargetedFileSystemCollector(
-      my_queue, my_store, pre_obj, './', filter_name)
-
-    my_collector.Run()
-    pathspecs = []
-    for serialized_pathspec in my_queue.PopItems():
-      pathspec = event.EventPathSpec()
-      pathspec.FromProtoString(serialized_pathspec)
-      pathspecs.append(pathspec)
-
-    try:
-      os.remove(filter_name)
-    except (OSError, IOError) as e:
-      logging.warning(
-          u'Unable to remove temporary file: %s due to: %s', filter_name, e)
-
-    # Three files with lib/collector_, AUTHORS and test_data/System.evtx.
-    self.assertEquals(len(pathspecs), 5)
-
-    paths = []
-    for pathspec in pathspecs:
-      paths.append(pathspec.file_path)
-
-    self.assertTrue('./plaso/lib/collector_filter.py' in paths)
-    self.assertTrue('./plaso/lib/collector_filter_test.py' in paths)
-    self.assertTrue('././AUTHORS' in paths)
 
 
 if __name__ == '__main__':

@@ -47,6 +47,7 @@ from plaso.lib import pfile
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import timelib
+from plaso.lib import tsk_preprocess
 from plaso.lib import utils
 from plaso.lib import vss
 from plaso.lib import win_registry_interface
@@ -960,7 +961,7 @@ def GetCollectorsFromAnImage(config):
 
   RegCache.fscache = pfile.FilesystemCache()
   try:
-    main_collector = preprocess.TSKFileCollector(
+    main_collector = tsk_preprocess.TSKFileCollector(
         RegCache.pre_obj, config.image, config.offset * 512)
   except errors.UnableToOpenFilesystem:
     ErrorAndDie(
@@ -986,7 +987,7 @@ def GetCollectorsFromAnImage(config):
           config.image, config.offset * 512))
 
     for store in config.vss_stores:
-      vss_collector = preprocess.VSSFileCollector(
+      vss_collector = tsk_preprocess.VSSFileCollector(
           RegCache.pre_obj, config.image, store, config.offset * 512)
       collectors.append((':VSS Store {}'.format(store + 1), vss_collector))
 
