@@ -51,6 +51,12 @@ class BencodeParser(parser.PlasoParser):
   NAME = 'bencode'
 
   def __init__(self, pre_obj, config=None):
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+      config: configuration object.
+    """
     super(BencodeParser, self).__init__(pre_obj, config)
     self._plugins = bencode_interface.GetBencodePlugins()
 

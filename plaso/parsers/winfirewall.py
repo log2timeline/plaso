@@ -69,7 +69,12 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   DATA_TYPE = 'windows:firewall:log_entry'
 
   def __init__(self, pre_obj, config):
-    """Initialize the parser."""
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+      config: configuration object.
+    """
     super(WinFirewallParser, self).__init__(pre_obj, config)
     self.version = None
     self.use_local_zone = False

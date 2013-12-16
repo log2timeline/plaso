@@ -53,6 +53,12 @@ class PlistParser(parser.PlasoParser):
   NAME = 'plist'
 
   def __init__(self, pre_obj, config):
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+      config: configuration object.
+    """
     super(PlistParser, self).__init__(pre_obj, config)
     plugin_filter_string = getattr(self._config, 'parsers', None)
     self._plugins = plugin.GetRegisteredPlugins(

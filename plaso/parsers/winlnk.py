@@ -67,6 +67,7 @@ class WinLnkParser(parser.PlasoParser):
 
     Args:
       pre_obj: pre-parsing object.
+      config: configuration object.
     """
     super(WinLnkParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
