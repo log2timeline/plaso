@@ -34,12 +34,15 @@ from plaso import preprocessors
 from plaso import output as output_plugins   # pylint: disable-msg=W0611
 from plaso import registry as reg_plugins   # pylint: disable-msg=W0611
 
-from plaso.lib import collector
 from plaso.lib import errors
+from plaso.lib import os_collector
+from plaso.lib import os_preprocess
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import storage
+from plaso.lib import tsk_collector
+from plaso.lib import tsk_preprocess
 from plaso.lib import worker
 
 import pytz
@@ -113,10 +116,10 @@ class Engine(object):
       sector_size = self.config.bytes_per_sector
       calculated_offset = self.config.image_offset * sector_size
       ofs = self.config.image_offset_bytes or calculated_offset
-      pre_collector = preprocess.TSKFileCollector(
+      pre_collector = tsk_preprocess.TSKFileCollector(
           pre_obj, self.config.filename, ofs)
     elif self.config.recursive:
-      pre_collector = preprocess.FileSystemCollector(
+      pre_collector = os_preprocess.FileSystemCollector(
           pre_obj, self.config.filename)
     else:
       return
@@ -539,7 +542,7 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
     # Start a targeted collection filter.
     if config.image:
       logging.debug(u'Starting a targeted image collection.')
-      return collector.TargetedImageCollector(
+      return tsk_collector.TargetedImageCollector(
           collection_queue, storage_queue, config.filename,
           config.file_filter, pre_obj,
           sector_offset=config.image_offset,
@@ -548,13 +551,13 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
           dir_stat=include_directory_stat)
     else:
       logging.debug(u'Starting a targeted recursive collection.')
-      return collector.TargetedFileSystemCollector(
+      return os_collector.TargetedFileSystemCollector(
           collection_queue, storage_queue, pre_obj, config.filename,
           config.file_filter, include_directory_stat)
 
   if config.image:
     logging.debug(u'Collection started from an image.')
-    return collector.SimpleImageCollector(
+    return tsk_collector.SimpleImageCollector(
         collection_queue, storage_queue, config.filename,
         offset=config.image_offset,
         offset_bytes=config.image_offset_bytes,
@@ -562,7 +565,7 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
         dir_stat=include_directory_stat)
   elif config.recursive:
     logging.debug(u'Collection started from a directory.')
-    return collector.SimpleFileCollector(
+    return os_collector.SimpleFileCollector(
         collection_queue, storage_queue, unicode(config.filename),
         include_directory_stat)
   else:
@@ -574,6 +577,6 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
       raise errors.BadConfigOption(
           u'Wrong usage: {%s} has to be a file.' % config.filename)
 
-    return collector.SimpleFileCollector(
+    return os_collector.SimpleFileCollector(
         collection_queue, storage_queue, unicode(config.filename),
         include_directory_stat)

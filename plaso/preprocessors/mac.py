@@ -19,6 +19,7 @@ import logging
 
 from plaso.lib import errors
 from plaso.lib import preprocess
+from plaso.lib import tsk_preprocess
 from plaso.lib import utils
 from plaso.parsers.plist_plugins import interface
 
@@ -135,7 +136,7 @@ class OSXTimeZone(preprocess.PreprocessPlugin):
     # TODO: This only works against an image file, need to support
     # other use cases as well (again something fixed with PyVFS).
     if not isinstance(
-        self._collector, preprocess.TSKFileCollector):
+        self._collector, tsk_preprocess.TSKFileCollector):
       raise errors.PreProcessFail(
           u'Currently only works against an image file.')
 
