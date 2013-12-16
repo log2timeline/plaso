@@ -22,6 +22,7 @@ import unittest
 
 from plaso.lib import collector_filter
 from plaso.lib import errors
+from plaso.lib import os_preprocess
 from plaso.lib import preprocess
 
 from plaso.proto import transmission_pb2
@@ -35,8 +36,8 @@ class CollectionFilterTest(unittest.TestCase):
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as fh:
       filter_name = fh.name
-      # Three hits.
-      fh.write('/plaso/lib/collector_.+.py\n')
+      # 2 hits.
+      fh.write('/test_data/testdir/filter_.+.txt\n')
       # A single hit.
       fh.write('/test_data/.+evtx\n')
       # A single hit.
@@ -48,8 +49,7 @@ class CollectionFilterTest(unittest.TestCase):
       fh.write('bad re (no close on that parenthesis/file\n')
 
     pre_obj = preprocess.PlasoPreprocess()
-    my_collector = preprocess.FileSystemCollector(
-        pre_obj, './')
+    my_collector = os_preprocess.FileSystemCollector(pre_obj, './')
     my_filter = collector_filter.CollectionFilter(my_collector, filter_name)
 
     try:
@@ -65,8 +65,8 @@ class CollectionFilterTest(unittest.TestCase):
     self.assertEquals(len(filter_list), 5)
 
     pathspecs = list(my_filter.GetPathSpecs())
-    # One evtx, one AUTHORS, three collector_* files, total five files.
-    self.assertEquals(len(pathspecs), 5)
+    # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
+    self.assertEquals(len(pathspecs), 4)
 
     with self.assertRaises(errors.BadConfigOption):
       _ = collector_filter.CollectionFilter(
@@ -78,7 +78,7 @@ class CollectionFilterTest(unittest.TestCase):
     proto.filter_string.append('/AUTHORS')
     proto.filter_string.append('/does_not_exist/some_file_[0-9]+txt')
     proto.filter_string.append('/test_data/.+evtx')
-    proto.filter_string.append('/plaso/lib/collector_.+.py')
+    proto.filter_string.append('/test_data/testdir/filter_.+.txt')
     proto.filter_string.append('bad re (no close on that parenthesis/file')
 
     proto_filter = collector_filter.CollectionFilter(my_collector, proto)
