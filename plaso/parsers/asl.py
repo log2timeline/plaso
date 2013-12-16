@@ -179,6 +179,12 @@ class AslParser(parser.PlasoParser):
           'value', length_field = construct.UBInt32('length')))
 
   def __init__(self, pre_obj, config):
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+      config: configuration object.
+    """
     super(AslParser, self).__init__(pre_obj, config)
     self._asl_record_struct_size = self.ASL_RECORD_STRUCT.sizeof()
 

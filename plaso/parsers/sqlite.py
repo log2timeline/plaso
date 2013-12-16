@@ -37,7 +37,12 @@ class SQLiteParser(parser.PlasoParser):
   NAME = 'sqlite'
 
   def __init__(self, pre_obj, config):
-    """Constructor for the SQLite parser."""
+    """Initializes the parser.
+
+    Args:
+      pre_obj: pre-parsing object.
+      config: configuration object.
+    """
     super(SQLiteParser, self).__init__(pre_obj, config)
     self._local_zone = False
     self.db = None
