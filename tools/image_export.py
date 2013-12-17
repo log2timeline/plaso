@@ -29,11 +29,11 @@ from plaso.collector import factory as collector_factory
 from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import pfile
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import queue
-from plaso.lib import vss
+from plaso.pvfs import pfile
+from plaso.pvfs import vss
 
 
 class ImageExtractor(object):

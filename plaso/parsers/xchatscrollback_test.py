@@ -21,13 +21,13 @@ import os
 import pytz
 import unittest
 
-from plaso.lib import eventdata
-from plaso.lib import preprocess
-from plaso.lib import putils
-from plaso.parsers import xchatscrollback as xchatscrollback_parser
 # Shut up pylint on W0611: Unused import xchatscrollback_formatter.
 # pylint: disable=W0611
 from plaso.formatters import xchatscrollback as xchatscrollback_formatter
+from plaso.lib import eventdata
+from plaso.lib import preprocess
+from plaso.parsers import xchatscrollback as xchatscrollback_parser
+from plaso.pvfs import utils
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
@@ -38,7 +38,7 @@ class XChatScrollbackUnitTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     test_file = os.path.join('test_data', 'xchatscrollback.log')
-    self.filehandle = putils.OpenOSFile(test_file)
+    self.filehandle = utils.OpenOSFile(test_file)
 
   def testParsing(self):
     """Test parsing of a XChat scrollback file."""

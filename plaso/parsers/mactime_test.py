@@ -21,8 +21,8 @@ import unittest
 from plaso.formatters import mactime
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.parsers import mactime
+from plaso.pvfs import utils
 
 import pytz
 
@@ -33,7 +33,7 @@ class MactimeUnitTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     test_file = os.path.join('test_data', 'mactime.body')
-    self.input_file = putils.OpenOSFile(test_file)
+    self.input_file = utils.OpenOSFile(test_file)
 
   def testParsing(self):
     """Test parsing of a mactime file."""

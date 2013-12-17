@@ -21,12 +21,10 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import bencode_parser as bencode_formatter
-
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.lib import putils
-
 from plaso.parsers import bencode_parser
+from plaso.pvfs import utils
 
 import pytz
 
@@ -45,7 +43,7 @@ class BencodeTest(unittest.TestCase):
 
   def _ParseBencodeFile(self, filename):
     """Open up a filehandle and yield all event objects."""
-    fh = putils.OpenOSFile(filename)
+    fh = utils.OpenOSFile(filename)
     parser = bencode_parser.BencodeParser(self.pre_obj, None)
     for event_object in parser.Parse(fh):
       yield event_object
@@ -55,7 +53,7 @@ class BencodeTest(unittest.TestCase):
     """Read Transmission activity files and make few tests."""
 
     events = None
-    with putils.OpenOSFile(self.transmission) as fd:
+    with utils.OpenOSFile(self.transmission) as fd:
       events = list(self._ParseBencodeFile(fd))
 
     events_expected = 1
@@ -92,7 +90,7 @@ class BencodeTest(unittest.TestCase):
   def testUTorrentPlugin(self):
     """Parse a uTorrent resume.dat file and make a few tests."""
     torrents = None
-    with putils.OpenOSFile(self.utorrent) as fd:
+    with utils.OpenOSFile(self.utorrent) as fd:
       torrents = list(self._ParseBencodeFile(fd))
 
     torrents_expected = 1  # Number of torrent files tracked.

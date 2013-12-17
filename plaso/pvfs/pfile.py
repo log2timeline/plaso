@@ -35,8 +35,8 @@ from plaso.lib import event
 from plaso.lib import registry
 from plaso.lib import sleuthkit
 from plaso.lib import timelib
-from plaso.lib import vss
 from plaso.proto import transmission_pb2
+from plaso.pvfs import vss
 
 import pytsk3
 import pyvshadow

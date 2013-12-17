@@ -44,13 +44,14 @@ from plaso import registry    # pylint: disable-msg=W0611
 from plaso.collector import factory as collector_factory
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import pfile
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.lib import timelib
 from plaso.lib import utils
-from plaso.lib import vss
+from plaso.lib import putils
 from plaso.lib import win_registry_interface
+from plaso.pvfs import pfile
+from plaso.pvfs import utils as pvfs_utils
+from plaso.pvfs import vss
 from plaso.winreg import cache
 from plaso.winreg import winregistry
 
@@ -130,7 +131,7 @@ class RegistryHexFormatter(RegistryFormatter):
     # pylint: disable-msg=W0212
     event_object.pathspec = RegCache.hive.file_object.pathspec
     ret_strings.append(utils.FormatHeader('Hex Output From Event.', '-'))
-    ret_strings.append(putils.GetEventData(event_object, RegCache.fscache))
+    ret_strings.append(pvfs_utils.GetEventData(event_object, RegCache.fscache))
 
     return u'\n'.join(ret_strings), u''
 
@@ -488,7 +489,7 @@ def IsLoaded():
 def OpenHive(filename, collector=None, codepage='cp1252'):
   """Open a registry hive based on a collector or a filename."""
   if not collector:
-    file_object = putils.OpenOSFile(filename)
+    file_object = pvfs_utils.OpenOSFile(filename)
   else:
     file_object = collector.OpenFile(filename)
 

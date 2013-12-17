@@ -15,9 +15,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The SleuthKit stat helper functions."""
+"""The SleuthKit helper functions."""
 
-from plaso.lib import pfile
+import logging
+
+from plaso.lib import errors
+from plaso.pvfs import pfile
 
 
 def GetTskDirectoryStat(directory_object):
@@ -70,3 +73,64 @@ def GetTskDirectoryStat(directory_object):
     stat.fs_type = fs_type
 
   return stat
+
+
+def GetTSKPaths(path_list, tsk_fs):
+  """Find the path if it exists.
+
+  Args:
+    path_list: A list of either regular expressions or expanded
+               paths (strings).
+    tsk_fs: The SleuthKit file system object.
+
+  Returns:
+    A list of paths.
+  """
+  paths = []
+
+  for part in path_list:
+    if not part:
+      continue
+
+    if isinstance(part, (str, unicode)):
+      if paths:
+        for index, path in enumerate(paths):
+          paths[index] = u'/'.join([path, part])
+      else:
+        paths.append(u'/{}'.format(part))
+    else:
+      found_path = False
+      if not paths:
+        paths.append('/')
+
+      old_paths = list(paths)
+      paths = []
+      for real_path in old_paths:
+        try:
+          directory = tsk_fs.fs.open_dir(real_path)
+        except IOError as e:
+          continue
+        for f in directory:
+          try:
+            name = f.info.name.name
+            if not f.info.meta:
+              continue
+          except AttributeError as e:
+            logging.error('[ParseImage] Problem reading file [%s], error: %s',
+                          name, e)
+            continue
+
+          if name == '.' or name == '..':
+            continue
+
+          m = part.match(name)
+          if m:
+            append_path = u'/'.join([real_path, m.group(0)])
+            found_path = True
+            paths.append(append_path)
+
+      if not found_path:
+        raise errors.PathNotFound(u'Path not found inside')
+
+  for real_path in paths:
+    yield real_path

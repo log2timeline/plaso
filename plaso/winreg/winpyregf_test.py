@@ -18,7 +18,7 @@
 import os
 import unittest
 
-from plaso.lib import putils
+from plaso.pvfs import utils
 from plaso.winreg import winpyregf
 
 
@@ -30,7 +30,7 @@ class RegistryUnitTest(unittest.TestCase):
 
   def testListKeys(self):
     test_file = os.path.join(self.base_path, 'NTUSER.DAT')
-    file_object = putils.OpenOSFile(test_file)
+    file_object = utils.OpenOSFile(test_file)
     reg = winpyregf.WinRegistry(file_object)
     keys = list(reg)
 
@@ -39,7 +39,7 @@ class RegistryUnitTest(unittest.TestCase):
 
   def testWinPyregf(self):
     test_file = os.path.join(self.base_path, 'NTUSER.DAT')
-    file_object = putils.OpenOSFile(test_file)
+    file_object = utils.OpenOSFile(test_file)
     reg = winpyregf.WinPyregfFile()
     reg.Open(file_object)
 
