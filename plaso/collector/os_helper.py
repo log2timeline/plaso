@@ -21,7 +21,7 @@ import logging
 import os
 
 from plaso.lib import errors
-from plaso.pvfs import pfile
+from plaso.pvfs import pstats
 
 
 def GetOsDirectoryStat(directory_path):
@@ -33,7 +33,7 @@ def GetOsDirectoryStat(directory_path):
   Returns:
     A stat object for the directory.
   """
-  ret = pfile.Stats()
+  ret = pstats.Stats()
   stat = os.stat(directory_path)
 
   ret.full_path = directory_path
