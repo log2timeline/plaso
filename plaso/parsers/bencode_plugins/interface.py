@@ -28,13 +28,12 @@ import abc
 import logging
 
 from plaso.lib import errors
-from plaso.lib import registry
+from plaso.lib import plugin
 
 
-class BencodePlugin(object):
+class BencodePlugin(plugin.Plugin):
   """This is an abstract class from which plugins should be based."""
 
-  __metaclass__ = registry.MetaclassRegistry
   # __abstract prevents the interface itself from being registered as a plugin.
   __abstract = True
 
@@ -49,14 +48,7 @@ class BencodePlugin(object):
   # Ex. ['https://wiki.theory.org/BitTorrentSpecification#Bencoding']
   URLS = []
 
-  def __init__(self, pre_obj):
-    """Constructor for a bencode plugin.
-
-    Args:
-      pre_obj: This is a PlasoPreprocess object.
-    """
-    self._config = pre_obj
-    self.plugin_name = self.__class__.__name__
+  NAME = 'bencode'
 
   @abc.abstractmethod
   def GetEntries(self):
@@ -80,7 +72,9 @@ class BencodePlugin(object):
       event.BencodeEvent(key) - An event from the bencoded file.
     """
 
-
+  # Not sure why this is needed but pylint complains about the arguments
+  # differing from the interface, but it should not.
+  # pylint: disable-msg=arguments-differ
   def Process(self, top_level):
     """Determine if this is the correct plugin; if so proceed with processing.
 
@@ -190,23 +184,3 @@ def GetKeys(top_level, keys, depth=1):
         if set(match.keys()) == keys:
           return match
   return match
-
-
-def GetBencodePlugins(pre_obj=None):
-  """Build a list of all available plugins capable of parsing bencoded files.
-
-  This method uses the class registration library to find all classes that have
-  implemented the BencodePlugin class and compiles a list of plugin objects.
-
-  Args:
-    pre_obj: A PlasoPreprocess object containing information.
-
-  Returns:
-    A list of bencode plugin objects.
-  """
-  plugins = []
-
-  for plugin_cls in BencodePlugin.classes.values():
-    plugins.append(plugin_cls(pre_obj))
-
-  return plugins
