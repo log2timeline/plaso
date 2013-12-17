@@ -20,7 +20,7 @@ EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
 # Run the tests in a specific order.
-for SUBDIR in lib winreg filters classifier parsers registry plist output frontend;
+for SUBDIR in lib winreg filters collector classifier parsers registry plist output frontend;
 do
   TEST_FILES=`find "plaso/${SUBDIR}" -name "*_test.py" | grep -v "\/build\/"`;
 

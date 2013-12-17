@@ -20,9 +20,9 @@ import logging
 import tempfile
 import unittest
 
+from plaso.collector import factory
 from plaso.lib import collector_filter
 from plaso.lib import errors
-from plaso.lib import os_preprocess
 from plaso.lib import preprocess
 
 from plaso.proto import transmission_pb2
@@ -49,7 +49,7 @@ class CollectionFilterTest(unittest.TestCase):
       fh.write('bad re (no close on that parenthesis/file\n')
 
     pre_obj = preprocess.PlasoPreprocess()
-    my_collector = os_preprocess.FileSystemCollector(pre_obj, './')
+    my_collector = factory.GetFileSystemPreprocessCollector(pre_obj, u'./')
     my_filter = collector_filter.CollectionFilter(my_collector, filter_name)
 
     try:

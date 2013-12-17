@@ -41,13 +41,13 @@ from IPython.core import magic
 from plaso import preprocessors
 from plaso import registry    # pylint: disable-msg=W0611
 
+from plaso.collector import factory as collector_factory
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import pfile
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import timelib
-from plaso.lib import tsk_preprocess
 from plaso.lib import utils
 from plaso.lib import vss
 from plaso.lib import win_registry_interface
@@ -961,8 +961,8 @@ def GetCollectorsFromAnImage(config):
 
   RegCache.fscache = pfile.FilesystemCache()
   try:
-    main_collector = tsk_preprocess.TSKFileCollector(
-        RegCache.pre_obj, config.image, config.offset * 512)
+    main_collector = collector_factory.GetImagePreprocessCollector(
+        RegCache.pre_obj, config.image, byte_offset=(config.offset * 512))
   except errors.UnableToOpenFilesystem:
     ErrorAndDie(
         u'Unable to open the file system image: {}'.format(config.image))
@@ -987,8 +987,9 @@ def GetCollectorsFromAnImage(config):
           config.image, config.offset * 512))
 
     for store in config.vss_stores:
-      vss_collector = tsk_preprocess.VSSFileCollector(
-          RegCache.pre_obj, config.image, store, config.offset * 512)
+      vss_collector = collector_factory.GetImagePreprocessCollector(
+          RegCache.pre_obj, config.image, byte_offset=(config.offset * 512),
+          vss_store_number=store)
       collectors.append((':VSS Store {}'.format(store + 1), vss_collector))
 
   return collectors
