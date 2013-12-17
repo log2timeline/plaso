@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,10 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A simple script to export files out of an image."""
+
 import argparse
 import hashlib
-import os
 import logging
+import os
 import sys
 
 from plaso import preprocessors
@@ -34,66 +36,173 @@ from plaso.lib import queue
 from plaso.lib import vss
 
 
-def RunExtensionExtraction(options, extensions, fscache):
-  """Extracts files based on file extensions.
+class ImageExtractor(object):
+  """Class that implements the image extractor."""
 
-  Args:
-    options: A configuration object, an argparse like object.
-    fscache: A FileSystemCache object.
-  """
-  input_queue = queue.SingleThreadedQueue()
-  output_queue = queue.SingleThreadedQueue()
+  def __init__(self):
+    """Initializes the image extractor object."""
+    super(ImageExtractor, self).__init__()
+    self._image_path = None
+    self._image_offset = 0
+    self._fscache = pfile.FilesystemCache()
+    self._image_collector = None
+    self._pre_obj = None
 
-  my_collector = collector_factory.GetImageCollector(
-      input_queue, output_queue, options.image, sector_offset=options.offset,
-      parse_vss=options.vss, fscache=fscache)
+  def Open(self, image_path, sector_offset=0):
+    """Opens the image.
 
-  my_collector.Collect()
+    Args:
+      image_path: The path to the disk image to parse.
+      sector_offset: Option offset in sectors into the image where the partition
+                     containing the file system starts. The default is 0.
+    """
+    self._image_path = image_path
+    self._image_offset = sector_offset * 512
 
-  # Configure filesaver.
-  FileSaver.calc_md5 = options.remove_duplicates
+  def _Preprocess(self):
+    """Preprocesses the image.
 
-  for pathspec_string in input_queue.PopItems():
-    pathspec = event.EventPathSpec()
-    pathspec.FromProtoString(pathspec_string)
+    Returns:
+      The image collector object.
+    """
+    if self._pre_obj is not None:
+      return
 
-    _, _, extension = pathspec.file_path.rpartition('.')
-    if extension.lower() in extensions:
-      fh = pfile.OpenPFile(pathspec, fscache=fscache)
-      if getattr(pathspec, 'vss_store_number', None):
-        FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number + 1
-      else:
-        FileSaver.prefix = ''
-      if os.path.sep != '/':
-        fh.name = fh.name.replace('/', os.path.sep)
+    self._pre_obj = preprocess.PlasoPreprocess()
+    try:
+      image_collector = collector_factory.GetImagePreprocessCollector(
+          self._pre_obj, self._image_path, byte_offset=self._image_offset)
 
-      FileSaver.SaveFile(fh, options.path)
+    except errors.UnableToOpenFilesystem as e:
+      raise RuntimeError('Unable to proceed, not an image file? [%s]' % e)
 
+    plugin_list = preprocessors.PreProcessList(
+        self._pre_obj, image_collector)
 
-def ExtractFiles(
-    my_collector, filter_definition, export_path, fscache=None):
-  """Extracts files that match the filter.
+    logging.info('Guessing OS')
+    guessed_os = preprocess.GuessOS(image_collector)
+    logging.info('OS: %s', guessed_os)
 
-  Args:
-    my_collector: A collection object that can be used to locate files.
-    filter_definition: This can be either a PathFilter protobuf,
-    a path to a file with ASCII presentation of the protobuf or a list
-    of entries, where each entry is a single path.
-    export_path: The path to where the files should be stored.
-    fscache: A filesystem cache object, if applicable.
+    logging.info('Running preprocess.')
+    for weight in plugin_list.GetWeightList(guessed_os):
+      for plugin in plugin_list.GetWeight(guessed_os, weight):
+        try:
+          plugin.Run()
+        except errors.PreProcessFail as e:
+          logging.warning(
+              'Unable to run preprocessor: %s, reason: %s',
+              plugin.__class__.__name__, e)
 
-  Returns:
-    None, unless calc_md5 is set then it returns a dict with MD5 sums.
-  """
-  col_fil = collector_filter.CollectionFilter(my_collector, filter_definition)
+    logging.info('Preprocess done, saving files from image.')
 
-  for pathspec_string in col_fil.GetPathSpecs():
-    with pfile.OpenPFile(pathspec_string, fscache=fscache) as fh:
-      # There will be issues on systems that use a different separator than a
-      # forward slash. However a forward slash is always used in the pathspec.
-      if os.path.sep != '/':
-        fh.name = fh.name.replace('/', os.path.sep)
-      FileSaver.SaveFile(fh, export_path)
+    return image_collector
+
+  def _ExtractFiles(self, image_collector, filter_expression, destination_path):
+    """Extracts files that match the filter.
+
+    Args:
+      image_collector: The image collector object.
+      filter_expression: String containing a collection filter expression.
+      destination_path: The path where the extracted files should be stored.
+
+    Returns:
+      None, unless calc_md5 is set then it returns a dict with MD5 sums.
+    """
+    filter_object = collector_filter.CollectionFilter(
+        image_collector, filter_expression)
+
+    for path_spec in filter_object.GetPathSpecs():
+      with pfile.OpenPFile(path_spec, fscache=self._fscache) as fh:
+        # There will be issues on systems that use a different separator than a
+        # forward slash. However a forward slash is always used in the pathspec.
+        if os.path.sep != '/':
+          fh.name = fh.name.replace('/', os.path.sep)
+        FileSaver.SaveFile(fh, destination_path)
+
+  def ExtractWithFilter(
+      self, filter_expression, destination_path, process_vss=False,
+      remove_duplicates=False):
+    """Extracts files using a filter expression.
+
+    This method runs the file extraction process on the image and
+    potentially on every VSS if that is wanted.
+
+    Args:
+      filter_expression: String containing a collection filter expression.
+      destination_path: The path where the extracted files should be stored.
+      process_vss: Optional boolean value to indicate if VSS should be detected
+                   and processed. The default is false.
+      remove_duplicates: Optional boolean value to indicate if duplicates should
+                         be detected and removed. The default is false.
+    """
+    if self._pre_obj is None:
+      image_collector = self._Preprocess()
+
+    if not os.path.isdir(destination_path):
+      os.makedirs(destination_path)
+
+    # Save the regular files.
+    FileSaver.calc_md5 = remove_duplicates
+    self._ExtractFiles(image_collector, filter_expression, destination_path)
+
+    if process_vss:
+      logging.info('Extracting files from VSS.')
+      vss_numbers = vss.GetVssStoreCount(self._image_path, self._image_offset)
+
+      for store_nr in range(0, vss_numbers):
+        logging.info(
+            'Extracting files from VSS %d/%d', store_nr + 1, vss_numbers)
+
+        vss_collector = collector_factory.GetImagePreprocessCollector(
+            self._pre_obj, self._image_path, byte_offset=self._image_offset,
+            vss_store_number=store_nr)
+
+        FileSaver.prefix = 'vss_%d' % store_nr
+        self._ExtractFiles(vss_collector, filter_expression, destination_path)
+
+  def ExtractWithExtensions(
+       self, extensions, destination_path, process_vss=False,
+       remove_duplicates=False):
+    """Extracts files using extensions.
+
+    Args:
+      extensions: List of extensions.
+      destination_path: The path where the extracted files should be stored.
+      process_vss: Optional boolean value to indicate if VSS should be detected
+                   and processed. The default is false.
+      remove_duplicates: Optional boolean value to indicate if duplicates should
+                         be detected and removed. The default is false.
+    """
+    if not os.path.isdir(destination_path):
+      os.makedirs(destination_path)
+
+    input_queue = queue.SingleThreadedQueue()
+    output_queue = queue.SingleThreadedQueue()
+
+    image_collector = collector_factory.GetImageCollector(
+        input_queue, output_queue, self._image_path,
+        byte_offset=self._image_offset, parse_vss=process_vss,
+        fscache=self._fscache)
+
+    image_collector.Collect()
+
+    FileSaver.calc_md5 = remove_duplicates
+
+    for path_spec_string in input_queue.PopItems():
+      pathspec = event.EventPathSpec()
+      pathspec.FromProtoString(path_spec_string)
+
+      _, _, extension = pathspec.file_path.rpartition('.')
+      if extension.lower() in extensions:
+        fh = pfile.OpenPFile(pathspec, fscache=self._fscache)
+        if getattr(pathspec, 'vss_store_number', None):
+          FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number + 1
+        else:
+          FileSaver.prefix = ''
+        if os.path.sep != '/':
+          fh.name = fh.name.replace('/', os.path.sep)
+
+        FileSaver.SaveFile(fh, destination_path)
 
 
 class FileSaver(object):
@@ -103,7 +212,7 @@ class FileSaver(object):
   prefix = ''
 
   @classmethod
-  def SaveFile(cls, fh, export_path):
+  def SaveFile(cls, fh, destination_path):
     """Take a filehandle and an export path and save the file."""
     directory = ''
     filename = ''
@@ -111,7 +220,7 @@ class FileSaver(object):
       directory_string, _, filename = fh.name.rpartition(os.path.sep)
       if directory_string:
         directory = os.path.join(
-            export_path, *directory_string.split(os.path.sep))
+            destination_path, *directory_string.split(os.path.sep))
     else:
       filename = fh.name
 
@@ -127,7 +236,7 @@ class FileSaver(object):
       if not os.path.isdir(directory):
         os.makedirs(directory)
     else:
-      directory = export_path
+      directory = destination_path
 
     save_file = True
     if cls.calc_md5:
@@ -163,88 +272,19 @@ def CalculateHash(file_object):
   return md5.hexdigest()
 
 
-def RunPreprocess(image_path, image_offset):
-  """Preprocess an image and return back a collector and a fscache.
-
-  Args:
-    image_path: The path to the disk image to parse.
-    image_offset: The sector offset into the volume where the partition starts.
-
-  Returns:
-    A tuple with three attributes, a collector, fileystem cache object and
-    a pre processing object.
-  """
-  fscache = pfile.FilesystemCache()
-  pre_obj = preprocess.PlasoPreprocess()
-
-  # Start with a regular TSK collector.
-  try:
-    image_collector = collector_factory.GetImagePreprocessCollector(
-        pre_obj, image_path, byte_offset=(image_offset * 512))
-  except errors.UnableToOpenFilesystem as e:
-    raise RuntimeError('Unable to proceed, not an image file? [%s]' % e)
-
-  plugin_list = preprocessors.PreProcessList(pre_obj, image_collector)
-
-  logging.info('Guessing OS')
-  guessed_os = preprocess.GuessOS(image_collector)
-  logging.info('OS: %s', guessed_os)
-  logging.info('Running preprocess.')
-  for weight in plugin_list.GetWeightList(guessed_os):
-    for plugin in plugin_list.GetWeight(guessed_os, weight):
-      try:
-        plugin.Run()
-      except errors.PreProcessFail as e:
-        logging.warning(
-            'Unable to run preprocessor: %s, reason: %s',
-            plugin.__class__.__name__, e)
-
-  logging.info('Preprocess done, saving files from image.')
-
-  return image_collector, fscache, pre_obj
-
-
-def RunExtraction(options, image_collector, pre_obj, fscache):
-  """Run the extraction process.
-
-  This method runs the file extraction process on the image and
-  potentially on every VSS if that is wanted.
-
-  Args:
-    options: A configuration object, something like an argparse object.
-    image_collector: An image collector object.
-    pre_obj: Pre.
-    fscache: A filesystem cache object.
-  """
-  # Save the regular files.
-  FileSaver.calc_md5 = options.remove_duplicates
-  ExtractFiles(image_collector, options.filter, options.path, fscache=fscache)
-
-  # Go through VSS if desired.
-  if options.vss:
-    logging.info('Extracting files from VSS.')
-    vss_numbers = vss.GetVssStoreCount(options.image, options.offset * 512)
-    for store_nr in range(0, vss_numbers):
-      logging.info('Extracting files from VSS %d/%d', store_nr + 1, vss_numbers)
-      vss_col = collector_factory.GetImagePreprocessCollector(
-          pre_obj, options.image, byte_offset=(options.offset * 512),
-          vss_store_number=store_nr)
-      FileSaver.prefix = 'vss_%d' % store_nr
-      ExtractFiles(vss_col, options.filter, options.path, fscache)
-
-
 def Main():
   """The main function, running the show."""
   arg_parser = argparse.ArgumentParser(
-      description=('This is a simple collector designed to export files'
-                   ' inside an image, both within a regular raw image as '
-                   'well as inside a VSS. The tool uses a collection filter '
-                   'that uses the same syntax as a targeted plaso filter.'),
+      description=(
+          'This is a simple collector designed to export files inside an '
+          'image, both within a regular RAW image as well as inside a VSS. '
+          'The tool uses a collection filter that uses the same syntax as a '
+          'targeted plaso filter.'),
       epilog='And that\'s how you export files, plaso style.')
 
   arg_parser.add_argument(
       '-v', '--vss', dest='vss', action='store_true', default=False,
-      help='Indicate to the tool that we want to extract files from VSS too.')
+      help='Also extract files from VSS.')
 
   arg_parser.add_argument(
       '-o', '--offset', dest='offset', action='store', default=0, type=int,
@@ -257,21 +297,21 @@ def Main():
   arg_parser.add_argument(
       '-x', '--extensions', dest='extension_string', action='store',
       type=str, metavar='EXTENSION_STRING', help=(
-          'If the purpose is to find all files given a certain extension'
-          'this options should be used. This option accepts a comma separated'
+          'If the purpose is to find all files given a certain extension '
+          'this options should be used. This option accepts a comma separated '
           'string denoting all file extensions, eg: -x "csv,docx,pst".'))
 
   arg_parser.add_argument(
       '-f', '--filter', action='store', dest='filter', metavar='FILTER_FILE',
       type=str, help=(
           'Full path to the file that contains the collection filter, '
-          'the file can use variables that are defined in preprocesing'
-          ', just like any other log2timeline/plaso collection filter.'))
+          'the file can use variables that are defined in preprocesing, '
+          'just like any other log2timeline/plaso collection filter.'))
 
   arg_parser.add_argument(
       '--include_duplicates', dest='include_duplicates', action='store_true',
       default=False, help=(
-          'By default if VSS is turned on all files saved will have their'
+          'By default if VSS is turned on all files saved will have their '
           'MD5 sum calculated and compared to other files already saved '
           'with the same inode value. If the MD5 sum is the same the file '
           'does not get saved again. This option turns off that behavior '
@@ -279,8 +319,8 @@ def Main():
 
   arg_parser.add_argument(
       'image', action='store', metavar='IMAGE', default=None, type=str, help=(
-          'The full path to the image file that we are about to extract files'
-          ' from, it should be a raw image or another image that plaso '
+          'The full path to the image file that we are about to extract files '
+          'from, it should be a raw image or another image that plaso '
           'supports.'))
 
   options = arg_parser.parse_args()
@@ -304,29 +344,29 @@ def Main():
       logging.error('Unable to proceed, filter file does not exist.')
       sys.exit(1)
 
-  if options.extension_string:
-    extensions = [x.strip() for x in options.extension_string.split(',')]
-
-  if not os.path.isdir(options.path):
-    os.makedirs(options.path)
-
-  if options.vss:
-    if options.include_duplicates:
-      options.remove_duplicates = False
-    else:
-      options.remove_duplicates = True
-  else:
+  if not options.vss:
     options.remove_duplicates = False
+  elif options.include_duplicates:
+    options.remove_duplicates = False
+  else:
+    options.remove_duplicates = True
 
-  collector_use, fscache, pre_obj = RunPreprocess(options.image, options.offset)
+  image_extractor = ImageExtractor()
+  image_extractor.Open(options.image, sector_offset=options.offset)
 
   # The option of running both options.
   if options.filter:
-    RunExtraction(options, collector_use, pre_obj, fscache)
-    logging.info('Files from filters extracted.')
+    image_extractor.ExtractWithFilter(
+        options.path, options.filter, 
+        process_vss=options.vss,
+        remove_duplicates=options.remove_duplicates)
 
   if options.extension_string:
-    RunExtensionExtraction(options, extensions, fscache)
+    extensions = [x.strip() for x in options.extension_string.split(',')]
+
+    image_extractor.ExtractWithExtensions(
+        extensions, options.path, process_vss=options.vss,
+        remove_duplicates=options.remove_duplicates)
     logging.info('Files based on extension extracted.')
 
 
