@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,15 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for the collection mechanism of Plaso."""
-import os
+
 import logging
+import os
 import tempfile
 import unittest
 
+from plaso.collector import factory
+from plaso.collector import tsk_collector
 from plaso.lib import event
 from plaso.lib import preprocess
 from plaso.lib import queue
-from plaso.lib import tsk_collector
 
 
 class TskCollectorUnitTest(unittest.TestCase):
@@ -64,9 +67,8 @@ class TskCollectorUnitTest(unittest.TestCase):
     # Start with a collector without opening files.
     my_queue = queue.SingleThreadedQueue()
     my_storage = queue.SingleThreadedQueue()
-    my_collect = tsk_collector.SimpleImageCollector(
-        my_queue, my_storage, path, 0)
-    my_collect.Run()
+    my_collector = tsk_collector.TSKCollector(my_queue, my_storage, path)
+    my_collector.Run()
     events = self.GetEvents(my_queue)
 
     self.assertEquals(len(events), 2)
@@ -88,9 +90,8 @@ class TargetedImageTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     my_queue = queue.SingleThreadedQueue()
     my_store = queue.SingleThreadedQueue()
-    my_collector = tsk_collector.TargetedImageCollector(
-        my_queue, my_store, image_path, filter_name, pre_obj, sector_offset=0,
-        byte_offset=0, parse_vss=False)
+    my_collector = factory.GetImageCollectorWithFilter(
+        my_queue, my_store, image_path, filter_name, pre_obj)
 
     my_collector.Run()
 

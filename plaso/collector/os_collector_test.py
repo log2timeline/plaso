@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,13 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for the collection mechanism of Plaso."""
-import os
+
 import logging
+import os
 import shutil
 import tempfile
 import unittest
 
-from plaso.lib import os_collector
+from plaso.collector import factory
+from plaso.collector import os_collector
 from plaso.lib import event
 from plaso.lib import preprocess
 from plaso.lib import queue
@@ -71,7 +74,7 @@ class OsCollectorUnitTest(unittest.TestCase):
 
       my_queue = queue.SingleThreadedQueue()
       my_store = queue.SingleThreadedQueue()
-      with os_collector.SimpleFileCollector(
+      with os_collector.OSCollector(
           my_queue, my_store, dirname) as my_collector:
         my_collector.Collect()
       events = self.GetEvents(my_queue)
@@ -95,7 +98,7 @@ class TargetedDirectoryTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     my_queue = queue.SingleThreadedQueue()
     my_store = queue.SingleThreadedQueue()
-    my_collector = os_collector.TargetedFileSystemCollector(
+    my_collector = factory.GetFileSystemCollectorWithFilter(
       my_queue, my_store, pre_obj, './', filter_name)
 
     my_collector.Run()
