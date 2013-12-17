@@ -16,5 +16,5 @@
 # limitations under the License.
 """This file contains an import statement for each bencode related plugin."""
 
-from plaso.bencode_parser import transmission
-from plaso.bencode_parser import utorrent
+from plaso.parsers.bencode_plugins import transmission
+from plaso.parsers.bencode_plugins import utorrent

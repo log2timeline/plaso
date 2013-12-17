@@ -16,9 +16,9 @@
 # limitations under the License.
 """This file contains a bencode plugin for Transmission BitTorrent data."""
 
-from plaso.lib import bencode_interface
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.parsers.bencode_plugins import interface
 
 
 class TransmissionEventContainer(event.EventContainer):
@@ -37,8 +37,10 @@ class TransmissionEventContainer(event.EventContainer):
     self.seedtime = seedtime // 60  # Convert seconds to minutes.
 
 
-class TransmissionPlugin(bencode_interface.BencodePlugin):
+class TransmissionPlugin(interface.BencodePlugin):
   """Parse Transmission BitTorrent activity file for current torrents."""
+
+  NAME = 'bencode_transmission'
 
   BENCODE_KEYS = frozenset(['activity-date', 'done-date', 'added-date',
                             'destination', 'seeding-time-seconds'])

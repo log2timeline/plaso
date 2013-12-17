@@ -24,10 +24,11 @@ import bencode
 import logging
 import re
 
-from plaso import bencode_parser  # pylint: disable=W0611
-from plaso.lib import bencode_interface
 from plaso.lib import errors
 from plaso.lib import parser
+from plaso.lib import plugin
+from plaso.parsers import bencode_plugins  # pylint: disable-msg=unused-import
+from plaso.parsers.bencode_plugins import interface
 
 
 class BencodeParser(parser.PlasoParser):
@@ -36,12 +37,12 @@ class BencodeParser(parser.PlasoParser):
   The Plaso engine calls parsers by their Parse() method. This parser's
   Parse() has GetTopLevel() which deserializes bencoded files using the
   BitTorrent-bencode library and calls plugins (BencodePlugin) registered
-  through the bencode_interface by their Process() to yield BencodeEvent
+  through the interface by their Process() to yield BencodeEvent
   objects back to the engine.
 
   Plugins are how this parser understands the content inside a bencoded file,
   each plugin holds logic specific to a particular bencoded file. See the
-  bencode_parser/ directory for examples of how bencode plugins are
+  bencode_plugins / directory for examples of how bencode plugins are
   implemented.
   """
 
@@ -58,7 +59,14 @@ class BencodeParser(parser.PlasoParser):
       config: configuration object.
     """
     super(BencodeParser, self).__init__(pre_obj, config)
-    self._plugins = bencode_interface.GetBencodePlugins()
+    self._plugins = self._GetPlugins()
+
+  def _GetPlugins(self):
+    """Return a list of all available plugins."""
+    parser_filter_string = getattr(self._config, 'parsers', None)
+
+    return plugin.GetRegisteredPlugins(
+        interface.BencodePlugin, self._pre_obj, parser_filter_string)
 
   def GetTopLevel(self, file_object):
     """Returns deserialized content of a bencoded file as a dictionary object.
@@ -103,9 +111,9 @@ class BencodeParser(parser.PlasoParser):
       raise errors.UnableToParseFile(
           u'[BENCODE] couldn\'t parse: %s.  Skipping.' % filehandle.name)
 
-    for plugin in self._plugins:
+    for bencode_plugin in self._plugins.itervalues():
       try:
-        for evt in plugin.Process(top_level_object):
+        for evt in bencode_plugin.Process(top_level_object):
           yield evt
       except errors.WrongBencodePlugin as e:
         logging.debug(u'[BENCODE] Wrong Plugin:{}'.format(e[0]))
