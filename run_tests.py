@@ -45,9 +45,12 @@ def FindTestFiles():
 def RunTests():
   """Runs all the tests and returns the results back."""
   test_classes = []
+  blacklisted_casses = ['plaso.parsers.pcap_test']
 
   for test_file in FindTestFiles():
     library_name = test_file.rstrip('.py').replace('/', '.').lstrip('.')
+    if library_name in blacklisted_casses:
+      continue
     test_classes.append(library_name)
 
   tests = unittest.TestLoader().loadTestsFromNames(test_classes)
@@ -80,8 +83,8 @@ if __name__ == '__main__':
   # Modify the system path to first search the CWD.
   sys.path.insert(0, '.')
 
-  results = RunTests()
+  test_results = RunTests()
 
-  PrintResults(results)
-  if not results.wasSuccessful():
+  PrintResults(test_results)
+  if not test_results.wasSuccessful():
     sys.exit(1)
