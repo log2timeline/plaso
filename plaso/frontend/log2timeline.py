@@ -24,10 +24,10 @@ import sys
 import time
 import textwrap
 
+from plaso.collector import factory as collector_factory
 from plaso.lib import errors
 from plaso.lib import engine
 from plaso.lib import info
-from plaso.lib import os_preprocess
 from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import preprocess
@@ -337,7 +337,7 @@ def Main():
 
   # Check to see if we are trying to parse a mount point.
   if options.recursive:
-    file_collector = os_preprocess.FileSystemCollector(
+    file_collector = collector_factory.GetFileSystemPreprocessCollector(
         preprocess.PlasoPreprocess(), options.filename)
     guessed_os = preprocess.GuessOS(file_collector)
     if guessed_os != 'None':

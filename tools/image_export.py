@@ -23,6 +23,7 @@ import sys
 
 from plaso import preprocessors
 
+from plaso.collector import factory as collector_factory
 from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import event
@@ -30,8 +31,6 @@ from plaso.lib import pfile
 from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import queue
-from plaso.lib import tsk_collector
-from plaso.lib import tsk_preprocess
 from plaso.lib import vss
 
 
@@ -45,9 +44,9 @@ def RunExtensionExtraction(options, extensions, fscache):
   input_queue = queue.SingleThreadedQueue()
   output_queue = queue.SingleThreadedQueue()
 
-  my_collector = tsk_collector.SimpleImageCollector(
-      input_queue, output_queue, options.image, options.offset, 0,
-      options.vss, fscache=fscache)
+  my_collector = collector_factory.GetImageCollector(
+      input_queue, output_queue, options.image, sector_offset=options.offset,
+      parse_vss=options.vss, fscache=fscache)
 
   my_collector.Collect()
 
@@ -180,15 +179,15 @@ def RunPreprocess(image_path, image_offset):
 
   # Start with a regular TSK collector.
   try:
-    tsk_col = tsk_preprocess.TSKFileCollector(
-        pre_obj, image_path, image_offset * 512)
+    image_collector = collector_factory.GetImagePreprocessCollector(
+        pre_obj, image_path, byte_offset=(image_offset * 512))
   except errors.UnableToOpenFilesystem as e:
     raise RuntimeError('Unable to proceed, not an image file? [%s]' % e)
 
-  plugin_list = preprocessors.PreProcessList(pre_obj, tsk_col)
+  plugin_list = preprocessors.PreProcessList(pre_obj, image_collector)
 
   logging.info('Guessing OS')
-  guessed_os = preprocess.GuessOS(tsk_col)
+  guessed_os = preprocess.GuessOS(image_collector)
   logging.info('OS: %s', guessed_os)
   logging.info('Running preprocess.')
   for weight in plugin_list.GetWeightList(guessed_os):
@@ -202,10 +201,10 @@ def RunPreprocess(image_path, image_offset):
 
   logging.info('Preprocess done, saving files from image.')
 
-  return tsk_col, fscache, pre_obj
+  return image_collector, fscache, pre_obj
 
 
-def RunExtraction(options, tsk_col, pre_obj, fscache):
+def RunExtraction(options, image_collector, pre_obj, fscache):
   """Run the extraction process.
 
   This method runs the file extraction process on the image and
@@ -213,13 +212,13 @@ def RunExtraction(options, tsk_col, pre_obj, fscache):
 
   Args:
     options: A configuration object, something like an argparse object.
-    tsk_col: A collector...
+    image_collector: An image collector object.
     pre_obj: Pre.
     fscache: A filesystem cache object.
   """
   # Save the regular files.
   FileSaver.calc_md5 = options.remove_duplicates
-  ExtractFiles(tsk_col, options.filter, options.path, fscache=fscache)
+  ExtractFiles(image_collector, options.filter, options.path, fscache=fscache)
 
   # Go through VSS if desired.
   if options.vss:
@@ -227,8 +226,9 @@ def RunExtraction(options, tsk_col, pre_obj, fscache):
     vss_numbers = vss.GetVssStoreCount(options.image, options.offset * 512)
     for store_nr in range(0, vss_numbers):
       logging.info('Extracting files from VSS %d/%d', store_nr + 1, vss_numbers)
-      vss_col = tsk_preprocess.VSSFileCollector(
-          pre_obj, options.image, store_nr, options.offset * 512)
+      vss_col = collector_factory.GetImagePreprocessCollector(
+          pre_obj, options.image, byte_offset=(options.offset * 512),
+          vss_store_number=store_nr)
       FileSaver.prefix = 'vss_%d' % store_nr
       ExtractFiles(vss_col, options.filter, options.path, fscache)
 
