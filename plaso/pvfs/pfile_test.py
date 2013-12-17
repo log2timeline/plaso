@@ -22,6 +22,7 @@ import unittest
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 
 
 class PlasoPFileTest(unittest.TestCase):
@@ -29,7 +30,7 @@ class PlasoPFileTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._fscache = pfile.FilesystemCache()
+    self._fscache = pvfs.FilesystemCache()
 
   def PerformSyslogTests(self, fh):
     """Perform a series of tests against a known syslog file.

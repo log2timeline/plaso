@@ -20,7 +20,7 @@
 import logging
 
 from plaso.lib import errors
-from plaso.pvfs import pfile
+from plaso.pvfs import pstats
 
 
 def GetTskDirectoryStat(directory_object):
@@ -30,9 +30,9 @@ def GetTskDirectoryStat(directory_object):
     directory_object: A pyts3k.Directory object.
 
   Returns:
-    A pfile.Stats object for the directory.
+    A pstats.Stats object for the directory.
   """
-  stat = pfile.Stats()
+  stat = pstats.Stats()
 
   info = getattr(directory_object, 'info', None)
   if not info:

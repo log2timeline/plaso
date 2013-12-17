@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -30,7 +31,7 @@ from plaso.lib import engine
 from plaso.lib import info
 from plaso.lib import pfilter
 from plaso.lib import preprocess
-from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024
@@ -312,7 +313,7 @@ def Main():
       file_use = options.output
 
     try:
-      partition_map = pfile.FilesystemCache.PartitionMap(file_use)
+      partition_map = pvfs.GetPartitionMap(file_use)
     except errors.UnableToOpenFilesystem as e:
       print e
       sys.exit(1)
@@ -365,7 +366,7 @@ def Main():
     options.image = True
 
   if options.partition_number:
-    partition_map = pfile.FilesystemCache.PartitionMap(options.filename)
+    partition_map = pvfs.PartitionMap(options.filename)
     offset = 0
     options.image = True
     options.bytes_per_sector = partition_map[0]

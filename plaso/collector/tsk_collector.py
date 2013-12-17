@@ -30,7 +30,7 @@ from plaso.lib import event
 from plaso.lib import storage_helper
 from plaso.lib import utils
 from plaso.parsers import filestat
-from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 from plaso.pvfs import vss
 
 
@@ -101,7 +101,7 @@ class TSKCollector(interface.Collector):
     self._offset_bytes = byte_offset
     self._vss = parse_vss
     self._vss_stores = vss_stores
-    self._fscache = fscache or pfile.FilesystemCache()
+    self._fscache = fscache or pvfs.FilesystemCache()
 
   def GetVssStores(self, offset):
     """Return a list of VSS stores that needs to be checked."""

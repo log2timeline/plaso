@@ -32,7 +32,7 @@ from plaso.collector import tsk_collector
 from plaso.collector import tsk_helper
 from plaso.lib import collector_filter
 from plaso.lib import errors
-from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 from plaso.pvfs import vss
 from plaso.pvfs import utils
 
@@ -138,7 +138,7 @@ class TSKFilePreprocessCollector(interface.PreprocessCollector):
     super(TSKFilePreprocessCollector, self).__init__(pre_obj)
     self._image_path = image_path
     self._image_offset = byte_offset
-    self._fscache = pfile.FilesystemCache()
+    self._fscache = pvfs.FilesystemCache()
     self._fs_obj = self._fscache.Open(image_path, byte_offset)
 
   def GetPaths(self, path_list):
@@ -202,7 +202,7 @@ class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
     super(VSSFilePreprocessCollector, self).__init__(
         pre_obj, image_path, byte_offset=byte_offset)
     self._store_nr = store_nr
-    self._fscache = pfile.FilesystemCache()
+    self._fscache = pvfs.FilesystemCache()
     self._fs_obj = self._fscache.Open(
         image_path, byte_offset, store_nr)
 
