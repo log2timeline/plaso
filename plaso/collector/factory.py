@@ -23,8 +23,6 @@ import logging
 import os
 import re
 
-import pytsk3
-
 from plaso.collector import interface
 from plaso.collector import os_collector
 from plaso.collector import os_helper
@@ -35,6 +33,8 @@ from plaso.lib import errors
 from plaso.pvfs import pvfs
 from plaso.pvfs import vss
 from plaso.pvfs import utils
+
+import pytsk3
 
 
 class FileSystemPreprocessCollector(interface.PreprocessCollector):
@@ -63,7 +63,15 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
     return os_helper.GetOsPaths(path_list, self._mount_point)
 
   def GetFilePaths(self, path, file_name):
-    """Return a list of files given a path and a pattern."""
+    """Return a list of files given a path and a pattern.
+
+    Args:
+      path: the path.
+      file_name: the file name pattern.
+
+    Returns:
+      A list of file names.
+    """
     ret = []
     file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
     if path == os.path.sep:
@@ -79,8 +87,10 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
         if m:
           if os.path.isfile(os.path.join(directory, m.group(0))):
             ret.append(os.path.join(path_use, m.group(0)))
-    except OSError as e:
-      logging.error(u'Unable to read directory: %s, reason %s', directory, e)
+    except OSError as exception:
+      logging.error(
+          u'Unable to read directory: {0:s}, reason {1:s}'.format(
+              directory, exception))
     return ret
 
   def OpenFile(self, path):
@@ -125,6 +135,8 @@ class TargetedFileSystemCollector(os_collector.OSCollector):
 
 class TSKFilePreprocessCollector(interface.PreprocessCollector):
   """A wrapper around collecting files from TSK images."""
+
+  _BYTES_PER_SECTOR = 512
 
   def __init__(self, pre_obj, image_path, byte_offset=0):
     """Initializes the preprocess collector object.
@@ -172,14 +184,15 @@ class TSKFilePreprocessCollector(interface.PreprocessCollector):
       if f_type == pytsk3.TSK_FS_META_TYPE_REG:
         m = file_re.match(name)
         if m:
-          ret.append(u'%s/%s' % (path, name))
+          ret.append(u'{0:s}/{1:s}'.format(path, name))
 
     return ret
 
   def OpenFile(self, path):
     """Open a file given a path and return a filehandle."""
     return utils.OpenTskFile(
-        path, self._image_path, int(self._image_offset / 512), self._fscache)
+        path, self._image_path,
+        int(self._image_offset / self._BYTES_PER_SECTOR), self._fscache)
 
   def ReadingFromImage(self):
     """Indicates if the collector is reading from an image file."""
@@ -209,8 +222,8 @@ class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
   def OpenFile(self, path):
     """Open a file given a path and return a filehandle."""
     return utils.OpenVssFile(
-        path, self._image_path, self._store_nr, int(self._image_offset / 512),
-        self._fscache)
+        path, self._image_path, self._store_nr,
+        int(self._image_offset / self._BYTES_PER_SECTOR), self._fscache)
 
 
 class TargetedImageCollector(tsk_collector.TSKCollector):

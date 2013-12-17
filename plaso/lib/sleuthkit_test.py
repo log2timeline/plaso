@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -18,10 +19,10 @@
 
 import os
 
+from plaso.lib import sleuthkit
+
 import pytsk3
 import unittest
-
-from plaso.lib import sleuthkit
 
 
 class SleuthkitUnitTest(unittest.TestCase):
