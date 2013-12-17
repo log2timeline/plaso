@@ -198,7 +198,7 @@ if __name__ == '__main__':
   if not CheckPythonModule('construct', '__version__', '2.5.1'):
     check_result = False
 
-  if not CheckPythonModule('dpkt', '__version__', '1.7'):
+  if not CheckPythonModule('dpkt', '__version__', '1.8'):
     check_result = False
 
   if not CheckPythonModule('pyparsing', '__version__', '1.5.6'):

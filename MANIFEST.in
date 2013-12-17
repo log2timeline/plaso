@@ -1,6 +1,8 @@
-include ACKNOWLEDGEMENT
+include ACKNOWLEDGEMENTS AUTHORS LICENSE.TXT
+include run_tests.py
 exclude .gitignore
 exclude *.pyc
+recursive-include config *
 recursive-include extra *
 recursive-include plaso *.proto
 recursive-exclude plaso *.pyc

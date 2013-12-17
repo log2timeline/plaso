@@ -31,11 +31,15 @@ try:
 except ImportError:
   from distutils.core import find_packages, setup, Command
 
-
 if sys.version < '2.7':
   print ('Wrong Python Version, require version 2.7 or higher (and lower '
          'than 3.X).\n%s') % sys.version
   sys.exit(1)
+
+# Change PYTHONPATH to include plaso so that we can get the version.
+sys.path.insert(0, os.path.join('plaso'))
+
+import plaso
 
 
 def GetTools():
@@ -74,18 +78,18 @@ class TestCommand(Command):
     pass
 
   def run(self):
-    results = run_tests.RunTests()
+    test_results = run_tests.RunTests()
 
 
 setup(
     name='plaso',
-    version='1.1dev',
+    version=plaso.__version__,
     description='The plaso backend as well as few front-ends.',
     license='Apache License, Version 2.0',
     url='https://sites.google.com/a/kiddaland.net/plaso',
     maintainer_email='log2timeline-dev@googlegroups.com',
     scripts=GetTools(),
-    cmdclass = {'test': TestCommand},
+    cmdclass={'test': TestCommand},
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
