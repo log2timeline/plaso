@@ -120,7 +120,6 @@ class TargetedImageTest(unittest.TestCase):
     # file_path: '///passwords.txt'
     # container_path: 'test_data/image.dd'
     # image_offset: 0
-    # TODO: Remove this unnecessary buildup of slashes in front.
     self.assertEquals(pathspecs[0].file_path, '///passwords.txt')
 
 

@@ -17,11 +17,11 @@
 # limitations under the License.
 """File for PyVFS migration to contain file system related functionality."""
 
-import pytsk3
-import pyvshadow
-
 from plaso.lib import errors
 from plaso.pvfs import vss
+
+import pytsk3
+import pyvshadow
 
 
 # TODO: Add support for "carving" embedded files
