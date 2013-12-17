@@ -25,6 +25,7 @@ import sys
 import time
 import textwrap
 
+import plaso
 from plaso.collector import factory as collector_factory
 from plaso.lib import errors
 from plaso.lib import engine
@@ -180,10 +181,8 @@ def Main():
       default=0, type=int, help='The bytes offset to the image')
 
   # Build the version information.
-  version_string = u'log2timeline - plaso backend {}'.format(engine.__version__)
-  if engine.VERSION_DEV:
-    version_string = u'{}_{}'.format(
-        version_string, engine.VERSION_DATE)
+  version_string = u'log2timeline - plaso backend {}'.format(
+      plaso.GetVersion())
 
   info_group.add_argument(
       '-v', '--version', action='version', version=version_string,
@@ -422,13 +421,6 @@ def Main():
           u'Error with collection filter, file: {} does not exist.'.format(
               options.file_filter))
       sys.exit(1)
-
-  if options.workers < 1:
-    # One worker for each "available" CPU (minus other processes).
-    cpus = multiprocessing.cpu_count()
-    options.workers = cpus
-    if cpus > 3:
-      options.workers -= 3
 
   try:
     l2t = engine.Engine(options)

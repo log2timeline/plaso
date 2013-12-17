@@ -32,6 +32,7 @@ import logging
 import pdb
 import sys
 
+import plaso
 from plaso import analysis
 from plaso import filters
 from plaso import formatters   # pylint: disable-msg=W0611
@@ -39,7 +40,6 @@ from plaso import output   # pylint: disable-msg=W0611
 
 from plaso.lib import analysis_interface
 from plaso.lib import bufferlib
-from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
@@ -440,7 +440,7 @@ def ProcessArguments(arguments):
 
   tool_group.add_argument(
       '-v', '--version', dest='version', action='version',
-      version='log2timeline - psort version %s' % engine.__version__,
+      version='log2timeline - psort version %s' % plaso.GetVersion(),
       help='Show the current version of psort.')
 
   tool_group.add_argument(

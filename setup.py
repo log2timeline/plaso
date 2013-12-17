@@ -83,7 +83,7 @@ class TestCommand(Command):
 
 setup(
     name='plaso',
-    version=plaso.__version__,
+    version=plaso.GetVersion(),
     description='The plaso backend as well as few front-ends.',
     license='Apache License, Version 2.0',
     url='https://sites.google.com/a/kiddaland.net/plaso',

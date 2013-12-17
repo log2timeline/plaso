@@ -17,3 +17,14 @@
 # limitations under the License.
 
 __version__ = '1.1.0-dev'
+
+VERSION_DEV = True
+VERSION_DATE = '20131217'
+
+
+def GetVersion():
+  """Returns a version information for plaso."""
+  if not VERSION_DEV:
+    return __version__
+
+  return u'{}_{}'.format(__version__, VERSION_DATE)

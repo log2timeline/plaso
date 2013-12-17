@@ -30,6 +30,7 @@ import sys
 import time
 import traceback
 
+import plaso
 from plaso import preprocessors
 from plaso import output as output_plugins   # pylint: disable-msg=W0611
 from plaso import registry as reg_plugins   # pylint: disable-msg=W0611
@@ -44,11 +45,6 @@ from plaso.lib import worker
 
 import pytz
 
-__version__ = '1.1_dev'
-
-VERSION_DEV = True
-VERSION_DATE = '20131125'
-
 
 def GetTimeZoneList():
   """Generates a list of all supported time zones."""
@@ -59,6 +55,11 @@ def GetTimeZoneList():
 
 class Engine(object):
   """The main engine of plaso, the one that rules them all."""
+
+  # The minimum amount of worker processes that are started.
+  MINIMUM_WORKERS = 3
+  # The maximum amount of worker processes started.
+  MAXIMUM_WORKERS = 15
 
   def __init__(self, config):
     """Initialize the Plaso engine.
@@ -102,6 +103,18 @@ class Engine(object):
 
     if self.config.image:
       self.config.preprocess = True
+
+    if self.config.workers < 1:
+      # One worker for each "available" CPU (minus other processes).
+      cpus = multiprocessing.cpu_count()
+
+      if cpus <= self.MINIMUM_WORKERS:
+        cpus = self.MINIMUM_WORKERS
+      elif cpus >= self.MAXIMUM_WORKERS:
+        # Let's have a maximum amount of workers.
+        cpus = self.MAXIMUM_WORKERS
+
+      self.config.workers = cpus
 
   def _PreProcess(self, pre_obj):
     """Run the preprocessors."""
@@ -403,7 +416,7 @@ class Engine(object):
     """Store information about collection into an object."""
     obj.collection_information = {}
 
-    obj.collection_information['version'] = __version__
+    obj.collection_information['version'] = plaso.GetVersion()
     obj.collection_information['configured_zone'] = self.config.zone
     obj.collection_information['file_processed'] = self.config.filename
     obj.collection_information['output_file'] = self.config.output
