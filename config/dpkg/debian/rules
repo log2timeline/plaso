@@ -60,6 +60,8 @@ override_dh_icons:
 
 override_dh_perl:
 
+override_dh_pysupport:
+
 override_dh_strip:
 	# Necessary otherwise the PyInstaller build executables will not run
 

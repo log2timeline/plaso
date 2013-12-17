@@ -22,35 +22,61 @@ and others involved with these projects:
 
 Thanks to contributors (alphabetically based on last name):
 * Brian Baskin
-  * Java IDX parser
+  * Parsers
+    * BEncode
+    * Java IDX parser
+* Johan Berggren
+  * SQLite plugins
+    * Zeitgeist activity database
 * Dominique Kilman
-  * PCAP parser
+  * Parsers
+    * PCAP
+* Joaquin Moreno Garijo
+  * Parsers
+    * ASL
+    * mac_wifi.log
+    * utmpx
+  * SQLite plugins
+    * Skype
 * David Nides (@davnads)
-  * 4n6time SQLite output with thanks to Eric Wong for assistance
-  * 4n6time MySQL output
-  * Google Drive parser
-  * Symantec AV Log parser
-  * Hachoir (meta data) parser
-  * OLECF parser (merged/deprecated)
-  * OMXL parser
-  * Typed Paths registry plugin
-  * Typed URLs registry plugin
-  * Win7 Userassist registry plugin(merged/deprecated)
+  * Output modules
+    * 4n6time SQLite, with thanks to Eric Wong for assistance
+    * 4n6time MySQL
+  * Parsers
+    * Hachoir (meta data)
+    * OLECF
+    * OMXL
+    * Symantec AV Log
   * timelib StringToDatetime function
-  * Terminal Server Client (RDP) registry plugin
-  * USBStor registry plugin
-  * Office MRU registry plugin
-  * Outlook registry plugin
-  * WinRar registry plugin
+  * SQLite plugins
+    * Google Drive
+  * Windows Registry plugins
+    * Office MRU
+    * Outlook
+    * Terminal Server Client (RDP)
+    * Typed Paths
+    * Typed URLs
+    * USBStor
+    * Win7 UserAssist
+    * WinRar
 * Francesco Picasso
-  * SELinux parser
+  * Parsers
+    * SELinux
 * Jordi Sanchez
+  * binplist
   * object filter
 * Elizabeth Schweinsberg
-  * multiple Registry plugins
+  * Parsers
+    * McAfee AV Access Protection Log
+  * Windows Registry plugins
+    * MSIE zones
 * Marc Séguin
-  * CCleaner registry plugin
+  * Windows Registry plugins
+    * CCleaner
 * Keith Wall
+  * SQLite plugins
+    * Android calls database
+    * Android sms database
   * updates to the timezone transformation
 
 Test data:

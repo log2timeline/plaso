@@ -26,10 +26,15 @@ do
 
   for TEST_FILE in ${TEST_FILES};
   do
-    echo "---+ ${TEST_FILE} +---"
-    PYTHONPATH=. /usr/bin/python ${TEST_FILE}
+    if test ${TEST_FILE} = "plaso/parsers/pcap_test.py";
+    then
+      continue;
+    fi
 
-    if [ $? -ne 0 ]
+    echo "---+ ${TEST_FILE} +---";
+    PYTHONPATH=. /usr/bin/python ${TEST_FILE};
+
+    if test $? -ne 0;
     then
       echo "TEST FAILED: ${TEST_FILE}.";
       echo "";
