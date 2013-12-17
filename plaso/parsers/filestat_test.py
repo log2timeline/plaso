@@ -23,6 +23,7 @@ from plaso.lib import event
 from plaso.lib import preprocess
 from plaso.parsers import filestat
 from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 
 
 class FileStatTest(unittest.TestCase):
@@ -32,7 +33,7 @@ class FileStatTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     self.parser = filestat.PfileStatParser(pre_obj)
-    self.fscache = pfile.FilesystemCache()
+    self.fscache = pvfs.FilesystemCache()
 
   def testTSKFile(self):
     """Read a file within an image file and make few tests."""

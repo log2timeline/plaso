@@ -33,6 +33,7 @@ from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 from plaso.pvfs import vss
 
 
@@ -44,7 +45,7 @@ class ImageExtractor(object):
     super(ImageExtractor, self).__init__()
     self._image_path = None
     self._image_offset = 0
-    self._fscache = pfile.FilesystemCache()
+    self._fscache = pvfs.FilesystemCache()
     self._image_collector = None
     self._pre_obj = None
 

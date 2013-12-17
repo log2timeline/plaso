@@ -49,7 +49,7 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.lib import putils
 from plaso.lib import win_registry_interface
-from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 from plaso.pvfs import utils as pvfs_utils
 from plaso.pvfs import vss
 from plaso.winreg import cache
@@ -960,7 +960,7 @@ def GetCollectorsFromAnImage(config):
 
     config.vss_stores = sorted(stores)
 
-  RegCache.fscache = pfile.FilesystemCache()
+  RegCache.fscache = pvfs.FilesystemCache()
   try:
     main_collector = collector_factory.GetImagePreprocessCollector(
         RegCache.pre_obj, config.image, byte_offset=(config.offset * 512))
