@@ -31,8 +31,8 @@ try:
 except ImportError:
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
+import plaso
 from plaso.frontend import psort
-from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import preprocess
 from plaso.lib import utils
@@ -136,7 +136,7 @@ def PrintHeader(options):
   print u'{:>20s}'.format(options.file_to_parse)
 
   print utils.FormatHeader('Versions')
-  print utils.FormatOutputString('plaso engine', engine.__version__)
+  print utils.FormatOutputString('plaso engine', plaso.GetVersion())
   print utils.FormatOutputString('pyevt', pyevt.get_version())
   print utils.FormatOutputString('pyevtx', pyevtx.get_version())
   print utils.FormatOutputString('pylnk', pylnk.get_version())

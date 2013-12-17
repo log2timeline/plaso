@@ -16,6 +16,7 @@
 # limitations under the License.
 """This file provides functions for printing out information."""
 import sys
+import plaso
 from plaso.lib import utils
 from plaso.lib import putils
 # TODO: Write a GetLibraryVersions that gathers all the backend parsing
@@ -51,7 +52,6 @@ def GetPluginData():
   # all appropriate parsers and plugins are registered, yet we don't need to
   # directly call these libraries, it is enough to load them up to get them
   # registered.
-  from plaso.lib import engine
   from plaso import filters
   from plaso import parsers as _
   from plaso import registry as _
@@ -61,7 +61,7 @@ def GetPluginData():
   from plaso.lib import win_registry_interface
 
   return_dict['Versions'] = [
-      ('plaso engine', engine.__version__),
+      ('plaso engine', plaso.GetVersion()),
       ('python', sys.version)]
 
   return_dict['Parsers'] = []
