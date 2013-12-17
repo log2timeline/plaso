@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""File for PyVFS migration to contain all TSK specific collector code."""
+"""The SleuthKit collector object implementation."""
 
 import hashlib
 import logging
@@ -22,67 +23,15 @@ import os
 
 import pytsk3
 
-from plaso.lib import collector
-from plaso.lib import collector_filter
+from plaso.collector import interface
+from plaso.collector import tsk_stat_helper
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfile
-from plaso.lib import tsk_preprocess
+from plaso.lib import storage_helper
 from plaso.lib import utils
 from plaso.lib import vss
 from plaso.parsers import filestat
-
-
-def GetTskDirectoryStat(directory_object):
-  """Return a stat object for a TSK directory object.
-
-  Args:
-    directory_object: A pyts3k.Directory object.
-
-  Returns:
-    A pfile.Stats object for the directory.
-  """
-  stat = pfile.Stats()
-
-  info = getattr(directory_object, 'info', None)
-  if not info:
-    return stat
-
-  try:
-    meta = info.fs_file.meta
-  except AttributeError:
-    return stat
-
-  if not meta:
-    return stat
-
-  fs_type = ''
-  stat.mode = getattr(meta, 'mode', None)
-  stat.ino = getattr(meta, 'addr', None)
-  stat.nlink = getattr(meta, 'nlink', None)
-  stat.uid = getattr(meta, 'uid', None)
-  stat.gid = getattr(meta, 'gid', None)
-  stat.size = getattr(meta, 'size', None)
-  stat.atime = getattr(meta, 'atime', None)
-  stat.atime_nano = getattr(meta, 'atime_nano', None)
-  stat.crtime = getattr(meta, 'crtime', None)
-  stat.crtime_nano = getattr(meta, 'crtime_nano', None)
-  stat.mtime = getattr(meta, 'mtime', None)
-  stat.mtime_nano = getattr(meta, 'mtime_nano', None)
-  stat.ctime = getattr(meta, 'ctime', None)
-  stat.ctime_nano = getattr(meta, 'ctime_nano', None)
-  stat.dtime = getattr(meta, 'dtime', None)
-  stat.dtime_nano = getattr(meta, 'dtime_nano', None)
-  stat.bkup_time = getattr(meta, 'bktime', None)
-  stat.bkup_time_nano = getattr(meta, 'bktime_nano', None)
-  fs_type = str(info.fs_info.ftype)
-
-  if fs_type.startswith('TSK_FS_TYPE'):
-    stat.fs_type = fs_type[12:]
-  else:
-    stat.fs_type = fs_type
-
-  return stat
 
 
 def CalculateNTFSTimeHash(meta):
@@ -116,32 +65,40 @@ def CalculateNTFSTimeHash(meta):
   return ret_hash.hexdigest()
 
 
-class SimpleImageCollector(collector.Collector):
-  """This is a simple collector that collects from an image file."""
+class TSKCollector(interface.Collector):
+  """Class that implements a collector object that uses pytsk3."""
 
   SECTOR_SIZE = 512
 
-  def __init__(self, proc_queue, stor_queue, image, offset=0, offset_bytes=0,
-               parse_vss=False, vss_stores=None, fscache=None, dir_stat=True):
-    """Initialize the image collector.
+  def __init__(
+      self, process_queue, output_queue, image, sector_offset=0, byte_offset=0,
+      parse_vss=False, vss_stores=None, fscache=None, add_dir_stat=True):
+    """Initializes the collector object.
 
     Args:
-      proc_queue: A Plaso queue object used as a processing queue of files.
-      stor_queue: A Plaso queue object used as a buffer to the storage layer.
+      directory: Path to the directory that contains the files to be collected.
+      proces_queue: The files processing queue (instance of
+                    queue.QueueInterface).
+      output_queue: The event output queue (instance of queue.QueueInterface).
+                    This queue is used as a buffer to the storage layer.
       image: A full path to the image file.
-      offset: An offset into the image file if this is a disk image (in sector
-      size, not byte size).
-      offset_bytes: A bytes offset into the image file if this is a disk image.
+      sector_offset: An offset into the image file if this is a disk image (in
+                     sector size, not byte size).
+      byte_offset: A bytes offset into the image file if this is a disk image.
+                   image. The default is 0.
       parse_vss: Boolean determining if we should collect from VSS as well
-      (only applicaple in Windows with Volume Shadow Snapshot).
+                 (only applicaple in Windows with Volume Shadow Snapshot).
       vss_stores: If defined a range of VSS stores to include in vss parsing.
       fscache: A FilesystemCache object.
+      add_dir_stat: Optional boolean value to indicate whether or not we want to
+                    include directory stat information into the storage queue.
+                    The default is true.
     """
-    super(SimpleImageCollector, self).__init__(
-        proc_queue, stor_queue, dir_stat)
+    super(TSKCollector, self).__init__(
+        process_queue, output_queue, add_dir_stat=add_dir_stat)
     self._image = image
-    self._offset = offset
-    self._offset_bytes = offset_bytes
+    self._offset = sector_offset
+    self._offset_bytes = byte_offset
     self._vss = parse_vss
     self._vss_stores = vss_stores
     self._fscache = fscache or pfile.FilesystemCache()
@@ -230,7 +187,7 @@ class SimpleImageCollector(collector.Collector):
       directory = fs.fs.open_dir(inode=cur_inode)
       # Get a stat object and send timestamps for the directory to the storage.
       if self._dir_stat:
-        directory_stat = GetTskDirectoryStat(directory)
+        directory_stat = tsk_stat_helper.GetTskDirectoryStat(directory)
         directory_stat.full_path = path
         directory_stat.display_path = '{}:{}'.format(self._image, path)
         try:
@@ -238,7 +195,7 @@ class SimpleImageCollector(collector.Collector):
         except UnicodeDecodeError:
           directory_stat.display_path = utils.GetUnicodeString(
               directory_stat.display_path)
-        collector.SendContainerToStorage(
+        storage_helper.SendContainerToStorage(
             filestat.GetEventContainerFromStat(directory_stat),
             directory_stat, self._storage_queue)
     except IOError:
@@ -311,63 +268,3 @@ class SimpleImageCollector(collector.Collector):
 
     for inode_addr, path in directories:
       self.ParseImageDir(fs, inode_addr, path)
-
-
-class TargetedImageCollector(SimpleImageCollector):
-  """Targeted collector that works against an image file."""
-
-  def __init__(self, proc_queue, stor_queue, image, file_filter, pre_obj,
-               sector_offset=0, byte_offset=0, parse_vss=False,
-               vss_stores=None, dir_stat=True):
-    """Initialize the image collector.
-
-    Args:
-      proc_queue: A Plaso queue object used as a processing queue of files.
-      stor_queue: A Plaso queue object used as a buffer to the storage layer.
-      image: The path to the image file.
-      file_filter: A file path to a file that contains simple collection
-      filters.
-      pre_obj: A PlasoPreprocess object.
-      sector_offset: A sector offset into the image file if this is a disk
-      image.
-      byte_offset: A bytes offset into the image file if this is a disk image.
-      parse_vss: Boolean determining if we should collect from VSS as well
-      (only applicaple in Windows with Volume Shadow Snapshot).
-      vss_stores: If defined a range of VSS stores to include in vss parsing.
-      dir_stat: A boolean that determines whether or not we want to include
-      directory stat information into the storage queue.
-    """
-    super(TargetedImageCollector, self).__init__(
-        proc_queue, stor_queue, image, sector_offset, byte_offset, parse_vss,
-        vss_stores, dir_stat)
-    self._file_filter = file_filter
-    self._pre_obj = pre_obj
-
-  def Collect(self):
-    """Start the collector."""
-    # TODO: Change the parent object so that is uses the sector/byte_offset
-    # to minimize confusion.
-    offset = self._offset_bytes or self._offset * self.SECTOR_SIZE
-    pre_collector = tsk_preprocess.TSKFileCollector(
-        self._pre_obj, self._image, offset)
-
-    try:
-      for pathspec_string in collector_filter.CollectionFilter(
-          pre_collector, self._file_filter).GetPathSpecs():
-        self._queue.Queue(pathspec_string)
-
-      if self._vss:
-        logging.debug(u'Searching for VSS')
-        vss_numbers = vss.GetVssStoreCount(self._image, offset)
-        for store_nr in self.GetVssStores(offset):
-          logging.info(
-              u'Collecting from VSS store number: %d/%d', store_nr + 1,
-              vss_numbers)
-          vss_collector = tsk_preprocess.VSSFileCollector(
-              self._pre_obj, self._image, store_nr, offset)
-
-          for pathspec_string in collector_filter.CollectionFilter(
-              vss_collector, self._file_filter).GetPathSpecs():
-            self._queue.Queue(pathspec_string)
-    finally:
-      logging.debug(u'Targeted Image Collector - Done.')
