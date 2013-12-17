@@ -21,9 +21,9 @@ import unittest
 from plaso.formatters import chrome
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import interface
+from plaso.pvfs import utils
 
 import pytz
 
@@ -43,7 +43,7 @@ class ChromeHistoryPluginTest(unittest.TestCase):
     test_file = os.path.join('test_data', 'History')
 
     events = None
-    with putils.OpenOSFile(test_file) as file_object:
+    with utils.OpenOSFile(test_file) as file_object:
       with interface.SQLiteDatabase(file_object) as database:
         generator = self.test_parser.Process(database)
         self.assertTrue(generator)

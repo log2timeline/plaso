@@ -28,9 +28,9 @@ from plaso.collector import factory as collector_factory
 from plaso.lib import errors
 from plaso.lib import engine
 from plaso.lib import info
-from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import preprocess
+from plaso.pvfs import pfile
 
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024

@@ -21,7 +21,7 @@ import logging
 import os
 
 from plaso.collector import interface
-from plaso.collector import os_stat_helper
+from plaso.collector import os_helper
 from plaso.lib import event
 from plaso.lib import storage_helper
 from plaso.lib import utils
@@ -79,7 +79,7 @@ class OSCollector(interface.Collector):
     if not self._dir_stat:
       return
 
-    directory_stat = os_stat_helper.GetOsDirectoryStat(path)
+    directory_stat = os_helper.GetOsDirectoryStat(path)
     storage_helper.SendContainerToStorage(
         filestat.GetEventContainerFromStat(directory_stat),
         directory_stat, self._storage_queue)

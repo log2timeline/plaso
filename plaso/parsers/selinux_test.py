@@ -21,8 +21,8 @@ import unittest
 from plaso.formatters import selinux
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.parsers import selinux
+from plaso.pvfs import utils
 
 import pytz
 
@@ -35,7 +35,7 @@ class SELinuxUnitTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     test_file = os.path.join('test_data', 'selinux.log')
-    self.filehandle = putils.OpenOSFile(test_file)
+    self.filehandle = utils.OpenOSFile(test_file)
 
   def testParsing(self):
     """Test parsing of a selinux file."""

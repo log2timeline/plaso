@@ -39,7 +39,6 @@ from plaso import registry
 from plaso.frontend import preg
 from plaso.frontend import psort
 
-from plaso.lib import collector
 from plaso.lib import collector_filter
 from plaso.lib import engine
 from plaso.lib import errors
@@ -50,7 +49,6 @@ from plaso.lib import lexer
 from plaso.lib import objectfilter
 from plaso.lib import output
 from plaso.lib import parser
-from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import preprocess
 from plaso.lib import queue
@@ -59,7 +57,6 @@ from plaso.lib import sleuthkit
 from plaso.lib import storage
 from plaso.lib import text_parser
 from plaso.lib import timelib
-from plaso.lib import vss
 from plaso.lib import win_registry_interface as win_registry_plugin_interface
 from plaso.lib import worker
 from plaso.lib.putils import *    # pylint: disable-msg=W0401,W0614
@@ -68,6 +65,10 @@ from plaso.output import helper
 
 from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
+
+from plaso.pvfs import pfile
+from plaso.pvfs import utils
+from plaso.pvfs import vss
 
 from plaso.winreg import interface as win_registry_interface
 from plaso.winreg import winregistry

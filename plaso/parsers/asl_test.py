@@ -25,8 +25,8 @@ import unittest
 from plaso.formatters import asl as asl_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.parsers import asl
+from plaso.pvfs import utils
 
 
 class AslParserTest(unittest.TestCase):
@@ -44,7 +44,7 @@ class AslParserTest(unittest.TestCase):
     test_file = os.path.join('test_data', 'applesystemlog.asl')
 
     events = None
-    with putils.OpenOSFile(test_file) as file_object:
+    with utils.OpenOSFile(test_file) as file_object:
       events = list(self.test_parser.Parse(file_object))
 
     self.assertEqual(len(events), 2)
