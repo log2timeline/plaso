@@ -39,6 +39,7 @@ from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import utils
 from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 
 
 class PlasoWorker(object):
@@ -95,7 +96,7 @@ class PlasoWorker(object):
     self._user_mapping = self._GetUserMapping()
 
     if hasattr(config, 'image') and config.image:
-      self._fscache = pfile.FilesystemCache()
+      self._fscache = pvfs.FilesystemCache()
 
     self._filter = None
     filter_query = getattr(config, 'filter', None)

@@ -67,6 +67,7 @@ from plaso.proto import plaso_storage_pb2
 from plaso.proto import transmission_pb2
 
 from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 from plaso.pvfs import utils
 from plaso.pvfs import vss
 
@@ -112,7 +113,7 @@ def Main():
 
   namespace = {}
 
-  fscache = pfile.FilesystemCache()
+  fscache = pvfs.FilesystemCache()
   pre_obj = preprocess.PlasoPreprocess()
   pre_obj.zone = pytz.UTC
 
