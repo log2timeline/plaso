@@ -20,9 +20,9 @@ import unittest
 
 from plaso.formatters import pcap
 from plaso.lib import eventdata
-from plaso.lib import putils
 from plaso.lib import preprocess
 from plaso.parsers import pcap
+from plaso.pvfs import utils
 
 
 class PCAPParserTest(unittest.TestCase):
@@ -39,7 +39,7 @@ class PCAPParserTest(unittest.TestCase):
 
     events = []
 
-    file_handle = putils.OpenOSFile(test_file)
+    file_handle = utils.OpenOSFile(test_file)
     events = list(self.test_parser.Parse(file_handle))
 
     # PCAP information:

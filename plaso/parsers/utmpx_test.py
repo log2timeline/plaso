@@ -25,8 +25,8 @@ from plaso.parsers import utmpx
 from plaso.formatters import utmpx as utmpx_formatter
 
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.lib import eventdata
+from plaso.pvfs import utils
 
 import pytz
 
@@ -46,7 +46,7 @@ class UtmpxParserTest(unittest.TestCase):
     test_file = os.path.join('test_data', 'utmpx_mac')
 
     events = None
-    with putils.OpenOSFile(test_file) as file_object:
+    with utils.OpenOSFile(test_file) as file_object:
       events = list(self.test_parser.Parse(file_object))
 
     self.assertEqual(len(events), 6)

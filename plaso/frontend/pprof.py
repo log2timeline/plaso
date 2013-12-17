@@ -35,10 +35,10 @@ from plaso.frontend import psort
 from plaso.lib import engine
 from plaso.lib import event
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.lib import utils
 from plaso.lib import queue
 from plaso.lib import worker
+from plaso.pvfs import utils as pvfs_utils
 
 import pyevt
 import pyevtx
@@ -186,7 +186,7 @@ def ProcessStorage(options):
 def ProcessFile(options):
   """Process a file and produce profile results."""
   try:
-    fh = putils.OpenOSFile(options.file_to_parse)
+    fh = pvfs_utils.OpenOSFile(options.file_to_parse)
   except IOError as e:
     logging.error(u'Unable to open file: %s, error given %s',
                   options.file_to_parse, e)

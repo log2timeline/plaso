@@ -35,10 +35,10 @@ import zlib
 from plaso import parsers   # pylint: disable-msg=W0611
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import pfile
 from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import utils
+from plaso.pvfs import pfile
 
 
 class PlasoWorker(object):

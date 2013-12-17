@@ -20,10 +20,9 @@ import os
 import unittest
 
 from plaso.lib import preprocess
-from plaso.lib import putils
-
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import bt
+from plaso.pvfs import utils
 
 
 class TestBtPlugin(unittest.TestCase):
@@ -36,7 +35,7 @@ class TestBtPlugin(unittest.TestCase):
 
     self.plist_binary = os.path.join('test_data', 'plist_binary')
 
-    with putils.OpenOSFile(self.plist_binary) as fd:
+    with utils.OpenOSFile(self.plist_binary) as fd:
       self.top_level_object = parser.GetTopLevel(fd)
 
   def testGetEntries(self):
