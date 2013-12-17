@@ -16,10 +16,10 @@
 # limitations under the License.
 """This file contains a bencode plugin for uTorrent data."""
 
-from plaso.lib import bencode_interface
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.parsers.bencode_plugins import interface
 
 
 class UTorrentEventContainer(event.EventContainer):
@@ -40,8 +40,10 @@ class UTorrentEventContainer(event.EventContainer):
     self.seedtime = seedtime // 60 # Convert seconds to minutes.
 
 
-class UTorrentPlugin(bencode_interface.BencodePlugin):
+class UTorrentPlugin(interface.BencodePlugin):
   """Plugin to extract uTorrent active torrent events."""
+
+  NAME = 'bencode_utorrent'
 
   # The following set is used to determine if the bencoded data is appropriate
   # for this plugin. If there's a match, the entire bencoded data block is
@@ -55,7 +57,7 @@ class UTorrentPlugin(bencode_interface.BencodePlugin):
     the selected file is the proper file to parse and extracts current
     running torrents.
 
-    bencode_interface.Process() checks for the given BENCODE_KEYS set, ensures
+    interface.Process() checks for the given BENCODE_KEYS set, ensures
     that it matches, and then passes the bencoded data to this function for
     parsing. This plugin then parses the entire set of bencoded data to extract
     the variable file-name keys to retrieve their values.
