@@ -27,12 +27,14 @@ import pytsk3
 
 from plaso.collector import interface
 from plaso.collector import os_collector
+from plaso.collector import os_helper
 from plaso.collector import tsk_collector
+from plaso.collector import tsk_helper
 from plaso.lib import collector_filter
 from plaso.lib import errors
-from plaso.lib import pfile
-from plaso.lib import putils
-from plaso.lib import vss
+from plaso.pvfs import pfile
+from plaso.pvfs import vss
+from plaso.pvfs import utils
 
 
 class FileSystemPreprocessCollector(interface.PreprocessCollector):
@@ -49,49 +51,16 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
     self._mount_point = mount_point
 
   def GetPaths(self, path_list):
-    """Find the path on the OS if it exists."""
-    paths = []
+    """Find the path if it exists.
 
-    for part in path_list:
-      if isinstance(part, (str, unicode)):
-        if part == '/':
-          part = os.path.sep
+    Args:
+      path_list: A list of either regular expressions or expanded
+                 paths (strings).
 
-        if len(paths):
-          for index, path in enumerate(paths):
-            paths[index] = os.path.join(path, part)
-        else:
-          paths.append(part)
-
-      else:
-        found_path = False
-        if not paths:
-          paths.append('.')
-
-        old_paths = list(paths)
-        paths = []
-        for path in old_paths:
-          for entry in os.listdir(os.path.join(self._mount_point, path)):
-            m = part.match(entry)
-            if m:
-              paths.append(os.path.join(path, m.group(0)))
-              found_path = True
-        if not found_path:
-          raise errors.PathNotFound(
-              u'Path not found inside %s/%s' % (self._mount_point, paths))
-
-    for real_path in paths:
-      if not os.path.isdir(os.path.join(self._mount_point, real_path)):
-        logging.warning(
-            u'File path does not seem to exist (%s/%s)', self._mount_point,
-            real_path)
-        continue
-
-      ret = real_path
-      if real_path[0] == '.':
-        ret = real_path[2:]
-
-      yield ret
+    Returns:
+      A list of paths.
+    """
+    return os_helper.GetOsPaths(path_list, self._mount_point)
 
   def GetFilePaths(self, path, file_name):
     """Return a list of files given a path and a pattern."""
@@ -116,7 +85,7 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
 
   def OpenFile(self, path):
     """Open a file given a path and return a filehandle."""
-    return putils.OpenOSFile(os.path.join(self._mount_point, path))
+    return utils.OpenOSFile(os.path.join(self._mount_point, path))
 
   def ReadingFromImage(self):
     """Indicates if the collector is reading from an image file."""
@@ -173,55 +142,16 @@ class TSKFilePreprocessCollector(interface.PreprocessCollector):
     self._fs_obj = self._fscache.Open(image_path, byte_offset)
 
   def GetPaths(self, path_list):
-    """Return a path."""
-    paths = []
+    """Find the path if it exists.
 
-    for part in path_list:
-      if not part:
-        continue
+    Args:
+      path_list: A list of either regular expressions or expanded
+                 paths (strings).
 
-      if isinstance(part, (str, unicode)):
-        if paths:
-          for index, path in enumerate(paths):
-            paths[index] = u'/'.join([path, part])
-        else:
-          paths.append(u'/{}'.format(part))
-      else:
-        found_path = False
-        if not paths:
-          paths.append('/')
-
-        old_paths = list(paths)
-        paths = []
-        for real_path in old_paths:
-          try:
-            directory = self._fs_obj.fs.open_dir(real_path)
-          except IOError as e:
-            continue
-          for f in directory:
-            try:
-              name = f.info.name.name
-              if not f.info.meta:
-                continue
-            except AttributeError as e:
-              logging.error('[ParseImage] Problem reading file [%s], error: %s',
-                            name, e)
-              continue
-
-            if name == '.' or name == '..':
-              continue
-
-            m = part.match(name)
-            if m:
-              append_path = u'/'.join([real_path, m.group(0)])
-              found_path = True
-              paths.append(append_path)
-
-        if not found_path:
-          raise errors.PathNotFound(u'Path not found inside')
-
-    for real_path in paths:
-      yield real_path
+    Returns:
+      A list of paths.
+    """
+    return tsk_helper.GetTSKPaths(path_list, self._fs_obj)
 
   def GetFilePaths(self, path, file_name):
     """Return a list of files given a path and a pattern."""
@@ -248,7 +178,7 @@ class TSKFilePreprocessCollector(interface.PreprocessCollector):
 
   def OpenFile(self, path):
     """Open a file given a path and return a filehandle."""
-    return putils.OpenTskFile(
+    return utils.OpenTskFile(
         path, self._image_path, int(self._image_offset / 512), self._fscache)
 
   def ReadingFromImage(self):
@@ -278,8 +208,9 @@ class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
 
   def OpenFile(self, path):
     """Open a file given a path and return a filehandle."""
-    return putils.OpenVssFile(path, self._image_path, self._store_nr,
-                              int(self._image_offset / 512), self._fscache)
+    return utils.OpenVssFile(
+        path, self._image_path, self._store_nr, int(self._image_offset / 512),
+        self._fscache)
 
 
 class TargetedImageCollector(tsk_collector.TSKCollector):

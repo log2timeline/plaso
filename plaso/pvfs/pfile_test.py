@@ -21,7 +21,7 @@ import unittest
 
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import pfile
+from plaso.pvfs import pfile
 
 
 class PlasoPFileTest(unittest.TestCase):

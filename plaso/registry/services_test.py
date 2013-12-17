@@ -20,8 +20,8 @@ import unittest
 
 from plaso.formatters import winreg   # pylint: disable-msg=W0611
 from plaso.lib import eventdata
-from plaso.lib import putils
 from plaso.registry import services
+from plaso.pvfs import utils
 from plaso.winreg import test_lib
 from plaso.winreg import winregistry
 
@@ -74,7 +74,7 @@ class TestServicesRegistry(unittest.TestCase):
 
   def testServicesOnAFile(self):
     """Test the services plugin on a registry file."""
-    fh = putils.OpenOSFile(os.path.join('test_data', 'SYSTEM'))
+    fh = utils.OpenOSFile(os.path.join('test_data', 'SYSTEM'))
     plugin = services.ServicesPlugin(None, None, None)
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)

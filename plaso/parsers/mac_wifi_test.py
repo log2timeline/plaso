@@ -24,8 +24,8 @@ import unittest
 from plaso.formatters import mac_wifi as mac_wifi_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.parsers import mac_wifi as mac_wifi_parser
+from plaso.pvfs import utils
 
 
 class MacWifiUnitTest(unittest.TestCase):
@@ -34,7 +34,7 @@ class MacWifiUnitTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     test_file = os.path.join('test_data', 'wifi.log')
-    self.filehandle = putils.OpenOSFile(test_file)
+    self.filehandle = utils.OpenOSFile(test_file)
 
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""

@@ -24,14 +24,14 @@ import os
 import pytsk3
 
 from plaso.collector import interface
-from plaso.collector import tsk_stat_helper
+from plaso.collector import tsk_helper
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import pfile
 from plaso.lib import storage_helper
 from plaso.lib import utils
-from plaso.lib import vss
 from plaso.parsers import filestat
+from plaso.pvfs import pfile
+from plaso.pvfs import vss
 
 
 def CalculateNTFSTimeHash(meta):
@@ -187,7 +187,7 @@ class TSKCollector(interface.Collector):
       directory = fs.fs.open_dir(inode=cur_inode)
       # Get a stat object and send timestamps for the directory to the storage.
       if self._dir_stat:
-        directory_stat = tsk_stat_helper.GetTskDirectoryStat(directory)
+        directory_stat = tsk_helper.GetTskDirectoryStat(directory)
         directory_stat.full_path = path
         directory_stat.display_path = '{}:{}'.format(self._image, path)
         try:

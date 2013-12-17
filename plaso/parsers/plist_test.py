@@ -20,8 +20,8 @@ import os
 import unittest
 
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.parsers import plist
+from plaso.pvfs import utils
 
 
 class PlistTest(unittest.TestCase):
@@ -37,7 +37,7 @@ class PlistTest(unittest.TestCase):
     """Parse sample BT Plist file there should be 12 events of known values."""
     parser = plist.PlistParser(self.pre, None)
 
-    with putils.OpenOSFile(self.plist_binary) as fd:
+    with utils.OpenOSFile(self.plist_binary) as fd:
       timestamps, roots, keys = zip(*[(x.timestamp, x.root, x.key) for x in
                                       parser.Parse(fd)])
 

@@ -20,11 +20,10 @@ import os
 import unittest
 
 from plaso.formatters import java_idx
-from plaso.parsers import java_idx
-
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.lib import putils
+from plaso.parsers import java_idx
+from plaso.pvfs import utils
 
 import pytz
 
@@ -44,7 +43,7 @@ class IDXTest(unittest.TestCase):
     test_file = os.path.join('test_data', 'java.idx')
 
     events = None
-    with putils.OpenOSFile(test_file) as file_object:
+    with utils.OpenOSFile(test_file) as file_object:
       events = list(self.test_parser.Parse(file_object))
 
     self.assertEqual(len(events), 2)

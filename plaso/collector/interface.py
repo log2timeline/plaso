@@ -130,7 +130,7 @@ class PreprocessCollector(object):
 
     Args:
       path_list: A list of either regular expressions or expanded
-      paths (strings).
+                 paths (strings).
 
     Returns:
       A list of strings, presenting the correct paths (None if not found).
@@ -162,7 +162,7 @@ class PreprocessCollector(object):
 
     Args:
       path: The correct path to the file, perhaps gathered from GetPaths
-      or FindPaths.
+            or FindPaths.
       file_name: The filename to the file (may be a regular expression).
 
     Returns:

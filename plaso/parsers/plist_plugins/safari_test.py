@@ -19,10 +19,9 @@ import os
 import unittest
 
 from plaso.lib import preprocess
-from plaso.lib import putils
-
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import safari
+from plaso.pvfs import utils
 
 
 class SafariPluginTest(unittest.TestCase):
@@ -35,7 +34,7 @@ class SafariPluginTest(unittest.TestCase):
 
     self.plist_binary = os.path.join('test_data', 'History.plist')
 
-    with putils.OpenOSFile(self.plist_binary) as fd:
+    with utils.OpenOSFile(self.plist_binary) as fd:
       self.top_level_object = parser.GetTopLevel(fd)
 
   def testGetEntries(self):

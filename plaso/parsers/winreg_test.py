@@ -20,8 +20,8 @@ import unittest
 
 from plaso import registry    # pylint: disable-msg=W0611
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.parsers import winreg
+from plaso.pvfs import utils
 
 
 class WinRegTest(unittest.TestCase):
@@ -75,7 +75,7 @@ class WinRegTest(unittest.TestCase):
   def _ParseRegistryFile(self, filename, correct_type):
     """Open up a filehandle and yield all event objects."""
     file_path = os.path.join(self.base_path, filename)
-    fh = putils.OpenOSFile(file_path)
+    fh = utils.OpenOSFile(file_path)
     parser = winreg.WinRegistryParser(self.pre)
     for event_object in parser.Parse(fh):
       yield event_object

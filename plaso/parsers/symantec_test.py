@@ -22,8 +22,8 @@ import unittest
 from plaso.formatters import symantec as symantec_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.parsers import symantec
+from plaso.pvfs import utils
 
 import pytz
 
@@ -34,7 +34,7 @@ class SymantecAccessProtectionUnitTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     test_file = os.path.join('test_data', 'Symantec.Log')
-    self.input_file = putils.OpenOSFile(test_file)
+    self.input_file = utils.OpenOSFile(test_file)
 
     self.pre_obj = preprocess.PlasoPreprocess()
     self.pre_obj.zone = pytz.UTC
