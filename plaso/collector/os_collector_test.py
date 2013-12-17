@@ -39,11 +39,8 @@ class TempDirectory(object):
 
     return self.name
 
-  def __exit__(self, exc_type, exc_value, traceback):
+  def __exit__(self, dummy_type, dummy_value, dummy_traceback):
     """Make this work with the 'with' statement."""
-    _ = exc_type
-    _ = exc_value
-    _ = traceback
     shutil.rmtree(self.name, True)
 
 

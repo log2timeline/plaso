@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#
 # -*- coding: utf-8 -*-
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
@@ -22,6 +23,7 @@ that is readable by TSK (Sleuthkit) and use like an ordinary file in Python.
 import os
 import logging
 import platform
+
 import pytsk3
 
 

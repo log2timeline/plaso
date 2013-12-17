@@ -21,8 +21,6 @@ import hashlib
 import logging
 import os
 
-import pytsk3
-
 from plaso.collector import interface
 from plaso.collector import tsk_helper
 from plaso.lib import errors
@@ -32,6 +30,8 @@ from plaso.lib import utils
 from plaso.parsers import filestat
 from plaso.pvfs import pvfs
 from plaso.pvfs import vss
+
+import pytsk3
 
 
 def CalculateNTFSTimeHash(meta):
@@ -163,7 +163,7 @@ class TSKCollector(interface.Collector):
 
     try:
       fs = self._fscache.Open(image_path, offset, store_nr)
-      self.ParseImageDir(fs, fs.fs.info.root_inum, '/')
+      self.ParseImageDir(fs, fs.fs.info.root_inum, u'/')
     except errors.UnableToOpenFilesystem as e:
       logging.error(u'Unable to read filesystem: %s.', e)
 
@@ -189,10 +189,13 @@ class TSKCollector(interface.Collector):
       if self._dir_stat:
         directory_stat = tsk_helper.GetTskDirectoryStat(directory)
         directory_stat.full_path = path
-        directory_stat.display_path = '{}:{}'.format(self._image, path)
+        directory_stat.display_path = u'{0:s}:{1:s}'.format(self._image, path)
         try:
           directory_stat.display_path.decode('utf-8')
         except UnicodeDecodeError:
+          logging.warning(
+              u'UnicodeDecodeError: directory_stat.display_path: {0:s}'.format(
+                  directory_stat.display_path))
           directory_stat.display_path = utils.GetUnicodeString(
               directory_stat.display_path)
         storage_helper.SendContainerToStorage(
@@ -207,9 +210,9 @@ class TSKCollector(interface.Collector):
       return
 
     directories = []
-    for f in directory:
+    for tsk_file in directory:
       try:
-        tsk_name = f.info.name
+        tsk_name = tsk_file.info.name
         if not tsk_name:
           continue
         # TODO: Add a test that tests the reason for this. Why is this?
@@ -220,11 +223,11 @@ class TSKCollector(interface.Collector):
           # TODO: Perhaps add a direct parsing of timestamps here to include
           # in the timeline.
           continue
-        if not f.info.meta:
+        if not tsk_file.info.meta:
           continue
         name_str = tsk_name.name
-        inode_addr = f.info.meta.addr
-        f_type = f.info.meta.type
+        inode_addr = tsk_file.info.meta.addr
+        f_type = tsk_file.info.meta.type
       except AttributeError as e:
         logging.error(u'[ParseImage] Problem reading file [%s], error: %s',
                       name_str, e)
@@ -255,7 +258,7 @@ class TSKCollector(interface.Collector):
         # calculated hash values, and only include the file into the queue if
         # the hash does not match.
         if self._vss:
-          hash_value = CalculateNTFSTimeHash(f.info.meta)
+          hash_value = CalculateNTFSTimeHash(tsk_file.info.meta)
 
           if inode_addr in self._hashlist:
             if hash_value in self._hashlist[inode_addr]:

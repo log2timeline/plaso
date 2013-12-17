@@ -92,7 +92,7 @@ def GetTSKPaths(path_list, tsk_fs):
     if not part:
       continue
 
-    if isinstance(part, (str, unicode)):
+    if isinstance(part, basestring):
       if paths:
         for index, path in enumerate(paths):
           paths[index] = u'/'.join([path, part])
@@ -107,17 +107,18 @@ def GetTSKPaths(path_list, tsk_fs):
       paths = []
       for real_path in old_paths:
         try:
-          directory = tsk_fs.fs.open_dir(real_path)
-        except IOError as e:
+          tsk_directory = tsk_fs.fs.open_dir(real_path)
+        except IOError:
           continue
-        for f in directory:
+        for tsk_file in tsk_directory:
           try:
-            name = f.info.name.name
-            if not f.info.meta:
+            name = tsk_file.info.name.name
+            if not tsk_file.info.meta:
               continue
-          except AttributeError as e:
-            logging.error('[ParseImage] Problem reading file [%s], error: %s',
-                          name, e)
+          except AttributeError as exception:
+            logging.error((
+                u'[ParseImage] Problem reading file [{0:s}], error: '
+                u'{1:s}').format(name, exception))
             continue
 
           if name == '.' or name == '..':

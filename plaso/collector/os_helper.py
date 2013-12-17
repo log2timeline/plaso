@@ -71,14 +71,14 @@ def GetOsPaths(path_list, mount_point):
   paths = []
 
   for part in path_list:
-    if isinstance(part, (str, unicode)):
+    if isinstance(part, basestring):
       if part == '/':
         part = os.path.sep
 
       # TODO: this is inefficient make sure to replace with an approach
       # that uses hashing e.g. storing the path as hash and counting
       # occurances and returning paths.keys() as a list.
-      if len(paths):
+      if paths:
         for index, path in enumerate(paths):
           paths[index] = os.path.join(path, part)
       else:
@@ -99,13 +99,13 @@ def GetOsPaths(path_list, mount_point):
             found_path = True
       if not found_path:
         raise errors.PathNotFound(
-            u'Path not found inside %s/%s' % (mount_point, paths))
+            u'Path not found inside {0:s}/{1:s}'.format(mount_point, paths))
 
   for real_path in paths:
     if not os.path.isdir(os.path.join(mount_point, real_path)):
       logging.warning(
-          u'File path does not seem to exist (%s/%s)', mount_point,
-          real_path)
+          u'File path does not seem to exist ({0:s}/{1:s})'.format(
+              mount_point, real_path))
       continue
 
     ret = real_path
