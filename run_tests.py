@@ -44,16 +44,23 @@ def FindTestFiles():
 
 def RunTests():
   """Runs all the tests and returns the results back."""
-  test_classes = []
   blacklisted_casses = ['plaso.parsers.pcap_test']
 
+  tests = None
   for test_file in FindTestFiles():
     library_name = test_file.rstrip('.py').replace('/', '.').lstrip('.')
     if library_name in blacklisted_casses:
       continue
-    test_classes.append(library_name)
+    try:
+      if not tests:
+        tests = unittest.TestLoader().loadTestsFromName(library_name)
+      else:
+        tests.addTests(unittest.TestLoader().loadTestsFromName(library_name))
+    except AttributeError as exception:
+      print u'Unable to run test: {} [{}] due to error: {}'.format(
+          library_name, test_file, exception)
+      sys.exit(1)
 
-  tests = unittest.TestLoader().loadTestsFromNames(test_classes)
   test_run = unittest.TextTestRunner(verbosity=1)
   return test_run.run(tests)
 
@@ -84,6 +91,10 @@ if __name__ == '__main__':
   sys.path.insert(0, '.')
 
   test_results = RunTests()
+
+  if not test_results:
+    print 'Unable to run tests due to an error.'
+    sys.exit(1)
 
   PrintResults(test_results)
   if not test_results.wasSuccessful():
