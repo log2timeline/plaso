@@ -66,8 +66,6 @@ class MetaclassRegistry(abc.ABCMeta):
       cls_name = getattr(cls, 'NAME', cls.__name__)
 
       if cls_name in cls.classes:
-        import IPython
-        IPython.embed()
         raise KeyError(u'Class: {} already registered.'.format(
             cls_name))
 

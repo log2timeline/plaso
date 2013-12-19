@@ -34,7 +34,6 @@ from plaso import formatters
 from plaso import output
 from plaso import parsers
 from plaso import preprocessors
-from plaso import registry
 
 from plaso.frontend import preg
 from plaso.frontend import psort
@@ -57,7 +56,6 @@ from plaso.lib import sleuthkit
 from plaso.lib import storage
 from plaso.lib import text_parser
 from plaso.lib import timelib
-from plaso.lib import win_registry_interface as win_registry_plugin_interface
 from plaso.lib import worker
 from plaso.lib.putils import *    # pylint: disable-msg=W0401,W0614
 

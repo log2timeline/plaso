@@ -19,7 +19,8 @@ import logging
 
 from plaso.lib import errors
 from plaso.lib import parser
-from plaso.lib import win_registry_interface
+from plaso.parsers import winreg_plugins
+from plaso.parsers.winreg_plugins import interface
 from plaso.winreg import cache
 from plaso.winreg import winregistry
 
@@ -49,7 +50,7 @@ class WinRegistryParser(parser.PlasoParser):
     """
     super(WinRegistryParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
-    self._plugins = win_registry_interface.GetRegistryPlugins()
+    self._plugins = interface.GetRegistryPlugins()
 
   def Scan(self, file_object):
     pass

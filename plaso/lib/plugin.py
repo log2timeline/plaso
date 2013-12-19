@@ -145,12 +145,12 @@ def GetRegisteredPlugins(
               plugin_name))
 
     if not parser_filter_string:
-      all_plugins[plugin_name] = plugin_cls(pre_obj)
+      all_plugins[plugin_name] = plugin_cls(pre_obj=pre_obj)
     else:
       if plugin_name in parser_include and plugin_name not in parser_exclude:
-        results[plugin_name] = plugin_cls(pre_obj)
+        results[plugin_name] = plugin_cls(pre_obj=pre_obj)
       if plugin_name not in parser_exclude:
-        all_plugins[plugin_name] = plugin_cls(pre_obj)
+        all_plugins[plugin_name] = plugin_cls(pre_obj=pre_obj)
 
   if parser_filter_string and results:
     return results

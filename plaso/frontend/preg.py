@@ -39,7 +39,6 @@ except ImportError:
 from IPython.core import magic
 
 from plaso import preprocessors
-from plaso import registry    # pylint: disable-msg=W0611
 
 from plaso.collector import factory as collector_factory
 from plaso.lib import errors
@@ -48,7 +47,8 @@ from plaso.lib import preprocess
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.lib import putils
-from plaso.lib import win_registry_interface
+from plaso.parsers import winreg_plugins    # pylint: disable-msg=W0611
+from plaso.parsers.winreg_plugins import interface
 from plaso.pvfs import pvfs
 from plaso.pvfs import utils as pvfs_utils
 from plaso.pvfs import vss
@@ -131,7 +131,7 @@ class RegistryHexFormatter(RegistryFormatter):
     # pylint: disable-msg=W0212
     event_object.pathspec = RegCache.hive.file_object.pathspec
     ret_strings.append(utils.FormatHeader('Hex Output From Event.', '-'))
-    ret_strings.append(pvfs_utils.GetEventData(event_object, RegCache.fscache))
+    ret_strings.append(putils.GetEventData(event_object, RegCache.fscache))
 
     return u'\n'.join(ret_strings), u''
 
@@ -210,7 +210,7 @@ def PluginCompleter(dummy_self, event):
   if not '-h' in event.line:
     ret_list.append('-h')
 
-  plugin_obj = win_registry_interface.GetRegistryPlugins()
+  plugin_obj = interface.GetRegistryPlugins()
 
   for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
     plugin_obj = plugin_cls(RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
@@ -256,7 +256,7 @@ class MyMagics(magic.Magics):
       else:
         plugin_name = items[0]
 
-    plugin_obj = win_registry_interface.GetRegistryPlugins()
+    plugin_obj = interface.GetRegistryPlugins()
     plugin_found = False
     for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
       plugin = plugin_cls(RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
@@ -275,7 +275,7 @@ class MyMagics(magic.Magics):
       return
 
     try:
-      key_fixed = win_registry_interface.ExpandRegistryPath(
+      key_fixed = interface.ExpandRegistryPath(
           plugin.REG_KEY, RegCache.pre_obj, RegCache.reg_cache)
     except KeyError:
       print u'Unable to use plugin {}'.format(line)
@@ -626,7 +626,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
   registry_type = RegCache.hive_type
 
   plugins = {}
-  regplugins = win_registry_interface.GetRegistryPlugins()
+  regplugins = interface.GetRegistryPlugins()
   # Compile a list of plugins we are about to use.
   for weight in regplugins.GetWeights():
     plugin_list = regplugins.GetWeightPlugins(weight, registry_type)
@@ -805,7 +805,7 @@ def Main(arguments):
   # Parse the command line arguments.
   options = arguments.parse_args()
 
-  options.plugins = win_registry_interface.GetRegistryPlugins()
+  options.plugins = interface.GetRegistryPlugins()
 
   # TODO: Move some of this logic to a separate function calls to make
   # GUI writing on top of this front-end simpler.
