@@ -18,7 +18,6 @@
 import os
 import unittest
 
-from plaso import registry    # pylint: disable-msg=W0611
 from plaso.lib import preprocess
 from plaso.parsers import winreg
 from plaso.pvfs import utils
@@ -38,11 +37,11 @@ class WinRegTest(unittest.TestCase):
     event_gen = self._ParseRegistryFile('NTUSER.DAT', 'NTUSER')
     plugins = self._GetPlugins(event_gen)
 
-    self.assertTrue('UserAssistPlugin2' in plugins)
-    self.assertTrue('UserAssistPlugin3' in plugins)
+    self.assertTrue('winreg_userassist_2' in plugins)
+    self.assertTrue('winreg_userassist_3' in plugins)
 
-    self.assertEquals(plugins['UserAssistPlugin2'], 1)
-    self.assertEquals(plugins['UserAssistPlugin3'], 15)
+    self.assertEquals(plugins['winreg_userassist_2'], 1)
+    self.assertEquals(plugins['winreg_userassist_3'], 15)
 
   def _GetPlugins(self, event_gen):
     """Return a dict with a plugin count given an event generator."""
@@ -63,20 +62,20 @@ class WinRegTest(unittest.TestCase):
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
-    self.assertTrue('USBStorPlugin' in plugins)
-    self.assertTrue('BootExecutePlugin' in plugins)
-    self.assertTrue('ServicesPlugin' in plugins)
+    self.assertTrue('winreg_usbstor' in plugins)
+    self.assertTrue('winreg_boot_execute' in plugins)
+    self.assertTrue('winreg_services' in plugins)
 
-    self.assertEquals(plugins.get('USBStorPlugin', 0), 3)
-    self.assertEquals(plugins.get('BootExecutePlugin', 0), 2)
-    self.assertEquals(plugins.get('ServicesPlugin', 0), 831)
+    self.assertEquals(plugins.get('winreg_usbstor', 0), 3)
+    self.assertEquals(plugins.get('winreg_boot_execute', 0), 2)
+    self.assertEquals(plugins.get('winreg_services', 0), 831)
 
 
   def _ParseRegistryFile(self, filename, correct_type):
     """Open up a filehandle and yield all event objects."""
     file_path = os.path.join(self.base_path, filename)
     fh = utils.OpenOSFile(file_path)
-    parser = winreg.WinRegistryParser(self.pre)
+    parser = winreg.WinRegistryParser(self.pre, None)
     for event_object in parser.Parse(fh):
       yield event_object
     fh.close()

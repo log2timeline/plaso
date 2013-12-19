@@ -23,7 +23,7 @@ import re
 import sre_constants
 
 from plaso.lib import errors
-from plaso.lib import win_registry_interface
+from plaso.parsers.winreg_plugins import interface as win_registry_interface
 
 
 class Collector(object):

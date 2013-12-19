@@ -54,11 +54,10 @@ def GetPluginData():
   # registered.
   from plaso import filters
   from plaso import parsers as _
-  from plaso import registry as _
   from plaso import output as _
   from plaso.frontend import presets
   from plaso.lib import output
-  from plaso.lib import win_registry_interface
+  from plaso.parsers.winreg_plugins import interface as win_registry_interface
 
   return_dict['Versions'] = [
       ('plaso engine', plaso.GetVersion()),
