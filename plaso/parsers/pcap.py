@@ -486,7 +486,7 @@ class PcapEventContainer(event.EventContainer):
     self.stream_data = repr(this_stream.stream_data[:50])
 
 
-class PcapParser(parser.PlasoParser):
+class PcapParser(parser.BaseParser):
   """Parses PCAP files."""
 
   DATA_TYPE = 'metadata:pcap'

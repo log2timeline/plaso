@@ -35,7 +35,7 @@ import pyparsing
 import pytz
 
 
-class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
+class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
   """Generic text based parser that uses lexer to assist with parsing.
 
   This text parser is based on a rather slow lexer, which makes the
@@ -71,7 +71,7 @@ class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
                   timezone, like UTC.
     """
     lexer.SelfFeederMixIn.__init__(self)
-    parser.PlasoParser.__init__(self, pre_obj, config)
+    parser.BaseParser.__init__(self, pre_obj, config)
     self.line_ready = False
     self.attributes = {
         'body': '',
@@ -300,7 +300,7 @@ class SlowLexicalTextParser(parser.PlasoParser, lexer.SelfFeederMixIn):
     return event_object
 
 
-class TextCSVParser(parser.PlasoParser):
+class TextCSVParser(parser.BaseParser):
   """An implementation of a simple CSV line-per-entry log files."""
 
   __abstract = True
@@ -527,7 +527,7 @@ class PyparsingConstants(object):
   # TODO: Add more commonly used structs that can be used by parsers.
 
 
-class PyparsingSingleLineTextParser(parser.PlasoParser):
+class PyparsingSingleLineTextParser(parser.BaseParser):
   """Single line text parser based on the pyparsing library."""
   __abstract = True
 

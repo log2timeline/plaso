@@ -53,7 +53,7 @@ class WinJobEventContainer(event.EventContainer):
     self.comment = binary.ReadUtf16(comment)
 
 
-class WinJobParser(parser.PlasoParser):
+class WinJobParser(parser.BaseParser):
   """Parse Windows Scheduled Task files for job events."""
 
   NAME = 'winjob'

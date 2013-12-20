@@ -192,6 +192,7 @@ class PlasoStorage(object):
 
       if pre_obj:
         pre_obj.counter = collections.Counter()
+        pre_obj.plugin_counter = collections.Counter()
         if hasattr(pre_obj, 'collection_information'):
           cmd_line = ' '.join(sys.argv)
           encoding = getattr(pre_obj, 'preferred_encoding', None)
@@ -635,6 +636,8 @@ class PlasoStorage(object):
     if self._pre_obj:
       self._pre_obj.counter['total'] += 1
       self._pre_obj.counter[evt.attributes.get('parser', 'N/A')] += 1
+      if 'plugin' in evt.GetAttributes():
+        self._pre_obj.plugin_counter[getattr(evt, 'plugin')] += 1
 
     # Add to temporary counter.
     self._count_data_type[evt.data_type] += 1

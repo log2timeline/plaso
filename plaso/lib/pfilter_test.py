@@ -41,8 +41,10 @@ class PfilterFakeFormatter(eventdata.EventFormatter):
   SOURCE_SHORT = 'REG'
 
 
-class PfilterFakeParser(parser.PlasoParser):
+class PfilterFakeParser(parser.BaseParser):
   """A fake parser that does not parse anything, but registers."""
+
+  NAME = 'pfilter_fake_parser'
 
   DATA_TYPE = 'Weirdo:Made up Source:Last Written'
 
@@ -68,6 +70,8 @@ class PfilterFakeParser(parser.PlasoParser):
 class PfilterAnotherParser(PfilterFakeParser):
   """Another fake parser that does nothing but register as a parser."""
 
+  NAME = 'pfilter_another_fake'
+
   DATA_TYPE = 'Weirdo:AnotherFakeSource'
 
 
@@ -80,6 +84,8 @@ class PfilterAnotherFakeFormatter(PfilterFakeFormatter):
 
 class PfilterAllEvilParser(PfilterFakeParser):
   """A class that does nothing but has a fancy name."""
+
+  NAME = 'pfilter_evil_fake_parser'
 
   DATA_TYPE = 'Weirdo:AllEvil'
 
@@ -136,7 +142,7 @@ class PFilterTest(unittest.TestCase):
     # Double negative matching -> should be the same
     # as a positive one.
     query = 'filename not not contains \'GoodFella\''
-    my_parser = pfilter.PlasoParser(query)
+    my_parser = pfilter.BaseParser(query)
     self.assertRaises(
         objectfilter.ParseError,
         my_parser.Parse)
@@ -201,16 +207,16 @@ class PFilterTest(unittest.TestCase):
 
     # Multiple attributes.
     query = ('source_long is \'Fake Parsing Source\' AND description_long '
-             'regexp \'bad, bad thing [\sa-zA-Z\.]+ evil\'')
+             'regexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'')
     self.RunPlasoTest(evt, query, False)
 
     query = ('source_long is \'Fake Parsing Source\' AND text iregexp '
-             '\'bad, bad thing [\sa-zA-Z\.]+ evil\'')
+             '\'bad, bad thing [\\sa-zA-Z\\.]+ evil\'')
     self.RunPlasoTest(evt, query, True)
 
   def RunPlasoTest(self, obj, query, result):
     """Run a simple test against an event object."""
-    my_parser = pfilter.PlasoParser(query).Parse()
+    my_parser = pfilter.BaseParser(query).Parse()
     matcher = my_parser.Compile(
         pfilter.PlasoAttributeFilterImplementation)
 

@@ -83,7 +83,7 @@ class PfileStatEventContainer(event.EventContainer):
     self.allocated = allocated
 
 
-class PfileStatParser(parser.PlasoParser):
+class PfileStatParser(parser.BaseParser):
   """Parse the PFile Stat object to extract filesystem timestamps."""
 
   NAME = 'filestat'

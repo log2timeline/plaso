@@ -372,7 +372,7 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
       self.attributes[property_name] = property_value.data_as_string
 
 
-class OleCfParser(parser.PlasoParser):
+class OleCfParser(parser.BaseParser):
   """Parses OLE Compound Files (OLECF)."""
 
   NAME = 'olecf'

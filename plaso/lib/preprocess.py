@@ -131,6 +131,12 @@ class PlasoPreprocess(object):
       for title, value in dict_obj.items():
         self.counter[title] = value
 
+    if proto.HasField('plugin_counter'):
+      self.plugin_counter = collections.Counter()
+      dict_obj = ProtoToDict(proto.plugin_counter)
+      for title, value in dict_obj.items():
+        self.plugin_counter[title] = value
+
     if proto.HasField('store_range'):
       range_list = []
       for value in proto.store_range.values:
@@ -158,6 +164,9 @@ class PlasoPreprocess(object):
       elif attribute == 'counter':
         value_dict = dict(value.items())
         proto.counter.MergeFrom(DictToProto(value_dict))
+      elif attribute == 'plugin_counter':
+        value_dict = dict(value.items())
+        proto.plugin_counter.MergeFrom(DictToProto(value_dict))
       elif attribute == 'store_range':
         range_proto = plaso_storage_pb2.Array()
         range_start = range_proto.values.add()

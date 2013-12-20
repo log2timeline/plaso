@@ -169,12 +169,12 @@ class TestTextParser(text_parser.SlowLexicalTextParser):
     return event_object
 
 
-class PlasoParserTest(unittest.TestCase):
+class BaseParserTest(unittest.TestCase):
   """An unit test for the plaso parser library."""
 
   def testParserNotImplemented(self):
     """Test the base class Parse function."""
-    self.assertRaises(TypeError, parser.PlasoParser)
+    self.assertRaises(TypeError, parser.BaseParser)
 
 
 class TextParserTest(unittest.TestCase):

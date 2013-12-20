@@ -31,7 +31,7 @@ from plaso.lib import plugin
 from plaso.lib import registry
 
 
-class PlistPlugin(plugin.Plugin):
+class PlistPlugin(plugin.BasePlugin):
   """This is an abstract class from which plugins should be based.
 
   The following are the attributes and methods expected to be overriden by a
