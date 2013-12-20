@@ -70,8 +70,13 @@ def DisplayInformation(info, params, store, last_entry=False):
       information += u'\t{0} = {1}\n'.format(key, value)
 
   if hasattr(info, 'counter'):
-    information += u'\nCounter information:\n'
+    information += u'\nCounter Information:\n'
     for key, value in info.counter.most_common():
+      information += u'\tCounter: %s = %d\n' % (key, value)
+
+  if hasattr(info, 'plugin_counter'):
+    information += u'\nPlugin Counter Information:\n'
+    for key, value in info.plugin_counter.most_common():
       information += u'\tCounter: %s = %d\n' % (key, value)
 
   if hasattr(info, 'stores'):
@@ -110,7 +115,7 @@ def DisplayInformation(info, params, store, last_entry=False):
   if params.verbose and last_entry and store.HasReports():
     report_list = []
     for report in store.GetReports():
-      report_list.append(report.String())
+      report_list.append(report.GetString())
     reports = u'\n'.join(report_list)
 
   return u'{0}\n{1}\n{2}\n{3}\n{4}'.format(

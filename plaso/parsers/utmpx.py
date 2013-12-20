@@ -64,7 +64,7 @@ class UtmpxMacOsXEvent(event.EventObject):
     self.timestamp_desc = eventdata.EventTimestamp.START_TIME
 
 
-class UtmpxParser(parser.PlasoParser):
+class UtmpxParser(parser.BaseParser):
   """Parser for UTMPX files. """
 
   NAME = 'utmpx'

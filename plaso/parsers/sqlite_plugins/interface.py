@@ -25,7 +25,7 @@ from plaso.lib import plugin
 import sqlite3
 
 
-class SQLitePlugin(plugin.Plugin):
+class SQLitePlugin(plugin.BasePlugin):
   """A SQLite plugin for Plaso."""
 
   __abstract = True
@@ -45,6 +45,8 @@ class SQLitePlugin(plugin.Plugin):
     super(SQLitePlugin, self).__init__(pre_obj)
     self.db = None
 
+  # TODO: Remove this pylinter.
+  # pylint: disable-msg=arguments-differ
   def Process(self, database):
     """Determine if this is the right plugin for this database.
 

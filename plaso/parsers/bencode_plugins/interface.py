@@ -31,7 +31,7 @@ from plaso.lib import errors
 from plaso.lib import plugin
 
 
-class BencodePlugin(plugin.Plugin):
+class BencodePlugin(plugin.BasePlugin):
   """This is an abstract class from which plugins should be based."""
 
   # __abstract prevents the interface itself from being registered as a plugin.

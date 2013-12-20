@@ -31,7 +31,7 @@ from plaso.parsers import bencode_plugins  # pylint: disable-msg=unused-import
 from plaso.parsers.bencode_plugins import interface
 
 
-class BencodeParser(parser.PlasoParser):
+class BencodeParser(parser.BaseParser):
   """Deserializes bencoded file; yields dictionary containing bencoded data.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
@@ -114,6 +114,7 @@ class BencodeParser(parser.PlasoParser):
     for bencode_plugin in self._plugins.itervalues():
       try:
         for evt in bencode_plugin.Process(top_level_object):
+          evt.plugin = bencode_plugin.plugin_name
           yield evt
       except errors.WrongBencodePlugin as e:
         logging.debug(u'[BENCODE] Wrong Plugin:{}'.format(e[0]))
