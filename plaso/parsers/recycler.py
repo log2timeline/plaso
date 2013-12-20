@@ -60,7 +60,7 @@ class WinRecycleEvent(event.FiletimeEvent):
       self.orig_filename_legacy = filename_ascii
 
 
-class WinRecycleBinParser(parser.PlasoParser):
+class WinRecycleBinParser(parser.BaseParser):
   """Parses the Windows $I recycle files."""
 
   NAME = 'recycle_bin'
@@ -98,7 +98,7 @@ class WinRecycleBinParser(parser.PlasoParser):
     yield WinRecycleEvent('', filename_utf, record, 0)
 
 
-class WinRecycleInfo2Parser(parser.PlasoParser):
+class WinRecycleInfo2Parser(parser.BaseParser):
   """Parses the Windows INFO2 recycle bin file."""
 
   NAME = 'recycle_bin_info2'

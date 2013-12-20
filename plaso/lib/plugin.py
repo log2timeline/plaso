@@ -25,10 +25,10 @@ projects that may want to use the Plaso plugin system.
 import abc
 
 from plaso.lib import registry
-from plaso.lib import putils
+from plaso.lib import utils
 
 
-class Plugin(object):
+class BasePlugin(object):
   """A plugin is a lightweight parser that makes use of a common data structure.
 
   When a data structure is common amongst several artifacts or files a plugin
@@ -62,7 +62,7 @@ class Plugin(object):
   # The name of the plugin. This is the name that is used in the registration
   # and used for parser/plugin selection, so this needs to be concise and unique
   # for all plugins/parsers, eg: 'Chrome', 'Safari', 'UserAssist', etc.
-  NAME = 'Plugin'
+  NAME = 'base_plugin'
 
   def __init__(self, pre_obj):
     """Constructor for a plugin.
@@ -104,7 +104,7 @@ class Plugin(object):
 
 
 def GetRegisteredPlugins(
-    parent_class=Plugin, pre_obj=None, parser_filter_string=u''):
+    parent_class=BasePlugin, pre_obj=None, parser_filter_string=u''):
   """Build a list of all available plugins and return them.
 
   This method uses the class registration library to find all classes that have
@@ -127,7 +127,7 @@ def GetRegisteredPlugins(
     ValueError: If two plugins have the same name.
   """
   if parser_filter_string:
-    parser_include, parser_exclude = putils.GetParserListsFromString(
+    parser_include, parser_exclude = utils.GetParserListsFromString(
         parser_filter_string)
 
   results = {}

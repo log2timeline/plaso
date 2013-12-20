@@ -30,7 +30,7 @@ from plaso.parsers import sqlite_plugins
 import sqlite3
 
 
-class SQLiteParser(parser.PlasoParser):
+class SQLiteParser(parser.BaseParser):
   """A SQLite parser for Plaso."""
 
   # Name of the parser, which enables all plugins by default.
@@ -70,6 +70,7 @@ class SQLiteParser(parser.PlasoParser):
       for plugin_obj in self._plugins.itervalues():
         try:
           for event_object in plugin_obj.Process(database):
+            event_object.plugin = plugin_obj.plugin_name
             yield event_object
         except errors.WrongPlugin:
           logging.debug(u'Unable to parse database: {} using {}'.format(

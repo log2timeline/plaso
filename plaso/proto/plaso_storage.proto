@@ -352,6 +352,9 @@ message PreProcess {
   // All attributes that each preprocessing module produces gets stored
   // inside this field.
   repeated Attribute attributes = 4;
+
+  // A dict that contains information about plugin counters.
+  optional Dict plugin_counter = 5;
 };
 
 // The AnalysisReport object is a simple message describing a report

@@ -37,7 +37,7 @@ import hachoir_metadata
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class HachoirParser(parser.PlasoParser):
+class HachoirParser(parser.BaseParser):
   """Parse meta data from files."""
 
   DATA_TYPE = 'metadata:hachoir'

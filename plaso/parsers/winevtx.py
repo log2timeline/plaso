@@ -70,7 +70,7 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
     self.xml_string = evtx_record.xml_string
 
 
-class WinEvtxParser(parser.PlasoParser):
+class WinEvtxParser(parser.BaseParser):
   """Parses Windows XML EventLog (EVTX) files."""
 
   NAME = 'winevtx'

@@ -292,7 +292,7 @@ class DateCompareObject(object):
     return self.text
 
 
-class PlasoParser(objectfilter.Parser):
+class BaseParser(objectfilter.Parser):
   """Plaso version of the Parser."""
 
   expression_cls = PlasoExpression
@@ -352,14 +352,14 @@ class TrueObject(object):
     # Regular expressions in pfilter may include the following escapes:
     #     "\\'\"rnbt\.ws":
     txt = self.txt
-    if '\.' in self.txt:
-      txt += self.txt.replace('\.', ' _ text _ ')
+    if r'\.' in self.txt:
+      txt += self.txt.replace(r'\.', ' _ text _ ')
 
-    if '\b' in self.txt:
-      txt += self.txt.replace('\b', ' ')
+    if r'\b' in self.txt:
+      txt += self.txt.replace(r'\b', ' ')
 
-    if '\s' in self.txt:
-      txt += self.txt.replace('\s', ' ')
+    if r'\s' in self.txt:
+      txt += self.txt.replace(r'\s', ' ')
 
     return txt
 
@@ -438,7 +438,7 @@ def GetMatcher(query, quiet=False):
   """Return a filter match object for a given query."""
   matcher = None
   try:
-    parser = PlasoParser(query).Parse()
+    parser = BaseParser(query).Parse()
     matcher = parser.Compile(
         PlasoAttributeFilterImplementation)
   except objectfilter.ParseError as e:

@@ -28,7 +28,7 @@ from plaso.lib import event
 from plaso.lib import registry
 
 
-class PlasoParser(object):
+class BaseParser(object):
   """A parent class defining a typical log parser.
 
   This parent class gets inherited from other classes that are parsing
@@ -37,6 +37,8 @@ class PlasoParser(object):
   """
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
+
+  NAME = 'base_parser'
 
   def __init__(self, pre_obj, config=None):
     """Parser constructor.
@@ -55,7 +57,7 @@ class PlasoParser(object):
   @property
   def parser_name(self):
     """Return the name of the parser."""
-    return self.__class__.__name__
+    return self.NAME
 
   @abc.abstractmethod
   def Parse(self, filehandle):
@@ -83,7 +85,7 @@ class PlasoParser(object):
     raise NotImplementedError
 
 
-class BundleParser(PlasoParser):
+class BundleParser(BaseParser):
   """A base class for parsers that need more than a single file to parse."""
 
   __abstract = True

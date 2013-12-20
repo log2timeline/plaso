@@ -57,7 +57,7 @@ class WinPrefetchEventContainer(event.EventContainer):
     self.volume_path = volume_path
 
 
-class WinPrefetchParser(parser.PlasoParser):
+class WinPrefetchParser(parser.BaseParser):
   """A parser for Windows Prefetch files."""
 
   NAME = 'prefetch'

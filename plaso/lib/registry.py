@@ -66,8 +66,8 @@ class MetaclassRegistry(abc.ABCMeta):
       cls_name = getattr(cls, 'NAME', cls.__name__)
 
       if cls_name in cls.classes:
-        raise KeyError(u'Class: {} already registered.'.format(
-            cls_name))
+        raise KeyError(u'Class: {} already registered. [{}]'.format(
+            cls_name, repr(cls)))
 
       cls.classes[cls_name] = cls
 

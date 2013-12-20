@@ -19,16 +19,16 @@ import logging
 
 from plaso.lib import errors
 from plaso.lib import parser
-from plaso.parsers import winreg_plugins
+from plaso.parsers import winreg_plugins    # pylint: disable-msg=unused-import
 from plaso.parsers.winreg_plugins import interface
 from plaso.winreg import cache
 from plaso.winreg import winregistry
 
 
-class WinRegistryParser(parser.PlasoParser):
+class WinRegistryParser(parser.BaseParser):
   """Parses Windows NT Registry (REGF) files."""
 
-  NAME = 'regf'
+  NAME = 'winreg'
 
   # List of types registry types and required keys to identify each of these
   # types.
