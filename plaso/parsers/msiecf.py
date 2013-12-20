@@ -61,7 +61,7 @@ class MsiecfUrlEventContainer(event.EventContainer):
       # OLE VT parsing.
 
 
-class MsiecfParser(parser.PlasoParser):
+class MsiecfParser(parser.BaseParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
   NAME = 'msiecf'

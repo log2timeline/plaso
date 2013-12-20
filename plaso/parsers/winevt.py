@@ -60,7 +60,7 @@ class WinEvtRecordEventContainer(event.EventContainer):
     self.strings = list(evt_record.strings)
 
 
-class WinEvtParser(parser.PlasoParser):
+class WinEvtParser(parser.BaseParser):
   """Parses Windows EventLog (EVT) files."""
 
   NAME = 'winevt'

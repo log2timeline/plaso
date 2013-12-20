@@ -76,7 +76,7 @@ class AslEvent(event.EventObject):
     self.message = message
     self.extra_information = extra_information
 
-class AslParser(parser.PlasoParser):
+class AslParser(parser.BaseParser):
   """Parser for ASL files. """
 
   NAME = 'asl_log'

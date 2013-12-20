@@ -365,7 +365,7 @@ def Main():
     options.image = True
 
   if options.partition_number:
-    partition_map = pvfs.PartitionMap(options.filename)
+    partition_map = pvfs.GetPartitionMap(options.filename)
     offset = 0
     options.image = True
     options.bytes_per_sector = partition_map[0]

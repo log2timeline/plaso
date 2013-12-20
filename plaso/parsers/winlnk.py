@@ -57,7 +57,7 @@ class WinLnkLinkEventContainer(event.EventContainer):
     self.icon_location = lnk_file.icon_location
 
 
-class WinLnkParser(parser.PlasoParser):
+class WinLnkParser(parser.BaseParser):
   """Parses Windows Shortcut (LNK) files."""
 
   NAME = 'lnk'

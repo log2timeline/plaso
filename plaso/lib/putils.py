@@ -16,13 +16,13 @@
 # limitations under the License.
 """This file contains few methods for Plaso."""
 import binascii
-import fnmatch
 import logging
 
-from plaso.frontend import presets
 from plaso.lib import output
 from plaso.lib import parser
+from plaso.lib import plugin
 from plaso.lib import timelib
+from plaso.lib import utils
 from plaso.pvfs import pfile
 
 import pytz
@@ -38,7 +38,7 @@ class Options(object):
 def FindAllParsers(pre_obj=None, config=None, parser_filter_string=''):
   """Find all available parser objects.
 
-  A parser is defined as an object that implements the PlasoParser
+  A parser is defined as an object that implements the BaseParser
   class and does not have the __abstract attribute set.
 
   The parser_filter_string is a simple comma separated value string that
@@ -71,25 +71,27 @@ def FindAllParsers(pre_obj=None, config=None, parser_filter_string=''):
     pre_obj = Options()
 
   # Process the filter string.
-  filter_strings_include, filter_strings_exclude = GetParserListsFromString(
+  filter_include, filter_exclude = utils.GetParserListsFromString(
       parser_filter_string)
+
+  # Extend the include using potential plugin names.
+  filter_include.extend(GetParsersFromPlugins(filter_include, filter_exclude))
 
   results = {}
   results['all'] = []
-  for parser_obj in _FindClasses(parser.PlasoParser, pre_obj, config):
+  for parser_obj in _FindClasses(parser.BaseParser, pre_obj, config):
     add = False
-    if not (filter_strings_exclude or filter_strings_include):
+    if not (filter_exclude or filter_include):
       add = True
     else:
-      for include in filter_strings_include:
-        if fnmatch.fnmatch(
-            parser_obj.parser_name.lower(), '*%s*' % include):
-          add = True
+      parser_name = parser_obj.parser_name.lower()
 
-      for exclude in filter_strings_exclude:
-        if fnmatch.fnmatch(
-            parser_obj.parser_name.lower(), '*%s*' % exclude):
-          add = False
+      if parser_name in filter_include:
+        add = True
+
+      # If a parser is specifically excluded it trumps include rules.
+      if parser_name in filter_exclude:
+        add = False
 
     if add:
       results['all'].append(parser_obj)
@@ -97,42 +99,6 @@ def FindAllParsers(pre_obj=None, config=None, parser_filter_string=''):
       # group parsers together.
 
   return results
-
-
-def GetParserListsFromString(parser_string):
-  """Return a list of parsers to include and exclude from a string.
-
-  Takes a comma separated string and splits it up into two lists,
-  of parsers or plugins to include and to exclude from selection.
-  If a particular filter is prepended with a minus sign it will
-  be included int he exclude section, otherwise in the include.
-
-  Args:
-    parser_string: The comma separated string.
-
-  Returns:
-    A tuple of two lists, include and exclude.
-  """
-  include = []
-  exclude = []
-  for filter_string in parser_string.split(','):
-    filter_string = filter_string.strip()
-    if not filter_string:
-      continue
-    if filter_string.startswith('-'):
-      filter_strings_use = exclude
-      filter_string = filter_string[1:]
-    else:
-      filter_strings_use = include
-
-    filter_string_lower = filter_string.lower()
-    if filter_string_lower in presets.categories:
-      for preset_parser in presets.categories.get(filter_string_lower):
-        filter_strings_use.append(preset_parser.lower())
-    else:
-      filter_strings_use.append(filter_string_lower)
-
-  return include, exclude
 
 
 def _FindClasses(class_object, *args):
@@ -274,3 +240,45 @@ def GetHexDumpLine(line, orig_ofs, entry_nr=0):
     else:
       out.append('.')
   return ''.join(out)
+
+
+def GetParsersFromPlugins(filter_strings, exclude_strings=None):
+  """Return a list of parsers from plugin names.
+
+  To be able to just select particular plugins to be used we need a method
+  that can take a plugin name and locate the appropriate parser for that
+  plugin. That is the purpose of this method, it takes a list of names,
+  checks to see if it is a plugin name and then returns the names of the
+  parsers responsible for that plugin.
+
+  Args:
+    filter_strings: A list of plugin names.
+    exclude_strings: A list of plugins or parsers that should not be
+                     included in the results.
+
+  Returns:
+    A list of parsers that make use of the supplied plugins.
+  """
+  parser_list = []
+
+  if not filter_strings:
+    return parser_list
+
+  if exclude_strings and type(exclude_strings) not in (tuple, list):
+    return parser_list
+
+  for parser_include in filter_strings:
+    plugin_cls = plugin.BasePlugin.classes.get(parser_include)
+
+    if plugin_cls:
+      # Skip if the plugin is in the exclude list.
+      if exclude_strings and parser_include in exclude_strings:
+        continue
+      parent = getattr(plugin_cls, 'parent_class')
+
+      # Only include if parser is not in the original filter string and not
+      # in the return list.
+      if parent and parent not in filter_strings and parent not in parser_list:
+        parser_list.append(parent)
+
+  return parser_list

@@ -79,7 +79,7 @@ class OperaGlobalHistoryEvent(event.PosixTimeEvent):
       self.description = 'Last Visit'
 
 
-class OperaTypedHistoryParser(parser.PlasoParser):
+class OperaTypedHistoryParser(parser.BaseParser):
   """Parses the Opera typed_history.xml file."""
 
   NAME = 'opera_typed_history'
@@ -119,7 +119,7 @@ class OperaTypedHistoryParser(parser.PlasoParser):
       yield OperaTypedHistoryEvent(last_typed, content, entry_type)
 
 
-class OperaGlobalHistoryParser(parser.PlasoParser):
+class OperaGlobalHistoryParser(parser.BaseParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = 'opera_global'

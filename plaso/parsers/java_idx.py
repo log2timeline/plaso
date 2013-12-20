@@ -48,7 +48,7 @@ class JavaIDXEventContainer(event.EventContainer):
     self.ip_address = ip_address
 
 
-class JavaIDXParser(parser.PlasoParser):
+class JavaIDXParser(parser.BaseParser):
   """Parse Java IDX files for download events.
 
   There are five structures defined. 6.02 files had one generic section

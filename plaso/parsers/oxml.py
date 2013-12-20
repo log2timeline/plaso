@@ -31,7 +31,7 @@ from xml.etree import ElementTree
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class OpenXMLParser(parser.PlasoParser):
+class OpenXMLParser(parser.BaseParser):
   """Parse metadata from OXML files."""
 
   NAME = 'openxml'

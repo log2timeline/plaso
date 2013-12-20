@@ -28,7 +28,7 @@ import logging
 from plaso.lib import plugin
 
 
-class RegistryPlugin(plugin.Plugin):
+class RegistryPlugin(plugin.BasePlugin):
   """Registry plugin takes a registry key and extracts entries from it.
 
   The entries that are extracted are in the form of an EventObject that
