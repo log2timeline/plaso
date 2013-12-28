@@ -18,14 +18,12 @@
 """The format specification classes."""
 
 
-class _Signature(object):
+class Signature(object):
   """Class that defines a signature of a format specification.
 
   The signature consists of a byte string expression, an optional
   offset relative to the start of the data, and a value to indidate
   if the expression is bound to the offset.
-
-  This class is intended to be used internally in the classifier.
   """
   def __init__(self, expression, offset=None, is_bound=False):
     """Initializes the signature.
@@ -39,8 +37,6 @@ class _Signature(object):
       is_bound: boolean value to indicate the signature must be bound to
                 the offset or False by default.
     """
-    # TODO: add support for regexp type of expressions.
-    # TODO: add sanity checking.
     self.expression = expression
     self.offset = offset
     self.is_bound = is_bound
@@ -55,14 +51,17 @@ class Specification(object):
     Args:
       identifier: string containing a unique name for the format.
     """
+    self.identifier = identifier
     self.mime_types = []
     self.signatures = []
     self.universal_type_identifiers = []
 
-    self.identifier = identifier
+  def AddMimeType(self, mime_type):
+    """Adds a MIME type."""
+    self.mime_types.append(mime_type)
 
   def AddNewSignature(self, expression, offset=None, is_bound=False):
-    """Adds a new signature.
+    """Adds a signature.
 
     Args:
       expression: string containing the expression of the signature.
@@ -72,11 +71,7 @@ class Specification(object):
                 the offset or False by default.
     """
     self.signatures.append(
-        _Signature(expression, offset=offset, is_bound=is_bound))
-
-  def AddMimeType(self, mime_type):
-    """Adds a MIME type."""
-    self.mime_types.append(mime_type)
+        Signature(expression, offset=offset, is_bound=is_bound))
 
   def AddUniversalTypeIdentifier(self, universal_type_identifiers):
     """Adds a Universal Type Identifier (UTI)."""

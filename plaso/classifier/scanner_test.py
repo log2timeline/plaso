@@ -20,56 +20,7 @@
 import unittest
 
 from plaso.classifier import scanner
-from plaso.classifier import specification
 from plaso.classifier import test_lib
-
-
-class ScanNodeTest(unittest.TestCase):
-  """Class to test the scan node."""
-
-  def testAddByteValueWithPattern(self):
-    """Function to test the add byte value with pattern function."""
-    # pylint: disable-msg=protected-access
-    scan_node = scanner._ScanTreeNode(0)
-
-    format_regf = specification.Specification('REGF')
-    format_regf.AddNewSignature('regf', offset=0)
-
-    format_esedb = specification.Specification('ESEDB')
-    format_esedb.AddNewSignature('\xef\xcd\xab\x89', offset=4)
-
-    signature_esedb = specification._Signature('\xef\xcd\xab\x89', offset=4)
-    signature_regf = specification._Signature('regf', offset=0)
-
-    pattern_regf = scanner.Pattern(0, signature_regf, format_regf)
-    pattern_esedb = scanner.Pattern(0, signature_esedb, format_esedb)
-
-    scan_node.AddByteValue('r', pattern_regf)
-    scan_node.AddByteValue('\xef', pattern_esedb)
-
-    self.assertRaises(
-        ValueError, scan_node.AddByteValue, 'r', pattern_regf)
-    self.assertRaises(
-        ValueError, scan_node.AddByteValue, -1, pattern_regf)
-    self.assertRaises(
-        ValueError, scan_node.AddByteValue, 256, pattern_regf)
-
-  def testAddByteValueWithScanNode(self):
-    """Function to test the add byte with scan node function."""
-    # pylint: disable-msg=protected-access
-    scan_node = scanner._ScanTreeNode(0)
-    scan_sub_node_0x41 = scanner._ScanTreeNode(1)
-    scan_sub_node_0x80 = scanner._ScanTreeNode(1)
-
-    scan_node.AddByteValue(0x41, scan_sub_node_0x41)
-    scan_node.AddByteValue(0x80, scan_sub_node_0x80)
-
-    self.assertRaises(
-        ValueError, scan_node.AddByteValue, 0x80, scan_sub_node_0x80)
-    self.assertRaises(
-        ValueError, scan_node.AddByteValue, -1, scan_sub_node_0x80)
-    self.assertRaises(
-        ValueError, scan_node.AddByteValue, 256, scan_sub_node_0x80)
 
 
 class ScannerTest(unittest.TestCase):
