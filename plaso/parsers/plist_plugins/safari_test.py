@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a test for the Safari History plist parser."""
+
 import os
 import unittest
 
@@ -29,19 +31,18 @@ class SafariPluginTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.plugin = safari.SafariHistoryPlugin(None)
-    parser = plist.PlistParser(preprocess.PlasoPreprocess(), None)
-
-    self.plist_binary = os.path.join('test_data', 'History.plist')
-
-    with utils.OpenOSFile(self.plist_binary) as fd:
-      self.top_level_object = parser.GetTopLevel(fd)
+    self._plugin = safari.SafariHistoryPlugin(None)
+    self._parser = plist.PlistParser(preprocess.PlasoPreprocess(), None)
 
   def testGetEntries(self):
     """Ensure that the Safari history file is parsed correctly."""
     name = 'History.plist'
+    test_file = os.path.join('test_data', 'History.plist')
 
-    events = list(self.plugin.Process(name, self.top_level_object))
+    file_entry = utils.OpenOSFileEntry(test_file)
+    top_level_object = self._parser.GetTopLevel(file_entry)
+
+    events = list(self._plugin.Process(name, top_level_object))
 
     # 18 entries in timeline.
     self.assertEquals(len(events), 18)

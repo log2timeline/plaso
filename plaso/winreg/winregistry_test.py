@@ -19,6 +19,7 @@
 import os
 import unittest
 
+from plaso.pvfs import utils
 from plaso.winreg import winregistry
 
 
@@ -31,12 +32,12 @@ class RegistryUnitTest(unittest.TestCase):
         winregistry.WinRegistry.BACKEND_PYREGF)
 
     test_file1 = os.path.join('test_data', 'SOFTWARE')
-    file_object1 = open(test_file1, 'rb')
-    winreg_file1 = registry.OpenFile(file_object1, codepage='cp1252')
+    file_entry1 = utils.OpenOSFileEntry(test_file1)
+    winreg_file1 = registry.OpenFile(file_entry1, codepage='cp1252')
 
     test_file2 = os.path.join('test_data', 'NTUSER-WIN7.DAT')
-    file_object2 = open(test_file2, 'rb')
-    winreg_file2 = registry.OpenFile(file_object2, codepage='cp1252')
+    file_entry2 = utils.OpenOSFileEntry(test_file2)
+    winreg_file2 = registry.OpenFile(file_entry2, codepage='cp1252')
 
     registry.MountFile(winreg_file1, u'HKEY_LOCAL_MACHINE\\Software')
 

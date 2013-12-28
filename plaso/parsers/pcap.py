@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for PCAP files."""
+
 import binascii
 import dpkt
 import operator
@@ -24,6 +26,7 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
+
 
 __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
 
@@ -520,28 +523,28 @@ class PcapParser(parser.BaseParser):
 
     return event_container
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extract data from a pcap file.
 
     A separate event container is returned for every record to limit
     memory consumption.
 
     Args:
-      file_object: A file-like object to read data from.
+      file_entry: A file entry object.
 
     Yields:
       An event container (PcapEventContainer) that contains
       the parsed data.
     """
-
+    file_object = file_entry.Open()
     try:
       pcap_reader = dpkt.pcap.Reader(file_object)
     except ValueError as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-        self.parser_name, file_object.name, exception))
+        self.parser_name, file_entry.name, exception))
     except dpkt.NeedData as exception:
       raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-        self.parser_name, file_object.name, exception))
+        self.parser_name, file_entry.name, exception))
 
     packet_id = 0
     ip_list = []
@@ -612,6 +615,7 @@ class PcapParser(parser.BaseParser):
 
     for other_stream in other_streams:
       yield self._ParseStream(other_stream)
+    file_object.close()
 
   def OtherStream(self, other_list, trunc_list):
     """Process packets that are no IP packets.
@@ -626,7 +630,6 @@ class PcapParser(parser.BaseParser):
     Returns:
       A stream container with detail information about the stream.
     """
-
     other_streams = []
 
     for packet in other_list:

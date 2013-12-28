@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows XML EventLog (EVTX) files."""
+
 import logging
 
 from plaso.lib import errors
@@ -85,15 +87,16 @@ class WinEvtxParser(parser.BaseParser):
     super(WinEvtxParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extract data from a Windows XML EventLog (EVTX) file.
 
     Args:
-      file_object: A file-like object to read data from.
+      file_entry: A file entry object.
 
     Yields:
       An event object (WinEvtxRecordEvent) that contains the parsed data.
     """
+    file_object = file_entry.Open()
     evtx_file = pyevtx.file()
     evtx_file.set_ascii_codepage(self._codepage)
 
@@ -101,7 +104,7 @@ class WinEvtxParser(parser.BaseParser):
       evtx_file.open_file_object(file_object)
     except IOError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_object.name, exception))
+          self.parser_name, file_entry.name, exception))
 
     for record_index in range(0, evtx_file.number_of_records):
       try:
@@ -110,7 +113,7 @@ class WinEvtxParser(parser.BaseParser):
       except IOError as exception:
         logging.warning(
             u'[%s] unable to parse event record: %d in file: %s: %s',
-            self.parser_name, record_index, file_object.name, exception)
+            self.parser_name, record_index, file_entry.name, exception)
 
     for record_index in range(0, evtx_file.number_of_recovered_records):
       try:
@@ -119,4 +122,6 @@ class WinEvtxParser(parser.BaseParser):
       except IOError as exception:
         logging.debug(
             u'[%s] unable to parse recovered event record: %d in file: %s: '
-            '%s', self.parser_name, record_index, file_object.name, exception)
+            '%s', self.parser_name, record_index, file_entry.name, exception)
+
+    file_object.close()

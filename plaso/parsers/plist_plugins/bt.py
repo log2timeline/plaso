@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -29,24 +30,24 @@ class BtPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.bluetooth.plist'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
+  # Yield Events
+  #
+  # LastInquiryUpdate = Device connected via Bluetooth Discovery.  Updated
+  #   when a device is detected in discovery mode.  E.g. BT headphone power
+  #   on.  Pairing is not required for a device to be discovered and cached.
+  #
+  # LastNameUpdate = When the human name was last set.  Usually done only once
+  #   during initial setup.
+  #
+  # LastServicesUpdate = Time set when device was polled to determine what it
+  #   is.  Usually done at setup or manually requested via advanced menu.
+
   def GetEntries(self):
     """Extracts relevant BT entries.
 
     Yields:
       EventObject objects extracted from the plist.
     """
-
-    # Yield Events
-    #
-    # LastInquiryUpdate = Device connected via Bluetooth Discovery.  Updated
-    #   when a device is detected in discovery mode.  E.g. BT headphone power
-    #   on.  Pairing is not required for a device to be discovered and cached.
-    #
-    # LastNameUpdate = When the human name was last set.  Usually done only once
-    #   during initial setup.
-    #
-    # LastServicesUpdate = Time set when device was polled to determine what it
-    #   is.  Usually done at setup or manually requested via advanced menu.
     root = '/DeviceCache'
 
     for device, value in self.match['DeviceCache'].items():
@@ -79,4 +80,3 @@ class BtPlugin(interface.PlistPlugin):
         key = ''.join((device, '/LastServicesUpdate'))
         time = timelib.Timestamp.FromPythonDatetime(value['LastServicesUpdate'])
         yield plist_event.PlistEvent(root, key, time, desc)
-

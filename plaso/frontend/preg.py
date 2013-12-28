@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -22,6 +23,7 @@ raw image files and extract registry files from VSS and restore points and then
 runs the registry plugins of plaso against the registry hive and presents it
 in a textual format.
 """
+
 import argparse
 import binascii
 import logging
@@ -47,7 +49,7 @@ from plaso.lib import preprocess
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.lib import putils
-from plaso.parsers import winreg_plugins    # pylint: disable-msg=W0611
+from plaso.parsers import winreg_plugins    # pylint: disable-msg=unused-import
 from plaso.parsers.winreg_plugins import interface
 from plaso.pvfs import pvfs
 from plaso.pvfs import utils as pvfs_utils
@@ -489,9 +491,10 @@ def IsLoaded():
 def OpenHive(filename, collector=None, codepage='cp1252'):
   """Open a registry hive based on a collector or a filename."""
   if not collector:
-    file_object = pvfs_utils.OpenOSFile(filename)
+    file_object = pvfs_utils.OpenOSFileIO(filename)
   else:
-    file_object = collector.OpenFile(filename)
+    file_entry = collector.OpenFileEntry(filename)
+    file_object = file_entry.Open()
 
   use_codepage = getattr(RegCache.pre_obj, 'code_page', codepage)
 

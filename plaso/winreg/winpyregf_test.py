@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains tests for the pyregf Windows Registry back-end."""
+
 import os
 import unittest
 
@@ -25,33 +27,30 @@ from plaso.winreg import winpyregf
 class RegistryUnitTest(unittest.TestCase):
   """An unit test for the plaso winpyregf library."""
 
-  def setUp(self):
-    self.base_path = 'test_data'
+  def _KeyPathCompare(self, reg, path):
+    """Get a key, compare it's path to the path requested."""
+    key = reg.GetKeyByPath(path)
+    self.assertEquals(key.path, path)
 
   def testListKeys(self):
-    test_file = os.path.join(self.base_path, 'NTUSER.DAT')
-    file_object = utils.OpenOSFile(test_file)
-    reg = winpyregf.WinRegistry(file_object)
+    test_file = os.path.join('test_data', 'NTUSER.DAT')
+    file_entry = utils.OpenOSFileEntry(test_file)
+    reg = winpyregf.WinRegistry(file_entry)
     keys = list(reg)
 
     # Count the number of registry keys in the hive.
     self.assertEquals(len(keys), 1126)
 
   def testWinPyregf(self):
-    test_file = os.path.join(self.base_path, 'NTUSER.DAT')
-    file_object = utils.OpenOSFile(test_file)
+    test_file = os.path.join('test_data', 'NTUSER.DAT')
+    file_entry = utils.OpenOSFileEntry(test_file)
     reg = winpyregf.WinPyregfFile()
-    reg.Open(file_object)
+    reg.Open(file_entry)
 
     self._KeyPathCompare(reg, '\\')
     self._KeyPathCompare(reg, '\\Printers')
     self._KeyPathCompare(reg, '\\Printers\\Connections')
     self._KeyPathCompare(reg, '\\Software')
-
-  def _KeyPathCompare(self, reg, path):
-    """Get a key, compare it's path to the path requested."""
-    key = reg.GetKeyByPath(path)
-    self.assertEquals(key.path, path)
 
 
 if __name__ == '__main__':

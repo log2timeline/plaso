@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows EventLog (EVT) files."""
+
 import logging
 
 from plaso.lib import errors
@@ -114,19 +116,20 @@ class WinEvtParser(parser.BaseParser):
 
     return event_container
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extract data from a Windows EventLog (EVT) file.
 
        A separate event container is returned for every record to limit
        memory consumption.
 
     Args:
-      file_object: A file-like object to read data from.
+      file_entry: A file entry object.
 
     Yields:
       An event container (WinEvtRecordEventContainer) that contains
       the parsed data.
     """
+    file_object = file_entry.Open()
     evt_file = pyevt.file()
     evt_file.set_ascii_codepage(self._codepage)
 
@@ -134,7 +137,7 @@ class WinEvtParser(parser.BaseParser):
       evt_file.open_file_object(file_object)
     except IOError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_object.name, exception))
+          self.parser_name, file_entry.name, exception))
 
     for record_index in range(0, evt_file.number_of_records):
       try:
@@ -143,7 +146,7 @@ class WinEvtParser(parser.BaseParser):
       except IOError as exception:
         logging.warning(
             '[%s] unable to parse event record: %d in file: %s: %s' % (
-            self.parser_name, record_index, file_object.name, exception))
+            self.parser_name, record_index, file_entry.name, exception))
 
     for record_index in range(0, evt_file.number_of_recovered_records):
       try:
@@ -153,4 +156,6 @@ class WinEvtParser(parser.BaseParser):
         logging.info((
             u'[%s] unable to parse recovered event record: %d in file: %s: '
             u'%s') % (
-                self.parser_name, record_index, file_object.name, exception))
+                self.parser_name, record_index, file_entry.name, exception))
+
+    file_object.close()

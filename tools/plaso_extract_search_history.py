@@ -27,7 +27,7 @@ import os
 import sys
 import urllib
 
-# pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
 from plaso import filters
 from plaso import formatters
 

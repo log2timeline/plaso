@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,20 +15,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This file contains a unit test for the skydrivelog parser in plaso."""
 
 import os
 import pytz
 import unittest
 
-# Shut up pylint on W0611: Unused import skydrivelog_formatter.
-# pylint: disable=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import skydrivelog as skydrivelog_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import skydrivelog as skydrivelog_parser
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
+
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
@@ -37,15 +37,19 @@ class SkyDriveLogUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'skydrive.log')
-    self.filehandle = utils.OpenOSFile(test_file)
-
-  def testParsing(self):
-    """Test parsing of a SkyDrive log file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.timezone('UTC')
-    myparser = skydrivelog_parser.SkyDriveLogParser(pre_obj, None)
-    events = list(myparser.Parse(self.filehandle))
+    self._parser = skydrivelog_parser.SkyDriveLogParser(pre_obj, None)
+
+  def _TestText(self, evt, text):
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(evt)
+    self.assertEquals(msg, text)
+
+  def testParse(self):
+    """Tests the Parse function."""
+    test_file = os.path.join('test_data', 'skydrive.log')
+
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEquals(len(events), 18)
 
@@ -69,9 +73,6 @@ class SkyDriveLogUnitTest(unittest.TestCase):
     self._TestText(events[17],
       u'SyncToken = Not a sync token (\xe0\xe8\xec\xf2\xf9)!')
 
-  def _TestText(self, evt, text):
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(evt)
-    self.assertEquals(msg, text)
 
 if __name__ == '__main__':
   unittest.main()

@@ -225,29 +225,30 @@ class MacPlistPreprocess(PreprocessPlugin):
       raise errors.PreProcessFail(u'Unable to find path: %s' % self.PLIST_PATH)
 
     try:
-      filehandle = self._collector.OpenFile(paths[0])
+      file_entry = self._collector.OpenFileEntry(paths[0])
+      file_object = file_entry.Open()
     except IOError:
       raise errors.PreProcessFail(
           u'Unable to open file {}: {}'.format(paths[0], e))
 
-    return self.ParseFile(filehandle)
+    return self.ParseFile(file_entry, file_object)
 
-  def ParseFile(self, filehandle):
+  def ParseFile(self, file_entry, file_object):
     """Parse the file and return parsed key."""
     try:
-      plist_file = binplist.BinaryPlist(filehandle)
+      plist_file = binplist.BinaryPlist(file_object)
       top_level_object = plist_file.Parse()
     except binplist.FormatError as e:
       raise errors.PreProcessFail(
           u'File is not a plist:{}'.format(utils.GetUnicodeString(e)))
     except OverflowError as e:
       raise errors.PreProcessFail(
-          u'Error processing:{} Error:{}'.format(filehandle.display_name, e))
+          u'Error processing:{} Error:{}'.format(file_entry.display_name, e))
 
     if not plist_file:
       raise errors.PreProcessFail(
           u'File is not a plist:{}'.format(utils.GetUnicodeString(
-              filehandle.display_name)))
+              file_entry.display_name)))
 
     match = None
     key_name = ''
@@ -278,11 +279,11 @@ class MacXMLPlistPreprocess(MacPlistPreprocess):
   """A preprocessing class that extract values from a XML plist file."""
   __abstract = True
 
-  def ParseFile(self, filehandle):
+  def ParseFile(self, file_entry, file_object):
     """Parse the file and return parsed key."""
     # TODO: Move to defusedxml for safer XML parsing.
     try:
-      xml = ElementTree.parse(filehandle)
+      xml = ElementTree.parse(file_object)
     except ElementTree.ParseError:
       raise errors.PreProcessFail(u'File is not a XML file.')
     except IOError:
@@ -356,7 +357,8 @@ class WinRegistryPreprocess(PreprocessPlugin):
               sys_dir, self.REG_FILE))
 
     try:
-      hive_fh = self._collector.OpenFile(file_name[0])
+      file_entry = self._collector.OpenFileEntry(file_name[0])
+      file_object = file_entry.Open()
     except IOError as e:
       raise errors.PreProcessFail(
           u'Unable to open file: {} [{}]'.format(file_name[0], e))
@@ -368,7 +370,7 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
     try:
       winreg_file = self.winreg_file = win_registry.OpenFile(
-          hive_fh, codepage=codepage)
+          file_object, codepage=codepage)
     except IOError as e:
       raise errors.PreProcessFail(
           u'Unable to open the registry: {} [{}]'.format(file_name[0], e))

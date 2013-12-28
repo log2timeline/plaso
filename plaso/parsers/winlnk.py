@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows Shortcut (LNK) files."""
+
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -72,24 +74,26 @@ class WinLnkParser(parser.BaseParser):
     super(WinLnkParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extract data from a Windows Shortcut (LNK) file.
 
     Args:
-      file_object: a file-like object to read data from.
+      file_entry: A file entry object.
 
     Yields:
       An event container (EventContainer) that contains the parsed
       attributes.
     """
+    file_object = file_entry.Open()
     lnk_file = pylnk.file()
     lnk_file.set_ascii_codepage(self._codepage)
 
     try:
       lnk_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_object.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+          self.parser_name, file_entry.name, exception))
 
     container = WinLnkLinkEventContainer(lnk_file)
 
@@ -111,4 +115,5 @@ class WinLnkParser(parser.BaseParser):
     # TODO: add support for the distributed link tracker.
     # TODO: add support for the shell item.
 
+    file_object.close()
     yield container

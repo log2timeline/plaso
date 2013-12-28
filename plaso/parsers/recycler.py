@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows Recycle files, INFO2 and $I/$R pairs."""
+
 import construct
 import logging
 
@@ -73,8 +75,16 @@ class WinRecycleBinParser(parser.BaseParser):
 
   MAGIC_STRUCT = construct.ULInt64('magic')
 
-  def Parse(self, file_object):
-    """Parse a file like object to extract EventObjects out of a $Ixx file."""
+  def Parse(self, file_entry):
+    """Extract entries from a Windows RecycleBin $Ixx file.
+
+    Args:
+      file_entry: A file entry object.
+
+    Yields:
+      An event object.
+    """
+    file_object = file_entry.Open()
     try:
       magic_header = self.MAGIC_STRUCT.parse_stream(file_object)
     except (construct.FieldError, IOError) as e:
@@ -87,7 +97,7 @@ class WinRecycleBinParser(parser.BaseParser):
 
     # We may have to rely on filenames since this header is very generic.
     # TODO: Rethink this and potentially make a better test.
-    base_filename = utils.GetBaseName(file_object.name)
+    base_filename = utils.GetBaseName(file_entry.name)
     if not base_filename.startswith('$I'):
       raise errors.UnableToParseFile(
           u'Not an $Ixxx file, filename doesn\'t start with $I.')
@@ -95,6 +105,7 @@ class WinRecycleBinParser(parser.BaseParser):
     record = self.RECORD_STRUCT.parse_stream(file_object)
     filename_utf = binary.ReadUtf16Stream(file_object)
 
+    file_object.close()
     yield WinRecycleEvent('', filename_utf, record, 0)
 
 
@@ -121,8 +132,16 @@ class WinRecycleInfo2Parser(parser.BaseParser):
   UNICODE_FILENAME_OFFSET = 0x11C
   RECORD_INDEX_OFFSET = 0x108
 
-  def Parse(self, file_object):
-    """Extract data from Windows INFO2 file."""
+  def Parse(self, file_entry):
+    """Extract entries from Windows Recycler INFO2 file.
+
+    Args:
+      file_entry: A file entry object.
+
+    Yields:
+      An event object.
+    """
+    file_object = file_entry.Open()
     try:
       magic_header = self.INT32_LE.parse_stream(file_object)
     except (construct.FieldError, IOError) as e:
@@ -136,7 +155,7 @@ class WinRecycleInfo2Parser(parser.BaseParser):
     # Since this header value is really generic it is hard not to use filename
     # as an indicator too.
     # TODO: Rethink this and potentially make a better test.
-    base_filename = utils.GetBaseName(file_object.name)
+    base_filename = utils.GetBaseName(file_entry.name)
     if not base_filename.startswith('INFO2'):
       raise errors.UnableToParseFile(
           u'Not an INFO2 file, filename isn\'t INFO2.')
@@ -173,3 +192,5 @@ class WinRecycleInfo2Parser(parser.BaseParser):
           filename_ascii, filename_utf, record_information, record_size)
 
       data = file_object.read(record_size)
+
+    file_object.close()

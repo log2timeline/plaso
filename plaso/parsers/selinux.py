@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -39,6 +40,7 @@
    http://www.redhat.com/promo/summit/2010/presentations/
    taste_of_training/Summit_2010_SELinux.pdf
 """
+
 import logging
 import re
 
@@ -47,6 +49,7 @@ from plaso.lib import event
 from plaso.lib import lexer
 from plaso.lib import text_parser
 from plaso.lib import timelib
+
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 

@@ -16,14 +16,14 @@
 # limitations under the License.
 """This file contains a test for the default plist parser."""
 
-import os
 import unittest
 
 # Always import plist to force plugin registration.
 from plaso.events import plist_event
 from plaso.lib import errors
 from plaso.lib import plugin
-from plaso.parsers import plist  # pylint: disable=W0611
+# pylint: disable-msg=unused-import
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -38,13 +38,12 @@ class MockPlugin(interface.PlistPlugin):
         1351827808261762)
 
 
-class TestPlistInterface(unittest.TestCase): # pylint: disable=R0923
+# pylint: disable=R0923
+class TestPlistInterface(unittest.TestCase):
   """The unittests for plist interface and components."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.base_path = 'test_data'
-    self.fd = os.path.join(self.base_path, 'plist_binary')
     self.plugins = plugin.GetRegisteredPlugins(interface.PlistPlugin)
     self.top_level_dict = {
         'DeviceCache': {

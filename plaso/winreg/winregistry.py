@@ -74,11 +74,11 @@ class WinRegistry(object):
     """
     return cls._FILENAME_MOUNTED_PATHS.get(filename.upper(), None)
 
-  def OpenFile(self, file_object, codepage='cp1252'):
+  def OpenFile(self, file_entry, codepage='cp1252'):
     """Opens the file object based on the back-end.
 
     Args:
-      file_object: The file-like object of the Registry file.
+      file_entry: The file entry object.
 
     Returns:
       The a Windows Registry file (an instance of WinRegFile) if successful
@@ -90,7 +90,7 @@ class WinRegistry(object):
       winreg_file = winpyregf.WinPyregfFile()
 
     if winreg_file:
-      winreg_file.Open(file_object, codepage=codepage)
+      winreg_file.Open(file_entry, codepage=codepage)
 
     return winreg_file
 
@@ -119,9 +119,11 @@ class WinRegistry(object):
     Returns:
       The key (an instance of WinRegKey) if available or None otherwise.
     """
-    for mounted_path in self._files.keys():
-      if path.startswith(mounted_path):
-        break
+    mounted_path = None
+    if self._files:
+      for mounted_path in self._files.keys():
+        if path.startswith(mounted_path):
+          break
 
     if not mounted_path:
       return None

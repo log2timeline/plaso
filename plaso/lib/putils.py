@@ -161,7 +161,7 @@ def GetEventData(evt, fscache=None, before=0, length=20):
     return u''
 
   try:
-    fh = pfile.OpenPFile(evt.pathspec.ToProto(), fscache=fscache)
+    file_entry = pfile.OpenPFileEntry(evt.pathspec.ToProto(), fscache=fscache)
   except IOError as e:
     return u'Error opening file: %s' % e
 
@@ -169,14 +169,14 @@ def GetEventData(evt, fscache=None, before=0, length=20):
   if offset - before > 0:
     offset -= before
 
-  return GetHexDumpStream(fh, offset, length)
+  return GetHexDumpStream(file_entry, offset, length)
 
 
-def GetHexDumpStream(fh, offset, length=20):
-  """Return a hex dump from a filehandle and an offset.
+def GetHexDumpStream(file_entry, offset, length=20):
+  """Return a hex dump of the contents of a file.
 
   Args:
-    fh: A filehandle or a file like object.
+    file_entry: A file entry object.
     offset: The offset into the file like object where the first
     byte is read from.
     length: Number of lines to print. A single line consists of 16 bytes,
@@ -185,8 +185,10 @@ def GetHexDumpStream(fh, offset, length=20):
   Returns:
     A string that contains the hex dump.
   """
-  fh.seek(offset)
-  data = fh.read(int(length) * 16)
+  file_object = file_entry.Open()
+  file_object.seek(offset)
+  data = file_object.read(int(length) * 16)
+  file_object.close()
   return GetHexDump(data, offset)
 
 

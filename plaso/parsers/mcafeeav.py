@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -18,6 +19,7 @@
 
 McAfee AV uses 4 logs to track when scans were run, when virus databases were
 updated, and when files match the virus database."""
+
 import logging
 
 from plaso.lib import event
@@ -30,7 +32,7 @@ class McafeeAVEvent(event.TextEvent):
   DATA_TYPE = 'av:mcafee:accessprotectionlog'
 
   def __init__(self, timestamp, attributes):
-    """ Initializes a McAfee AV Log Event.
+    """Initializes a McAfee AV Log Event.
 
     Args:
       timestamp: The timestamp time value. The timestamp contains the

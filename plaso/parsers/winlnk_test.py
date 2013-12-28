@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Windows Shortcut (LNK) parser."""
+
 import os
 import unittest
 
-from plaso.formatters import winlnk
+# pylint: disable-msg=unused-import
+from plaso.formatters import winlnk as winlnk_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
+from plaso.parsers import test_lib
 from plaso.parsers import winlnk
 
 
@@ -30,18 +34,16 @@ class WinLnkParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = winlnk.WinLnkParser(pre_obj, None)
+    self._parser = winlnk.WinLnkParser(pre_obj, None)
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
     self.maxDiff = None
 
-  def testParseFile(self):
-    """Read a LNK file and run a few tests."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'example.lnk')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # Link information:
     # 	Creation time			: Jul 13, 2009 23:29:02.849131000 UTC

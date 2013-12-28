@@ -25,7 +25,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
-from plaso.formatters import winreg   # pylint: disable-msg=W0611
+from plaso.formatters import winreg   # pylint: disable-msg=unused-import
 
 
 class DummyObject(object):

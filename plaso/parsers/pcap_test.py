@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors..
 #
@@ -15,14 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for PCAP parser."""
+
 import os
 import unittest
 
-from plaso.formatters import pcap
+# pylint: disable-msg=unused-import
+from plaso.formatters import pcap as pcap_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import pcap
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
 
 
 class PCAPParserTest(unittest.TestCase):
@@ -31,22 +34,18 @@ class PCAPParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = pcap.PcapParser(pre_obj)
+    self._parser = pcap.PcapParser(pre_obj)
 
-  def testPCAPParserFile(self):
-    """Reads and parses a test PCAP file."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'test.pcap')
 
-    events = []
-
-    file_handle = utils.OpenOSFile(test_file)
-    events = list(self.test_parser.Parse(file_handle))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # PCAP information:
     #    Number of streams: 96
 
-    expected_number_of_events = 96
-    self.assertEquals(len(events), expected_number_of_events)
+    self.assertEquals(len(events), 96)
 
     # Test stream 3.
     #    Protocol:        TCP

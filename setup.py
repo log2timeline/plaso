@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,12 +15,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-This is the setup file for the project. The standard setup rules apply:
+"""This is the setup file for the project. The standard setup rules apply:
 
-  python setup.py build
-  sudo python setup.py install
+   python setup.py build
+   sudo python setup.py install
 """
+
 import glob
 import os
 import sys
