@@ -151,7 +151,7 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-# Update the version information
+# Update the version information.
 echo "Updating version information to match today's date."
 DATE_NOW=`date +"%Y%m%d"`
 sed -i -e "s/^VERSION_DATE.*$/VERSION_DATE = '${DATE_NOW}'/g" plaso/__init__.py
