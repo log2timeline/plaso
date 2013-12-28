@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -19,10 +20,12 @@
 import os
 import unittest
 
-from plaso.formatters import winreg   # pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
+from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import userassist
+from plaso.pvfs import utils
 from plaso.winreg import winregistry
 
 
@@ -35,8 +38,8 @@ class WindowsXPUserAssistTest(unittest.TestCase):
         winregistry.WinRegistry.BACKEND_PYREGF)
 
     test_file = os.path.join('test_data', 'NTUSER.DAT')
-    file_object = open(test_file, 'rb')
-    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
+    file_entry = utils.OpenOSFileEntry(test_file)
+    self.winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
@@ -80,8 +83,8 @@ class Windows7UserAssistTest(unittest.TestCase):
         winregistry.WinRegistry.BACKEND_PYREGF)
 
     test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
-    file_object = open(test_file, 'rb')
-    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
+    file_entry = utils.OpenOSFileEntry(test_file)
+    self.winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,16 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a unit test for the selinux parser in plaso."""
+
 import os
 import unittest
 
-from plaso.formatters import selinux
+# pylint: disable-msg=unused-import
+from plaso.formatters import selinux as selinux_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import selinux
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
 
 import pytz
+
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
@@ -34,19 +38,16 @@ class SELinuxUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'selinux.log')
-    self.filehandle = utils.OpenOSFile(test_file)
-
-  def testParsing(self):
-    """Test parsing of a selinux file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.year = 2013
     pre_obj.zone = pytz.UTC
-    sl = selinux.SELinuxParser(pre_obj, None)
+    self._parser = selinux.SELinuxParser(pre_obj, None)
 
-    self.filehandle.seek(0)
-    sl_generator = sl.Parse(self.filehandle)
-    events = list(sl_generator)
+  def testParse(self):
+    """Tests the Parse function."""
+    test_file = os.path.join('test_data', 'selinux.log')
+
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEquals(len(events), 4)
 

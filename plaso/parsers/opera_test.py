@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,14 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Opera browser history parsers."""
+
 import os
 import unittest
 
-# pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import opera as opera_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import opera
+from plaso.parsers import test_lib
 
 
 class OperaTypedParserTest(unittest.TestCase):
@@ -37,13 +40,11 @@ class OperaTypedParserTest(unittest.TestCase):
     # conventions.
     self.maxDiff = None
 
-  def testParseFile(self):
-    """Read a history file and run a few tests."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'typed_history.xml')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self._parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEquals(len(events), 4)
 
@@ -91,9 +92,7 @@ class OperaGlobalParserTest(unittest.TestCase):
     """Read a history file and run a few tests."""
     test_file = os.path.join('test_data', 'global_history.dat')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self._parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEquals(len(events), 37)
 

@@ -477,16 +477,17 @@ class OleCfParser(parser.BaseParser):
       for event_container in self._ParseItem(sub_item, level=(level + 1)):
         yield event_container
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extracts data from an OLE Compound File (OLECF).
 
     Args:
-      file_object: a file-like object to read data from.
+      file_entry: A file entry object.
 
     Yields:
       An event container (EventContainer) that contains the parsed
       attributes.
     """
+    file_object = file_entry.Open()
     olecf_file = pyolecf.file()
     olecf_file.set_ascii_codepage(self._codepage)
 
@@ -494,9 +495,11 @@ class OleCfParser(parser.BaseParser):
       olecf_file.open_file_object(file_object)
     except IOError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_object.name, exception))
+          self.parser_name, file_entry.name, exception))
 
     # Need to yield every event container individually otherwise
     # a generator object is yielded.
     for event_container in self._ParseItem(olecf_file.root_item, level=0):
       yield event_container
+
+    file_object.close()

@@ -113,12 +113,8 @@ class ImageExtractor(object):
         image_collector, filter_expression)
 
     for path_spec in filter_object.GetPathSpecs():
-      with pfile.OpenPFile(path_spec, fscache=self._fscache) as fh:
-        # There will be issues on systems that use a different separator than a
-        # forward slash. However a forward slash is always used in the pathspec.
-        if os.path.sep != '/':
-          fh.name = fh.name.replace('/', os.path.sep)
-        FileSaver.SaveFile(fh, destination_path)
+      with pfile.OpenPFileEntry(path_spec, fscache=self._fscache) as file_entry:
+        FileSaver.SaveFile(file_entry, destination_path)
 
   def ExtractWithFilter(
       self, filter_expression, destination_path, process_vss=False,
@@ -195,15 +191,13 @@ class ImageExtractor(object):
 
       _, _, extension = pathspec.file_path.rpartition('.')
       if extension.lower() in extensions:
-        fh = pfile.OpenPFile(pathspec, fscache=self._fscache)
+        file_entry = pfile.OpenPFileEntry(pathspec, fscache=self._fscache)
         if getattr(pathspec, 'vss_store_number', None):
           FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number + 1
         else:
           FileSaver.prefix = ''
-        if os.path.sep != '/':
-          fh.name = fh.name.replace('/', os.path.sep)
 
-        FileSaver.SaveFile(fh, destination_path)
+        FileSaver.SaveFile(file_entry, destination_path)
 
 
 class FileSaver(object):
@@ -213,17 +207,21 @@ class FileSaver(object):
   prefix = ''
 
   @classmethod
-  def SaveFile(cls, fh, destination_path):
-    """Take a filehandle and an export path and save the file."""
+  def SaveFile(cls, file_entry, destination_path):
+    """Take a file entry object and an export path and save the file."""
     directory = ''
-    filename = ''
-    if os.path.sep in fh.name:
-      directory_string, _, filename = fh.name.rpartition(os.path.sep)
+    filename = file_entry.name
+
+    # There will be issues on systems that use a different separator than a
+    # forward slash. However a forward slash is always used in the pathspec.
+    if os.path.sep != '/':
+      filename = filename.replace('/', os.path.sep)
+
+    if os.path.sep in filename:
+      directory_string, _, filename = filename.rpartition(os.path.sep)
       if directory_string:
         directory = os.path.join(
             destination_path, *directory_string.split(os.path.sep))
-    else:
-      filename = fh.name
 
     if cls.prefix:
       extracted_filename = '{}_{}'.format(cls.prefix, filename)
@@ -241,9 +239,9 @@ class FileSaver(object):
 
     save_file = True
     if cls.calc_md5:
-      stat = fh.Stat()
+      stat = file_entry.Stat()
       inode = stat.attributes.get('ino', 0)
-      md5sum = CalculateHash(fh)
+      md5sum = CalculateHash(file_entry)
       if inode in cls.md5_dict:
         if md5sum in cls.md5_dict[inode]:
           save_file = False
@@ -254,10 +252,12 @@ class FileSaver(object):
 
     if save_file:
       try:
-        putils.Pfile2File(fh, os.path.join(directory, extracted_filename))
+        putils.Pfile2File(
+            file_entry, os.path.join(directory, extracted_filename))
       except IOError as e:
-        logging.error(u'Unable to save file: {} [skipping]. Error {}'.format(
-            fh.name, e))
+        logging.error(
+            u'[skipping] unable to save file: {0:s} with error: {1:s}'.format(
+                filename, e))
 
 
 def CalculateHash(file_object):
@@ -358,7 +358,7 @@ def Main():
   # The option of running both options.
   if options.filter:
     image_extractor.ExtractWithFilter(
-        options.path, options.filter, 
+        options.path, options.filter,
         process_vss=options.vss,
         remove_duplicates=options.remove_duplicates)
 

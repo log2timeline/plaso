@@ -18,12 +18,13 @@
 import os
 import unittest
 
-# pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import android_sms as android_sms_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import interface
+from plaso.pvfs import utils
 
 import pytz
 
@@ -43,11 +44,11 @@ class AndroidSmsTest(unittest.TestCase):
     test_file = os.path.join('test_data', 'mmssms.db')
 
     events = None
-    with open(test_file, 'rb') as file_object:
-      with interface.SQLiteDatabase(file_object) as database:
-        generator = self.test_parser.Process(database)
-        self.assertTrue(generator)
-        events = list(generator)
+    file_entry = utils.OpenOSFileEntry(test_file)
+    with interface.SQLiteDatabase(file_entry) as database:
+      generator = self.test_parser.Process(database)
+      self.assertTrue(generator)
+      events = list(generator)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEquals(len(events), 9)

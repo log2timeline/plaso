@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -114,7 +115,7 @@ class JavaIDXParser(parser.BaseParser):
       construct.PascalString(
           'string', length_field = construct.UBInt16('length')))
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extract data from a Java cache IDX file.
 
     This is the main parsing engine for the parser. It determines if
@@ -123,12 +124,13 @@ class JavaIDXParser(parser.BaseParser):
     data.
 
     Args:
-      file_object: file_object: A file-like object to read data from.
+      file_entry: A file entry object.
 
-    Returns:
+    Yields:
       An EventContainer (JavaIDXEventContainer) with extracted EventObjects
       that contain the extracted attributes.
     """
+    file_object = file_entry.Open()
     try:
       magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as e:
@@ -167,8 +169,7 @@ class JavaIDXParser(parser.BaseParser):
       # remaining data.
       section_one = self.IDX_605_SECTION_ONE_STRUCT.parse_stream(file_object)
       last_modified_date = section_one.last_modified_date
-      stat = file_object.Stat()
-      if stat.size > 128:
+      if file_object.get_size() > 128:
         file_object.seek(128)  # Static offset for section 2.
         section_two = self.IDX_605_SECTION_TWO_STRUCT.parse_stream(file_object)
         url = section_two.url
@@ -213,4 +214,5 @@ class JavaIDXParser(parser.BaseParser):
           download_date, eventdata.EventTimestamp.FILE_DOWNLOADED,
           container.DATA_TYPE))
 
-    return container
+    file_object.close()
+    yield container

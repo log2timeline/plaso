@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Windows Prefetch files."""
+
 import os
 import construct
 
@@ -233,15 +235,16 @@ class WinPrefetchParser(parser.BaseParser):
 
     return volume_path
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extract data from a Windows Prefetch file.
 
     Args:
-      file_object: A file-like object to read data from.
+      file_entry: A file entry object.
 
     Yields:
       An event container (EventContainer) that contains the parsed attributes.
     """
+    file_object = file_entry.Open()
     file_header = self._ParseFileHeader(file_object)
 
     format_version = file_header.get('version', None)
@@ -318,4 +321,5 @@ class WinPrefetchParser(parser.BaseParser):
             timestamp, eventdata.EventTimestamp.CREATION_TIME,
             container.data_type))
 
+    file_object.close()
     yield container

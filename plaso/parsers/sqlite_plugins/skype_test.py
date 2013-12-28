@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,15 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Skype main.db history parser."""
+
 import os
 import unittest
 
-# pylint: disable-msg=W0611
-
+# pylint: disable-msg=unused-import
+from plaso.formatters import skype as skype_formatter
 from plaso.lib import preprocess
-from plaso.formatters import skype as dummy_formatter
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import skype
+from plaso.pvfs import utils
 
 import pytz
 
@@ -58,11 +60,11 @@ class SkypePluginTest(unittest.TestCase):
     test_file = os.path.join('test_data', 'skype_main.db')
 
     events = None
-    with open(test_file, 'rb') as file_object:
-      with interface.SQLiteDatabase(file_object) as database:
-        generator = self.test_parser.Process(database)
-        self.assertTrue(generator)
-        events = list(generator)
+    file_entry = utils.OpenOSFileEntry(test_file)
+    with interface.SQLiteDatabase(file_entry) as database:
+      generator = self.test_parser.Process(database)
+      self.assertTrue(generator)
+      events = list(generator)
 
     calls = 0
     files = 0

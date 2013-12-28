@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -26,6 +27,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
+
 
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
@@ -103,63 +105,45 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     self.local_zone = getattr(pre_obj, 'zone', pytz.utc)
     self._last_month = None
 
-  def VerifyStructure(self, line):
-    """Verify that this file is a Mac Wifi log file."""
-    try:
-      _ = self.WIFI_HEADER.parseString(line)
-    except pyparsing.ParseException:
-      logging.debug(u'Not a Mac Wifi log file')
-      return False
-    return True
+  def _GetAction(self, agent, function, text):
+    """Parse the well know actions for easy reading.
 
-  def ParseRecord(self, key, structure):
-    """Parse each record structure and return an EventObject if applicable."""
-    if key == 'logline':
-      return self._ParseLogLine(structure)
-    elif key != 'header':
-      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
+    Args:
+      agent: The device that generate the entry.
+      function: The function or action called by the agent.
+      text: Mac Wifi log text.
 
-  def _ParseLogLine(self, structure):
-    """Parse a logline and store appropriate attributes."""
-    # TODO: improving this to get a valid year.
-    if not self._year_use:
-      # Get from the creation time of the file.
-      self._year_use = self._GetYear(self.fd.Stat(), self.local_zone)
-      # If fail, get from the current time.
-      if not self._year_use:
-        self._year_use = timelib.GetCurrentYear()
+    Returns:
+      know_action: A formatted string representing the known (or common) action.
+    """
+    if not agent.startswith('airportd'):
+      return text
 
-    # Gap detected between years.
-    month = timelib.MONTH_DICT.get(structure.month.lower())
-    if not self._last_month:
-      self._last_month = month
-    if month < self._last_month:
-      self._year_use += 1
-    timestamp = self._GetTimestamp(
-        structure.day,
-        month,
-        self._year_use,
-        structure.time)
-    if not timestamp:
-      logging.debug(u'Invalid timestamp {}'.format(structure.timestamp))
-      return
-    self.last_month = month
+    if 'airportdProcessDLILEvent' in function:
+      interface = text.split()[0]
+      return u'Interface {} turn up.'.format(interface)
 
-    # Pyparsing reads in RAW, but the text is in UTF8.
-    try:
-      text = structure.text.decode('utf-8')
-    except UnicodeDecodeError:
-      logging.warning(
-          'Decode UTF8 failed, the message string may be cut short.')
-      text = structure.text.decode('utf-8', 'ignore')
+    if 'doAutoJoin' in function:
+      match = re.match(self.RE_CONNECTED, text)
+      if match:
+        ssid = match.group(1)[1:-1]
+      else:
+        ssid = 'Unknown'
+      return u'Wifi connected to SSID {}'.format(ssid)
 
-    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
-    # that need to be removed.
-    function = structure.function.strip()
-    event_object = MacWifiLogEvent(
-        timestamp, structure.agent, function, text,
-        self._GetAction(structure.agent, function, text))
-    return event_object
+    if 'processSystemPSKAssoc' in function:
+      ssid = re.match(self.RE_ASSOCIATE_SSID, text)
+      if not ssid:
+        ssid = 'Unknown'
+      bssid = re.match(self.RE_ASSOCIATE_BSSID, text)
+      if not bssid:
+        bssid = 'Unknown'
+      security = re.match(self.RE_ASSOCIATE_SECURITY, text)
+      if not security:
+        security = 'Unknown'
+      return u'New wifi configured. BSSID: {} SSID: {}, Security: {}.'.format(
+          bssid, ssid, security)
+    return text
 
   def _GetTimestamp(self, day, month, year, time):
     """Gets a timestamp from a pyparsing ParseResults timestamp.
@@ -208,43 +192,60 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       return timelib.GetCurrentYear()
     return timestamp.year
 
-  def _GetAction(self, agent, function, text):
-    """Parse the well know actions for easy reading.
+  def _ParseLogLine(self, structure):
+    """Parse a logline and store appropriate attributes."""
+    # TODO: improving this to get a valid year.
+    if not self._year_use:
+      # Get from the creation time of the file.
+      self._year_use = self._GetYear(self.file_entry.Stat(), self.local_zone)
+      # If fail, get from the current time.
+      if not self._year_use:
+        self._year_use = timelib.GetCurrentYear()
 
-    Args:
-      agent: The device that generate the entry.
-      function: The function or action called by the agent.
-      text: Mac Wifi log text.
+    # Gap detected between years.
+    month = timelib.MONTH_DICT.get(structure.month.lower())
+    if not self._last_month:
+      self._last_month = month
+    if month < self._last_month:
+      self._year_use += 1
+    timestamp = self._GetTimestamp(
+        structure.day,
+        month,
+        self._year_use,
+        structure.time)
+    if not timestamp:
+      logging.debug(u'Invalid timestamp {}'.format(structure.timestamp))
+      return
+    self.last_month = month
 
-    Returns:
-      know_action: A formatted string representing the known (or common) action.
-    """
-    if not agent.startswith('airportd'):
-      return text
+    # Pyparsing reads in RAW, but the text is in UTF8.
+    try:
+      text = structure.text.decode('utf-8')
+    except UnicodeDecodeError:
+      logging.warning(
+          'Decode UTF8 failed, the message string may be cut short.')
+      text = structure.text.decode('utf-8', 'ignore')
 
-    if 'airportdProcessDLILEvent' in function:
-      interface = text.split()[0]
-      return u'Interface {} turn up.'.format(interface)
+    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
+    # that need to be removed.
+    function = structure.function.strip()
+    event_object = MacWifiLogEvent(
+        timestamp, structure.agent, function, text,
+        self._GetAction(structure.agent, function, text))
+    return event_object
 
-    if 'doAutoJoin' in function:
-      match = re.match(self.RE_CONNECTED, text)
-      if match:
-        ssid = match.group(1)[1:-1]
-      else:
-        ssid = 'Unknown'
-      return u'Wifi connected to SSID {}'.format(ssid)
+  def ParseRecord(self, key, structure):
+    """Parse each record structure and return an EventObject if applicable."""
+    if key == 'logline':
+      return self._ParseLogLine(structure)
+    elif key != 'header':
+      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
 
-    if 'processSystemPSKAssoc' in function:
-      ssid = re.match(self.RE_ASSOCIATE_SSID, text)
-      if not ssid:
-        ssid = 'Unknown'
-      bssid = re.match(self.RE_ASSOCIATE_BSSID, text)
-      if not bssid:
-        bssid = 'Unknown'
-      security = re.match(self.RE_ASSOCIATE_SECURITY, text)
-      if not security:
-        security = 'Unknown'
-      return u'New wifi configured. BSSID: {} SSID: {}, Security: {}.'.format(
-          bssid, ssid, security)
-    return text
-
+  def VerifyStructure(self, line):
+    """Verify that this file is a Mac Wifi log file."""
+    try:
+      _ = self.WIFI_HEADER.parseString(line)
+    except pyparsing.ParseException:
+      logging.debug(u'Not a Mac Wifi log file')
+      return False
+    return True

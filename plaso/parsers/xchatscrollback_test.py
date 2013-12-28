@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,20 +15,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This file contains a unit test for the xchatscrollback parser in plaso."""
 
 import os
 import pytz
 import unittest
 
-# Shut up pylint on W0611: Unused import xchatscrollback_formatter.
-# pylint: disable=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import xchatscrollback as xchatscrollback_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import xchatscrollback as xchatscrollback_parser
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
+
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
@@ -37,15 +37,15 @@ class XChatScrollbackUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'xchatscrollback.log')
-    self.filehandle = utils.OpenOSFile(test_file)
-
-  def testParsing(self):
-    """Test parsing of a XChat scrollback file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.timezone('UTC')
-    myparser = xchatscrollback_parser.XChatScrollbackParser(pre_obj, None)
-    events = list(myparser.Parse(self.filehandle))
+    self._parser = xchatscrollback_parser.XChatScrollbackParser(pre_obj, None)
+
+  def testParse(self):
+    """Tests the Parse function."""
+    test_file = os.path.join('test_data', 'xchatscrollback.log')
+
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEquals(len(events), 10)
 
@@ -71,6 +71,7 @@ class XChatScrollbackUnitTest(unittest.TestCase):
   def _TestText(self, evt, text):
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(evt)
     self.assertEquals(msg, text)
+
 
 if __name__ == '__main__':
   unittest.main()

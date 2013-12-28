@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,14 +16,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a test for MS Office MRUs plugin in Plaso."""
+
 import os
 import unittest
 
-from plaso.formatters import winreg   # pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
+from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
+from plaso.pvfs import utils
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import officemru
 from plaso.winreg import winregistry
+
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -36,8 +41,8 @@ class RegistryOfficeMRUTest(unittest.TestCase):
         winregistry.WinRegistry.BACKEND_PYREGF)
 
     test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
-    file_object = open(test_file, 'rb')
-    self.winreg_file = registry.OpenFile(file_object, codepage='cp1252')
+    file_entry = utils.OpenOSFileEntry(test_file)
+    self.winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
   def testOfficeMRU(self):
     """Test the Typed URLS plugin."""

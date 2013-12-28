@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -64,58 +65,69 @@ class PlistParser(parser.BaseParser):
     self._plugins = plugin.GetRegisteredPlugins(
         interface.PlistPlugin, pre_obj, plugin_filter_string)
 
-  def GetTopLevel(self, filehandle):
+  def GetTopLevel(self, file_entry):
     """Returns the deserialized content of a plist as a dictionary object.
 
     Args:
-      filehandle: This is a file-like object pointing to the plist.
+      file_entry: the file entry object.
 
     Returns:
-      Dictionary object representing the contents of the plist.
+      A dictionary object representing the contents of the plist.
     """
-    file_size = getattr(filehandle, 'size', 0)
-    if not file_size:
-      stat = filehandle.Stat()
-      file_size = getattr(stat, 'size', 0)
+    file_object = file_entry.Open()
+    file_size = file_object.get_size()
 
-    if file_size > 50000000:  # 50MB is 10x larger than any plist seen to date.
+    if file_size <= 0:
       raise errors.UnableToParseFile(
-          u'[PLIST] Plist file is more than 50MB: {} bytes'.format(file_size))
+          u'[PLIST] file size: {0:d} bytes is less equal 0.'.format(file_size))
+
+    # 50MB is 10x larger than any plist seen to date.
+    if file_size > 50000000:
+      raise errors.UnableToParseFile(
+          u'[PLIST] file size: {0:d} bytes is larger than 50 MB.'.format(
+              file_size))
 
     try:
-      bpl = binplist.BinaryPlist(filehandle)
+      bpl = binplist.BinaryPlist(file_object)
       top_level_object = bpl.Parse()
     except binplist.FormatError as e:
       raise errors.UnableToParseFile(
-          u'[PLIST] File is not a plist:{}'.format(utils.GetUnicodeString(e)))
+          u'[PLIST] File is not a plist: {0:s}'.format(
+              utils.GetUnicodeString(e)))
     except OverflowError as e:
       raise errors.UnableToParseFile(
-          u'[PLIST] error processing:{} Error:{}'.format(filehandle, e))
+          u'[PLIST] unable to parse: {0:s} with error: {1:s}'.format(
+              file_entry.name, e))
+
+    file_object.close()
 
     if not bpl:
       raise errors.UnableToParseFile(
-          u'[PLIST] File is not a plist:{}'.format(utils.GetUnicodeString(e)))
+          u'[PLIST] File is not a plist: {0:s}'.format(
+              utils.GetUnicodeString(e)))
 
     if bpl.is_corrupt:
-      logging.warning(u'[PLIST] bpl found corruption in: %s', filehandle.name)
+      logging.warning(
+          u'[PLIST] corruption detected in binary plist: {0:s}'.format(
+              file_entry.name))
 
     return top_level_object
 
-  def Parse(self, filehandle):
+  def Parse(self, file_entry):
     """Parse and extract values from a plist file.
 
     Args:
-      filehandle: This is a file like object or a PFile object.
+      file_entry: the file entry object.
 
     Yields:
       A plist event object (instance of event.PlistEvent).
     """
-    top_level_object = self.GetTopLevel(filehandle)
+    top_level_object = self.GetTopLevel(file_entry)
     if not top_level_object:
       raise errors.UnableToParseFile(
-          u'[PLIST] couldn\'t parse: %s.  Skipping.' % filehandle.name)
+          u'[PLIST] couldn\'t parse: %s.  Skipping.' % file_entry.name)
 
-    plist_name = os.path.basename(filehandle.name)
+    plist_name = os.path.basename(file_entry.name)
 
     for plist_plugin in self._plugins.itervalues():
       try:

@@ -90,8 +90,8 @@ class CollectionFilter(object):
         # proper stats are implemented.
         try:
           for file_path in self._collector.GetFilePaths(path, filter_file):
-            fh = self._collector.OpenFile(file_path)
-            yield fh.pathspec_root.ToProtoString()
+            file_entry = self._collector.OpenFileEntry(file_path)
+            yield file_entry.pathspec_root.ToProtoString()
         except errors.PreProcessFail as e:
           logging.warning(
               u'Unable to parse filter: {}/{} - path not found [{}].'.format(

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,13 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser Test for Windows Scheduled Task job files."""
+
 import os
 import unittest
 
-# pylint: disable=W0611
-from plaso.formatters import winjob as dummy_formatter
+# pylint: disable-msg=unused-import
+from plaso.formatters import winjob as winjob_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
+from plaso.parsers import test_lib
 from plaso.parsers import winjob
 
 import pytz
@@ -34,20 +37,21 @@ class WinJobTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
-    self.test_parser = winjob.WinJobParser(pre_obj)
+    self._parser = winjob.WinJobParser(pre_obj)
 
-
-  def testParseFile(self):
-    """Read a Windows Scheduled Task job file and make few tests."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'wintask.job')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
-    self.assertEqual(len(events), 2)
+    self.assertEquals(len(events), 1)
 
-    event_object = events[0]
+    event_container = events[0]
+
+    self.assertEquals(len(event_container.events), 2)
+
+    event_object = event_container.events[0]
 
     application_expected = (u'C:\\Program Files (x86)\\Google\\Update'
                             u'\\GoogleUpdate.exe')
@@ -77,7 +81,7 @@ class WinJobTest(unittest.TestCase):
         last_modified_date_expected)
 
     # Parse second event. Same metadata; different timestamp event.
-    event_object = events[1]
+    event_object = event_container.events[1]
 
     self.assertEqual(event_object.application, application_expected)
     self.assertEqual(event_object.username, username_expected)

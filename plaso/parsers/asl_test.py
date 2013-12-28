@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,19 +15,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 """Parser test for Apple System Log files."""
+
 import os
 import pytz
 import unittest
 
-# pylint: disable=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import asl as asl_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import asl
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
 
 
 class AslParserTest(unittest.TestCase):
@@ -37,15 +37,13 @@ class AslParserTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = asl.AslParser(pre_obj, None)
+    self._parser = asl.AslParser(pre_obj, None)
 
-  def testParseFile(self):
-    """Read ASL files and make few tests."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'applesystemlog.asl')
 
-    events = None
-    with utils.OpenOSFile(test_file) as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEqual(len(events), 2)
 

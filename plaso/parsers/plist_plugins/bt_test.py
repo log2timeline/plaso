@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -31,20 +32,20 @@ class TestBtPlugin(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self.plugin = bt.BtPlugin(None)
-    parser = plist.PlistParser(preprocess.PlasoPreprocess(), None)
-
-    self.plist_binary = os.path.join('test_data', 'plist_binary')
-
-    with utils.OpenOSFile(self.plist_binary) as fd:
-      self.top_level_object = parser.GetTopLevel(fd)
+    self._parser = plist.PlistParser(preprocess.PlasoPreprocess(), None)
 
   def testGetEntries(self):
     """Ensure that the bluetooth plist file is parsed correctly."""
     name = 'com.apple.bluetooth.plist'
 
+    test_file = os.path.join('test_data', 'plist_binary')
+
+    file_entry = utils.OpenOSFileEntry(test_file)
+    top_level_object = self._parser.GetTopLevel(file_entry)
+
     timestamps = []
     paired = []
-    for event in self.plugin.Process(name, self.top_level_object):
+    for event in self.plugin.Process(name, top_level_object):
       timestamps.append(event.timestamp)
       if 'Paired' in event.desc:
         paired.append(event)
@@ -64,6 +65,7 @@ class TestBtPlugin(unittest.TestCase):
     self.assertEquals(len(paired), 2)
     self.assertTrue('Paired:True Name:Apple Magic Trackpad 2' in [
         x.desc for x in paired])
+
 
 if __name__ == '__main__':
   unittest.main()

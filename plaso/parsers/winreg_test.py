@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for Windows registry parsing in Plaso."""
+
 import os
 import unittest
 
 from plaso.lib import preprocess
+from plaso.parsers import test_lib
 from plaso.parsers import winreg
-from plaso.pvfs import utils
 
 
 class WinRegTest(unittest.TestCase):
@@ -28,25 +30,14 @@ class WinRegTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.base_path = 'test_data'
-    self.pre = preprocess.PlasoPreprocess()
-    self.pre.current_control_set = 'ControlSet001'
+    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj.current_control_set = 'ControlSet001'
+    self._parser = winreg.WinRegistryParser(pre_obj)
 
-  def testNtuserParsing(self):
-    """Parse a NTUSER.dat file and check few items."""
-    event_gen = self._ParseRegistryFile('NTUSER.DAT', 'NTUSER')
-    plugins = self._GetPlugins(event_gen)
-
-    self.assertTrue('winreg_userassist_2' in plugins)
-    self.assertTrue('winreg_userassist_3' in plugins)
-
-    self.assertEquals(plugins['winreg_userassist_2'], 1)
-    self.assertEquals(plugins['winreg_userassist_3'], 15)
-
-  def _GetPlugins(self, event_gen):
+  def _GetPlugins(self, events):
     """Return a dict with a plugin count given an event generator."""
     plugins = {}
-    for event_object in event_gen:
+    for event_object in events:
       if event_object.plugin in plugins:
         plugins[event_object.plugin] += 1
       else:
@@ -54,11 +45,33 @@ class WinRegTest(unittest.TestCase):
 
     return plugins
 
+  def testNtuserParsing(self):
+    """Parse a NTUSER.dat file and check few items."""
+    test_file = os.path.join('test_data', 'NTUSER.DAT')
+
+    events = test_lib.ParseFile(self._parser, test_file)
+
+    # pylint: disable-msg=W0212
+    self.assertEquals(self._parser._registry_type, 'NTUSER')
+
+    plugins = self._GetPlugins(events)
+
+    self.assertTrue('winreg_userassist_2' in plugins)
+    self.assertTrue('winreg_userassist_3' in plugins)
+
+    self.assertEquals(plugins['winreg_userassist_2'], 1)
+    self.assertEquals(plugins['winreg_userassist_3'], 15)
+
   def testSystemParsing(self):
     """Parse a SYSTEM hive an run few tests."""
-    event_gen = self._ParseRegistryFile('SYSTEM', 'SYSTEM')
+    test_file = os.path.join('test_data', 'SYSTEM')
 
-    plugins = self._GetPlugins(event_gen)
+    events = test_lib.ParseFile(self._parser, test_file)
+
+    # pylint: disable-msg=W0212
+    self.assertEquals(self._parser._registry_type, 'SYSTEM')
+
+    plugins = self._GetPlugins(events)
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
@@ -69,18 +82,6 @@ class WinRegTest(unittest.TestCase):
     self.assertEquals(plugins.get('winreg_usbstor', 0), 3)
     self.assertEquals(plugins.get('winreg_boot_execute', 0), 2)
     self.assertEquals(plugins.get('winreg_services', 0), 831)
-
-
-  def _ParseRegistryFile(self, filename, correct_type):
-    """Open up a filehandle and yield all event objects."""
-    file_path = os.path.join(self.base_path, filename)
-    fh = utils.OpenOSFile(file_path)
-    parser = winreg.WinRegistryParser(self.pre, None)
-    for event_object in parser.Parse(fh):
-      yield event_object
-    fh.close()
-    # pylint: disable-msg=W0212
-    self.assertEquals(parser._registry_type, correct_type)
 
 
 if __name__ == '__main__':

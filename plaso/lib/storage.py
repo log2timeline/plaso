@@ -220,9 +220,9 @@ class PlasoStorage(object):
     """Store information gathered during preprocessing to the storage file."""
     strings = []
     try:
-      pre_fh = self.zipfile.open('information.dump', 'r')
+      file_object = self.zipfile.open('information.dump', 'r')
       while 1:
-        read_str = pre_fh.read(1024)
+        read_str = file_object.read(1024)
         if not read_str:
           break
         strings.append(read_str)
@@ -247,12 +247,12 @@ class PlasoStorage(object):
     """Return gathered preprocessing information from a storage file."""
     information = []
     try:
-      pre_fh = self.zipfile.open('information.dump', 'r')
+      file_object = self.zipfile.open('information.dump', 'r')
     except KeyError:
       return information
 
     while 1:
-      unpacked = pre_fh.read(4)
+      unpacked = file_object.read(4)
       if len(unpacked) != 4:
         break
 
@@ -261,7 +261,7 @@ class PlasoStorage(object):
       if size > 1024 * 1024 * 40:
         raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
 
-      serialized = pre_fh.read(size)
+      serialized = file_object.read(size)
       info = preprocess.PlasoPreprocess()
       try:
         info.FromProtoString(serialized)
@@ -292,7 +292,7 @@ class PlasoStorage(object):
     return total_events
 
   def _GetEntry(self, number, entry_index=-1):
-    """Return a serialized EventObject protobuf read from filehandle.
+    """Return a serialized EventObject protobuf.
 
     By default the next entry in the appropriate proto file is read
     and returned, however any entry can be read using the index file.
@@ -311,18 +311,18 @@ class PlasoStorage(object):
     """
     last_index = 0
     if number in self.protofiles:
-      fh, last_index = self.protofiles[number]
+      file_object, last_index = self.protofiles[number]
     else:
-      fh = self.zipfile.open('plaso_proto.%06d' % number, 'r')
-      self.protofiles[number] = (fh, 0)
+      file_object = self.zipfile.open('plaso_proto.%06d' % number, 'r')
+      self.protofiles[number] = (file_object, 0)
 
     if entry_index > -1:
-      index_fh = self.zipfile.open('plaso_index.%06d' % number, 'r')
+      index_file_object = self.zipfile.open('plaso_index.%06d' % number, 'r')
       ofs = entry_index * 4
 
       # Since seek is not supported we need to read and ignore the data.
-      _ = index_fh.read(ofs)
-      size_byte_stream = index_fh.read(4)
+      _ = index_file_object.read(ofs)
+      size_byte_stream = index_file_object.read(4)
 
       if len(size_byte_stream) != 4:
         logging.error('Unable to read entry number: %d from store %d',
@@ -333,10 +333,10 @@ class PlasoStorage(object):
 
       # Again, since seek is not supported we need to close the file and reopen
       # it to be able to "fake" seek.
-      fh = self.zipfile.open('plaso_proto.%06d' % number, 'r')
-      self.protofiles[number] = (fh, entry_index)
+      file_object = self.zipfile.open('plaso_proto.%06d' % number, 'r')
+      self.protofiles[number] = (file_object, entry_index)
       last_index = entry_index
-      _ = fh.read(ofs)
+      _ = file_object.read(ofs)
 
     if not last_index and  hasattr(
         self, '_bound_first') and self._bound_first and entry_index == -1:
@@ -359,10 +359,10 @@ class PlasoStorage(object):
 
       # Recent add-on to the storage file, not certain this file exists.
       if timestamp_filename in self.zipfile.namelist():
-        timestamp_fh = self.zipfile.open(timestamp_filename, 'r')
+        timestamp_file_object = self.zipfile.open(timestamp_filename, 'r')
         timestamp_compare = 0
         while timestamp_compare < self._bound_first:
-          timestamp_raw = timestamp_fh.read(8)
+          timestamp_raw = timestamp_file_object.read(8)
           if len(timestamp_raw) != 8:
             break
           timestamp_compare = struct.unpack('<q', timestamp_raw)[0]
@@ -370,7 +370,7 @@ class PlasoStorage(object):
         return self._GetEntry(number, index)
 
     # Now we've seeked to the proper location in code.
-    unpacked = fh.read(4)
+    unpacked = file_object.read(4)
 
     if len(unpacked) != 4:
       return None, None
@@ -380,11 +380,11 @@ class PlasoStorage(object):
     if size > 1024 * 1024 * 40:
       raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
 
-    self.protofiles[number] = (fh, last_index + 1)
-    return fh.read(size), last_index
+    self.protofiles[number] = (file_object, last_index + 1)
+    return file_object.read(size), last_index
 
   def GetProtoEntry(self, number, entry_index=-1):
-    """Return an EventObject protobuf from a filehandle.
+    """Return an EventObject protobuf.
 
     By default the next entry in the appropriate proto file is read
     and returned, however any entry can be read using the index file.
@@ -510,7 +510,7 @@ class PlasoStorage(object):
     return event_read
 
   def GetEntry(self, number, entry_index=-1):
-    """Return an EventObject read from a filehandle.
+    """Return an EventObject.
 
     By default the next entry in the appropriate proto file is read
     and returned, however any entry can be read using the index file.
@@ -533,7 +533,7 @@ class PlasoStorage(object):
     return event_object
 
   def GetEntries(self, number):
-    """A generator to read all plaso_storage protobufs from a filehandle.
+    """A generator to read all plaso_storage protobufs.
 
     The storage mechanism of Plaso works in the way that it creates potentially
     several files inside the ZIP container. As soon as the number of protobufs
@@ -746,8 +746,8 @@ class PlasoStorage(object):
     """Read in all stored analysis reports from storage and yield them."""
     for name in self.zipfile.namelist():
       if 'plaso_report.' in name:
-        report_fh = self.zipfile.open(name, 'r')
-        report_string = report_fh.read(1024 * 1024 * 24)
+        report_file_object = self.zipfile.open(name, 'r')
+        report_string = report_file_object.read(1024 * 1024 * 24)
         report = analysis_interface.AnalysisReport()
         report.FromProtoString(report_string)
         yield report
@@ -870,9 +870,10 @@ class PlasoStorage(object):
         # occasion, we need to make sure we are appending to that particular
         # tag.
         tag_store, tag_offset = self._tag_memory[tag.string_key]
-        tag_fh = self.zipfile.open('plaso_tagging.%06d' % tag_store , 'r')
-        _  = tag_fh.read(tag_offset)
-        old_tag = self._GetTagEntry(tag_fh)
+        tag_file_object = self.zipfile.open(
+            'plaso_tagging.%06d' % tag_store , 'r')
+        _  = tag_file_object.read(tag_offset)
+        old_tag = self._GetTagEntry(tag_file_object)
         if hasattr(old_tag, 'tags'):
           tag.tags.extend(old_tag.tags)
         if hasattr(old_tag, 'comment'):
@@ -914,11 +915,11 @@ class PlasoStorage(object):
 
     for name in self.zipfile.namelist():
       if 'plaso_grouping.' in name:
-        fh = self.zipfile.open(name, 'r')
-        group_entry = GetEventGroupProto(fh)
+        file_object = self.zipfile.open(name, 'r')
+        group_entry = GetEventGroupProto(file_object)
         while group_entry:
           yield group_entry
-          group_entry = GetEventGroupProto(fh)
+          group_entry = GetEventGroupProto(file_object)
 
   def GetTag(self, store_number, store_index, uuid):
     """Return a EventTagging proto if it exists from a store number and index.
@@ -944,9 +945,9 @@ class PlasoStorage(object):
 
     tag_store, tag_offset = self._tag_memory.get(key_index)
 
-    tag_fh = self.zipfile.open('plaso_tagging.%06d' % tag_store , 'r')
-    _  = tag_fh.read(tag_offset)
-    return self._GetTagEntry(tag_fh)
+    tag_file_object = self.zipfile.open('plaso_tagging.%06d' % tag_store , 'r')
+    _  = tag_file_object.read(tag_offset)
+    return self._GetTagEntry(tag_file_object)
 
   def _ReadTagInformationIntoMemory(self):
     """Build a dict that maintains tag offset information for quick reading."""
@@ -955,12 +956,12 @@ class PlasoStorage(object):
     for name in self.zipfile.namelist():
       if not 'plaso_tag_index.' in name:
         continue
-      fh = self.zipfile.open(name, 'r')
+      file_object = self.zipfile.open(name, 'r')
       _, _, number_str = name.rpartition('.')
       number = int(number_str)
       while 1:
         try:
-          tag_index = self.TAG_INDEX_STRUCT.parse_stream(fh)
+          tag_index = self.TAG_INDEX_STRUCT.parse_stream(file_object)
         except (construct.FieldError, AttributeError):
           break
 
@@ -993,12 +994,12 @@ class PlasoStorage(object):
     """
     for name in self.zipfile.namelist():
       if 'plaso_tagging.' in name:
-        fh = self.zipfile.open(name, 'r')
+        file_object = self.zipfile.open(name, 'r')
 
-        tag_entry = self._GetTagEntry(fh)
+        tag_entry = self._GetTagEntry(file_object)
         while tag_entry:
           yield tag_entry
-          tag_entry = self._GetTagEntry(fh)
+          tag_entry = self._GetTagEntry(file_object)
 
   def GetEventsFromGroup(self, group_proto):
     """Return a generator with all EventObjects from a group."""
@@ -1026,9 +1027,9 @@ class PlasoStorage(object):
 
     return evt
 
-  def _GetTagEntry(self, fh):
+  def _GetTagEntry(self, file_object):
     """Read a single EventTag from a tag store file."""
-    unpacked = fh.read(4)
+    unpacked = file_object.read(4)
     if len(unpacked) != 4:
       return None
 
@@ -1037,7 +1038,7 @@ class PlasoStorage(object):
     if size > 1024 * 1024 * 40:
       raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
 
-    proto_serialized = fh.read(size)
+    proto_serialized = file_object.read(size)
     event_tag = event.EventTag()
     event_tag.FromProtoString(proto_serialized)
     return event_tag
@@ -1145,9 +1146,9 @@ class BypassStorageDumper(object):
     self.output_module.End()
 
 
-def GetEventGroupProto(fh):
-  """Return a single group entry from a filehandle."""
-  unpacked = fh.read(4)
+def GetEventGroupProto(file_object):
+  """Return a single group entry."""
+  unpacked = file_object.read(4)
   if len(unpacked) != 4:
     return None
 
@@ -1156,7 +1157,7 @@ def GetEventGroupProto(fh):
   if size > 1024 * 1024 * 40:
     raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
 
-  proto_serialized = fh.read(size)
+  proto_serialized = file_object.read(size)
   proto = plaso_storage_pb2.EventGroup()
 
   proto.ParseFromString(proto_serialized)

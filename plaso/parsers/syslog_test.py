@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,14 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a unit test for the syslog parser in plaso."""
+
 import os
 import unittest
 
-from plaso.formatters import syslog
+# pylint: disable-msg=unused-import
+from plaso.formatters import syslog as syslog_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import syslog
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
 
 import pytz
 
@@ -32,25 +35,22 @@ class SyslogUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'syslog')
-    self.input_file = utils.OpenOSFile(test_file)
-
-  def testParsing(self):
-    """Test parsing of a syslog file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.year = 2012
     pre_obj.zone = pytz.UTC
-    syslog_parser = syslog.SyslogParser(pre_obj, None)
+    self._parser = syslog.SyslogParser(pre_obj, None)
 
-    self.input_file.seek(0)
-    events = list(syslog_parser.Parse(self.input_file))
-    first = events[0]
+  def testParse(self):
+    """Tests the Parse function."""
+    test_file = os.path.join('test_data', 'syslog')
+
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # TODO let's add code to convert Jan 22 2012 07:52:33 into the
     # corresponding timestamp, I think that will be more readable
-    self.assertEquals(first.timestamp, 1327218753000000)
-    self.assertEquals(first.hostname, 'myhostname.myhost.com')
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(first)
+    self.assertEquals(events[0].timestamp, 1327218753000000)
+    self.assertEquals(events[0].hostname, 'myhostname.myhost.com')
+    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(events[0])
     self.assertEquals(
         msg, '[client, pid: 30840] : INFO No new content.')
 

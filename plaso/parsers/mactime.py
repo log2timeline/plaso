@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -19,6 +20,7 @@
 The format specifications can be read here:
   http://wiki.sleuthkit.org/index.php?title=Body_file
 """
+
 import re
 
 from plaso.lib import event
