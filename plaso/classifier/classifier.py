@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -52,6 +53,7 @@ The classifier returns zero or more classifications which point to a format
 specification and the scan results for the signatures defined by
 the specification.
 """
+
 import logging
 import os
 
@@ -138,8 +140,9 @@ class Classifier(object):
       specification = scan_result.specification
       identifier = specification.identifier
 
-      logging.debug("scan result at offset: %08x specification: %s",
-                    scan_result.file_offset, identifier)
+      logging.debug(
+          u'scan result at offset: 0x{0:08x} specification: {1:s}'.format(
+              scan_result.file_offset, identifier))
 
       if identifier not in classifications:
         classifications[identifier] = Classification(specification)
@@ -176,7 +179,7 @@ class Classifier(object):
     scan_state = self._scanner.ScanStart()
 
     if self._mode == self.HEAD_TAIL_SCAN:
-      if hasattr(file_object, "get_size"):
+      if hasattr(file_object, 'get_size'):
         file_size = file_object.get_size()
       else:
         file_object.seek(0, os.SEEK_END)
@@ -216,6 +219,6 @@ class Classifier(object):
       a list of classifier classifications or an empty list.
     """
     classifications = []
-    with open(filename, "rb") as file_object:
+    with open(filename, 'rb') as file_object:
       classifications = self.ClassifyFileObject(file_object)
     return classifications

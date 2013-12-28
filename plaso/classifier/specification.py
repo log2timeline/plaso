@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,11 +15,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the format specification classes of the classifier."""
+"""The format specification classes."""
 
 
 class _Signature(object):
-  """Class that defines a signature for a format specification.
+  """Class that defines a signature of a format specification.
 
   The signature consists of a byte string expression, an optional
   offset relative to the start of the data, and a value to indidate
@@ -26,8 +27,6 @@ class _Signature(object):
 
   This class is intended to be used internally in the classifier.
   """
-
-  # TODO: add support for regexp type of expressions
   def __init__(self, expression, offset=None, is_bound=False):
     """Initializes the signature.
 
@@ -40,14 +39,15 @@ class _Signature(object):
       is_bound: boolean value to indicate the signature must be bound to
                 the offset or False by default.
     """
-    # TODO: add sanity checking
+    # TODO: add support for regexp type of expressions.
+    # TODO: add sanity checking.
     self.expression = expression
     self.offset = offset
     self.is_bound = is_bound
 
 
 class Specification(object):
-  """Class that contains the format specification for the classifier."""
+  """Class that contains a format specification."""
 
   def __init__(self, identifier):
     """Initializes the specification.
@@ -61,8 +61,8 @@ class Specification(object):
 
     self.identifier = identifier
 
-  def AddSignature(self, expression, offset=None, is_bound=False):
-    """Adds a signature.
+  def AddNewSignature(self, expression, offset=None, is_bound=False):
+    """Adds a new signature.
 
     Args:
       expression: string containing the expression of the signature.
@@ -92,11 +92,11 @@ class SpecificationStore(object):
 
   @property
   def specifications(self):
-    """A list containing the specifications."""
-    return self._format_specifications.values()
+    """A specifications iterator object."""
+    return self._format_specifications.itervalues()
 
-  def AddSpecification(self, identifier):
-    """Adds a specification.
+  def AddNewSpecification(self, identifier):
+    """Adds a new specification.
 
     Args:
       identifier: a string containing the format identifier,
@@ -117,19 +117,34 @@ class SpecificationStore(object):
 
     return self._format_specifications[identifier]
 
-  def ReadFromFileObject(self, file_object):
+  def AddSpecification(self, specification):
+    """Adds a specification.
+
+    Args:
+      specification: the specification (instance of Specification).
+
+    Raises:
+      KeyError: if the store already contains a specification with
+                the same identifier.
+    """
+    if specification.identifier in self._format_specifications:
+      raise KeyError(
+          u'Specification {0:s} is already defined in store.'.format(
+              specification.identifier))
+
+    self._format_specifications[specification.identifier] = specification
+
+  def ReadFromFileObject(self, dummy_file_object):
     """Reads the specification store from a file-like object.
 
     Args:
-      file_object: A file-like object.
+      dummy_file_object: A file-like object.
 
     Raises:
       RuntimeError: because functionality is not implemented yet.
     """
-    # TODO: implement this function
-    _ = file_object
-
-    raise RuntimeError("not implemented yet")
+    # TODO: implement this function.
+    raise RuntimeError(u'Function not implemented.')
 
   def ReadFromFile(self, filename):
     """Reads the specification store from a file.
@@ -137,6 +152,6 @@ class SpecificationStore(object):
     Args:
       filename: The name of the file.
     """
-    file_object = open(filename, "r")
+    file_object = open(filename, 'r')
     self.ReadFromFileObject(file_object)
     file_object.close()
