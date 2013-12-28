@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -16,60 +17,62 @@
 # limitations under the License.
 """This file contains a small classify test program."""
 
+import argparse
 import glob
-# TODO: move to ArgParser
-from optparse import OptionParser
+import logging
 
 from plaso.classifier import classifier
-from plaso.classifier import re2scanner
 from plaso.classifier import scanner
-from plaso.classifier import test_store
+from plaso.classifier import test_lib
 
 
-def main():
-  usage = "Usage: %prog filename(s)"
-  args_parser = OptionParser(usage)
-  args_parser.add_option("-t", "--type", type="choice", action="store",
-                         dest="scanner_type",
-                         choices=["re2", "scan-tree", "scan_tree"],
-                         default="re2", help="The scanner type")
-  args_parser.add_option("-v", "--verbose", action="store_true",
-                         dest="verbose", default=False,
-                         help="Print verbose output")
-  options, args = args_parser.parse_args()
+def Main():
+  args_parser = argparse.ArgumentParser(
+      decription='Classify test program.')
+
+  args_parser.add_argument(
+      '-t', '--type', type='choice', metavar='TYPE', action='store',
+      dest='scanner_type', choices=['scan-tree', 'scan_tree'],
+      default='scan-tree', help='The scanner type')
+
+  args_parser.add_argument(
+      '-v', '--verbose', action='store_true', dest='verbose', default=False,
+      help='Print verbose output')
+
+  args_parser.add_argument(
+      'filenames', nargs='+', action='store', metavar='FILENAMES',
+      default=None, help='The input filename(s) to classify.')
+
+  options = args_parser.parse_args()
 
   if options.verbose:
     logging.set_verbosity(logging.DEBUG)
 
   files_to_classify = []
-  for input_glob in args:
+  for input_glob in options.filenames:
     files_to_classify += glob.glob(input_glob)
 
-  store = test_store.CreateSpecificationStore()
+  store = test_lib.CreateSpecificationStore()
 
-  if (options.scanner_type == "scan-tree" or
-      options.scanner_type == "scan_tree"):
-    scan = scanner.Scanner(store)
-  else:
-    if not options.scanner_type == "re2":
-      print u"Unsupported scanner type defaulting to: re2"
-    scan = re2scanner.RE2Scanner(store)
+  if options.scanner_type not in ['scan-tree', 'scan_tree']:
+    print u'Unsupported scanner type defaulting to: scan-tree'
+
+  scan = scanner.Scanner(store)
   classify = classifier.Classifier(scan)
 
   for input_filename in files_to_classify:
     classifications = classify.ClassifyFile(input_filename)
 
-    print u"File: {0:s}".format(input_filename)
+    print u'File: {0:s}'.format(input_filename)
     if not classifications:
-      print u"No classifications found."
+      print u'No classifications found.'
     else:
-      print u"Classifications:"
+      print u'Classifications:'
       for classification in classifications:
-        print u"\tformat: {0:s}".format(
-            classification.identifier)
+        print u'\tformat: {0:s}'.format(classification.identifier)
 
-    print u""
+    print u''
 
 
-if __name__ == "__main__":
-  main()
+if __name__ == '__main__':
+  Main()

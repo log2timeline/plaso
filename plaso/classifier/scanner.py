@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the classes for a scan tree-based format scanner."""
+
 import logging
 
 
@@ -36,7 +38,7 @@ class _ByteValuePatterns(object):
 
   def __str__(self):
     """Retrieves a string representation of the byte value patterns."""
-    return "0x{0:02x} {1!s}".format(ord(self.byte_value), self.patterns)
+    return '0x{0:02x} {1!s}'.format(ord(self.byte_value), self.patterns)
 
   def AddPattern(self, pattern):
     """Adds a pattern.
@@ -49,22 +51,22 @@ class _ByteValuePatterns(object):
                   with the same identifier.
     """
     if pattern.identifier in self.patterns:
-      raise ValueError("pattern {0:s} is already defined.".format(
+      raise ValueError(u'Pattern {0:s} is already defined.'.format(
           pattern.identifier))
 
     self.patterns[pattern.identifier] = pattern
 
   def ToDebugString(self, indentation_level=1):
     """Converts the byte value pattern into a debug string."""
-    indentation = u"  " * indentation_level
+    indentation = u'  ' * indentation_level
 
-    header = u"{0:s}byte value: 0x{1:02x}\n".format(
+    header = u'{0:s}byte value: 0x{1:02x}\n'.format(
         indentation, ord(self.byte_value))
 
-    entries = u"".join([u"{0:s}  patterns: {1:s}\n".format(
+    entries = u''.join([u'{0:s}  patterns: {1:s}\n'.format(
         indentation, identifier) for identifier in self.patterns])
 
-    return u"".join([header, entries, u"\n"])
+    return u''.join([header, entries, u'\n'])
 
 
 class Pattern(object):
@@ -97,7 +99,7 @@ class Pattern(object):
     """The identifier."""
     # Using _ here because re2 only allows for a limited character set
     # for the identifiers
-    return "{0:s}_{1:d}".format(
+    return u'{0:s}_{1:d}'.format(
         self.specification.identifier, self._signature_index)
 
   @property
@@ -123,7 +125,7 @@ class PatternTable(object):
                 offsets.
 
     Raises:
-      ValueError: if a signature pattern is too small to be useful (< 4)
+      ValueError: if a signature pattern is too small to be useful (< 4).
     """
     self._byte_values_per_offset = {}
     self.patterns = []
@@ -137,7 +139,7 @@ class PatternTable(object):
       pattern_length = len(pattern.expression)
 
       if pattern_length < 4:
-        raise ValueError("pattern too small to be useful")
+        raise ValueError(u'Pattern too small to be useful.')
 
       self.smallest_pattern_length = min(
           self.smallest_pattern_length, pattern_length)
@@ -148,11 +150,6 @@ class PatternTable(object):
       self.patterns.append(pattern)
 
       self._AddPattern(pattern, ignore_list, is_bound)
-
-  @property
-  def offsets(self):
-    """The offsets."""
-    return self._byte_values_per_offset.keys()
 
   def _AddPattern(self, pattern, ignore_list, is_bound):
     """Addes the byte values per offset in the pattern to the table.
@@ -181,6 +178,11 @@ class PatternTable(object):
 
       pattern_offset += 1
 
+  @property
+  def offsets(self):
+    """The offsets."""
+    return self._byte_values_per_offset.keys()
+
   def GetByteValues(self, pattern_offset):
     """Returns the bytes values for a specific pattern offset."""
     return self._byte_values_per_offset[pattern_offset]
@@ -206,23 +208,23 @@ class PatternTable(object):
 
   def ToDebugString(self):
     """Converts the pattern table into a debug string."""
-    header = u"pattern offset\tbyte value(s)\n"
-    entries = u""
+    header = u'Pattern offset\tByte value(s)\n'
+    entries = u''
 
     for pattern_offset in self._byte_values_per_offset:
-      entries += u"{0:d}".format(pattern_offset)
+      entries += u'{0:d}'.format(pattern_offset)
 
       byte_values = self._byte_values_per_offset[pattern_offset]
 
       for byte_value in byte_values:
-        identifiers = u", ".join(
+        identifiers = u', '.join(
             [identifier for identifier in byte_values[byte_value].patterns])
 
-        entries += u"\t0x{0:02x} ({1:s})".format(ord(byte_value), identifiers)
+        entries += u'\t0x{0:02x} ({1:s})'.format(ord(byte_value), identifiers)
 
-      entries += u"\n"
+      entries += u'\n'
 
-    return u"".join([header, entries, u"\n"])
+    return u''.join([header, entries, u'\n'])
 
 
 class _PatternWeights(object):
@@ -243,7 +245,7 @@ class _PatternWeights(object):
       ValueError: if the pattern weights already contains the pattern offset.
     """
     if pattern_offset in self._weight_per_offset:
-      raise ValueError("pattern offset already set")
+      raise ValueError(u'Pattern offset already set.')
 
     self._weight_per_offset[pattern_offset] = 0
 
@@ -258,29 +260,9 @@ class _PatternWeights(object):
       ValueError: if the pattern weights does not contain the pattern offset.
     """
     if not pattern_offset in self._weight_per_offset:
-      raise ValueError("pattern offset not set")
+      raise ValueError(u'Pattern offset not set.')
 
     self._weight_per_offset[pattern_offset] += weight
-
-    if not weight in self._offsets_per_weight:
-      self._offsets_per_weight[weight] = []
-
-    self._offsets_per_weight[weight].append(pattern_offset)
-
-  def SetWeight(self, pattern_offset, weight):
-    """Sets a weight for a specific pattern offset.
-
-    Args:
-      pattern_offset: the pattern offset to set in the pattern weights.
-      weight: the corresponding weight to set.
-
-    Raises:
-      ValueError: if the pattern weights does not contain the pattern offset.
-    """
-    if not pattern_offset in self._weight_per_offset:
-      raise ValueError("pattern offset not set")
-
-    self._weight_per_offset[pattern_offset] = weight
 
     if not weight in self._offsets_per_weight:
       self._offsets_per_weight[weight] = []
@@ -304,19 +286,39 @@ class _PatternWeights(object):
 
   def ToDebugString(self):
     """Converts the pattern weights into a debug string."""
-    header1 = u"pattern offset\tweight\n"
+    header1 = u'Pattern offset\tWeight\n'
 
-    entries1 = u"".join([u"{0:d}\t{1:d}\n".format(
+    entries1 = u''.join([u'{0:d}\t{1:d}\n'.format(
         pattern_offset, self._weight_per_offset[pattern_offset])
                          for pattern_offset in self._weight_per_offset])
 
-    header2 = u"weight\tpattern offset(s)\n"
+    header2 = u'Weight\tPattern offset(s)\n'
 
-    entries2 = u"".join([u"{0:d}\t{1!s}\n".format(
+    entries2 = u''.join([u'{0:d}\t{1!s}\n'.format(
         weight, self._offsets_per_weight[weight])
                          for weight in self._offsets_per_weight])
 
-    return u"".join([header1, entries1, u"\n", header2, entries2, u"\n"])
+    return u''.join([header1, entries1, u'\n', header2, entries2, u'\n'])
+
+  def SetWeight(self, pattern_offset, weight):
+    """Sets a weight for a specific pattern offset.
+
+    Args:
+      pattern_offset: the pattern offset to set in the pattern weights.
+      weight: the corresponding weight to set.
+
+    Raises:
+      ValueError: if the pattern weights does not contain the pattern offset.
+    """
+    if not pattern_offset in self._weight_per_offset:
+      raise ValueError(u'Pattern offset not set.')
+
+    self._weight_per_offset[pattern_offset] = weight
+
+    if not weight in self._offsets_per_weight:
+      self._offsets_per_weight[weight] = []
+
+    self._offsets_per_weight[weight].append(pattern_offset)
 
 
 class ScanState(object):
@@ -367,7 +369,7 @@ class ScanState(object):
       RuntimeError: when a unsupported state is encountered.
     """
     if self.state != self.START and self.state != self.SCANNING:
-      raise RuntimeError("Unsupported scan state")
+      raise RuntimeError(u'Unsupported scan state.')
 
     self.file_offset = file_offset
     self.scan_tree_node = scan_tree_node
@@ -380,7 +382,7 @@ class ScanState(object):
       RuntimeError: when a unsupported state is encountered.
     """
     if self.state != self.START and self.state != self.SCANNING:
-      raise RuntimeError("Unsupported scan state")
+      raise RuntimeError(u'Unsupported scan state.')
 
     self.scan_tree_node = None
     self.state = self.STOP
@@ -436,62 +438,15 @@ class _ScanTreeNode(object):
       byte_value = ord(byte_value)
 
     if byte_value < 0 or byte_value > 255:
-      raise ValueError("invalid byte value, value out of bounds")
+      raise ValueError(u'Invalid byte value, value out of bounds.')
 
     if byte_value in self._byte_values:
-      raise ValueError("byte value already set")
+      raise ValueError(u'Byte value already set.')
 
     if isinstance(scan_object, _ScanTreeNode):
       scan_object.parent = self
 
     self._byte_values[byte_value] = scan_object
-
-  def SetDefaultValue(self, scan_object):
-    """Sets the default (non-match) value.
-
-    Args:
-      scan_object: the scan object, either a scan sub node or a pattern.
-
-    Raises:
-      ValueError: if the default value is already set.
-    """
-    if self.default_value:
-      raise ValueError("default value already set")
-
-    self.default_value = scan_object
-
-  def ToDebugString(self, indentation_level=1):
-    """Converts the scan tree node into a debug string."""
-    indentation = u"  " * indentation_level
-
-    header = u"{0:s}pattern offset: {1:d}\n".format(
-        indentation, self.pattern_offset)
-
-    entries = u""
-
-    for byte_value in self._byte_values:
-      entries += u"{0:s}byte value: 0x{1:02x}\n".format(indentation, byte_value)
-
-      if isinstance(self._byte_values[byte_value], _ScanTreeNode):
-        entries += u"{0:s}scan tree node:\n".format(indentation)
-        entries += self._byte_values[byte_value].ToDebugString(
-            indentation_level + 1)
-
-      elif isinstance(self._byte_values[byte_value], Pattern):
-        entries += u"{0:s}pattern: {1:s}\n".format(
-            indentation, self._byte_values[byte_value].identifier)
-
-    default = u"{0:s}default value:\n".format(indentation)
-
-    if isinstance(self.default_value, _ScanTreeNode):
-      default += u"{0:s}scan tree node:\n".format(indentation)
-      default += self.default_value.ToDebugString(indentation_level + 1)
-
-    elif isinstance(self.default_value, Pattern):
-      default += "{0:s}pattern: {1:s}\n".format(
-          indentation, self.default_value.identifier)
-
-    return u"".join([header, entries, default, u"\n"])
 
   def CompareByteValue(self, data, data_size, data_offset, match_on_boundary):
     """Scans a buffer using the bounded scan tree.
@@ -514,12 +469,12 @@ class _ScanTreeNode(object):
     scan_tree_byte_value = 0
 
     if data_offset < 0 or data_offset >= data_size:
-      raise RuntimeError("data offset out of bounds")
+      raise RuntimeError(u'Data offset out of bounds.')
 
     data_offset += self.pattern_offset
 
     if not match_on_boundary and data_offset >= data_size:
-      raise RuntimeError("pattern offset out of bounds")
+      raise RuntimeError(u'Pattern offset out of bounds.')
 
     if data_offset < data_size:
       data_byte_value = ord(data[data_offset])
@@ -542,6 +497,53 @@ class _ScanTreeNode(object):
           scan_object = scan_object.default_value
 
     return scan_object
+
+  def SetDefaultValue(self, scan_object):
+    """Sets the default (non-match) value.
+
+    Args:
+      scan_object: the scan object, either a scan sub node or a pattern.
+
+    Raises:
+      ValueError: if the default value is already set.
+    """
+    if self.default_value:
+      raise ValueError(u'Default value already set.')
+
+    self.default_value = scan_object
+
+  def ToDebugString(self, indentation_level=1):
+    """Converts the scan tree node into a debug string."""
+    indentation = u'  ' * indentation_level
+
+    header = u'{0:s}pattern offset: {1:d}\n'.format(
+        indentation, self.pattern_offset)
+
+    entries = u''
+
+    for byte_value in self._byte_values:
+      entries += u'{0:s}byte value: 0x{1:02x}\n'.format(indentation, byte_value)
+
+      if isinstance(self._byte_values[byte_value], _ScanTreeNode):
+        entries += u'{0:s}scan tree node:\n'.format(indentation)
+        entries += self._byte_values[byte_value].ToDebugString(
+            indentation_level + 1)
+
+      elif isinstance(self._byte_values[byte_value], Pattern):
+        entries += u'{0:s}pattern: {1:s}\n'.format(
+            indentation, self._byte_values[byte_value].identifier)
+
+    default = u'{0:s}default value:\n'.format(indentation)
+
+    if isinstance(self.default_value, _ScanTreeNode):
+      default += u'{0:s}scan tree node:\n'.format(indentation)
+      default += self.default_value.ToDebugString(indentation_level + 1)
+
+    elif isinstance(self.default_value, Pattern):
+      default += u'{0:s}pattern: {1:s}\n'.format(
+          indentation, self.default_value.identifier)
+
+    return u''.join([header, entries, default, u'\n'])
 
 
 class _SkipTable(object):
@@ -581,10 +583,10 @@ class _SkipTable(object):
       ValueError: if byte value or skip value is out of bounds.
     """
     if byte_value < 0 or byte_value > 255:
-      raise ValueError("invalid byte value, value out of bounds")
+      raise ValueError(u'Invalid byte value, value out of bounds.')
 
     if skip_value < 0 or skip_value >= self.skip_pattern_length:
-      raise ValueError("invalid skip value, value out of bounds")
+      raise ValueError(u'Invalid skip value, value out of bounds.')
 
     if (not byte_value in self._skip_value_per_byte_value or
         self._skip_value_per_byte_value[byte_value] > skip_value):
@@ -592,24 +594,24 @@ class _SkipTable(object):
 
   def ToDebugString(self):
     """Converts the skip table into a debug string."""
-    header = u"byte value\tskip value\n"
+    header = u'Byte value\tSkip value\n'
 
-    entries = u"".join([u"0x{0:02x}\t{1:d}\n".format(
+    entries = u''.join([u'0x{0:02x}\t{1:d}\n'.format(
         byte_value, self._skip_value_per_byte_value[byte_value])
                         for byte_value in self._skip_value_per_byte_value])
 
-    default = u"default\t{0:d}\n".format(self.skip_pattern_length)
+    default = u'Default\t{0:d}\n'.format(self.skip_pattern_length)
 
-    return u"".join([header, entries, default, u"\n"])
+    return u''.join([header, entries, default, u'\n'])
 
 
 class Scanner(object):
   """Class for scanning for formats in raw data."""
 
   COMMON_BYTE_VALUES = frozenset(
-      "\x00\x01\xff\t\n\r 0123456789"
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      "abcdefghijklmnopqrstuvwxyz")
+      '\x00\x01\xff\t\n\r 0123456789'
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      'abcdefghijklmnopqrstuvwxyz')
 
   def __init__(self, specification_store):
     """Initializes the scanner and sets up the scanning related structures.
@@ -648,13 +650,141 @@ class Scanner(object):
           signature_pattern_length = len(signature.expression)
 
           if signature_pattern_length < 4:
-            raise ValueError("pattern too small to be useful")
+            raise ValueError(u'Pattern too small to be useful.')
 
           pattern = Pattern(signature_index, signature, specification)
           patterns.append(pattern)
         signature_index += 1
 
     return patterns
+
+  def _BuildScanTreeNode(self, pattern_table, ignore_list, is_bound):
+    """Builds a scan tree node.
+
+    Args:
+      pattern_table: a pattern table (instance of PatternTable).
+      ignore_list: a list of pattern offsets to ignore
+      is_bound: boolean value to indicate if the signatures should have bound
+                offsets.
+
+    Raises:
+      ValueError: if number of byte value patterns value out of bounds.
+
+    Returns:
+      a scan tree node.
+    """
+    # Make a copy of the lists because the function is going to alter them
+    # and the changes must remain in scope of the function
+    patterns = list(pattern_table.patterns)
+    ignore_list = list(ignore_list)
+
+    similarity_weights = _PatternWeights()
+    occurrence_weights = _PatternWeights()
+    value_weights = _PatternWeights()
+
+    for pattern_offset in pattern_table.offsets:
+      similarity_weights.AddOffset(pattern_offset)
+      occurrence_weights.AddOffset(pattern_offset)
+      value_weights.AddOffset(pattern_offset)
+
+      byte_values = pattern_table.GetByteValues(pattern_offset)
+      number_of_byte_values = len(byte_values)
+
+      if number_of_byte_values > 1:
+        occurrence_weights.SetWeight(pattern_offset, number_of_byte_values)
+
+      for byte_value in byte_values:
+        byte_value_patterns = byte_values[byte_value]
+        byte_value_weight = len(byte_value_patterns.patterns)
+
+        if byte_value_weight > 1:
+          similarity_weights.AddWeight(pattern_offset, byte_value_weight)
+
+        if not byte_value_weight in self.COMMON_BYTE_VALUES:
+          value_weights.AddWeight(pattern_offset, 1)
+
+    logging.debug(
+        u'Pattern table:\n%s', pattern_table.ToDebugString())
+    logging.debug(
+        u'Similarity weights:\n%s', similarity_weights.ToDebugString())
+    logging.debug(
+        u'Occurrence weights:\n%s', occurrence_weights.ToDebugString())
+    logging.debug(
+        u'Value weights:\n%s', value_weights.ToDebugString())
+
+    pattern_offset = self._GetMostSignificantPatternOffset(
+        patterns, similarity_weights, occurrence_weights, value_weights)
+
+    ignore_list.append(pattern_offset)
+
+    scan_tree_node = _ScanTreeNode(pattern_offset)
+
+    byte_values = pattern_table.GetByteValues(pattern_offset)
+
+    for byte_value in byte_values:
+      byte_value_patterns = byte_values[byte_value]
+
+      logging.debug(u'%s', byte_value_patterns.ToDebugString())
+
+      number_of_byte_value_patterns = len(byte_value_patterns.patterns)
+
+      if number_of_byte_value_patterns <= 0:
+        raise ValueError(
+            u'Invalid number of byte value patterns value out of bounds.')
+
+      elif number_of_byte_value_patterns == 1:
+        for identifier in byte_value_patterns.patterns:
+          logging.debug(
+              u'Adding pattern: {0:s} for byte value: 0x{1:02x}.'.format(
+                  identifier, ord(byte_value)))
+
+          scan_tree_node.AddByteValue(
+              byte_value, byte_value_patterns.patterns[identifier])
+
+      else:
+        pattern_table = PatternTable(
+            byte_value_patterns.patterns.itervalues(), ignore_list, is_bound)
+
+        scan_sub_node = self._BuildScanTreeNode(
+            pattern_table, ignore_list, is_bound)
+
+        logging.debug(
+            u'Adding scan node for byte value: 0x%02x\n%s',
+            ord(byte_value), scan_sub_node.ToDebugString())
+
+        scan_tree_node.AddByteValue(ord(byte_value), scan_sub_node)
+
+      for identifier in byte_value_patterns.patterns:
+        logging.debug(
+            u'Removing pattern: %s from:\n%s', identifier,
+            self._PatternsToDebugString(patterns))
+
+        patterns.remove(byte_value_patterns.patterns[identifier])
+
+    logging.debug(
+        u'Remaining patterns:\n%s', self._PatternsToDebugString(patterns))
+
+    number_of_patterns = len(patterns)
+
+    if number_of_patterns == 1:
+      logging.debug(
+          u'Setting pattern: %s for default value', patterns[0].identifier)
+
+      scan_tree_node.SetDefaultValue(patterns[0])
+
+    elif number_of_patterns > 1:
+      pattern_table = PatternTable(patterns, ignore_list, is_bound)
+
+      scan_sub_node = self._BuildScanTreeNode(
+          pattern_table, ignore_list, is_bound)
+
+      logging.debug(
+          u'Setting scan node for default value:\n%s',
+          scan_sub_node.ToDebugString())
+
+      scan_tree_node.SetDefaultValue(scan_sub_node)
+
+    return scan_tree_node
 
   def _BuildScanningTrees(self, specification_store):
     """Builds the scanning trees.
@@ -672,222 +802,68 @@ class Scanner(object):
     is_bound = True
     pattern_table = PatternTable(patterns, ignore_list, is_bound)
 
-    self._bound_scan_tree = self._BuildScanTreeNode(
-        pattern_table, ignore_list, is_bound)
+    if pattern_table.patterns:
+      self._bound_scan_tree = self._BuildScanTreeNode(
+          pattern_table, ignore_list, is_bound)
 
-    logging.debug("bound scan tree:\n%s",
-                  self._bound_scan_tree.ToDebugString())
+      logging.debug(
+          u'Bound scan tree:\n%s', self._bound_scan_tree.ToDebugString())
 
     ignore_list = []
     is_bound = False
     pattern_table = PatternTable(patterns, ignore_list, is_bound)
 
-    self._scan_tree = self._BuildScanTreeNode(
-        pattern_table, ignore_list, is_bound)
+    if pattern_table.patterns:
+      self._scan_tree = self._BuildScanTreeNode(
+          pattern_table, ignore_list, is_bound)
 
-    logging.debug("scan tree:\n%s",
-                  self._scan_tree.ToDebugString())
+      logging.debug(
+          u'Scan tree:\n%s', self._scan_tree.ToDebugString())
 
     # At the end the skip table is determined to provide for the
     # Boyer–Moore–Horspool skip value
     self._skip_table = pattern_table.GetSkipTable()
 
-    logging.debug("skip table:\n%s",
-                  self._skip_table.ToDebugString())
+    logging.debug(
+        u'Skip table:\n%s', self._skip_table.ToDebugString())
 
     self._scan_tree_largest_length = pattern_table.largest_pattern_length
 
-  def _PatternsToDebugString(self, patterns):
-    """Converts the patterns into a debug string."""
-    entries = u", ".join([u"{0:s}".format(pattern) for pattern in patterns])
-
-    return u"".join([u"[", entries, u"]"])
-
-  def _BuildScanTreeNode(self, patterns_table, ignore_list, is_bound):
-    """Builds a scan tree node.
-
-    Args:
-      patterns_table: an instance of PatternTable.
-      ignore_list: a list of pattern offsets to ignore
-      is_bound: boolean value to indicate if the signatures should have bound
-                offsets.
-
-    Raises:
-      ValueError: if number of byte value patterns value out of bounds.
-
-    Returns:
-      a scan tree node.
-    """
-    # Make a copy of the lists because the function is going to alter them
-    # and the changes must remain in scope of the function
-    patterns = list(patterns_table.patterns)
-    ignore_list = list(ignore_list)
-
-    similarity_weights = _PatternWeights()
-    occurrence_weights = _PatternWeights()
-    value_weights = _PatternWeights()
-
-    for pattern_offset in patterns_table.offsets:
-      similarity_weights.AddOffset(pattern_offset)
-      occurrence_weights.AddOffset(pattern_offset)
-      value_weights.AddOffset(pattern_offset)
-
-      byte_values = patterns_table.GetByteValues(pattern_offset)
-      number_of_byte_values = len(byte_values)
-
-      if number_of_byte_values > 1:
-        occurrence_weights.SetWeight(pattern_offset, number_of_byte_values)
-
-      for byte_value in byte_values:
-        byte_value_patterns = byte_values[byte_value]
-        byte_value_weight = len(byte_value_patterns.patterns)
-
-        if byte_value_weight > 1:
-          similarity_weights.AddWeight(pattern_offset, byte_value_weight)
-
-        if not byte_value_weight in self.COMMON_BYTE_VALUES:
-          value_weights.AddWeight(pattern_offset, 1)
-
-    logging.debug("patterns table:\n%s", patterns_table.ToDebugString())
-    logging.debug("similarity weights:\n%s",
-                  similarity_weights.ToDebugString())
-    logging.debug("occurrence weights:\n%s",
-                  occurrence_weights.ToDebugString())
-    logging.debug("value weights:\n%s", value_weights.ToDebugString())
-
-    pattern_offset = self._GetMostSignificantPatternOffset(
-        patterns, similarity_weights, occurrence_weights, value_weights)
-
-    ignore_list.append(pattern_offset)
-
-    scan_tree_node = _ScanTreeNode(pattern_offset)
-
-    byte_values = patterns_table.GetByteValues(pattern_offset)
-
-    for byte_value in byte_values:
-      byte_value_patterns = byte_values[byte_value]
-
-      logging.debug("%s", byte_value_patterns.ToDebugString())
-
-      number_of_byte_value_patterns = len(byte_value_patterns.patterns)
-
-      if number_of_byte_value_patterns <= 0:
-        raise ValueError(
-            "invalid number of byte value patterns value out of bounds")
-
-      elif number_of_byte_value_patterns == 1:
-        for identifier in byte_value_patterns.patterns:
-          logging.debug("adding pattern: %s for byte value: 0x%02x",
-                        identifier, ord(byte_value))
-
-          scan_tree_node.AddByteValue(
-              byte_value, byte_value_patterns.patterns[identifier])
-
-      else:
-        pattern_table = PatternTable(
-            byte_value_patterns.patterns.values(), ignore_list, is_bound)
-
-        scan_sub_node = self._BuildScanTreeNode(
-            pattern_table, ignore_list, is_bound)
-
-        logging.debug("adding scan node for byte value: 0x%02x\n%s",
-                      ord(byte_value), scan_sub_node.ToDebugString())
-
-        scan_tree_node.AddByteValue(ord(byte_value), scan_sub_node)
-
-      for identifier in byte_value_patterns.patterns:
-        logging.debug("removing pattern: %s from:\n%s", identifier,
-                      self._PatternsToDebugString(patterns))
-
-        patterns.remove(byte_value_patterns.patterns[identifier])
-
-    logging.debug("Remaining patterns:\n%s",
-                  self._PatternsToDebugString(patterns))
-
-    number_of_patterns = len(patterns)
-
-    if number_of_patterns == 1:
-      logging.debug("setting pattern: %s for default value",
-                    patterns[0].identifier)
-
-      scan_tree_node.SetDefaultValue(patterns[0])
-
-    elif number_of_patterns > 1:
-      pattern_table = PatternTable(patterns, ignore_list, is_bound)
-
-      scan_sub_node = self._BuildScanTreeNode(
-          pattern_table, ignore_list, is_bound)
-
-      logging.debug("setting scan node for default value:\n%s",
-                    scan_sub_node.ToDebugString())
-
-      scan_tree_node.SetDefaultValue(scan_sub_node)
-
-    return scan_tree_node
-
-  def _GetPatternOffsetForSimilarityWeights(
-      self, similarity_weights, occurrence_weights, value_weights):
+  def _GetMostSignificantPatternOffset(
+      self, patterns, similarity_weights, occurrence_weights, value_weights):
     """Returns the most significant pattern offset.
 
     Args:
+      patterns: a list of patterns
       similarity_weights: the similarity (pattern) weights.
       occurrence_weights: the occurrence (pattern) weights.
       value_weights: the value (pattern) weights.
 
+    Raises:
+      ValueError: when pattern is an empty list.
+
     Returns:
       a pattern offset.
     """
-    debug_string = ""
+    if not patterns:
+      raise ValueError(u'Missing patterns.')
+
     pattern_offset = None
+    number_of_patterns = len(patterns)
 
-    largest_weight = similarity_weights.GetLargestWeight()
-    logging.debug("largest similarity weight: %d", largest_weight)
+    if number_of_patterns == 1:
+      pattern_offset = self._GetPatternOffsetForValueWeights(
+          value_weights)
 
-    if largest_weight > 0:
-      similarity_weight_offsets = similarity_weights.GetOffsetsForWeight(
-          largest_weight)
-      number_of_similarity_offsets = len(similarity_weight_offsets)
-    else:
-      number_of_similarity_offsets = 0
-
-    if number_of_similarity_offsets == 0:
+    elif number_of_patterns == 2:
       pattern_offset = self._GetPatternOffsetForOccurrenceWeights(
           occurrence_weights, value_weights)
 
-    elif number_of_similarity_offsets == 1:
-      pattern_offset = similarity_weight_offsets[0]
+    elif number_of_patterns > 2:
+      pattern_offset = self._GetPatternOffsetForSimilarityWeights(
+          similarity_weights, occurrence_weights, value_weights)
 
-    else:
-      largest_weight = 0
-      largest_value_weight = 0
-
-      for similarity_offset in similarity_weight_offsets:
-        occurrence_weight = occurrence_weights.GetWeightForOffset(
-            similarity_offset)
-
-        debug_string = ("similarity offset: %{0:d} occurrence weight: "
-                        "%{1:d}").format(similarity_offset, occurrence_weight)
-
-        if largest_weight > 0 and largest_weight == occurrence_weight:
-          value_weight = value_weights.GetWeightForOffset(
-              similarity_offset)
-
-          debug_string += " value weight: {0:d}".format(value_weight)
-
-          if largest_value_weight < value_weight:
-            largest_weight = 0
-
-        if not pattern_offset or largest_weight < occurrence_weight:
-          largest_weight = occurrence_weight
-          pattern_offset = similarity_offset
-
-          largest_value_weight = value_weights.GetWeightForOffset(
-              similarity_offset)
-
-          debug_string += " largest value weight: {0:d}".format(
-              largest_value_weight)
-
-        logging.debug("%s", debug_string)
+    logging.debug(u'Largest weight offset: {0:d}'.format(pattern_offset))
 
     return pattern_offset
 
@@ -906,7 +882,7 @@ class Scanner(object):
     pattern_offset = None
 
     largest_weight = occurrence_weights.GetLargestWeight()
-    logging.debug("largest occurrence weight: %d", largest_weight)
+    logging.debug(u'Largest occurrence weight: {0:d}'.format(largest_weight))
 
     if largest_weight > 0:
       occurrence_weight_offsets = occurrence_weights.GetOffsetsForWeight(
@@ -930,17 +906,85 @@ class Scanner(object):
         value_weight = value_weights.GetWeightForOffset(
             occurrence_offset)
 
-        debug_string = ("occurrence offset: %{0:d} value weight: "
-                        "%{1:d}").format(occurrence_offset, value_weight)
+        debug_string = (
+            u'Occurrence offset: %{0:d} value weight: %{1:d}').format(
+                occurrence_offset, value_weight)
 
         if not pattern_offset or largest_weight < value_weight:
           largest_weight = value_weight
           pattern_offset = occurrence_offset
 
-          debug_string += " largest value weight: {0:d}".format(
+          debug_string += u' largest value weight: {0:d}'.format(
               largest_value_weight)
 
-        logging.debug("%s", debug_string)
+        logging.debug(u'{0:s}'.format(debug_string))
+
+    return pattern_offset
+
+  def _GetPatternOffsetForSimilarityWeights(
+      self, similarity_weights, occurrence_weights, value_weights):
+    """Returns the most significant pattern offset.
+
+    Args:
+      similarity_weights: the similarity (pattern) weights.
+      occurrence_weights: the occurrence (pattern) weights.
+      value_weights: the value (pattern) weights.
+
+    Returns:
+      a pattern offset.
+    """
+    debug_string = ""
+    pattern_offset = None
+
+    largest_weight = similarity_weights.GetLargestWeight()
+    logging.debug(u'Largest similarity weight: %d', largest_weight)
+
+    if largest_weight > 0:
+      similarity_weight_offsets = similarity_weights.GetOffsetsForWeight(
+          largest_weight)
+      number_of_similarity_offsets = len(similarity_weight_offsets)
+    else:
+      number_of_similarity_offsets = 0
+
+    if number_of_similarity_offsets == 0:
+      pattern_offset = self._GetPatternOffsetForOccurrenceWeights(
+          occurrence_weights, value_weights)
+
+    elif number_of_similarity_offsets == 1:
+      pattern_offset = similarity_weight_offsets[0]
+
+    else:
+      largest_weight = 0
+      largest_value_weight = 0
+
+      for similarity_offset in similarity_weight_offsets:
+        occurrence_weight = occurrence_weights.GetWeightForOffset(
+            similarity_offset)
+
+        debug_string = (
+            u'Similarity offset: %{0:d} occurrence weight: %{1:d}').format(
+                similarity_offset, occurrence_weight)
+
+        if largest_weight > 0 and largest_weight == occurrence_weight:
+          value_weight = value_weights.GetWeightForOffset(
+              similarity_offset)
+
+          debug_string += u' value weight: {0:d}'.format(value_weight)
+
+          if largest_value_weight < value_weight:
+            largest_weight = 0
+
+        if not pattern_offset or largest_weight < occurrence_weight:
+          largest_weight = occurrence_weight
+          pattern_offset = similarity_offset
+
+          largest_value_weight = value_weights.GetWeightForOffset(
+              similarity_offset)
+
+          debug_string += u' largest value weight: {0:d}'.format(
+              largest_value_weight)
+
+        logging.debug(u'{0:s}'.format(debug_string))
 
     return pattern_offset
 
@@ -958,7 +1002,7 @@ class Scanner(object):
       a pattern offset.
     """
     largest_weight = value_weights.GetLargestWeight()
-    logging.debug("largest value weight: %d", largest_weight)
+    logging.debug(u'Largest value weight: {0:d}'.format(largest_weight))
 
     if largest_weight > 0:
       value_weight_offsets = value_weights.GetOffsetsForWeight(largest_weight)
@@ -967,58 +1011,18 @@ class Scanner(object):
       number_of_value_offsets = 0
 
     if number_of_value_offsets == 0:
-      raise RuntimeError("No value weight offsets found")
+      raise RuntimeError(u'No value weight offsets found.')
 
     return value_weight_offsets[0]
 
-  def _GetMostSignificantPatternOffset(
-      self, patterns, similarity_weights, occurrence_weights, value_weights):
-    """Returns the most significant pattern offset.
+  def _PatternsToDebugString(self, patterns):
+    """Converts the patterns into a debug string."""
+    entries = u', '.join([u'{0:s}'.format(pattern) for pattern in patterns])
 
-    Args:
-      patterns: a list of patterns
-      similarity_weights: the similarity (pattern) weights.
-      occurrence_weights: the occurrence (pattern) weights.
-      value_weights: the value (pattern) weights.
+    return u''.join([u'[', entries, u']'])
 
-    Raises:
-      ValueError: when pattern is an empty list.
-
-    Returns:
-      a pattern offset.
-    """
-    if not patterns:
-      raise ValueError("missing patterns")
-
-    pattern_offset = None
-    number_of_patterns = len(patterns)
-
-    if number_of_patterns == 1:
-      pattern_offset = self._GetPatternOffsetForValueWeights(
-          value_weights)
-
-    elif number_of_patterns == 2:
-      pattern_offset = self._GetPatternOffsetForOccurrenceWeights(
-          occurrence_weights, value_weights)
-
-    elif number_of_patterns > 2:
-      pattern_offset = self._GetPatternOffsetForSimilarityWeights(
-          similarity_weights, occurrence_weights, value_weights)
-
-    logging.debug("largest weight offset: %d", pattern_offset)
-
-    return pattern_offset
-
-  def ScanStart(self):
-    """Starts a scan.
-
-    Returns:
-      a scan state.
-    """
-    return ScanState(self._scan_tree)
-
-  def _ScanBufferBoundedScanTree(self, scan_state, file_offset, data,
-                                 data_size):
+  def _ScanBufferBoundedScanTree(
+      self, scan_state, file_offset, data, data_size):
     """Scans a buffer using the bounded scan tree.
 
     Args:
@@ -1046,8 +1050,8 @@ class Scanner(object):
         scan_state.AddResult(
             file_offset + scan_object.signature.offset, scan_object)
 
-  def _ScanBufferScanState(self, scan_state, file_offset, data, data_size,
-                           match_on_boundary):
+  def _ScanBufferScanState(
+      self, scan_state, file_offset, data, data_size, match_on_boundary):
     """Scans a buffer using the scan tree.
 
     This function implements a Boyer–Moore–Horspool equivalent approach
@@ -1113,7 +1117,7 @@ class Scanner(object):
         last_pattern_offset = self._skip_table.skip_pattern_length - 1
 
         if data_offset + last_pattern_offset >= data_size:
-          raise RuntimeError("last pattern offset out of bounds")
+          raise RuntimeError(u'Last pattern offset out of bounds.')
         skip_value = 0
 
         while last_pattern_offset >= 0 and not skip_value:
@@ -1167,6 +1171,14 @@ class Scanner(object):
       self._ScanBufferBoundedScanTree(scan_state, file_offset, data, data_size)
 
     self._ScanBufferScanState(scan_state, file_offset, data, data_size, False)
+
+  def ScanStart(self):
+    """Starts a scan.
+
+    Returns:
+      a scan state.
+    """
+    return ScanState(self._scan_tree)
 
   def ScanStop(self, scan_state):
     """Stops a scan.

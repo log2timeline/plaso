@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,24 +16,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains tests for the format classifier classes."""
+
 import os
 import unittest
 
 from plaso.classifier import classifier
 from plaso.classifier import scanner
-from plaso.classifier import test_store
+from plaso.classifier import test_lib
 
 
 class ClassifierTest(unittest.TestCase):
   """Class to test Classifier."""
 
   def setUp(self):
-    self._store = test_store.CreateSpecificationStore()
+    self._store = test_lib.CreateSpecificationStore()
     self._scanner = scanner.Scanner(self._store)
 
     self._input_filenames = [
-        os.path.join("test_data", "NTUSER.DAT"),
-        os.path.join("test_data", "syslog.zip")]
+        os.path.join('test_data', 'NTUSER.DAT'),
+        os.path.join('test_data', 'syslog.zip')]
 
   def testClassifyFileScannerFull(self):
     """Function to test the ClassifyFile function with the scan tree scanner."""
