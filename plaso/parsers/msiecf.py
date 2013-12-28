@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for Microsoft Internet Explorer (MSIE) Cache Files (CF)."""
+
 import logging
 
 from plaso.lib import errors
@@ -155,19 +157,20 @@ class MsiecfParser(parser.BaseParser):
 
     return event_container
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extract data from a MSIE Cache File (MSIECF).
 
        A separate event container is returned for every item to limit
        memory consumption.
 
     Args:
-      file_object: A file-like object to read data from.
+      file_entry: A file entry object.
 
     Yields:
       An event container (MsiecfUrlEventContainer) that contains
       the parsed data.
     """
+    file_object = file_entry.Open()
     msiecf_file = pymsiecf.file()
     msiecf_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
 
@@ -177,7 +180,7 @@ class MsiecfParser(parser.BaseParser):
       self.version = msiecf_file.format_version
     except IOError as exception:
       raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_object.name, exception))
+          self.parser_name, file_entry.name, exception))
 
     for item_index in range(0, msiecf_file.number_of_items):
       try:
@@ -188,7 +191,7 @@ class MsiecfParser(parser.BaseParser):
         # pymsiecf.item.
       except IOError as exception:
         logging.warning('[%s] unable to parse item: %d in file: %s: %s' % (
-            self.parser_name, item_index, file_object.name, exception))
+            self.parser_name, item_index, file_entry.name, exception))
 
     for item_index in range(0, msiecf_file.number_of_recovered_items):
       try:
@@ -200,4 +203,6 @@ class MsiecfParser(parser.BaseParser):
       except IOError as exception:
         logging.info(
             '[%s] unable to parse recovered item: %d in file: %s: %s' % (
-            self.parser_name, item_index, file_object.name, exception))
+            self.parser_name, item_index, file_entry.name, exception))
+
+    file_object.close()

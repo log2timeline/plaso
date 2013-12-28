@@ -17,6 +17,7 @@
 # limitations under the License.
 """File for PyVFS migration to contain file entry related functionality."""
 
+import abc
 import bz2
 import gzip
 import os
@@ -25,12 +26,12 @@ import zipfile
 
 from plaso.lib import errors
 from plaso.lib import registry
-from plaso.lib import sleuthkit
 from plaso.lib import timelib
+from plaso.pvfs import pfile_io
 from plaso.pvfs import pstats
 
 
-class PlasoFileEntry(object):
+class BaseFileEntry(object):
   """Base class for a file entry object."""
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
@@ -38,87 +39,356 @@ class PlasoFileEntry(object):
   TYPE = 'UNSET'
 
   def __init__(self, proto, root=None, fscache=None):
-    """Constructor.
+    """Initializes the file entry object.
 
     Args:
-      proto: The transmission_proto that describes the file.
-      root: The root transmission_proto that describes the file if one exists.
-      fscache: A FilesystemCache object.
+      proto: The transmission proto that describes the file.
+      root: Optional root transmission proto that describes the file.
+            The default is None.
+      fscache: Optional file system cache object. The default is None.
 
     Raises:
       errors.UnableToOpenFile: If this class supports the wrong driver for this
       file.
     """
-    super(PlasoFileEntry, self).__init__()
+    if proto.type != self.TYPE:
+      raise errors.UnableToOpenFile('Unable to handle this file type.')
+
+    super(BaseFileEntry, self).__init__()
     self.pathspec = proto
+    self._fscache = fscache
+    self._stat = None
+    self.file_object = None
+    self.name = ''
+
     if root:
       self.pathspec_root = root
     else:
       self.pathspec_root = proto
-    self.name = ''
-
-    if fscache:
-      self._fscache = fscache
-
-    if proto.type != self.TYPE:
-      raise errors.UnableToOpenFile('Unable to handle this file type.')
-
-    self._stat = None
 
   def __enter__(self):
     """Make it work with the with statement."""
     return self
 
-  def __exit__(self, exc_type, exc_value, traceback):
+  def __exit__(self, dummy_type, dummy_value, dummy_traceback):
     """Make it work with the with statement."""
-    _ = exc_type
-    _ = exc_value
-    _ = traceback
-    self.close()
-    return False
-
-  def __str__(self):
-    """Return a string representation of the file object, the display name."""
-    if hasattr(self, 'display_name'):
-      return self.display_name
-    else:
-      return 'Unknown File'
-
-  def Open(self, filehandle=None):
-    """Open the file as it is described in the PathSpec protobuf.
-
-    This method reads the content of the PathSpec protobuf and opens
-    the filehandle up according to the driver the class supports.
-
-    Filehandle can be passed to the method if the file that needs to
-    be opened is within another file.
-
-    Args:
-      filehandle: A PlasoFile object that the file is contained within.
-    """
-    raise NotImplementedError
-
-  def Stat(self):
-    """Return a Stats object that contains stats like information."""
-    raise NotImplementedError
+    return
 
   def HasParent(self):
     """Check if the PathSpec defines a parent."""
     return hasattr(self.pathspec, 'nested_pathspec')
 
+  @abc.abstractmethod
+  def Open(self, file_entry=None):
+    """Open the file as it is described in the PathSpec protobuf.
 
-class TskFileEntry(PlasoFileEntry):
+    This method reads the content of the PathSpec protobuf and opens
+    the file entry up according to the driver the class supports.
+
+    The file entry can be passed to the method if the file that needs to
+    be opened is within another file.
+
+    Args:
+      file_entry: Optional parent file-like object. The default is None.
+
+    Returns:
+      A file-like object.
+    """
+
+  @abc.abstractmethod
+  def Stat(self):
+    """Return a Stats object that contains stats like information."""
+
+
+class Bz2FileEntry(BaseFileEntry):
+  """Provide a file-like object to a file compressed using BZ2."""
+
+  TYPE = 'BZ2'
+
+  def __init__(self, proto, root=None, fscache=None):
+    """Initializes the file entry object.
+
+    Args:
+      proto: The transmission proto that describes the file.
+      root: Optional root transmission proto that describes the file.
+            The default is None.
+      fscache: Optional file system cache object. The default is None.
+    """
+    super(Bz2FileEntry, self).__init__(proto, root=root, fscache=fscache)
+
+  def Open(self, file_entry=None):
+    """Open the file as it is described in the PathSpec protobuf.
+
+    Args:
+      file_entry: Optional parent file entry object. The default is None.
+
+    Returns:
+      A file-like object.
+    """
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
+    if file_entry:
+      self.inode = getattr(file_entry.Stat(), 'ino', 0)
+      try:
+        file_entry.file_object.seek(0)
+      except NotImplementedError:
+        pass
+      bzip2_file = bz2.BZ2File(file_entry.file_object, 'r')
+      self.display_name = u'{}:{}{}'.format(
+          file_entry.name, path_prepend, self.pathspec.file_path)
+    else:
+      self.display_name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
+      bzip2_file = bz2.BZ2File(self.pathspec.file_path, 'r')
+      self.inode = os.stat(self.pathspec.file_path).st_ino
+
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
+
+    self.file_object = pfile_io.Bz2FileIO(bzip2_file)
+    return self.file_object
+
+  def Stat(self):
+    """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
+    stats_object = pstats.Stats()
+    # TODO: change this logic as part of PyVFS.
+    if not self.file_object:
+      return stats_object
+
+    stats_object.ino = self.inode
+    stats_object.fs_type = 'BZ2 container'
+    self._stat = stats_object
+    return stats_object
+
+
+class GzipFileEntry(BaseFileEntry):
+  """Provide a file-like object to a file compressed using GZIP."""
+
+  TYPE = 'GZIP'
+
+  def __init__(self, proto, root=None, fscache=None):
+    """Initializes the file entry object.
+
+    Args:
+      proto: The transmission proto that describes the file.
+      root: Optional root transmission proto that describes the file.
+            The default is None.
+      fscache: Optional file system cache object. The default is None.
+    """
+    super(GzipFileEntry, self).__init__(proto, root=root, fscache=fscache)
+
+  def Open(self, file_entry=None):
+    """Open the file as it is described in the PathSpec protobuf.
+
+    Args:
+      file_entry: Optional parent file entry object. The default is None.
+
+    Returns:
+      A file-like object.
+    """
+    if file_entry:
+      file_entry.file_object.seek(0)
+      gzip_file = gzip.GzipFile(fileobj=file_entry.file_object, mode='rb')
+      self.inode = getattr(file_entry.Stat(), 'ino', 0)
+    else:
+      gzip_file = gzip.GzipFile(
+          filename=self.pathspec.file_path, mode='rb')
+      self.inode = os.stat(self.pathspec.file_path).st_ino
+
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
+    if file_entry:
+      self.display_name = u'{}{}_uncompressed'.format(
+          path_prepend, file_entry.name)
+    else:
+      self.display_name = u'{}{}'.format(path_prepend, self.name)
+
+    # To get the size properly calculated.
+    try:
+      _ = gzip_file.read(4)
+    except IOError as e:
+      dn = self.display_name
+      raise IOError('Not able to open the GZIP file %s -> %s [%s]' % (
+          self.name, dn, e))
+    gzip_file.rewind()
+    try:
+      self.size = gzip_file.size
+    except AttributeError:
+      self.size = 0
+
+    self.file_object = pfile_io.GzipFileIO(gzip_file)
+    return self.file_object
+
+  def Stat(self):
+    """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
+    stats_object = pstats.Stats()
+    # TODO: change this logic as part of PyVFS.
+    if not self.file_object:
+      return stats_object
+
+    stats_object.size = self.size
+    stats_object.ino = self.inode
+    stats_object.fs_type = 'GZ File'
+
+    self._stat = stats_object
+    return stats_object
+
+
+class OsFileEntry(BaseFileEntry):
+  """Class to provide a file-like object to a file stored on a filesystem."""
+
+  TYPE = 'OS'
+
+  def __init__(self, proto, root=None, fscache=None):
+    """Initializes the file entry object.
+
+    Args:
+      proto: The transmission proto that describes the file.
+      root: Optional root transmission proto that describes the file.
+            The default is None.
+      fscache: Optional file system cache object. The default is None.
+    """
+    super(OsFileEntry, self).__init__(proto, root=root, fscache=fscache)
+
+  def Open(self, file_entry=None):
+    """Open the file as it is described in the PathSpec protobuf.
+
+    Args:
+      file_entry: Optional parent file entry object. The default is None.
+
+    Returns:
+      A file-like object.
+    """
+    file_object = open(self.pathspec.file_path, 'rb')
+    self.name = self.pathspec.file_path
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
+    if file_entry:
+      self.display_name = u'{}:{}{}'.format(
+          file_entry.name, path_prepend, self.name)
+    else:
+      self.display_name = u'{}{}'.format(path_prepend, self.name)
+
+    self._stat_info = os.stat(self.name)
+    self.file_object = pfile_io.OsFileIO(file_object, self._stat_info.st_size)
+    return self.file_object
+
+  def Stat(self):
+    """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
+    stats_object = pstats.Stats()
+    # TODO: change this logic as part of PyVFS.
+    if not self.file_object:
+      return stats_object
+
+    stats_object.mode = self._stat_info.st_mode
+    stats_object.ino = self._stat_info.st_ino
+    stats_object.dev = self._stat_info.st_dev
+    stats_object.nlink = self._stat_info.st_nlink
+    stats_object.uid = self._stat_info.st_uid
+    stats_object.gid = self._stat_info.st_gid
+    stats_object.size = self._stat_info.st_size
+    if self._stat_info.st_atime > 0:
+      stats_object.atime = self._stat_info.st_atime
+    if self._stat_info.st_mtime > 0:
+      stats_object.mtime = self._stat_info.st_mtime
+    if self._stat_info.st_ctime > 0:
+      stats_object.ctime = self._stat_info.st_ctime
+    stats_object.fs_type = 'Unknown'
+    stats_object.allocated = True
+
+    self._stat = stats_object
+    return stats_object
+
+
+class TarFileEntry(BaseFileEntry):
+  """Provide a file-like object to a file stored inside a TAR file."""
+
+  TYPE = 'TAR'
+
+  def __init__(self, proto, root=None, fscache=None):
+    """Initializes the file entry object.
+
+    Args:
+      proto: The transmission proto that describes the file.
+      root: Optional root transmission proto that describes the file.
+            The default is None.
+      fscache: Optional file system cache object. The default is None.
+    """
+    super(TarFileEntry, self).__init__(proto, root=root, fscache=fscache)
+
+  def Open(self, file_entry=None):
+    """Open the file as it is described in the PathSpec protobuf.
+
+    Args:
+      file_entry: Optional parent file entry object. The default is None.
+
+    Returns:
+      A file-like object.
+    """
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
+    if file_entry:
+      tar_file = tarfile.open(fileobj=file_entry.file_object, mode='r')
+      self.display_name = u'{}:{}{}'.format(
+          file_entry.name, path_prepend, self.pathspec.file_path)
+      self.inode = getattr(file_entry.Stat(), 'ino', 0)
+    else:
+      container_path = getattr(self.pathspec, 'container_path', '')
+      if not container_path:
+        raise IOError(
+            u'[TAR] missing container path in path specification.')
+      self.display_name = u'{}:{}{}'.format(
+          container_path, path_prepend, self.pathspec.file_path)
+      tar_file = tarfile.open(container_path, 'r')
+      self.inode = os.stat(container_path).st_ino
+
+    extracted_file_object = tar_file.extractfile(self.pathspec.file_path)
+    if not extracted_file_object:
+      raise IOError(
+          u'[TAR] File %s empty or unable to open.' % self.pathspec.file_path)
+    self.buffer = ''
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
+    self.size = extracted_file_object.size
+
+    self.file_object = pfile_io.TarFileIO(extracted_file_object)
+    return self.file_object
+
+  def Stat(self):
+    """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
+    stats_object = pstats.Stats()
+    # TODO: change this logic as part of PyVFS.
+    if not self.file_object:
+      return stats_object
+
+    stats_object.ino = self.inode
+    stats_object.fs_type = 'Tar container'
+    self._stat = stats_object
+    return stats_object
+
+
+class TSKFileEntry(BaseFileEntry):
   """Class to open up files using TSK."""
 
   TYPE = 'TSK'
 
-  def __init__(self, fscache):
-    """Constructor."""
-    super(TskFileEntry, self).__init__()
-    self.fh = None
+  def __init__(self, proto, root=None, fscache=None):
+    """Initializes the file entry object.
+
+    Args:
+      proto: The transmission proto that describes the file.
+      root: Optional root transmission proto that describes the file.
+            The default is None.
+      fscache: Optional file system cache object. The default is None.
+    """
+    super(TSKFileEntry, self).__init__(proto, root=root, fscache=fscache)
     self._fs = None
-    self._fscache = fscache
-    self._stat = None
 
   def _OpenFileSystem(self, path, offset):
     """Open the filesystem object and store a copy of it for caching.
@@ -135,372 +405,118 @@ class TskFileEntry(PlasoFileEntry):
       raise IOError('No FS cache provided, unable to open a file.')
 
     fs_obj = self._fscache.Open(path, offset)
-
-    self.fh = None
     self._fs = fs_obj.fs
 
-  def Stat(self):
-    """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
-
-    ret = pstats.Stats()
-    if not self.fh:
-      return ret
-
-    try:
-      info = self.fh.fileobj.info
-      meta = info.meta
-    except IOError:
-      return ret
-
-    if not meta:
-      return ret
-
-    fs_type = ''
-    ret.mode = getattr(meta, 'mode', None)
-    ret.ino = getattr(meta, 'addr', None)
-    ret.nlink = getattr(meta, 'nlink', None)
-    ret.uid = getattr(meta, 'uid', None)
-    ret.gid = getattr(meta, 'gid', None)
-    ret.size = getattr(meta, 'size', None)
-    ret.atime = getattr(meta, 'atime', None)
-    ret.atime_nano = getattr(meta, 'atime_nano', None)
-    ret.crtime = getattr(meta, 'crtime', None)
-    ret.crtime_nano = getattr(meta, 'crtime_nano', None)
-    ret.mtime = getattr(meta, 'mtime', None)
-    ret.mtime_nano = getattr(meta, 'mtime_nano', None)
-    ret.ctime = getattr(meta, 'ctime', None)
-    ret.ctime_nano = getattr(meta, 'ctime_nano', None)
-    ret.dtime = getattr(meta, 'dtime', None)
-    ret.dtime_nano = getattr(meta, 'dtime_nano', None)
-    ret.bkup_time = getattr(meta, 'bktime', None)
-    ret.bkup_time_nano = getattr(meta, 'bktime_nano', None)
-    fs_type = str(self._fs.info.ftype)
-
-    check_allocated = getattr(self.fh.fileobj, 'IsAllocated', None)
-    if check_allocated:
-      ret.allocated = check_allocated()
-    else:
-      ret.allocated = True
-
-    if fs_type.startswith('TSK_FS_TYPE'):
-      ret.fs_type = fs_type[12:]
-    else:
-      ret.fs_type = fs_type
-
-    self._stat = ret
-    return ret
-
-  def Open(self, filehandle=None):
+  def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
 
     This method reads the content of the PathSpec protobuf and opens
-    the filehandle using the Sleuthkit (TSK).
+    the file entry object using the Sleuthkit (TSK).
 
     Args:
-      filehandle: A PlasoFile object that the file is contained within.
+      file_entry: Optional parent file entry object. The default is None.
+
+    Returns:
+      A file-like object.
     """
-    if filehandle:
-      path = filehandle
+    if file_entry:
+      path = file_entry
     else:
       path = self.pathspec.container_path
 
-    if hasattr(self.pathspec, 'image_offset'):
-      self._OpenFileSystem(path, self.pathspec.image_offset)
-    else:
-      self._OpenFileSystem(path, 0)
+    image_offset = getattr(self.pathspec, 'image_offset', 0)
+    self._OpenFileSystem(path, image_offset)
 
-    inode = 0
-    if hasattr(self.pathspec, 'image_inode'):
-      inode = self.pathspec.image_inode
+    inode = getattr(self.pathspec, 'image_inode', 0)
 
     if not hasattr(self.pathspec, 'file_path'):
       self.pathspec.file_path = 'NA_NotProvided'
 
-    self.fh = sleuthkit.Open(
+    self.file_object = pfile_io.TSKFileIO(
         self._fs, inode, self.pathspec.file_path)
 
     path_prepend = getattr(self.pathspec, 'path_prepend', '')
     self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
-    self.size = self.fh.size
+    self.size = self.file_object.size
     self.display_name = u'{}:{}{}'.format(
         self.pathspec.container_path, path_prepend,
         self.pathspec.file_path)
-    if filehandle:
+    if file_entry:
       self.display_name = u'{}:{}{}'.format(
-          filehandle.name, path_prepend, self.display_name)
+          file_entry.name, path_prepend, self.display_name)
 
-
-class OsFileEntry(PlasoFileEntry):
-  """Class to provide a file-like object to a file stored on a filesystem."""
-
-  TYPE = 'OS'
-
-  def __init__(self):
-    """Constructor."""
-    super(OsFileEntry, self).__init__()
-    self.fh = None
-    self.name = None
-    self._stat = None
-
-  def Open(self, filehandle=None):
-    """Open the file as it is described in the PathSpec protobuf."""
-    self.fh = open(self.pathspec.file_path, 'rb')
-    self.name = self.pathspec.file_path
-    path_prepend = getattr(self.pathspec, 'path_prepend', '')
-    if filehandle:
-      self.display_name = u'{}:{}{}'.format(
-          filehandle.name, path_prepend, self.name)
-    else:
-      self.display_name = u'{}{}'.format(path_prepend, self.name)
+    return self.file_object
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
     if getattr(self, '_stat', None):
       return self._stat
 
-    ret = pstats.Stats()
-    if not self.fh:
-      return ret
+    stats_object = pstats.Stats()
+    # TODO: change this logic as part of PyVFS.
+    if not self.file_object:
+      return stats_object
 
-    stat = os.stat(self.name)
-    ret.mode = stat.st_mode
-    ret.ino = stat.st_ino
-    ret.dev = stat.st_dev
-    ret.nlink = stat.st_nlink
-    ret.uid = stat.st_uid
-    ret.gid = stat.st_gid
-    ret.size = stat.st_size
-    if stat.st_atime > 0:
-      ret.atime = stat.st_atime
-    if stat.st_mtime > 0:
-      ret.mtime = stat.st_mtime
-    if stat.st_ctime > 0:
-      ret.ctime = stat.st_ctime
-    ret.fs_type = 'Unknown'
-    ret.allocated = True
-
-    self._stat = ret
-    return ret
-
-
-class ZipFileEntry(PlasoFileEntry):
-  """Provide a file-like object to a file stored inside a ZIP file."""
-  TYPE = 'ZIP'
-
-  def __init__(self):
-    """Constructor."""
-    super(ZipFileEntry, self).__init__()
-
-  def Stat(self):
-    """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
-
-    ret = pstats.Stats()
-
-    if not self.fh:
-      return ret
-
-    # TODO: Make this a proper stat element with as much information
-    # as can be extracted.
-    # Also confirm for sure that this is the correct timestamp and it is
-    # stored in UTC (or if it is in local timezone, adjust it)
-    ret.ctime = timelib.Timetuple2Timestamp(self.zipinfo.date_time)
-    ret.ino = self.inode
-    ret.size = self.zipinfo.file_size
-    ret.fs_type = 'ZIP Container'
-
-    self._stat = ret
-    return ret
-
-  def Open(self, filehandle=None):
-    """Open the file as it is described in the PathSpec protobuf."""
-    if filehandle:
-      try:
-        zf = zipfile.ZipFile(filehandle, 'r')
-      except zipfile.BadZipfile as e:
-        raise IOError(
-            u'Unable to open ZIP file, not a ZIP file?: {} [{}]'.format(
-                filehandle.name, e))
-      path_name = filehandle.name
-      self.inode = getattr(filehandle.Stat(), 'ino', 0)
-    else:
-      path_name = self.pathspec.container_path
-      zf = zipfile.ZipFile(path_name, 'r')
-      self.inode = os.stat(path_name).st_ino
-
-    path_prepend = getattr(self.pathspec, 'path_prepend', '')
-    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
-    if filehandle:
-      self.display_name = u'{}:{}{}'.format(
-          filehandle.display_name, path_prepend, self.pathspec.file_path)
-    else:
-      self.display_name = u'{}:{}{}'.format(
-          path_name, path_prepend, self.pathspec.file_path)
-    self.offset = 0
-    self.orig_fh = filehandle
-    self.zipinfo = zf.getinfo(self.pathspec.file_path)
-    self.size = self.zipinfo.file_size
     try:
-      self.fh = zf.open(self.pathspec.file_path, 'r')
-    except (RuntimeError, zipfile.BadZipfile) as e:
-      raise IOError(u'Unable to open ZIP file: {%s} -> %s' % (self.name, e))
+      info = self.file_object.fileobj.info
+      meta = info.meta
+    except IOError:
+      return stats_object
 
+    if not meta:
+      return stats_object
 
-class GzipFileEntry(PlasoFileEntry):
-  """Provide a file-like object to a file compressed using GZIP."""
-  TYPE = 'GZIP'
+    fs_type = ''
+    stats_object.mode = getattr(meta, 'mode', None)
+    stats_object.ino = getattr(meta, 'addr', None)
+    stats_object.nlink = getattr(meta, 'nlink', None)
+    stats_object.uid = getattr(meta, 'uid', None)
+    stats_object.gid = getattr(meta, 'gid', None)
+    stats_object.size = getattr(meta, 'size', None)
+    stats_object.atime = getattr(meta, 'atime', None)
+    stats_object.atime_nano = getattr(meta, 'atime_nano', None)
+    stats_object.crtime = getattr(meta, 'crtime', None)
+    stats_object.crtime_nano = getattr(meta, 'crtime_nano', None)
+    stats_object.mtime = getattr(meta, 'mtime', None)
+    stats_object.mtime_nano = getattr(meta, 'mtime_nano', None)
+    stats_object.ctime = getattr(meta, 'ctime', None)
+    stats_object.ctime_nano = getattr(meta, 'ctime_nano', None)
+    stats_object.dtime = getattr(meta, 'dtime', None)
+    stats_object.dtime_nano = getattr(meta, 'dtime_nano', None)
+    stats_object.bkup_time = getattr(meta, 'bktime', None)
+    stats_object.bkup_time_nano = getattr(meta, 'bktime_nano', None)
+    fs_type = str(self._fs.info.ftype)
 
-  def __init__(self):
-    """Constructor."""
-    super(GzipFileEntry, self).__init__()
-
-  def Stat(self):
-    """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
-
-    ret = pstats.Stats()
-    if not self.fh:
-      return ret
-
-    ret.size = self.size
-    ret.ino = self.inode
-    ret.fs_type = 'GZ File'
-
-    self._stat = ret
-    return ret
-
-  def Open(self, filehandle=None):
-    """Open the file as it is described in the PathSpec protobuf."""
-    if filehandle:
-      filehandle.seek(0)
-      self.fh = gzip.GzipFile(fileobj=filehandle, mode='rb')
-      self.inode = getattr(filehandle.Stat(), 'ino', 0)
+    check_allocated = getattr(self.file_object.fileobj, 'IsAllocated', None)
+    if check_allocated:
+      stats_object.allocated = check_allocated()
     else:
-      self.fh = gzip.GzipFile(filename=self.pathspec.file_path, mode='rb')
-      self.inode = os.stat(self.pathspec.file_path).st_ino
+      stats_object.allocated = True
 
-    path_prepend = getattr(self.pathspec, 'path_prepend', '')
-    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
-    if filehandle:
-      self.display_name = u'{}{}_uncompressed'.format(
-          path_prepend, filehandle.name)
+    if fs_type.startswith('TSK_FS_TYPE'):
+      stats_object.fs_type = fs_type[12:]
     else:
-      self.display_name = u'{}{}'.format(path_prepend, self.name)
+      stats_object.fs_type = fs_type
 
-    # To get the size properly calculated.
-    try:
-      _ = self.fh.read(4)
-    except IOError as e:
-      dn = self.display_name
-      raise IOError('Not able to open the GZIP file %s -> %s [%s]' % (
-          self.name, dn, e))
-    self.fh.rewind()
-    try:
-      self.size = self.fh.size
-    except AttributeError:
-      self.size = 0
+    self._stat = stats_object
+    return stats_object
 
 
-class Bz2FileEntry(PlasoFileEntry):
-  """Provide a file-like object to a file compressed using BZ2."""
-  TYPE = 'BZ2'
-
-  def __init__(self):
-    """Constructor."""
-    super(Bz2FileEntry, self).__init__()
-
-  def Stat(self):
-    """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
-
-    ret = pstats.Stats()
-    if not self.fh:
-      return ret
-
-    ret.ino = self.inode
-    ret.fs_type = 'BZ2 container'
-    self._stat = ret
-    return ret
-
-  def Open(self, filehandle=None):
-    """Open the file as it is described in the PathSpec protobuf."""
-    path_prepend = getattr(self.pathspec, 'path_prepend', '')
-    if filehandle:
-      self.inode = getattr(filehandle.Stat(), 'ino', 0)
-      try:
-        filehandle.seek(0)
-      except NotImplementedError:
-        pass
-      self.fh = bz2.BZ2File(filehandle, 'r')
-      self.display_name = u'{}:{}{}'.format(
-          filehandle.name, path_prepend, self.pathspec.file_path)
-    else:
-      self.display_name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
-      self.fh = bz2.BZ2File(self.pathspec.file_path, 'r')
-      self.inode = os.stat(self.pathspec.file_path).st_ino
-
-    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
-
-
-class TarFileEntry(PlasoFileEntry):
-  """Provide a file-like object to a file stored inside a TAR file."""
-  TYPE = 'TAR'
-
-  def __init__(self):
-    """Constructor."""
-    super(TarFileEntry, self).__init__()
-
-  def Stat(self):
-    """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
-
-    ret = pstats.Stats()
-    if not self.fh:
-      return ret
-
-    ret.ino = self.inode
-    ret.fs_type = 'Tar container'
-    self._stat = ret
-    return ret
-
-  def Open(self, filehandle=None):
-    """Open the file as it is described in the PathSpec protobuf."""
-    path_prepend = getattr(self.pathspec, 'path_prepend', '')
-    if filehandle:
-      ft = tarfile.open(fileobj=filehandle, mode='r')
-      self.display_name = u'{}:{}{}'.format(
-          filehandle.name, path_prepend, self.pathspec.file_path)
-      self.inode = getattr(filehandle.Stat(), 'ino', 0)
-    else:
-      self.display_name = u'{}:{}{}'.format(
-          self.pathspec.container_path, path_prepend,
-          self.pathspec.file_path)
-      ft = tarfile.open(self.pathspec.container_path, 'r')
-      self.inode = os.stat(self.pathspec.container_path).st_ino
-
-    self.fh = ft.extractfile(self.pathspec.file_path)
-    if not self.fh:
-      raise IOError(
-          u'[TAR] File %s empty or unable to open.' % self.pathspec.file_path)
-    self.buffer = ''
-    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
-    self.size = self.fh.size
-
-
-class VssFileEntry(TskFileEntry):
+class VssFileEntry(TSKFileEntry):
   """Class to open up files in Volume Shadow Copies."""
 
   TYPE = 'VSS'
 
-  def __init__(self):
-    """Constructor."""
-    super(VssFileEntry, self).__init__()
+  def __init__(self, proto, root=None, fscache=None):
+    """Initializes the file entry object.
+
+    Args:
+      proto: The transmission proto that describes the file.
+      root: Optional root transmission proto that describes the file.
+            The default is None.
+      fscache: Optional file system cache object. The default is None.
+    """
+    super(VssFileEntry, self).__init__(proto, root=root, fscache=fscache)
 
   def _OpenFileSystem(self, path, offset):
     """Open a filesystem object for a VSS file."""
@@ -516,9 +532,104 @@ class VssFileEntry(TskFileEntry):
 
     self._fs = self._fs_obj.fs
 
-  def Open(self, filehandle=None):
-    """Open a VSS file, which is a subset of a TSK file."""
-    super(VssFileEntry, self).Open(filehandle)
+  def Open(self, file_entry=None):
+    """Open the file as it is described in the PathSpec protobuf.
+
+    Args:
+      file_entry: Optional parent file entry object. The default is None.
+
+    Returns:
+      A file-like object.
+    """
+    file_object = super(VssFileEntry, self).Open(file_entry=file_entry)
 
     self.display_name = u'%s:vss_store_%d' % (
         self.display_name, self.pathspec.vss_store_number)
+
+    return file_object
+
+
+class ZipFileEntry(BaseFileEntry):
+  """Provide a file-like object to a file stored inside a ZIP file."""
+
+  TYPE = 'ZIP'
+
+  def __init__(self, proto, root=None, fscache=None):
+    """Initializes the file entry object.
+
+    Args:
+      proto: The transmission proto that describes the file.
+      root: Optional root transmission proto that describes the file.
+            The default is None.
+      fscache: Optional file system cache object. The default is None.
+    """
+    super(ZipFileEntry, self).__init__(proto, root=root, fscache=fscache)
+
+  def Open(self, file_entry=None):
+    """Open the file as it is described in the PathSpec protobuf.
+
+    Args:
+      file_entry: Optional parent file entry object. The default is None.
+
+    Returns:
+      A file-like object.
+    """
+    if file_entry:
+      try:
+        zip_file = zipfile.ZipFile(file_entry.file_object, 'r')
+      except zipfile.BadZipfile as e:
+        raise IOError(
+            u'Unable to open ZIP file, not a ZIP file?: {} [{}]'.format(
+                file_entry.name, e))
+      path_name = file_entry.name
+      self.inode = getattr(file_entry.Stat(), 'ino', 0)
+    else:
+      container_path = getattr(self.pathspec, 'container_path', '')
+      if not container_path:
+        raise IOError(
+            u'[ZIP] missing container path in path specification.')
+      path_name = container_path
+      zip_file = zipfile.ZipFile(path_name, 'r')
+      self.inode = os.stat(path_name).st_ino
+
+    path_prepend = getattr(self.pathspec, 'path_prepend', '')
+    self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
+    if file_entry:
+      self.display_name = u'{}:{}{}'.format(
+          file_entry.display_name, path_prepend, self.pathspec.file_path)
+    else:
+      self.display_name = u'{}:{}{}'.format(
+          path_name, path_prepend, self.pathspec.file_path)
+    self.zipinfo = zip_file.getinfo(self.pathspec.file_path)
+
+    try:
+      _ = zip_file.open(self.pathspec.file_path, 'r')
+    except (RuntimeError, zipfile.BadZipfile) as e:
+      raise IOError(u'Unable to open ZIP file: {%s} -> %s' % (self.name, e))
+
+    self.file_object = pfile_io.ZipFileIO(
+        zip_file, self.pathspec.file_path, self.zipinfo.file_size)
+    return self.file_object
+
+  def Stat(self):
+    """Return a Stats object that contains stats like information."""
+    if getattr(self, '_stat', None):
+      return self._stat
+
+    stats_object = pstats.Stats()
+
+    # TODO: change this logic as part of PyVFS.
+    if not self.file_object:
+      return stats_object
+
+    # TODO: Make this a proper stat element with as much information
+    # as can be extracted.
+    # Also confirm for sure that this is the correct timestamp and it is
+    # stored in UTC (or if it is in local timezone, adjust it)
+    stats_object.ctime = timelib.Timetuple2Timestamp(self.zipinfo.date_time)
+    stats_object.ino = self.inode
+    stats_object.size = self.zipinfo.file_size
+    stats_object.fs_type = 'ZIP Container'
+
+    self._stat = stats_object
+    return stats_object

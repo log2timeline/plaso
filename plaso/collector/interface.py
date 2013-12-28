@@ -170,8 +170,8 @@ class PreprocessCollector(object):
     """
 
   @abc.abstractmethod
-  def OpenFile(self, path):
-    """Return a PFile object from a real existing path."""
+  def OpenFileEntry(self, path):
+    """Opens a file entry object from the path."""
 
   @abc.abstractmethod
   def ReadingFromImage(self):

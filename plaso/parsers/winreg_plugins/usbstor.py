@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.#
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +21,7 @@ import logging
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import interface
+
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 

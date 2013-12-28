@@ -35,8 +35,8 @@ import sys
 import plaso
 from plaso import analysis
 from plaso import filters
-from plaso import formatters   # pylint: disable-msg=W0611
-from plaso import output   # pylint: disable-msg=W0611
+from plaso import formatters   # pylint: disable-msg=unused-import
+from plaso import output   # pylint: disable-msg=unused-import
 
 from plaso.lib import analysis_interface
 from plaso.lib import bufferlib

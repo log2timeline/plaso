@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a syslog parser in plaso."""
+
 import datetime
 import logging
 
@@ -128,7 +130,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     if not self._year_use:
       # TODO: Find a decent way to actually calculate the correct year
       # from the syslog file, instead of relying on stats object.
-      stat = self.fd.Stat()
+      stat = self.file_entry.Stat()
       self._year_use = self.GetYear(stat, zone)
 
       if not self._year_use:

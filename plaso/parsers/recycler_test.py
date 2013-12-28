@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,35 +16,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Windows recycler parser."""
+
 import os
 import unittest
 
-from plaso.formatters import recycler
+# pylint: disable-msg=unused-import
+from plaso.formatters import recycler as recycler_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import recycler
+from plaso.parsers import test_lib
 
 
-class WinRecyclerParserTest(unittest.TestCase):
-  """Tests for the Windows recycler parser."""
+class WinRecycleBinParserTest(unittest.TestCase):
+  """Tests for the Windows Recycle Bin parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.info2_parser = recycler.WinRecycleInfo2Parser(pre_obj)
-    self.i_parser = recycler.WinRecycleBinParser(pre_obj)
-
+    self._parser = recycler.WinRecycleBinParser(pre_obj)
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
     self.maxDiff = None
 
-  def testParseIFile(self):
-    """Read an $Ixxx file and run a few tests."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', '$II3DF3L.zip')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self.i_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEquals(len(events), 1)
 
@@ -66,13 +66,24 @@ class WinRecyclerParserTest(unittest.TestCase):
     self.assertEquals(msg, expected_string)
     self.assertEquals(msg_short, expected_short_string)
 
-  def testParseInfo2(self):
-    """Read an INFO2 file and run a few tests."""
+
+class WinRecyclerInfo2ParserTest(unittest.TestCase):
+  """Tests for the Windows Recycler INFO2 parser."""
+
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    pre_obj = preprocess.PlasoPreprocess()
+    self._parser = recycler.WinRecycleInfo2Parser(pre_obj)
+
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
+    self.maxDiff = None
+
+  def testParse(self):
+    """Reads an INFO2 file and run a few tests."""
     test_file = os.path.join('test_data', 'INFO2')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self.info2_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEquals(len(events), 4)
 

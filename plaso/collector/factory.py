@@ -93,9 +93,9 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
               directory, exception))
     return ret
 
-  def OpenFile(self, path):
-    """Open a file given a path and return a filehandle."""
-    return utils.OpenOSFile(os.path.join(self._mount_point, path))
+  def OpenFileEntry(self, path):
+    """Opens a file entry object from the path."""
+    return utils.OpenOSFileEntry(os.path.join(self._mount_point, path))
 
   def ReadingFromImage(self):
     """Indicates if the collector is reading from an image file."""
@@ -188,9 +188,9 @@ class TSKFilePreprocessCollector(interface.PreprocessCollector):
 
     return ret
 
-  def OpenFile(self, path):
-    """Open a file given a path and return a filehandle."""
-    return utils.OpenTskFile(
+  def OpenFileEntry(self, path):
+    """Opens a file entry object from the path."""
+    return utils.OpenTskFileEntry(
         path, self._image_path,
         int(self._image_offset / self._BYTES_PER_SECTOR), self._fscache)
 
@@ -219,9 +219,9 @@ class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
     self._fs_obj = self._fscache.Open(
         image_path, byte_offset, store_nr)
 
-  def OpenFile(self, path):
-    """Open a file given a path and return a filehandle."""
-    return utils.OpenVssFile(
+  def OpenFileEntry(self, path):
+    """Opens a file entry object from the path."""
+    return utils.OpenVssFileEntry(
         path, self._image_path, self._store_nr,
         int(self._image_offset / self._BYTES_PER_SECTOR), self._fscache)
 

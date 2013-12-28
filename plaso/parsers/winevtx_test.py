@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Windows XML EventLog (EVTX) parser."""
+
 import os
 import unittest
 
-from plaso.formatters import winevtx
+# pylint: disable-msg=unused-import
+from plaso.formatters import winevtx as winevtx_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
+from plaso.parsers import test_lib
 from plaso.parsers import winevtx
 
 
@@ -30,15 +34,13 @@ class WinEvtxParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = winevtx.WinEvtxParser(pre_obj, None)
+    self._parser = winevtx.WinEvtxParser(pre_obj, None)
 
-  def testWinEvtxParserFile(self):
-    """Reads and parses a test Windows EventLog (EVT) file."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'System.evtx')
 
-    events = []
-    with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # Windows Event Viewer Log (EVTX) information:
     #   Version				: 3.1

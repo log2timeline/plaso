@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Parser for utmpx files."""
 
 # TODO: Add support for other implementations than Mac OS X.
 
@@ -26,7 +28,9 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
+
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
+
 
 class UtmpxMacOsXBootTimeEvent(event.EventObject):
   """Convenience class for boot time from utmpx file."""
@@ -118,44 +122,15 @@ class UtmpxParser(parser.BaseParser):
     super(UtmpxParser, self).__init__(pre_obj, config)
     self._utmpx_record_size = self.MAC_UTMPX_STRUCT.sizeof()
 
-  def Parse(self, file_object):
-    """ Extract data from a UTMPX file.
-
-    Args:
-      file_object: A file-like object to read data from.
-
-    Returns:
-      An UtmpxMacOsXEvent for each logon/logoff event.
-    """
-
-    try:
-      header = self.MAC_UTMPX_HEADER.parse_stream(file_object)
-    except (IOError, construct.FieldError) as e:
-      raise errors.UnableToParseFile(
-          u'Not a Mac UTMPX Header, unable to parse. ',
-          u'Reason given: {}'.format(e))
-
-    if header.magic != self.MAC_MAGIC:
-      raise errors.UnableToParseFile(u'Not a valid Mac Os X UTMPX Header.')
-
-    yield UtmpxMacOsXBootTimeEvent(
-        timelib.Timestamp.FromPosixTime(header.timestamp))
-
-    event_object = self.ReadMacOsXEvent(file_object)
-    while event_object:
-      yield event_object
-      event_object = self.ReadMacOsXEvent(file_object)
-
-  def ReadMacOsXEvent(self, file_object):
-    """ Returns an UtmpxMacOsXEvent from a single UTMPX entry.
+  def _ReadEntry(self, file_object):
+    """Reads an UTMPX entry.
 
     Args:
       file_object: a file-like object that points to an UTMPX file.
 
     Returns:
-      An event object constructed from a single UTMPX record.
+      An event object constructed from the UTMPX entry.
     """
-
     data = file_object.read(self._utmpx_record_size)
     if len(data) != self._utmpx_record_size:
       return
@@ -163,8 +138,8 @@ class UtmpxParser(parser.BaseParser):
     try:
       entry = self.MAC_UTMPX_STRUCT.parse(data)
     except (IOError, construct.FieldError) as e:
-      logging.warning(u'Unable to parse Mac OS X UTMPX event, '
-                      u'reason given: {}'.format(e))
+      logging.warning(
+          u'Unable to parse Mac OS X UTMPX entry with error: {0:s}'.format(e))
       return
 
     user, _, _ = entry.user.partition('\x00')
@@ -182,3 +157,29 @@ class UtmpxParser(parser.BaseParser):
 
     return UtmpxMacOsXEvent(user, terminal, status, timestamp)
 
+  def Parse(self, file_entry):
+    """Extract data from a UTMPX file.
+
+    Args:
+      file_entry: a file entry object.
+
+    Returns:
+      An UtmpxMacOsXEvent for each logon/logoff event.
+    """
+    try:
+      file_object = file_entry.Open()
+      header = self.MAC_UTMPX_HEADER.parse_stream(file_object)
+    except (IOError, construct.FieldError) as e:
+      raise errors.UnableToParseFile(
+          u'Unable to parse Mac OS X UTMPX header with error: {0:s}'.format(e))
+
+    if header.magic != self.MAC_MAGIC:
+      raise errors.UnableToParseFile(u'Invalid Mac OS X UTMPX header.')
+
+    yield UtmpxMacOsXBootTimeEvent(
+        timelib.Timestamp.FromPosixTime(header.timestamp))
+
+    event_object = self._ReadEntry(file_object)
+    while event_object:
+      yield event_object
+      event_object = self._ReadEntry(file_object)

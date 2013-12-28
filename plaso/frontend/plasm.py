@@ -34,7 +34,7 @@ from plaso.lib import output as output_lib
 from plaso.lib import preprocess
 from plaso.lib import storage
 
-# pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
 from plaso.output import pstorage
 
 

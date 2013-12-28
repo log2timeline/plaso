@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,9 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" The Apple System Log Parser."""
-
-# TODO: get the real name for the user of the group having the uid or gid.
+"""The Apple System Log Parser."""
 
 import construct
 import logging
@@ -28,7 +27,10 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
+
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
+
+# TODO: get the real name for the user of the group having the uid or gid.
 
 
 class AslEvent(event.EventObject):
@@ -149,7 +151,7 @@ class AslParser(parser.BaseParser):
   # 8-byte fields, they can be:
   # - String: [Nibble = 1000 (8)][Nibble = Length][7 Bytes = String].
   # - Integer: integer that has the byte position in the file that points
-  #            to a ASL_RECORD_DYN_VALUE struct. If the value of the integer
+  #            to an ASL_RECORD_DYN_VALUE struct. If the value of the integer
   #            is equal to 0, it means that it has not data (skip).
 
   # If the field is a String, we use this structure to decode each
@@ -188,34 +190,37 @@ class AslParser(parser.BaseParser):
     super(AslParser, self).__init__(pre_obj, config)
     self._asl_record_struct_size = self.ASL_RECORD_STRUCT.sizeof()
 
-  def Parse(self, file_object):
-    """Extract entries from a ASL file.
+  def Parse(self, file_entry):
+    """Extract entries from an ASL file.
 
     Args:
-      file_object: A file-like object to read data from.
+      file_entry: A file entry object.
 
     Yields:
       An ASL event for each entry in the file.
     """
+    file_object = file_entry.Open()
     try:
       header = self.ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as e:
       raise errors.UnableToParseFile(
-          u'Not a ASL Header, unable to parse.',
+          u'Not an ASL Header, unable to parse.',
           u'Reason given: {}'.format(e))
 
     if header.magic != self.ASL_MAGIC:
-      raise errors.UnableToParseFile(u'Not a ASL Header, unable to parse.')
+      raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
 
     # Get the first and the last entry.
     offset = header.offset
     old_offset = header.offset
     last_offset_header = header.last_offset
+
     # If the ASL file has entries.
     if offset:
       event_object, offset = self.ReadAslEvent(file_object, offset)
       while event_object:
         yield event_object
+
         # TODO: an anomaly object must be yielded once that is implemented.
         # Anti-Forensics check, the last read element must be the same as
         # the headers said.
@@ -224,6 +229,7 @@ class AslParser(parser.BaseParser):
         old_offset = offset
         event_object, offset = self.ReadAslEvent(file_object, offset)
 
+    file_object.close()
 
   def ReadAslEvent(self, file_object, offset):
     """Returns an AslEvent from a single ASL entry.
@@ -280,7 +286,7 @@ class AslParser(parser.BaseParser):
     #           Example: [8468 6964 6400 0000]
     #                    [8] String, [4] length, value: [68 69 64 64] = hidd.
     # - Pointer: static position in the file to a special struct
-    #            implemented as a ASL_RECORD_DYN_VALUE.
+    #            implemented as an ASL_RECORD_DYN_VALUE.
     #            Example: [0000 0000 0000 0077]
     #            It points to the file position 0x077 that has a
     #            ASL_RECORD_DYN_VALUE structure.

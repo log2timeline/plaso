@@ -47,26 +47,27 @@ class OSXUsers(preprocess.PreprocessPlugin):
   def OpenPlistFile(self, filename):
     """Open a Plist file given a path and returns a plist top level object."""
     try:
-      filehandle = self._collector.OpenFile(filename)
+      file_entry = self._collector.OpenFileEntry(filename)
+      file_object = file_entry.Open()
     except IOError as e:
       raise errors.PreProcessFail(
           u'Unable to open file:{} [{}]'.format(
               filename, utils.GetUnicodeString(e)))
 
     try:
-      plist_file = binplist.BinaryPlist(filehandle)
+      plist_file = binplist.BinaryPlist(file_object)
       top_level_object = plist_file.Parse()
     except binplist.FormatError as e:
       raise errors.PreProcessFail(
           u'File is not a plist:{}'.format(utils.GetUnicodeString(e)))
     except OverflowError as e:
       raise errors.PreProcessFail(
-          u'Error processing:{} Error:{}'.format(filehandle.display_name, e))
+          u'Error processing:{} Error:{}'.format(file_entry.display_name, e))
 
     if not plist_file:
       raise errors.PreProcessFail(
           u'File is not a plist:{}'.format(utils.GetUnicodeString(
-              filehandle.display_name)))
+              file_entry.display_name)))
 
     return top_level_object
 

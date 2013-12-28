@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -20,12 +21,12 @@ import os
 import pytz
 import unittest
 
-# pylint: disable=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import mac_wifi as mac_wifi_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import mac_wifi as mac_wifi_parser
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
 
 
 class MacWifiUnitTest(unittest.TestCase):
@@ -33,17 +34,16 @@ class MacWifiUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'wifi.log')
-    self.filehandle = utils.OpenOSFile(test_file)
-
-  def testParseFile(self):
-    """Test parsing of a Mac Wifi log file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.year = 2013
     pre_obj.zone = pytz.timezone('UTC')
+    self._parser = mac_wifi_parser.MacWifiLogParser(pre_obj, None)
 
-    mac_wifi = mac_wifi_parser.MacWifiLogParser(pre_obj, None)
-    events = list(mac_wifi.Parse(self.filehandle))
+  def testParse(self):
+    """Tests the Parse function."""
+    test_file = os.path.join('test_data', 'wifi.log')
+
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEqual(len(events), 9)
 

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -20,9 +21,11 @@ This class contains a base framework class for parsing fileobjects, and
 also some implementations that extend it to provide a more comprehensive
 parser.
 """
+
 import abc
 import csv
 import logging
+import os
 
 from plaso.lib import errors
 from plaso.lib import event
@@ -70,6 +73,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
                   zone of the computer that stored it or in a fixed
                   timezone, like UTC.
     """
+    # TODO: remove the multiple inheritance.
     lexer.SelfFeederMixIn.__init__(self)
     parser.BaseParser.__init__(self, pre_obj, config)
     self.line_ready = False
@@ -147,16 +151,28 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     """
     self.attributes['iyear'] = int(match.group(1))
 
-  def Parse(self, filehandle):
-    """Try to parse each line in the file."""
+  def Parse(self, file_entry):
+    """Extract data from a text file.
+
+    Args:
+      file_entry: A file entry object.
+
+    Yields:
+      An event object (EventObject) that contains the parsed
+      attributes.
+    """
+    file_object = file_entry.Open()
+
+    # TODO: this is necessary since we inherit from lexer.SelfFeederMixIn.
+    self.file_object = file_object
+
     # Start by checking, is this a text file or not? Before we proceed
     # any further.
-    filehandle.seek(0)
-    if not utils.IsText(filehandle.read(40)):
+    file_object.seek(0, os.SEEK_SET)
+    if not utils.IsText(file_object.read(40)):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
-    self.fd = filehandle
-    filehandle.seek(0)
+    file_object.seek(0, os.SEEK_SET)
     error_count = 0
     file_verified = False
     # We need to clear out few values in the Lexer before continuing.
@@ -169,12 +185,12 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
 
       if self.state == 'INITIAL':
         self.entry_offset = getattr(self, 'next_entry_offset', 0)
-        self.next_entry_offset = self.fd.tell() - len(self.buffer)
+        self.next_entry_offset = file_object.tell() - len(self.buffer)
 
       if not file_verified and self.error >= self.MAX_LINES * 2:
         logging.debug('Lexer error count: %d and current state %s', self.error,
                       self.state)
-        name = '%s (%s)' % (self.fd.name, self.fd.display_name)
+        name = '%s (%s)' % (file_entry.name, file_entry.display_name)
         raise errors.UnableToParseFile(u'File %s not a %s.' % (
             name, self.parser_name))
 
@@ -186,15 +202,15 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
           error_count += 1
           if file_verified:
             logging.debug('[%s VERIFIED] Error count: %d and ERROR: %d',
-                          filehandle.name, error_count, self.error)
+                          file_entry.name, error_count, self.error)
             logging.warning(('[%s] Unable to parse timestamp, skipping entry. '
                              'Msg: [%s]'), self.parser_name, e)
           else:
             logging.debug('[%s EVALUATING] Error count: %d and ERROR: %d',
-                          filehandle.name, error_count, self.error)
+                          file_entry.name, error_count, self.error)
             if error_count >= self.MAX_LINES:
               raise errors.UnableToParseFile(u'File %s not a %s.' % (
-                  self.fd.name, self.parser_name))
+                  file_entry.name, self.parser_name))
 
         finally:
           self.ClearValues()
@@ -203,7 +219,9 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
 
     if not file_verified:
       raise errors.UnableToParseFile(
-          u'File %s not a %s.' % (filehandle.name, self.parser_name))
+          u'File %s not a %s.' % (file_entry.name, self.parser_name))
+
+    file_object.close()
 
   def ParseString(self, match, **_):
     """Return a string with combined values from the lexer.
@@ -344,16 +362,26 @@ class TextCSVParser(parser.BaseParser):
     event_object.row_dict = row
     return event_object
 
-  def Parse(self, filehandle):
-    """A generator that returns extracted EventObjects from the log file."""
+  def Parse(self, file_entry):
+    """Extract data from a CVS file.
+
+    Args:
+      file_entry: A file entry object.
+
+    Yields:
+      An event object (EventObject) that contains the parsed
+      attributes.
+    """
+    file_object = file_entry.Open()
+
     self.entry_offset = 0
     # If we specifically define a number of lines we should skip do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
-      line = filehandle.readline()
+      line = file_object.readline()
       self.entry_offset += len(line)
 
     reader = csv.DictReader(
-        filehandle, fieldnames=self.COLUMNS, restkey=self.MAGIC_TEST_STRING,
+        file_object, fieldnames=self.COLUMNS, restkey=self.MAGIC_TEST_STRING,
         restval=self.MAGIC_TEST_STRING, delimiter=self.VALUE_SEPARATOR,
         quotechar=self.QUOTE_CHAR)
 
@@ -361,22 +389,22 @@ class TextCSVParser(parser.BaseParser):
       row = reader.next()
     except csv.Error:
       raise errors.UnableToParseFile(
-          u'File %s not a CSV file, unable to parse.' % filehandle.name)
+          u'File %s not a CSV file, unable to parse.' % file_entry.name)
 
     if len(row) != len(self.COLUMNS):
       raise errors.UnableToParseFile(
           u'File %s not a %s. (wrong nr. of columns %d vs. %d)' % (
-              filehandle.name, self.parser_name, len(row), len(self.COLUMNS)))
+              file_entry.name, self.parser_name, len(row), len(self.COLUMNS)))
 
     for key, value in row.items():
       if key == self.MAGIC_TEST_STRING or value == self.MAGIC_TEST_STRING:
         raise errors.UnableToParseFile(
             u'File %s not a %s (wrong nr. of columns, should be %d' % (
-                filehandle.name, self.parser_name, len(row)))
+                file_entry.name, self.parser_name, len(row)))
 
     if not self.VerifyRow(row):
       raise errors.UnableToParseFile('File %s not a %s. (wrong magic)' % (
-          filehandle.name, self.parser_name))
+          file_entry.name, self.parser_name))
 
     for evt in self._ParseRow(row):
       if evt:
@@ -386,6 +414,8 @@ class TextCSVParser(parser.BaseParser):
       for evt in self._ParseRow(row):
         if evt:
           yield evt
+
+    file_object.close()
 
   def _ParseRow(self, row):
     """Parse a line and extract an EventObject from it if possible."""
@@ -565,48 +595,11 @@ class PyparsingSingleLineTextParser(parser.BaseParser):
     self.encoding = self.ENCODING
     self._current_offset = 0
 
-  @abc.abstractmethod
-  def VerifyStructure(self, line):
-    """Verify the structure of the file and return boolean based on that check.
-
-    This function should read enough text from the text file to confirm
-    that the file is the correct one for this particular parser.
-
-    Args:
-      line: A single line from the text file.
-
-    Returns:
-      True if this is the correct parser, False otherwise.
-    """
-    if not line:
-      return False
-
-    return False
-
-  @abc.abstractmethod
-  def ParseRecord(self, key, structure):
-    """Parse a single extracted pyparsing structure.
-
-    This function takes as an input a parsed pyparsing structure
-    and produces an EventObject if possible from that structure.
-
-    Args:
-      key: An identification string indicating the name of the parsed
-      structure.
-      structure: A pyparsing.ParseResults object from a line in the
-      log file.
-
-    Returns:
-      An EventObject if one can be extracted from the structure, otherwise
-      None.
-    """
-    pass
-
-  def _ReadLine(self, filehandle, max_len=0, quiet=False, depth=0):
+  def _ReadLine(self, file_object, max_len=0, quiet=False, depth=0):
     """Read a single line from a text file and return it back.
 
     Args:
-      filehandle: The file-like object to read the line from.
+      file_object: The file-like object.
       max_len: If defined determines the maximum number of bytes a single line
       can take.
       quiet: If True then a decode warning is not displayed.
@@ -618,9 +611,9 @@ class PyparsingSingleLineTextParser(parser.BaseParser):
       characters (if max_len defined and line longer than the defined size).
     """
     if max_len:
-      line = filehandle.readline(max_len)
+      line = file_object.readline(max_len)
     else:
-      line = filehandle.readline()
+      line = file_object.readline()
 
     if not line:
       return
@@ -631,7 +624,7 @@ class PyparsingSingleLineTextParser(parser.BaseParser):
       if depth == 40:
         return ''
 
-      return self._ReadLine(filehandle, max_len, depth=depth + 1)
+      return self._ReadLine(file_object, max_len, depth=depth + 1)
 
     if not self.encoding:
       return line.strip()
@@ -645,15 +638,29 @@ class PyparsingSingleLineTextParser(parser.BaseParser):
             repr(line[1:30]), self.encoding))
       return line.strip()
 
-  def Parse(self, filehandle):
-    """Parse a text file using a pyparsing definition."""
+  def Parse(self, file_entry):
+    """Extract data from a text file using a pyparsing definition.
+
+    Args:
+      file_entry: A file entry object.
+
+    Yields:
+      An event object (EventObject) that contains the parsed
+      attributes.
+    """
+    # TODO: find a more elegant way for this; currently the mac_wifi and
+    # syslog parser seem to rely on this member.
+    self.file_entry = file_entry
+
+    file_object = file_entry.Open()
+
     if not self.LINE_STRUCTURES:
       raise errors.UnableToParseFile(
           u'Line structure undeclared, unable to proceed.')
 
-    filehandle.seek(0)
+    file_object.seek(0, os.SEEK_SET)
 
-    line = self._ReadLine(filehandle, self.MAX_LINE_LENGTH, True)
+    line = self._ReadLine(file_object, self.MAX_LINE_LENGTH, True)
     if not line:
       raise errors.UnableToParseFile(u'Not a text file.')
 
@@ -694,5 +701,39 @@ class PyparsingSingleLineTextParser(parser.BaseParser):
       else:
         logging.warning(u'Unable to parse log line: {}'.format(line))
 
-      self._current_offset = filehandle.tell()
-      line = self._ReadLine(filehandle)
+      self._current_offset = file_object.tell()
+      line = self._ReadLine(file_object)
+
+    file_object.close()
+
+  @abc.abstractmethod
+  def ParseRecord(self, key, structure):
+    """Parse a single extracted pyparsing structure.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
+
+    Args:
+      key: An identification string indicating the name of the parsed
+      structure.
+      structure: A pyparsing.ParseResults object from a line in the
+      log file.
+
+    Returns:
+      An EventObject if one can be extracted from the structure, otherwise
+      None.
+    """
+
+  @abc.abstractmethod
+  def VerifyStructure(self, line):
+    """Verify the structure of the file and return boolean based on that check.
+
+    This function should read enough text from the text file to confirm
+    that the file is the correct one for this particular parser.
+
+    Args:
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """

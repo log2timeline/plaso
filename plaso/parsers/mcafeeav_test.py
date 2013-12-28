@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,15 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for the McAfee AV Log parsers in plaso."""
+
 import os
 import unittest
 
-# pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import mcafeeav as mcafeeav_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import mcafeeav
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
 
 import pytz
 
@@ -33,18 +35,15 @@ class McafeeAccessProtectionUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj.zone = pytz.UTC
+    self._parser = mcafeeav.McafeeAccessProtectionParser(pre_obj)
+
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'AccessProtectionLog.txt')
-    self.input_file = utils.OpenOSFile(test_file)
 
-    self.pre_obj = preprocess.PlasoPreprocess()
-    self.pre_obj.zone = pytz.UTC
-
-  def testParsing(self):
-    """Test parsing of a McAfee AV Access Protection Log file."""
-    parser = mcafeeav.McafeeAccessProtectionParser(self.pre_obj)
-
-    self.input_file.seek(0)
-    events = list(parser.Parse(self.input_file))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # The file contains 14 lines.
     self.assertEquals(len(events), 14)

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,7 +15,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This file contains SkyDrive log file parser in plaso."""
 
 import logging
@@ -24,6 +24,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
+
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 

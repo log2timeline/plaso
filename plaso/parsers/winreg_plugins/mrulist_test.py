@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -18,7 +19,8 @@
 
 import unittest
 
-from plaso.formatters import winreg   # pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
+from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import mrulist
 from plaso.winreg import test_lib

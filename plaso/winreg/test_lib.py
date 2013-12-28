@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Implementation of Windows Registry related objects for testing."""
+"""Windows Registry related functions and classes for testing."""
 
 # TODO: replace struct by construct to improve readability.
 import struct
@@ -88,6 +89,20 @@ class TestRegKey(interface.WinRegKey):
   def number_of_subkeys(self):
     """The number of subkeys within the key."""
     return len(self._subkeys)
+
+  def GetSubkey(self, name):
+    """Retrive a subkey by name.
+
+    Args:
+      name: The relative path of the current key to the desired one.
+
+    Returns:
+      The subkey with the relative path of name or None if not found.
+    """
+    for subkey in self._subkeys:
+      if subkey.name == name:
+        return subkey
+    return
 
   def GetSubkeys(self):
     """Return a list of all subkeys."""

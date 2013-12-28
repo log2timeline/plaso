@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,15 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Zeitgeist parser."""
+
 import os
 import unittest
 
-# pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import zeitgeist as zeitgeist_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import zeitgeist
+from plaso.pvfs import utils
 
 import pytz
 
@@ -42,11 +45,11 @@ class ZeitgeistPluginTest(unittest.TestCase):
     """Read a zeitgeist activity.sqlite file and run a few tests."""
     test_file = os.path.join('test_data', 'activity.sqlite')
 
-    with open(test_file, 'rb') as file_object:
-      with interface.SQLiteDatabase(file_object) as database:
-        generator = self.test_parser.Process(database)
-        self.assertTrue(generator)
-        events = list(generator)
+    file_entry = utils.OpenOSFileEntry(test_file)
+    with interface.SQLiteDatabase(file_entry) as database:
+      generator = self.test_parser.Process(database)
+      self.assertTrue(generator)
+      events = list(generator)
 
     # The sqlite file contains 44 events.
     self.assertEquals(len(events), 44)

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,15 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains the unit tests for the Symantec AV Log parser."""
+
 import os
 import unittest
 
-# pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import symantec as symantec_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import symantec
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
 
 import pytz
 
@@ -33,20 +35,17 @@ class SymantecAccessProtectionUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'Symantec.Log')
-    self.input_file = utils.OpenOSFile(test_file)
-
-    self.pre_obj = preprocess.PlasoPreprocess()
-    self.pre_obj.zone = pytz.UTC
+    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj.zone = pytz.UTC
+    self._parser = symantec.SymantecParser(pre_obj, None)
 
     self.maxDiff = None
 
-  def testParsing(self):
-    """Test parsing of a Symantec AV Log file."""
-    parser = symantec.SymantecParser(self.pre_obj, None)
+  def testParse(self):
+    """Tests the Parse function."""
+    test_file = os.path.join('test_data', 'Symantec.Log')
 
-    self.input_file.seek(0)
-    events = list(parser.Parse(self.input_file))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # The file contains 8 lines.
     self.assertEquals(len(events), 8)

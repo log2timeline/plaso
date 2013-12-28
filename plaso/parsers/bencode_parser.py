@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -23,11 +24,13 @@ processed, typically seen for BitTorrent data.
 import bencode
 import logging
 import re
+import os
 
 from plaso.lib import errors
 from plaso.lib import parser
 from plaso.lib import plugin
-from plaso.parsers import bencode_plugins  # pylint: disable-msg=unused-import
+# pylint: disable-msg=unused-import
+from plaso.parsers import bencode_plugins
 from plaso.parsers.bencode_plugins import interface
 
 
@@ -72,13 +75,13 @@ class BencodeParser(parser.BaseParser):
     """Returns deserialized content of a bencoded file as a dictionary object.
 
     Args:
-      file_object: This is a file-like object pointing to the bencoded file.
+      file_object: A file-like object.
 
     Returns:
       Dictionary object representing the contents of the bencoded file.
     """
     header = file_object.read(2)
-    file_object.seek(0)
+    file_object.seek(0, os.SEEK_SET)
 
     if not self.BENCODE_RE.match(header):
       raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
@@ -87,34 +90,40 @@ class BencodeParser(parser.BaseParser):
       top_level_object = bencode.bdecode(file_object.read())
     except (IOError, bencode.BTFailure) as e:
       raise errors.UnableToParseFile(
-          u'Not a valid Bencoded file, unable to parse. '
-          u'Reason given: {}'.format(e))
+          u'Unable to parse invalid Bencoded file with error: {0:s}'.format(e))
 
     if not top_level_object:
       raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
 
     return top_level_object
 
-
-  def Parse(self, filehandle):
+  def Parse(self, file_entry):
     """Parse and extract values from a bencoded file.
 
     Args:
-      filehandle: This is a file like object.
+      file_entry: A file entry object.
 
     Yields:
-    An event.BencodeEvent containing information extracted from a bencoded
-    file.
+      An event.BencodeEvent containing information extracted from a bencoded
+      file.
     """
-    top_level_object = self.GetTopLevel(filehandle)
+    file_object = file_entry.Open()
+    top_level_object = self.GetTopLevel(file_object)
+
     if not top_level_object:
+      file_object.close()
       raise errors.UnableToParseFile(
-          u'[BENCODE] couldn\'t parse: %s.  Skipping.' % filehandle.name)
+          u'[{0:s}] unable to parse: {1:s}. Skipping.'.format(
+              self.NAME, file_entry.name))
 
     for bencode_plugin in self._plugins.itervalues():
       try:
-        for evt in bencode_plugin.Process(top_level_object):
-          evt.plugin = bencode_plugin.plugin_name
-          yield evt
+        for event_object in bencode_plugin.Process(top_level_object):
+          event_object.plugin = bencode_plugin.plugin_name
+          yield event_object
+
       except errors.WrongBencodePlugin as e:
-        logging.debug(u'[BENCODE] Wrong Plugin:{}'.format(e[0]))
+        # TODO: Change the raise so that e[0] is replaced by e.g. e.
+        logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(self.NAME, e[0]))
+
+    file_object.close()

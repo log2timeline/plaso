@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -60,7 +61,7 @@ class BaseParser(object):
     return self.NAME
 
   @abc.abstractmethod
-  def Parse(self, filehandle):
+  def Parse(self, file_entry):
     """Verifies and parses the log file and returns EventObjects.
 
     This is the main function of the class, the one that actually
@@ -76,8 +77,7 @@ class BaseParser(object):
     the reason why the class does not parse it.
 
     Args:
-      filehandle: A filehandle/file-like-object that is seekable to the file
-      needed to be checked.
+      file_entry: A file entry object.
 
     Raises:
       NotImplementedError when not implemented.
@@ -95,23 +95,23 @@ class BundleParser(BaseParser):
   PATTERNS = []
 
   @abc.abstractmethod
-  def ParseBundle(self, filehandles):
+  def ParseBundle(self, file_entries):
     """Return a generator of EventObjects from a list of files.
 
     Args:
-      filehandles: A list of open file like objects.
+      file_entries: A list of file entry objects.
 
     Yields:
       EventObject for each extracted event.
     """
     pass
 
-  def Parse(self, filebundle):
+  def Parse(self, path_spec_bundle):
     """Return a generator for EventObjects extracted from a path bundle."""
-    if not isinstance(filebundle, event.EventPathBundle):
+    if not isinstance(path_spec_bundle, event.EventPathBundle):
       raise errors.UnableToParseFile(u'Not a file bundle.')
 
-    bundle_pattern = getattr(filebundle, 'pattern', None)
+    bundle_pattern = getattr(path_spec_bundle, 'pattern', None)
 
     if not bundle_pattern:
       raise errors.UnableToParseFile(u'No bundle pattern defined.')
@@ -119,6 +119,6 @@ class BundleParser(BaseParser):
     if u'|'.join(self.PATTERNS) != bundle_pattern:
       raise errors.UnableToParseFile(u'No bundle pattern defined.')
 
-    filehandles = list(filebundle)
+    file_entries = list(path_spec_bundle)
 
-    return self.ParseBundle(filehandles)
+    return self.ParseBundle(file_entries)
