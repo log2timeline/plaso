@@ -82,10 +82,16 @@ class TestCommand(Command):
     test_results = run_tests.RunTests()
 
 
+plaso_description = (
+    'plaso (or Plaso Langar Að Safna Öllu) is a tool designed to extract '
+    'timestamps from various files found on a typical computer system(s) '
+    'and aggregate them.')
+
 setup(
     name='plaso',
     version=plaso.GetVersion(),
-    description='The plaso backend as well as few front-ends.',
+    description=plaso_description,
+    long_description=plaso_description,
     license='Apache License, Version 2.0',
     url='https://sites.google.com/a/kiddaland.net/plaso',
     maintainer_email='log2timeline-dev@googlegroups.com',
