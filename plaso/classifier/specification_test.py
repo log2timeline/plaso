@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,30 +15,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains tests for the format specification classes."""
+"""Tests for the format specification classes."""
+
 import unittest
 
 from plaso.classifier import specification
 
 
 class SpecificationStoreTest(unittest.TestCase):
-  """Class to test SpecificationStore."""
+  """Class to test the specification store."""
 
   def testAddSpecification(self):
-    """Function to test the AddSpecification function."""
+    """Function to test the add specification function."""
     store = specification.SpecificationStore()
 
-    format_regf = specification.Specification("REGF")
-    format_regf.AddSignature("regf", offset=0)
+    format_regf = specification.Specification('REGF')
+    format_regf.AddNewSignature('regf', offset=0)
 
-    format_esedb = specification.Specification("ESEDB")
-    format_esedb.AddSignature("\xef\xcd\xab\x89", offset=4)
+    format_esedb = specification.Specification('ESEDB')
+    format_esedb.AddNewSignature('\xef\xcd\xab\x89', offset=4)
 
     store.AddSpecification(format_regf)
     store.AddSpecification(format_esedb)
 
-    self.assertRaises(ValueError, store.AddSpecification, format_regf)
+    with self.assertRaises(KeyError):
+      store.AddSpecification(format_regf)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   unittest.main()
