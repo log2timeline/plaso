@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,14 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a unit test for the mactime parser in plaso."""
+
 import os
 import unittest
 
-from plaso.formatters import mactime
+# pylint: disable-msg=unused-import
+from plaso.formatters import mactime as mactime_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import mactime
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
 
 import pytz
 
@@ -32,17 +35,15 @@ class MactimeUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    test_file = os.path.join('test_data', 'mactime.body')
-    self.input_file = utils.OpenOSFile(test_file)
-
-  def testParsing(self):
-    """Test parsing of a mactime file."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
-    parser = mactime.MactimeParser(pre_obj, None)
+    self._parser = mactime.MactimeParser(pre_obj, None)
 
-    self.input_file.seek(0)
-    events = list(parser.Parse(self.input_file))
+  def testParse(self):
+    """Tests the Parse function."""
+    test_file = os.path.join('test_data', 'mactime.body')
+
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # The file contains 10 lines x 4 timestamps per line makes 40 events.
     self.assertEquals(len(events), 40)

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for the Stat object of a PFile."""
+
 from plaso.lib import event
 from plaso.lib import parser
 from plaso.lib import timelib
 
 
-def GetEventContainerFromStat(stat, is_allocated=True):
+# TODO: move this function to lib or equiv since it is used from the collector
+# as well.
+
+
+def GetEventContainerFromStat(stat_object):
   """Return an EventContainer object from a file stat object.
 
   This method takes a stat object and creates an EventContainer
@@ -32,34 +38,40 @@ def GetEventContainerFromStat(stat, is_allocated=True):
   stored as a Posix timestamps.
 
   Args:
-    stat: A stat object, preferably a pfile.Stat object.
-    is_allocated: A boolean variable defining if the file is
-    currently allocated or not.
+    stat_object: A stat object.
 
   Returns:
     An EventContainer that contains an EventObject for each extracted
-    timestamp contained in the stat object.
+    timestamp contained in the stat object or None if the stat object
+    does not contain time values.
   """
-  times = []
-  for item, _ in stat:
+  # TODO: this is highly fragile improve this solution.
+  time_values = []
+  for item, _ in stat_object:
     if item[-4:] == 'time':
-      times.append(item)
+      time_values.append(item)
+
+  if not time_values:
+    return
+
+  is_allocated = getattr(stat_object, 'allocated', True)
 
   event_container = PfileStatEventContainer(
-      is_allocated, stat.attributes.get('size', None))
+      is_allocated, stat_object.attributes.get('size', None))
 
-  for time in times:
-    evt = event.EventObject()
-    evt.timestamp = timelib.Timestamp.FromPosixTime(getattr(stat, time, 0))
-    evt.timestamp += getattr(stat, '%s_nano' % time, 0)
+  for time_value in time_values:
+    timestamp = getattr(stat_object, time_value, 0)
+    event_object = event.EventObject()
+    event_object.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
+    event_object.timestamp += getattr(stat_object, '%s_nano' % time_value, 0)
 
-    if not evt.timestamp:
+    if not event_object.timestamp:
       continue
 
-    evt.timestamp_desc = time
-    evt.fs_type = getattr(stat, 'fs_type', 'N/A')
+    event_object.timestamp_desc = time_value
+    event_object.fs_type = getattr(stat_object, 'fs_type', 'N/A')
 
-    event_container.Append(evt)
+    event_container.Append(event_object)
 
   return event_container
 
@@ -88,12 +100,19 @@ class PfileStatParser(parser.BaseParser):
 
   NAME = 'filestat'
 
-  def Parse(self, filehandle):
-    """Extract the stat object and parse it."""
-    stat = filehandle.Stat()
+  def Parse(self, file_entry):
+    """Extract data from a file system stat entry.
 
-    if not stat:
-      return
+    Args:
+      file_entry: A file entry object.
 
-    allocated = getattr(stat, 'allocated', True)
-    return GetEventContainerFromStat(stat, allocated)
+    Yields:
+      An event container (EventContainer) that contains the parsed
+      attributes.
+    """
+    stat_object = file_entry.Stat()
+
+    if stat_object:
+      event_container = GetEventContainerFromStat(stat_object)
+      if event_container:
+        yield event_container

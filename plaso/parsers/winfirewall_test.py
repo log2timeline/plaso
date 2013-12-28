@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,13 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Windows firewall log parser."""
+
 import os
 import unittest
 
-# pylint: disable-msg=W0611
-from plaso.formatters import winfirewall as winformatter
+# pylint: disable-msg=unused-import
+from plaso.formatters import winfirewall as winfirewall_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
+from plaso.parsers import test_lib
 from plaso.parsers import winfirewall
 
 import pytz
@@ -40,13 +43,11 @@ class WinFirewallParserTest(unittest.TestCase):
     # conventions.
     self.maxDiff = None
 
-  def testParseFile(self):
-    """Read a fireall log file and run a few tests."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'firewall.log')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self._parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEquals(len(events), 15)
 

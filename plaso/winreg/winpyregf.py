@@ -227,14 +227,14 @@ class WinPyregfFile(interface.WinRegFile):
     super(WinPyregfFile, self).__init__()
     self._pyregf_file = pyregf.file()
     self.name = ''
-    self.file_object = None
     self._base_key = None
 
-  def Open(self, file_object, codepage='cp1252'):
+  def Open(self, file_entry, codepage='cp1252'):
     """Opens the Registry file.
 
     Args:
-      file_object: The file-like object of the Registry file.
+      file_entry: The file entry object.
+      name: The name of the file.
       codepage: Optional codepage for ASCII strings, default is cp1252.
     """
     # TODO: Add a more elegant error handling to this issue. There are some
@@ -249,19 +249,18 @@ class WinPyregfFile(interface.WinRegFile):
           u'Unable to set the Registry file codepage: {0:s}. '
           u'Ignoring provided value.').format(codepage))
 
-    # Keeping a copy of the original file object in case attributes from
-    # it are needed (preg uses it for instance to get the pathspec attribute
-    # directly from the file object).
-    self.file_object = file_object
+    self._file_object = file_entry.Open()
+    self._pyregf_file.open_file_object(self._file_object)
 
-    self._pyregf_file.open_file_object(file_object)
-    self.name = getattr(file_object, 'name', '')
     self._base_key = self._pyregf_file.get_root_key()
+
+    # TODO: move to a pyvfs like registry sub-system.
+    self.name = file_entry.name
 
   def Close(self):
     """Closes the Registry file."""
     self._pyregf_file.close()
-    self.file_object = None
+    self._file_object.close()
 
   def GetKeyByPath(self, path):
     """Retrieves a specific key defined by the Registry path.
@@ -296,16 +295,16 @@ class WinRegistry(object):
   """Provides access to the Windows registry file."""
   # TODO: deprecate this class.
 
-  def __init__(self, hive, codepage='cp1252'):
+  def __init__(self, file_entry, codepage='cp1252'):
     """Constructor for the registry object.
 
     Args:
-      hive: A file-like object, most likely a PFile object for the registry.
+      file_entry: A file entry object.
       codepage: The codepage of the registry hive, used for string
                 representation.
     """
     self._pyregf_file = pyregf.file()
-    self._pyregf_file.open_file_object(hive)
+
     try:
       # TODO: Add a more elegant error handling to this issue. There are some
       # code pages that are not supported by the parent library. However we
@@ -316,9 +315,9 @@ class WinRegistry(object):
       logging.error(
           u'Unable to set the registry codepage to: {}. Not setting it'.format(
               codepage))
-    # Keeping a copy of the volume due to limitation of the python bindings
-    # for VSS.
-    self._fh = hive
+
+    self._file_object = file_entry.Open()
+    self._pyregf_file.open_file_object(self._file_object)
 
   def GetRoot(self):
     """Return the root key of the registry hive."""

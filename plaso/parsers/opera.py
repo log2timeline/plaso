@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,7 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Parsers for Opera Browser history files."""
+
 import logging
+import os
 import urllib2
 
 from plaso.lib import errors
@@ -84,12 +87,21 @@ class OperaTypedHistoryParser(parser.BaseParser):
 
   NAME = 'opera_typed_history'
 
-  def Parse(self, file_like_object):
-    """Parse the history file and yield extracted events."""
+  def Parse(self, file_entry):
+    """Extract data from an Opera typed history file.
+
+    Args:
+      file_entry: A file entry object.
+
+    Yields:
+      An event container (EventContainer) that contains the parsed
+      attributes.
+    """
+    file_object = file_entry.Open()
 
     # Need to verify the first line to make sure this is a) XML and
     # b) the right XML.
-    first_line = file_like_object.readline(90)
+    first_line = file_object.readline(90)
 
     if not first_line.startswith('<?xml version="1.0'):
       raise errors.UnableToParseFile(
@@ -99,17 +111,17 @@ class OperaTypedHistoryParser(parser.BaseParser):
     # reads the entire file in memory to parse the XML string and
     # we only care about the XML file with the correct root key,
     # which denotes a typed_history.xml file.
-    second_line = file_like_object.readline(50).strip()
+    second_line = file_object.readline(50).strip()
 
     if second_line != '<typed_history>':
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [wrong XML root key]')
 
-    # For ElementTree to work we need to work on a filehandle seeked
+    # For ElementTree to work we need to work on a file object seeked
     # to the beginning.
-    file_like_object.seek(0)
+    file_object.seek(0, os.SEEK_SET)
 
-    xml = ElementTree.parse(file_like_object)
+    xml = ElementTree.parse(file_object)
 
     for history_item in xml.iterfind('typed_history_item'):
       content = history_item.get('content', '')
@@ -117,6 +129,8 @@ class OperaTypedHistoryParser(parser.BaseParser):
       entry_type = history_item.get('type', '')
 
       yield OperaTypedHistoryEvent(last_typed, content, entry_type)
+
+    file_object.close()
 
 
 class OperaGlobalHistoryParser(parser.BaseParser):
@@ -126,7 +140,17 @@ class OperaGlobalHistoryParser(parser.BaseParser):
 
   _SUPPORTED_URL_SCHEMES = frozenset(['file', 'http', 'https', 'ftp'])
 
-  def ReadRecord(self, file_like_object, max_line_length=0):
+  def _IsValidUrl(self, url):
+    """A simple test to see if an URL is considered valid."""
+    parsed_url = urllib2.urlparse.urlparse(url)
+
+    # Few supported first URL entries.
+    if parsed_url.scheme in self._SUPPORTED_URL_SCHEMES:
+      return True
+
+    return False
+
+  def _ReadRecord(self, file_object, max_line_length=0):
     """Return a single record from an Opera global_history file.
 
     A single record consists of four lines, with each line as:
@@ -136,8 +160,7 @@ class OperaGlobalHistoryParser(parser.BaseParser):
       Popularity index (-1 if first time visited).
 
     Args:
-      file_like_object: A file-like object that is used to read
-                        the record from.
+      file_object: A file-like object.
       max_line_length: An integer that denotes the maximum byte
                        length for each line read.
 
@@ -148,25 +171,25 @@ class OperaGlobalHistoryParser(parser.BaseParser):
       errors.NotAText: If the file being read is not a text file.
     """
     if max_line_length:
-      title_raw = file_like_object.readline(max_line_length)
+      title_raw = file_object.readline(max_line_length)
       if len(title_raw) == max_line_length and not title_raw.endswith('\n'):
         return None, None, None, None
       if not utils.IsText(title_raw):
         raise errors.NotAText(u'Title line is not a text.')
       title = title_raw.strip()
     else:
-      title = file_like_object.readline().strip()
+      title = file_object.readline().strip()
 
     if not title:
       return None, None, None, None
 
-    url = file_like_object.readline().strip()
+    url = file_object.readline().strip()
 
     if not url:
       return None, None, None, None
 
-    timestamp_line = file_like_object.readline().strip()
-    popularity_line = file_like_object.readline().strip()
+    timestamp_line = file_object.readline().strip()
+    popularity_line = file_object.readline().strip()
 
     try:
       timestamp = int(timestamp_line, 10)
@@ -199,7 +222,7 @@ class OperaGlobalHistoryParser(parser.BaseParser):
 
     return title_unicode, url, timestamp, popularity_index
 
-  def ReadRecords(self, file_like_object):
+  def _ReadRecords(self, file_object):
     """Yield records read from an Opera global_history file.
 
     A single record consists of four lines, with each line as:
@@ -209,15 +232,13 @@ class OperaGlobalHistoryParser(parser.BaseParser):
       Popularity index (-1 if first time visited).
 
     Args:
-      file_like_object: A file-like object that is used to read
-                        the record from.
+      file_object: A file-like object.
 
     Yields:
       A tuple of: title, url, timestamp, popularity_index.
     """
     while 1:
-      title, url, timestamp, popularity_index = self.ReadRecord(
-          file_like_object)
+      title, url, timestamp, popularity_index = self._ReadRecord(file_object)
       if not title:
         raise StopIteration
       if not url:
@@ -227,21 +248,21 @@ class OperaGlobalHistoryParser(parser.BaseParser):
 
       yield title, url, timestamp, popularity_index
 
-  def _IsValidUrl(self, url):
-    """A simple test to see if an URL is considered valid."""
-    parsed_url = urllib2.urlparse.urlparse(url)
+  def Parse(self, file_entry):
+    """Extract data from an Opera global history file.
 
-    # Few supported first URL entries.
-    if parsed_url.scheme in self._SUPPORTED_URL_SCHEMES:
-      return True
+    Args:
+      file_entry: A file entry object.
 
-    return False
+    Yields:
+      An event container (EventContainer) that contains the parsed
+      attributes.
+    """
+    file_object = file_entry.Open()
 
-  def Parse(self, file_like_object):
-    """Parse the history file and yield extracted events."""
     try:
-      title, url, timestamp, popularity_index = self.ReadRecord(
-          file_like_object, 400)
+      title, url, timestamp, popularity_index = self._ReadRecord(
+          file_object, 400)
     except errors.NotAText:
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a text file].')
@@ -261,7 +282,8 @@ class OperaGlobalHistoryParser(parser.BaseParser):
     yield OperaGlobalHistoryEvent(timestamp, url, title, popularity_index)
 
     # Read in the rest of the history file.
-    for title, url, timestamp, popularity_index in self.ReadRecords(
-        file_like_object):
+    for title, url, timestamp, popularity_index in self._ReadRecords(
+        file_object):
       yield OperaGlobalHistoryEvent(timestamp, url, title, popularity_index)
 
+    file_object.close()

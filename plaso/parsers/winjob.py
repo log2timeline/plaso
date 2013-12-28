@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -24,6 +25,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
+
 
 __author__ = 'Brian Baskin (brian@thebaskins.com)'
 
@@ -162,7 +164,7 @@ class WinJobParser(parser.BaseParser):
       )
 
 
-  def Parse(self, file_object):
+  def Parse(self, file_entry):
     """Extract data from a Windows job file.
 
     This is the main parsing engine for the parser. It determines if
@@ -170,12 +172,13 @@ class WinJobParser(parser.BaseParser):
     the scheduled task data.
 
     Args:
-      file_object: file_object: A file-like object to read data from.
+      file_entry: A file entry object.
 
-    Returns:
+    Yields:
       An EventContainer (WinJobEventContainer) with extracted EventObjects
       that contain the extracted attributes.
     """
+    file_object = file_entry.Open()
     try:
       header = self.JOB_FIXED_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as e:
@@ -256,4 +259,5 @@ class WinJobParser(parser.BaseParser):
           'Scheduled To End',
           container.DATA_TYPE))
 
-    return container
+    file_object.close()
+    yield container

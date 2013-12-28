@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Windows prefetch parser."""
+
 import os
 import unittest
 
-from plaso.formatters import winprefetch
+# pylint: disable-msg=unused-import
+from plaso.formatters import winprefetch as winprefetch_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
+from plaso.parsers import test_lib
 from plaso.parsers import winprefetch
 
 
@@ -30,18 +34,16 @@ class WinPrefetchParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = winprefetch.WinPrefetchParser(pre_obj)
+    self._parser = winprefetch.WinPrefetchParser(pre_obj)
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
     self.maxDiff = None
 
-  def testParseFileV17(self):
-    """Read a v17 Prefetch file and run a few tests."""
+  def testParse17(self):
+    """Tests the Parse function on a version 17 Prefetch file."""
     test_file = os.path.join('test_data', 'CMD.EXE-087B4001.pf')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # Check the number of event containers.
     self.assertEquals(len(events), 1)
@@ -72,13 +74,11 @@ class WinPrefetchParserTest(unittest.TestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
-  def testParseFileV23(self):
-    """Read a v23 Prefetch file and run a few tests."""
+  def testParse23(self):
+    """Tests the Parse function on a version 23 Prefetch file."""
     test_file = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # Check the number of event containers.
     self.assertEquals(len(events), 1)
@@ -130,13 +130,11 @@ class WinPrefetchParserTest(unittest.TestCase):
     self.assertEquals(msg, expected_msg)
     self.assertEquals(msg_short, expected_msg_short)
 
-  def testParseFileV26(self):
-    """Read a v26 Prefetch file and run a few tests."""
+  def testParse26(self):
+    """Tests the Parse function on a version 26 Prefetch file."""
     test_file = os.path.join('test_data', 'TASKHOST.EXE-3AE259FC.pf')
 
-    events = None
-    with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # Check the number of event containers.
     self.assertEquals(len(events), 1)
@@ -176,7 +174,7 @@ class WinPrefetchParserTest(unittest.TestCase):
     self.assertEquals(event_object.timestamp, 1380902246146547)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    # TODO: add more tests.
+
 
 if __name__ == '__main__':
   unittest.main()

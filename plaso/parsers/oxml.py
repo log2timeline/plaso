@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -28,7 +29,24 @@ from plaso.lib import parser
 from plaso.lib import timelib
 from xml.etree import ElementTree
 
+
 __author__ = 'David Nides (david.nides@gmail.com)'
+
+
+class OpenXMLParserEvent(event.TimestampEvent):
+  """Process timestamps from MS Office XML Events."""
+
+  DATA_TYPE = 'metadata:openxml'
+
+  def __init__(self, dt_timestamp, usage):
+    """Initializes the event object.
+
+    Args:
+      dt_timestamp: A python datetime.datetime object.
+      usage: The description of the usage of the time value.
+    """
+    timestamp = timelib.Timestamp.FromTimeString(dt_timestamp)
+    super(OpenXMLParserEvent, self).__init__(timestamp, usage, self.DATA_TYPE)
 
 
 class OpenXMLParser(parser.BaseParser):
@@ -53,31 +71,45 @@ class OpenXMLParser(parser.BaseParser):
     'Shared_Doc': 'shared',
   }
 
-  _FILES_REQUIRED = frozenset(['[Content_Types].xml',
-                               '_rels/.rels',
-                               'docProps/core.xml'])
+  _FILES_REQUIRED = frozenset([
+      '[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
 
-  def Parse(self, filehandle):
-    """Extract EventObjects from a file."""
+  def _FixString(self, key):
+    """Convert CamelCase to lower_with_underscore."""
+    # TODO: Add unicode support.
+    fix_key = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 
-    if not zipfile.is_zipfile(filehandle):
+  def Parse(self, file_entry):
+    """Extract data from an OXML file.
+
+    Args:
+      file_entry: A file entry object.
+
+    Yields:
+      An event container (EventContainer) that contains the parsed
+      attributes.
+    """
+    file_object = file_entry.Open()
+
+    if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
-          u'[%s] unable to parse file %s: %s' % (
-              self.parser_name, filehandle.name, 'Not a Zip file.'))
+          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.parser_name, file_entry.name, 'Not a Zip file.'))
 
     try:
-      zip_container = zipfile.ZipFile(filehandle, 'r')
+      zip_container = zipfile.ZipFile(file_object, 'r')
     except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
-          u'[%s] unable to parse file %s: %s' % (
-              self.parser_name, filehandle.name, 'Bad Zip file.'))
+          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.parser_name, file_entry.name, 'Bad Zip file.'))
 
     zip_name_list = set(zip_container.namelist())
 
     if not self._FILES_REQUIRED.issubset(zip_name_list):
       raise errors.UnableToParseFile(
-          u'[%s] unable to parse file %s: %s' % (
-              self.parser_name, filehandle.name, 'OXML element(s) missing.'))
+          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.parser_name, file_entry.name, 'OXML element(s) missing.'))
     metadata = {}
 
     rels_xml = zip_container.read('_rels/.rels')
@@ -90,7 +122,8 @@ class OpenXMLParser(parser.BaseParser):
           root = ElementTree.fromstring(xml)
         except (OverflowError, IndexError, ValueError) as exception:
           logging.warning(
-            u'Unable to read property [%s].', exception)
+            u'[{0:s}] unable to read property with error: {1:s}.'.format(
+                self.parser_name, exception))
           continue
 
         for element in root.iter():
@@ -101,53 +134,32 @@ class OpenXMLParser(parser.BaseParser):
             if tag != 'lpstr':
               metadata[tag] = element.text
 
-    container = event.EventContainer()
-    container.offset = 0
-    container.data_type = self.DATA_TYPE
+    event_container = event.EventContainer()
+    event_container.offset = 0
+    event_container.data_type = self.DATA_TYPE
 
     for key, value in metadata.items():
       if key in ('created', 'modified', 'lastPrinted'):
         continue
-      attribute_name = self._METAKEY_TRANSLATE.get(key, self.FixString(key))
-      setattr(container, attribute_name, value)
+      attribute_name = self._METAKEY_TRANSLATE.get(key, self._FixString(key))
+      setattr(event_container, attribute_name, value)
 
     if metadata.get('created', None):
-      container.Append(OpenXMLParserEvent(
+      event_container.Append(OpenXMLParserEvent(
           metadata['created'], eventdata.EventTimestamp.CREATION_TIME))
 
     if metadata.get('modified', None):
-      container.Append(OpenXMLParserEvent(
+      event_container.Append(OpenXMLParserEvent(
           metadata['modified'], eventdata.EventTimestamp.MODIFICATION_TIME))
 
     if metadata.get('lastPrinted', None):
-      container.Append(OpenXMLParserEvent(
+      event_container.Append(OpenXMLParserEvent(
           metadata['lastPrinted'], eventdata.EventTimestamp.LAST_PRINTED))
 
-    if not container:
+    if not event_container:
       raise errors.UnableToParseFile(
-          u'[%s] unable to parse file %s: %s' % (
-              self.parser_name, filehandle.name, 'No timestamps.'))
+          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.parser_name, file_entry.name, 'timestamps missing.'))
 
-    return container
-
-  def FixString(self, key):
-    """Convert CamelCase to lower_with_underscore."""
-    # TODO: Add unicode support.
-    fix_key = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
-
-
-class OpenXMLParserEvent(event.TimestampEvent):
-  """Process timestamps from MS Office XML Events."""
-
-  DATA_TYPE = 'metadata:openxml'
-
-  def __init__(self, dt_timestamp, usage):
-    """An EventObject created from an OLE2 entry.
-
-    Args:
-      dt_timestamp: A python datetime.datetime object.
-      usage: The description of the usage of the time value.
-    """
-    timestamp = timelib.Timestamp.FromTimeString(dt_timestamp)
-    super(OpenXMLParserEvent, self).__init__(timestamp, usage, self.DATA_TYPE)
+    file_object.close()
+    yield event_container

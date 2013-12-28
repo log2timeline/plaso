@@ -27,7 +27,7 @@ class Token(object):
   """A token action."""
 
   def __init__(self, state_regex, regex, actions, next_state, flags=re.I):
-    """Constructor.
+    """Initializes the token object.
 
     Args:
 
@@ -80,8 +80,8 @@ class Lexer(object):
   # Regex flags
   flags = 0
 
-  def __init__(self, data=""):
-    """Constructor."""
+  def __init__(self, data=''):
+    """Initializes the lexer object."""
     self.buffer = data
     self.state_stack = []
 
@@ -90,11 +90,13 @@ class Lexer(object):
     current_state = self.state
     for token in self.tokens:
       # Does the rule apply to us?
-      if not token.state_regex.match(current_state): continue
+      if not token.state_regex.match(current_state):
+        continue
 
       # Try to match the rule
       m = token.regex.match(self.buffer)
-      if not m: continue
+      if not m:
+        continue
 
       # The match consumes the data off the buffer (the handler can put it back
       # if it likes)
@@ -165,7 +167,7 @@ class Lexer(object):
     except IndexError:
       self.Error("Tried to pop the state but failed - possible recursion error")
 
-  def PushBack(self, string="", **_):
+  def PushBack(self, string='', **_):
     """Push the match back on the stream."""
     self.buffer = string + self.buffer
     self.processed_buffer = self.processed_buffer[:-len(string)]
@@ -180,12 +182,17 @@ class Lexer(object):
 class SelfFeederMixIn(Lexer):
   """This mixin is used to make a lexer which feeds itself.
 
-  Note that self.fd must be the fd we read from.
+  Note that self.file_object must be the file object we read from.
   """
 
-  def __init__(self, fd=""):
-    """Constructor."""
-    self.fd = fd
+  # TODO: fix this, file object eiter needs to be set or not passed here.
+  def __init__(self, file_object=None):
+    """Initializes the lexer feeder min object.
+
+    Args:
+      file_object: Optional file-like object. The default is None.
+    """
+    self.file_object = file_object
     super(SelfFeederMixIn, self).__init__()
 
   def NextToken(self):
@@ -200,7 +207,7 @@ class SelfFeederMixIn(Lexer):
 
   def Feed(self, size=512):
     """Feed data into the buffer."""
-    data = self.fd.read(size)
+    data = self.file_object.read(size)
     Lexer.Feed(self, data)
 
     return len(data)
@@ -216,7 +223,7 @@ class Expression(object):
   number_of_args = 1
 
   def __init__(self):
-    """Constructor."""
+    """Initializes the expression object."""
     self.args = []
 
   def SetAttribute(self, attribute):
@@ -253,11 +260,11 @@ class Expression(object):
     return "Expression: (%s) (%s) %s" % (
         self.attribute, self.operator, self.args)
 
-  def PrintTree(self, depth=""):
+  def PrintTree(self, depth=''):
     """Print the tree."""
     return "%s %s" % (depth, self)
 
-  def Compile(self, unused_filter_implemention):
+  def Compile(self, dummy_filter_implemention):
     """Given a filter implementation, compile this expression."""
     raise NotImplementedError("%s does not implement Compile." %
                               self.__class__.__name__)
@@ -266,11 +273,12 @@ class Expression(object):
 class BinaryExpression(Expression):
   """An expression which takes two other expressions."""
 
-  def __init__(self, operator="", part=None):
-    """Constructor for the binary expression."""
+  def __init__(self, operator='', part=None):
+    """Initializes the expression object."""
     self.operator = operator
     self.args = []
-    if part: self.args.append(part)
+    if part:
+      self.args.append(part)
     super(BinaryExpression, self).__init__()
 
   def __str__(self):
@@ -286,7 +294,7 @@ class BinaryExpression(Expression):
       raise ParseError("Expected expression, got %s %s %s" % (
           lhs, self.operator, rhs))
 
-  def PrintTree(self, depth=""):
+  def PrintTree(self, depth=''):
     """Print the tree."""
     result = "%s%s\n" % (depth, self.operator)
     for part in self.args:
@@ -330,37 +338,38 @@ class SearchParser(Lexer):
 
   tokens = [
       # Double quoted string
-      Token("STRING", "\"", "PopState,StringFinish", None),
-      Token("STRING", r"\\(.)", "StringEscape", None),
-      Token("STRING", r"[^\\\"]+", "StringInsert", None),
+      Token('STRING', '\"', 'PopState,StringFinish', None),
+      Token('STRING', r'\\(.)', 'StringEscape', None),
+      Token('STRING', r'[^\\\"]+', 'StringInsert', None),
 
       # Single quoted string
-      Token("SQ_STRING", "'", "PopState,StringFinish", None),
-      Token("SQ_STRING", r"\\(.)", "StringEscape", None),
-      Token("SQ_STRING", r"[^\\']+", "StringInsert", None),
+      Token('SQ_STRING', '\'', 'PopState,StringFinish', None),
+      Token('SQ_STRING', r'\\(.)', 'StringEscape', None),
+      Token('SQ_STRING', r'[^\\\']+', 'StringInsert', None),
 
-      # TODO(user): Implement a unary not operator.
+      # TODO: Implement a unary not operator.
       # The first thing we see in the initial state takes up to the ATTRIBUTE
-      Token("INITIAL", "(and|or|\&\&|\|\|)", "BinaryOperator", None),
-      Token("INITIAL", r"[^\s\(\)]", "PushState,PushBack", "ATTRIBUTE"),
-      Token("INITIAL", "\(", "BracketOpen", None),
-      Token("INITIAL", r"\)", "BracketClose", None),
+      Token('INITIAL', r'(and|or|\&\&|\|\|)', 'BinaryOperator', None),
+      Token('INITIAL', r'[^\s\(\)]', 'PushState,PushBack', 'ATTRIBUTE'),
+      Token('INITIAL', r'\(', 'BracketOpen', None),
+      Token('INITIAL', r'\)', 'BracketClose', None),
 
-      Token("ATTRIBUTE", "[\w._0-9]+", "StoreAttribute", "OPERATOR"),
-      Token("OPERATOR", "[a-z0-9<>=\-\+\!\^\&%]+", "StoreOperator", "ARG_LIST"),
-      Token("OPERATOR", "(!=|[<>=])", "StoreSpecialOperator", "ARG_LIST"),
-      Token("ARG_LIST", "[^\s'\"]+", "InsertArg", None),
+      Token('ATTRIBUTE', r'[\w._0-9]+', 'StoreAttribute', 'OPERATOR'),
+      Token('OPERATOR', r'[a-z0-9<>=\-\+\!\^\&%]+', 'StoreOperator',
+            'ARG_LIST'),
+      Token('OPERATOR', r'(!=|[<>=])', 'StoreSpecialOperator', 'ARG_LIST'),
+      Token('ARG_LIST', r'[^\s\'\"]+', 'InsertArg', None),
 
       # Start a string.
-      Token(".", "\"", "PushState,StringStart", "STRING"),
-      Token(".", "'", "PushState,StringStart", "SQ_STRING"),
+      Token('.', '\"', 'PushState,StringStart', 'STRING'),
+      Token('.', '\'', 'PushState,StringStart', 'SQ_STRING'),
 
       # Skip whitespace.
-      Token(".", r"\s+", None, None),
+      Token('.', r'\s+', None, None),
       ]
 
   def __init__(self, data):
-    """Constructor for the search parser."""
+    """Initializes the search parser object."""
     # Holds expression
     self.current_expression = self.expression_cls()
     self.filter_string = data
@@ -400,7 +409,7 @@ class SearchParser(Lexer):
     else:
       self.string += string
 
-  def StringInsert(self, string="", **_):
+  def StringInsert(self, string='', **_):
     """Add to the string."""
     self.string += string
 
@@ -412,11 +421,11 @@ class SearchParser(Lexer):
     elif self.state == "ARG_LIST":
       return self.InsertArg(string=self.string)
 
-  def StoreAttribute(self, string="", **_):
+  def StoreAttribute(self, string='', **_):
     """Store the attribute."""
     logging.debug("Storing attribute %r", string)
 
-    # TODO(user): Update the expected number_of_args
+    # TODO: Update the expected number_of_args
     try:
       self.current_expression.SetAttribute(string)
     except AttributeError:
@@ -424,12 +433,12 @@ class SearchParser(Lexer):
 
     return "OPERATOR"
 
-  def StoreOperator(self, string="", **_):
+  def StoreOperator(self, string='', **_):
     """Store the operator."""
     logging.debug("Storing operator %r", string)
     self.current_expression.SetOperator(string)
 
-  def InsertArg(self, string="", **_):
+  def InsertArg(self, string='', **_):
     """Insert an arg to the current expression."""
     logging.debug("Storing Argument %s", string)
 
@@ -479,7 +488,8 @@ class SearchParser(Lexer):
       self._CombineBinaryExpressions("or")
 
       # No change
-      if len(self.stack) == length: break
+      if len(self.stack) == length:
+        break
       length = len(self.stack)
 
     if length != 1:
@@ -487,7 +497,7 @@ class SearchParser(Lexer):
 
     return self.stack[0]
 
-  def Error(self, message=None, unused_weight=1):
+  def Error(self, message=None, dummy_weight=1):
     """Raise an error message."""
     raise ParseError("%s in position %s: %s <----> %s )" % (
         message, len(self.processed_buffer), self.processed_buffer,

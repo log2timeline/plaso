@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,10 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains tests for Services registry parsing in Plaso."""
+
 import os
 import unittest
 
-from plaso.formatters import winreg   # pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
+from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import services
 from plaso.pvfs import utils
@@ -74,16 +77,17 @@ class TestServicesRegistry(unittest.TestCase):
 
   def testServicesOnAFile(self):
     """Test the services plugin on a registry file."""
-    fh = utils.OpenOSFile(os.path.join('test_data', 'SYSTEM'))
     plugin = services.ServicesPlugin(None, None, None)
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
-    hive = registry.OpenFile(fh)
+    test_file = os.path.join('test_data', 'SYSTEM')
+    file_entry = utils.OpenOSFileEntry(test_file)
+    winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
     entries = []
     base_key_path = '\\ControlSet001\\services'
-    base_key = hive.GetKeyByPath(base_key_path)
+    base_key = winreg_file.GetKeyByPath(base_key_path)
 
     self.assertTrue(base_key)
 

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,19 +15,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 """Parser test for utmpx files."""
+
 import os
 import unittest
 
-from plaso.parsers import utmpx
-# pylint: disable=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import utmpx as utmpx_formatter
-
 from plaso.lib import preprocess
 from plaso.lib import eventdata
-from plaso.pvfs import utils
+from plaso.parsers import test_lib
+from plaso.parsers import utmpx
 
 import pytz
 
@@ -38,16 +37,13 @@ class UtmpxParserTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
+    self._parser = utmpx.UtmpxParser(pre_obj, None)
 
-    self.test_parser = utmpx.UtmpxParser(pre_obj, None)
-
-  def testParseFile(self):
-    """Read utmpx files and make few tests."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'utmpx_mac')
 
-    events = None
-    with utils.OpenOSFile(test_file) as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     self.assertEqual(len(events), 6)
 
@@ -94,6 +90,7 @@ class UtmpxParserTest(unittest.TestCase):
     expected_short_message = 'User: moxilo'
     self.assertEquals(msg, expected_message)
     self.assertEquals(msg_short, expected_short_message)
+
 
 if __name__ == '__main__':
   unittest.main()

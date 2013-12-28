@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a SQLite parser."""
+
 import logging
 
 from plaso.lib import errors
@@ -49,23 +51,30 @@ class SQLiteParser(parser.BaseParser):
     self._plugins = self._GetPlugins()
 
   def _GetPlugins(self):
-    """Return a list of all available plugins."""
+    """Returns a list of all registered plugins."""
     parser_filter_string = getattr(self._config, 'parsers', None)
 
     return plugin.GetRegisteredPlugins(
         interface.SQLitePlugin, self._pre_obj, parser_filter_string)
 
-  def Parse(self, filehandle):
-    """Return a generator for EventObjects extracted from SQLite db."""
-    with interface.SQLiteDatabase(filehandle) as database:
+  def Parse(self, file_entry):
+    """Parses an SQLite database.
+
+    Args:
+      file_entry: the file entry object.
+
+    Returns:
+      A event object generator (EventObjects) extracted from the database.
+    """
+    with interface.SQLiteDatabase(file_entry) as database:
       try:
         database.Open()
       except IOError as e:
         raise errors.UnableToParseFile(
-            u'Not able to open database: {}'.format(e))
+            u'Unable to open database with error: {0:s}'.format(e))
       except sqlite3.DatabaseError as e:
         raise errors.UnableToParseFile(
-            u'Unable to parse SQLite database due to an error: %s.' % e)
+            u'Unable to parse SQLite database with error: {0:s}.'.format(e))
 
       for plugin_obj in self._plugins.itervalues():
         try:
@@ -73,6 +82,7 @@ class SQLiteParser(parser.BaseParser):
             event_object.plugin = plugin_obj.plugin_name
             yield event_object
         except errors.WrongPlugin:
-          logging.debug(u'Unable to parse database: {} using {}'.format(
-              filehandle.name, plugin_obj.plugin_name))
+          logging.debug(
+              u'Plugin: {0:s} cannot parse database: {1:s}'.format(
+                  plugin_obj.plugin_name, file_entry.name))
 

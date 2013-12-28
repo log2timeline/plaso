@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,13 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Microsoft Internet Explorer (MSIE) Cache Files (CF) parser."""
+
 import os
 import unittest
 
-from plaso.formatters import msiecf
+# pylint: disable-msg=unused-import
+from plaso.formatters import msiecf as msiecf_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import msiecf
+from plaso.parsers import test_lib
 
 
 class MsiecfParserTest(unittest.TestCase):
@@ -30,15 +34,13 @@ class MsiecfParserTest(unittest.TestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-    self.test_parser = msiecf.MsiecfParser(pre_obj)
+    self._parser = msiecf.MsiecfParser(pre_obj)
 
-  def testMsiecfParserFile(self):
-    """Reads and parses a test MSIE Cache File (MSIECF)."""
+  def testParse(self):
+    """Tests the Parse function."""
     test_file = os.path.join('test_data', 'index.dat')
 
-    events = []
-    with open(test_file, 'rb') as file_object:
-      events = list(self.test_parser.Parse(file_object))
+    events = test_lib.ParseFile(self._parser, test_file)
 
     # MSIE Cache File information:
     # 	File size:			32768 bytes

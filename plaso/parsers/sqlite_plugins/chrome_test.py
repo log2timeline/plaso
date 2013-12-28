@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the Google Chrome history parser."""
+
 import os
 import unittest
 
@@ -43,11 +45,11 @@ class ChromeHistoryPluginTest(unittest.TestCase):
     test_file = os.path.join('test_data', 'History')
 
     events = None
-    with utils.OpenOSFile(test_file) as file_object:
-      with interface.SQLiteDatabase(file_object) as database:
-        generator = self.test_parser.Process(database)
-        self.assertTrue(generator)
-        events = list(generator)
+    file_entry = utils.OpenOSFileEntry(test_file)
+    with interface.SQLiteDatabase(file_entry) as database:
+      generator = self.test_parser.Process(database)
+      self.assertTrue(generator)
+      events = list(generator)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
     self.assertEquals(len(events), 71)

@@ -32,7 +32,7 @@ import traceback
 
 import plaso
 from plaso import preprocessors
-from plaso import output as output_plugins   # pylint: disable-msg=W0611
+from plaso import output as output_plugins   # pylint: disable-msg=unused-import
 
 from plaso.collector import factory as collector_factory
 from plaso.lib import errors

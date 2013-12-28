@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,9 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains tests for Less Frequently Used Keys parsing in Plaso."""
+
 import unittest
 
-from plaso.formatters import winreg   # pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
+from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers.winreg_plugins import lfu

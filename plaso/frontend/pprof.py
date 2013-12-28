@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Test run for a single file and a display of how many events are collected."""
+
 import argparse
 import collections
 import cProfile
@@ -186,7 +188,7 @@ def ProcessStorage(options):
 def ProcessFile(options):
   """Process a file and produce profile results."""
   try:
-    fh = pvfs_utils.OpenOSFile(options.file_to_parse)
+    fh = pvfs_utils.OpenOSFileIO(options.file_to_parse)
   except IOError as e:
     logging.error(u'Unable to open file: %s, error given %s',
                   options.file_to_parse, e)

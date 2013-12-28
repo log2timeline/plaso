@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the browser_search analysis plugin."""
+
 import os
 import unittest
 
@@ -50,14 +52,15 @@ class BrowserSearchAnalysisTest(unittest.TestCase):
 
     # Create a parser and open file.
     parser = sqlite.SQLiteParser(pre_obj, None)
-    file_object = utils.OpenOSFile(os.path.join('test_data', 'History'))
+    test_file = os.path.join('test_data', 'History')
+    file_entry = utils.OpenOSFileEntry(test_file)
 
     # Initialize plugin.
     analysis_plugin = browser_search.AnalyzeBrowserSearchPlugin(
         pre_obj, incoming_queue, outgoing_queue)
 
     # Fill the incoming queue with events.
-    for event_object in parser.Parse(file_object):
+    for event_object in parser.Parse(file_entry):
       incoming_queue.AddEvent(event_object.ToJson())
 
     incoming_queue.Close()

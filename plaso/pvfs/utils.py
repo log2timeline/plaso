@@ -25,10 +25,10 @@ from plaso.lib import utils
 from plaso.pvfs import pfile
 
 
-def _OpenImageFile(file_to_open, image_path, image_type='tsk',
-                   image_offset=0, store_nr=0, fscache=None,
-                   sector_size=512):
-  """Return a PFile like object for a file in a raw disk image.
+def _OpenImageFile(
+    file_to_open, image_path, image_type='tsk', image_offset=0, store_nr=0,
+    fscache=None, sector_size=512):
+  """Opens a file entry object for a file in a raw disk image.
 
   Args:
     file_to_open: A path or an inode number to the file in question.
@@ -42,7 +42,7 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
     sector_size: The size in bytes, defaults to 512.
 
   Returns:
-    A PFile object.
+    A file entry object.
   """
   pathspec = event.EventPathSpec()
   if image_type == 'vss':
@@ -64,12 +64,12 @@ def _OpenImageFile(file_to_open, image_path, image_type='tsk',
       file_to_open = file_to_open.replace('\\', '/')
     pathspec.file_path = file_to_open
 
-  return pfile.OpenPFile(pathspec, fscache=fscache)
+  return pfile.OpenPFileEntry(pathspec, fscache=fscache)
 
 
-def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None,
-                sector_size=512):
-  """Return a PFile like object for a file in a raw disk image.
+def OpenTskFileEntry(
+    file_to_open, image_path, image_offset=0, fscache=None, sector_size=512):
+  """Opens a file entry object for a file in a raw disk image.
 
   Args:
     file_to_open: A path or an inode number to the file in question.
@@ -79,25 +79,32 @@ def OpenTskFile(file_to_open, image_path, image_offset=0, fscache=None,
     sector_size: The size in bytes, defaults to 512.
 
   Returns:
-    A PFile object.
+    A file entry object.
   """
   return _OpenImageFile(
       file_to_open, image_path, 'tsk', image_offset, fscache=fscache,
       sector_size=sector_size)
 
 
-def OpenOSFile(path):
-  """Return a PFile like object for a file in the OS."""
+def OpenOSFileEntry(path):
+  """Opens a file entry object based on an OS path."""
   pathspec = event.EventPathSpec()
   pathspec.type = 'OS'
   pathspec.file_path = utils.GetUnicodeString(path)
 
-  return pfile.OpenPFile(pathspec)
+  return pfile.OpenPFileEntry(pathspec)
 
 
-def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0,
-                fscache=None, sector_size=512):
-  """Return a PFile like object for a file in an image inside a VSS.
+def OpenOSFileIO(path):
+  """Opens a file-like object based on an OS path."""
+  file_entry = OpenOSFileEntry(path)
+  return file_entry.Open()
+
+
+def OpenVssFileEntry(
+    file_to_open, image_path, store_nr, image_offset=0, fscache=None,
+    sector_size=512):
+  """Opens a file entry object for a file in an image inside a VSS.
 
   Args:
     file_to_open: A path or an inode number to the file in question.
@@ -108,7 +115,7 @@ def OpenVssFile(file_to_open, image_path, store_nr, image_offset=0,
     sector_size: The size in bytes, defaults to 512.
 
   Returns:
-    A PFile object.
+    A file entry object.
   """
   return _OpenImageFile(
       file_to_open, image_path, 'vss', image_offset, store_nr, fscache=fscache,

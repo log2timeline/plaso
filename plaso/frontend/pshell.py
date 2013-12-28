@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -28,7 +29,7 @@ try:
 except ImportError:
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
-# pylint: disable-msg=W0611
+# pylint: disable-msg=unused-import
 from plaso import filters
 from plaso import formatters
 from plaso import output
@@ -52,7 +53,6 @@ from plaso.lib import pfilter
 from plaso.lib import preprocess
 from plaso.lib import queue
 from plaso.lib import registry as class_registry
-from plaso.lib import sleuthkit
 from plaso.lib import storage
 from plaso.lib import text_parser
 from plaso.lib import timelib
@@ -141,7 +141,7 @@ def Main():
       'Base methods:\n'
       '\tFindAllParsers() - All available parser.\n'
       '\tFindAllOutputs() - All available outputs.\n'
-      '\tOpenOSFile(path) - Open a PFile like object from a path.\n'
+      '\tOpenOSFileIO(path) - Open a file-like object from a path.\n'
       '\tPrintTimestamp(timestamp) - Print a human readable timestamp from '
       'values stored in the EventObject.\n'
       '\tOpenVssFile (file_to_open, image_path, store_nr, image_offset) - '
