@@ -38,7 +38,7 @@ if sys.version < '2.7':
   sys.exit(1)
 
 # Change PYTHONPATH to include plaso so that we can get the version.
-sys.path.insert(0, os.path.join('plaso'))
+sys.path.insert(0, '.')
 
 import plaso
 

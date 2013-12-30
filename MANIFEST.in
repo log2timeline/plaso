@@ -1,5 +1,6 @@
 include ACKNOWLEDGEMENTS AUTHORS LICENSE.TXT
 include run_tests.py
+include utils/check_dependencies.py
 exclude .gitignore
 exclude *.pyc
 recursive-include config *
