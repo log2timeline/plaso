@@ -19,6 +19,7 @@
 
 import glob
 import os
+import pdb
 import unittest
 import sys
 
@@ -44,7 +45,7 @@ def FindTestFiles():
   return file_list
 
 
-def RunTests():
+def RunTests(debug_mode=False):
   """Runs all the tests and returns the results back."""
   blacklisted_casses = ['plaso.parsers.pcap_test']
 
@@ -61,6 +62,8 @@ def RunTests():
     except AttributeError as exception:
       print u'Unable to run test: {} [{}] due to error: {}'.format(
           library_name, test_file, exception)
+      if debug_mode:
+        pdb.post_mortem()
       sys.exit(1)
 
   test_run = unittest.TextTestRunner(verbosity=1)
@@ -92,7 +95,13 @@ if __name__ == '__main__':
   # Modify the system path to first search the CWD.
   sys.path.insert(0, '.')
 
-  test_results = RunTests()
+  # Allow debug mode, no need for advanced parameter handling.
+  if len(sys.argv) == 2 and sys.argv[1] == '-d':
+    debug = True
+  else:
+    debug = False
+
+  test_results = RunTests(debug)
 
   if not test_results:
     print 'Unable to run tests due to an error.'
