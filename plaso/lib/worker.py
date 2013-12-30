@@ -249,20 +249,21 @@ class PlasoWorker(object):
     # key = self._parsers.get(classification, 'all')
     stat_obj = file_entry.Stat()
     for parsing_object in self._parsers['all']:
-      logging.debug(u'Checking [%s] against: %s', file_entry.name,
-                    parsing_object.parser_name)
+      logging.debug(
+          u'Checking [%s] against: %s', file_entry.name,
+          parsing_object.parser_name)
       try:
-        file_entry.seek(0, os.SEEK_SET)
-        for evt in parsing_object.Parse(file_entry):
-          if evt:
-            if isinstance(evt, event.EventObject):
+        for event_object in parsing_object.Parse(file_entry):
+          if not event_object:
+            continue
+
+          if isinstance(event_object, event.EventObject):
+            self._ParseEvent(
+                event_object, file_entry, parsing_object.parser_name, stat_obj)
+          elif isinstance(event_object, event.EventContainer):
+            for sub_event in event_object:
               self._ParseEvent(
-                  evt, file_entry, parsing_object.parser_name, stat_obj)
-            elif isinstance(evt, event.EventContainer):
-              for event_object in evt:
-                self._ParseEvent(
-                    event_object, file_entry, parsing_object.parser_name,
-                    stat_obj)
+                  sub_event, file_entry, parsing_object.parser_name, stat_obj)
 
       except errors.UnableToParseFile as e:
         logging.debug(u'Not a %s file (%s) - %s', parsing_object.parser_name,
