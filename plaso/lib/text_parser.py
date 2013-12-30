@@ -87,6 +87,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
         'username': '',
     }
     self.local_zone = local_zone
+    self.file_entry = None
 
   def ClearValues(self):
     """Clears all the values inside the attributes dict.
@@ -163,6 +164,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     """
     file_object = file_entry.Open()
 
+    self.file_entry = file_entry
     # TODO: this is necessary since we inherit from lexer.SelfFeederMixIn.
     self.file_object = file_object
 
@@ -737,3 +739,101 @@ class PyparsingSingleLineTextParser(parser.BaseParser):
     Returns:
       True if this is the correct parser, False otherwise.
     """
+
+
+class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
+  """Multi line text parser based on the pyparsing library."""
+
+  __abstract = True
+
+  BUFFER_SIZE = 2048
+
+  def __init__(self, pre_obj, config):
+    """A constructor for the pyparsing assistant."""
+    super(PyparsingMultiLineTextParser, self).__init__(pre_obj, config)
+    self._buffer = ''
+
+  def _FillBuffer(self, filehandle):
+    """Fill the buffer."""
+    if len(self._buffer) > self.BUFFER_SIZE:
+      return
+
+    self._buffer += filehandle.read(self.BUFFER_SIZE)
+
+  def _NextLine(self, filehandle):
+    """Move to the next newline in the buffer."""
+    throw, _, self._buffer = self._buffer.partition('\n')
+    if throw.startswith('\r'):
+      throw = throw[1:]
+      self._current_offset += 1
+
+    self._current_offset += 1 + len(throw)
+    self._FillBuffer(filehandle)
+    return throw
+
+  def Parse(self, file_entry):
+    """Parse a text file using a pyparsing definition."""
+    self.file_entry = file_entry
+
+    file_object = file_entry.Open()
+
+    if not self.LINE_STRUCTURES:
+      raise errors.UnableToParseFile(
+          u'Line structure undeclared, unable to proceed.')
+
+    file_object.seek(0, os.SEEK_SET)
+
+    self._buffer = ''
+    self._FillBuffer(file_object)
+
+    if not utils.IsText(self._buffer):
+      raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
+
+    if not self.VerifyStructure(self._buffer):
+      raise errors.UnableToParseFile('Wrong file structure.')
+
+    # Set the offset to the beginning of the file.
+    self._current_offset = 0
+
+    # Read every line in the text file.
+    while self._buffer:
+      # Initialize pyparsing objects.
+      tokens = None
+      start = 0
+      end = 0
+
+      structure_key = None
+
+      # Try to parse the line using all the line structures.
+      for key, structure in self.LINE_STRUCTURES:
+        try:
+          parsed_structure = next(
+              structure.scanString(self._buffer, maxMatches=1), None)
+        except pyparsing.ParseException:
+          continue
+        if not parsed_structure:
+          continue
+
+        tokens, start, end = parsed_structure
+
+        # Only want to parse the structure if it starts
+        # at the beginning of the buffer.
+        if start == 0:
+          structure_key = key
+          break
+
+      if tokens and not start:
+        parsed_event = self.ParseRecord(structure_key, tokens)
+        if parsed_event:
+          parsed_event.offset = self._current_offset
+          yield parsed_event
+        self._current_offset += end
+        self._buffer = self._buffer[end:]
+      else:
+        old_line = self._NextLine(file_object)
+        if old_line:
+          logging.warning(u'Unable to parse log line: {}'.format(
+              repr(old_line)))
+
+      # Re-fill the buffer.
+      self._FillBuffer(file_object)

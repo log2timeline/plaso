@@ -57,7 +57,7 @@ def GetPluginData():
   from plaso import output as _
   from plaso.frontend import presets
   from plaso.lib import output
-  from plaso.parsers.winreg_plugins import interface as win_registry_interface
+  from plaso.lib import plugin
 
   return_dict['Versions'] = [
       ('plaso engine', plaso.GetVersion()),
@@ -76,13 +76,11 @@ def GetPluginData():
   for name, description in sorted(output.ListOutputFormatters()):
     return_dict['Output Modules'].append((name, description))
 
-  return_dict['Registry Plugins'] = []
-  reg_plugins = win_registry_interface.GetRegistryPlugins()
-  a_plugin = reg_plugins.GetAllKeyPlugins()[0]
+  return_dict['Plugins'] = []
 
-  for plugin, obj in sorted(a_plugin.classes.items()):
+  for plugin, obj in sorted(plugin.BasePlugin.classes.iteritems()):
     doc_string, _, _ = obj.__doc__.partition('\n')
-    return_dict['Registry Plugins'].append((plugin, doc_string))
+    return_dict['Plugins'].append((plugin, doc_string))
 
   return_dict['Filters'] = []
   for filter_obj in sorted(filters.ListFilters()):
