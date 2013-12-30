@@ -50,7 +50,7 @@ def RunTests():
 
   tests = None
   for test_file in FindTestFiles():
-    library_name = test_file.rstrip('.py').replace('/', '.').lstrip('.')
+    library_name = test_file.rstrip('.py').replace(os.path.sep, '.').lstrip('.')
     if library_name in blacklisted_casses:
       continue
     try:
