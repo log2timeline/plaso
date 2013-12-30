@@ -27,7 +27,6 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
-
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
 # TODO: get the real name for the user of the group having the uid or gid.
@@ -77,6 +76,7 @@ class AslEvent(event.EventObject):
     self.facility = facility
     self.message = message
     self.extra_information = extra_information
+
 
 class AslParser(parser.BaseParser):
   """Parser for ASL files. """
@@ -200,6 +200,7 @@ class AslParser(parser.BaseParser):
       An ASL event for each entry in the file.
     """
     file_object = file_entry.Open()
+    file_object.seek(0, os.SEEK_SET)
     try:
       header = self.ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as e:

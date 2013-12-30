@@ -98,6 +98,7 @@ class OperaTypedHistoryParser(parser.BaseParser):
       attributes.
     """
     file_object = file_entry.Open()
+    file_object.seek(0, os.SEEK_SET)
 
     # Need to verify the first line to make sure this is a) XML and
     # b) the right XML.
@@ -259,6 +260,7 @@ class OperaGlobalHistoryParser(parser.BaseParser):
       attributes.
     """
     file_object = file_entry.Open()
+    file_object.seek(0, os.SEEK_SET)
 
     try:
       title, url, timestamp, popularity_index = self._ReadRecord(
