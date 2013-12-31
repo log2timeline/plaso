@@ -21,6 +21,7 @@ from plaso.formatters import android_sms
 from plaso.formatters import appusage
 from plaso.formatters import bencode_parser
 from plaso.formatters import chrome
+from plaso.formatters import chrome_cookies
 from plaso.formatters import filestat
 from plaso.formatters import firefox
 from plaso.formatters import gdrive

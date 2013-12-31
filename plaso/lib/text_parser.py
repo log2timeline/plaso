@@ -37,6 +37,10 @@ from plaso.lib import utils
 import pyparsing
 import pytz
 
+# Pylint complains about some functions not being implemented that shouldn't
+# be since they need to be implemented by children.
+# pylint: disable-msg=abstract-method
+
 
 class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
   """Generic text based parser that uses lexer to assist with parsing.
