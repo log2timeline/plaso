@@ -20,6 +20,7 @@ from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import appusage
 from plaso.parsers.sqlite_plugins import chrome
+from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import firefox
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import ls_quarantine
