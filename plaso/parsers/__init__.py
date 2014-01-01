@@ -19,6 +19,7 @@
 
 from plaso.parsers import asl
 from plaso.parsers import bencode_parser
+from plaso.parsers import bsm
 from plaso.parsers import filestat
 from plaso.parsers import hachoir
 from plaso.parsers import java_idx
