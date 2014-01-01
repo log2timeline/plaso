@@ -23,6 +23,7 @@ from plaso.parsers import bsm
 from plaso.parsers import filestat
 from plaso.parsers import hachoir
 from plaso.parsers import java_idx
+from plaso.parsers import mac_appfirewall
 from plaso.parsers import mac_wifi
 from plaso.parsers import mactime
 from plaso.parsers import mcafeeav
