@@ -302,6 +302,10 @@ class OsFileEntry(BaseFileEntry):
       yield OsFileEntry(
           path_spec, root=self.pathspec_root, fscache=self._fscache)
 
+  def IsAllocated(self):
+    """Determines if the file entry is allocated."""
+    return True
+
   def IsDirectory(self):
     """Determines if the file entry is a directory."""
     return os.path.isdir(self.pathspec.file_path)

@@ -176,10 +176,12 @@ class ImageExtractor(object):
     input_queue = queue.SingleThreadedQueue()
     output_queue = queue.SingleThreadedQueue()
 
-    image_collector = collector_factory.GetImageCollector(
-        input_queue, output_queue, self._image_path,
-        byte_offset=self._image_offset, parse_vss=process_vss,
-        fscache=self._fscache)
+    image_collector = collector_factory.GetGenericCollector(
+        input_queue, output_queue, self._image_path)
+    image_collector.SetImageInformation(
+        byte_offset=self._image_offset, fscache=self._fscache)
+    if process_vss:
+      image_collector.SetImageInformation()
 
     image_collector.Collect()
 
