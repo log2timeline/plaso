@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -19,6 +20,7 @@
 pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
 """
 # To make YAML loading work.
+
 import argparse
 import datetime
 import locale
@@ -90,7 +92,7 @@ def DisplayInformation(info, params, store, last_entry=False):
     else:
       information += u'\tPrintout omitted (use verbose to see)\n'
 
-  preprocessing = u'Pre-processing information:\n'
+  preprocessing = u'Preprocessing information:\n'
   if params.verbose:
     for key, value in info.__dict__.items():
       if key == 'collection_information':

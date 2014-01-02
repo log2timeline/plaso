@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -21,6 +22,7 @@ This can currently be looked as an alpha stage.
 This file contains the main engine used by plaso or the main glue
 that holds everything in one place.
 """
+
 import logging
 import multiprocessing
 import os
@@ -118,7 +120,7 @@ class Engine(object):
   def _PreProcess(self, pre_obj):
     """Run the preprocessors."""
 
-    logging.info('Starting to collect pre-processing information.')
+    logging.info('Starting to collect preprocessing information.')
     logging.info('Filename: %s', self.config.filename)
 
     if self.config.image:
@@ -272,7 +274,7 @@ class Engine(object):
     if not pre_obj:
       pre_obj = preprocess.PlasoPreprocess()
 
-    # Run pre-processing if necessary.
+    # Run preprocessing if necessary.
     if run_preprocess:
       try:
         self._PreProcess(pre_obj)
@@ -331,7 +333,7 @@ class Engine(object):
         logging.info(u'Parser filter expression changed to: {}'.format(
             self.config.parsers))
 
-    # Save some information about the run time into the pre-processing object.
+    # Save some information about the run time into the preprocessing object.
     self._StoreCollectionInformation(pre_obj)
 
     return pre_obj

@@ -17,10 +17,10 @@
 # limitations under the License.
 """The SleuthKit collector object implementation."""
 
+import logging
 import re
 
 from plaso.collector import interface
-from plaso.collector import tsk_helper
 from plaso.lib import errors
 from plaso.pvfs import pvfs
 from plaso.pvfs import utils as pvfs_utils
@@ -37,35 +37,84 @@ class TSKFilePreprocessCollector(interface.PreprocessCollector):
     """Initializes the preprocess collector object.
 
     Args:
-      pre_obj: The pre-processing object.
+      pre_obj: The preprocessing object.
       source_path: Path of the source image file.
       byte_offset: Optional byte offset into the image file if this is a disk
                    image. The default is 0.
     """
-    super(TSKFilePreprocessCollector, self).__init__(pre_obj)
-    self._source_path = source_path
+    super(TSKFilePreprocessCollector, self).__init__(pre_obj, source_path)
     self._image_offset = byte_offset
     self._fscache = pvfs.FilesystemCache()
-    self._fs_obj = self._fscache.Open(source_path, byte_offset=byte_offset)
+    self._tsk_fs = self._fscache.Open(source_path, byte_offset=byte_offset)
 
-  def GetPaths(self, path_list):
-    """Find the path if it exists.
+  def _GetPaths(self, path_segments_expressions_list):
+    """Retrieves paths based on path segments expressions.
+
+       A path segment expression is either a regular expression or a string
+       containing an expanded path segment.
 
     Args:
-      path_list: A list of either regular expressions or expanded
-                 paths (strings).
+       path_segments_expressions_list: A list of path segments expressions.
 
-    Returns:
-      A list of paths.
+    Yields:
+      The paths found.
     """
-    return tsk_helper.GetTSKPaths(path_list, self._fs_obj)
+    paths = []
+
+    for part in path_segments_expressions_list:
+      if not part:
+        continue
+
+      if isinstance(part, basestring):
+        if paths:
+          for index, path in enumerate(paths):
+            paths[index] = u'/'.join([path, part])
+        else:
+          paths.append(u'/{}'.format(part))
+      else:
+        found_path = False
+        if not paths:
+          paths.append('/')
+
+        old_paths = list(paths)
+        paths = []
+        for real_path in old_paths:
+          try:
+            tsk_directory = self._tsk_fs.fs.open_dir(real_path)
+          except IOError:
+            continue
+          for tsk_file in tsk_directory:
+            try:
+              name = tsk_file.info.name.name
+              if not tsk_file.info.meta:
+                continue
+            except AttributeError as exception:
+              logging.error((
+                  u'[ParseImage] Problem reading file [{0:s}], error: '
+                  u'{1:s}').format(name, exception))
+              continue
+
+            if name == '.' or name == '..':
+              continue
+
+            m = part.match(name)
+            if m:
+              append_path = u'/'.join([real_path, m.group(0)])
+              found_path = True
+              paths.append(append_path)
+
+        if not found_path:
+          raise errors.PathNotFound(u'Path not found inside')
+
+    for real_path in paths:
+      yield real_path
 
   def GetFilePaths(self, path, file_name):
     """Return a list of files given a path and a pattern."""
     ret = []
     file_re = re.compile(r'^{0:s}$'.format(file_name), re.I | re.S)
     try:
-      directory = self._fs_obj.fs.open_dir(path)
+      directory = self._tsk_fs.fs.open_dir(path)
     except IOError as e:
       raise errors.PreProcessFail(
           u'Unable to open directory: {0:s} with error: {1:s}'.format(path, e))
@@ -101,7 +150,7 @@ class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
     """Initializes the preprocess collector object.
 
     Args:
-      pre_obj: The pre-processing object.
+      pre_obj: The preprocessing object.
       source_path: Path of the source image file.
       store_number: The VSS store index number.
       byte_offset: Optional byte offset into the image file if this is a disk
@@ -111,7 +160,7 @@ class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
         pre_obj, source_path, byte_offset=byte_offset)
     self._store_number = store_number
     self._fscache = pvfs.FilesystemCache()
-    self._fs_obj = self._fscache.Open(
+    self._tsk_fs = self._fscache.Open(
         source_path, byte_offset=byte_offset, store_number=store_number)
 
   def OpenFileEntry(self, path):

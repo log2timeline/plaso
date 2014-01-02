@@ -22,34 +22,74 @@ import os
 import re
 
 from plaso.collector import interface
-from plaso.collector import os_helper
+from plaso.lib import event
+from plaso.lib import utils
+from plaso.pvfs import pfile_entry
 from plaso.pvfs import utils as pvfs_utils
 
 
 class FileSystemPreprocessCollector(interface.PreprocessCollector):
-  """A wrapper around collecting files from mount points."""
+  """Class that implements the file system preprocess collector object."""
 
-  def __init__(self, pre_obj, source_path):
-    """Initializes the preprocess collector object.
+  def _GetPaths(self, path_segments_expressions_list):
+    """Retrieves paths based on path segments expressions.
 
-    Args:
-      pre_obj: The pre-processing object.
-      source_path: Path of the source file or directory.
-    """
-    super(FileSystemPreprocessCollector, self).__init__(pre_obj)
-    self._source_path = source_path
-
-  def GetPaths(self, path_list):
-    """Find the path if it exists.
+       A path segment expression is either a regular expression or a string
+       containing an expanded path segment.
 
     Args:
-      path_list: A list of either regular expressions or expanded
-                 paths (strings).
+       path_segments_expressions_list: A list of path segments expressions.
 
-    Returns:
-      A list of paths.
+    Yields:
+      The paths found.
     """
-    return os_helper.GetOsPaths(path_list, self._source_path)
+    source_path = self._source_path
+    if source_path.endswith(os.path.sep):
+      source_path = source_path[:-1]
+
+    paths_found = ['']
+
+    for path_segment_expression in path_segments_expressions_list:
+      sub_paths_found = []
+
+      for path in paths_found:
+        full_path = pfile_entry.OsFileEntry.JoinPath([source_path, path])
+
+        path_spec = event.EventPathSpec()
+        path_spec.type = 'OS'
+        path_spec.file_path = utils.GetUnicodeString(full_path)
+        file_entry = pfile_entry.OsFileEntry(path_spec)
+
+        for sub_file_entry in file_entry.GetSubFileEntries():
+          sub_file_entry_match = u''
+
+          # TODO: need to handle case (in)sentive matches.
+          if isinstance(path_segment_expression, basestring):
+            if path_segment_expression == sub_file_entry.directory_entry_name:
+              sub_file_entry_match = sub_file_entry.directory_entry_name
+
+          else:
+            re_match = path_segment_expression.match(
+                sub_file_entry.directory_entry_name)
+
+            if re_match:
+              sub_file_entry_match = re_match.group(0)
+
+          if sub_file_entry_match:
+            sub_paths_found.append(pfile_entry.OsFileEntry.JoinPath([
+                path, sub_file_entry_match]))
+
+      if not sub_paths_found:
+        break
+
+      paths_found = sub_paths_found
+
+    # A resulting path will contain a leading path separator that needs
+    # to be removed.
+    for path in paths_found:
+      # TODO: the original function contained a check for os.path.isdir()
+      # is this function supposed to only return paths of directories?
+      yield path[1:]
 
   def GetFilePaths(self, path, file_name):
     """Return a list of files given a path and a pattern.
@@ -59,9 +99,9 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
       file_name: the file name pattern.
 
     Returns:
-      A list of file names.
+      A list of filenames.
     """
-    ret = []
+    filenames_found = []
     file_re = re.compile(r'^{0:s}$'.format(file_name), re.I | re.S)
     if path == os.path.sep:
       directory = self._source_path
@@ -72,15 +112,15 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
 
     try:
       for entry in os.listdir(directory):
-        m = file_re.match(entry)
-        if m:
-          if os.path.isfile(os.path.join(directory, m.group(0))):
-            ret.append(os.path.join(path_use, m.group(0)))
+        match = file_re.match(entry)
+        if match:
+          if os.path.isfile(os.path.join(directory, match.group(0))):
+            filenames_found.append(os.path.join(path_use, match.group(0)))
     except OSError as exception:
-      logging.error(
-          u'Unable to read directory: {0:s}, reason {1:s}'.format(
+      logging.error((
+          u'Unable to read directory: {0:s} with error: {1:s}').format(
               directory, exception))
-    return ret
+    return filenames_found
 
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""

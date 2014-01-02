@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -26,6 +27,7 @@ entry to an output formatter that takes care of parsing the output into
 a human readable format for easy human consumption/analysis.
 
 """
+
 import abc
 import logging
 import sys
@@ -131,7 +133,7 @@ class LogOutputFormatter(object):
   def StartEvent(self):
     """This should be extended by specific implementations.
 
-    This method does all pre-processing or output before each event
+    This method does all preprocessing or output before each event
     is printed, for instance to surround XML events with tags, etc.
     """
     pass
