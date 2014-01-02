@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -93,6 +94,7 @@ For further details about the storage design see:
 # Independent enough to be split into separate project to ease integration by
 # other tools. This file will then contain the queueing mechanism and other
 # plaso specific mechanism, making it easier to import the storage library.
+
 import collections
 import construct
 import heapq
@@ -1073,7 +1075,7 @@ class SimpleStorageDumper(object):
     Args:
       output_file: The path to the output file.
       buffer_size: The estimated size of a protobuf file.
-      pre: A pre-processing object.
+      pre: A preprocessing object.
     """
     self._queue = queue.MultiThreadedQueue()
     self.output_file = output_file

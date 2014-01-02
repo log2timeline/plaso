@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -22,6 +23,7 @@ Windows registry plugins, SQLite plugins or any other parsing plugins.
 This is provided as a separate file to make it easier to inherit in other
 projects that may want to use the Plaso plugin system.
 """
+
 import abc
 
 from plaso.lib import registry
@@ -68,7 +70,7 @@ class BasePlugin(object):
     """Constructor for a plugin.
 
     Args:
-      pre_obj: The pre-processing object that contains information gathered
+      pre_obj: The preprocessing object that contains information gathered
                during the pre processing stage. This object contains useful
                information that can be utilized by the plugin.
     """

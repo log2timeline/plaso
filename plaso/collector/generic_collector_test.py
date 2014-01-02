@@ -118,7 +118,7 @@ class GenericCollectorUnitTest(unittest.TestCase):
     self.assertTrue('./test_data/testdir/filter_1.txt' in paths)
     self.assertFalse('./test_data/testdir/filter2.txt' in paths)
     self.assertTrue('./test_data/testdir/filter_3.txt' in paths)
-    self.assertTrue('././AUTHORS' in paths)
+    self.assertTrue('./AUTHORS' in paths)
 
   def testImageCollection(self):
     """Test collection on a storage media image file.

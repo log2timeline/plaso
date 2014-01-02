@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A plugin that gather extension ID's from Chrome history browser."""
+
 import logging
 import re
 import urllib2
@@ -95,7 +97,7 @@ class AnalyzeChromeExtensionPlugin(analysis_interface.AnalysisPlugin):
   def _GetUserNameFromPath(self, file_path):
     """Return a username based on gathered information in pre_obj and path.
 
-    During pre-processing the tool will gather file paths to where each user
+    During preprocessing the tool will gather file paths to where each user
     profile is stored, and which user it belongs to. This function takes in
     a path to a file and compares it to a list of all discovered usernames
     and paths to their profiles in the system. If it finds that the file path
