@@ -45,7 +45,7 @@ class TestWinRarRegistry(unittest.TestCase):
 
   def testWinRarArcHistoryPlugin(self):
     """Run a simple test against a mocked key with values."""
-    plugin = winrar.WinRarArcHistoryPlugin(None, None, None)
+    plugin = winrar.WinRarArcHistoryPlugin()
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)

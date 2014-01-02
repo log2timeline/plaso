@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -24,8 +25,8 @@ from plaso.lib import event
 from plaso.lib import registry
 from plaso.lib import utils
 from plaso.parsers.plist_plugins import interface as plist_interface
-from plaso.parsers.winreg_plugins import interface as win_registry_interface
 from plaso.winreg import cache
+from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
 
 from plaso.proto import plaso_storage_pb2
@@ -37,7 +38,7 @@ import pytz
 
 
 class PreprocessPlugin(object):
-  """A preprocessing class defining a single attribute.
+  """Class that defines the preprocess plugin object interface.
 
   Any pre-processing plugin that implements this interface
   should define which operating system this plugin supports.
@@ -66,7 +67,6 @@ class PreprocessPlugin(object):
   guaranteed order of plugins that have the same weight, which
   makes it important to define the weight appropriately.
   """
-
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
@@ -79,7 +79,13 @@ class PreprocessPlugin(object):
   ATTRIBUTE = ''
 
   def __init__(self, obj_store, collector):
-    """Set up the preprocessing plugin."""
+    """Initializes the preprocess plugin object.
+
+    Args:
+      obj_store: the object store.
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
+    super(PreprocessPlugin, self).__init__()
     self._obj_store = obj_store
     self._collector = collector
 
@@ -198,7 +204,7 @@ class PlasoPreprocess(object):
 
 
 class MacPlistPreprocess(PreprocessPlugin):
-  """A preprocessing class that extract values from plist files."""
+  """Class that defines the Mac OS X plist preprocess plugin object."""
   __abstract = True
 
   SUPPORTED_OS = ['MacOSX']
@@ -276,7 +282,7 @@ class MacPlistPreprocess(PreprocessPlugin):
 
 
 class MacXMLPlistPreprocess(MacPlistPreprocess):
-  """A preprocessing class that extract values from a XML plist file."""
+  """Class that defines the Mac OS X XML plist preprocess plugin object."""
   __abstract = True
 
   def ParseFile(self, file_entry, file_object):
@@ -324,14 +330,13 @@ class MacXMLPlistPreprocess(MacPlistPreprocess):
 
 
 class WinRegistryPreprocess(PreprocessPlugin):
-  """A preprocessing class that extracts values from the Windows registry.
+  """Class that defines the Windows Registry preprocess plugin object.
 
   By default registry needs information about system paths, which excludes
   them to run in priority 1, in some cases they may need to run in priority
   3, for instance if the registry key is dependent on which version of Windows
   is running, information that is collected during priority 2.
   """
-
   __abstract = True
 
   SUPPORTED_OS = ['Windows']
@@ -340,6 +345,16 @@ class WinRegistryPreprocess(PreprocessPlugin):
   REG_KEY = '\\'
   REG_PATH = '{sysregistry}'
   REG_FILE = 'SOFTWARE'
+
+  def __init__(self, obj_store, collector):
+    """Initializes the Window Registry preprocess plugin object.
+
+    Args:
+      obj_store: the object store.
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
+    super(WinRegistryPreprocess, self).__init__()
+    self._path_expander = None
 
   def GetValue(self):
     """Return the value gathered from a registry key for preprocessing."""
@@ -375,9 +390,16 @@ class WinRegistryPreprocess(PreprocessPlugin):
       raise errors.PreProcessFail(
           u'Unable to open the registry: {} [{}]'.format(file_name[0], e))
 
-    self._reg_cache = cache.WinRegistryCache(winreg_file, self.REG_FILE)
-    self._reg_cache.BuildCache()
-    key_path = self.ExpandKeyPath()
+    if self._path_expander is None:
+      reg_cache = cache.WinRegistryCache(winreg_file, self.REG_FILE)
+      reg_cache.BuildCache()
+      self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
+          self._obj_store, reg_cache)
+
+    try:
+      key_path = self._path_expander.ExpandPath(self.REG_KEY)
+    except KeyError:
+      key_path = u''
 
     try:
       key = winreg_file.GetKeyByPath(key_path)
@@ -390,16 +412,6 @@ class WinRegistryPreprocess(PreprocessPlugin):
           u'Registry key %s does not exist.' % self.REG_KEY)
 
     return self.ParseKey(key)
-
-  def ExpandKeyPath(self):
-    """Expand the key path with key words."""
-    try:
-      path = win_registry_interface.ExpandRegistryPath(
-          self.REG_KEY, self._obj_store, self._reg_cache)
-    except KeyError:
-      return ''
-
-    return path
 
   @abc.abstractmethod
   def ParseKey(self, key):

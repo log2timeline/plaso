@@ -67,7 +67,7 @@ class WinRegistry(object):
     """Determines the mounted path based on the filename.
 
     Args:
-      filename: The name of the Registry file.
+      filename: The name of the Windows Registry file.
 
     Returns:
       The mounted path if successful or None otherwise.
@@ -81,7 +81,7 @@ class WinRegistry(object):
       file_entry: The file entry object.
 
     Returns:
-      The a Windows Registry file (an instance of WinRegFile) if successful
+      The a Windows Registry file (instance of WinRegFile) if successful
       or None otherwise.
     """
     winreg_file = None
@@ -98,8 +98,9 @@ class WinRegistry(object):
     """Mounts a file in the Registry.
 
     Args:
-      winreg_file: The Windows Registry file (an instance of WinRegFile).
-      mounted_path: The path of the key where the Registry file is mounted.
+      winreg_file: The Windows Registry file (instance of WinRegFile).
+      mounted_path: The path of the key where the Windows Registry file
+                    is mounted.
 
     Raises:
       KeyError: if mounted path is already set.
@@ -117,7 +118,7 @@ class WinRegistry(object):
     """Retrieves a specific key defined by the Registry path.
 
     Returns:
-      The key (an instance of WinRegKey) if available or None otherwise.
+      The key (instance of WinRegKey) if available or None otherwise.
     """
     mounted_path = None
     if self._files:

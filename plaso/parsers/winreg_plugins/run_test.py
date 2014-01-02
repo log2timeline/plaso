@@ -43,7 +43,7 @@ class TestRunNtuserRegistry(unittest.TestCase):
   def testRunNtuser(self):
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run')
-    plugin = run.RunNtuserPlugin(None, None, None)
+    plugin = run.RunNtuserPlugin()
     entries = list(plugin.Process(key))
 
     expected_line = (
@@ -59,7 +59,7 @@ class TestRunNtuserRegistry(unittest.TestCase):
   def testRunOnceNtuser(self):
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce')
-    plugin = run.RunOnceNtuserPlugin(None, None, None)
+    plugin = run.RunOnceNtuserPlugin()
     entries = list(plugin.Process(key))
 
     expected_line = (
@@ -88,7 +88,7 @@ class TestRunSoftwareRegistry(unittest.TestCase):
   def testRunSoftware(self):
     key = self.winreg_file.GetKeyByPath(
         '\\Microsoft\\Windows\\CurrentVersion\\Run')
-    plugin = run.RunSoftwarePlugin(None, None, None)
+    plugin = run.RunSoftwarePlugin()
     entries = list(plugin.Process(key))
 
     expected_line = (
@@ -105,7 +105,7 @@ class TestRunSoftwareRegistry(unittest.TestCase):
   def testRunOnceSoftware(self):
     key = self.winreg_file.GetKeyByPath(
         '\\Microsoft\\Windows\\CurrentVersion\\RunOnce')
-    plugin = run.RunOnceSoftwarePlugin(None, None, None)
+    plugin = run.RunOnceSoftwarePlugin()
     entries = list(plugin.Process(key))
 
     expected_line = (

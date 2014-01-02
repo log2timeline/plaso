@@ -44,8 +44,7 @@ class TestOutlookSearchMRUPlugin(unittest.TestCase):
 
   def testMSOutlook2013SearchMRUPlugin(self):
     """Run a simple test against a mocked key with values."""
-    plugin = outlook.MSOutlook2013SearchMRUPlugin(
-        None, None, None)
+    plugin = outlook.MSOutlook2013SearchMRUPlugin()
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)

@@ -55,7 +55,7 @@ class TestMRUListRegistry(unittest.TestCase):
 
   def testMRUListPlugin(self):
     """Run a simple test against a mocked key with values."""
-    plugin = mrulist.MRUListPlugin(None, None, None)
+    plugin = mrulist.MRUListPlugin()
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)
