@@ -52,7 +52,7 @@ class RegistryPlugin(plugin.BasePlugin):
     Args:
       hive: Optional Windows Registry hive (instance of WinRegistry).
             The default is None.
-      pre_obj: Optional pre-processing object that contains information gathered
+      pre_obj: Optional preprocessing object that contains information gathered
                during preprocessing of data. The default is None.
       reg_cache: Optional Windows Registry objects cache (instance of
                  WinRegistryCache). The default is None.
@@ -95,7 +95,7 @@ class KeyPlugin(RegistryPlugin):
     Args:
       hive: Optional Windows Registry hive (instance of WinRegistry).
             The default is None.
-      pre_obj: Optional pre-processing object that contains information gathered
+      pre_obj: Optional preprocessing object that contains information gathered
                during preprocessing of data. The default is None.
       reg_cache: Optional Windows Registry objects cache (instance of
                  WinRegistryCache). The default is None.

@@ -237,6 +237,7 @@ class OsFileEntry(BaseFileEntry):
       fscache: Optional file system cache object. The default is None.
     """
     super(OsFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
+    self.directory_entry_name = u''
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -295,12 +296,17 @@ class OsFileEntry(BaseFileEntry):
       return
 
     for directory_entry in os.listdir(self.pathspec.file_path):
-      directory_entry = os.path.join(self.pathspec.file_path, directory_entry)
+      directory_entry_path = os.path.join(
+          self.pathspec.file_path, directory_entry)
       path_spec = event.EventPathSpec()
       path_spec.type = 'OS'
-      path_spec.file_path = utils.GetUnicodeString(directory_entry)
-      yield OsFileEntry(
+      path_spec.file_path = utils.GetUnicodeString(directory_entry_path)
+      sub_file_entry = OsFileEntry(
           path_spec, root=self.pathspec_root, fscache=self._fscache)
+
+      # Work-around for limitations of pfile, will be fixed by PyVFS.
+      sub_file_entry.directory_entry_name = directory_entry
+      yield sub_file_entry
 
   def IsAllocated(self):
     """Determines if the file entry is allocated."""
@@ -317,6 +323,16 @@ class OsFileEntry(BaseFileEntry):
   def IsLink(self):
     """Determines if the file entry is a link."""
     return os.path.islink(self.pathspec.file_path)
+
+  @classmethod
+  def JoinPath(cls, path_segments):
+    """Joins the path segments into a path."""
+    return os.path.sep.join(path_segments)
+
+  @classmethod
+  def SplitPath(cls, path):
+    """Splits the path into path segments."""
+    return path.split(os.path.sep)
 
 
 class TarFileEntry(BaseFileEntry):

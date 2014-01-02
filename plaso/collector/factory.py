@@ -28,7 +28,7 @@ def GetFileSystemPreprocessCollector(pre_obj, source_path):
   """Factory function to retrieve an image preprocess collector object.
 
   Args:
-    pre_obj: The pre-processing object.
+    pre_obj: The preprocessing object.
     source_path: Path of the source file or directory.
 
   Returns:
@@ -42,7 +42,7 @@ def GetImagePreprocessCollector(
   """Factory function to retrieve an image preprocess collector object.
 
   Args:
-    pre_obj: The pre-processing object.
+    pre_obj: The preprocessing object.
     source_path: Path of the source image file.
     byte_offset: Optional byte offset into the image file if this is a disk
                  image. The default is 0.

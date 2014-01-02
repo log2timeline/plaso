@@ -336,7 +336,7 @@ message EventContainer {
 };
 
 // The PreProcess protobuf is a simple message that stores information
-// gathered from the pre-processing stage of plaso.
+// gathered from the preprocessing stage of plaso.
 message PreProcess {
   // Storing information about the runtime of the tool.
   optional Dict collection_information = 1;
