@@ -20,6 +20,7 @@
 import hashlib
 import logging
 import os
+import re
 
 from plaso.collector import interface
 from plaso.collector import tsk_helper
@@ -29,6 +30,7 @@ from plaso.lib import storage_helper
 from plaso.lib import utils
 from plaso.parsers import filestat
 from plaso.pvfs import pvfs
+from plaso.pvfs import utils as pvfs_utils
 from plaso.pvfs import vss
 
 import pytsk3
@@ -65,14 +67,14 @@ def CalculateNTFSTimeHash(meta):
   return ret_hash.hexdigest()
 
 
-class TSKCollector(interface.Collector):
-  """Class that implements a collector object that uses pytsk3."""
+class TSKCollector(interface.PfileCollector):
+  """Class that implements a pfile-based collector object that uses pytsk3."""
 
   SECTOR_SIZE = 512
 
   def __init__(
       self, process_queue, output_queue, image, sector_offset=0, byte_offset=0,
-      parse_vss=False, vss_stores=None, fscache=None, add_dir_stat=True):
+      parse_vss=False, vss_stores=None, fscache=None):
     """Initializes the collector object.
 
     Args:
@@ -90,12 +92,8 @@ class TSKCollector(interface.Collector):
                  (only applicaple in Windows with Volume Shadow Snapshot).
       vss_stores: If defined a range of VSS stores to include in vss parsing.
       fscache: A FilesystemCache object.
-      add_dir_stat: Optional boolean value to indicate whether or not we want to
-                    include directory stat information into the storage queue.
-                    The default is true.
     """
-    super(TSKCollector, self).__init__(
-        process_queue, output_queue, add_dir_stat=add_dir_stat)
+    super(TSKCollector, self).__init__(process_queue, output_queue)
     self._image = image
     self._offset = sector_offset
     self._offset_bytes = byte_offset
@@ -186,7 +184,7 @@ class TSKCollector(interface.Collector):
     try:
       directory = fs.fs.open_dir(inode=cur_inode)
       # Get a stat object and send timestamps for the directory to the storage.
-      if self._dir_stat:
+      if self.collect_directory_metadata:
         directory_stat = tsk_helper.GetTskDirectoryStat(directory)
         directory_stat.full_path = path
         directory_stat.display_path = u'{0:s}:{1:s}'.format(self._image, path)
@@ -271,3 +269,98 @@ class TSKCollector(interface.Collector):
 
     for inode_addr, path in directories:
       self.ParseImageDir(fs, inode_addr, path)
+
+
+class TSKFilePreprocessCollector(interface.PreprocessCollector):
+  """A wrapper around collecting files from TSK images."""
+
+  _BYTES_PER_SECTOR = 512
+
+  def __init__(self, pre_obj, image_path, byte_offset=0):
+    """Initializes the preprocess collector object.
+
+    Args:
+      pre_obj: The pre-processing object.
+      image_path: The path of the image file.
+      byte_offset: Optional byte offset into the image file if this is a disk
+                   image. The default is 0.
+    """
+    super(TSKFilePreprocessCollector, self).__init__(pre_obj)
+    self._image_path = image_path
+    self._image_offset = byte_offset
+    self._fscache = pvfs.FilesystemCache()
+    self._fs_obj = self._fscache.Open(image_path, byte_offset)
+
+  def GetPaths(self, path_list):
+    """Find the path if it exists.
+
+    Args:
+      path_list: A list of either regular expressions or expanded
+                 paths (strings).
+
+    Returns:
+      A list of paths.
+    """
+    return tsk_helper.GetTSKPaths(path_list, self._fs_obj)
+
+  def GetFilePaths(self, path, file_name):
+    """Return a list of files given a path and a pattern."""
+    ret = []
+    file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
+    try:
+      directory = self._fs_obj.fs.open_dir(path)
+    except IOError as e:
+      raise errors.PreProcessFail(
+          u'Unable to open directory: %s [%s]' % (path, e))
+
+    for tsk_file in directory:
+      try:
+        f_type = tsk_file.info.meta.type
+        name = tsk_file.info.name.name
+      except AttributeError:
+        continue
+      if f_type == pytsk3.TSK_FS_META_TYPE_REG:
+        m = file_re.match(name)
+        if m:
+          ret.append(u'{0:s}/{1:s}'.format(path, name))
+
+    return ret
+
+  def OpenFileEntry(self, path):
+    """Opens a file entry object from the path."""
+    return pvfs_utils.OpenTskFileEntry(
+        path, self._image_path,
+        int(self._image_offset / self._BYTES_PER_SECTOR), self._fscache)
+
+  def ReadingFromImage(self):
+    """Indicates if the collector is reading from an image file."""
+    return True
+
+
+class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
+  """A wrapper around collecting files from a VSS store from an image file."""
+
+  def __init__(self, pre_obj, image_path, store_nr, byte_offset=0):
+    """Initializes the preprocess collector object.
+
+    Args:
+      pre_obj: The pre-processing object.
+      image_path: The path of the image file.
+      store_nr: The VSS store index number.
+      byte_offset: Optional byte offset into the image file if this is a disk
+                   image. The default is 0.
+    """
+    super(VSSFilePreprocessCollector, self).__init__(
+        pre_obj, image_path, byte_offset=byte_offset)
+    self._store_nr = store_nr
+    self._fscache = pvfs.FilesystemCache()
+    self._fs_obj = self._fscache.Open(
+        image_path, byte_offset, store_nr)
+
+  def OpenFileEntry(self, path):
+    """Opens a file entry object from the path."""
+    return pvfs_utils.OpenVssFileEntry(
+        path, self._image_path, self._store_nr,
+        int(self._image_offset / self._BYTES_PER_SECTOR), self._fscache)
+
+

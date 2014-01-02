@@ -547,45 +547,53 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
     if 'PfileStatParser' in loaded_parsers:
       include_directory_stat = True
 
-  if config.file_filter:
-    # Start a targeted collection filter.
-    if config.image:
+  if config.image:
+    # Note that os.path.isfile() will return false when config.filename
+    # point to a device file.
+    if os.path.isdir(config.filename):
+      raise errors.BadConfigOption(
+          u'Source: {0:s} cannot be a directory.'.format(config.filename))
+
+    if config.file_filter:
       logging.debug(u'Starting a targeted image collection.')
-      return collector_factory.GetImageCollectorWithFilter(
+    else:
+      logging.debug(u'Collection started from an image.')
+
+    if config.file_filter:
+      collector_object = collector_factory.GetImageCollectorWithFilter(
           collection_queue, storage_queue, config.filename,
           config.file_filter, pre_obj,
           sector_offset=config.image_offset,
           byte_offset=config.image_offset_bytes,
-          parse_vss=config.parse_vss, vss_stores=config.vss_stores,
-          add_dir_stat=include_directory_stat)
+          parse_vss=config.parse_vss, vss_stores=config.vss_stores)
     else:
-      logging.debug(u'Starting a targeted recursive collection.')
-      return collector_factory.GetFileSystemCollectorWithFilter(
-          collection_queue, storage_queue, pre_obj, config.filename,
-          config.file_filter, add_dir_stat=include_directory_stat)
+      collector_object = collector_factory.GetImageCollector(
+          collection_queue, storage_queue, config.filename,
+          sector_offset=config.image_offset,
+          byte_offset=config.image_offset_bytes,
+          parse_vss=config.parse_vss, vss_stores=config.vss_stores)
 
-  if config.image:
-    logging.debug(u'Collection started from an image.')
-    return collector_factory.GetImageCollector(
-        collection_queue, storage_queue, config.filename,
-        sector_offset=config.image_offset,
-        byte_offset=config.image_offset_bytes,
-        parse_vss=config.parse_vss, vss_stores=config.vss_stores,
-        add_dir_stat=include_directory_stat)
-  elif config.recursive:
-    logging.debug(u'Collection started from a directory.')
-    return collector_factory.GetFileSystemCollector(
-        collection_queue, storage_queue, unicode(config.filename),
-        add_dir_stat=include_directory_stat)
   else:
-    # Parsing a single file, no need to have multiple workers.
-    config.workers = 1
-
-    # We need to make sure we are dealing with a file.
-    if not os.path.isfile(config.filename):
+    if (not os.path.isfile(config.filename) and
+        not os.path.isdir(config.filename)):
       raise errors.BadConfigOption(
-          u'Wrong usage: {%s} has to be a file.' % config.filename)
+          u'Source: {0:s} has to be a file or directory.'.format(
+              config.filename))
 
-    return collector_factory.GetFileSystemCollector(
-        collection_queue, storage_queue, unicode(config.filename),
-        add_dir_stat=include_directory_stat)
+    if config.file_filter:
+      logging.debug(u'Starting a targeted recursive collection.')
+    elif config.recursive:
+      logging.debug(u'Collection started from a directory.')
+    else:
+      # No need for multiple workers when parsing a single file.
+      config.workers = 1
+
+    collector_object = collector_factory.GetFileSystemCollector(
+        collection_queue, storage_queue, unicode(config.filename))
+
+    if config.file_filter:
+      collector_object.SetFilter(config.file_filter, pre_obj)
+
+  collector_object.collect_directory_metadata = include_directory_stat
+
+  return collector_object

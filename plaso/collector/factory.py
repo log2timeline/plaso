@@ -20,210 +20,11 @@
 # factory helper functions for the PyVFS migration.
 
 import logging
-import os
-import re
 
-from plaso.collector import interface
 from plaso.collector import os_collector
-from plaso.collector import os_helper
 from plaso.collector import tsk_collector
-from plaso.collector import tsk_helper
 from plaso.lib import collector_filter
-from plaso.lib import errors
-from plaso.pvfs import pvfs
 from plaso.pvfs import vss
-from plaso.pvfs import utils
-
-import pytsk3
-
-
-class FileSystemPreprocessCollector(interface.PreprocessCollector):
-  """A wrapper around collecting files from mount points."""
-
-  def __init__(self, pre_obj, mount_point):
-    """Initializes the preprocess collector object.
-
-    Args:
-      pre_obj: The pre-processing object.
-      mount_point: The path to the mount point or base directory.
-    """
-    super(FileSystemPreprocessCollector, self).__init__(pre_obj)
-    self._mount_point = mount_point
-
-  def GetPaths(self, path_list):
-    """Find the path if it exists.
-
-    Args:
-      path_list: A list of either regular expressions or expanded
-                 paths (strings).
-
-    Returns:
-      A list of paths.
-    """
-    return os_helper.GetOsPaths(path_list, self._mount_point)
-
-  def GetFilePaths(self, path, file_name):
-    """Return a list of files given a path and a pattern.
-
-    Args:
-      path: the path.
-      file_name: the file name pattern.
-
-    Returns:
-      A list of file names.
-    """
-    ret = []
-    file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
-    if path == os.path.sep:
-      directory = self._mount_point
-      path_use = '.'
-    else:
-      directory = os.path.join(self._mount_point, path)
-      path_use = path
-
-    try:
-      for entry in os.listdir(directory):
-        m = file_re.match(entry)
-        if m:
-          if os.path.isfile(os.path.join(directory, m.group(0))):
-            ret.append(os.path.join(path_use, m.group(0)))
-    except OSError as exception:
-      logging.error(
-          u'Unable to read directory: {0:s}, reason {1:s}'.format(
-              directory, exception))
-    return ret
-
-  def OpenFileEntry(self, path):
-    """Opens a file entry object from the path."""
-    return utils.OpenOSFileEntry(os.path.join(self._mount_point, path))
-
-  def ReadingFromImage(self):
-    """Indicates if the collector is reading from an image file."""
-    return False
-
-
-class TargetedFileSystemCollector(os_collector.OSCollector):
-  """This is a simple collector that collects using a targeted list."""
-
-  def __init__(
-      self, proc_queue, stor_queue, pre_obj, mount_point, file_filter,
-      add_dir_stat=True):
-    """Initialize the targeted filesystem collector.
-
-    Args:
-      proc_queue: A Plaso queue object used as a processing queue of files.
-      stor_queue: A Plaso queue object used as a buffer to the storage layer.
-      pre_obj: The PlasoPreprocess object.
-      mount_point: The path to the mount point or base directory.
-      file_filter: The path of the filter file.
-      add_dir_stat: Optional boolean value to indicate whether or not we want to
-                    include directory stat information into the storage queue.
-                    The default is true.
-    """
-    super(TargetedFileSystemCollector, self).__init__(
-        proc_queue, stor_queue, mount_point, add_dir_stat=add_dir_stat)
-    self._collector = FileSystemPreprocessCollector(
-        pre_obj, mount_point)
-    self._file_filter = file_filter
-
-  def Collect(self):
-    """Start the collector."""
-    for pathspec_string in collector_filter.CollectionFilter(
-        self._collector, self._file_filter).GetPathSpecs():
-      self._queue.Queue(pathspec_string)
-
-
-class TSKFilePreprocessCollector(interface.PreprocessCollector):
-  """A wrapper around collecting files from TSK images."""
-
-  _BYTES_PER_SECTOR = 512
-
-  def __init__(self, pre_obj, image_path, byte_offset=0):
-    """Initializes the preprocess collector object.
-
-    Args:
-      pre_obj: The pre-processing object.
-      image_path: The path of the image file.
-      byte_offset: Optional byte offset into the image file if this is a disk
-                   image. The default is 0.
-    """
-    super(TSKFilePreprocessCollector, self).__init__(pre_obj)
-    self._image_path = image_path
-    self._image_offset = byte_offset
-    self._fscache = pvfs.FilesystemCache()
-    self._fs_obj = self._fscache.Open(image_path, byte_offset)
-
-  def GetPaths(self, path_list):
-    """Find the path if it exists.
-
-    Args:
-      path_list: A list of either regular expressions or expanded
-                 paths (strings).
-
-    Returns:
-      A list of paths.
-    """
-    return tsk_helper.GetTSKPaths(path_list, self._fs_obj)
-
-  def GetFilePaths(self, path, file_name):
-    """Return a list of files given a path and a pattern."""
-    ret = []
-    file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
-    try:
-      directory = self._fs_obj.fs.open_dir(path)
-    except IOError as e:
-      raise errors.PreProcessFail(
-          u'Unable to open directory: %s [%s]' % (path, e))
-
-    for tsk_file in directory:
-      try:
-        f_type = tsk_file.info.meta.type
-        name = tsk_file.info.name.name
-      except AttributeError:
-        continue
-      if f_type == pytsk3.TSK_FS_META_TYPE_REG:
-        m = file_re.match(name)
-        if m:
-          ret.append(u'{0:s}/{1:s}'.format(path, name))
-
-    return ret
-
-  def OpenFileEntry(self, path):
-    """Opens a file entry object from the path."""
-    return utils.OpenTskFileEntry(
-        path, self._image_path,
-        int(self._image_offset / self._BYTES_PER_SECTOR), self._fscache)
-
-  def ReadingFromImage(self):
-    """Indicates if the collector is reading from an image file."""
-    return True
-
-
-class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
-  """A wrapper around collecting files from a VSS store from an image file."""
-
-  def __init__(self, pre_obj, image_path, store_nr, byte_offset=0):
-    """Initializes the preprocess collector object.
-
-    Args:
-      pre_obj: The pre-processing object.
-      image_path: The path of the image file.
-      store_nr: The VSS store index number.
-      byte_offset: Optional byte offset into the image file if this is a disk
-                   image. The default is 0.
-    """
-    super(VSSFilePreprocessCollector, self).__init__(
-        pre_obj, image_path, byte_offset=byte_offset)
-    self._store_nr = store_nr
-    self._fscache = pvfs.FilesystemCache()
-    self._fs_obj = self._fscache.Open(
-        image_path, byte_offset, store_nr)
-
-  def OpenFileEntry(self, path):
-    """Opens a file entry object from the path."""
-    return utils.OpenVssFileEntry(
-        path, self._image_path, self._store_nr,
-        int(self._image_offset / self._BYTES_PER_SECTOR), self._fscache)
 
 
 class TargetedImageCollector(tsk_collector.TSKCollector):
@@ -231,7 +32,7 @@ class TargetedImageCollector(tsk_collector.TSKCollector):
 
   def __init__(
      self, proc_queue, stor_queue, image, file_filter, pre_obj, sector_offset=0,
-     byte_offset=0, parse_vss=False, vss_stores=None, add_dir_stat=True):
+     byte_offset=0, parse_vss=False, vss_stores=None):
     """Initialize the image collector.
 
     Args:
@@ -248,14 +49,10 @@ class TargetedImageCollector(tsk_collector.TSKCollector):
       parse_vss: Boolean determining if we should collect from VSS as well
                  (only applicaple in Windows with Volume Shadow Snapshot).
       vss_stores: If defined a range of VSS stores to include in vss parsing.
-      add_dir_stat: Optional boolean value to indicate whether or not we want to
-                    include directory stat information into the storage queue.
-                    The default is true.
     """
     super(TargetedImageCollector, self).__init__(
         proc_queue, stor_queue, image, sector_offset=sector_offset,
-        byte_offset=byte_offset, parse_vss=parse_vss, vss_stores=vss_stores,
-        add_dir_stat=add_dir_stat)
+        byte_offset=byte_offset, parse_vss=parse_vss, vss_stores=vss_stores)
     self._file_filter = file_filter
     self._pre_obj = pre_obj
 
@@ -264,7 +61,7 @@ class TargetedImageCollector(tsk_collector.TSKCollector):
     # TODO: Change the parent object so that is uses the sector/byte_offset
     # to minimize confusion.
     offset = self._offset_bytes or self._offset * self.SECTOR_SIZE
-    pre_collector = TSKFilePreprocessCollector(
+    pre_collector = tsk_collector.TSKFilePreprocessCollector(
         self._pre_obj, self._image, offset)
 
     try:
@@ -279,7 +76,7 @@ class TargetedImageCollector(tsk_collector.TSKCollector):
           logging.info(
               u'Collecting from VSS store number: %d/%d', store_nr + 1,
               vss_numbers)
-          vss_collector = VSSFilePreprocessCollector(
+          vss_collector = tsk_collector.VSSFilePreprocessCollector(
               self._pre_obj, self._image, store_nr, byte_offset=offset)
 
           for pathspec_string in collector_filter.CollectionFilter(
@@ -299,7 +96,7 @@ def GetFileSystemPreprocessCollector(pre_obj, mount_point):
   Returns:
     A preprocess collector object (instance of PreprocessCollector).
   """
-  return FileSystemPreprocessCollector(pre_obj, mount_point)
+  return os_collector.FileSystemPreprocessCollector(pre_obj, mount_point)
 
 
 def GetImagePreprocessCollector(
@@ -317,54 +114,26 @@ def GetImagePreprocessCollector(
     A preprocess collector object (instance of PreprocessCollector).
   """
   if vss_store_number is not None:
-    return VSSFilePreprocessCollector(
+    return tsk_collector.VSSFilePreprocessCollector(
         pre_obj, image_path, vss_store_number, byte_offset=byte_offset)
-  return TSKFilePreprocessCollector(
+  return tsk_collector.TSKFilePreprocessCollector(
       pre_obj, image_path, byte_offset=byte_offset)
 
 
-def GetFileSystemCollector(
-    proc_queue, stor_queue, directory, add_dir_stat=True):
+def GetFileSystemCollector(proc_queue, stor_queue, directory):
   """Factory function to retrieve a file system collector object.
 
   Args:
     proc_queue: A Plaso queue object used as a processing queue of files.
     stor_queue: A Plaso queue object used as a buffer to the storage layer.
     directory: Path to the directory that contains files to be collected.
-    add_dir_stat: Optional boolean value to indicate whether or not we want to
-                  include directory stat information into the storage queue.
-                  The default is true.
   """
-  return os_collector.OSCollector(
-      proc_queue, stor_queue, directory, add_dir_stat=add_dir_stat)
-
-
-def GetFileSystemCollectorWithFilter(
-    proc_queue, stor_queue, pre_obj, mount_point, file_filter,
-    add_dir_stat=True):
-  """Factory function to retrieve a file system collector object with filter.
-
-  Args:
-    proc_queue: A Plaso queue object used as a processing queue of files.
-    stor_queue: A Plaso queue object used as a buffer to the storage layer.
-    pre_obj: The PlasoPreprocess object.
-    mount_point: The path to the mount point or base directory.
-    file_filter: The path of the filter file.
-    add_dir_stat: Optional boolean value to indicate whether or not we want to
-                  include directory stat information into the storage queue.
-                  The default is true.
-
-  Returns:
-    A collector object (instance of Collector).
-  """
-  return TargetedFileSystemCollector(
-      proc_queue, stor_queue, pre_obj, mount_point, file_filter,
-      add_dir_stat=add_dir_stat)
+  return os_collector.OSCollector(proc_queue, stor_queue, directory)
 
 
 def GetImageCollector(
     proc_queue, stor_queue, image, sector_offset=0, byte_offset=0,
-    parse_vss=False, vss_stores=None, fscache=None, add_dir_stat=True):
+    parse_vss=False, vss_stores=None, fscache=None):
   """Factory function to retrieve an image collector object.
 
   Args:
@@ -379,21 +148,18 @@ def GetImageCollector(
                (only applicaple in Windows with Volume Shadow Snapshot).
     vss_stores: If defined a range of VSS stores to include in vss parsing.
     fscache: A FilesystemCache object.
-    add_dir_stat: Optional boolean value to indicate whether or not we want to
-                  include directory stat information into the storage queue.
-                  The default is true.
   Returns:
     A collector object (instance of Collector).
   """
   return tsk_collector.TSKCollector(
       proc_queue, stor_queue, image, sector_offset=sector_offset,
       byte_offset=byte_offset, parse_vss=parse_vss, vss_stores=vss_stores,
-      fscache=fscache, add_dir_stat=add_dir_stat)
+      fscache=fscache)
 
 
 def GetImageCollectorWithFilter(
     proc_queue, stor_queue, image, file_filter, pre_obj, sector_offset=0,
-    byte_offset=0, parse_vss=False, vss_stores=None, add_dir_stat=True):
+    byte_offset=0, parse_vss=False, vss_stores=None):
   """Factory function to retrieve an image collector object with filter.
 
   Args:
@@ -410,9 +176,6 @@ def GetImageCollectorWithFilter(
     parse_vss: Boolean determining if we should collect from VSS as well
                (only applicaple in Windows with Volume Shadow Snapshot).
     vss_stores: If defined a range of VSS stores to include in vss parsing.
-    add_dir_stat: Optional boolean value to indicate whether or not we want to
-                  include directory stat information into the storage queue.
-                  The default is true.
 
   Returns:
     A collector object (instance of Collector).
@@ -420,4 +183,4 @@ def GetImageCollectorWithFilter(
   return TargetedImageCollector(
       proc_queue, stor_queue, image, file_filter, pre_obj,
       sector_offset=sector_offset, byte_offset=byte_offset, parse_vss=parse_vss,
-      vss_stores=vss_stores, add_dir_stat=add_dir_stat)
+      vss_stores=vss_stores)
