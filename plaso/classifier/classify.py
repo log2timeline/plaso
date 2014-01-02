@@ -46,7 +46,7 @@ def Main():
   options = args_parser.parse_args()
 
   if options.verbose:
-    logging.set_verbosity(logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
 
   files_to_classify = []
   for input_glob in options.filenames:

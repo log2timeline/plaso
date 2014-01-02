@@ -56,12 +56,12 @@ class _PatternWeights(object):
     Raises:
       ValueError: if the pattern weights does not contain the pattern offset.
     """
-    if not pattern_offset in self._weight_per_offset:
+    if pattern_offset not in self._weight_per_offset:
       raise ValueError(u'Pattern offset not set.')
 
     self._weight_per_offset[pattern_offset] += weight
 
-    if not weight in self._offsets_per_weight:
+    if weight not in self._offsets_per_weight:
       self._offsets_per_weight[weight] = []
 
     self._offsets_per_weight[weight].append(pattern_offset)
@@ -107,12 +107,12 @@ class _PatternWeights(object):
     Raises:
       ValueError: if the pattern weights does not contain the pattern offset.
     """
-    if not pattern_offset in self._weight_per_offset:
+    if pattern_offset not in self._weight_per_offset:
       raise ValueError(u'Pattern offset not set.')
 
     self._weight_per_offset[pattern_offset] = weight
 
-    if not weight in self._offsets_per_weight:
+    if weight not in self._offsets_per_weight:
       self._offsets_per_weight[weight] = []
 
     self._offsets_per_weight[weight].append(pattern_offset)
@@ -153,8 +153,11 @@ class ScanTree(object):
                    and an error is raised for negative offsets.
     """
     super(ScanTree, self).__init__()
+    self.largest_length = 0
     self.pattern_list = []
     self.range_list = range_list.RangeList()
+    self.root_node = None
+    self.skip_table = None
 
     # First determine all the patterns from the specification store.
     self._BuildPatterns(specification_store, is_bound, offset_mode=offset_mode)
@@ -171,14 +174,14 @@ class ScanTree(object):
       logging.debug(
           u'Scan tree:\n%s', self.root_node.ToDebugString())
 
-    # At the end the skip table is determined to provide for the
-    # Boyer–Moore–Horspool skip value.
-    self.skip_table = pattern_table.GetSkipTable()
+      # At the end the skip table is determined to provide for the
+      # Boyer–Moore–Horspool skip value.
+      self.skip_table = pattern_table.GetSkipTable()
 
-    logging.debug(
-        u'Skip table:\n%s', self.skip_table.ToDebugString())
+      logging.debug(
+          u'Skip table:\n%s', self.skip_table.ToDebugString())
 
-    self.largest_length = pattern_table.largest_pattern_length
+      self.largest_length = pattern_table.largest_pattern_length
 
   def _BuildPatterns(
       self, specification_store, is_bound,
@@ -211,14 +214,25 @@ class ScanTree(object):
           signature_offset = signature.offset if is_bound else 0
           signature_pattern_length = len(signature.expression)
 
+          # Make sure signature offset is numeric.
+          try:
+            signature_offset = int(signature_offset)
+          except (TypeError, ValueError):
+            signature_offset = 0
+
           if signature_offset < 0:
             if offset_mode == self.OFFSET_MODE_POSITIVE:
               continue
             elif offset_mode == self.OFFSET_MODE_POSITIVE_STRICT:
               raise ValueError(u'Signature offset less than 0.')
 
-            # The range list does not allow offsets to be negative.
+            # The range list does not allow offsets to be negative and thus
+            # the signature offset is turned into a positive equivalent.
             signature_offset *= -1
+
+            # The signature size is substracted to make sure the spanning
+            # range will align with the original negative offset values.
+            signature_offset -= signature_pattern_length
 
           elif signature_offset > 0:
             if offset_mode == self.OFFSET_MODE_NEGATIVE:
@@ -280,7 +294,7 @@ class ScanTree(object):
         if byte_value_weight > 1:
           similarity_weights.AddWeight(pattern_offset, byte_value_weight)
 
-        if not byte_value_weight in self._COMMON_BYTE_VALUES:
+        if byte_value_weight not in self._COMMON_BYTE_VALUES:
           value_weights.AddWeight(pattern_offset, 1)
 
     logging.debug(
@@ -297,7 +311,13 @@ class ScanTree(object):
 
     ignore_list.append(pattern_offset)
 
-    scan_tree_node = ScanTreeNode(pattern_offset)
+    # For the scan tree negative offsets are adjusted so that
+    # the smallest pattern offset is 0.
+    scan_tree_pattern_offset = pattern_offset
+    if scan_tree_pattern_offset < 0:
+      scan_tree_pattern_offset -= pattern_table.smallest_pattern_offset
+
+    scan_tree_node = ScanTreeNode(scan_tree_pattern_offset)
 
     byte_values = pattern_table.GetByteValues(pattern_offset)
 
@@ -601,33 +621,54 @@ class ScanTreeNode(object):
 
     self._byte_values[byte_value] = scan_object
 
-  def CompareByteValue(self, data, data_size, data_offset, match_on_boundary):
+  def CompareByteValue(
+      self, data, data_offset, data_size, total_data_offset,
+      total_data_size=None):
     """Scans a buffer using the bounded scan tree.
+
+       This function will return partial matches on the ata block block
+       boundary as long as the total data size has not been reached.
 
     Args:
       data: a buffer containing raw data.
-      data_size: the size of the raw data in the buffer.
       data_offset: the offset in the raw data in the buffer.
-      match_on_boundary: boolean value to indicate if a match on data boundary
-                         is permitted.
-
-    Raises:
-      RuntimeError: if the data offset is out of bounds.
+      data_size: the size of the raw data in the buffer.
+      total_data_offset: the offset of the data relative to the start of
+                         the total data scanned.
+      total_data_size: optional value to indicate the total data size.
+                       The default is None.
 
     Returns:
       the resulting scan object which is either a ScanTreeNode or Pattern
       or None.
+
+    Raises:
+      RuntimeError: if the data offset, total data offset, total data size
+                    or pattern offset value is out of bounds.
     """
     found_match = False
     scan_tree_byte_value = 0
 
     if data_offset < 0 or data_offset >= data_size:
-      raise RuntimeError(u'Data offset out of bounds.')
+      raise RuntimeError(u'Invalid data offset, value out of bounds.')
+
+    if total_data_size is not None and total_data_size < 0:
+      raise RuntimeError(u'Invalid total data size, value out of bounds.')
+
+    if total_data_offset < 0 or (
+      total_data_size is not None and total_data_offset >= total_data_size):
+      raise RuntimeError(u'Invalid total data offset, value out of bounds.')
+
+    if (total_data_size is not None and
+        total_data_offset + data_size >= total_data_size):
+      match_on_boundary = True
+    else:
+      match_on_boundary = False
 
     data_offset += self.pattern_offset
 
     if not match_on_boundary and data_offset >= data_size:
-      raise RuntimeError(u'Pattern offset out of bounds.')
+      raise RuntimeError(u'Invalid pattern offset value, out of bounds.')
 
     if data_offset < data_size:
       data_byte_value = ord(data[data_offset])
@@ -639,8 +680,13 @@ class ScanTreeNode(object):
 
     if found_match:
       scan_object = self._byte_values[scan_tree_byte_value]
+
+      logging.debug(
+        u'Scan tree node match at data offset: 0x{0:08x}.'.format(data_offset))
+
     else:
       scan_object = self.default_value
+
       if not scan_object:
         scan_object = self.parent
         while scan_object and not scan_object.default_value:
