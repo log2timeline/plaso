@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains log2timeline, the friendly front-end to plaso."""
+
 import argparse
 import locale
 import logging
