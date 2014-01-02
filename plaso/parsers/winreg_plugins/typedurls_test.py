@@ -48,7 +48,7 @@ class RegistryTypedURLsTest(unittest.TestCase):
     """Test the MISE Typed URLs plugin."""
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Internet Explorer\\TypedURLs')
-    plugin = typedurls.MsieTypedURLsPlugin(None, None, None)
+    plugin = typedurls.MsieTypedURLsPlugin()
     entries = list(plugin.Process(key))
 
     self.assertEquals(len(entries), 13)
@@ -72,7 +72,7 @@ class RegistryTypedURLsTest(unittest.TestCase):
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
         '\\TypedPaths')
-    plugin = typedurls.TypedPathsPlugin(None, None, None)
+    plugin = typedurls.TypedPathsPlugin()
     entries = list(plugin.Process(key))
 
     self.assertEquals(len(entries), 1)

@@ -55,7 +55,7 @@ class TestServicesRegistry(unittest.TestCase):
 
   def testServices(self):
     """Test the ServicesPlugin."""
-    plugin = services.ServicesPlugin(None, None, None)
+    plugin = services.ServicesPlugin()
     entries = list(plugin.Process(self.regkey))
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
@@ -77,7 +77,7 @@ class TestServicesRegistry(unittest.TestCase):
 
   def testServicesOnAFile(self):
     """Test the services plugin on a registry file."""
-    plugin = services.ServicesPlugin(None, None, None)
+    plugin = services.ServicesPlugin()
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 

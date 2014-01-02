@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -20,7 +21,7 @@ import abc
 
 
 class WinRegKey(object):
-  """Abstract class to represent the Windows Registry Key interface."""
+  """Abstract class to represent the Windows Registry key interface."""
 
   PATH_SEPARATOR = u'\\'
 
@@ -34,7 +35,7 @@ class WinRegKey(object):
 
   @abc.abstractproperty
   def offset(self):
-    """The offset of the key within the Registry File."""
+    """The offset of the key within the Windows Registry file."""
 
   @abc.abstractproperty
   def last_written_timestamp(self):
@@ -52,7 +53,7 @@ class WinRegKey(object):
       name: Name of the value or an empty string for the default value.
 
     Returns:
-      An instance of a Windows Registry Value object (WinRegValue) if
+      An instance of a Windows Registry value object (WinRegValue) if
       a corresponding value was found or None if not.
     """
 
@@ -61,7 +62,7 @@ class WinRegKey(object):
     """Retrieves all values within the key.
 
     Yields:
-      Instances of Windows Registry Value objects (WinRegValue) that represent
+      Windows Registry value objects (instances of WinRegValue) that represent
       the values stored within the key.
     """
 
@@ -85,13 +86,13 @@ class WinRegKey(object):
     """Retrieves all subkeys within the key.
 
     Yields:
-      Instances of Windows Registry Key objects (WinRegKey) that represent
+      Windows Registry key objects (instances of WinRegKey) that represent
       the subkeys stored within the key.
     """
 
 
 class WinRegValue(object):
-  """Abstract class to represent the Windows Registry Value interface."""
+  """Abstract class to represent the Windows Registry value interface."""
 
   REG_NONE = 0
   REG_SZ = 1
@@ -123,7 +124,7 @@ class WinRegValue(object):
   }
 
   def __init__(self):
-    """Default constructor for the registry value."""
+    """Default constructor for the Windows Registry value."""
     self._data = u''
 
   @abc.abstractproperty
@@ -132,7 +133,7 @@ class WinRegValue(object):
 
   @abc.abstractproperty
   def offset(self):
-    """The offset of the value within the Registry File."""
+    """The offset of the value within the Windows Registry file."""
 
   @abc.abstractproperty
   def data_type(self):
@@ -195,24 +196,24 @@ class WinRegValue(object):
 
 
 class WinRegFile(object):
-  """Abstract class to represent the Windows Registry File interface."""
+  """Abstract class to represent the Windows Registry file interface."""
 
   def __init__(self):
-    """Default constructor for the Registry file."""
+    """Default constructor for the Windows Registry file."""
     self._mounted_key_path = u''
 
   @abc.abstractmethod
   def Open(self, file_object, codepage='cp1252'):
-    """Opens the Registry file.
+    """Opens the Windows Registry file.
 
     Args:
-      file_object: The file-like object of the Registry file.
+      file_object: The file-like object of the Windows Registry file.
       codepage: Optional codepage for ASCII strings, default is cp1252.
     """
 
   @abc.abstractmethod
   def Close(self):
-    """Closes the Registry file."""
+    """Closes the Windows Registry file."""
 
   @abc.abstractmethod
   def GetKeyByPath(self, registry_path):
@@ -222,5 +223,5 @@ class WinRegFile(object):
       path: the Registry path.
 
     Returns:
-      The key (an instance of WinRegKey) if available or None otherwise.
+      The key (instance of WinRegKey) if available or None otherwise.
     """

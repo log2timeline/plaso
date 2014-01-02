@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,30 +15,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains basic interface for registry handling within Plaso.
+"""The Windows Registry plugin objects interface."""
 
-This library serves a basis for defining interfaces for registry keys, values
-and other items that may need defining.
-
-This is provided as a separate file to make it easier to inherit in other
-projects that may want to use the registry plugin system in Plaso.
-"""
 import abc
 import logging
 
 from plaso.lib import plugin
+from plaso.winreg import path_expander as winreg_path_expander
 
 
 class RegistryPlugin(plugin.BasePlugin):
-  """Registry plugin takes a registry key and extracts entries from it.
-
-  The entries that are extracted are in the form of an EventObject that
-  describes the content of the registry key in a human readable format.
-  """
-
-  NAME = 'winreg'
+  """Class that defines the Windows Registry plugin object interface."""
 
   __abstract = True
+
+  NAME = 'winreg'
 
   # Indicate the type of hive this plugin belongs to (eg. NTUSER, SOFTWARE).
   REG_TYPE = 'any'
@@ -45,78 +37,97 @@ class RegistryPlugin(plugin.BasePlugin):
   # The URLS should contain a list of URL's with additional information about
   # this key or value.
   URLS = []
+
   # WEIGHT is a simple integer value representing the priority of this plugin.
   # The weight can be used by some parser implementation to prioritize the
-  # order in which plugins are run against registry keys.
-  # By default no registry plugin should overwrite this value, it should only
-  # be defined in interfaces extending the base class, providing higher level of
-  # prioritization to registry plugins.
+  # order in which plugins are run against the Windows Registry keys.
+  # By default no the Windows Registry plugin should overwrite this value,
+  # it should only be defined in interfaces extending the base class, providing
+  # higher level of prioritization to Windows Registry plugins.
   WEIGHT = 3
 
   def __init__(self, hive=None, pre_obj=None, reg_cache=None):
-    """Constructor for a registry plugin.
+    """Initializes Windows Registry plugin object.
 
     Args:
-      hive: A WinRegistry value that stores the hive object, in case we need
-      to get values from other keys in the hive.
-      pre_obj: The pre-processing object that contains information gathered
-      during preprocessing of data.
-      rec_cache: A Windows registry cache object.
+      hive: Optional Windows Registry hive (instance of WinRegistry).
+            The default is None.
+      pre_obj: Optional pre-processing object that contains information gathered
+               during preprocessing of data. The default is None.
+      reg_cache: Optional Windows Registry objects cache (instance of
+                 WinRegistryCache). The default is None.
     """
     super(RegistryPlugin, self).__init__(pre_obj)
-    self._hive = hive
     self._config = pre_obj
+    self._hive = hive
+    # TODO: Clean this up, this value is stored but not used. 
     self._reg_cache = reg_cache
 
   @abc.abstractmethod
   def GetEntries(self):
-    """Extract and return EventObjects from the registry key."""
+    """Extracts event objects from the Windows Registry key."""
 
-  # We need to squash down the linter complaint, should not be here.
-  # TODO: Remove this pylint disable.
+  # TODO: Fix this, either make RegistryPlugin a separate interface
+  # or use kwargs to create a coherent plugin interface.
   # pylint: disable-msg=arguments-differ
-  @abc.abstractmethod
   def Process(self, key):
     """Determine if plugin should process and then process.
 
     Args:
-      key: A WinRegKey object that represents the registry key.
+      key: A Windows Registry key (instance of WinRegKey).
     """
     self._key = key
 
 
-# We are not implementing GetEntries for a purpose, since we want
-# plugins that extend this one to do so.
-# pylint: disable-msg=abstract-method
 class KeyPlugin(RegistryPlugin):
-  """A key-based registry plugin implementation."""
+  """Class that defines the Windows Registry key-based plugin interface."""
 
   __abstract = True
 
-  # The path of the registry key this plugin supports.
+  # The path of the Windows Registry key this plugin supports.
   REG_KEY = None
 
   WEIGHT = 1
+
+  def __init__(self, hive=None, pre_obj=None, reg_cache=None):
+    """Initializes key-based Windows Registry plugin object.
+
+    Args:
+      hive: Optional Windows Registry hive (instance of WinRegistry).
+            The default is None.
+      pre_obj: Optional pre-processing object that contains information gathered
+               during preprocessing of data. The default is None.
+      reg_cache: Optional Windows Registry objects cache (instance of
+                 WinRegistryCache). The default is None.
+    """
+    super(KeyPlugin, self).__init__(
+        hive=hive, pre_obj=pre_obj, reg_cache=reg_cache)
+    self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
+        pre_obj, reg_cache)
+
+  @abc.abstractmethod
+  def GetEntries(self):
+    """Extracts event objects from the Windows Registry key."""
 
   def Process(self, key):
     """Process the key based plugin."""
     key_fixed = u''
     try:
-      key_fixed = ExpandRegistryPath(
-          self.REG_KEY, self._config, self._reg_cache)
+      key_fixed = self._path_expander.ExpandPath(self.REG_KEY)
     except KeyError as e:
-      logging.warning(u'Unable to use plugin %s, error message: %s',
-                      self.plugin_name, e)
+      logging.warning(
+          u'Unable to use plugin {0:s}, error message: {1:s}'.format(
+              self.plugin_name, e))
 
     if not key_fixed:
       return
 
-    # Special case of Wow6432 registry redirection.
+    # Special case of Wow6432 Windows Registry redirection.
     # URL:  http://msdn.microsoft.com/en-us/library/windows/desktop/\
     # ms724072%28v=vs.85%29.aspx
     if key_fixed.startswith('\\Software'):
       _, first, second = key_fixed.partition('\\Software')
-      key_redirect = u'{}\\Wow6432Node{}'.format(first, second)
+      key_redirect = u'{0:s}\\Wow6432Node{1:s}'.format(first, second)
 
       if key_redirect == key.path:
         self._key = key
@@ -129,11 +140,8 @@ class KeyPlugin(RegistryPlugin):
     return self.GetEntries()
 
 
-# We are not implementing GetEntries for a purpose, since we want
-# plugins that extend this one to do so.
-# pylint: disable-msg=abstract-method
 class ValuePlugin(RegistryPlugin):
-  """A value-based registry plugin implementation."""
+  """Class that defines the Windows Registry value-based plugin interface."""
 
   __abstract = True
 
@@ -141,6 +149,10 @@ class ValuePlugin(RegistryPlugin):
   REG_VALUES = frozenset()
 
   WEIGHT = 2
+
+  @abc.abstractmethod
+  def GetEntries(self):
+    """Extracts event objects from the Windows Registry key."""
 
   def Process(self, key):
     """Process the value based plugin."""
@@ -151,18 +163,35 @@ class ValuePlugin(RegistryPlugin):
 
 
 class PluginList(object):
-  """A simple class that stores information about registry plugins."""
+  """A simple class that stores information about Windows Registry plugins."""
 
   def __init__(self):
-    """Default constructor for the plugin list."""
+    """Initializes the plugin list object."""
+    super(PluginList, self).__init__()
     self._key_plugins = {}
     self._value_plugins = {}
 
-  def AddPlugin(self, plugin_type, plugin_class):
-    """Add a registry plugin to the container.
+  def _GetPluginsByType(self, plugins_dict, plugin_type):
+    """Retrieves the Windows Registry plugins of a specific type.
 
     Args:
-      plugin_type: A string denoting the registry type, eg. NTUSER, SOFTWARE.
+      plugins_dict: Dictionary containing the Windows Registry plugins
+                    by plugin type.
+      plugin_type: String containing the Windows Registry type,
+                   e.g. NTUSER, SOFTWARE.
+
+    Returns:
+      A list containing the Windows Registry plugins (instances of
+      RegistryPlugin) for the specific plugin type.
+    """
+    return plugins_dict.get(plugin_type, []) + plugins_dict.get('any', [])
+
+  def AddPlugin(self, plugin_type, plugin_class):
+    """Add a Windows Registry plugin to the container.
+
+    Args:
+      plugin_type: String containing the Windows Registry type,
+                   e.g. NTUSER, SOFTWARE.
       plugin_class: The plugin class that is being registered.
     """
     if issubclass(plugin_class, KeyPlugin):
@@ -178,18 +207,36 @@ class PluginList(object):
     return ret
 
   def GetAllValuePlugins(self):
-    """Return a list of a all classes that implement value centric plugins."""
+    """Return a list of a all classes that implement value-based plugins."""
     ret = []
     _ = map(ret.extend, self._value_plugins.values())
     return ret
 
   def GetValuePlugins(self, plugin_type):
-    """Returns a list of all value plugins for a given type of registry."""
-    return GetPlugins(self._value_plugins, plugin_type)
+    """Retrieves the Windows Registry value-based plugins of a specific type.
+
+    Args:
+      plugin_type: String containing the Windows Registry type,
+                   e.g. NTUSER, SOFTWARE.
+
+    Returns:
+      A list containing the Windows Registry plugins (instances of
+      RegistryPlugin) for the specific plugin type.
+    """
+    return self._GetPluginsByType(self._value_plugins, plugin_type)
 
   def GetKeyPlugins(self, plugin_type):
-    """Returns a list of all key plugins for a given type of registry."""
-    return GetPlugins(self._key_plugins, plugin_type)
+    """Retrieves the Windows Registry key-based plugins of a specific type.
+
+    Args:
+      plugin_type: String containing the Windows Registry type,
+                   e.g. NTUSER, SOFTWARE.
+
+    Returns:
+      A list containing the Windows Registry plugins (instances of
+      RegistryPlugin) for the specific plugin type.
+    """
+    return self._GetPluginsByType(self._key_plugins, plugin_type)
 
   def GetWeightPlugins(self, weight, plugin_type=''):
     """Return a list of all plugins for a given weight or priority.
@@ -199,12 +246,12 @@ class PluginList(object):
 
     This method returns all plugins, whether they are key or value based
     that use a defined weight or priority and are defined to parse keys
-    or values found in a certain registry type.
+    or values found in a certain Windows Registry type.
 
     Args:
       weight: An integer representing the weight or priority (usually a
       number from 1 to 3).
-      plugin_type: A string that defines the registry type, eg. NTUSER,
+      plugin_type: A string that defines the Windows Registry type, eg. NTUSER,
       SOFTWARE, etc.
 
     Returns:
@@ -231,79 +278,20 @@ class PluginList(object):
     return set(self._key_plugins).union(self._value_plugins)
 
 
-def GetPlugins(plugin_dict, plugin_type):
-  """Return all plugins as a list for a specific plugin type."""
-  return plugin_dict.get(plugin_type, []) + plugin_dict.get('any', [])
-
-
 def GetRegistryPlugins():
-  """Build a list of all available plugins capable of parsing the registry.
+  """Build a list of all available Windows Registry plugins.
 
-  This method uses the class registration library to find all classes that have
-  implemented the RegistryPlugin class and compiles two dictionaries, one
-  containing a list of all plugins that support key-centric plugins and then
-  another one that contains plugins that are value-centric.
+     This function uses the class registration library to find all classes that
+     have implemented the RegistryPlugin class.
 
   Returns:
-    Two dictionaries, key_centric and value_centric used for plugin detection.
+    A plugins list (instance of PluginList).
   """
-  plugins = PluginList()
+  plugins_list = PluginList()
 
-  for plugin_cls in plugin.GetRegisteredPlugins(
-      RegistryPlugin).itervalues():
+  for plugin_cls in plugin.GetRegisteredPlugins(RegistryPlugin).itervalues():
     plugin_type = plugin_cls.REG_TYPE
-    plugins.AddPlugin(
+    plugins_list.AddPlugin(
         plugin_type, plugin_cls.classes.get(plugin_cls.plugin_name))
 
-  return plugins
-
-
-def ExpandRegistryPath(key_str, pre_obj=None, reg_cache=None):
-  """Expand a registry path based on attributes in pre calculated values.
-
-  A registry key path may contain paths that are attributes, based on
-  calculations from either preprocessing or based on each individual
-  registry file.
-
-  An attribute is defined as anything within a curly bracket, eg.
-  "\\System\\{my_attribute}\\Path\\Keyname". If the attribute my_attribute
-  is defined in either the pre processing object or the registry cache
-  it's value will be replaced with the attribute name, eg
-  "\\System\\MyValue\\Path\\Keyname".
-
-  If the registry path needs to have curly brackets in the path then
-  they need to be escaped with another curly bracket, eg
-  "\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName". In this
-  case the {{123-AF25-E523}} will be replaced with "{123-AF25-E523}".
-
-  Args:
-    key_str: The registry key string before being expanded.
-    pre_obj: The PlasoPreprocess object that contains stored values from
-    the image.
-    reg_cache: A registry cache object.
-
-  Raises:
-    KeyError: If an attribute name is in the key path yet not set in
-    either the registry cache nor in the pre processing object a KeyError
-    will be raised.
-
-  Returns:
-    A registry key path that's expanded based on attribute values.
-  """
-  key_fixed = u''
-  key_dict = {}
-  if reg_cache:
-    key_dict.update(reg_cache.attributes.items())
-
-  if pre_obj:
-    key_dict.update(pre_obj.__dict__.items())
-
-  try:
-    key_fixed = key_str.format(**key_dict)
-  except KeyError as e:
-    raise KeyError(u'Unable to expand string, %s' % e)
-
-  if not key_fixed:
-    raise KeyError(u'Unable expand string, no string returned.')
-
-  return key_fixed
+  return plugins_list

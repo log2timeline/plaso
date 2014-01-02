@@ -50,7 +50,7 @@ class WindowsXPUserAssistTest(unittest.TestCase):
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         '\\{75048700-EF1F-11D0-9888-006097DEACF9}')
-    plugin = userassist.UserAssistPlugin3(None, None, None)
+    plugin = userassist.UserAssistPlugin3()
     entries = list(plugin.Process(key))
 
     self.assertEquals(len(entries), 15)
@@ -95,7 +95,7 @@ class Windows7UserAssistTest(unittest.TestCase):
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         '\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
-    plugin = userassist.UserAssistPlugin8(None, None, None)
+    plugin = userassist.UserAssistPlugin8()
     entries = list(plugin.Process(key))
 
     self.assertEquals(len(entries), 63)

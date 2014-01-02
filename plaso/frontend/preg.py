@@ -55,6 +55,7 @@ from plaso.pvfs import pvfs
 from plaso.pvfs import utils as pvfs_utils
 from plaso.pvfs import vss
 from plaso.winreg import cache
+from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
 
 import pytz
@@ -147,6 +148,7 @@ class RegCache(object):
   hive_type = 'UNKNOWN'
   pre_obj = None
   fscache = None
+  path_expander = None
   reg_cache = None
 
   REG_TYPES = {
@@ -183,6 +185,8 @@ class RegCache(object):
     # Calculate the registry cache.
     cls.reg_cache = cache.WinRegistryCache(cls.hive, cls.hive_type)
     cls.reg_cache.BuildCache()
+    cls.path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
+        cls.pre_obj, cls.reg_cache)
 
   @classmethod
   def GetHiveName(cls):
@@ -277,8 +281,7 @@ class MyMagics(magic.Magics):
       return
 
     try:
-      key_fixed = interface.ExpandRegistryPath(
-          plugin.REG_KEY, RegCache.pre_obj, RegCache.reg_cache)
+      key_fixed = RegCache.path_expander.ExpandPath(plugin.REG_KEY)
     except KeyError:
       print u'Unable to use plugin {}'.format(line)
       return
@@ -569,8 +572,9 @@ def ParseHive(hive_path, collectors, keys, use_plugins, verbose):
       try:
         key_str_use = key_str.format(**key_dict)
       except KeyError as e:
-        logging.warning(
-            u'Unable to format key string %s, error message: %s', key_str, e)
+        logging.warning((
+            u'Unable to format key string {0:s} with error: '
+            u'{1:s}').format(key_str, e))
 
       key = RegCache.hive.GetKeyByPath(key_str_use)
       key_texts.append(u'{:>15} : {}'.format(u'Key Name', key_str_use))
@@ -649,7 +653,8 @@ def ParseKey(key, verbose=False, use_plugins=None):
       call_back = plugin.Process(key)
       if call_back:
         print_strings.append(
-            u'{:^80}'.format(u' ** Plugin : %s **' % plugin.plugin_name))
+            u'{:^80}'.format(u' ** Plugin : {0:s} **'.format(
+                plugin.plugin_name)))
         first = True
         for event_object in call_back:
           if first:
@@ -673,21 +678,21 @@ def FindRegistryPaths(pattern, collector):
     paths = list(collector.FindPaths(file_path))
 
     if not paths:
-      logging.debug(u'No paths found for pattern [%s]' % file_path)
+      logging.debug(u'No paths found for pattern [{0:s}]'.format(file_path))
       return hive_paths
 
     for path in paths:
       fh_paths = list(collector.GetFilePaths(path, file_name))
       if not fh_paths:
-        logging.debug(u'File [%s] not found in path [%s]....' % (
+        logging.debug(u'File [{0:s}] not found in path [{1:s}]....'.format(
             file_name, path))
         continue
       for fh_path in fh_paths:
         hive_paths.append(fh_path)
   except errors.PreProcessFail as e:
-    logging.debug('Path: %s not found, error: %s' % (pattern, e))
+    logging.debug('Path: {0:s} not found, error: {1:s}'.format(pattern, e))
   except errors.PathNotFound as e:
-    logging.debug('Path: %s not found, error: %s' % (pattern, e))
+    logging.debug('Path: {0:s} not found, error: {1:s}'.format(pattern, e))
 
   return hive_paths
 
@@ -1175,10 +1180,10 @@ def RunModeConsole(config):
     else:
       banners.append(utils.FormatOutputString(text, (
           'Collector is an available attribute and NR is a number ranging'
-          ' from 0 to %d (see above which files these numbers belong to).'
+          ' from 0 to {0:d} (see above which files these numbers belong to).'
           ' To get the name of the loaded hive use RegCache.GetHiveName()'
           ' and RegCache.hive_type to get the '
-          'type.') % (len(hives) + 1), len(text)))
+          'type.').format(len(hives) + 1), len(text)))
   else:
     # We have a single hive but many collectors.
     banners.append(
