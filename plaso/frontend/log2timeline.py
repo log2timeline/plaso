@@ -340,9 +340,10 @@ def Main():
   # Check to see if we are trying to parse a mount point.
   if options.recursive:
     pre_obj = preprocess.PlasoPreprocess()
-    file_collector = collector_factory.GetFileSystemPreprocessCollector(
+    preprocess_collector = collector_factory.GetGenericPreprocessCollector(
         pre_obj, options.filename)
-    guessed_os = preprocess.GuessOS(file_collector)
+
+    guessed_os = preprocess.GuessOS(preprocess_collector)
     if guessed_os != 'None':
       options.preprocess = True
       logging.info((
@@ -350,11 +351,11 @@ def Main():
           u'preprocessing.').format(guessed_os))
       logging.info(
           u'It is highly recommended to run the tool directly against '
-          'the image, instead of parsing a mount point (you may get '
-          'inconsistence results depending on the driver you use to mount '
-          'the image. Please consider running against the raw image. A '
-          '5 second wait has been introduced to give you time to read this '
-          'over.')
+          u'the image, instead of parsing a mount point (you may get '
+          u'inconsistence results depending on the driver you use to mount '
+          u'the image. Please consider running against the raw image. A '
+          u'5 second wait has been introduced to give you time to read this '
+          u'over.')
       time.sleep(5)
 
   if options.filter and not pfilter.GetMatcher(options.filter):

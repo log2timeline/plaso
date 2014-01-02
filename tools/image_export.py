@@ -71,8 +71,9 @@ class ImageExtractor(object):
 
     self._pre_obj = preprocess.PlasoPreprocess()
     try:
-      image_collector = collector_factory.GetImagePreprocessCollector(
-          self._pre_obj, self._image_path, byte_offset=self._image_offset)
+      image_collector = collector_factory.GetGenericPreprocessCollector(
+          self._pre_obj, self._image_path)
+      image_collector.SetImageInformation(byte_offset=self._image_offset)
 
     except errors.UnableToOpenFilesystem as e:
       raise RuntimeError('Unable to proceed, not an image file? [%s]' % e)
@@ -150,9 +151,10 @@ class ImageExtractor(object):
         logging.info(
             'Extracting files from VSS %d/%d', store_nr + 1, vss_numbers)
 
-        vss_collector = collector_factory.GetImagePreprocessCollector(
-            self._pre_obj, self._image_path, byte_offset=self._image_offset,
-            vss_store_number=store_nr)
+        vss_collector = collector_factory.GetGenericPreprocessCollector(
+            self._pre_obj, self._image_path)
+        vss_collector.SetImageInformation(byte_offset=self._image_offset)
+        vss_collector.SetVssInformation(store_number=store_nr)
 
         FileSaver.prefix = 'vss_%d' % store_nr
         self._ExtractFiles(vss_collector, filter_expression, destination_path)
