@@ -68,12 +68,12 @@ class OsCollectorUnitTest(unittest.TestCase):
       for a_file in test_files:
         shutil.copy(a_file, dirname)
 
-      my_queue = queue.SingleThreadedQueue()
-      my_store = queue.SingleThreadedQueue()
-      my_collector = os_collector.OSCollector(my_queue, my_store, dirname)
-      my_collector.Run()
+      test_queue = queue.SingleThreadedQueue()
+      test_store = queue.SingleThreadedQueue()
+      test_collector = os_collector.OSCollector(test_queue, test_store, dirname)
+      test_collector.Run()
 
-      events = self.GetEvents(my_queue)
+      events = self.GetEvents(test_queue)
       self.assertEquals(len(events), 4)
 
 
@@ -91,14 +91,14 @@ class TargetedDirectoryTest(unittest.TestCase):
       fh.write('/does_not_exist/some_file_[0-9]+txt\n')
 
     pre_obj = preprocess.PlasoPreprocess()
-    my_queue = queue.SingleThreadedQueue()
-    my_store = queue.SingleThreadedQueue()
-    my_collector = os_collector.OSCollector(my_queue, my_store, './')
-    my_collector.SetFilter(filter_name, pre_obj)
-    my_collector.Run()
+    test_queue = queue.SingleThreadedQueue()
+    test_store = queue.SingleThreadedQueue()
+    test_collector = os_collector.OSCollector(test_queue, test_store, './')
+    test_collector.SetFilter(filter_name, pre_obj)
+    test_collector.Run()
 
     pathspecs = []
-    for serialized_pathspec in my_queue.PopItems():
+    for serialized_pathspec in test_queue.PopItems():
       pathspec = event.EventPathSpec()
       pathspec.FromProtoString(serialized_pathspec)
       pathspecs.append(pathspec)

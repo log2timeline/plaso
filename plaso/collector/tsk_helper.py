@@ -20,59 +20,6 @@
 import logging
 
 from plaso.lib import errors
-from plaso.pvfs import pstats
-
-
-def GetTskDirectoryStat(directory_object):
-  """Return a stat object for a TSK directory object.
-
-  Args:
-    directory_object: A pyts3k.Directory object.
-
-  Returns:
-    A pstats.Stats object for the directory.
-  """
-  stat = pstats.Stats()
-
-  info = getattr(directory_object, 'info', None)
-  if not info:
-    return stat
-
-  try:
-    meta = info.fs_file.meta
-  except AttributeError:
-    return stat
-
-  if not meta:
-    return stat
-
-  fs_type = ''
-  stat.mode = getattr(meta, 'mode', None)
-  stat.ino = getattr(meta, 'addr', None)
-  stat.nlink = getattr(meta, 'nlink', None)
-  stat.uid = getattr(meta, 'uid', None)
-  stat.gid = getattr(meta, 'gid', None)
-  stat.size = getattr(meta, 'size', None)
-  stat.atime = getattr(meta, 'atime', None)
-  stat.atime_nano = getattr(meta, 'atime_nano', None)
-  stat.crtime = getattr(meta, 'crtime', None)
-  stat.crtime_nano = getattr(meta, 'crtime_nano', None)
-  stat.mtime = getattr(meta, 'mtime', None)
-  stat.mtime_nano = getattr(meta, 'mtime_nano', None)
-  stat.ctime = getattr(meta, 'ctime', None)
-  stat.ctime_nano = getattr(meta, 'ctime_nano', None)
-  stat.dtime = getattr(meta, 'dtime', None)
-  stat.dtime_nano = getattr(meta, 'dtime_nano', None)
-  stat.bkup_time = getattr(meta, 'bktime', None)
-  stat.bkup_time_nano = getattr(meta, 'bktime_nano', None)
-  fs_type = str(info.fs_info.ftype)
-
-  if fs_type.startswith('TSK_FS_TYPE'):
-    stat.fs_type = fs_type[12:]
-  else:
-    stat.fs_type = fs_type
-
-  return stat
 
 
 def GetTSKPaths(path_list, tsk_fs):

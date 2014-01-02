@@ -22,7 +22,6 @@ import os
 import tempfile
 import unittest
 
-from plaso.collector import factory
 from plaso.collector import tsk_collector
 from plaso.lib import event
 from plaso.lib import preprocess
@@ -62,15 +61,15 @@ class TskCollectorUnitTest(unittest.TestCase):
 
     This means that the collection script should collect 6 files in total.
     """
-    path = os.path.join('test_data', 'syslog_image.dd')
+    test_file = os.path.join('test_data', 'syslog_image.dd')
 
-    # Start with a collector without opening files.
-    my_queue = queue.SingleThreadedQueue()
-    my_storage = queue.SingleThreadedQueue()
-    my_collector = tsk_collector.TSKCollector(my_queue, my_storage, path)
-    my_collector.Run()
-    events = self.GetEvents(my_queue)
+    test_queue = queue.SingleThreadedQueue()
+    test_storage = queue.SingleThreadedQueue()
+    test_collector = tsk_collector.TSKCollector(
+        test_queue, test_storage, test_file)
+    test_collector.Run()
 
+    events = self.GetEvents(test_queue)
     self.assertEquals(len(events), 2)
 
 
@@ -79,7 +78,7 @@ class TargetedImageTest(unittest.TestCase):
 
   def testImageCollection(self):
     """Test the image collection."""
-    image_path = os.path.join('test_data', 'image.dd')
+    test_file = os.path.join('test_data', 'image.dd')
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as fh:
       filter_name = fh.name
@@ -88,15 +87,15 @@ class TargetedImageTest(unittest.TestCase):
       fh.write('/passwords.txt\n')
 
     pre_obj = preprocess.PlasoPreprocess()
-    my_queue = queue.SingleThreadedQueue()
-    my_store = queue.SingleThreadedQueue()
-    my_collector = factory.GetImageCollectorWithFilter(
-        my_queue, my_store, image_path, filter_name, pre_obj)
-
-    my_collector.Run()
+    test_queue = queue.SingleThreadedQueue()
+    test_storage = queue.SingleThreadedQueue()
+    test_collector = tsk_collector.TSKCollector(
+        test_queue, test_storage, test_file)
+    test_collector.SetFilter(filter_name, pre_obj)
+    test_collector.Run()
 
     pathspecs = []
-    for serialized_pathspec in my_queue.PopItems():
+    for serialized_pathspec in test_queue.PopItems():
       pathspec = event.EventPathSpec()
       pathspec.FromProtoString(serialized_pathspec)
       pathspecs.append(pathspec)

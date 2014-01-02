@@ -60,7 +60,7 @@ class BaseFileEntry(object):
 
     super(BaseFileEntry, self).__init__()
     self._fscache = fscache
-    self._stat = None
+    self._stat_object = None
     self.file_object = None
     self.name = ''
     self.pathspec = pathspec
@@ -149,13 +149,11 @@ class Bz2FileEntry(BaseFileEntry):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
+    if self._stat_object is None:
+      self._stat_object = pstats.Stats()
+      self._stat_object.fs_type = 'BZ2 container'
 
-    stats_object = pstats.Stats()
-    stats_object.fs_type = 'BZ2 container'
-    self._stat = stats_object
-    return stats_object
+    return self._stat_object
 
 
 class GzipFileEntry(BaseFileEntry):
@@ -202,9 +200,9 @@ class GzipFileEntry(BaseFileEntry):
     try:
       _ = gzip_file.read(4)
     except IOError as e:
-      dn = self.display_name
-      raise IOError('Not able to open the GZIP file %s -> %s [%s]' % (
-          self.name, dn, e))
+      raise IOError(
+          u'Unable to open GZIP file: {0:s} ({1:s}) with error: {2:s}'.format(
+              self.name, self.display_name, e))
     gzip_file.rewind()
     try:
       self.size = gzip_file.size
@@ -216,15 +214,12 @@ class GzipFileEntry(BaseFileEntry):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
+    if self._stat_object is None:
+      self._stat_object = pstats.Stats()
+      self._stat_object.size = self.size
+      self._stat_object.fs_type = 'GZ File'
 
-    stats_object = pstats.Stats()
-    stats_object.size = self.size
-    stats_object.fs_type = 'GZ File'
-
-    self._stat = stats_object
-    return stats_object
+    return self._stat_object
 
 
 class OsFileEntry(BaseFileEntry):
@@ -242,7 +237,6 @@ class OsFileEntry(BaseFileEntry):
       fscache: Optional file system cache object. The default is None.
     """
     super(OsFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
-    self._stat_object = None
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -363,7 +357,8 @@ class TarFileEntry(BaseFileEntry):
     extracted_file_object = tar_file.extractfile(self.pathspec.file_path)
     if not extracted_file_object:
       raise IOError(
-          u'[TAR] File %s empty or unable to open.' % self.pathspec.file_path)
+          u'Unable to extract file: {0:s} from TAR.'.format(
+              self.pathspec.file_path))
     self.buffer = ''
     self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
     self.size = extracted_file_object.size
@@ -373,13 +368,11 @@ class TarFileEntry(BaseFileEntry):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
+    if self._stat_object is None:
+      self._stat_object = pstats.Stats()
+      self._stat_object.fs_type = 'Tar container'
 
-    stats_object = pstats.Stats()
-    stats_object.fs_type = 'Tar container'
-    self._stat = stats_object
-    return stats_object
+    return self._stat_object
 
 
 class TSKFileEntry(BaseFileEntry):
@@ -397,24 +390,25 @@ class TSKFileEntry(BaseFileEntry):
       fscache: Optional file system cache object. The default is None.
     """
     super(TSKFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
-    self._fs = None
+    self._tsk_fs = None
+    self.directory_entry_name = u''
 
-  def _OpenFileSystem(self, path, offset):
+  def _OpenFileSystem(self, path, byte_offset):
     """Open the filesystem object and store a copy of it for caching.
 
     Args:
       path: Path to the image file.
-      offset: If this is a disk partition an offset to the filesystem
-      is needed.
+      byte_offset: The byte offset into the image file if this is a disk
+                   image.
 
     Raises:
       IOError: If no pfile.FilesystemCache object is provided.
     """
     if not hasattr(self, '_fscache'):
-      raise IOError('No FS cache provided, unable to open a file.')
+      raise IOError('No file system cache provided, unable to open a file.')
 
-    fs_obj = self._fscache.Open(path, offset)
-    self._fs = fs_obj.fs
+    file_system_container = self._fscache.Open(path, byte_offset=byte_offset)
+    self._tsk_fs = file_system_container.fs
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -442,7 +436,7 @@ class TSKFileEntry(BaseFileEntry):
       self.pathspec.file_path = 'NA_NotProvided'
 
     self.file_object = pfile_io.TSKFileIO(
-        self._fs, inode, self.pathspec.file_path)
+        self._tsk_fs, inode, self.pathspec.file_path)
 
     path_prepend = getattr(self.pathspec, 'path_prepend', '')
     self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
@@ -458,56 +452,122 @@ class TSKFileEntry(BaseFileEntry):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
+    if self._stat_object is None:
+      self._stat_object = pstats.Stats()
 
-    stats_object = pstats.Stats()
+      try:
+        info = self.file_object.fileobj.info
+        meta = info.meta
+      except IOError:
+        return self._stat_object
 
-    try:
-      info = self.file_object.fileobj.info
-      meta = info.meta
-    except IOError:
-      return stats_object
+      if not meta:
+        return self._stat_object
 
-    if not meta:
-      return stats_object
+      self._stat_object.mode = getattr(meta, 'mode', None)
+      self._stat_object.ino = getattr(meta, 'addr', None)
+      self._stat_object.nlink = getattr(meta, 'nlink', None)
+      self._stat_object.uid = getattr(meta, 'uid', None)
+      self._stat_object.gid = getattr(meta, 'gid', None)
+      self._stat_object.size = getattr(meta, 'size', None)
+      self._stat_object.atime = getattr(meta, 'atime', None)
+      self._stat_object.atime_nano = getattr(meta, 'atime_nano', None)
+      self._stat_object.crtime = getattr(meta, 'crtime', None)
+      self._stat_object.crtime_nano = getattr(meta, 'crtime_nano', None)
+      self._stat_object.mtime = getattr(meta, 'mtime', None)
+      self._stat_object.mtime_nano = getattr(meta, 'mtime_nano', None)
+      self._stat_object.ctime = getattr(meta, 'ctime', None)
+      self._stat_object.ctime_nano = getattr(meta, 'ctime_nano', None)
+      self._stat_object.dtime = getattr(meta, 'dtime', None)
+      self._stat_object.dtime_nano = getattr(meta, 'dtime_nano', None)
+      self._stat_object.bkup_time = getattr(meta, 'bktime', None)
+      self._stat_object.bkup_time_nano = getattr(meta, 'bktime_nano', None)
 
-    fs_type = ''
-    stats_object.mode = getattr(meta, 'mode', None)
-    stats_object.ino = getattr(meta, 'addr', None)
-    stats_object.nlink = getattr(meta, 'nlink', None)
-    stats_object.uid = getattr(meta, 'uid', None)
-    stats_object.gid = getattr(meta, 'gid', None)
-    stats_object.size = getattr(meta, 'size', None)
-    stats_object.atime = getattr(meta, 'atime', None)
-    stats_object.atime_nano = getattr(meta, 'atime_nano', None)
-    stats_object.crtime = getattr(meta, 'crtime', None)
-    stats_object.crtime_nano = getattr(meta, 'crtime_nano', None)
-    stats_object.mtime = getattr(meta, 'mtime', None)
-    stats_object.mtime_nano = getattr(meta, 'mtime_nano', None)
-    stats_object.ctime = getattr(meta, 'ctime', None)
-    stats_object.ctime_nano = getattr(meta, 'ctime_nano', None)
-    stats_object.dtime = getattr(meta, 'dtime', None)
-    stats_object.dtime_nano = getattr(meta, 'dtime_nano', None)
-    stats_object.bkup_time = getattr(meta, 'bktime', None)
-    stats_object.bkup_time_nano = getattr(meta, 'bktime_nano', None)
-    fs_type = str(self._fs.info.ftype)
+      flags = getattr(meta, 'flags', 0)
 
-    flags = getattr(meta, 'flags', 0)
+      # The flags are an instance of pytsk3.TSK_FS_META_FLAG_ENUM.
+      if int(flags) & pytsk3.TSK_FS_META_FLAG_ALLOC:
+        self._stat_object.allocated = True
+      else:
+        self._stat_object.allocated = False
 
-    # The flags are an instance of pytsk3.TSK_FS_META_FLAG_ENUM.
-    if int(flags) & pytsk3.TSK_FS_META_FLAG_ALLOC:
-      stats_object.allocated = True
+      fs_type = str(self._tsk_fs.info.ftype)
+
+      if fs_type.startswith('TSK_FS_TYPE'):
+        self._stat_object.fs_type = fs_type[12:]
+      else:
+        self._stat_object.fs_type = fs_type
+
+    return self._stat_object
+
+  def GetSubFileEntries(self):
+    """Retrieves the sub file entries.
+
+    Yields:
+      A sub file entry (instance of TSKFileEntry).
+    """
+    inode = getattr(self.pathspec, 'image_inode', 0)
+    if inode is not None:
+      tsk_directory = self._tsk_fs.open_dir(inode=inode)
     else:
-      stats_object.allocated = False
+      tsk_directory = self._tsk_fs.open_dir(path=self.pathspec.file_path)
 
-    if fs_type.startswith('TSK_FS_TYPE'):
-      stats_object.fs_type = fs_type[12:]
-    else:
-      stats_object.fs_type = fs_type
+    for tsk_directory_entry in tsk_directory:
+      image_inode = getattr(tsk_directory_entry.info.meta, 'addr', 0)
+      # Ignore directory entries with an inode of 0.
+      if image_inode == 0:
+        continue
 
-    self._stat = stats_object
-    return stats_object
+      # Ignore the directory entries . and ..
+      if tsk_directory_entry.info.name.name in ['.', '..']:
+        continue
+
+      directory_entry_path = u'/'.join([
+          self.pathspec.file_path, tsk_directory_entry.info.name.name])
+      path_spec = event.EventPathSpec()
+
+      if hasattr(self.pathspec, 'vss_store_number'):
+        path_spec.type = 'VSS'
+        path_spec.vss_store_number = self.pathspec.vss_store_number
+      else:
+        path_spec.type = 'TSK'
+
+      path_spec.container_path = self.pathspec.container_path
+      path_spec.image_offset = self.pathspec.image_offset
+      path_spec.image_inode = image_inode
+      path_spec.file_path = utils.GetUnicodeString(directory_entry_path)
+      sub_file_entry = TSKFileEntry(
+          path_spec, root=self.pathspec_root, fscache=self._fscache)
+
+      # Work-around for limitations of pfile, will be fixed by PyVFS.
+      sub_file_entry.directory_entry_name = tsk_directory_entry.info.name
+      yield sub_file_entry
+
+  def IsAllocated(self):
+    """Determines if the file entry is allocated."""
+    flags = getattr(self.file_object.fileobj.info.meta, 'flags', 0)
+    return int(flags) & pytsk3.TSK_FS_META_FLAG_ALLOC
+
+  def IsDirectory(self):
+    """Determines if the file entry is a directory."""
+    tsk_fs_meta_type = getattr(
+        self.file_object.fileobj.info.meta, 'type',
+        pytsk3.TSK_FS_META_TYPE_UNDEF)
+    return tsk_fs_meta_type == pytsk3.TSK_FS_META_TYPE_DIR
+
+  def IsFile(self):
+    """Determines if the file entry is a file."""
+    tsk_fs_meta_type = getattr(
+        self.file_object.fileobj.info.meta, 'type',
+        pytsk3.TSK_FS_META_TYPE_UNDEF)
+    return tsk_fs_meta_type == pytsk3.TSK_FS_META_TYPE_REG
+
+  def IsLink(self):
+    """Determines if the file entry is a link."""
+    tsk_fs_meta_type = getattr(
+        self.file_object.fileobj.info.meta, 'type',
+        pytsk3.TSK_FS_META_TYPE_UNDEF)
+    return tsk_fs_meta_type == pytsk3.TSK_FS_META_TYPE_LNK
 
 
 class VssFileEntry(TSKFileEntry):
@@ -529,16 +589,16 @@ class VssFileEntry(TSKFileEntry):
   def _OpenFileSystem(self, path, offset):
     """Open a filesystem object for a VSS file."""
     if not hasattr(self.pathspec, 'vss_store_number'):
-      raise IOError((u'Unable to open VSS file: {%s} -> No VSS store number '
-                     'defined.') % self.name)
+      raise IOError((
+          u'Unable to open VSS file: {0:s}, missing VSS store number.').format(
+              self.name))
 
     if not hasattr(self, '_fscache'):
-      raise IOError('No FS cache provided, unable to contine.')
+      raise IOError(u'No file system cache provided, unable to contine.')
 
-    self._fs_obj = self._fscache.Open(
+    file_system_container = self._fscache.Open(
         path, offset, self.pathspec.vss_store_number)
-
-    self._fs = self._fs_obj.fs
+    self._tsk_fs = file_system_container.fs
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -551,7 +611,7 @@ class VssFileEntry(TSKFileEntry):
     """
     file_object = super(VssFileEntry, self).Open(file_entry=file_entry)
 
-    self.display_name = u'%s:vss_store_%d' % (
+    self.display_name = u'{0:s}:vss_store_{1:d}'.format(
         self.display_name, self.pathspec.vss_store_number)
 
     return file_object
@@ -611,7 +671,8 @@ class ZipFileEntry(BaseFileEntry):
     try:
       _ = zip_file.open(self.pathspec.file_path, 'r')
     except (RuntimeError, zipfile.BadZipfile) as e:
-      raise IOError(u'Unable to open ZIP file: {%s} -> %s' % (self.name, e))
+      raise IOError(u'Unable to open ZIP file: {0:s} wiht error: {1:s}'.format(
+          self.name, e))
 
     self.file_object = pfile_io.ZipFileIO(
         zip_file, self.pathspec.file_path, self.zipinfo.file_size)
@@ -619,18 +680,16 @@ class ZipFileEntry(BaseFileEntry):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
+    if self._stat_object is None:
+      self._stat_object = pstats.Stats()
 
-    stats_object = pstats.Stats()
+      # TODO: Make this a proper stat element with as much information
+      # as can be extracted.
+      # Also confirm for sure that this is the correct timestamp and it is
+      # stored in UTC (or if it is in local timezone, adjust it)
+      self._stat_object.ctime = timelib.Timetuple2Timestamp(
+          self.zipinfo.date_time)
+      self._stat_object.size = self.zipinfo.file_size
+      self._stat_object.fs_type = 'ZIP Container'
 
-    # TODO: Make this a proper stat element with as much information
-    # as can be extracted.
-    # Also confirm for sure that this is the correct timestamp and it is
-    # stored in UTC (or if it is in local timezone, adjust it)
-    stats_object.ctime = timelib.Timetuple2Timestamp(self.zipinfo.date_time)
-    stats_object.size = self.zipinfo.file_size
-    stats_object.fs_type = 'ZIP Container'
-
-    self._stat = stats_object
-    return stats_object
+    return self._stat_object

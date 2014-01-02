@@ -20,7 +20,6 @@
 import abc
 import logging
 import os
-import platform
 import zlib
 import zipfile
 
@@ -410,18 +409,13 @@ class TSKFileIO(BaseFileIO):
     """
     super(TSKFileIO, self).__init__()
     self.inode = inode
-    self.fs = filesystem
+    self.tsk_fs = filesystem
 
     # We prefer opening up a file by it's inode number since its faster.
     if inode:
-      self.fileobj = self.fs.open_meta(inode=inode)
-    # Ignore a leading path separator: \ on Windows.
-    # This prevents the cannot access \$MFT issue.
-    # TODO: this is a workaround for now and needs to be fixed in pyvfs.
-    elif platform.system() == 'Windows' and path.startswith('\\'):
-      self.fileobj = self.fs.open(path[1:])
+      self.fileobj = self.tsk_fs.open_meta(inode=inode)
     else:
-      self.fileobj = self.fs.open(path)
+      self.fileobj = self.tsk_fs.open(path)
 
     self.size = self.fileobj.info.meta.size
     self.name = path
@@ -429,9 +423,6 @@ class TSKFileIO(BaseFileIO):
 
     if not self.fileobj.info.meta:
       raise IOError('No valid metastructure for inode: %d' % inode)
-
-    if self.fileobj.info.meta.type != pytsk3.TSK_FS_META_TYPE_REG:
-      raise IOError('Cannot open a directory.')
 
     self.readahead = ''
     self.next_read_offset = 0
@@ -454,6 +445,9 @@ class TSKFileIO(BaseFileIO):
     Raises:
       IOError: if no read_size is passed on.
     """
+    if self.fileobj.info.meta.type != pytsk3.TSK_FS_META_TYPE_REG:
+      raise IOError('Cannot read from directory.')
+
     if read_size is None:
       # Check file size and read within "reasonable" limits.
       if self.size - self.tell() < 1024 * 1024 * 24:
@@ -495,6 +489,9 @@ class TSKFileIO(BaseFileIO):
     Returns:
       A string containing a single line read from the file.
     """
+    if self.fileobj.info.meta.type != pytsk3.TSK_FS_META_TYPE_REG:
+      raise IOError('Cannot read from directory.')
+
     read_size = size or self.MIN_READSIZE
 
     # check if we need to read more into the buffer
@@ -519,6 +516,9 @@ class TSKFileIO(BaseFileIO):
     Raises:
       IOError:
     """
+    if self.fileobj.info.meta.type != pytsk3.TSK_FS_META_TYPE_REG:
+      raise IOError('Cannot seek in directory.')
+
     # TODO: Buffering needs to be properly fixed. The current
     # solution is to keep the buffer somewhat between seek operations
     # but it can be improved even further. Buffering should also be
@@ -556,10 +556,16 @@ class TSKFileIO(BaseFileIO):
 
   def tell(self):
     """Return the current offset into the file."""
+    if self.fileobj.info.meta.type != pytsk3.TSK_FS_META_TYPE_REG:
+      raise IOError('Cannot retrieve offset form directory.')
+
     return self.next_read_offset - len(self.readahead)
 
   def get_size(self):
     """Returns the file size."""
+    if self.fileobj.info.meta.type != pytsk3.TSK_FS_META_TYPE_REG:
+      raise IOError('Cannot retrieve size form directory.')
+
     size = getattr(self.fileobj.info.meta, 'size', 0)
     return long(size)
 
