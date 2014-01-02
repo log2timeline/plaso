@@ -82,7 +82,7 @@ class Engine(object):
       if not os.path.isfile(config.filename) and not os.path.isdir(
           config.filename):
         raise errors.BadConfigOption(
-            'File [%s] does not exist.' % config.filename)
+            'File [{0:s}] does not exist.'.format(config.filename))
 
     if os.path.isfile(config.output):
       logging.warning('Appending to an already existing file.')
@@ -95,7 +95,7 @@ class Engine(object):
 
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
-          'Unable to write to location: %s' % config.output)
+          'Unable to write to location: {0:s}'.format(config.output))
 
     self.config.zone = pytz.timezone(config.tzone)
 
@@ -121,7 +121,7 @@ class Engine(object):
     """Run the preprocessors."""
 
     logging.info('Starting to collect preprocessing information.')
-    logging.info('Filename: %s', self.config.filename)
+    logging.info('Filename: {0:s}'.format(self.config.filename))
 
     if not self.config.image and not self.config.recursive:
       return
@@ -152,14 +152,15 @@ class Engine(object):
 
     # Set the timezone.
     if hasattr(pre_obj, 'time_zone_str'):
-      logging.info(u'Setting timezone to: %s', pre_obj.time_zone_str)
+      logging.info(u'Setting timezone to: {0:s}'.format(pre_obj.time_zone_str))
       try:
         pre_obj.zone = pytz.timezone(pre_obj.time_zone_str)
       except pytz.UnknownTimeZoneError:
         if hasattr(self.config, 'zone'):
           logging.warning(
               (u'Unable to automatically configure timezone, falling back '
-               'to the user supplied one [%s]'), self.config.zone.zone)
+               'to the user supplied one [{0:s}]').format(
+                  self.config.zone.zone))
           pre_obj.zone = self.config.zone
         else:
           logging.warning('TimeZone was not properly set, defaults to UTC')
@@ -178,8 +179,8 @@ class Engine(object):
         # The tool should generally not be run in single threaded mode
         # for other reasons than to debug. Hence the general error
         # catching.
-        logging.error('An uncaught exception occured: %s.\n%s', e,
-                      traceback.format_exc())
+        logging.error('An uncaught exception occured: {0:s}.\n{1:s}'.format(
+            e, traceback.format_exc()))
         if self.config.debug:
           pdb.post_mortem()
       return
@@ -279,12 +280,10 @@ class Engine(object):
       try:
         self._PreProcess(pre_obj)
       except errors.UnableToOpenFilesystem as e:
-        logging.error(u'Unable to open the filesystem: %s', e)
+        logging.error(u'Unable to open the filesystem: {0:s}'.format(e))
         return
       except IOError as e:
-        logging.error(
-            (u'An IOError occurred while trying to pre-process, bailing out. '
-             'The error given is: %s'), e)
+        logging.error(u'Unable to preprocess, with error: {0:s}'.format(e))
         return
 
     if not getattr(pre_obj, 'zone', None):
