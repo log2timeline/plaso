@@ -152,7 +152,7 @@ class MsiecfParser(parser.BaseParser):
     last_checked_timestamp = msiecf_item.get_last_checked_time_as_integer()
     if last_checked_timestamp > 0:
       event_container.Append(event.FatDateTimeEvent(
-          last_checked_timestamp, 'Last Checked Time',
+          last_checked_timestamp, eventdata.EventTimestamp.LAST_CHECKED_TIME,
           event_container.data_type))
 
     return event_container

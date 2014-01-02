@@ -30,7 +30,7 @@ from plaso.parsers import test_lib
 import pytz
 
 
-class BencodeTest(unittest.TestCase):
+class BencodeTest(test_lib.ParserTestCase):
   """The unit test for Bencode data plugins."""
 
   def setUp(self):
@@ -39,22 +39,17 @@ class BencodeTest(unittest.TestCase):
     self.pre_obj.zone = pytz.UTC
     self._parser = bencode_parser.BencodeParser(self.pre_obj, None)
 
-    self._caption_expected = 'plaso test'
-    self._path_expected = 'e:\\torrent\\files\\plaso test'
-
   def testTransmissionPlugin(self):
     """Read Transmission activity files and make few tests."""
     test_file = os.path.join('test_data', 'bencode_transmission')
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEqual(len(event_container.events), 3)
 
-    events_expected = 1
-    self.assertEqual(len(events), events_expected)
-
-    event_container = events[0]
     event_object = event_container.events[0]
 
-    destination_expected = '/Users/brian/Downloads'
+    destination_expected = u'/Users/brian/Downloads'
     self.assertEqual(event_object.destination, destination_expected)
 
     self.assertEqual(event_object.seedtime, 4)
@@ -81,21 +76,20 @@ class BencodeTest(unittest.TestCase):
   def testUTorrentPlugin(self):
     """Parse a uTorrent resume.dat file and make a few tests."""
     test_file = os.path.join('test_data', 'bencode_utorrent')
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEqual(len(event_container.events), 4)
 
-    self.assertEqual(len(events), 1)
-
-    event_container = events[0]
-
-    self.assertEqual(len(event_container), 4)
+    caption_expected = u'plaso test'
+    path_expected = u'e:\\torrent\\files\\plaso test'
 
     # First test on when the torrent was added to the client.
     event_object = event_container.events[3]
 
-    self.assertEqual(event_object.caption, self._caption_expected)
+    self.assertEqual(event_object.caption, caption_expected)
 
-    self.assertEqual(event_object.path, self._path_expected)
+    self.assertEqual(event_object.path, path_expected)
 
     self.assertEqual(event_object.seedtime, 511)
 
@@ -109,8 +103,8 @@ class BencodeTest(unittest.TestCase):
     # Second test on when the torrent file was completely downloaded.
     event_object = event_container.events[2]
 
-    self.assertEqual(event_object.caption, self._caption_expected)
-    self.assertEqual(event_object.path, self._path_expected)
+    self.assertEqual(event_object.caption, caption_expected)
+    self.assertEqual(event_object.path, path_expected)
     self.assertEqual(event_object.seedtime, 511)
 
     description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
@@ -123,8 +117,8 @@ class BencodeTest(unittest.TestCase):
     # Third test on when the torrent was first modified.
     event_object = event_container.events[0]
 
-    self.assertEqual(event_object.caption, self._caption_expected)
-    self.assertEqual(event_object.path, self._path_expected)
+    self.assertEqual(event_object.caption, caption_expected)
+    self.assertEqual(event_object.path, path_expected)
     self.assertEqual(event_object.seedtime, 511)
 
     description_expected = eventdata.EventTimestamp.MODIFICATION_TIME
@@ -137,8 +131,8 @@ class BencodeTest(unittest.TestCase):
     # Fourth test on when the torrent was again modified.
     event_object = event_container.events[1]
 
-    self.assertEqual(event_object.caption, self._caption_expected)
-    self.assertEqual(event_object.path, self._path_expected)
+    self.assertEqual(event_object.caption, caption_expected)
+    self.assertEqual(event_object.path, path_expected)
     self.assertEqual(event_object.seedtime, 511)
 
     description_expected = eventdata.EventTimestamp.MODIFICATION_TIME

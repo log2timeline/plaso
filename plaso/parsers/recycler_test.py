@@ -28,7 +28,7 @@ from plaso.parsers import recycler
 from plaso.parsers import test_lib
 
 
-class WinRecycleBinParserTest(unittest.TestCase):
+class WinRecycleBinParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycle Bin parser."""
 
   def setUp(self):
@@ -42,12 +42,12 @@ class WinRecycleBinParserTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', '$II3DF3L.zip')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEquals(len(event_objects), 1)
 
-    self.assertEquals(len(events), 1)
-
-    event_object = events[0]
+    event_object = event_objects[0]
 
     self.assertEquals(event_object.orig_filename, (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip'))
@@ -55,19 +55,17 @@ class WinRecycleBinParserTest(unittest.TestCase):
     self.assertEquals(event_object.timestamp, 1331585398633000)
     self.assertEquals(event_object.file_size, 724919)
 
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-        event_object)
-    expected_short_string = (
-        u'Deleted file: C:\\Users\\nfury\\Documents\\Alloy Research\\'
-        'StarFury.zip')
-    expected_string = (
+    expected_msg = (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip '
-        '(from drive C?)')
-    self.assertEquals(msg, expected_string)
-    self.assertEquals(msg_short, expected_short_string)
+        u'(from drive C?)')
+    expected_msg_short = (
+        u'Deleted file: C:\\Users\\nfury\\Documents\\Alloy Research\\'
+        u'StarFury.zip')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
-class WinRecyclerInfo2ParserTest(unittest.TestCase):
+class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycler INFO2 parser."""
 
   def setUp(self):
@@ -82,33 +80,42 @@ class WinRecyclerInfo2ParserTest(unittest.TestCase):
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
     test_file = os.path.join('test_data', 'INFO2')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEquals(len(event_objects), 4)
 
-    self.assertEquals(len(events), 4)
+    event_object = event_objects[0]
 
     # Date: 2004-08-25T16:18:25.237000+00:00
-    self.assertEquals(events[0].timestamp, 1093450705237000)
-    self.assertEquals(events[0].timestamp_desc,
+    self.assertEquals(event_object.timestamp, 1093450705237000)
+    self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.DELETED_TIME)
 
-    self.assertEquals(events[0].index, 1)
-    self.assertEquals(events[0].orig_filename, (
+    self.assertEquals(event_object.index, 1)
+    self.assertEquals(event_object.orig_filename, (
         u'C:\\Documents and Settings\\Mr. Evil\\Desktop\\lalsetup250.exe'))
 
+    event_object = event_objects[1]
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(events[1])
-    self.assertEquals(msg, (
-        u'DC2 -> C:\\Documents and Settings\\Mr. '
-        'Evil\\Desktop\\netstumblerinstaller_0_4_0.exe [C:\\Documents and '
-        'Settings\\Mr. Evil\\Desktop\\netstumblerinstaller_0_4_0.exe] (from '
-        'drive C)'))
+    expected_msg = (
+        u'DC2 -> C:\\Documents and Settings\\Mr. Evil\\Desktop'
+        u'\\netstumblerinstaller_0_4_0.exe [C:\\Documents and '
+        u'Settings\\Mr. Evil\\Desktop\\netstumblerinstaller_0_4_0.exe] '
+        u'(from drive C)')
+    expected_msg_short = (
+        u'Deleted file: C:\\Documents and Settings\\Mr. Evil\\Desktop'
+        u'\\netstumblerinstaller...')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
+    event_object = event_objects[2]
 
     short, source = eventdata.EventFormatterManager.GetSourceStrings(
-        events[2])
+        event_object)
 
-    self.assertEquals(source, 'Recycle Bin')
-    self.assertEquals(short, 'RECBIN')
+    self.assertEquals(source, u'Recycle Bin')
+    self.assertEquals(short, u'RECBIN')
 
 
 if __name__ == '__main__':

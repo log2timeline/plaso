@@ -29,7 +29,7 @@ from plaso.parsers import test_lib
 from plaso.pvfs import pvfs
 
 
-class FileStatTest(unittest.TestCase):
+class FileStatTest(test_lib.ParserTestCase):
   """The unit test for filestat parser."""
 
   def setUp(self):
@@ -47,12 +47,9 @@ class FileStatTest(unittest.TestCase):
     path.image_inode = 15
     path.file_path = 'passwords.txt'
 
-    events = test_lib.ParseFileByPathSpec(
+    events = self._ParseFileByPathSpec(
         self._parser, path, fscache=self._fscache)
-
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    event_container = self._GetEventContainer(events)
 
     # The TSK file entry has 3 timestamps.
     self.assertEquals(len(event_container.events), 3)
@@ -64,12 +61,9 @@ class FileStatTest(unittest.TestCase):
     path.container_path = os.path.join('test_data', 'syslog.zip')
     path.file_path = 'syslog'
 
-    events = test_lib.ParseFileByPathSpec(
+    events = self._ParseFileByPathSpec(
         self._parser, path, fscache=self._fscache)
-
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    event_container = self._GetEventContainer(events)
 
     # The ZIP file has 1 timestamp.
     self.assertEquals(len(event_container.events), 1)
@@ -80,7 +74,7 @@ class FileStatTest(unittest.TestCase):
     path.type = 'GZIP'
     path.file_path = os.path.join('test_data', 'syslog.gz')
 
-    events = test_lib.ParseFileByPathSpec(
+    events = self._ParseFileByPathSpec(
         self._parser, path, fscache=self._fscache)
 
     self.assertEquals(len(events), 0)
@@ -92,7 +86,7 @@ class FileStatTest(unittest.TestCase):
     path.container_path = os.path.join('test_data', 'syslog.tar')
     path.file_path = 'syslog'
 
-    events = test_lib.ParseFileByPathSpec(
+    events = self._ParseFileByPathSpec(
         self._parser, path, fscache=self._fscache)
 
     self.assertEquals(len(events), 0)
@@ -109,7 +103,7 @@ class FileStatTest(unittest.TestCase):
 
     path.nested_pathspec = host_file
 
-    events = test_lib.ParseFileByPathSpec(
+    events = self._ParseFileByPathSpec(
         self._parser, path, fscache=self._fscache)
 
     # No stat available from a GZIP file.
@@ -125,7 +119,7 @@ class FileStatTest(unittest.TestCase):
 
     path.nested_pathspec = gzip
 
-    events = test_lib.ParseFileByPathSpec(
+    events = self._ParseFileByPathSpec(
         self._parser, path, fscache=self._fscache)
 
     # No stat available from a GZIP file.
@@ -146,12 +140,9 @@ class FileStatTest(unittest.TestCase):
 
     path.nested_pathspec = host_path
 
-    events = test_lib.ParseFileByPathSpec(
+    events = self._ParseFileByPathSpec(
         self._parser, path, fscache=self._fscache)
-
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    event_container = self._GetEventContainer(events)
 
     # The ZIP file has 1 timestamp.
     self.assertEquals(len(event_container.events), 1)

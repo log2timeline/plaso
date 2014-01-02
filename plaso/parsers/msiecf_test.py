@@ -28,7 +28,7 @@ from plaso.parsers import msiecf
 from plaso.parsers import test_lib
 
 
-class MsiecfParserTest(unittest.TestCase):
+class MsiecfParserTest(test_lib.ParserTestCase):
   """Tests for the MSIE Cache Files (MSIECF) parser."""
 
   def setUp(self):
@@ -39,19 +39,18 @@ class MsiecfParserTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'index.dat')
-
-    events = test_lib.ParseFile(self._parser, test_file)
+    events = self._ParseFile(self._parser, test_file)
+    event_containers = self._GetEventContainers(events)
 
     # MSIE Cache File information:
     # 	File size:			32768 bytes
     # 	Number of items:		7
     # 	Number of recovered items:	11
 
-    expected_number_of_events = 7 + 11
-    self.assertEquals(len(events), expected_number_of_events)
+    self.assertEquals(len(event_containers), 7 + 11)
 
-    event_container = events[2]
-    self.assertEquals(len(event_container), 4)
+    event_container = event_containers[2]
+    self.assertEquals(len(event_container.events), 4)
 
     # Record type             : URL
     # Offset range            : 21376 - 21632 (256)
@@ -74,40 +73,44 @@ class MsiecfParserTest(unittest.TestCase):
     event_object = event_container.events[0]
 
     # date -u -d"Jun 23, 2011 18:02:10.066000000" +"%s.%N"
-    self.assertEquals(event_object.timestamp,
-                      (1308852130 * 1000000) + (66000000 / 1000))
-    self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.LAST_VISITED_TIME)
+    expected_timestamp = (1308852130 * 1000000) + (66000000 / 1000)
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_container.events[1]
 
-    self.assertEquals(event_object.timestamp,
-                      (1308852130 * 1000000) + (66000000 / 1000))
-    self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.LAST_VISITED_TIME)
+    expected_timestamp = (1308852130 * 1000000) + (66000000 / 1000)
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
-    # date -u -d"Jun 29, 2011 17:55:02" +"%s.%N"
     event_object = event_container.events[2]
 
-    self.assertEquals(event_object.timestamp, 1309370102 * 1000000)
-    self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.EXPIRATION_TIME)
+    # date -u -d"Jun 29, 2011 17:55:02" +"%s.%N"
+    expected_timestamp = 1309370102 * 1000000
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
 
-    # date -u -d"Jun 23, 2011 18:02:12" +"%s.%N"
     event_object = event_container.events[3]
 
-    self.assertEquals(event_object.timestamp, 1308852132 * 1000000)
-    self.assertEquals(event_object.timestamp_desc, 'Last Checked Time')
+    # date -u -d"Jun 23, 2011 18:02:12" +"%s.%N"
+    expected_timestamp = 1308852132 * 1000000
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_CHECKED_TIME)
 
-    # Test the event specific formatter.
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
-         event_object)
+    expected_msg = (
+        u'Location: Visited: testing@http://www.trafficfusionx.com/download'
+        u'/tfscrn2/funnycats.exe '
+        u'Number of hits: 6 '
+        u'Cached file size: 0')
+    expected_msg_short = (
+        u'Location: Visited: testing@http://www.trafficfusionx.com/download'
+        u'/tfscrn2/fun...')
 
-    expected_msg = (u'Location: Visited: testing@http://www.trafficfusionx.com'
-                    u'/download/tfscrn2/funnycats.exe '
-                    u'Number of hits: 6 Cached file size: 0')
-
-    self.assertEquals(msg, expected_msg)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

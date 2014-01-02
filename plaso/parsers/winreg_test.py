@@ -25,7 +25,7 @@ from plaso.parsers import test_lib
 from plaso.parsers import winreg
 
 
-class WinRegTest(unittest.TestCase):
+class WinRegTest(test_lib.ParserTestCase):
   """The unit test for winreg parser."""
 
   def setUp(self):
@@ -48,8 +48,7 @@ class WinRegTest(unittest.TestCase):
   def testNtuserParsing(self):
     """Parse a NTUSER.dat file and check few items."""
     test_file = os.path.join('test_data', 'NTUSER.DAT')
-
-    events = test_lib.ParseFile(self._parser, test_file)
+    events = self._ParseFile(self._parser, test_file)
 
     # pylint: disable-msg=W0212
     self.assertEquals(self._parser._registry_type, 'NTUSER')
@@ -65,8 +64,7 @@ class WinRegTest(unittest.TestCase):
   def testSystemParsing(self):
     """Parse a SYSTEM hive an run few tests."""
     test_file = os.path.join('test_data', 'SYSTEM')
-
-    events = test_lib.ParseFile(self._parser, test_file)
+    events = self._ParseFile(self._parser, test_file)
 
     # pylint: disable-msg=W0212
     self.assertEquals(self._parser._registry_type, 'SYSTEM')

@@ -25,30 +25,34 @@ from plaso.parsers import plist
 from plaso.parsers import test_lib
 
 
-class PlistParserTest(unittest.TestCase):
+class PlistParserTest(test_lib.ParserTestCase):
   """The unit test for the plist parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
-
     self._parser = plist.PlistParser(pre_obj, None)
 
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'plist_binary')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    # TODO: getting flaky results here!
+    # using ./utils/run_tests.sh (12) or ./run_tests.py (13).
+    # self.assertEquals(len(event_objects), 12)
+
     timestamps, roots, keys = zip(
-        *[(event.timestamp, event.root, event.key) for event in events])
+        *[(event.timestamp, event.root, event.key) for event in event_objects])
 
-    expected_ts = [
+    expected_timestamps = frozenset([
         1345251192528750, 1351827808261762, 1345251268370453,
         1351818803000000, 1351819298997672, 1351818797324095,
         1301012201414766, 1302199013524275, 1341957900020116,
-        1350666391557044, 1350666385239661, 1341957896010535]
+        1350666391557044, 1350666385239661, 1341957896010535])
 
-    self.assertTrue(set(expected_ts) == set(timestamps))
+    self.assertTrue(set(expected_timestamps) == set(timestamps))
     self.assertEquals(12, len(set(timestamps)))
 
     expected_roots = frozenset([
@@ -62,7 +66,9 @@ class PlistParserTest(unittest.TestCase):
     self.assertEquals(6, len(set(roots)))
 
     expected_keys = frozenset([
-        'LastInquiryUpdate', 'LastServicesUpdate', 'LastNameUpdate'])
+        u'LastInquiryUpdate',
+        u'LastServicesUpdate',
+        u'LastNameUpdate'])
     self.assertTrue(expected_keys == set(keys))
     self.assertEquals(3, len(set(keys)))
 
