@@ -19,6 +19,7 @@
 # Note that this is not a real factory class but code that provides
 # factory helper functions for the PyVFS migration.
 
+from plaso.collector import generic_collector
 from plaso.collector import os_collector
 from plaso.collector import tsk_collector
 
@@ -57,38 +58,12 @@ def GetImagePreprocessCollector(
       pre_obj, source_path, byte_offset=byte_offset)
 
 
-def GetFileSystemCollector(proc_queue, stor_queue, source_path):
-  """Factory function to retrieve a file system collector object.
+def GetGenericCollector(proc_queue, stor_queue, source_path):
+  """Factory function to retrieve a generic collector object.
 
   Args:
     proc_queue: A Plaso queue object used as a processing queue of files.
     stor_queue: A Plaso queue object used as a buffer to the storage layer.
     source_path: Path of the source file or directory.
   """
-  return os_collector.OSCollector(proc_queue, stor_queue, source_path)
-
-
-def GetImageCollector(
-    proc_queue, stor_queue, source_path, sector_offset=0, byte_offset=0,
-    parse_vss=False, vss_stores=None, fscache=None):
-  """Factory function to retrieve an image collector object.
-
-  Args:
-    proc_queue: A Plaso queue object used as a processing queue of files.
-    stor_queue: A Plaso queue object used as a buffer to the storage layer.
-    source_path: Path of the source image file.
-    sector_offset: A sector offset into the image file if this is a disk
-                   image.
-    byte_offset: Optional byte offset into the image file if this is a disk
-                 image. The default is 0.
-    parse_vss: Boolean determining if we should collect from VSS as well
-               (only applicaple in Windows with Volume Shadow Snapshot).
-    vss_stores: If defined a range of VSS stores to include in vss parsing.
-    fscache: A FilesystemCache object.
-  Returns:
-    A collector object (instance of Collector).
-  """
-  return tsk_collector.TSKCollector(
-      proc_queue, stor_queue, source_path, sector_offset=sector_offset,
-      byte_offset=byte_offset, parse_vss=parse_vss, vss_stores=vss_stores,
-      fscache=fscache)
+  return generic_collector.GenericCollector(proc_queue, stor_queue, source_path)

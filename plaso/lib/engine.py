@@ -559,12 +559,6 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
     else:
       logging.debug(u'Starting a collection on image.')
 
-    collector_object = collector_factory.GetImageCollector(
-        collection_queue, storage_queue, config.filename,
-        sector_offset=config.image_offset,
-        byte_offset=config.image_offset_bytes,
-        parse_vss=config.parse_vss, vss_stores=config.vss_stores)
-
   else:
     if (not os.path.isfile(config.filename) and
         not os.path.isdir(config.filename)):
@@ -580,8 +574,15 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
       # No need for multiple workers when parsing a single file.
       config.workers = 1
 
-    collector_object = collector_factory.GetFileSystemCollector(
-        collection_queue, storage_queue, unicode(config.filename))
+  collector_object = collector_factory.GetGenericCollector(
+      collection_queue, storage_queue, unicode(config.filename))
+
+  if config.image:
+    collector_object.SetImageInformation(
+      sector_offset=config.image_offset, byte_offset=config.image_offset_bytes)
+
+    if config.parse_vss:
+      collector_object.SetVssInformation(vss_stores=config.vss_stores)
 
   if config.file_filter:
     collector_object.SetFilter(config.file_filter, pre_obj)
