@@ -29,7 +29,7 @@ from plaso.parsers import mac_wifi as mac_wifi_parser
 from plaso.parsers import test_lib
 
 
-class MacWifiUnitTest(unittest.TestCase):
+class MacWifiUnitTest(test_lib.ParserTestCase):
   """A unit test for the Mac Wifi log parser."""
 
   def setUp(self):
@@ -42,67 +42,86 @@ class MacWifiUnitTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'wifi.log')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEqual(len(event_objects), 9)
 
-    self.assertEqual(len(events), 9)
+    event_object = event_objects[0]
 
-    event = events[0]
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event)
-    expected_msg = (u'Action: Interface en0 turn up. '
-                    '(airportdProcessDLILEvent) Log: en0 attached (up)')
-    self.assertEqual(expected_msg, msg)
-    # date -u -d"Thu, 14 Nov 2013 20:36:37" +"%s222000"
-    self.assertEqual(1384461397222000, event.timestamp)
-    self.assertEqual(u'airportd[88]', event.agent)
-    self.assertEqual(u'airportdProcessDLILEvent', event.function)
-    self.assertEqual(u'Interface en0 turn up.', event.action)
-    self.assertEqual(u'en0 attached (up)', event.text)
+    # date -u -d"Thu, 14 Nov 2013 20:36:37.222" +"%s.%N"
+    self.assertEqual(event_object.timestamp, 1384461397222000)
+    self.assertEqual(event_object.agent, u'airportd[88]')
+    self.assertEqual(event_object.function, u'airportdProcessDLILEvent')
+    self.assertEqual(event_object.action, u'Interface en0 turn up.')
+    self.assertEqual(event_object.text, u'en0 attached (up)')
 
-    event = events[1]
-    # date -u -d"Thu, 14 Nov 2013 20:36:43.818" +"%s818000"
-    self.assertEqual(1384461403818000, event.timestamp)
-    self.assertEqual(u'airportd[88]', event.agent)
-    self.assertEqual(u'_doAutoJoin', event.function)
-    self.assertEqual(u'Wifi connected to SSID CampusNet', event.action)
-    expected_msg = (u'Already associated to \u201cCampusNet\u201d. '
-                    'Bailing on auto-join.')
-    self.assertEqual(expected_msg, event.text)
+    expected_msg = (
+        u'Action: Interface en0 turn up. '
+        u'(airportdProcessDLILEvent) '
+        u'Log: en0 attached (up)')
+    expected_msg_short = (
+        u'Action: Interface en0 turn up.')
 
-    event = events[2]
-    # date -u -d"Thu, 14 Nov 2013 21:50:52.395" +"%s395000"
-    self.assertEqual(1384465852395000, event.timestamp)
-    self.assertEqual(u'airportd[88]', event.agent)
-    self.assertEqual(u'_handleLinkEvent', event.function)
-    expected_msg = (u'Unable to process link event, op mode request '
-                    'returned -3903 (Operation not supported)')
-    self.assertEqual(expected_msg, event.action)
-    self.assertEqual(expected_msg, event.text)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event = events[5]
-    # date -u -d"Thu, 14 Nov 2013 21:52:09" +"%s883000"
-    self.assertEqual(1384465929883000, event.timestamp)
-    self.assertEqual(u'airportd[88]', event.agent)
-    self.assertEqual(u'_processSystemPSKAssoc', event.function)
-    expected_msg = (u'New wifi configured. BSSID: 88:30:8a:7a:61:88, SSID: '
-                    u'AndroidAP, Security: WPA2 Personal.')
-    self.assertEqual(expected_msg, event.action)
-    expected_msg = (u'No password for network <CWNetwork: '
-                    '0x7fdfe970b250> [ssid=AndroidAP, bssid='
-                    '88:30:8a:7a:61:88, security=WPA2 '
-                    'Personal, rssi=-21, channel=<CWChannel: '
-                    '0x7fdfe9712870> [channelNumber=11(2GHz), '
-                    'channelWidth={20MHz}], ibss=0] in the '
-                    'system keychain')
-    self.assertEqual(expected_msg, event.text)
+    event_object = event_objects[1]
 
-    event = events[7]
-    # date -u -d"Tue, 31 Dec 2013 23:59:38" +"%s165000"
-    self.assertEqual(1388534378165000, event.timestamp)
+    # date -u -d"Thu, 14 Nov 2013 20:36:43.818" +"%s.%N"
+    self.assertEqual(event_object.timestamp, 1384461403818000)
+    self.assertEqual(event_object.agent, u'airportd[88]')
+    self.assertEqual(event_object.function, u'_doAutoJoin')
+    self.assertEqual(event_object.action, u'Wifi connected to SSID CampusNet')
 
-    event = events[8]
-    # date -u -d"Wed, 1 Jan 2014 01:12:17" +"%s311000"
-    self.assertEqual(1388538737311000, event.timestamp)
+    expected_text = (
+        u'Already associated to \u201cCampusNet\u201d. Bailing on auto-join.')
+    self.assertEqual(event_object.text, expected_text)
+
+    event_object = event_objects[2]
+
+    # date -u -d"Thu, 14 Nov 2013 21:50:52.395" +"%s.%N"
+    self.assertEqual(event_object.timestamp, 1384465852395000)
+    self.assertEqual(event_object.agent, u'airportd[88]')
+    self.assertEqual(event_object.function, u'_handleLinkEvent')
+
+    expected_string = (
+        u'Unable to process link event, op mode request returned -3903 '
+        u'(Operation not supported)')
+
+    self.assertEqual(event_object.action, expected_string)
+    self.assertEqual(event_object.text, expected_string)
+
+    event_object = event_objects[5]
+
+    # date -u -d"Thu, 14 Nov 2013 21:52:09.883" +"%s.%N"
+    self.assertEqual(1384465929883000, event_object.timestamp)
+    self.assertEqual(u'airportd[88]', event_object.agent)
+    self.assertEqual(u'_processSystemPSKAssoc', event_object.function)
+
+    expected_action = (
+        u'New wifi configured. BSSID: 88:30:8a:7a:61:88, SSID: AndroidAP, '
+        u'Security: WPA2 Personal.')
+
+    self.assertEqual(event_object.action, expected_action)
+
+    expected_text = (
+        u'No password for network <CWNetwork: 0x7fdfe970b250> '
+        u'[ssid=AndroidAP, bssid=88:30:8a:7a:61:88, security=WPA2 '
+        u'Personal, rssi=-21, channel=<CWChannel: 0x7fdfe9712870> '
+        u'[channelNumber=11(2GHz), channelWidth={20MHz}], ibss=0] '
+        u'in the system keychain')
+
+    self.assertEqual(event_object.text, expected_text)
+
+    event_object = event_objects[7]
+
+    # date -u -d"Tue, 31 Dec 2013 23:59:38.165" +"%s.%N"
+    self.assertEqual(event_object.timestamp, 1388534378165000)
+
+    event_object = event_objects[8]
+
+    # date -u -d"Wed, 1 Jan 2014 01:12:17.311" +"%s.%N"
+    self.assertEqual(event_object.timestamp, 1388538737311000)
 
 
 if __name__ == '__main__':

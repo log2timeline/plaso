@@ -30,7 +30,7 @@ from plaso.parsers import winjob
 import pytz
 
 
-class WinJobTest(unittest.TestCase):
+class WinJobTest(test_lib.ParserTestCase):
   """The unit test for Windows Scheduled Task job parser."""
 
   def setUp(self):
@@ -42,19 +42,15 @@ class WinJobTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'wintask.job')
-
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
     self.assertEquals(len(event_container.events), 2)
 
     event_object = event_container.events[0]
 
-    application_expected = (u'C:\\Program Files (x86)\\Google\\Update'
-                            u'\\GoogleUpdate.exe')
+    application_expected = (
+        u'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe')
     self.assertEqual(event_object.application, application_expected)
 
     username_expected = u'Brian'
@@ -88,22 +84,24 @@ class WinJobTest(unittest.TestCase):
     self.assertEqual(event_object.trigger, trigger_expected)
     self.assertEqual(event_object.comment, comment_expected)
 
-    description_expected = 'Scheduled To Start'
+    description_expected = u'Scheduled To Start'
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
     # 2013-07-12T15:42:00+00:00
     download_date_expected = 1373643720000000
     self.assertEqual(event_object.timestamp, download_date_expected)
 
-    msg_expected = (
+    expected_msg = (
         u'Application: C:\\Program Files (x86)\\Google\\Update\\'
-        u'GoogleUpdate.exe '
-        u'/ua /installsource scheduler '
+        u'GoogleUpdate.exe /ua /installsource scheduler '
         u'Scheduled by: Brian '
         u'Run Iteration: DAILY')
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
 
-    self.assertEqual(msg_expected, msg)
+    expected_msg_short = (
+        u'Application: C:\\Program Files (x86)\\Google\\Update\\'
+        u'GoogleUpdate.exe /ua /insta...')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

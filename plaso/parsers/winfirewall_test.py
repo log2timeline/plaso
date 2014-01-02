@@ -22,7 +22,6 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winfirewall as winfirewall_formatter
-from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import test_lib
 from plaso.parsers import winfirewall
@@ -30,7 +29,7 @@ from plaso.parsers import winfirewall
 import pytz
 
 
-class WinFirewallParserTest(unittest.TestCase):
+class WinFirewallParserTest(test_lib.ParserTestCase):
   """Tests for the Windows firewall log parser."""
 
   def setUp(self):
@@ -46,37 +45,43 @@ class WinFirewallParserTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'firewall.log')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEquals(len(event_objects), 15)
 
-    self.assertEquals(len(events), 15)
+    event_object = event_objects[4]
 
-    udp_event = events[4]
-
-    self.assertEquals(udp_event.source_ip, '123.45.78.90')
-    self.assertEquals(udp_event.dest_ip, '123.156.78.90')
     # expr `date -u -d "2005-04-11 08:06:02" +"%s%N"` \/ 1000
-    self.assertEquals(udp_event.timestamp, 1113206762000000)
+    self.assertEquals(event_object.timestamp, 1113206762000000)
+    self.assertEquals(event_object.source_ip, '123.45.78.90')
+    self.assertEquals(event_object.dest_ip, '123.156.78.90')
 
-    tcp_event = events[7]
-    icmp_event = events[9]
+    event_object = event_objects[7]
 
-    self.assertEquals(tcp_event.size, 576)
-    self.assertEquals(tcp_event.flags, 'A')
-    self.assertEquals(tcp_event.tcp_ack, 987654321)
     # expr `date -u -d "2005-04-11 08:06:26" +"%s%N"` \/ 1000
-    self.assertEquals(tcp_event.timestamp, 1113206786000000)
+    self.assertEquals(event_object.timestamp, 1113206786000000)
+    self.assertEquals(event_object.size, 576)
+    self.assertEquals(event_object.flags, 'A')
+    self.assertEquals(event_object.tcp_ack, 987654321)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
-        tcp_event)
-    expected_string = (
-        u'DROP [ TCP RECEIVE ] From: 123.45.78.90 :80 > 123.156.78.90 :1774 '
-        'Size (bytes): 576 Flags [A] TCP Seq Number: 123456789 TCP ACK Number: '
-        '987654321 TCP Window Size (bytes): 12345')
-    self.assertEquals(msg, expected_string)
+    expected_msg = (
+        u'DROP [ TCP RECEIVE ] '
+        u'From: 123.45.78.90 :80 > 123.156.78.90 :1774 '
+        u'Size (bytes): 576 '
+        u'Flags [A] '
+        u'TCP Seq Number: 123456789 '
+        u'TCP ACK Number: 987654321 '
+        u'TCP Window Size (bytes): 12345')
+    expected_msg_short = (
+        u'DROP [TCP] 123.45.78.90 : 80 > 123.156.78.90 : 1774')
 
-    self.assertEquals(icmp_event.icmp_type, 8)
-    self.assertEquals(icmp_event.icmp_code, 0)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
+    event_object = event_objects[9]
+
+    self.assertEquals(event_object.icmp_type, 8)
+    self.assertEquals(event_object.icmp_code, 0)
 
 
 if __name__ == '__main__':

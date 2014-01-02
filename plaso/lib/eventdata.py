@@ -45,6 +45,8 @@ class EventTimestamp(object):
   # TODO: change page visited into last visited time.
   LAST_VISITED_TIME = u'Last Visited Time'
 
+  LAST_CHECKED_TIME = u'Last Checked Time'
+
   EXPIRATION_TIME = u'Expiration Time'
   START_TIME = u'Start Time'
   END_TIME = u'End Time'

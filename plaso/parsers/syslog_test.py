@@ -22,7 +22,6 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import syslog as syslog_formatter
-from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import syslog
 from plaso.parsers import test_lib
@@ -30,7 +29,7 @@ from plaso.parsers import test_lib
 import pytz
 
 
-class SyslogUnitTest(unittest.TestCase):
+class SyslogUnitTest(test_lib.ParserTestCase):
   """A unit test for the timelib."""
 
   def setUp(self):
@@ -43,29 +42,35 @@ class SyslogUnitTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'syslog')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEquals(len(event_objects), 13)
 
     # TODO let's add code to convert Jan 22 2012 07:52:33 into the
     # corresponding timestamp, I think that will be more readable
-    self.assertEquals(events[0].timestamp, 1327218753000000)
-    self.assertEquals(events[0].hostname, 'myhostname.myhost.com')
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(events[0])
-    self.assertEquals(
-        msg, '[client, pid: 30840] : INFO No new content.')
+    self.assertEquals(event_objects[0].timestamp, 1327218753000000)
+    self.assertEquals(event_objects[0].hostname, 'myhostname.myhost.com')
 
-    self.assertEquals(len(events), 13)
+    expected_string = (
+        u'[client, pid: 30840] : INFO No new content.')
+    self._TestGetMessageStrings(
+        event_objects[0], expected_string, expected_string)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(events[11])
-    self.assertEquals(msg, (
+    expected_msg = (
         '[aprocess, pid: 101001] : This is a multi-line message that screws up'
-        'many syslog parsers.'))
+        'many syslog parsers.')
+    expected_msg_short = (
+        '[aprocess, pid: 101001] : This is a multi-line message that screws up'
+        'many sys...')
+    self._TestGetMessageStrings(
+        event_objects[11], expected_msg, expected_msg_short)
 
     # Mon Feb 29 01:15:43 UTC 2012.
-    self.assertEquals(events[6].timestamp, 1330478143000000)
+    self.assertEquals(event_objects[6].timestamp, 1330478143000000)
 
     # Sat Mar 23 23:01:18 UTC 2013 - testing year increment.
-    self.assertEquals(events[8].timestamp, 1364079678000000)
+    self.assertEquals(event_objects[8].timestamp, 1364079678000000)
 
 
 if __name__ == '__main__':

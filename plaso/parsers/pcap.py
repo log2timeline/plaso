@@ -95,7 +95,6 @@ def ParseNetBios(netbios_packet):
   Returns:
      Formatted netBIOS details.
   """
-
   netbios_data = []
   for query in netbios_packet.qd:
     netbios_data.append('NETBIOS qd:')
@@ -119,7 +118,6 @@ def TCPFlags(flag):
   Returns:
     String with printable flags for specific packet.
   """
-
   res = []
   if flag & dpkt.tcp.TH_FIN:
     res.append('FIN')
@@ -150,7 +148,6 @@ def ICMPTypes(packet):
   Returns:
     Formatted ICMP details.
   """
-
   icmp_type = packet.type
   icmp_code = packet.code
   icmp_data = []
@@ -341,7 +338,6 @@ class Stream(object):
       A tuple consisting of a basic desctiption of the stream
       (i.e. HTTP Request) and the prettyfied string for the protocols.
     """
-
     packet_details = []
     if self.stream_data[:4] == 'HTTP':
       try:
@@ -452,7 +448,6 @@ class Stream(object):
 
     return 'other', self.protocol_data
 
-
   def Clean(self):
     """Clean up stream data."""
     clean_data = []
@@ -537,14 +532,22 @@ class PcapParser(parser.BaseParser):
       the parsed data.
     """
     file_object = file_entry.Open()
+
+    # TODO: this is a hack for a limitation in dpkt that expects the file
+    # object to have a name. This needs to be fixed properly by creating
+    # a plaso specific dpkt Reader object that takes a file entry as input.
+    file_object.name = file_entry.name
+
     try:
       pcap_reader = dpkt.pcap.Reader(file_object)
     except ValueError as exception:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-        self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
     except dpkt.NeedData as exception:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-        self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     packet_id = 0
     ip_list = []

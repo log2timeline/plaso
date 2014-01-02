@@ -109,6 +109,7 @@ class OleCfSummaryInfoEventContainer(event.EventContainer):
     super(OleCfSummaryInfoEventContainer, self).__init__()
 
     self.data_type = 'olecf:summary_info'
+    self.name = u'Summary Information'
 
     # TODO: make this more elegant/generic also in light of OLECF
     # sub parsers (plugins).
@@ -268,6 +269,7 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
     super(OleCfDocumentSummaryInfoEventContainer, self).__init__()
 
     self.data_type = 'olecf:document_summary_info'
+    self.name = u'Document Summary Information'
 
     self._InitFromPropertySet(olecf_item.set)
 

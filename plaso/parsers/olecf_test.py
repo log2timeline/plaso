@@ -28,7 +28,7 @@ from plaso.parsers import olecf
 from plaso.parsers import test_lib
 
 
-class TestOleCfParser(unittest.TestCase):
+class TestOleCfParser(test_lib.ParserTestCase):
   """Tests for the OLECF parser."""
 
   def setUp(self):
@@ -43,15 +43,16 @@ class TestOleCfParser(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'Document.doc')
+    events = self._ParseFile(self._parser, test_file)
+    event_containers = self._GetEventContainers(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    self.assertEquals(len(events), 5)
+    self.assertEquals(len(event_containers), 5)
 
     # Check the Root Entry event.
-    event_container = events[0]
+    event_container = event_containers[0]
 
-    self.assertEquals(event_container.name, 'Root Entry')
+    self.assertEquals(len(event_container.events), 1)
+    self.assertEquals(event_container.name, u'Root Entry')
 
     event_object = event_container.events[0]
 
@@ -60,34 +61,29 @@ class TestOleCfParser(unittest.TestCase):
     # May 16, 2013 02:29:49.795000000 UTC.
     self.assertEquals(event_object.timestamp, 1368671389795000)
 
-    expected_msg = (
+    expected_string = (
         u'Name: Root Entry')
 
-    expected_msg_short = (
-        u'Name: Root Entry')
-
-    # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-         event_object)
-
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(msg_short, expected_msg_short)
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
     # Check the Summary Information.
-    event_container = events[1]
+    event_container = event_containers[1]
 
-    self.assertEquals(event_container.title, 'Table of Context')
-    self.assertEquals(event_container.author, 'DAVID NIDES')
-    self.assertEquals(event_container.template, 'Normal.dotm')
-    self.assertEquals(event_container.last_saved_by, 'Nides')
-    self.assertEquals(event_container.revision_number, '4')
+    self.assertEquals(len(event_container.events), 2)
+    self.assertEquals(event_container.name, u'Summary Information')
+
+    self.assertEquals(event_container.title, u'Table of Context')
+    self.assertEquals(event_container.author, u'DAVID NIDES')
+    self.assertEquals(event_container.template, u'Normal.dotm')
+    self.assertEquals(event_container.last_saved_by, u'Nides')
+    self.assertEquals(event_container.revision_number, u'4')
     self.assertEquals(event_container.number_of_characters, 18)
-    self.assertEquals(event_container.application, 'Microsoft Office Word')
+    self.assertEquals(event_container.application, u'Microsoft Office Word')
     self.assertEquals(event_container.security, 0)
 
     event_object = event_container.events[0]
 
-    self.assertEquals(event_object.timestamp_desc, 'Document Creation Time')
+    self.assertEquals(event_object.timestamp_desc, u'Document Creation Time')
     # Date: 2012-12-10T18:38:00.000000+00:00.
     self.assertEquals(event_object.timestamp, 1355164680000000)
 
@@ -111,17 +107,19 @@ class TestOleCfParser(unittest.TestCase):
     # TODO: add support for:
     #    u'Total edit time (secs): 0 '
 
-    # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-         event_object)
-
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(msg_short, expected_msg_short)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # Check the Document Summary Information.
-    event_container = events[2]
+    event_container = event_containers[2]
 
-    self.assertEquals(event_container.company, 'KPMG')
+    self.assertEquals(len(event_container.events), 1)
+    self.assertEquals(event_container.name, u'Document Summary Information')
+
+    self.assertEquals(event_container.number_of_lines, 1)
+    self.assertEquals(event_container.number_of_paragraphs, 1)
+    self.assertEquals(event_container.company, u'KPMG')
+    self.assertFalse(event_container.shared_document)
+    self.assertEquals(event_container.application_version, u'14.0')
 
     # TODO: add support for:
     # self.assertEquals(event_container.is_shared, False)
@@ -138,12 +136,7 @@ class TestOleCfParser(unittest.TestCase):
     expected_msg_short = (
         u'Company: KPMG')
 
-    # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-         event_object)
-
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(msg_short, expected_msg_short)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

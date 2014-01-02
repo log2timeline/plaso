@@ -28,7 +28,7 @@ from plaso.parsers import opera
 from plaso.parsers import test_lib
 
 
-class OperaTypedParserTest(unittest.TestCase):
+class OperaTypedParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Typed History Parser."""
 
   def setUp(self):
@@ -43,40 +43,35 @@ class OperaTypedParserTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'typed_history.xml')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEquals(len(event_objects), 4)
 
-    self.assertEquals(len(events), 4)
-
-    # Pick two events for additional tests.
-    event_one = events[0]
-    event_two = events[3]
+    event_object = event_objects[0]
 
     # Timestamp is: 2013-11-11T23:45:27Z.
     # date -u -d "2013-11-11T23:45:27Z" +"%s"
-    self.assertEquals(event_one.timestamp, 1384213527000000)
-    # Timestamp is: 2013-11-11T22:46:07Z.
-    # date -u -d "2013-11-11T22:46:07Z" +"%s"
-    self.assertEquals(event_two.timestamp, 1384209967000000)
-
-    self.assertEquals(event_one.entry_selection, 'Filled from autocomplete.')
-    self.assertEquals(event_two.entry_selection, 'Manually typed.')
-
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-        event_one)
+    self.assertEquals(event_object.timestamp, 1384213527000000)
+    self.assertEquals(event_object.entry_selection, 'Filled from autocomplete.')
 
     expected_string = u'plaso.kiddaland.net (Filled from autocomplete.)'
-    self.assertEquals(msg, expected_string)
-    self.assertEquals(msg_short, expected_string)
 
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-        event_two)
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+
+    event_object = event_objects[3]
+
+    # Timestamp is: 2013-11-11T22:46:07Z.
+    # date -u -d "2013-11-11T22:46:07Z" +"%s"
+    self.assertEquals(event_object.timestamp, 1384209967000000)
+    self.assertEquals(event_object.entry_selection, 'Manually typed.')
+
     expected_string = u'theonion.com (Manually typed.)'
-    self.assertEquals(msg, expected_string)
-    self.assertEquals(msg_short, expected_string)
+
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
 
-class OperaGlobalParserTest(unittest.TestCase):
+class OperaGlobalParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Global History parser."""
 
   def setUp(self):
@@ -91,40 +86,44 @@ class OperaGlobalParserTest(unittest.TestCase):
   def testParseFile(self):
     """Read a history file and run a few tests."""
     test_file = os.path.join('test_data', 'global_history.dat')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEquals(len(event_objects), 37)
 
-    self.assertEquals(len(events), 37)
-
-    # Pick three "randomly" selected events from the pool.
-    event_one = events[4]
-    event_two = events[10]
-    event_three = events[16]
+    event_object = event_objects[4]
 
     # date -u -d @1384209946
     # Mon Nov 11 22:45:46 UTC 2013
-    self.assertEquals(event_one.timestamp, 1384209946 * 1000000)
+    self.assertEquals(event_object.timestamp, 1384209946 * 1000000)
 
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-        event_one)
-    expected_string = (
+    expected_msg = (
         u'http://www.mbl.is/frettir/erlent/2013/11/11/'
         u'karl_bretaprins_faer_ellilifeyri/ (Karl Bretaprins fær ellilífeyri'
         u' - mbl.is) [First and Only Visit]')
-
-    expected_short_string = (
+    expected_msg_short = (
         u'http://www.mbl.is/frettir/erlent/2013/11/11/'
         u'karl_bretaprins_faer_ellilifeyri/...')
 
-    self.assertEquals(msg, expected_string)
-    self.assertEquals(msg_short, expected_short_string)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    self.assertEquals(event_two.timestamp, 1384209955 * 1000000)
-    self.assertEquals(event_three.timestamp, 1384209976 * 1000000)
+    event_object = event_objects[10]
 
-    self.assertEquals(event_three.title, (
+    # date -u -d @1384209955
+    # Mon Nov 11 22:45:55 UTC 2013
+    self.assertEquals(event_object.timestamp, 1384209955 * 1000000)
+
+    event_object = event_objects[16]
+
+    # date -u -d @1384209976
+    # Mon Nov 11 22:46:16 UTC 2013
+    self.assertEquals(event_object.timestamp, 1384209976 * 1000000)
+
+    expected_title = (
         u'10 Celebrities You Never Knew Were Abducted And Murdered '
-        u'By Andie MacDowell | The Onion - America\'s Finest News Source'))
+        u'By Andie MacDowell | The Onion - America\'s Finest News Source')
+
+    self.assertEquals(event_object.title, expected_title)
 
 
 if __name__ == '__main__':
