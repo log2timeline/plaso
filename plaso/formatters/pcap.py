@@ -36,12 +36,11 @@ class PCAPFormatter(eventdata.ConditionalEventFormatter):
       u'Stream Data: {stream_data}',
       u'First Packet ID: {first_packet_id}',
       u'Last Packet ID: {last_packet_id}',
-      u'Packet Count: {packet_count}'
-      ]
+      u'Packet Count: {packet_count}']
 
   FORMAT_STRING_SHORT_PIECES = [
-    u'Type: {stream_type}',
-    u'Start Packet ID: {first_packet_id}']
+      u'Type: {stream_type}',
+      u'First Packet ID: {first_packet_id}']
 
   SOURCE_LONG = 'Packet Capture File (pcap)'
   SOURCE_SHORT = 'PCAP'

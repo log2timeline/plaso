@@ -30,7 +30,7 @@ from plaso.parsers import test_lib
 import pytz
 
 
-class IDXTest(unittest.TestCase):
+class IDXTest(test_lib.ParserTestCase):
   """The unit test for Java IDX parser."""
 
   def setUp(self):
@@ -42,12 +42,8 @@ class IDXTest(unittest.TestCase):
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""
     test_file = os.path.join('test_data', 'java_602.idx')
-
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
     self.assertEquals(len(event_container.events), 2)
 
@@ -56,13 +52,13 @@ class IDXTest(unittest.TestCase):
     idx_version_expected = 602
     self.assertEqual(event_object.idx_version, idx_version_expected)
 
-    ip_address_expected = 'Unknown'
+    ip_address_expected = u'Unknown'
     self.assertEqual(event_object.ip_address, ip_address_expected)
 
-    url_expected = 'http://www.gxxxxx.com/a/java/xxz.jar'
+    url_expected = u'http://www.gxxxxx.com/a/java/xxz.jar'
     self.assertEqual(event_object.url, url_expected)
 
-    description_expected = 'File Hosted Date'
+    description_expected = u'File Hosted Date'
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
     last_modified_date_expected = 1273023259720 * 1000
@@ -86,12 +82,8 @@ class IDXTest(unittest.TestCase):
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
     test_file = os.path.join('test_data', 'java.idx')
-
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
     self.assertEquals(len(event_container.events), 2)
 
@@ -104,8 +96,8 @@ class IDXTest(unittest.TestCase):
     self.assertEqual(event_object.ip_address, ip_address_expected)
 
     url_expected = (
-        'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
-        'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')
+        u'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
+        u'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')
     self.assertEqual(event_object.url, url_expected)
 
     description_expected = 'File Hosted Date'

@@ -20,16 +20,15 @@ import os
 import pytz
 import unittest
 
-# pylint: disable=W0611
+# pylint: disable-msg=unused-import
 from plaso.formatters import mac_appfirewall as mac_appfirewall_formatter
-from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.parsers import mac_appfirewall as mac_appfirewall_parser
+from plaso.parsers import mac_appfirewall
 from plaso.parsers import test_lib
 from plaso.pvfs import utils
 
 
-class MacAppFirewallUnitTest(unittest.TestCase):
+class MacAppFirewallUnitTest(test_lib.ParserTestCase):
   """A unit test for the Mac Wifi log parser."""
 
   def setUp(self):
@@ -37,60 +36,79 @@ class MacAppFirewallUnitTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.year = 2013
     pre_obj.zone = pytz.timezone('UTC')
-    self._parser = mac_appfirewall_parser.MacAppFirewallParser(pre_obj, None)
+    self._parser = mac_appfirewall.MacAppFirewallParser(pre_obj, None)
 
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""
     test_file = os.path.join('test_data', 'appfirewall.log')
-    events = test_lib.ParseFile(self._parser, test_file)
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    self.assertEqual(len(events), 47)
+    self.assertEqual(len(event_objects), 47)
 
-    event = events[0]
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event)
-    expected_msg = (u'Computer: DarkTemplar-2.local Agent: '
-                    u'socketfilterfw[112] Status: Error Process name: '
-                    u'Logging Log: creating /var/log/appfirewall.log')
-    self.assertEqual(expected_msg, msg)
-    # date -u -d"Sat, 2 Nov 2013 04:07:35" +"%s222000"
-    self.assertEqual(1383365255000000, event.timestamp)
-    self.assertEqual(u'socketfilterfw[112]', event.agent)
-    self.assertEqual(u'DarkTemplar-2.local', event.computer_name)
-    self.assertEqual(u'Error', event.status)
-    self.assertEqual(u'Logging', event.process_name)
-    self.assertEqual(u'creating /var/log/appfirewall.log', event.action)
+    event_object = event_objects[0]
 
-    event = events[9]
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event)
-    expected_msg = (u'Computer: DarkTemplar-2.local Agent: '
-                    u'socketfilterfw[87] Status: Info Process name: '
-                    u'Dropbox Log: Allow TCP LISTEN  (in:0 '
-                    u'out:1)')
-    self.assertEqual(expected_msg, msg)
-    # date -u -d"Sun, 3 Nov 2013 13:25:15" +"%s222000"
-    self.assertEqual(1383485115000000, event.timestamp)
-    self.assertEqual(u'socketfilterfw[87]', event.agent)
-    self.assertEqual(u'DarkTemplar-2.local', event.computer_name)
-    self.assertEqual(u'Info', event.status)
-    self.assertEqual(u'Dropbox', event.process_name)
-    self.assertEqual(u'Allow TCP LISTEN  (in:0 out:1)', event.action)
+    # date -u -d"Sat, 2 Nov 2013 04:07:35.222" +"%s.%N"
+    self.assertEqual(event_object.timestamp, 1383365255000000)
+    self.assertEqual(event_object.agent, u'socketfilterfw[112]')
+    self.assertEqual(event_object.computer_name, u'DarkTemplar-2.local')
+    self.assertEqual(event_object.status, u'Error')
+    self.assertEqual(event_object.process_name, u'Logging')
+    self.assertEqual(event_object.action, u'creating /var/log/appfirewall.log')
+
+    expected_msg = (
+        u'Computer: DarkTemplar-2.local '
+        u'Agent: socketfilterfw[112] '
+        u'Status: Error '
+        u'Process name: Logging '
+        u'Log: creating /var/log/appfirewall.log')
+    expected_msg_short = (
+        u'Process name: Logging '
+        u'Status: Error')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
+    event_object = event_objects[9]
+
+    # date -u -d"Sun, 3 Nov 2013 13:25:15.222" +"%s.%N"
+    self.assertEqual(event_object.timestamp, 1383485115000000)
+    self.assertEqual(event_object.agent, u'socketfilterfw[87]')
+    self.assertEqual(event_object.computer_name, u'DarkTemplar-2.local')
+    self.assertEqual(event_object.status, u'Info')
+    self.assertEqual(event_object.process_name, u'Dropbox')
+    self.assertEqual(event_object.action, u'Allow TCP LISTEN  (in:0 out:1)')
+
+    expected_msg = (
+        u'Computer: DarkTemplar-2.local '
+        u'Agent: socketfilterfw[87] '
+        u'Status: Info '
+        u'Process name: Dropbox '
+        u'Log: Allow TCP LISTEN  (in:0 out:1)')
+    expected_msg_short = (
+        u'Process name: Dropbox '
+        u'Status: Info')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # Check repeated lines.
-    event = events[38]
-    event_rep = events[39]
-    self.assertEqual(event_rep.agent, event.agent)
-    self.assertEqual(event_rep.computer_name, event.computer_name)
-    self.assertEqual(event_rep.status, event.status)
-    self.assertEqual(event_rep.process_name, event.process_name)
-    self.assertEqual(event_rep.action, event.action)
+    event_object = event_objects[38]
+    repeated_event_object = event_objects[39]
+    self.assertEqual(event_object.agent, repeated_event_object.agent)
+    self.assertEqual(
+        event_object.computer_name, repeated_event_object.computer_name)
+    self.assertEqual(event_object.status, repeated_event_object.status)
+    self.assertEqual(
+        event_object.process_name, repeated_event_object.process_name)
+    self.assertEqual(event_object.action, repeated_event_object.action)
 
     # Year changes.
-    event = events[45]
-    # date -u -d"Tue, 31 Dec 2013 23:59:23" +"%s00"
-    self.assertEqual(1388534363000000, event.timestamp)
-    event = events[46]
-    # date -u -d"Wed, 1 Jan 2014 01:13:23" +"%s00"
-    self.assertEqual(1388538803000000, event.timestamp)
+    event_object = event_objects[45]
+    # date -u -d"Tue, 31 Dec 2013 23:59:23" +"%s"
+    self.assertEqual(event_object.timestamp, 1388534363000000)
+
+    event_object = event_objects[46]
+    # date -u -d"Wed, 1 Jan 2014 01:13:23" +"%s"
+    self.assertEqual(event_object.timestamp, 1388538803000000)
 
 
 if __name__ == '__main__':

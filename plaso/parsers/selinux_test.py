@@ -33,7 +33,7 @@ import pytz
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class SELinuxUnitTest(unittest.TestCase):
+class SELinuxUnitTest(test_lib.ParserTestCase):
   """A unit test for the selinux."""
 
   def setUp(self):
@@ -46,37 +46,56 @@ class SELinuxUnitTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'selinux.log')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEquals(len(event_objects), 4)
 
-    self.assertEquals(len(events), 4)
+    # Test case: normal entry.
+    event_object = event_objects[0]
 
-    normal_entry = events[0]
-    short_date = events[1]
-    no_msg = events[2]
-    under_score = events[3]
+    self.assertEquals(event_object.timestamp, 1337845201174000)
 
-    self.assertEquals(normal_entry.timestamp, 1337845201174000)
-    self.assertEquals(short_date.timestamp, 1337845201000000)
-    self.assertEquals(no_msg.timestamp, 1337845222174000)
-    self.assertEquals(under_score.timestamp, 1337845666174000)
+    expected_msg = (
+        u'[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
+        u'auid=4294967295 new auid=0 old ses=4294967295 new ses=1165')
+    expected_msg_short = (
+        u'[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
+        u'auid=4294967295 new auid=...')
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(normal_entry)
-    self.assertEquals( msg, (
-        '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
-        'auid=4294967295 new auid=0 old ses=4294967295 new ses=1165'))
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(short_date)
-    self.assertEquals(msg, (
-        '[audit_type: SHORTDATE] check rounding'))
+    # Test case: short date.
+    event_object = event_objects[1]
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(no_msg)
-    self.assertEquals(msg, ('[audit_type: NOMSG]'))
+    self.assertEquals(event_object.timestamp, 1337845201000000)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(under_score)
-    self.assertEquals(msg, (
-        '[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
-        'auid=4294967295 new auid=54321 old ses=4294967295 new ses=1166'))
+    expected_string = u'[audit_type: SHORTDATE] check rounding'
+
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+
+    # Test case: no msg.
+    event_object = event_objects[2]
+
+    self.assertEquals(event_object.timestamp, 1337845222174000)
+
+    expected_string = u'[audit_type: NOMSG]'
+
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+
+    # Test case: under score.
+    event_object = event_objects[3]
+
+    self.assertEquals(event_object.timestamp, 1337845666174000)
+
+    expected_msg = (
+        u'[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
+        u'auid=4294967295 new auid=54321 old ses=4294967295 new ses=1166')
+    expected_msg_short = (
+        u'[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
+        u'auid=4294967295 new...')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

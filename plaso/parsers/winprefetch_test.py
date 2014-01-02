@@ -28,7 +28,7 @@ from plaso.parsers import test_lib
 from plaso.parsers import winprefetch
 
 
-class WinPrefetchParserTest(unittest.TestCase):
+class WinPrefetchParserTest(test_lib.ParserTestCase):
   """Tests for the Windows prefetch parser."""
 
   def setUp(self):
@@ -42,13 +42,8 @@ class WinPrefetchParserTest(unittest.TestCase):
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
     test_file = os.path.join('test_data', 'CMD.EXE-087B4001.pf')
-
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    # Check the number of event containers.
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
     # Check the number of events in event container.
     self.assertEquals(len(event_container.events), 2)
@@ -77,13 +72,8 @@ class WinPrefetchParserTest(unittest.TestCase):
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
     test_file = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
-
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    # Check the number of event containers.
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
     # Check the number of events in event container.
     self.assertEquals(len(event_container.events), 2)
@@ -113,10 +103,6 @@ class WinPrefetchParserTest(unittest.TestCase):
     self.assertEquals(event_object.volume_path, u'\\DEVICE\\HARDDISKVOLUME1')
     self.assertEquals(event_object.volume_serial, 0xac036525)
 
-    # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-         event_object)
-
     expected_msg = (
         u'Superfetch [PING.EXE] was executed - run count 14 path: '
         u'\\WINDOWS\\SYSTEM32\\PING.EXE '
@@ -127,19 +113,13 @@ class WinPrefetchParserTest(unittest.TestCase):
 
     expected_msg_short = u'PING.EXE was run 14 time(s)'
 
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(msg_short, expected_msg_short)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
     test_file = os.path.join('test_data', 'TASKHOST.EXE-3AE259FC.pf')
-
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    # Check the number of event containers.
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
     # Check the number of events in event container.
     self.assertEquals(len(event_container.events), 5)
@@ -164,7 +144,7 @@ class WinPrefetchParserTest(unittest.TestCase):
     self.assertEquals(event_object.timestamp, 1380900489010356)
     self.assertEquals(
         event_object.timestamp_desc,
-        'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME))
+        u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME))
 
     # The creation time.
     event_object = event_container.events[4]

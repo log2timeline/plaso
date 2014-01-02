@@ -28,7 +28,7 @@ from plaso.parsers import test_lib
 from plaso.parsers import winevtx
 
 
-class WinEvtxParserTest(unittest.TestCase):
+class WinEvtxParserTest(test_lib.ParserTestCase):
   """Tests for the Windows XML EventLog (EVTX) parser."""
 
   def setUp(self):
@@ -39,43 +39,39 @@ class WinEvtxParserTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'System.evtx')
-
-    events = test_lib.ParseFile(self._parser, test_file)
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
     # Windows Event Viewer Log (EVTX) information:
-    #   Version				: 3.1
-    #   Number of records		: 1601
-    #   Number of recovered records	: 0
-    #   Log type			: System
+    #   Version                     : 3.1
+    #   Number of records           : 1601
+    #   Number of recovered records : 0
+    #   Log type                    : System
 
-    expected_number_of_events = 1601
-    self.assertEquals(len(events), expected_number_of_events)
+    self.assertEquals(len(event_objects), 1601)
 
-    # Event number                    : 12049
-    # Written time                    : Mar 14, 2012 04:17:43.354562700 UTC
-    # Event level                     : Information (4)
-    # Computer name                   : WKS-WIN764BITB.shieldbase.local
-    # Provider identifier             : {fc65ddd8-d6ef-4962-83d5-6e5cfe9ce148}
-    # Source name                     : Microsoft-Windows-Eventlog
-    # Event identifier                : 0x00000069 (105)
-    # Number of strings               : 2
-    # String: 1                       : System
-    # String: 2                       : C:\Windows\System32\Winevt\Logs\
-    #                                 : Archive-System-2012-03-14-04-17-39-932
-    #                                 : .evtx
+    # Event number        : 12049
+    # Written time        : Mar 14, 2012 04:17:43.354562700 UTC
+    # Event level         : Information (4)
+    # Computer name       : WKS-WIN764BITB.shieldbase.local
+    # Provider identifier : {fc65ddd8-d6ef-4962-83d5-6e5cfe9ce148}
+    # Source name         : Microsoft-Windows-Eventlog
+    # Event identifier    : 0x00000069 (105)
+    # Number of strings   : 2
+    # String: 1           : System
+    # String: 2           : C:\Windows\System32\Winevt\Logs\
+    #                     : Archive-System-2012-03-14-04-17-39-932.evtx
 
-    event_object = events[0]
+    event_object = event_objects[0]
 
     self.assertEquals(event_object.record_number, 12049)
-    self.assertEquals(event_object.computer_name,
-                      'WKS-WIN764BITB.shieldbase.local')
-    self.assertEquals(event_object.source_name, 'Microsoft-Windows-Eventlog')
+    expected_computer_name = u'WKS-WIN764BITB.shieldbase.local'
+    self.assertEquals(event_object.computer_name, expected_computer_name)
+    self.assertEquals(event_object.source_name, u'Microsoft-Windows-Eventlog')
     self.assertEquals(event_object.event_level, 4)
     self.assertEquals(event_object.event_identifier, 0x00000069)
 
-    expected_string = u'System'
-
-    self.assertEquals(event_object.strings[0], expected_string)
+    self.assertEquals(event_object.strings[0], u'System')
 
     expected_string = (
         u'C:\\Windows\\System32\\Winevt\\Logs\\'
@@ -83,13 +79,13 @@ class WinEvtxParserTest(unittest.TestCase):
 
     self.assertEquals(event_object.strings[1], expected_string)
 
-    # date -u -d"Mar 14, 2012 04:17:38.276340200" +"%s.%N"
-    event_object = events[1]
+    event_object = event_objects[1]
 
-    self.assertEquals(event_object.timestamp,
-                      (1331698658 * 1000000) + (276340200 / 1000))
-    self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.WRITTEN_TIME)
+    # date -u -d"Mar 14, 2012 04:17:38.276340200" +"%s.%N"
+    expected_timestamp = (1331698658 * 1000000) + (276340200 / 1000)
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_xml_string = (
         u'<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/'
@@ -122,10 +118,6 @@ class WinEvtxParserTest(unittest.TestCase):
 
     self.assertEquals(event_object.xml_string, expected_xml_string)
 
-    # Test the event specific formatter.
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-         event_object)
-
     expected_msg = (
         u'[7036 / 0x00001b7c] '
         u'Record Number: 12050 '
@@ -141,8 +133,7 @@ class WinEvtxParserTest(unittest.TestCase):
         u'Strings: [u\'Windows Modules Installer\', '
         u'u\'stopped\', u\'5400720075...')
 
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(msg_short, expected_msg_short)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

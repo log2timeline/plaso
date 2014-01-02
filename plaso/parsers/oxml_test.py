@@ -28,7 +28,7 @@ from plaso.parsers import oxml
 from plaso.parsers import test_lib
 
 
-class OXMLTest(unittest.TestCase):
+class OXMLTest(test_lib.ParserTestCase):
   """Tests for the OXML parser."""
 
   def setUp(self):
@@ -42,12 +42,8 @@ class OXMLTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'Document.docx')
-
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
+    events = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(events)
 
     self.assertEquals(len(event_container.events), 2)
 
@@ -55,45 +51,49 @@ class OXMLTest(unittest.TestCase):
 
     # Date: 2012-11-07T23:29:00.000000+00:00.
     self.assertEquals(event_object.timestamp, 1352330940000000)
-    self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.CREATION_TIME)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     event_object = event_container.events[1]
 
-    self.assertEquals(event_object.num_chars, '13')
-    self.assertEquals(event_object.total_time, '1385')
-    self.assertEquals(event_object.characters_with_spaces, '14')
-    self.assertEquals(event_object.i4, '1')
-    self.assertEquals(event_object.app_version, '14.0000')
-    self.assertEquals(event_object.num_lines, '1')
-    self.assertEquals(event_object.scale_crop, 'false')
-    self.assertEquals(event_object.num_pages, '1')
-    self.assertEquals(event_object.num_words, '2')
-    self.assertEquals(event_object.links_up_to_date, 'false')
-    self.assertEquals(event_object.num_paragraphs, '1')
-    self.assertEquals(event_object.doc_security, '0')
-    self.assertEquals(event_object.hyperlinks_changed, 'false')
-    self.assertEquals(event_object.revision_num, '3')
-    self.assertEquals(event_object.last_saved_by, 'Nides')
-    self.assertEquals(event_object.author, 'Nides')
-    self.assertEquals(event_object.creating_app,
-                      'Microsoft Office Word')
-    self.assertEquals(event_object.template, 'Normal.dotm')
+    self.assertEquals(event_object.num_chars, u'13')
+    self.assertEquals(event_object.total_time, u'1385')
+    self.assertEquals(event_object.characters_with_spaces, u'14')
+    self.assertEquals(event_object.i4, u'1')
+    self.assertEquals(event_object.app_version, u'14.0000')
+    self.assertEquals(event_object.num_lines, u'1')
+    self.assertEquals(event_object.scale_crop, u'false')
+    self.assertEquals(event_object.num_pages, u'1')
+    self.assertEquals(event_object.num_words, u'2')
+    self.assertEquals(event_object.links_up_to_date, u'false')
+    self.assertEquals(event_object.num_paragraphs, u'1')
+    self.assertEquals(event_object.doc_security, u'0')
+    self.assertEquals(event_object.hyperlinks_changed, u'false')
+    self.assertEquals(event_object.revision_num, u'3')
+    self.assertEquals(event_object.last_saved_by, u'Nides')
+    self.assertEquals(event_object.author, u'Nides')
+    self.assertEquals(
+        event_object.creating_app, u'Microsoft Office Word')
+    self.assertEquals(event_object.template, u'Normal.dotm')
 
-    # Test the event specific formatter.
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(
-         event_object)
+    expected_msg = (
+        u'Creating App: Microsoft Office Word '
+        u'App version: 14.0000 '
+        u'Last saved by: Nides '
+        u'Author: Nides '
+        u'Revision Num: 3 '
+        u'Template: Normal.dotm '
+        u'Num pages: 1 '
+        u'Num words: 2 '
+        u'Num chars: 13 '
+        u'Num lines: 1 '
+        u'Hyperlinks changed: false '
+        u'Links up to date: false '
+        u'Scale crop: false')
+    expected_msg_short = (
+        u'Author: Nides')
 
-    # TODO: Add test for msg_short.
-    self.assertEquals(msg, (
-      u'Creating App: Microsoft Office Word App '
-      'version: 14.0000 Last saved by: Nides Author: Nides '
-      'Revision Num: 3 '
-      'Template: Normal.dotm Num pages: 1 '
-      'Num words: 2 Num chars: 13 Num lines: 1 '
-      'Hyperlinks changed: false '
-      'Links up to date: false '
-      'Scale crop: false'))
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':
