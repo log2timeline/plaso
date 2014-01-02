@@ -103,7 +103,7 @@ def CreateSpecificationStore():
   test_specification.AddNewSignature('PK\x03\x04', offset=0)
   test_specification.AddNewSignature('PK\x05\x05')
   # Will be at offset 0 when the archive is empty.
-  test_specification.AddNewSignature('PK\x05\x06')
+  test_specification.AddNewSignature('PK\x05\x06', offset=-22, is_bound=True)
   test_specification.AddNewSignature('PK\x06\x06')
   test_specification.AddNewSignature('PK\x06\x07')
   test_specification.AddNewSignature('PK\x06\x08')
