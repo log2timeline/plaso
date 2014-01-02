@@ -63,10 +63,9 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'macwifi'
 
   # Regular expressions for known actions.
-  RE_CONNECTED = r'Already\sassociated\sto\s(.*)\.\sBailing'
-  RE_ASSOCIATE_SSID = r'(?<=\[ssid=).*?(?=, bssid=)'
-  RE_ASSOCIATE_BSSID = r'(?<=bssid=).*?(?=, security=)'
-  RE_ASSOCIATE_SECURITY = r'(?<=security=).*?(?=, rssi=)'
+  RE_CONNECTED = re.compile(r'Already\sassociated\sto\s(.*)\.\sBailing')
+  RE_WIFI_PARAMETERS = re.compile(
+      r'\[ssid=(.*?), bssid=(.*?), security=(.*?), rssi=')
 
   # Define how a log line should look like.
   WIFI_LINE = (
@@ -132,17 +131,19 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       return u'Wifi connected to SSID {}'.format(ssid)
 
     if 'processSystemPSKAssoc' in function:
-      ssid = re.match(self.RE_ASSOCIATE_SSID, text)
-      if not ssid:
-        ssid = 'Unknown'
-      bssid = re.match(self.RE_ASSOCIATE_BSSID, text)
-      if not bssid:
-        bssid = 'Unknown'
-      security = re.match(self.RE_ASSOCIATE_SECURITY, text)
-      if not security:
-        security = 'Unknown'
-      return u'New wifi configured. BSSID: {} SSID: {}, Security: {}.'.format(
-          bssid, ssid, security)
+      wifi_parameters = self.RE_WIFI_PARAMETERS.search(text)
+      if wifi_parameters:
+        ssid = wifi_parameters.group(1)
+        bssid = wifi_parameters.group(2)
+        security = wifi_parameters.group(3)
+        if not ssid:
+          ssid = 'Unknown'
+        if not bssid:
+          bssid = 'Unknown'
+        if not security:
+          security = 'Unknown'
+        return (u'New wifi configured. BSSID: {}, SSID: {}, '
+                u'Security: {}.'.format(bssid, ssid, security))
     return text
 
   def _GetTimestamp(self, day, month, year, time):
