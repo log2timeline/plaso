@@ -33,7 +33,9 @@ class Signature(object):
                   The expression consists of a byte string at the moment
                   regular expression (regexp) are not supported.
       offset: the offset of the signature or None by default. None is used
-              to indicate the signature has no offset.
+              to indicate the signature has no offset. A positive offset
+              is relative from the start of the data a negative offset
+              is relative from the end of the data.
       is_bound: boolean value to indicate the signature must be bound to
                 the offset or False by default.
     """
@@ -66,7 +68,9 @@ class Specification(object):
     Args:
       expression: string containing the expression of the signature.
       offset: the offset of the signature or None by default. None is used
-              to indicate the signature has no offset.
+              to indicate the signature has no offset. A positive offset
+              is relative from the start of the data a negative offset
+              is relative from the end of the data.
       is_bound: boolean value to indicate the signature must be bound to
                 the offset or False by default.
     """

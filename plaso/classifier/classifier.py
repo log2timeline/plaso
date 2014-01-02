@@ -55,7 +55,6 @@ the specification.
 """
 
 import logging
-import os
 
 
 class Classification(object):
@@ -65,18 +64,18 @@ class Classification(object):
      scan results.
   """
 
-  def __init__(self, specification):
+  def __init__(self, specification, scan_matches):
     """Initializes the classification.
 
     Args:
-      specification: an instance of Specification that contains the format
-                     specification.
+      specification: the format specification (instance of Specification).
+      scan_matches: the list of scan matches (instances of _ScanMatch).
 
     Raises:
       TypeError: if the specification is not of type Specification.
     """
-    self.scan_results = []
     self._specification = specification
+    self.scan_matches = scan_matches
 
   @property
   def identifier(self):
@@ -108,20 +107,13 @@ class Classifier(object):
   """
   BUFFER_SIZE = 16 * 1024 * 1024
 
-  # Classifying modes
-  FULL_SCAN = 0
-  HEAD_TAIL_SCAN = 1
-
-  def __init__(self, scanner, mode=0):
+  def __init__(self, scanner):
     """Initializes the classifier and sets up the scanning related structures.
 
     Args:
       scanner: an instance of the signature scanner.
-      mode: the classifying mode, only applies to scanning a file or file-like
-            object.
     """
     self._scanner = scanner
-    self._mode = mode
 
   def _GetClassifications(self, scan_results):
     """Retrieves the classifications based on the scan results.
@@ -137,33 +129,30 @@ class Classifier(object):
     classifications = {}
 
     for scan_result in scan_results:
-      specification = scan_result.specification
-      identifier = specification.identifier
+      for scan_match in scan_result.scan_matches:
+        logging.debug(
+            u'scan match at offset: 0x{0:08x} specification: {1:s}'.format(
+                scan_match.total_data_offset, scan_result.identifier))
 
-      logging.debug(
-          u'scan result at offset: 0x{0:08x} specification: {1:s}'.format(
-              scan_result.file_offset, identifier))
-
-      if identifier not in classifications:
-        classifications[identifier] = Classification(specification)
-
-      classifications[identifier].scan_results.append(scan_result)
+      if scan_result.identifier not in classifications:
+        classifications[scan_result.identifier] = Classification(
+            scan_result.specification, scan_result.scan_matches)
 
     return classifications.values()
 
-  def ClassifyBuffer(self, file_offset, data):
+  def ClassifyBuffer(self, data, data_size):
     """Classifies the data in a buffer, assumes all necessary data is available.
 
     Args:
-      file_offset: the offset of the data relative to the start of the file.
       data: a buffer containing raw data.
+      data_size: the size of the raw data in the buffer.
 
     Returns:
       a list of classifications or an empty list.
     """
-    scan_state = self._scanner.ScanStart()
-    self._scanner.ScanBuffer(scan_state, file_offset, data)
-    self._scanner.ScanStop(scan_state)
+    scan_state = self._scanner.StartScan()
+    self._scanner.ScanBuffer(scan_state, data, data_size)
+    self._scanner.StopScan(scan_state)
 
     return self._GetClassifications(scan_state.GetResults())
 
@@ -176,38 +165,9 @@ class Classifier(object):
     Returns:
       a list of classifier classifications or an empty list.
     """
-    scan_state = self._scanner.ScanStart()
+    scan_results = self._scanner.ScanFileObject(file_object)
 
-    if self._mode == self.HEAD_TAIL_SCAN:
-      if hasattr(file_object, 'get_size'):
-        file_size = file_object.get_size()
-      else:
-        file_object.seek(0, os.SEEK_END)
-        file_size = file_object.tell()
-
-    file_object.seek(0, os.SEEK_SET)
-    file_offset = file_object.tell()
-
-    if (self._mode == self.HEAD_TAIL_SCAN and
-        file_size > (self.BUFFER_SIZE * 2)):
-      data = file_object.read(self.BUFFER_SIZE)
-      self._scanner.ScanBuffer(scan_state, file_offset, data)
-
-      file_object.seek((-1 * self.BUFFER_SIZE), os.SEEK_END)
-      file_offset = file_object.tell()
-      data = file_object.read(self.BUFFER_SIZE)
-      self._scanner.ScanBuffer(scan_state, file_offset, data)
-
-    else:
-      data = file_object.read(self.BUFFER_SIZE)
-      while data:
-        self._scanner.ScanBuffer(scan_state, file_offset, data)
-        file_offset = file_object.tell()
-        data = file_object.read(self.BUFFER_SIZE)
-
-    self._scanner.ScanStop(scan_state)
-
-    return self._GetClassifications(scan_state.GetResults())
+    return self._GetClassifications(scan_results)
 
   def ClassifyFile(self, filename):
     """Classifies the data in a file.

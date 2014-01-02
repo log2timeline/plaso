@@ -18,7 +18,7 @@
 """The range list data type."""
 
 
-class _Range(object):
+class Range(object):
   """Class that implements a range object."""
 
   def __init__(self, range_offset, range_size):
@@ -37,7 +37,7 @@ class _Range(object):
     if range_size < 0:
       raise ValueError(u'Invalid range size value.')
 
-    super(_Range, self).__init__()
+    super(Range, self).__init__()
     self.start_offset = range_offset
     self.size = range_size
     self.end_offset = range_offset + range_size
@@ -55,6 +55,17 @@ class RangeList(object):
   def number_of_ranges(self):
     """The number of ranges."""
     return len(self.ranges)
+
+  def GetSpanningRange(self):
+    """Retrieves the range spanning the entire range list."""
+    if self.number_of_ranges == 0:
+      return
+
+    first_range = self.ranges[0]
+    last_range = self.ranges[-1]
+    range_size = last_range.end_offset - first_range.start_offset
+
+    return Range(first_range.start_offset, range_size)
 
   def Insert(self, range_offset, range_size):
     """Inserts the range defined by the offset and size in the list.
@@ -133,7 +144,7 @@ class RangeList(object):
           u'Unable to insert the range both insert and merge specified.')
 
     if insert_index is not None:
-      self.ranges.insert(insert_index, _Range(range_offset, range_size))
+      self.ranges.insert(insert_index, Range(range_offset, range_size))
 
     elif merge_index is not None:
       range_object = self.ranges[merge_index]
