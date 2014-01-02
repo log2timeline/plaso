@@ -17,6 +17,7 @@
 # limitations under the License.
 """This file contains the tests for the generic text parser."""
 
+import os
 import unittest
 
 from plaso.lib import errors
@@ -25,8 +26,7 @@ from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 from plaso.lib import text_parser
-from plaso.pvfs import pfile_entry
-from plaso.pvfs import pfile_io
+from plaso.pvfs import utils as pvfs_utils
 
 import pyparsing
 import pytz
@@ -34,166 +34,6 @@ import pytz
 
 class EmtpyObject(object):
   """An empty object."""
-
-
-class FakeProto(object):
-  """Implements a fake file proto object."""
-
-  def __init__(self):
-    self.type = 'FAKE'
-
-
-class FakeFileEntry(pfile_entry.BaseFileEntry):
-  """Implements a fake file entry object."""
-
-  TYPE = 'FAKE'
-
-  def __init__(self, proto, root=None, fscache=None):
-    """Initializes the file entry object.
-
-    Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
-            The default is None.
-      fscache: Optional file system cache object. The default is None.
-    """
-    super(FakeFileEntry, self).__init__(proto, root=root, fscache=fscache)
-    self.name = 'IamFakeFile'
-    self.display_name = self.name
-
-  def Open(self, file_entry=None):
-    """Open the file as it is described in the PathSpec protobuf.
-
-    Args:
-      file_entry: Optional parent file entry object. The default is None.
-
-    Returns:
-      A file-like object.
-    """
-    return FakeFileIO()
-
-  def Stat(self):
-    """Return a Stats object that contains stats like information."""
-    return None
-
-
-class FakeFileIO(pfile_io.BaseFileIO):
-  """Implements a fake file-like object."""
-
-  LINES = ('first line.', 'second line.', 'third line.')
-
-  def __init__(self):
-    super(FakeFileIO, self).__init__()
-    self.buffer = ''
-    self.index = 0
-    self.offset = 0
-    self.size = 0
-    for line in self.LINES:
-      self.size += len(line)
-
-  def __iter__(self):
-    while 1:
-      line = self.readline()
-      if not line:
-        break
-      yield line
-
-  def close(self):
-    """Closes the file."""
-    pass
-
-  # We are implementing an interface.
-  def read(self, size=None):
-    if len(self.buffer) > size:
-      ret = self.buffer[:size]
-      self.buffer = self.buffer[size:]
-      self.offset += len(ret)
-      return ret
-
-    if self.index < len(self.LINES):
-      # Add to buffer.
-      self.buffer += self.LINES[self.index]
-      self.index += 1
-      return self.read(size)
-
-    ret = self.buffer
-    self.buffer = ''
-    self.offset += len(ret)
-    return ret
-
-  # We are implementing an interface.
-  def readline(self, size=None):
-    """Provides a "fake" readline function."""
-    ret = ''
-    if self.index < len(self.LINES):
-      ret = self.LINES[self.index]
-
-    self.index += 1
-    self.offset += len(ret)
-    return ret
-
-  # We are implementing an interface.
-  def seek(self, offset, whence=0):
-    if whence == 0:
-      self.index = 0
-      self.buffer = ''
-      self.offset = 0
-      _ = self.read(offset)
-    elif whence == 1:
-      if offset > 0:
-        _ = self.read(offset)
-      else:
-        ofs = self.offset + offset
-        self.seek(ofs)
-    elif whence == 2:
-      ofs = self.size + offset
-      if ofs > self.offset:
-        _ = self.read(ofs - self.offset)
-      else:
-        self.seek(0)
-        _ = self.read(ofs)
-    else:
-      raise RuntimeError('Illegal whence value %s' % whence)
-
-  # We are implementing an interface.
-  def tell(self):
-    return self.offset
-
-  def get_size(self):
-    """Returns the file size."""
-    return self.size
-
-
-class BetterFakeProto(object):
-  """Implements a fake file proto object."""
-
-  def __init__(self):
-    self.type = 'BETTER_FAKE'
-
-
-class BetterFakeFileEntry(FakeFileEntry):
-  """Implements a fake file entry."""
-
-  TYPE = 'BETTER_FAKE'
-
-  def Open(self, file_entry=None):
-    """Open the file as it is described in the PathSpec protobuf.
-
-    Args:
-      file_entry: Optional parent file entry object. The default is None.
-
-    Returns:
-      A file-like object.
-    """
-    return BetterFakeFileIO()
-
-
-class BetterFakeFileIO(FakeFileIO):
-  """Implements a fake file-like object."""
-
-  LINES = ('01/01/2011 05:23:15 myuser:myhost- first line.\n',
-           '12/24/1991 19:58:06 myuser:myhost- second line.\n',
-           '06/01/1945 08:20:00 myuser:myhost- third line.\n')
 
 
 class TestTextEvent(event.TextEvent):
@@ -261,13 +101,15 @@ class TextParserTest(unittest.TestCase):
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
-    file_entry = FakeFileEntry(FakeProto())
+    test_file = os.path.join('test_data', 'text_parser', 'test1.txt')
+    file_entry = pvfs_utils.OpenOSFileEntry(test_file)
     text_generator = self._parser.Parse(file_entry)
     self.assertRaises(errors.UnableToParseFile, list, text_generator)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
-    file_entry = BetterFakeFileEntry(BetterFakeProto())
+    test_file = os.path.join('test_data', 'text_parser', 'test2.txt')
+    file_entry = pvfs_utils.OpenOSFileEntry(test_file)
     text_generator = self._parser.Parse(file_entry)
 
     first_entry = text_generator.next()
