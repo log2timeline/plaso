@@ -111,8 +111,8 @@ class PlasoWorker(object):
     """Start the worker, monitor the queue and parse files."""
     self.pid = os.getpid()
     logging.info(
-        u'Worker %d (PID: %d) started monitoring process queue.',
-        self._identifier, self.pid)
+        u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
+        self._identifier, self.pid))
 
     for item in self._proc_queue.PopItems():
       # TODO: Remove this "ugly" hack in favor of something more elegant
@@ -123,11 +123,12 @@ class PlasoWorker(object):
         self.ParseBundle(item)
       else:
         logging.error(
-            u'Unable to unserialize pathspec, wrong type: %s', item[0])
+            u'Unable to unserialize pathspec, wrong type: {0:s}'.format(
+                item[0]))
 
     logging.info(
-        'Worker %d (PID: %d) stopped monitoring process queue.',
-        self._identifier, os.getpid())
+        'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
+        self._identifier, os.getpid()))
 
   def ParseBundle(self, bundle_string):
     """Parse a file given a serialized pathspec bundle."""
@@ -135,9 +136,9 @@ class PlasoWorker(object):
     try:
       bundle.FromProtoString(bundle_string)
     except RuntimeError:
-      logging.debug(
-          (u'Error while trying to parse a PathSpecBundle from the queue. '
-           'The bundle that caused the error:\n%s'), bundle_string)
+      logging.debug((
+          u'Error while trying to parse a PathSpecBundle from the queue. '
+          u'The bundle that caused the error:\n{0:s}').format(bundle_string))
       return
 
     print bundle.ToProto()
@@ -154,9 +155,10 @@ class PlasoWorker(object):
     try:
       pathspec.FromProtoString(pathspec_string)
     except RuntimeError:
-      logging.debug(
-          (u'Error while trying to parse a PathSpec from the queue.'
-           'The PathSpec that caused the error:\n%s'), pathspec_string)
+      logging.debug((
+          u'Error while trying to parse a PathSpec from the queue.'
+          u'The PathSpec that caused the error:\n{0:s}').format(
+              pathspec_string))
       return
 
     # Either parse this file and all extracted files, or just the file.
@@ -167,9 +169,11 @@ class PlasoWorker(object):
       if self.config.open_files:
         self.ParseAllFiles(file_entry)
     except IOError as e:
-      logging.warning(u'Unable to parse file: %s (%s)', pathspec.file_path, e)
+      logging.warning(u'Unable to parse file: {0:s} ({1:s})'.format(
+          pathspec.file_path, e))
       logging.warning(
-          u'Proto\n%s\n%s\n%s', '-+' * 20, pathspec.ToProto(), '-+' * 20)
+          u'Proto\n{0:s}\n{1:s}\n{2:s}'.format(
+              '-+' * 20, pathspec.ToProto(), '-+' * 20))
 
   def ParseAllFiles(self, file_entry):
     """Parse every file that can be extracted from a PFile object.
@@ -183,8 +187,9 @@ class PlasoWorker(object):
         self.ParseFile(new_file_entry)
     except IOError as e:
       logging.debug((
-          u'Unable to open file: {%s}, not sure if we can extract '
-          u'further files from it. Msg: %s'), file_entry.display_name, e)
+          u'Unable to open file: {{{0:s}}}, not sure if we can extract '
+          u'further files from it. Msg: {1:s}').format(
+              file_entry.display_name, e))
 
   def _GetUserMapping(self):
     """Return a user dict which maps SID/UID values and usernames."""
@@ -238,7 +243,7 @@ class PlasoWorker(object):
     Args:
       file_entry: A file entry object.
     """
-    logging.debug(u'[ParseFile] Parsing: %s', file_entry.display_name)
+    logging.debug(u'[ParseFile] Parsing: {0:s}'.format(file_entry.display_name))
 
     # TODO: Not go through all parsers, just the ones
     # that the classifier classifies the file as.
@@ -249,9 +254,8 @@ class PlasoWorker(object):
     # key = self._parsers.get(classification, 'all')
     stat_obj = file_entry.Stat()
     for parsing_object in self._parsers['all']:
-      logging.debug(
-          u'Checking [%s] against: %s', file_entry.name,
-          parsing_object.parser_name)
+      logging.debug(u'Checking [{0:s}] against: {1:s}'.format(
+          file_entry.name, parsing_object.parser_name))
       try:
         for event_object in parsing_object.Parse(file_entry):
           if not event_object:
@@ -266,24 +270,26 @@ class PlasoWorker(object):
                   sub_event, file_entry, parsing_object.parser_name, stat_obj)
 
       except errors.UnableToParseFile as e:
-        logging.debug(u'Not a %s file (%s) - %s', parsing_object.parser_name,
-                      file_entry.name, e)
+        logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
+            parsing_object.parser_name, file_entry.name, e))
       except IOError as e:
-        logging.debug(u'Unable to parse: %s [%s] using %s', file_entry.name,
-                      file_entry.display_name, parsing_object.parser_name)
+        logging.debug(u'Unable to parse: {0:s} [{1:s}] using {2:s}'.format(
+            file_entry.name, file_entry.display_name,
+            parsing_object.parser_name))
+
       # Casting a wide net, catching all exceptions. Done to keep the worker
       # running, despite the parser hitting errors, so the worker doesn't die
       # if a single file is corrupted or there is a bug in a parser.
       except Exception as e:
         logging.warning((
             u'An unexpected error occured during processing of '
-            u'file: %s using module %s. The error was: %s.\nParsing '
-            u'of file is is terminated.'), file_entry.name,
-            parsing_object.parser_name, e)
+            u'file: {0:s} using module {1:s}. The error was: {2:s}.\nParsing '
+            u'of file is is terminated.').format(
+                file_entry.name, parsing_object.parser_name, e))
         logging.debug(
-            u'The PathSpec that caused the error:\n(root)\n%s\n%s',
-            file_entry.pathspec_root.ToProto(),
-            file_entry.pathspec.ToProto())
+            u'The PathSpec that caused the error:\n(root)\n{0:s}\n{1:s}'.format(
+                file_entry.pathspec_root.ToProto(),
+                file_entry.pathspec.ToProto()))
         logging.exception(e)
 
         # Check for debug mode and single-threaded, then we would like
@@ -291,7 +297,8 @@ class PlasoWorker(object):
         if self.config.single_thread and self.config.debug:
           pdb.post_mortem()
 
-    logging.debug(u'[ParseFile] Parsing DONE: %s', file_entry.display_name)
+    logging.debug(u'[ParseFile] Parsing DONE: {0:s}'.format(
+        file_entry.display_name))
 
   @classmethod
   def SmartOpenFiles(cls, file_entry, fscache=None, depth=0):
@@ -318,8 +325,9 @@ class PlasoWorker(object):
         yield new_file_entry
       except IOError as e:
         logging.debug((
-            u'Unable to open file: {%s}, not sure if we can extract '
-            u'further files from it. Msg: %s'), file_entry.display_name, e)
+            u'Unable to open file: {{{0:s}}}, not sure if we can extract '
+            u'further files from it. Msg: {1:s}').format(
+                file_entry.display_name, e))
         continue
       for new_file_entry in cls.SmartOpenFiles(
           new_file_entry, fscache=fscache, depth=(depth + 1)):
@@ -384,17 +392,17 @@ class PlasoWorker(object):
         file_ending = file_entry.name.lower()[-4:]
         if file_ending in ['.jar', '.sym', '.xpi']:
           file_object.close()
-          logging.debug(
-              u'ZIP but the wrong type of zip [%s]: %s', file_ending,
-              file_entry.name)
+          logging.debug(u'ZIP but the wrong type of zip [{0:s}]: {1:s}'.format(
+              file_ending, file_entry.name))
           return
 
         container_path = file_entry.pathspec.file_path
         root_pathspec = file_entry.pathspec_root
         for info in zip_file.infolist():
           if info.file_size > 0:
-            logging.debug(u'Including: %s from ZIP into process queue.',
-                          info.filename)
+            logging.debug(
+                u'Including: {0:s} from ZIP into process queue.'.format(
+                    info.filename))
             pathspec = copy.deepcopy(root_pathspec)
             transfer_zip = event.EventPathSpec()
             transfer_zip.type = 'ZIP'
@@ -414,8 +422,8 @@ class PlasoWorker(object):
         gzip_file = gzip.GzipFile(fileobj=file_object, mode='rb')
         _ = gzip_file.read(4)
         gzip_file.seek(0, os.SEEK_SET)
-        logging.debug(
-            u'Including: %s from GZIP into process queue.', file_entry.name)
+        logging.debug(u'Including: {0:s} from GZIP into process queue.'.format(
+            file_entry.name))
         transfer_gzip = event.EventPathSpec()
         transfer_gzip.type = 'GZIP'
         transfer_gzip.file_path = utils.GetUnicodeString(
@@ -440,7 +448,8 @@ class PlasoWorker(object):
           if not name_info.isfile():
             continue
           name = name_info.path
-          logging.debug(u'Including: %s from TAR into process queue.', name)
+          logging.debug(
+              u'Including: {0:s} from TAR into process queue.'.format(name))
           pathspec = copy.deepcopy(root_pathspec)
           transfer_tar = event.EventPathSpec()
           transfer_tar.type = 'TAR'
