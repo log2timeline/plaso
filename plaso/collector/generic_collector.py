@@ -282,7 +282,7 @@ class GenericCollector(interface.PfileCollector):
     """Processes the image with the collection filter."""
     image_offset = self._GetImageByteOffset()
     preprocessor_collector = tsk_collector.TSKFilePreprocessCollector(
-        self._pre_obj, self._source_path, image_offset)
+        self._pre_obj, self._source_path, byte_offset=image_offset)
 
     try:
       filter_object = collector_filter.CollectionFilter(
@@ -300,10 +300,12 @@ class GenericCollector(interface.PfileCollector):
           vss_collector = tsk_collector.VSSFilePreprocessCollector(
               self._pre_obj, self._source_path, store_number,
               byte_offset=image_offset)
+          filter_object = collector_filter.CollectionFilter(
+              vss_collector, self._filter_file_path)
 
-          for pathspec_string in collector_filter.CollectionFilter(
-              vss_collector, self._filter_file_path).GetPathSpecs():
+          for pathspec_string in filter_object.GetPathSpecs():
             self._queue.Queue(pathspec_string)
+
     finally:
       logging.debug(u'Targeted Image Collector - Done.')
 

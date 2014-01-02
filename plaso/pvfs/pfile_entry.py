@@ -526,9 +526,9 @@ class TSKFileEntry(BaseFileEntry):
     Yields:
       A sub file entry (instance of TSKFileEntry).
     """
-    inode = getattr(self.pathspec, 'image_inode', 0)
-    if inode is not None:
-      tsk_directory = self._tsk_fs.open_dir(inode=inode)
+    inode_number = getattr(self.pathspec, 'image_inode', None)
+    if inode_number is not None:
+      tsk_directory = self._tsk_fs.open_dir(inode=inode_number)
     else:
       tsk_directory = self._tsk_fs.open_dir(path=self.pathspec.file_path)
 
@@ -560,7 +560,7 @@ class TSKFileEntry(BaseFileEntry):
           path_spec, root=self.pathspec_root, fscache=self._fscache)
 
       # Work-around for limitations of pfile, will be fixed by PyVFS.
-      sub_file_entry.directory_entry_name = tsk_directory_entry.info.name
+      sub_file_entry.directory_entry_name = tsk_directory_entry.info.name.name
       yield sub_file_entry
 
   def IsAllocated(self):
@@ -588,6 +588,16 @@ class TSKFileEntry(BaseFileEntry):
         self.file_object.fileobj.info.meta, 'type',
         pytsk3.TSK_FS_META_TYPE_UNDEF)
     return tsk_fs_meta_type == pytsk3.TSK_FS_META_TYPE_LNK
+
+  @classmethod
+  def JoinPath(cls, path_segments):
+    """Joins the path segments into a path."""
+    return u'/'.join(path_segments)
+
+  @classmethod
+  def SplitPath(cls, path):
+    """Splits the path into path segments."""
+    return path.split(u'/')
 
 
 class VssFileEntry(TSKFileEntry):

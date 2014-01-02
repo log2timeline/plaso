@@ -100,9 +100,27 @@ class PreprocessCollector(object):
     self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
         pre_obj, None)
 
+  def _GetExtendedPath(self, path):
+    """Return an extened path without the generic path elements.
+
+    Remove common generic path elements, like {log_path}, {systemroot}
+    and extend them to their real meaning.
+
+    Args:
+      path: The path before extending it.
+
+    Returns:
+      A string containing the extended path.
+    """
+    try:
+      return self._path_expander.ExpandPath(path)
+    except KeyError as e:
+      logging.error(
+          u'Unable to expand path {0:s} with error: {1:s}'.format(path, e))
+
   @abc.abstractmethod
   def _GetPaths(self, path_segments_expressions_list):
-    """Retrieves paths based on path segment specifications.
+    """Retrieves paths based on path segment expressions.
 
        A path segment expression is either a regular expression or a string
        containing an expanded path segment.
@@ -113,6 +131,49 @@ class PreprocessCollector(object):
     Yields:
       The paths found.
     """
+
+  def _GetPathSegmentExpressionsList(self, path_expression):
+    """Retrieves a list of paths  segment expressions on a path expression.
+
+       A path segment expression is either a regular expression or a string
+       containing an expanded path segment.
+
+    Args:
+      path_expression: The path expression, which is a string that can contain
+                       system specific placeholders such as e.g. "{log_path}"
+                       or "{systemroot}" or regular expressions such as e.g.
+                       "[0-9]+" to match a path segments that only consists of
+                       numeric values.
+
+    Returns:
+      A list of path segments expressions.
+    """
+    path_segments_expressions_list = []
+    for path_segment in path_expression.split(u'/'):
+      # Ignore empty path segments.
+      if not path_segment:
+        continue
+
+      if self._PATH_EXPANDER_RE.match(path_segment):
+        expression = self._GetExtendedPath(path_segment)
+
+      else:
+        try:
+          # We compile the regular expression so it spans the full path
+          # segment.
+          expression_string = u'^{0:s}$'.format(path_segment)
+          expression = re.compile(expression_string, re.I | re.S)
+
+        except sre_constants.error as e:
+          error_string = (
+              u'Unable to compile regular expression for path segment: {0:s} '
+              u'with error: {1:s}').format(path_segment, e)
+          logging.warning(error_string)
+          raise errors.PathNotFound(error_string)
+
+      path_segments_expressions_list.append(expression)
+
+    return path_segments_expressions_list
 
   # TODO: in PyVFS create a separate FindExpression of FindSpec object to
   # define path expresssions.
@@ -135,66 +196,32 @@ class PreprocessCollector(object):
     Raises:
       errors.PathNotFound: If unable to compile any regular expression.
     """
-    if not path_expression:
-      return self._GetPaths([u'/'])
-
-    path_segments_expressions_list = []
-    for path_segment in path_expression.split(u'/'):
-      # Ignore empty path segments.
-      if not path_segment:
-        continue
-
-      if self._PATH_EXPANDER_RE.match(path_segment):
-        expression = self.GetExtendedPath(path_segment)
-
-      else:
-        try:
-          # We compile the regular expression so it spans the full path
-          # segment.
-          expression_string = u'^{0:s}$'.format(path_segment)
-          expression = re.compile(expression_string, re.I | re.S)
-
-        except sre_constants.error as e:
-          error_string = (
-              u'Unable to compile regular expression for path segment: {0:s} '
-              u'with error: {1:s}').format(path_segment, e)
-          logging.warning(error_string)
-          raise errors.PathNotFound(error_string)
-
-      path_segments_expressions_list.append(expression)
+    path_segments_expressions_list = self._GetPathSegmentExpressionsList(
+        path_expression)
 
     return self._GetPaths(path_segments_expressions_list)
 
-  def GetExtendedPath(self, path):
-    """Return an extened path without the generic path elements.
-
-    Remove common generic path elements, like {log_path}, {systemroot}
-    and extend them to their real meaning.
+  def GetFilePaths(self, path_expression, filename_expression):
+    """Retrieves paths based on a path and filename expression.
 
     Args:
-      path: The path before extending it.
+      path_expression: The path expression, which is a string that can contain
+                       system specific placeholders such as e.g. "{log_path}"
+                       or "{systemroot}" or regular expressions such as e.g.
+                       "[0-9]+" to match a path segments that only consists of
+                       numeric values.
+      filename_expression: The filename expression.
 
     Returns:
-      A string containing the extended path.
+      A list of paths.
     """
-    try:
-      return self._path_expander.ExpandPath(path)
-    except KeyError as e:
-      logging.error(
-          u'Unable to expand path {0:s} with error: {1:s}'.format(path, e))
+    path_segments_expressions_list = self._GetPathSegmentExpressionsList(
+        path_expression)
 
-  @abc.abstractmethod
-  def GetFilePaths(self, path, file_name):
-    """Return a filepath to a file given a name pattern and a path.
-
-    Args:
-      path: The correct path to the file, perhaps gathered from GetPaths
-            or FindPaths.
-      file_name: The filename to the file (may be a regular expression).
-
-    Returns:
-      A list of filenames.
-    """
+    path_segments_expressions_list.extend(
+        self._GetPathSegmentExpressionsList(filename_expression))
+    
+    return self._GetPaths(path_segments_expressions_list)
 
   @abc.abstractmethod
   def OpenFileEntry(self, path):

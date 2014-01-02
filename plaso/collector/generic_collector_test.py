@@ -104,8 +104,9 @@ class GenericCollectorUnitTest(unittest.TestCase):
     try:
       os.remove(filter_name)
     except (OSError, IOError) as e:
-      logging.warning(
-          u'Unable to remove temporary file: %s due to: %s', filter_name, e)
+      logging.warning((
+          u'Unable to remove temporary file: {0:s} due to: {1:s}').format(
+              filter_name, e))
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS
     # and test_data/System.evtx.
@@ -180,23 +181,25 @@ class GenericCollectorUnitTest(unittest.TestCase):
     try:
       os.remove(filter_name)
     except (OSError, IOError) as e:
-      logging.warning(
-          u'Unable to remove temporary file: %s due to: %s', filter_name, e)
+      logging.warning((
+          u'Unable to remove temporary file: {0:s} due to: {1:s}').format(
+              filter_name, e))
 
     self.assertEquals(len(pathspecs), 2)
+
     # pathspecs[0]
     # type: TSK
-    # file_path: '//a_directory/another_file'
+    # file_path: '/a_directory/another_file'
     # container_path: 'test_data/image.dd'
     # image_offset: 0
-    self.assertEquals(pathspecs[1].file_path, '//a_directory/another_file')
+    self.assertEquals(pathspecs[1].file_path, '/a_directory/another_file')
 
     # pathspecs[1]
     # type: TSK
-    # file_path: '///passwords.txt'
+    # file_path: '/passwords.txt'
     # container_path: 'test_data/image.dd'
     # image_offset: 0
-    self.assertEquals(pathspecs[0].file_path, '///passwords.txt')
+    self.assertEquals(pathspecs[0].file_path, '/passwords.txt')
 
 
 if __name__ == '__main__':
