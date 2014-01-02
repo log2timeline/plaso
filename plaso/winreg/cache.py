@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -23,25 +24,26 @@ from plaso.lib import registry
 
 
 class WinRegistryCache(object):
-  """Stores calculated registry cache object.
+  """Class that implements the Windows Registry objects cache.
 
-  There are some values that are valid for the duration
-  of an entire run against an image, such as code_page, etc.
+     There are some values that are valid for the duration of an entire run
+     against an image, such as code_page, etc.
 
-  However there are other values that should only be valid for each
-  registry file, such as a current_control_set. This registry cache
-  object is designed to store those short lived cache values, so they
-  can be calculated once for each registry file, yet do not live
-  across all files parsed within an image.
+     However there are other values that should only be valid for each
+     Windows Registry file, such as a current_control_set. The Windows Registry
+     objects cache is designed to store those short lived cache values, so they
+     can be calculated once for each Windows Registry file, yet do not live
+     across all files parsed within an image.
   """
 
   def __init__(self, hive, reg_type):
-    """Initialize the registry cache object.
+    """Initialize the cache object.
 
     Args:
       hive: The WinRegistry object.
-      reg_type: The registry type, eg. "SYSTEM", "NTUSER".
+      reg_type: The Registry type, eg. "SYSTEM", "NTUSER".
     """
+    super(WinRegistryCache, self).__init__()
     self._reg_type = reg_type
     self._hive = hive
     self.attributes = {}
@@ -59,7 +61,7 @@ class WinRegistryCache(object):
 
 
 class WinRegCachePlugin(object):
-  """A registry cache plugin interface."""
+  """Class that implement the Window Registry cache plugin interface."""
 
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
@@ -74,11 +76,13 @@ class WinRegCachePlugin(object):
     """Initialize the plugin.
 
     Args:
-      hive: The registry hive object (WinRegistry).
-      reg_type: The detected registry type, should match this plugins type.
+      hive: The Windows Registry hive object (instance of WinRegistry).
+      reg_type: The detected Windows Registry type. This value should match
+                the REG_TYPE value defined by the plugins.
     """
+    super(WinRegCachePlugin, self).__init__()
     if self.REG_TYPE.lower() != reg_type.lower():
-      raise errors.WrongPlugin(u'Not the correct registry type.')
+      raise errors.WrongPlugin(u'Not the correct Windows Registry type.')
 
     self._hive = hive
 

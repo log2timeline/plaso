@@ -38,7 +38,7 @@ class RegistryUnitTest(unittest.TestCase):
     reg = winpyregf.WinRegistry(file_entry)
     keys = list(reg)
 
-    # Count the number of registry keys in the hive.
+    # Count the number of Registry keys in the hive.
     self.assertEquals(len(keys), 1126)
 
   def testWinPyregf(self):

@@ -49,7 +49,7 @@ class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
     """Test the Internet Settings Zones plugin for the Software hive."""
     key = self.winreg_file.GetKeyByPath(
         '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones')
-    plugin = msie_zones.MsieZoneSettingsSoftwareZonesPlugin(None, None, None)
+    plugin = msie_zones.MsieZoneSettingsSoftwareZonesPlugin()
     entries = list(plugin.Process(key))
 
     expected_line = (
@@ -88,8 +88,7 @@ class SoftwareMsieZoneSettingsPluginTest(unittest.TestCase):
     key = self.winreg_file.GetKeyByPath(
         '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Lockdown_Zones')
-    plugin = msie_zones.MsieZoneSettingsSoftwareLockdownZonesPlugin(
-        None, None, None)
+    plugin = msie_zones.MsieZoneSettingsSoftwareLockdownZonesPlugin()
     entries = list(plugin.Process(key))
 
     expected_line = (
@@ -148,7 +147,7 @@ class UserMsieZoneSettingsPluginTest(unittest.TestCase):
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Zones')
-    plugin = msie_zones.MsieZoneSettingsUserZonesPlugin(None, None, None)
+    plugin = msie_zones.MsieZoneSettingsUserZonesPlugin()
     entries = list(plugin.Process(key))
 
     expected_line = (
@@ -184,8 +183,7 @@ class UserMsieZoneSettingsPluginTest(unittest.TestCase):
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         '\\Lockdown_Zones')
-    plugin = msie_zones.MsieZoneSettingsUserLockdownZonesPlugin(
-        None, None, None)
+    plugin = msie_zones.MsieZoneSettingsUserLockdownZonesPlugin()
     entries = list(plugin.Process(key))
 
     expected_line = (

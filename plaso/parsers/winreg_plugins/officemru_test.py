@@ -48,7 +48,7 @@ class RegistryOfficeMRUTest(unittest.TestCase):
     """Test the Typed URLS plugin."""
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU')
-    plugin = officemru.MSWord2010FileMRU(None, None, None)
+    plugin = officemru.MSWord2010FileMRU()
     entries = list(plugin.Process(key))
 
     # Tue Mar 13 18:27:15.083000 UTC 2012

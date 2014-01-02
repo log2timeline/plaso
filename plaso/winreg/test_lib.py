@@ -17,8 +17,7 @@
 # limitations under the License.
 """Windows Registry related functions and classes for testing."""
 
-# TODO: replace struct by construct to improve readability.
-import struct
+import construct
 
 from plaso.winreg import interface
 
@@ -28,18 +27,18 @@ class TestRegKey(interface.WinRegKey):
 
   def __init__(self, path, last_written_timestamp, values, offset=0,
                subkeys=None):
-    """An abstract object for a Windows registry key.
+    """An abstract object for a Windows Registry key.
 
-    This implementation is more a manual one, so it can be used for
-    testing the registry plugins without requiring a full blown
-    registry file to extract key values.
+       This implementation is more a manual one, so it can be used for
+       testing the Registry plugins without requiring a full blown
+       Windows Registry file to extract key values.
 
     Args:
       path: The full key name and path.
       last_written_timestamp: An integer containing the the last written
                               timestamp of the Registry key.
       values: A list of TestRegValue values this key holds.
-      offset: A byte offset into the registry file where the entry lies.
+      offset: A byte offset into the Windows Registry file where the entry lies.
       subkeys: A list of subkeys this key has.
     """
     super(TestRegKey, self).__init__()
@@ -64,7 +63,7 @@ class TestRegKey(interface.WinRegKey):
 
   @property
   def offset(self):
-    """The offset of the key within the Registry File."""
+    """The offset of the key within the Windows Registry file."""
     return self._offset
 
   @property
@@ -77,13 +76,13 @@ class TestRegKey(interface.WinRegKey):
     return len(self._values)
 
   def GetValue(self, name):
-    """Return a WinRegValue object for a specific registry key path."""
+    """Return a WinRegValue object for a specific Registry key path."""
     for value in self._values:
       if value.name == name:
         return value
 
   def GetValues(self):
-    """Return a list of all values from the registry key."""
+    """Return a list of all values from the Registry key."""
     return self._values
 
   def number_of_subkeys(self):
@@ -112,6 +111,10 @@ class TestRegKey(interface.WinRegKey):
 class TestRegValue(interface.WinRegValue):
   """Implementation of the Registry value interface for testing."""
 
+  _INT32_BIG_ENDIAN = construct.SBInt32('value')
+  _INT32_LITTLE_ENDIAN = construct.SLInt32('value')
+  _INT64_LITTLE_ENDIAN = construct.SLInt64('value')
+
   def __init__(self, name, data, data_type, offset=0):
     """Set up the test reg value object."""
     super(TestRegValue, self).__init__()
@@ -128,7 +131,7 @@ class TestRegValue(interface.WinRegValue):
 
   @property
   def offset(self):
-    """The offset of the value within the Registry File."""
+    """The offset of the value within the Windows Registry file."""
     return self._offset
 
   @property
@@ -154,13 +157,13 @@ class TestRegValue(interface.WinRegValue):
         pass
 
     elif self._data_type == self.REG_DWORD and len(self._data) == 4:
-      return struct.unpack('<i', self._data)[0]
+      return self._INT32_LITTLE_ENDIAN.parse(self._data)
 
     elif self._data_type == self.REG_DWORD_BIG_ENDIAN and len(self._data) == 4:
-      return struct.unpack('>i', self._data)[0]
+      return self._INT32_BIG_ENDIAN.parse(self._data)
 
     elif self._data_type == self.REG_QWORD and len(self._data) == 8:
-      return struct.unpack('<q', self._data)[0]
+      return self._INT64_LITTLE_ENDIAN.parse(self._data)
 
     elif self._data_type == self.REG_MULTI_SZ:
       try:

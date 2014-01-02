@@ -47,7 +47,7 @@ class RegistryCCleanerTest(unittest.TestCase):
     """Test the CCleaner plugin."""
     key = self.winreg_file.GetKeyByPath(
         '\\Software\\Piriform\\CCleaner')
-    plugin = ccleaner.CCleanerPlugin(None, None, None)
+    plugin = ccleaner.CCleanerPlugin()
     entries = list(plugin.Process(key))
 
     self.assertEquals(entries[0].timestamp, 1373709794000000)

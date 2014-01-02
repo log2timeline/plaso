@@ -23,7 +23,7 @@ import re
 import sre_constants
 
 from plaso.lib import errors
-from plaso.parsers.winreg_plugins import interface as win_registry_interface
+from plaso.winreg import path_expander as winreg_path_expander
 
 
 class PfileCollector(object):
@@ -93,7 +93,8 @@ class PreprocessCollector(object):
       pre_obj: The preprocessing object with all it's attributes that
       have been gathered so far.
     """
-    self._pre_obj = pre_obj
+    self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
+        pre_obj, None)
 
   def FindPaths(self, path_expression):
     """Return a path from a regular expression or a potentially wrong path.
@@ -126,12 +127,14 @@ class PreprocessCollector(object):
         try:
           # We compile the regular expression so it matches the entire string
           # from beginning to end.
-          re_list.append(re.compile(r'^%s$' % path_part, re.I | re.S))
+          re_list.append(re.compile(r'^{0:s}$'.format(path_part, re.I | re.S)))
         except sre_constants.error as e:
-          logging.warning(
-              u'Unable to append the following expression: %s due to %s',
-              path_part, e)
-          raise errors.PathNotFound(u'Unable to compile regex for path: %s', e)
+          logging.warning((
+              u'Unable to append the following expression: {0:s} with error: '
+              u'{1:s}').format(path_part, e))
+          raise errors.PathNotFound((
+              u'Unable to compile regex for path: {0:s} with error: '
+              u'{1:s}').format(path_part, e))
 
     return self.GetPaths(re_list)
 
@@ -160,12 +163,10 @@ class PreprocessCollector(object):
       A string containing the extended path.
     """
     try:
-      # TODO: move this to a path expander helper.
-      path_replacer = win_registry_interface.ExpandRegistryPath(
-          path, self._pre_obj)
-      return path_replacer
+      return self._path_expander.ExpandPath(path)
     except KeyError as e:
-      logging.error(u'Unable to extend path %s, reason: %s', path, e)
+      logging.error(
+          u'Unable to expand path {0:s} with error: {1:s}'.format(path, e))
 
   @abc.abstractmethod
   def GetFilePaths(self, path, file_name):
