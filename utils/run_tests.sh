@@ -20,7 +20,9 @@ EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
 # Run the tests in a specific order.
-for SUBDIR in lib pvfs winreg filters collector classifier parsers registry plist output frontend;
+SUBDIRS="lib pvfs winreg filters classifier collector parsers output analysis frontend";
+
+for SUBDIR in ${SUBDIRS};
 do
   TEST_FILES=`find "plaso/${SUBDIR}" -name "*_test.py" | grep -v "\/build\/"`;
 
