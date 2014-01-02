@@ -18,14 +18,13 @@
 """The SleuthKit collector object implementation."""
 
 import logging
-import re
 
 from plaso.collector import interface
-from plaso.lib import errors
+from plaso.lib import event
+from plaso.lib import utils
 from plaso.pvfs import pvfs
+from plaso.pvfs import pfile_entry
 from plaso.pvfs import utils as pvfs_utils
-
-import pytsk3
 
 
 class TSKFilePreprocessCollector(interface.PreprocessCollector):
@@ -45,7 +44,8 @@ class TSKFilePreprocessCollector(interface.PreprocessCollector):
     super(TSKFilePreprocessCollector, self).__init__(pre_obj, source_path)
     self._image_offset = byte_offset
     self._fscache = pvfs.FilesystemCache()
-    self._tsk_fs = self._fscache.Open(source_path, byte_offset=byte_offset)
+    self._file_system_container = self._fscache.Open(
+        source_path, byte_offset=byte_offset)
 
   def _GetPaths(self, path_segments_expressions_list):
     """Retrieves paths based on path segments expressions.
@@ -59,78 +59,68 @@ class TSKFilePreprocessCollector(interface.PreprocessCollector):
     Yields:
       The paths found.
     """
-    paths = []
+    paths_found = ['']
+    for path_segment_expression in path_segments_expressions_list:
+      sub_paths_found = []
 
-    for part in path_segments_expressions_list:
-      if not part:
-        continue
+      for path in paths_found:
+        path_spec = event.EventPathSpec()
+        path_spec.type = 'TSK'
 
-      if isinstance(part, basestring):
-        if paths:
-          for index, path in enumerate(paths):
-            paths[index] = u'/'.join([path, part])
+        if not path:
+          path_spec.file_path = u'/'
+          path_spec.image_inode = self._file_system_container.fs.info.root_inum
         else:
-          paths.append(u'/{}'.format(part))
-      else:
-        found_path = False
-        if not paths:
-          paths.append('/')
+          path_spec.file_path = utils.GetUnicodeString(path)
 
-        old_paths = list(paths)
-        paths = []
-        for real_path in old_paths:
+        path_spec.container_path = self._source_path
+        path_spec.image_offset = self._image_offset
+        # TODO: do we need to set root here?
+        file_entry = pfile_entry.TSKFileEntry(
+            path_spec, root=None, fscache=self._fscache)
+
+        if isinstance(file_entry, pfile_entry.TSKFileEntry):
+          # Work-around the limitation in TSKFileEntry that it needs to be open
+          # to return stat information. This will be fixed by PyVFS.
           try:
-            tsk_directory = self._tsk_fs.fs.open_dir(real_path)
-          except IOError:
+            _  = file_entry.Open()
+          except AttributeError as e:
+            logging.error((
+                u'Unable to read file: {0:s} from image with error: '
+                u'{1:s}').format(file_entry.pathspec.file_path, e))
             continue
-          for tsk_file in tsk_directory:
-            try:
-              name = tsk_file.info.name.name
-              if not tsk_file.info.meta:
-                continue
-            except AttributeError as exception:
-              logging.error((
-                  u'[ParseImage] Problem reading file [{0:s}], error: '
-                  u'{1:s}').format(name, exception))
-              continue
 
-            if name == '.' or name == '..':
-              continue
+        # Since there are more path segment expressions and the file entry
+        # is not a directory this cannot be the path we're looking for.
+        if not file_entry.IsDirectory():
+          continue
 
-            m = part.match(name)
-            if m:
-              append_path = u'/'.join([real_path, m.group(0)])
-              found_path = True
-              paths.append(append_path)
+        for sub_file_entry in file_entry.GetSubFileEntries():
+          sub_file_entry_match = u''
 
-        if not found_path:
-          raise errors.PathNotFound(u'Path not found inside')
+          # TODO: need to handle case (in)sentive matches.
+          if isinstance(path_segment_expression, basestring):
+            if path_segment_expression == sub_file_entry.directory_entry_name:
+              sub_file_entry_match = sub_file_entry.directory_entry_name
 
-    for real_path in paths:
-      yield real_path
+          else:
+            re_match = path_segment_expression.match(
+                sub_file_entry.directory_entry_name)
 
-  def GetFilePaths(self, path, file_name):
-    """Return a list of files given a path and a pattern."""
-    ret = []
-    file_re = re.compile(r'^{0:s}$'.format(file_name), re.I | re.S)
-    try:
-      directory = self._tsk_fs.fs.open_dir(path)
-    except IOError as e:
-      raise errors.PreProcessFail(
-          u'Unable to open directory: {0:s} with error: {1:s}'.format(path, e))
+            if re_match:
+              sub_file_entry_match = re_match.group(0)
 
-    for tsk_file in directory:
-      try:
-        f_type = tsk_file.info.meta.type
-        name = tsk_file.info.name.name
-      except AttributeError:
-        continue
-      if f_type == pytsk3.TSK_FS_META_TYPE_REG:
-        m = file_re.match(name)
-        if m:
-          ret.append(u'{0:s}/{1:s}'.format(path, name))
+          if sub_file_entry_match:
+            sub_paths_found.append(pfile_entry.TSKFileEntry.JoinPath([
+                path, sub_file_entry_match]))
 
-    return ret
+      paths_found = sub_paths_found
+
+      if not paths_found:
+        break
+
+    for path in paths_found:
+      yield path
 
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""
@@ -160,7 +150,7 @@ class VSSFilePreprocessCollector(TSKFilePreprocessCollector):
         pre_obj, source_path, byte_offset=byte_offset)
     self._store_number = store_number
     self._fscache = pvfs.FilesystemCache()
-    self._tsk_fs = self._fscache.Open(
+    self._file_system_container = self._fscache.Open(
         source_path, byte_offset=byte_offset, store_number=store_number)
 
   def OpenFileEntry(self, path):
