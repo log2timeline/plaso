@@ -53,36 +53,66 @@ class ScannerTest(unittest.TestCase):
 
     test_scanner = scanner.Scanner(store)
 
-    scan_state = test_scanner.ScanStart()
-    test_scanner.ScanBuffer(scan_state, 0, data1)
-    test_scanner.ScanStop(scan_state)
+    total_data_size = len(data1)
+    scan_state = test_scanner.StartScan(total_data_size=total_data_size)
+    test_scanner.ScanBuffer(scan_state, data1, len(data1))
+    test_scanner.StopScan(scan_state)
 
-    self.assertEqual(len(scan_state.GetResults()), 1)
+    self.assertEqual(len(scan_state.GetMatches()), 1)
 
-    scan_state = test_scanner.ScanStart()
-    test_scanner.ScanBuffer(scan_state, 0, data2)
-    test_scanner.ScanStop(scan_state)
+    scan_state = test_scanner.StartScan(total_data_size=None)
+    test_scanner.ScanBuffer(scan_state, data1, len(data1))
+    test_scanner.StopScan(scan_state)
 
-    self.assertEqual(len(scan_state.GetResults()), 1)
+    self.assertEqual(len(scan_state.GetMatches()), 1)
 
-    scan_state = test_scanner.ScanStart()
-    test_scanner.ScanBuffer(scan_state, 0, data3)
-    test_scanner.ScanStop(scan_state)
+    total_data_size = len(data2)
+    scan_state = test_scanner.StartScan(total_data_size=total_data_size)
+    test_scanner.ScanBuffer(scan_state, data2, len(data2))
+    test_scanner.StopScan(scan_state)
 
-    self.assertEqual(len(scan_state.GetResults()), 0)
+    self.assertEqual(len(scan_state.GetMatches()), 1)
 
-    scan_state = test_scanner.ScanStart()
-    test_scanner.ScanBuffer(scan_state, 0, data4a)
-    test_scanner.ScanBuffer(scan_state, len(data4a), data4b)
-    test_scanner.ScanStop(scan_state)
+    scan_state = test_scanner.StartScan(total_data_size=None)
+    test_scanner.ScanBuffer(scan_state, data2, len(data2))
+    test_scanner.StopScan(scan_state)
 
-    self.assertEqual(len(scan_state.GetResults()), 1)
+    self.assertEqual(len(scan_state.GetMatches()), 1)
 
-    scan_state = test_scanner.ScanStart()
-    test_scanner.ScanBuffer(scan_state, 0, data5)
-    test_scanner.ScanStop(scan_state)
+    total_data_size = len(data3)
+    scan_state = test_scanner.StartScan(total_data_size=total_data_size)
+    test_scanner.ScanBuffer(scan_state, data3, len(data3))
+    test_scanner.StopScan(scan_state)
 
-    self.assertEqual(len(scan_state.GetResults()), 1)
+    self.assertEqual(len(scan_state.GetMatches()), 0)
+
+    scan_state = test_scanner.StartScan(total_data_size=None)
+    test_scanner.ScanBuffer(scan_state, data3, len(data3))
+    test_scanner.StopScan(scan_state)
+
+    self.assertEqual(len(scan_state.GetMatches()), 0)
+
+    total_data_size = len(data4a) + len(data4b)
+    scan_state = test_scanner.StartScan(total_data_size=total_data_size)
+    test_scanner.ScanBuffer(scan_state, data4a, len(data4a))
+    test_scanner.ScanBuffer(scan_state, data4b, len(data4b))
+    test_scanner.StopScan(scan_state)
+
+    self.assertEqual(len(scan_state.GetMatches()), 1)
+
+    scan_state = test_scanner.StartScan(total_data_size=None)
+    test_scanner.ScanBuffer(scan_state, data4a, len(data4a))
+    test_scanner.ScanBuffer(scan_state, data4b, len(data4b))
+    test_scanner.StopScan(scan_state)
+
+    self.assertEqual(len(scan_state.GetMatches()), 1)
+
+    total_data_size = len(data5)
+    scan_state = test_scanner.StartScan(total_data_size=total_data_size)
+    test_scanner.ScanBuffer(scan_state, data5, len(data5))
+    test_scanner.StopScan(scan_state)
+
+    self.assertEqual(len(scan_state.GetMatches()), 1)
 
 
 if __name__ == '__main__':

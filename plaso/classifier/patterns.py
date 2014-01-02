@@ -35,9 +35,9 @@ class _ByteValuePatterns(object):
     self.byte_value = byte_value
     self.patterns = {}
 
-  def __str__(self):
+  def __unicode__(self):
     """Retrieves a string representation of the byte value patterns."""
-    return '0x{0:02x} {1!s}'.format(ord(self.byte_value), self.patterns)
+    return u'0x{0:02x} {1!s}'.format(ord(self.byte_value), self.patterns)
 
   def AddPattern(self, pattern):
     """Adds a pattern.
@@ -149,7 +149,7 @@ class Pattern(object):
     self.signature = signature
     self.specification = specification
 
-  def __str__(self):
+  def __unicode__(self):
     """Retrieves a string representation."""
     return self.identifier
 
@@ -201,9 +201,11 @@ class PatternTable(object):
     """
     super(PatternTable, self).__init__()
     self._byte_values_per_offset = {}
-    self.patterns = []
     self.largest_pattern_length = 0
+    self.largest_pattern_offset = 0
+    self.patterns = []
     self.smallest_pattern_length = 0
+    self.smallest_pattern_offset = 0
 
     for pattern in patterns:
       if is_bound is not None and pattern.signature.is_bound != is_bound:
@@ -216,7 +218,6 @@ class PatternTable(object):
 
       self.smallest_pattern_length = min(
           self.smallest_pattern_length, pattern_length)
-
       self.largest_pattern_length = max(
           self.largest_pattern_length, pattern_length)
 
@@ -237,14 +238,19 @@ class PatternTable(object):
     """
     pattern_offset = pattern.offset if is_bound else 0
 
+    self.smallest_pattern_offset = min(
+        self.smallest_pattern_offset, pattern_offset)
+    self.largest_pattern_offset = max(
+        self.largest_pattern_offset, pattern_offset)
+
     for byte_value in pattern.expression:
-      if not pattern_offset in self._byte_values_per_offset:
+      if pattern_offset not in self._byte_values_per_offset:
         self._byte_values_per_offset[pattern_offset] = {}
 
-      if not pattern_offset in ignore_list:
+      if pattern_offset not in ignore_list:
         byte_values = self._byte_values_per_offset[pattern_offset]
 
-        if not byte_value in byte_values:
+        if byte_value not in byte_values:
           byte_values[byte_value] = _ByteValuePatterns(byte_value)
 
         byte_value_patterns = byte_values[byte_value]

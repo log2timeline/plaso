@@ -29,29 +29,43 @@ class ClassifierTest(unittest.TestCase):
   """Class to test Classifier."""
 
   def setUp(self):
+    """Function to test the initialize function."""
     self._store = test_lib.CreateSpecificationStore()
-    self._scanner = scanner.Scanner(self._store)
 
-    self._input_filenames = [
-        os.path.join('test_data', 'NTUSER.DAT'),
-        os.path.join('test_data', 'syslog.zip')]
+    self._test_file1 = os.path.join('test_data', 'NTUSER.DAT')
+    self._test_file2 = os.path.join('test_data', 'syslog.zip')
 
-  def testClassifyFileScannerFull(self):
-    """Function to test the ClassifyFile function with the scan tree scanner."""
-    for input_filename in self._input_filenames:
-      test_classifier = classifier.Classifier(self._scanner)
-      classifications = test_classifier.ClassifyFile(input_filename)
+  def testClassifyFileWithScanner(self):
+    """Function to test the classify file function."""
+    test_scanner = scanner.Scanner(self._store)
 
-      self.assertEqual(len(classifications), 1)
+    test_classifier = classifier.Classifier(test_scanner)
+    classifications = test_classifier.ClassifyFile(self._test_file1)
+    self.assertEqual(len(classifications), 1)
 
-  def testClassifyFileScannerHeadTail(self):
-    """Function to test the ClassifyFile function with the scan tree scanner."""
-    for input_filename in self._input_filenames:
-      test_classifier = classifier.Classifier(
-          self._scanner, classifier.Classifier.HEAD_TAIL_SCAN)
-      classifications = test_classifier.ClassifyFile(input_filename)
+    # TODO: assert the contents of the classification.
 
-      self.assertEqual(len(classifications), 1)
+    test_classifier = classifier.Classifier(test_scanner)
+    classifications = test_classifier.ClassifyFile(self._test_file2)
+    self.assertEqual(len(classifications), 1)
+
+    # TODO: assert the contents of the classification.
+
+  def testClassifyFileWithOffsetBoundScanner(self):
+    """Function to test the classify file function."""
+    test_scanner = scanner.OffsetBoundScanner(self._store)
+
+    test_classifier = classifier.Classifier(test_scanner)
+    classifications = test_classifier.ClassifyFile(self._test_file1)
+    self.assertEqual(len(classifications), 1)
+
+    # TODO: assert the contents of the classification.
+
+    test_classifier = classifier.Classifier(test_scanner)
+    classifications = test_classifier.ClassifyFile(self._test_file2)
+    self.assertEqual(len(classifications), 1)
+
+    # TODO: assert the contents of the classification.
 
 
 if __name__ == "__main__":
