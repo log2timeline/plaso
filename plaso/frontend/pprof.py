@@ -113,9 +113,7 @@ from it and which parsers recognize it.
     sys.exit(1)
 
   if not os.path.isfile(options.file_to_parse):
-    logging.error(
-        u'File [%s] needs to exist.',
-        options.file_to_parse)
+    logging.error(u'File [{0:s}] needs to exist.'.format(options.file_to_parse))
     sys.exit(1)
 
   PrintHeader(options)
@@ -188,10 +186,10 @@ def ProcessStorage(options):
 def ProcessFile(options):
   """Process a file and produce profile results."""
   try:
-    fh = pvfs_utils.OpenOSFileIO(options.file_to_parse)
+    file_entry = pvfs_utils.OpenOSFileEntry(options.file_to_parse)
   except IOError as e:
-    logging.error(u'Unable to open file: %s, error given %s',
-                  options.file_to_parse, e)
+    logging.error(u'Unable to open file: {0:s} with error: {1:s}'.format(
+        options.file_to_parse, e))
     sys.exit(1)
 
   pre_obj = preprocess.PlasoPreprocess()
@@ -205,14 +203,12 @@ def ProcessFile(options):
     profiler.enable()
   else:
     time_start = time.time()
-  my_worker.ParseFile(fh)
+  my_worker.ParseFile(file_entry)
 
   if options.verbose:
     profiler.disable()
   else:
     time_end = time.time()
-
-  fh.close()
 
   counter = collections.Counter()
   parsers = []
