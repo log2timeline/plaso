@@ -1,0 +1,3 @@
+01/01/2011 05:23:15 myuser:myhost- first line.
+12/24/1991 19:58:06 myuser:myhost- second line.
+06/01/1945 08:20:00 myuser:myhost- third line.

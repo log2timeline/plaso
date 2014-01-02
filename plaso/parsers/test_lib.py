@@ -22,7 +22,7 @@ import unittest
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.pvfs import pfile
-from plaso.pvfs import utils
+from plaso.pvfs import utils as pvfs_utils
 
 
 class ParserTestCase(unittest.TestCase):
@@ -107,7 +107,7 @@ class ParserTestCase(unittest.TestCase):
       A list of event containers or objects as returned by the parser
       (instances of EventObject or EventContainer).
     """
-    file_entry = utils.OpenOSFileEntry(filename)
+    file_entry = pvfs_utils.OpenOSFileEntry(filename)
     return list(parser_object.Parse(file_entry))
 
   def _ParseFileByPathSpec(self, parser_object, path_spec, fscache=None):
