@@ -20,42 +20,6 @@
 # factory helper functions for the PyVFS migration.
 
 from plaso.collector import generic_collector
-from plaso.collector import os_collector
-from plaso.collector import tsk_collector
-
-
-def GetFileSystemPreprocessCollector(pre_obj, source_path):
-  """Factory function to retrieve an image preprocess collector object.
-
-  Args:
-    pre_obj: The preprocessing object.
-    source_path: Path of the source file or directory.
-
-  Returns:
-    A preprocess collector object (instance of PreprocessCollector).
-  """
-  return os_collector.FileSystemPreprocessCollector(pre_obj, source_path)
-
-
-def GetImagePreprocessCollector(
-    pre_obj, source_path, byte_offset=0, vss_store_number=None):
-  """Factory function to retrieve an image preprocess collector object.
-
-  Args:
-    pre_obj: The preprocessing object.
-    source_path: Path of the source image file.
-    byte_offset: Optional byte offset into the image file if this is a disk
-                 image. The default is 0.
-    vss_store_number: Optional VSS store index number. The default is None.
-
-  Returns:
-    A preprocess collector object (instance of PreprocessCollector).
-  """
-  if vss_store_number is not None:
-    return tsk_collector.VSSFilePreprocessCollector(
-        pre_obj, source_path, vss_store_number, byte_offset=byte_offset)
-  return tsk_collector.TSKFilePreprocessCollector(
-      pre_obj, source_path, byte_offset=byte_offset)
 
 
 def GetGenericCollector(proc_queue, stor_queue, source_path):
@@ -67,3 +31,16 @@ def GetGenericCollector(proc_queue, stor_queue, source_path):
     source_path: Path of the source file or directory.
   """
   return generic_collector.GenericCollector(proc_queue, stor_queue, source_path)
+
+
+def GetGenericPreprocessCollector(pre_obj, source_path):
+  """Factory function to retrieve a generic preprocess collector object.
+
+  Args:
+    pre_obj: The preprocessing object.
+    source_path: Path of the source file or directory.
+
+  Returns:
+    A preprocess collector object (instance of PreprocessCollector).
+  """
+  return generic_collector.GenericPreprocessCollector(pre_obj, source_path)

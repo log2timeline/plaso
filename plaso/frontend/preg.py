@@ -948,6 +948,7 @@ def StartPreProcess():
 
 def GetCollectorsFromAnImage(config):
   """Open up an image and return back a list of collectors."""
+  bytes_per_sector = 512
   collectors = []
   StartPreProcess()
   if config.vss_stores:
@@ -970,17 +971,21 @@ def GetCollectorsFromAnImage(config):
 
   RegCache.fscache = pvfs.FilesystemCache()
   try:
-    main_collector = collector_factory.GetImagePreprocessCollector(
-        RegCache.pre_obj, config.image, byte_offset=(config.offset * 512))
+    preprocess_collector = collector_factory.GetGenericPreprocessCollector(
+        RegCache.pre_obj, config.image)
+    byte_offset = config.offset * bytes_per_sector
+    preprocess_collector.SetImageInformation(
+        sector_offset=config.offset, byte_offset=byte_offset)
+
   except errors.UnableToOpenFilesystem:
     ErrorAndDie(
         u'Unable to open the file system image: {}'.format(config.image))
-  collectors.append(('', main_collector))
+  collectors.append(('', preprocess_collector))
 
   # Run pre processing on image.
   pre_plugin_list = preprocessors.PreProcessList(
-      RegCache.pre_obj, main_collector)
-  guessed_os = preprocess.GuessOS(main_collector)
+      RegCache.pre_obj, preprocess_collector)
+  guessed_os = preprocess.GuessOS(preprocess_collector)
   for weight in pre_plugin_list.GetWeightList(guessed_os):
     for plugin in pre_plugin_list.GetWeight(guessed_os, weight):
       try:
@@ -991,15 +996,20 @@ def GetCollectorsFromAnImage(config):
 
   # Check for VSS.
   if config.vss:
+    byte_offset = config.offset * bytes_per_sector
     if not config.vss_stores:
       config.vss_stores = range(0, vss.GetVssStoreCount(
-          config.image, config.offset * 512))
+          config.image, byte_offset))
 
-    for store in config.vss_stores:
-      vss_collector = collector_factory.GetImagePreprocessCollector(
-          RegCache.pre_obj, config.image, byte_offset=(config.offset * 512),
-          vss_store_number=store)
-      collectors.append((':VSS Store {}'.format(store + 1), vss_collector))
+    for store_number in config.vss_stores:
+      vss_collector = collector_factory.GetGenericPreprocessCollector(
+          RegCache.pre_obj, config.image)
+      vss_collector.SetImageInformation(
+          sector_offset=config.offset, byte_offset=byte_offset)
+      vss_collector.SetVssInformation(
+          store_number=store_number)
+      collectors.append((
+          ':VSS Store {}'.format(store_number + 1), vss_collector))
 
   return collectors
 
