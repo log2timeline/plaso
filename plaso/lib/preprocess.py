@@ -40,7 +40,7 @@ import pytz
 class PreprocessPlugin(object):
   """Class that defines the preprocess plugin object interface.
 
-  Any pre-processing plugin that implements this interface
+  Any preprocessing plugin that implements this interface
   should define which operating system this plugin supports.
 
   The OS variable supports the following values:

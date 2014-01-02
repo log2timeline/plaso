@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Import statements for analysis plugins and common methods."""
+
 from plaso.lib import analysis_interface
 from plaso.lib import errors
 
@@ -48,7 +50,7 @@ def LoadPlugins(plugin_names, pre_obj, incoming_queues, outgoing_queue):
   Args:
     plugin_names: A list of plugin names that should be loaded up. This
                   shold be a list of strings.
-    pre_obj: The pre-processing object.
+    pre_obj: The preprocessing object.
     incoming_queues: A list of queues (QueueInterface object) that the plugin
                      uses to read in incoming events to analyse.
     outgoing_queue: The queue that is used by all plugins to send in compiled

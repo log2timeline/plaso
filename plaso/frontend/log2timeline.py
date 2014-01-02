@@ -35,6 +35,7 @@ from plaso.lib import pfilter
 from plaso.lib import preprocess
 from plaso.pvfs import pvfs
 
+
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024
 
@@ -114,7 +115,7 @@ def Main():
   function_group.add_argument(
       '-p', '--preprocess', dest='preprocess', action='store_true',
       default=False, help=(
-          'Turn on pre-processing. Pre-processing is turned on by default '
+          'Turn on preprocessing. Preprocessing is turned on by default '
           'when parsing image files, however if a mount point is being '
           'parsed then this parameter needs to be set manually.'))
 
@@ -338,15 +339,15 @@ def Main():
 
   # Check to see if we are trying to parse a mount point.
   if options.recursive:
+    pre_obj = preprocess.PlasoPreprocess()
     file_collector = collector_factory.GetFileSystemPreprocessCollector(
-        preprocess.PlasoPreprocess(), options.filename)
+        pre_obj, options.filename)
     guessed_os = preprocess.GuessOS(file_collector)
     if guessed_os != 'None':
-      logging.info((
-          u'Running against a mount point [{}]. Turning on '
-          u'pre-processing.').format(
-              guessed_os))
       options.preprocess = True
+      logging.info((
+          u'Running against a mount point [{0:s}]. Turning on '
+          u'preprocessing.').format(guessed_os))
       logging.info(
           u'It is highly recommended to run the tool directly against '
           'the image, instead of parsing a mount point (you may get '

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains basic interface for analysis plugins."""
+
 import abc
 import construct
 import logging
@@ -24,6 +26,7 @@ from plaso.lib import event
 from plaso.lib import putils
 from plaso.lib import registry
 from plaso.proto import plaso_storage_pb2
+
 
 # Constants representing the type of mesages the report deals with.
 MESSAGE_REPORT = 1
@@ -82,7 +85,7 @@ class AnalysisPlugin(object):
     """Constructor for a registry plugin.
 
     Args:
-      pre_obj: The pre-processing object that contains information gathered
+      pre_obj: The preprocessing object that contains information gathered
       during preprocessing of data.
       incoming_queue: A queue that is used to listen to incoming events.
       outgoing_queue: The queue used to send back reports, tags and anomaly

@@ -670,19 +670,19 @@ def ParseKey(key, verbose=False, use_plugins=None):
   return print_strings
 
 
-def FindRegistryPaths(pattern, collector):
+def FindRegistryPaths(pattern, preprocess_collector):
   """Return a list of Windows registry file paths."""
   hive_paths = []
   try:
     file_path, _, file_name = pattern.rpartition('/')
-    paths = list(collector.FindPaths(file_path))
+    paths = list(preprocess_collector.FindPaths(file_path))
 
     if not paths:
       logging.debug(u'No paths found for pattern [{0:s}]'.format(file_path))
       return hive_paths
 
     for path in paths:
-      fh_paths = list(collector.GetFilePaths(path, file_name))
+      fh_paths = list(preprocess_collector.GetFilePaths(path, file_name))
       if not fh_paths:
         logging.debug(u'File [{0:s}] not found in path [{1:s}]....'.format(
             file_name, path))
@@ -904,8 +904,8 @@ def RunModeRegistryKey(config):
 def GetHivesAndCollectors(config):
   """Returns a list of discovered registry hives and collectors."""
   if config.image:
-    collectors = GetCollectorsFromAnImage(config)
-    _, collector = collectors[0]
+    preprocess_collectors = GetCollectorsFromAnImage(config)
+    _, preprocess_collector = preprocess_collectors[0]
     # Find all the registry paths we need to check.
     if config.regfile:
       paths = GetRegistryFilePaths(config, config.regfile.upper())
@@ -914,12 +914,12 @@ def GetHivesAndCollectors(config):
 
     hives = []
     for path in paths:
-      hives.extend(FindRegistryPaths(path, collector))
+      hives.extend(FindRegistryPaths(path, preprocess_collector))
   else:
     hives = [config.regfile]
-    collectors = [('', None)]
+    preprocess_collectors = [('', None)]
 
-  return hives, collectors
+  return hives, preprocess_collectors
 
 
 def RunModeRegistryPlugin(config):
