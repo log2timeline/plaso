@@ -17,9 +17,7 @@
 # limitations under the License.
 """The operating system collector object implementation."""
 
-import logging
 import os
-import re
 
 from plaso.collector import interface
 from plaso.lib import event
@@ -48,7 +46,6 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
       source_path = source_path[:-1]
 
     paths_found = ['']
-
     for path_segment_expression in path_segments_expressions_list:
       sub_paths_found = []
 
@@ -59,6 +56,11 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
         path_spec.type = 'OS'
         path_spec.file_path = utils.GetUnicodeString(full_path)
         file_entry = pfile_entry.OsFileEntry(path_spec)
+
+        # Since there are more path segment expressions and the file entry
+        # is not a directory this cannot be the path we're looking for.
+        if not file_entry.IsDirectory():
+          continue
 
         for sub_file_entry in file_entry.GetSubFileEntries():
           sub_file_entry_match = u''
@@ -79,48 +81,16 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
             sub_paths_found.append(pfile_entry.OsFileEntry.JoinPath([
                 path, sub_file_entry_match]))
 
-      if not sub_paths_found:
-        break
-
       paths_found = sub_paths_found
 
-    # A resulting path will contain a leading path separator that needs
-    # to be removed.
+      if not paths_found:
+        break
+
     for path in paths_found:
-      # TODO: the original function contained a check for os.path.isdir()
-      # is this function supposed to only return paths of directories?
+      # A resulting path will contain a leading path separator that needs to be
+      # removed. If path is an empty string the result of path[1:] will be
+      # an empty string.
       yield path[1:]
-
-  def GetFilePaths(self, path, file_name):
-    """Return a list of files given a path and a pattern.
-
-    Args:
-      path: the path.
-      file_name: the file name pattern.
-
-    Returns:
-      A list of filenames.
-    """
-    filenames_found = []
-    file_re = re.compile(r'^{0:s}$'.format(file_name), re.I | re.S)
-    if path == os.path.sep:
-      directory = self._source_path
-      path_use = '.'
-    else:
-      directory = os.path.join(self._source_path, path)
-      path_use = path
-
-    try:
-      for entry in os.listdir(directory):
-        match = file_re.match(entry)
-        if match:
-          if os.path.isfile(os.path.join(directory, match.group(0))):
-            filenames_found.append(os.path.join(path_use, match.group(0)))
-    except OSError as exception:
-      logging.error((
-          u'Unable to read directory: {0:s} with error: {1:s}').format(
-              directory, exception))
-    return filenames_found
 
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""
