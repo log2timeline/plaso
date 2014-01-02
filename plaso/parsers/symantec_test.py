@@ -22,7 +22,6 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import symantec as symantec_formatter
-from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers import symantec
 from plaso.parsers import test_lib
@@ -30,7 +29,7 @@ from plaso.parsers import test_lib
 import pytz
 
 
-class SymantecAccessProtectionUnitTest(unittest.TestCase):
+class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
   """A unit test for the Symantec AV Log parser."""
 
   def setUp(self):
@@ -38,43 +37,45 @@ class SymantecAccessProtectionUnitTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
     self._parser = symantec.SymantecParser(pre_obj, None)
-
+    # Show full diff results, part of TestCase so does not follow our naming
+    # conventions.
     self.maxDiff = None
 
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'Symantec.Log')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    # The file contains 8 lines.
-    self.assertEquals(len(events), 8)
+    # The file contains 8 lines which should result in 8 event objects.
+    self.assertEquals(len(event_objects), 8)
 
     # Test the second entry:
-    test_event1 = events[1]
+    event_object = event_objects[1]
 
-    self.assertEquals(test_event1.timestamp, 1354272449000000)
-    self.assertEquals(test_event1.user, 'davnads')
-    self.assertEquals(test_event1.file,
-                      u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')
+    self.assertEquals(event_object.timestamp, 1354272449000000)
+    self.assertEquals(event_object.user, u'davnads')
+    expected_file = (
+        u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')
+    self.assertEquals(event_object.file, expected_file)
 
-    expected_msg = (u'Event Name: GL_EVENT_INFECTION; '
-                    u'Category Name: GL_CAT_INFECTION; '
-                    u'Malware Name: W32.Changeup!gen33; '
-                    u'Malware Path: '
-                    u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt; '
-                    u'Action0: Unknown; '
-                    u'Action1: Clean virus from file; '
-                    u'Action2: Delete infected file; '
-                    u'Scan ID: 0; '
-                    u'Event Data: 201\t4\t6\t1\t65542\t0\t0\t0\t0\t0\t0')
-    expected_short = (u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt; '
-                      u'W32.Changeup!gen33; '
-                      u'Unknown; ...')
+    expected_msg = (
+        u'Event Name: GL_EVENT_INFECTION; '
+        u'Category Name: GL_CAT_INFECTION; '
+        u'Malware Name: W32.Changeup!gen33; '
+        u'Malware Path: '
+        u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt; '
+        u'Action0: Unknown; '
+        u'Action1: Clean virus from file; '
+        u'Action2: Delete infected file; '
+        u'Scan ID: 0; '
+        u'Event Data: 201\t4\t6\t1\t65542\t0\t0\t0\t0\t0\t0')
+    expected_msg_short = (
+        u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt; '
+        u'W32.Changeup!gen33; '
+        u'Unknown; ...')
 
-    msg, short = eventdata.EventFormatterManager.GetMessageStrings(test_event1)
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(short, expected_short)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -18,6 +19,7 @@
 
 from plaso.lib import eventdata
 
+
 class MacWifiLogFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Mac Wifi file."""
   DATA_TYPE = 'mac:wifilog:line'
@@ -28,8 +30,8 @@ class MacWifiLogFormatter(eventdata.ConditionalEventFormatter):
       u'({function})',
       u'Log: {text}']
 
-  FORMAT_STRING_SHORT_PIECES = [u'Log: {action}']
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Action: {action}']
 
   SOURCE_LONG = 'Mac Wifi Log'
   SOURCE_SHORT = 'LOG'
-

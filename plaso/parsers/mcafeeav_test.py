@@ -30,7 +30,7 @@ from plaso.parsers import test_lib
 import pytz
 
 
-class McafeeAccessProtectionUnitTest(unittest.TestCase):
+class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
   """A unit test for the McAfee AV Access Protection Log parser."""
 
   def setUp(self):
@@ -42,11 +42,16 @@ class McafeeAccessProtectionUnitTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'AccessProtectionLog.txt')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    # The file contains 14 lines which results in 14 event objects.
+    self.assertEquals(len(event_objects), 14)
 
-    # The file contains 14 lines.
-    self.assertEquals(len(events), 14)
+    # Test that the UTF-8 byte order mark gets removed from the first line.
+    event_object = event_objects[0]
+
+    self.assertEquals(event_object.timestamp, 1380292946000000)
 
     # Test this entry:
     # 9/27/2013 2:42:26 PM  Blocked by Access Protection rule
@@ -54,31 +59,27 @@ class McafeeAccessProtectionUnitTest(unittest.TestCase):
     # (x86)\McAfee\Common Framework\UdaterUI.exe  Common Standard
     # Protection:Prevent termination of McAfee processes  Action blocked :
     # Terminate
-    test_event1 = events[1]
-    # And that the magic bytes get removed from the first line.
-    test_event2 = events[0]
 
-    self.assertEquals(test_event1.timestamp, 1380292959000000)
-    self.assertEquals(test_event1.username, 'SOMEDOMAIN\\someUser')
-    self.assertEquals(test_event1.full_path,
-                      u'C:\\Windows\\System32\\procexp64.exe')
+    event_object = event_objects[1]
 
-    self.assertEquals(test_event2.timestamp, 1380292946000000)
+    self.assertEquals(event_object.timestamp, 1380292959000000)
+    self.assertEquals(event_object.username, u'SOMEDOMAIN\\someUser')
+    self.assertEquals(
+        event_object.full_path, u'C:\\Windows\\System32\\procexp64.exe')
 
-    expected_msg = (u'File Name: C:\\Windows\\System32\\procexp64.exe '
-                    u'User: SOMEDOMAIN\\someUser '
-                    u'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
-                    u'workService.exe '
-                    u'Blocked by Access Protection rule  '
-                    u'Common Standard Protection:Prevent termination of McAfee '
-                    u'processes '
-                    u'Action blocked : Terminate')
-    expected_short = (u'C:\\Windows\\System32\\procexp64.exe '
-                      u'Action blocked : Terminate')
+    expected_msg = (
+        u'File Name: C:\\Windows\\System32\\procexp64.exe '
+        u'User: SOMEDOMAIN\\someUser '
+        u'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
+        u'workService.exe '
+        u'Blocked by Access Protection rule  '
+        u'Common Standard Protection:Prevent termination of McAfee processes '
+        u'Action blocked : Terminate')
+    expected_msg_short = (
+        u'C:\\Windows\\System32\\procexp64.exe '
+        u'Action blocked : Terminate')
 
-    msg, short = eventdata.EventFormatterManager.GetMessageStrings(test_event1)
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(short, expected_short)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

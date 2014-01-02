@@ -32,7 +32,7 @@ from plaso.parsers import test_lib
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class XChatScrollbackUnitTest(unittest.TestCase):
+class XChatScrollbackUnitTest(test_lib.ParserTestCase):
   """A unit test for the XChatScrollback Parser."""
 
   def setUp(self):
@@ -44,33 +44,48 @@ class XChatScrollbackUnitTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'xchatscrollback.log')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEquals(len(event_objects), 10)
 
-    self.assertEquals(len(events), 10)
+    self.assertEquals(event_objects[0].timestamp, 1232074579000000)
+    self.assertEquals(event_objects[1].timestamp, 1232074587000000)
+    self.assertEquals(event_objects[2].timestamp, 1232315916000000)
+    self.assertEquals(event_objects[3].timestamp, 1232315916000000)
+    self.assertEquals(event_objects[4].timestamp, 1232959856000000)
+    self.assertEquals(event_objects[5].timestamp, 0)
+    self.assertEquals(event_objects[7].timestamp, 1232959862000000)
+    self.assertEquals(event_objects[8].timestamp, 1232959932000000)
+    self.assertEquals(event_objects[9].timestamp, 1232959993000000)
 
-    self.assertEquals(events[0].timestamp, 1232074579000000)
-    self.assertEquals(events[1].timestamp, 1232074587000000)
-    self.assertEquals(events[2].timestamp, 1232315916000000)
-    self.assertEquals(events[3].timestamp, 1232315916000000)
-    self.assertEquals(events[4].timestamp, 1232959856000000)
-    self.assertEquals(events[5].timestamp, 0)
-    self.assertEquals(events[7].timestamp, 1232959862000000)
-    self.assertEquals(events[8].timestamp, 1232959932000000)
-    self.assertEquals(events[9].timestamp, 1232959993000000)
+    expected_string = u'[] * Speaking now on ##plaso##'
+    self._TestGetMessageStrings(
+        event_objects[0], expected_string, expected_string)
 
-    self._TestText(events[0], u'[] * Speaking now on ##plaso##')
-    self._TestText(events[1], u'[] * Joachim \xe8 uscito (Client exited)')
-    self._TestText(events[2], u'[] Tcl interface unloaded')
-    self._TestText(events[3], u'[] Python interface unloaded')
-    self._TestText(events[6], u'[] * Topic of #plasify \xe8: .')
-    self._TestText(events[8], u'[nickname: fpi] Hi Kristinn!')
-    self._TestText(events[9],
-      u'[nickname: Kristinn] GO AND WRITE PARSERS!!! O_o')
+    expected_string = u'[] * Joachim \xe8 uscito (Client exited)'
+    self._TestGetMessageStrings(
+        event_objects[1], expected_string, expected_string)
 
-  def _TestText(self, evt, text):
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(evt)
-    self.assertEquals(msg, text)
+    expected_string = u'[] Tcl interface unloaded'
+    self._TestGetMessageStrings(
+        event_objects[2], expected_string, expected_string)
+
+    expected_string = u'[] Python interface unloaded'
+    self._TestGetMessageStrings(
+        event_objects[3], expected_string, expected_string)
+
+    expected_string = u'[] * Topic of #plasify \xe8: .'
+    self._TestGetMessageStrings(
+        event_objects[6], expected_string, expected_string)
+
+    expected_string = u'[nickname: fpi] Hi Kristinn!'
+    self._TestGetMessageStrings(
+        event_objects[8], expected_string, expected_string)
+
+    expected_string = u'[nickname: Kristinn] GO AND WRITE PARSERS!!! O_o'
+    self._TestGetMessageStrings(
+        event_objects[9], expected_string, expected_string)
 
 
 if __name__ == '__main__':

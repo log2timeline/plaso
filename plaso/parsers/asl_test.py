@@ -29,7 +29,7 @@ from plaso.parsers import asl
 from plaso.parsers import test_lib
 
 
-class AslParserTest(unittest.TestCase):
+class AslParserTest(test_lib.ParserTestCase):
   """The unit test for ASL parser."""
 
   def setUp(self):
@@ -42,49 +42,59 @@ class AslParserTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'applesystemlog.asl')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
+    self.assertEqual(len(event_objects), 2)
 
-    self.assertEqual(len(events), 2)
+    event_object = event_objects[0]
 
-    event = events[0]
+    # date -u -d"Wed, 13 Nov 2013 17:52:34.705481" +"%s.%N"
+    self.assertEqual(event_object.timestamp, 1385372735705481)
 
-    # date -u -d"Wed, 13 Nov 2013 17:52:34" +"%s705481"
-    self.assertEqual(1385372735705481, event.timestamp)
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event)
-    expected_msg = ('MessageID: 101406 Level: WARNING (4) User ID: 205 '
-                   'Group ID: 205 Read User: 205 Read Group: ALL Host: '
-                   'DarkTemplar-2.local Sender: locationd Facility: '
-                   'com.apple.locationd Message: Incorrect '
-                   'NSStringEncoding value 0x8000100 detected. '
-                   'Assuming NSASCIIStringEncoding. Will stop this '
-                   'compatiblity mapping behavior in the near future. '
-                   '[CFLog Local Time: 2013-11-25 09:45:35.701][CFLog '
-                   'Thread: 1007][Sender_Mach_UUID: '
-                   '50E1F76A-60FF-368C-B74E-EB48F6D98C51]')
-    self.assertEqual(expected_msg, msg)
-    self.assertEqual(442, event.record_position)
-    self.assertEqual(101406, event.message_id)
-    self.assertEqual('DarkTemplar-2.local', event.computer_name)
-    self.assertEqual('locationd', event.sender)
-    self.assertEqual('com.apple.locationd', event.facility)
-    self.assertEqual(69, event.pid)
-    self.assertEqual(205, event.user_sid)
-    self.assertEqual(205, event.group_id)
-    self.assertEqual(205, event.read_uid)
-    self.assertEqual('ALL', event.read_gid)
-    self.assertEqual('WARNING (4)', event.level)
-    expected_message = ('Incorrect NSStringEncoding value 0x8000100 '
-                        'detected. Assuming NSASCIIStringEncoding. '
-                        'Will stop this compatiblity mapping behavior '
-                        'in the near future.')
-    self.assertEqual(expected_message, event.message)
-    expected_extra_1 = '[CFLog Local Time: 2013-11-25 09:45:35.701]'
-    expected_extra_2 = '[CFLog Thread: 1007]'
-    expected_extra_3 = ('[Sender_Mach_UUID: '
-                        '50E1F76A-60FF-368C-B74E-EB48F6D98C51]')
-    expected_extra = expected_extra_1 + expected_extra_2 + expected_extra_3
-    self.assertEqual(expected_extra, event.extra_information)
+    self.assertEqual(event_object.record_position, 442)
+    self.assertEqual(event_object.message_id, 101406)
+    self.assertEqual(event_object.computer_name, u'DarkTemplar-2.local')
+    self.assertEqual(event_object.sender, u'locationd')
+    self.assertEqual(event_object.facility, u'com.apple.locationd')
+    self.assertEqual(event_object.pid, 69)
+    self.assertEqual(event_object.user_sid, 205)
+    self.assertEqual(event_object.group_id, 205)
+    self.assertEqual(event_object.read_uid, 205)
+    self.assertEqual(event_object.read_gid, 'ALL')
+    self.assertEqual(event_object.level, u'WARNING (4)')
+
+    expected_message = (
+        u'Incorrect NSStringEncoding value 0x8000100 detected. '
+        u'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
+        u'mapping behavior in the near future.')
+
+    self.assertEqual(event_object.message, expected_message)
+
+    expected_extra = (
+        u'[CFLog Local Time: 2013-11-25 09:45:35.701]'
+        u'[CFLog Thread: 1007]'
+        u'[Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51]')
+
+    self.assertEqual(event_object.extra_information, expected_extra)
+
+    expected_msg = (
+        u'MessageID: 101406 '
+        u'Level: WARNING (4) '
+        u'User ID: 205 '
+        u'Group ID: 205 '
+        u'Read User: 205 '
+        u'Read Group: ALL '
+        u'Host: DarkTemplar-2.local '
+        u'Sender: locationd '
+        u'Facility: com.apple.locationd '
+        u'Message: {0:s} {1:s}').format(expected_message, expected_extra)
+
+    expected_msg_short = (
+        u'Sender: locationd '
+        u'Facility: com.apple.locationd')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

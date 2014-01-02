@@ -30,7 +30,7 @@ from plaso.parsers import test_lib
 import pytz
 
 
-class MactimeUnitTest(unittest.TestCase):
+class MactimeUnitTest(test_lib.ParserTestCase):
   """A unit test for the mactime parser."""
 
   def setUp(self):
@@ -42,41 +42,45 @@ class MactimeUnitTest(unittest.TestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = os.path.join('test_data', 'mactime.body')
+    events = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(events)
 
-    events = test_lib.ParseFile(self._parser, test_file)
-
-    # The file contains 10 lines x 4 timestamps per line makes 40 events.
-    self.assertEquals(len(events), 40)
+    # The file contains 10 lines x 4 timestamps per line this will result in
+    # 40 event objects.
+    self.assertEquals(len(event_objects), 40)
 
     # Test this entry:
     # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961583|
     # 1337961584|1337961585|0
-    test_event1 = events[8]
-    test_event2 = events[9]
-    test_event3 = events[10]
-    test_event4 = events[11]
+    event_object = event_objects[11]
 
-    self.assertEquals(test_event4.timestamp, 0)
-    self.assertEquals(test_event4.timestamp_desc,
-                      eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEquals(test_event4.inode, '16')
+    self.assertEquals(event_object.timestamp, 0)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+    self.assertEquals(event_object.inode, u'16')
 
-    self.assertEquals(test_event1.timestamp, 1337961583000000)
-    self.assertEquals(test_event1.timestamp_desc,
-                      eventdata.EventTimestamp.ACCESS_TIME)
+    event_object = event_objects[8]
 
-    self.assertEquals(test_event2.timestamp, 1337961584000000)
-    self.assertEquals(test_event2.timestamp_desc,
-                      eventdata.EventTimestamp.MODIFICATION_TIME)
+    self.assertEquals(event_object.timestamp, 1337961583000000)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
-    self.assertEquals(test_event3.timestamp, 1337961585000000)
-    self.assertEquals(test_event3.timestamp_desc,
-                      eventdata.EventTimestamp.CHANGE_TIME)
-    self.assertEquals(test_event3.name, '/a_directory/another_file')
-    self.assertEquals(test_event3.mode_as_string, 'r/rrw-------')
+    expected_string = u'/a_directory/another_file'
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(test_event1)
-    self.assertEquals(msg, u'/a_directory/another_file')
+    event_object = event_objects[9]
+
+    self.assertEquals(event_object.timestamp, 1337961584000000)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+
+    event_object = event_objects[10]
+
+    self.assertEquals(event_object.timestamp, 1337961585000000)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.CHANGE_TIME)
+    self.assertEquals(event_object.name, u'/a_directory/another_file')
+    self.assertEquals(event_object.mode_as_string, u'r/rrw-------')
 
 
 if __name__ == '__main__':
