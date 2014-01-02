@@ -84,9 +84,8 @@ class MacWifiUnitTest(unittest.TestCase):
     self.assertEqual(1384465929883000, event.timestamp)
     self.assertEqual(u'airportd[88]', event.agent)
     self.assertEqual(u'_processSystemPSKAssoc', event.function)
-    # TODO: something happens here, it must be checked
-    expected_msg = (u'New wifi configured. BSSID: Unknown SSID: '
-                    'Unknown, Security: Unknown.')
+    expected_msg = (u'New wifi configured. BSSID: 88:30:8a:7a:61:88, SSID: '
+                    u'AndroidAP, Security: WPA2 Personal.')
     self.assertEqual(expected_msg, event.action)
     expected_msg = (u'No password for network <CWNetwork: '
                     '0x7fdfe970b250> [ssid=AndroidAP, bssid='
