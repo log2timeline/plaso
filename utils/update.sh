@@ -29,11 +29,6 @@ CL_NUMBER="";
 while test $# -gt 0;
 do
   case $1 in
-  --cache )
-    CACHE_PARAM="--cache";
-    shift;
-    ;;
-
   --nobrowser | --no-browser | --no_browser )
     BROWSER_PARAM="--no_oauth2_webbrowser";
     shift;
@@ -46,21 +41,23 @@ do
   esac
 done
 
-if test -z $CL_NUMBER;
+if test -z "${CL_NUMBER}";
 then
   if test -f ._code_review_number;
   then
     CL_NUMBER=`cat ._code_review_number`
+    RESULT=`echo ${CL_NUMBER} | sed -e 's/[0-9]//g'`;
 
-    if test "x`echo ${CL_NUMBER} | sed -e 's/[0-9]//g'`" != "x";
+    if ! test -z "${RESULT}";
     then
-      echo "File ._code_review_number exists but contains an invalid CL number.";
+      echo "File ._code_review_number exists but contains an incorrect CL number.";
+
       exit ${EXIT_FAILURE};
     fi
   fi
 fi
 
-if test -z $CL_NUMBER;
+if test -z "${CL_NUMBER}";
 then
   echo "Usage: ./${SCRIPTNAME} [--nobrowser] [CL_NUMBER]";
   echo "";
@@ -81,6 +78,18 @@ fi
 
 . utils/common.sh
 
+# Check for double status codes, upload.py cannot handle these correctly.
+STATUS_CODES=`git status -s | cut -b1,2 | grep '\S\S' | grep -v '??' | sort | uniq`;
+
+if ! test -z "${STATUS_CODES}";
+then
+  echo "Update aborted - detected double git status codes."
+  echo "Run: 'git stash git stash pop'.";
+
+  exit ${EXIT_FAILURE};
+fi
+
+# Check if the linting is correct.
 if ! linter;
 then
   echo "Update aborted - fix the issues reported by the linter.";
@@ -88,16 +97,30 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-echo "Run tests.";
-python run_tests.py
-
-if test $? -ne 0;
+# Check if all the tests pass.
+if test -e run_tests.py;
 then
-  echo "Tests failed, not updating change list: ${CL_NUMBER}";
-  exit ${EXIT_FAILURE};
-else
-  echo "Tests succeeded, updating change list: ${CL_NUMBER}";
+  echo "Running tests.";
+  python run_tests.py
+
+  if test $? -ne 0;
+  then
+    echo "Update aborted - fix the issues reported by the failing test.";
+
+    exit ${EXIT_FAILURE};
+  fi
 fi
+
+# Check if we need to set --cache.
+STATUS_CODES=`git status -s | cut -b1,2 | sed 's/\s//g' | sort | uniq`;
+
+for STATUS_CODE in ${STATUS_CODES};
+do
+  if test "${STATUS_CODE}" = "A";
+  then
+    CACHE_PARAM="--cache";
+  fi
+done
 
 python utils/upload.py \
     --oauth2 ${BROWSER_PARAM} -y -i ${CL_NUMBER} ${CACHE_PARAM} \
