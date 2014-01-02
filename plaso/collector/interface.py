@@ -29,7 +29,7 @@ from plaso.parsers.winreg_plugins import interface as win_registry_interface
 class PfileCollector(object):
   """Class that implements a pfile-based collector object interface."""
 
-  def __init__(self, process_queue, output_queue):
+  def __init__(self, process_queue, output_queue, source_path):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -41,9 +41,13 @@ class PfileCollector(object):
                     queue.QueueInterface).
       output_queue: The event output queue (instance of queue.QueueInterface).
                     This queue is used as a buffer to the storage layer.
+      source_path: Path of the source file or directory.
     """
     super(PfileCollector, self).__init__()
+    self._filter_file_path = None
+    self._pre_obj = None
     self._queue = process_queue
+    self._source_path = source_path
     self._storage_queue = output_queue
     self.collect_directory_metadata = True
 
@@ -59,14 +63,24 @@ class PfileCollector(object):
   def Collect(self):
     """Discovers files adds their path specification to the process queue."""
 
+  def Finish(self):
+    """Finishes the collection and closes the process queue."""
+    self._queue.Close()
+
   def Run(self):
     """Runs the collection process and closes the process queue afterwards."""
     self.Collect()
     self.Finish()
 
-  def Finish(self):
-    """Finishes the collection and closes the process queue."""
-    self._queue.Close()
+  def SetFilter(self, filter_file_path, pre_obj):
+    """Sets the collection filter.
+
+    Args:
+      filter_file_path: The path of the filter file.
+      pre_obj: The preprocessor object.
+    """
+    self._filter_file_path = filter_file_path
+    self._pre_obj = pre_obj
 
 
 class PreprocessCollector(object):

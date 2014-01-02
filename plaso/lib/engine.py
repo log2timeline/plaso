@@ -555,23 +555,15 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
           u'Source: {0:s} cannot be a directory.'.format(config.filename))
 
     if config.file_filter:
-      logging.debug(u'Starting a targeted image collection.')
+      logging.debug(u'Starting a collection on image with filter.')
     else:
-      logging.debug(u'Collection started from an image.')
+      logging.debug(u'Starting a collection on image.')
 
-    if config.file_filter:
-      collector_object = collector_factory.GetImageCollectorWithFilter(
-          collection_queue, storage_queue, config.filename,
-          config.file_filter, pre_obj,
-          sector_offset=config.image_offset,
-          byte_offset=config.image_offset_bytes,
-          parse_vss=config.parse_vss, vss_stores=config.vss_stores)
-    else:
-      collector_object = collector_factory.GetImageCollector(
-          collection_queue, storage_queue, config.filename,
-          sector_offset=config.image_offset,
-          byte_offset=config.image_offset_bytes,
-          parse_vss=config.parse_vss, vss_stores=config.vss_stores)
+    collector_object = collector_factory.GetImageCollector(
+        collection_queue, storage_queue, config.filename,
+        sector_offset=config.image_offset,
+        byte_offset=config.image_offset_bytes,
+        parse_vss=config.parse_vss, vss_stores=config.vss_stores)
 
   else:
     if (not os.path.isfile(config.filename) and
@@ -581,9 +573,9 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
               config.filename))
 
     if config.file_filter:
-      logging.debug(u'Starting a targeted recursive collection.')
+      logging.debug(u'Starting a collection on directory with filter.')
     elif config.recursive:
-      logging.debug(u'Collection started from a directory.')
+      logging.debug(u'Starting a collection on directory.')
     else:
       # No need for multiple workers when parsing a single file.
       config.workers = 1
@@ -591,8 +583,8 @@ def GetCollector(config, pre_obj, collection_queue, storage_queue):
     collector_object = collector_factory.GetFileSystemCollector(
         collection_queue, storage_queue, unicode(config.filename))
 
-    if config.file_filter:
-      collector_object.SetFilter(config.file_filter, pre_obj)
+  if config.file_filter:
+    collector_object.SetFilter(config.file_filter, pre_obj)
 
   collector_object.collect_directory_metadata = include_directory_stat
 

@@ -26,8 +26,8 @@ from plaso.pvfs import pfile
 
 
 def _OpenImageFile(
-    file_to_open, image_path, image_type='tsk', image_offset=0, store_nr=0,
-    fscache=None, sector_size=512):
+    file_to_open, image_path, image_type='tsk', image_offset=0,
+    store_number=None, fscache=None, sector_size=512):
   """Opens a file entry object for a file in a raw disk image.
 
   Args:
@@ -36,8 +36,7 @@ def _OpenImageFile(
     image_type: 'tsk' or 'vss' depending on the type of image being
     opened.
     image_offset: Offset in sectors if this is a disk image.
-    store_nr: Applicaple only in the VSS sense, indicates the
-    store number.
+    store_number: Optional VSS store index number. The default is None.
     fscache: A FilesystemCache object that stores cached fs objects.
     sector_size: The size in bytes, defaults to 512.
 
@@ -47,7 +46,7 @@ def _OpenImageFile(
   pathspec = event.EventPathSpec()
   if image_type == 'vss':
     pathspec.type = 'VSS'
-    pathspec.vss_store_number = store_nr
+    pathspec.vss_store_number = store_number
   elif image_type == 'tsk':
     pathspec.type = 'TSK'
 
@@ -102,14 +101,14 @@ def OpenOSFileIO(path):
 
 
 def OpenVssFileEntry(
-    file_to_open, image_path, store_nr, image_offset=0, fscache=None,
+    file_to_open, image_path, store_number, image_offset=0, fscache=None,
     sector_size=512):
   """Opens a file entry object for a file in an image inside a VSS.
 
   Args:
     file_to_open: A path or an inode number to the file in question.
     image_path: Full path to the image itself.
-    store_nr: The store number (VSS store).
+    store_number: The VSS store index number.
     image_offset: Offset in sectors if this is a disk image.
     fscache: A FilesystemCache object that stores cached fs objects.
     sector_size: The size in bytes, defaults to 512.
@@ -118,8 +117,8 @@ def OpenVssFileEntry(
     A file entry object.
   """
   return _OpenImageFile(
-      file_to_open, image_path, 'vss', image_offset, store_nr, fscache=fscache,
-      sector_size=sector_size)
+      file_to_open, image_path, 'vss', image_offset, store_number,
+      fscache=fscache, sector_size=sector_size)
 
 
 def Pfile2File(fh_in, path=None):
