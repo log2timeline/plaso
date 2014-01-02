@@ -123,22 +123,22 @@ class Engine(object):
     logging.info('Starting to collect preprocessing information.')
     logging.info('Filename: %s', self.config.filename)
 
-    if self.config.image:
-      sector_size = self.config.bytes_per_sector
-      calculated_offset = self.config.image_offset * sector_size
-      ofs = self.config.image_offset_bytes or calculated_offset
-      pre_collector = collector_factory.GetImagePreprocessCollector(
-          pre_obj, self.config.filename, ofs)
-    elif self.config.recursive:
-      pre_collector = collector_factory.GetFileSystemPreprocessCollector(
-          pre_obj, self.config.filename)
-    else:
+    if not self.config.image and not self.config.recursive:
       return
 
-    if not getattr(self.config, 'os', None):
-      self.config.os = preprocess.GuessOS(pre_collector)
+    preprocess_collector = collector_factory.GetGenericPreprocessCollector(
+        pre_obj, self.config.filename)
 
-    plugin_list = preprocessors.PreProcessList(pre_obj, pre_collector)
+    if self.config.image:
+      # TODO: pass self.config.bytes_per_sector?
+      preprocess_collector.SetImageInformation(
+          sector_offset=self.config.image_offset,
+          byte_offset=self.config.image_offset_bytes)
+
+    if not getattr(self.config, 'os', None):
+      self.config.os = preprocess.GuessOS(preprocess_collector)
+
+    plugin_list = preprocessors.PreProcessList(pre_obj, preprocess_collector)
     pre_obj.guessed_os = self.config.os
 
     for weight in plugin_list.GetWeightList(self.config.os):

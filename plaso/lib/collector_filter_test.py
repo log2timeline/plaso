@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Contains the unit tests for the filter collection mechanism of Plaso."""
+
 import os
 import logging
 import tempfile
@@ -50,28 +51,31 @@ class CollectionFilterTest(unittest.TestCase):
       fh.write('bad re (no close on that parenthesis/file\n')
 
     pre_obj = preprocess.PlasoPreprocess()
-    my_collector = factory.GetFileSystemPreprocessCollector(pre_obj, u'./')
-    my_filter = collector_filter.CollectionFilter(my_collector, filter_name)
+    test_preprocess_collector = factory.GetGenericPreprocessCollector(
+        pre_obj, u'./')
+    test_filter = collector_filter.CollectionFilter(
+        test_preprocess_collector, filter_name)
 
     try:
       os.remove(filter_name)
     except (OSError, IOError) as e:
       logging.warning(
-          u'Unable to remove temporary file: %s due to: %s', filter_name, e)
+          u'Unable to remove temporary file: {0:s} due to: {1:s}'.format(
+              filter_name, e))
 
     # This filter will contain all the filter lines, even those that will fail
     # during finding pathspecs, yet there is one that will fail, so we should
     # have five hits.
-    filter_list = my_filter.BuildFiltersFromProto()
+    filter_list = test_filter.BuildFiltersFromProto()
     self.assertEquals(len(filter_list), 5)
 
-    pathspecs = list(my_filter.GetPathSpecs())
+    pathspecs = list(test_filter.GetPathSpecs())
     # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
     self.assertEquals(len(pathspecs), 4)
 
     with self.assertRaises(errors.BadConfigOption):
       _ = collector_filter.CollectionFilter(
-          my_collector, 'thisfiledoesnotexist')
+          test_preprocess_collector, 'thisfiledoesnotexist')
 
     # Build a proto using the same filter criteria as above.
     proto = transmission_pb2.PathFilter()
@@ -82,12 +86,13 @@ class CollectionFilterTest(unittest.TestCase):
     proto.filter_string.append('/test_data/testdir/filter_.+.txt')
     proto.filter_string.append('bad re (no close on that parenthesis/file')
 
-    proto_filter = collector_filter.CollectionFilter(my_collector, proto)
+    proto_filter = collector_filter.CollectionFilter(
+        test_preprocess_collector, proto)
     proto_list = proto_filter.BuildFiltersFromProto()
     self.assertEquals(len(proto_list), 5)
 
     proto_serialized_filter = collector_filter.CollectionFilter(
-        my_collector, proto.SerializeToString())
+        test_preprocess_collector, proto.SerializeToString())
     proto_serialized_list = proto_serialized_filter.BuildFiltersFromProto()
     self.assertEquals(len(proto_serialized_list), 5)
 
