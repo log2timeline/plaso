@@ -25,10 +25,14 @@ import tarfile
 import zipfile
 
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import registry
 from plaso.lib import timelib
+from plaso.lib import utils
 from plaso.pvfs import pfile_io
 from plaso.pvfs import pstats
+
+import pytsk3
 
 
 class BaseFileEntry(object):
@@ -38,12 +42,12 @@ class BaseFileEntry(object):
 
   TYPE = 'UNSET'
 
-  def __init__(self, proto, root=None, fscache=None):
+  def __init__(self, pathspec, root=None, fscache=None):
     """Initializes the file entry object.
 
     Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
+      pathspec: The path specification (instance of transmission proto).
+      root: Optional root path specification (instance of transmission proto).
             The default is None.
       fscache: Optional file system cache object. The default is None.
 
@@ -51,20 +55,20 @@ class BaseFileEntry(object):
       errors.UnableToOpenFile: If this class supports the wrong driver for this
       file.
     """
-    if proto.type != self.TYPE:
+    if pathspec.type != self.TYPE:
       raise errors.UnableToOpenFile('Unable to handle this file type.')
 
     super(BaseFileEntry, self).__init__()
-    self.pathspec = proto
     self._fscache = fscache
     self._stat = None
     self.file_object = None
     self.name = ''
+    self.pathspec = pathspec
 
     if root:
       self.pathspec_root = root
     else:
-      self.pathspec_root = proto
+      self.pathspec_root = pathspec
 
   def __enter__(self):
     """Make it work with the with statement."""
@@ -105,16 +109,16 @@ class Bz2FileEntry(BaseFileEntry):
 
   TYPE = 'BZ2'
 
-  def __init__(self, proto, root=None, fscache=None):
+  def __init__(self, pathspec, root=None, fscache=None):
     """Initializes the file entry object.
 
     Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
+      pathspec: The path specification (instance of transmission proto).
+      root: Optional root path specification (instance of transmission proto).
             The default is None.
       fscache: Optional file system cache object. The default is None.
     """
-    super(Bz2FileEntry, self).__init__(proto, root=root, fscache=fscache)
+    super(Bz2FileEntry, self).__init__(pathspec, root=root, fscache=fscache)
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -127,7 +131,6 @@ class Bz2FileEntry(BaseFileEntry):
     """
     path_prepend = getattr(self.pathspec, 'path_prepend', '')
     if file_entry:
-      self.inode = getattr(file_entry.Stat(), 'ino', 0)
       try:
         file_entry.file_object.seek(0)
       except NotImplementedError:
@@ -138,7 +141,6 @@ class Bz2FileEntry(BaseFileEntry):
     else:
       self.display_name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
       bzip2_file = bz2.BZ2File(self.pathspec.file_path, 'r')
-      self.inode = os.stat(self.pathspec.file_path).st_ino
 
     self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
 
@@ -151,11 +153,6 @@ class Bz2FileEntry(BaseFileEntry):
       return self._stat
 
     stats_object = pstats.Stats()
-    # TODO: change this logic as part of PyVFS.
-    if not self.file_object:
-      return stats_object
-
-    stats_object.ino = self.inode
     stats_object.fs_type = 'BZ2 container'
     self._stat = stats_object
     return stats_object
@@ -166,16 +163,16 @@ class GzipFileEntry(BaseFileEntry):
 
   TYPE = 'GZIP'
 
-  def __init__(self, proto, root=None, fscache=None):
+  def __init__(self, pathspec, root=None, fscache=None):
     """Initializes the file entry object.
 
     Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
+      pathspec: The path specification (instance of transmission proto).
+      root: Optional root path specification (instance of transmission proto).
             The default is None.
       fscache: Optional file system cache object. The default is None.
     """
-    super(GzipFileEntry, self).__init__(proto, root=root, fscache=fscache)
+    super(GzipFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -189,11 +186,9 @@ class GzipFileEntry(BaseFileEntry):
     if file_entry:
       file_entry.file_object.seek(0)
       gzip_file = gzip.GzipFile(fileobj=file_entry.file_object, mode='rb')
-      self.inode = getattr(file_entry.Stat(), 'ino', 0)
     else:
       gzip_file = gzip.GzipFile(
           filename=self.pathspec.file_path, mode='rb')
-      self.inode = os.stat(self.pathspec.file_path).st_ino
 
     path_prepend = getattr(self.pathspec, 'path_prepend', '')
     self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
@@ -225,12 +220,7 @@ class GzipFileEntry(BaseFileEntry):
       return self._stat
 
     stats_object = pstats.Stats()
-    # TODO: change this logic as part of PyVFS.
-    if not self.file_object:
-      return stats_object
-
     stats_object.size = self.size
-    stats_object.ino = self.inode
     stats_object.fs_type = 'GZ File'
 
     self._stat = stats_object
@@ -242,16 +232,17 @@ class OsFileEntry(BaseFileEntry):
 
   TYPE = 'OS'
 
-  def __init__(self, proto, root=None, fscache=None):
+  def __init__(self, pathspec, root=None, fscache=None):
     """Initializes the file entry object.
 
     Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
+      pathspec: The path specification (instance of transmission proto).
+      root: Optional root path specification (instance of transmission proto).
             The default is None.
       fscache: Optional file system cache object. The default is None.
     """
-    super(OsFileEntry, self).__init__(proto, root=root, fscache=fscache)
+    super(OsFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
+    self._stat_object = None
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -277,32 +268,57 @@ class OsFileEntry(BaseFileEntry):
 
   def Stat(self):
     """Return a Stats object that contains stats like information."""
-    if getattr(self, '_stat', None):
-      return self._stat
+    if self._stat_object is None:
+      self._stat_object = pstats.Stats()
 
-    stats_object = pstats.Stats()
-    # TODO: change this logic as part of PyVFS.
-    if not self.file_object:
-      return stats_object
+      self._stat_object.mode = self._stat_info.st_mode
+      self._stat_object.ino = self._stat_info.st_ino
+      self._stat_object.dev = self._stat_info.st_dev
+      self._stat_object.nlink = self._stat_info.st_nlink
+      self._stat_object.uid = self._stat_info.st_uid
+      self._stat_object.gid = self._stat_info.st_gid
+      self._stat_object.size = self._stat_info.st_size
 
-    stats_object.mode = self._stat_info.st_mode
-    stats_object.ino = self._stat_info.st_ino
-    stats_object.dev = self._stat_info.st_dev
-    stats_object.nlink = self._stat_info.st_nlink
-    stats_object.uid = self._stat_info.st_uid
-    stats_object.gid = self._stat_info.st_gid
-    stats_object.size = self._stat_info.st_size
-    if self._stat_info.st_atime > 0:
-      stats_object.atime = self._stat_info.st_atime
-    if self._stat_info.st_mtime > 0:
-      stats_object.mtime = self._stat_info.st_mtime
-    if self._stat_info.st_ctime > 0:
-      stats_object.ctime = self._stat_info.st_ctime
-    stats_object.fs_type = 'Unknown'
-    stats_object.allocated = True
+      if self._stat_info.st_atime > 0:
+        self._stat_object.atime = self._stat_info.st_atime
+      if self._stat_info.st_mtime > 0:
+        self._stat_object.mtime = self._stat_info.st_mtime
+      if self._stat_info.st_ctime > 0:
+        self._stat_object.ctime = self._stat_info.st_ctime
 
-    self._stat = stats_object
-    return stats_object
+      self._stat_object.fs_type = 'Unknown'
+      self._stat_object.allocated = True
+
+    return self._stat_object
+
+  def GetSubFileEntries(self):
+    """Retrieves the sub file entries.
+
+    Yields:
+      A sub file entry (instance of OsFileEntry).
+    """
+    if not os.path.isdir(self.pathspec.file_path):
+      return
+
+    for directory_entry in os.listdir(self.pathspec.file_path):
+      directory_entry = os.path.join(self.pathspec.file_path, directory_entry)
+      path_spec = event.EventPathSpec()
+      path_spec.type = 'OS'
+      path_spec.file_path = utils.GetUnicodeString(directory_entry)
+      yield OsFileEntry(
+          path_spec, root=self.pathspec_root, fscache=self._fscache)
+
+  def IsDirectory(self):
+    """Determines if the file entry is a directory."""
+    return os.path.isdir(self.pathspec.file_path)
+
+  def IsFile(self):
+    """Determines if the file entry is a file."""
+    return os.path.isfile(self.pathspec.file_path)
+
+  def IsLink(self):
+    """Determines if the file entry is a link."""
+    return os.path.islink(self.pathspec.file_path)
 
 
 class TarFileEntry(BaseFileEntry):
@@ -310,16 +326,16 @@ class TarFileEntry(BaseFileEntry):
 
   TYPE = 'TAR'
 
-  def __init__(self, proto, root=None, fscache=None):
+  def __init__(self, pathspec, root=None, fscache=None):
     """Initializes the file entry object.
 
     Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
+      pathspec: The path specification (instance of transmission proto).
+      root: Optional root path specification (instance of transmission proto).
             The default is None.
       fscache: Optional file system cache object. The default is None.
     """
-    super(TarFileEntry, self).__init__(proto, root=root, fscache=fscache)
+    super(TarFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -335,7 +351,6 @@ class TarFileEntry(BaseFileEntry):
       tar_file = tarfile.open(fileobj=file_entry.file_object, mode='r')
       self.display_name = u'{}:{}{}'.format(
           file_entry.name, path_prepend, self.pathspec.file_path)
-      self.inode = getattr(file_entry.Stat(), 'ino', 0)
     else:
       container_path = getattr(self.pathspec, 'container_path', '')
       if not container_path:
@@ -344,7 +359,6 @@ class TarFileEntry(BaseFileEntry):
       self.display_name = u'{}:{}{}'.format(
           container_path, path_prepend, self.pathspec.file_path)
       tar_file = tarfile.open(container_path, 'r')
-      self.inode = os.stat(container_path).st_ino
 
     extracted_file_object = tar_file.extractfile(self.pathspec.file_path)
     if not extracted_file_object:
@@ -363,11 +377,6 @@ class TarFileEntry(BaseFileEntry):
       return self._stat
 
     stats_object = pstats.Stats()
-    # TODO: change this logic as part of PyVFS.
-    if not self.file_object:
-      return stats_object
-
-    stats_object.ino = self.inode
     stats_object.fs_type = 'Tar container'
     self._stat = stats_object
     return stats_object
@@ -378,16 +387,16 @@ class TSKFileEntry(BaseFileEntry):
 
   TYPE = 'TSK'
 
-  def __init__(self, proto, root=None, fscache=None):
+  def __init__(self, pathspec, root=None, fscache=None):
     """Initializes the file entry object.
 
     Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
+      pathspec: The path specification (instance of transmission proto).
+      root: Optional root path specification (instance of transmission proto).
             The default is None.
       fscache: Optional file system cache object. The default is None.
     """
-    super(TSKFileEntry, self).__init__(proto, root=root, fscache=fscache)
+    super(TSKFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
     self._fs = None
 
   def _OpenFileSystem(self, path, offset):
@@ -453,9 +462,6 @@ class TSKFileEntry(BaseFileEntry):
       return self._stat
 
     stats_object = pstats.Stats()
-    # TODO: change this logic as part of PyVFS.
-    if not self.file_object:
-      return stats_object
 
     try:
       info = self.file_object.fileobj.info
@@ -487,11 +493,13 @@ class TSKFileEntry(BaseFileEntry):
     stats_object.bkup_time_nano = getattr(meta, 'bktime_nano', None)
     fs_type = str(self._fs.info.ftype)
 
-    check_allocated = getattr(self.file_object.fileobj, 'IsAllocated', None)
-    if check_allocated:
-      stats_object.allocated = check_allocated()
-    else:
+    flags = getattr(meta, 'flags', 0)
+
+    # The flags are an instance of pytsk3.TSK_FS_META_FLAG_ENUM.
+    if int(flags) & pytsk3.TSK_FS_META_FLAG_ALLOC:
       stats_object.allocated = True
+    else:
+      stats_object.allocated = False
 
     if fs_type.startswith('TSK_FS_TYPE'):
       stats_object.fs_type = fs_type[12:]
@@ -507,16 +515,16 @@ class VssFileEntry(TSKFileEntry):
 
   TYPE = 'VSS'
 
-  def __init__(self, proto, root=None, fscache=None):
+  def __init__(self, pathspec, root=None, fscache=None):
     """Initializes the file entry object.
 
     Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
+      pathspec: The path specification (instance of transmission proto).
+      root: Optional root path specification (instance of transmission proto).
             The default is None.
       fscache: Optional file system cache object. The default is None.
     """
-    super(VssFileEntry, self).__init__(proto, root=root, fscache=fscache)
+    super(VssFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
 
   def _OpenFileSystem(self, path, offset):
     """Open a filesystem object for a VSS file."""
@@ -554,16 +562,16 @@ class ZipFileEntry(BaseFileEntry):
 
   TYPE = 'ZIP'
 
-  def __init__(self, proto, root=None, fscache=None):
+  def __init__(self, pathspec, root=None, fscache=None):
     """Initializes the file entry object.
 
     Args:
-      proto: The transmission proto that describes the file.
-      root: Optional root transmission proto that describes the file.
+      pathspec: The path specification (instance of transmission proto).
+      root: Optional root path specification (instance of transmission proto).
             The default is None.
       fscache: Optional file system cache object. The default is None.
     """
-    super(ZipFileEntry, self).__init__(proto, root=root, fscache=fscache)
+    super(ZipFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -582,7 +590,6 @@ class ZipFileEntry(BaseFileEntry):
             u'Unable to open ZIP file, not a ZIP file?: {} [{}]'.format(
                 file_entry.name, e))
       path_name = file_entry.name
-      self.inode = getattr(file_entry.Stat(), 'ino', 0)
     else:
       container_path = getattr(self.pathspec, 'container_path', '')
       if not container_path:
@@ -590,7 +597,6 @@ class ZipFileEntry(BaseFileEntry):
             u'[ZIP] missing container path in path specification.')
       path_name = container_path
       zip_file = zipfile.ZipFile(path_name, 'r')
-      self.inode = os.stat(path_name).st_ino
 
     path_prepend = getattr(self.pathspec, 'path_prepend', '')
     self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
@@ -618,16 +624,11 @@ class ZipFileEntry(BaseFileEntry):
 
     stats_object = pstats.Stats()
 
-    # TODO: change this logic as part of PyVFS.
-    if not self.file_object:
-      return stats_object
-
     # TODO: Make this a proper stat element with as much information
     # as can be extracted.
     # Also confirm for sure that this is the correct timestamp and it is
     # stored in UTC (or if it is in local timezone, adjust it)
     stats_object.ctime = timelib.Timetuple2Timestamp(self.zipinfo.date_time)
-    stats_object.ino = self.inode
     stats_object.size = self.zipinfo.file_size
     stats_object.fs_type = 'ZIP Container'
 

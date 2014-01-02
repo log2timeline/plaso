@@ -23,7 +23,6 @@ import shutil
 import tempfile
 import unittest
 
-from plaso.collector import factory
 from plaso.collector import os_collector
 from plaso.lib import event
 from plaso.lib import preprocess
@@ -59,23 +58,22 @@ class OsCollectorUnitTest(unittest.TestCase):
 
   def testFileCollector(self):
     """Test collection from a simple file."""
-    files = []
-    files.append(os.path.join('test_data', 'syslog.tgz'))
-    files.append(os.path.join('test_data', 'syslog.zip'))
-    files.append(os.path.join('test_data', 'syslog.bz2'))
-    files.append(os.path.join('test_data', 'wtmp.1'))
+    test_files = [
+        os.path.join('test_data', 'syslog.tgz'),
+        os.path.join('test_data', 'syslog.zip'),
+        os.path.join('test_data', 'syslog.bz2'),
+        os.path.join('test_data', 'wtmp.1')]
 
     with TempDirectory() as dirname:
-      for a_file in files:
+      for a_file in test_files:
         shutil.copy(a_file, dirname)
 
       my_queue = queue.SingleThreadedQueue()
       my_store = queue.SingleThreadedQueue()
-      with os_collector.OSCollector(
-          my_queue, my_store, dirname) as my_collector:
-        my_collector.Collect()
-      events = self.GetEvents(my_queue)
+      my_collector = os_collector.OSCollector(my_queue, my_store, dirname)
+      my_collector.Run()
 
+      events = self.GetEvents(my_queue)
       self.assertEquals(len(events), 4)
 
 
@@ -95,10 +93,10 @@ class TargetedDirectoryTest(unittest.TestCase):
     pre_obj = preprocess.PlasoPreprocess()
     my_queue = queue.SingleThreadedQueue()
     my_store = queue.SingleThreadedQueue()
-    my_collector = factory.GetFileSystemCollectorWithFilter(
-      my_queue, my_store, pre_obj, './', filter_name)
-
+    my_collector = os_collector.OSCollector(my_queue, my_store, './')
+    my_collector.SetFilter(filter_name, pre_obj)
     my_collector.Run()
+
     pathspecs = []
     for serialized_pathspec in my_queue.PopItems():
       pathspec = event.EventPathSpec()
