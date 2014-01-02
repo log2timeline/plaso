@@ -21,40 +21,6 @@ import logging
 import os
 
 from plaso.lib import errors
-from plaso.pvfs import pstats
-
-
-def GetOsDirectoryStat(directory_path):
-  """Return a stat object for an OS directory object.
-
-  Args:
-    directory_path: Path to the directory.
-
-  Returns:
-    A stat object for the directory.
-  """
-  ret = pstats.Stats()
-  stat = os.stat(directory_path)
-
-  ret.full_path = directory_path
-  ret.display_path = directory_path
-  ret.mode = stat.st_mode
-  ret.ino = stat.st_ino
-  ret.dev = stat.st_dev
-  ret.nlink = stat.st_nlink
-  ret.uid = stat.st_uid
-  ret.gid = stat.st_gid
-  ret.size = stat.st_size
-  if stat.st_atime > 0:
-    ret.atime = stat.st_atime
-  if stat.st_mtime > 0:
-    ret.mtime = stat.st_mtime
-  if stat.st_ctime > 0:
-    ret.ctime = stat.st_ctime
-  ret.fs_type = 'Unknown'
-  ret.allocated = True
-
-  return ret
 
 
 def GetOsPaths(path_list, mount_point):

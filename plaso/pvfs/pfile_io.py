@@ -573,17 +573,6 @@ class TSKFileIO(BaseFileIO):
     """Make usable with "with" statement."""
     self.close()
 
-  def IsAllocated(self):
-    """Return a boolean indicating if the file is allocated or not."""
-    ret = False
-    flags = self.fileobj.info.meta.flags
-
-    if flags:
-      if int(flags) & int(pytsk3.TSK_FS_META_FLAG_ALLOC):
-        ret = True
-
-    return ret
-
   def isatty(self):
     """Return a bool indicating if the file is connected to tty-like device."""
     return False

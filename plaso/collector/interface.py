@@ -26,10 +26,10 @@ from plaso.lib import errors
 from plaso.parsers.winreg_plugins import interface as win_registry_interface
 
 
-class Collector(object):
-  """Class that implements the collector object interface."""
+class PfileCollector(object):
+  """Class that implements a pfile-based collector object interface."""
 
-  def __init__(self, process_queue, output_queue, add_dir_stat=True):
+  def __init__(self, process_queue, output_queue):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -41,14 +41,11 @@ class Collector(object):
                     queue.QueueInterface).
       output_queue: The event output queue (instance of queue.QueueInterface).
                     This queue is used as a buffer to the storage layer.
-      add_dir_stat: Optional boolean value to indicate whether or not we want to
-                    include directory stat information into the storage queue.
-                    The default is true.
     """
-    super(Collector, self).__init__()
+    super(PfileCollector, self).__init__()
     self._queue = process_queue
     self._storage_queue = output_queue
-    self._dir_stat = add_dir_stat
+    self.collect_directory_metadata = True
 
   def __enter__(self):
     """Enters a with statement."""
@@ -56,11 +53,7 @@ class Collector(object):
 
   def __exit__(self, dummy_type, dummy_value, dummy_traceback):
     """Exits a with statement."""
-    self._CloseProcessQueue()
-
-  def _CloseProcessQueue(self):
-    """Closes the process queue."""
-    self._queue.Close()
+    self.Finish()
 
   @abc.abstractmethod
   def Collect(self):
@@ -69,7 +62,11 @@ class Collector(object):
   def Run(self):
     """Runs the collection process and closes the process queue afterwards."""
     self.Collect()
-    self._CloseProcessQueue()
+    self.Finish()
+
+  def Finish(self):
+    """Finishes the collection and closes the process queue."""
+    self._queue.Close()
 
 
 class PreprocessCollector(object):
