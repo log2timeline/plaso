@@ -53,7 +53,7 @@ class TestUSBStor(unittest.TestCase):
     """Test the user assist plugin."""
     key = self.winreg_file.GetKeyByPath(
         '\\ControlSet001\\Enum\\USBSTOR')
-    plugin = usbstor.USBStorPlugin(None, self._pre_obj, None)
+    plugin = usbstor.USBStorPlugin(pre_obj=self._pre_obj)
     entries = list(plugin.Process(key))
 
     self.assertEquals(len(entries), 3)

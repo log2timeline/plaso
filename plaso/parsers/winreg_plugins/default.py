@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a default registry plugin in Plaso."""
+"""The default Windows Registry plugin."""
 
 from plaso.lib import event
 from plaso.lib import utils
@@ -23,7 +23,7 @@ from plaso.parsers.winreg_plugins import interface
 
 
 class DefaultPlugin(interface.KeyPlugin):
-  """Basic plugin to extract minimal information from registry keys."""
+  """Class that implements the default Windows Registry plugin."""
 
   NAME = 'winreg_default'
 

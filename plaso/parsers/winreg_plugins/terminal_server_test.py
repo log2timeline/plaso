@@ -47,8 +47,7 @@ class TestTerminalServerClientPlugin(unittest.TestCase):
 
   def testServersTerminalServerClientPlugin(self):
     """Run a simple test against a mocked key with values."""
-    plugin = terminal_server.ServersTerminalServerClientPlugin(
-        None, None, None)
+    plugin = terminal_server.ServersTerminalServerClientPlugin()
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)
@@ -85,8 +84,7 @@ class TestTerminalServerClientMRU(unittest.TestCase):
 
   def testDefaulTerminalServerClientMRUPlugin(self):
     """Run a simple test against a mocked key with values."""
-    plugin = terminal_server.DefaulTerminalServerClientMRUPlugin(
-        None, None, None)
+    plugin = terminal_server.DefaulTerminalServerClientMRUPlugin()
     generator = plugin.Process(self.regkey)
     self.assertTrue(generator)
     entries = list(generator)

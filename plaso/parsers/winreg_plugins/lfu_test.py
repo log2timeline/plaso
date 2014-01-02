@@ -63,7 +63,8 @@ class TestBootExecuteRegistry(unittest.TestCase):
     self.registry_cache.attributes['current_control_set'] = 'ControlSet001'
 
   def testBootExecute(self):
-    plugin = lfu.BootExecutePlugin(None, self.preprocess, self.registry_cache)
+    plugin = lfu.BootExecutePlugin(
+        pre_obj=self.preprocess, reg_cache=self.registry_cache)
     entries = list(plugin.Process(self.regkey))
 
     line1 = (u'[\\ControlSet001\\Control\\Session Manager] BootExecute: '
@@ -102,7 +103,7 @@ class TestBootVerificationRegistry(unittest.TestCase):
 
   def testBootVerification(self):
     plugin = lfu.BootVerificationPlugin(
-        None, self.preprocess, self.registry_cache)
+        pre_obj=self.preprocess, reg_cache=self.registry_cache)
     entries = list(plugin.Process(self.regkey))
 
     line = (u'[\\ControlSet001\\Control\\BootVerificationProgram] Boot'

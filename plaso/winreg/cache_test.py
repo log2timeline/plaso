@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -28,7 +29,7 @@ class CacheTest(unittest.TestCase):
   """Tests for the Windows Registry objects cache."""
 
   def testBuildCache(self):
-    """Tests creating a Windows Registry cache."""
+    """Tests creating a Windows Registry objects cache."""
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
