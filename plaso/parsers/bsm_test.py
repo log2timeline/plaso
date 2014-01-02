@@ -125,7 +125,7 @@ class BsmParserTest(unittest.TestCase):
     expected_msg = u'[BSM_TOKEN_DATA: Format data: String, Data: SomeData]'
     self.assertEqual(expected_msg, event.extra_tokens)
     event = events[2]
-    expected_msg = u'[BSM_TOKEN_FILE: test, timestamp: 4332-11-14 20:07:04]'
+    expected_msg = u'[BSM_TOKEN_FILE: test, timestamp: 1970-01-01 20:42:45]'
     self.assertEqual(expected_msg, event.extra_tokens)
     event = events[3]
     expected_msg = u'[BSM_TOKEN_ADDR: 192.168.100.15]'
