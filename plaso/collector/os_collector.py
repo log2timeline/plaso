@@ -36,21 +36,6 @@ from plaso.pvfs import utils as pvfs_utils
 class OSCollector(interface.PfileCollector):
   """Class that implements a pfile-based collector object that uses os."""
 
-  def __init__(self, process_queue, output_queue, source_path):
-    """Initializes the collector object.
-
-    Args:
-      proces_queue: The files processing queue (instance of
-                    queue.QueueInterface).
-      output_queue: The event output queue (instance of queue.QueueInterface).
-                    This queue is used as a buffer to the storage layer.
-      source_path: Path of the source file or directory.
-    """
-    super(OSCollector, self).__init__(process_queue, output_queue)
-    self._filter_file_path = None
-    self._pre_obj = None
-    self._source_path = source_path
-
   def _CopyPathToPathSpec(self, path):
     """Copies the path to a path specification equivalent.""" 
     path_spec = event.EventPathSpec()
@@ -60,6 +45,10 @@ class OSCollector(interface.PfileCollector):
 
   def _ProcessDirectory(self, file_entry):
     """Processes a directory and extract its metadata if necessary."""
+    # Need to do a breadth-first search otherwise we'll hit the Python
+    # maximum recursion depth.
+    sub_directories = []
+
     for sub_file_entry in file_entry.GetSubFileEntries():
       if sub_file_entry.IsLink():
         continue
@@ -68,16 +57,21 @@ class OSCollector(interface.PfileCollector):
         if self.collect_directory_metadata:
           # TODO: solve this differently by putting the path specification
           # on the queue and have the filestat parser just extract the metadata.
+          # self._queue.Queue(sub_file_entry.pathspec.ToProtoString())
           stat_object = sub_file_entry.Stat()
           stat_object.full_path = sub_file_entry.pathspec.file_path
           stat_object.display_path = sub_file_entry.pathspec.file_path
           storage_helper.SendContainerToStorage(
               filestat.GetEventContainerFromStat(stat_object), stat_object,
               self._storage_queue)
-        self._ProcessDirectory(sub_file_entry)
+
+        sub_directories.append(sub_file_entry)
 
       elif sub_file_entry.IsFile():
         self._queue.Queue(sub_file_entry.pathspec.ToProtoString())
+
+    for sub_file_entry in sub_directories:
+      self._ProcessDirectory(sub_file_entry)
 
   def _ProcessFilter(self):
     """Processes the source path based on the collection filter."""
@@ -88,16 +82,6 @@ class OSCollector(interface.PfileCollector):
 
     for pathspec_string in filter_object.GetPathSpecs():
       self._queue.Queue(pathspec_string)
-
-  def SetFilter(self, filter_file_path, pre_obj):
-    """Sets the collection filter.
-
-    Args:
-      filter_file_path: The path of the filter file.
-      pre_obj: The preprocessor object.
-    """
-    self._filter_file_path = filter_file_path
-    self._pre_obj = pre_obj
 
   def Collect(self):
     """Collects files from the source path."""
@@ -122,15 +106,15 @@ class OSCollector(interface.PfileCollector):
 class FileSystemPreprocessCollector(interface.PreprocessCollector):
   """A wrapper around collecting files from mount points."""
 
-  def __init__(self, pre_obj, mount_point):
+  def __init__(self, pre_obj, source_path):
     """Initializes the preprocess collector object.
 
     Args:
       pre_obj: The pre-processing object.
-      mount_point: The path to the mount point or base directory.
+      source_path: Path of the source file or directory.
     """
     super(FileSystemPreprocessCollector, self).__init__(pre_obj)
-    self._mount_point = mount_point
+    self._source_path = source_path
 
   def GetPaths(self, path_list):
     """Find the path if it exists.
@@ -142,7 +126,7 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
     Returns:
       A list of paths.
     """
-    return os_helper.GetOsPaths(path_list, self._mount_point)
+    return os_helper.GetOsPaths(path_list, self._source_path)
 
   def GetFilePaths(self, path, file_name):
     """Return a list of files given a path and a pattern.
@@ -155,12 +139,12 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
       A list of file names.
     """
     ret = []
-    file_re = re.compile(r'^%s$' % file_name, re.I | re.S)
+    file_re = re.compile(r'^{0:s}$'.format(file_name), re.I | re.S)
     if path == os.path.sep:
-      directory = self._mount_point
+      directory = self._source_path
       path_use = '.'
     else:
-      directory = os.path.join(self._mount_point, path)
+      directory = os.path.join(self._source_path, path)
       path_use = path
 
     try:
@@ -177,10 +161,8 @@ class FileSystemPreprocessCollector(interface.PreprocessCollector):
 
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""
-    return pvfs_utils.OpenOSFileEntry(os.path.join(self._mount_point, path))
+    return pvfs_utils.OpenOSFileEntry(os.path.join(self._source_path, path))
 
   def ReadingFromImage(self):
     """Indicates if the collector is reading from an image file."""
     return False
-
-

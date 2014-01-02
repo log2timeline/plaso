@@ -144,7 +144,7 @@ def Main():
       '\tOpenOSFileIO(path) - Open a file-like object from a path.\n'
       '\tPrintTimestamp(timestamp) - Print a human readable timestamp from '
       'values stored in the EventObject.\n'
-      '\tOpenVssFile (file_to_open, image_path, store_nr, image_offset) - '
+      '\tOpenVssFile (file_to_open, image_path, store_number, image_offset) - '
       'Open a PFile object from an image file, for a file inside a VSS.\n'
       '\tOpenTskFile(file_to_open, image_path, image_offset) - Open a PFile '
       'object from an image file.\n'
