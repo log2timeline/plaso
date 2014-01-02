@@ -17,7 +17,6 @@
 """Basic Security Module Parser."""
 
 import construct
-import datetime
 import logging
 import os
 import socket
@@ -29,6 +28,8 @@ from plaso.lib import parser
 from plaso.lib import timelib
 
 from plaso.unix import bsmtoken
+
+import pytz
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
@@ -859,8 +860,8 @@ class BsmParser(parser.BaseParser):
       #       event.
       timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
           token.timestamp, token.microsecond)
-      human_timestamp = datetime.datetime.fromtimestamp(
-          timestamp).strftime('%Y-%m-%d %H:%M:%S')
+      date_time = timelib.Timestamp.CopyToDatetime(timestamp, pytz.utc)
+      human_timestamp = date_time.strftime('%Y-%m-%d %H:%M:%S')
       return u'[{0}: {1}, timestamp: {2}]'.format(
           bsm_type, self._RawToUTF8(token.file_name), human_timestamp)
     elif bsm_type == 'BSM_TOKEN_IPC':
