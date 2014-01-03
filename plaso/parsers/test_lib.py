@@ -110,19 +110,18 @@ class ParserTestCase(unittest.TestCase):
     file_entry = pvfs_utils.OpenOSFileEntry(filename)
     return list(parser_object.Parse(file_entry))
 
-  def _ParseFileByPathSpec(self, parser_object, path_spec, fscache=None):
+  def _ParseFileByPathSpec(self, parser_object, path_spec):
     """Parses a file using the parser class.
 
     Args:
       parser_object: the parser object.
-      path_spect: the path specification of the file to parse.
-      fscache: optional file system cache object. The default is None.
+      path_spec: the path specification of the file to parse.
 
     Returns:
       A list of event containers or objects as returned by the parser
       (instances of EventObject or EventContainer).
     """
-    file_entry = pfile.OpenPFileEntry(path_spec, fscache=fscache)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
     return list(parser_object.Parse(file_entry))
 
   def _TestGetMessageStrings(
