@@ -324,16 +324,6 @@ class OsFileEntry(BaseFileEntry):
     """Determines if the file entry is a link."""
     return os.path.islink(self.pathspec.file_path)
 
-  @classmethod
-  def JoinPath(cls, path_segments):
-    """Joins the path segments into a path."""
-    return os.path.sep.join(path_segments)
-
-  @classmethod
-  def SplitPath(cls, path):
-    """Splits the path into path segments."""
-    return path.split(os.path.sep)
-
 
 class TarFileEntry(BaseFileEntry):
   """Provide a file-like object to a file stored inside a TAR file."""
@@ -410,25 +400,17 @@ class TSKFileEntry(BaseFileEntry):
       fscache: Optional file system cache object. The default is None.
     """
     super(TSKFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
-    self._tsk_fs = None
     self.directory_entry_name = u''
 
-  def _OpenFileSystem(self, path, byte_offset):
-    """Open the filesystem object and store a copy of it for caching.
-
-    Args:
-      path: Path to the image file.
-      byte_offset: The byte offset into the image file if this is a disk
-                   image.
-
-    Raises:
-      IOError: If no pfile.FilesystemCache object is provided.
-    """
+  def _GetFileSystem(self):
+    """Retrieves the file system object."""
     if not hasattr(self, '_fscache'):
-      raise IOError('No file system cache provided, unable to open a file.')
+      raise IOError(
+          u'Unable to open file system missing file system cache.')
 
-    file_system_container = self._fscache.Open(path, byte_offset=byte_offset)
-    self._tsk_fs = file_system_container.fs
+    image_offset = getattr(self.pathspec, 'image_offset', 0)
+    return self._fscache.Open(
+        self.pathspec.container_path, byte_offset=image_offset)
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
@@ -443,20 +425,16 @@ class TSKFileEntry(BaseFileEntry):
       A file-like object.
     """
     if file_entry:
-      path = file_entry
-    else:
-      path = self.pathspec.container_path
+      raise IOError(u'Open with file entry not supported.')
 
-    image_offset = getattr(self.pathspec, 'image_offset', 0)
-    self._OpenFileSystem(path, image_offset)
-
+    file_system = self._GetFileSystem()
     inode = getattr(self.pathspec, 'image_inode', 0)
 
     if not hasattr(self.pathspec, 'file_path'):
       self.pathspec.file_path = 'NA_NotProvided'
 
     self.file_object = pfile_io.TSKFileIO(
-        self._tsk_fs, inode, self.pathspec.file_path)
+        file_system.tsk_fs, inode, self.pathspec.file_path)
 
     path_prepend = getattr(self.pathspec, 'path_prepend', '')
     self.name = u'{}{}'.format(path_prepend, self.pathspec.file_path)
@@ -473,6 +451,7 @@ class TSKFileEntry(BaseFileEntry):
   def Stat(self):
     """Return a Stats object that contains stats like information."""
     if self._stat_object is None:
+      file_system = self._GetFileSystem()
       self._stat_object = pstats.Stats()
 
       try:
@@ -511,7 +490,7 @@ class TSKFileEntry(BaseFileEntry):
       else:
         self._stat_object.allocated = False
 
-      fs_type = str(self._tsk_fs.info.ftype)
+      fs_type = str(file_system.tsk_fs.info.ftype)
 
       if fs_type.startswith('TSK_FS_TYPE'):
         self._stat_object.fs_type = fs_type[12:]
@@ -526,11 +505,12 @@ class TSKFileEntry(BaseFileEntry):
     Yields:
       A sub file entry (instance of TSKFileEntry).
     """
+    file_system = self._GetFileSystem()
     inode_number = getattr(self.pathspec, 'image_inode', None)
     if inode_number is not None:
-      tsk_directory = self._tsk_fs.open_dir(inode=inode_number)
+      tsk_directory = file_system.tsk_fs.open_dir(inode=inode_number)
     else:
-      tsk_directory = self._tsk_fs.open_dir(path=self.pathspec.file_path)
+      tsk_directory = file_system.tsk_fs.open_dir(path=self.pathspec.file_path)
 
     for tsk_directory_entry in tsk_directory:
       image_inode = getattr(tsk_directory_entry.info.meta, 'addr', 0)
@@ -589,16 +569,6 @@ class TSKFileEntry(BaseFileEntry):
         pytsk3.TSK_FS_META_TYPE_UNDEF)
     return tsk_fs_meta_type == pytsk3.TSK_FS_META_TYPE_LNK
 
-  @classmethod
-  def JoinPath(cls, path_segments):
-    """Joins the path segments into a path."""
-    return u'/'.join(path_segments)
-
-  @classmethod
-  def SplitPath(cls, path):
-    """Splits the path into path segments."""
-    return path.split(u'/')
-
 
 class VssFileEntry(TSKFileEntry):
   """Class to open up files in Volume Shadow Copies."""
@@ -616,19 +586,20 @@ class VssFileEntry(TSKFileEntry):
     """
     super(VssFileEntry, self).__init__(pathspec, root=root, fscache=fscache)
 
-  def _OpenFileSystem(self, path, offset):
-    """Open a filesystem object for a VSS file."""
-    if not hasattr(self.pathspec, 'vss_store_number'):
-      raise IOError((
-          u'Unable to open VSS file: {0:s}, missing VSS store number.').format(
-              self.name))
-
+  def _GetFileSystem(self):
+    """Retrieves the file system object."""
     if not hasattr(self, '_fscache'):
-      raise IOError(u'No file system cache provided, unable to contine.')
+      raise IOError(
+          u'Unable to open file system missing file system cache.')
 
-    file_system_container = self._fscache.Open(
-        path, offset, self.pathspec.vss_store_number)
-    self._tsk_fs = file_system_container.fs
+    if not hasattr(self.pathspec, 'vss_store_number'):
+      raise IOError(
+          u'Unable to open file system missing VSS store number.')
+
+    image_offset = getattr(self.pathspec, 'image_offset', 0)
+    return self._fscache.Open(
+        self.pathspec.container_path, byte_offset=image_offset,
+        store_number=self.pathspec.vss_store_number)
 
   def Open(self, file_entry=None):
     """Open the file as it is described in the PathSpec protobuf.
