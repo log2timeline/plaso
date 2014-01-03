@@ -28,9 +28,8 @@ from plaso.lib import event
 from plaso.lib import storage_helper
 from plaso.lib import utils
 from plaso.parsers import filestat
+from plaso.pvfs import pfile
 from plaso.pvfs import pfile_entry
-from plaso.pvfs import pfile_system
-from plaso.pvfs import pvfs
 from plaso.pvfs import utils as pvfs_utils
 from plaso.pvfs import vss
 
@@ -57,7 +56,6 @@ class GenericCollector(interface.PfileCollector):
     super(GenericCollector, self).__init__(
         process_queue, output_queue, source_path)
     self._byte_offset = None
-    self._fscache = None
     self._hashlist = None
     self._process_image = None
     self._process_vss = None
@@ -224,8 +222,10 @@ class GenericCollector(interface.PfileCollector):
 
     # Read the root dir, and move from there.
     try:
-      file_system = self._fscache.Open(
-          self._source_path, byte_offset=image_offset)
+      root_path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+          'TSK', u'/', container_path=self._source_path,
+          image_offset=image_offset)
+      file_system = pfile.PFileResolver.OpenFileSystem(root_path_spec)
       root_file_entry = file_system.GetRootFileEntry()
 
       # Work-around the limitation in TSKFileEntry that it needs to be open
@@ -260,8 +260,7 @@ class GenericCollector(interface.PfileCollector):
     preprocessor_collector = GenericPreprocessCollector(
         self._pre_obj, self._source_path)
     preprocessor_collector.SetImageInformation(
-        sector_offset=self._sector_offset, byte_offset=self._byte_offset,
-        fscache=self._fscache)
+        sector_offset=self._sector_offset, byte_offset=self._byte_offset)
 
     try:
       filter_object = collector_filter.CollectionFilter(
@@ -283,8 +282,7 @@ class GenericCollector(interface.PfileCollector):
           vss_preprocessor_collector = GenericPreprocessCollector(
               self._pre_obj, self._source_path)
           vss_preprocessor_collector.SetImageInformation(
-              sector_offset=self._sector_offset, byte_offset=self._byte_offset,
-              fscache=self._fscache)
+              sector_offset=self._sector_offset, byte_offset=self._byte_offset)
           vss_preprocessor_collector.SetVssInformation(
               store_number=store_number)
 
@@ -307,9 +305,10 @@ class GenericCollector(interface.PfileCollector):
     image_offset = self._GetImageByteOffset()
 
     try:
-      file_system = self._fscache.Open(
-          self._source_path, byte_offset=image_offset,
-          store_number=store_number)
+      root_path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+          'VSS', u'/', container_path=self._source_path,
+          image_offset=image_offset, store_number=store_number)
+      file_system = pfile.PFileResolver.OpenFileSystem(root_path_spec)
       root_file_entry = file_system.GetRootFileEntry()
 
       # Work-around the limitation in TSKFileEntry that it needs to be open
@@ -359,8 +358,7 @@ class GenericCollector(interface.PfileCollector):
       else:
         self._queue.Queue(source_path_spec.ToProtoString())
 
-  def SetImageInformation(
-      self, sector_offset=None, byte_offset=None, fscache=None):
+  def SetImageInformation(self, sector_offset=None, byte_offset=None):
     """Sets the image information.
 
        This function will enable image collection.
@@ -370,11 +368,9 @@ class GenericCollector(interface.PfileCollector):
                      image. The default is None.
       byte_offset: Optional byte offset into the image file if this is a disk
                    image. The default is None.
-      fscache: Optional file system cache (instance of FilesystemCache).
     """
     self._process_image = True
     self._byte_offset = byte_offset
-    self._fscache = fscache or pvfs.FilesystemCache()
     self._sector_offset = sector_offset
 
   def SetVssInformation(self, vss_stores=None):
@@ -404,30 +400,10 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     """
     super(GenericPreprocessCollector, self).__init__(pre_obj, source_path)
     self._byte_offset = None
-    self._fscache = None
     self._process_image = None
     self._process_vss = None
     self._sector_offset = None
     self._store_number = None
-
-  def _CopyPathToPathSpec(
-      self, path_spec_type, path, inode_number=None, store_number=None):
-    """Copies the path to a path specification equivalent."""
-    path_spec = event.EventPathSpec()
-    path_spec.type = path_spec_type
-    path_spec.file_path = utils.GetUnicodeString(path)
-
-    if path_spec_type in ['TSK', 'VSS']:
-      path_spec.container_path = self._source_path
-      path_spec.image_offset = self._GetImageByteOffset()
-      if inode_number is not None:
-        path_spec.image_inode = inode_number
-
-    if path_spec_type == 'VSS':
-      if store_number is not None:
-        path_spec.vss_store_number = store_number
-
-    return path_spec
 
   def _GetImageByteOffset(self):
     """Retrieves the image offset in bytes."""
@@ -451,12 +427,17 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     Yields:
       The paths found.
     """
-    if self._process_image:
-      file_system = self._fscache.Open(
-          self._source_path, byte_offset=self._byte_offset)
-
+    if not self._process_image:
+      type_indicator = 'OS'
+    elif not self._process_vss:
+      type_indicator = 'TSK'
     else:
-      file_system = pfile_system.OsFileSystem(self._source_path)
+      type_indicator = 'VSS'
+
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+         type_indicator, u'/', container_path=self._source_path,
+         image_offset=self._GetImageByteOffset())
+    file_system = pfile.PFileResolver.OpenFileSystem(path_spec)
 
     if not self._process_image:
       # When processing the file system strip off the path separator at
@@ -478,8 +459,10 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
         if self._process_image and not path:
           file_entry = file_system.GetRootFileEntry()
         else:
-          path_spec = self._CopyPathToPathSpec(
-              file_system.TYPE_INDICATOR, full_path, inode_number=None,
+          path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+              file_system.TYPE_INDICATOR, full_path,
+              container_path=self._source_path,
+              image_offset=self._GetImageByteOffset(), inode_number=None,
               store_number=self._store_number)
 
           file_entry = file_system.OpenFileEntry(path_spec)
@@ -540,15 +523,21 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
       image_offset = self._GetImageByteOffset() / self._BYTES_PER_SECTOR
 
       if self._process_vss:
-        file_entry = pvfs_utils.OpenVssFileEntry(
-            path, self._source_path, self._store_number, image_offset,
-            self._fscache)
+        file_entry = pvfs_utils.OpenImageFile(
+            path, self._source_path, 'vss', self._store_number, image_offset,
+            sector_size=self._BYTES_PER_SECTOR)
       else:
-        file_entry = pvfs_utils.OpenTskFileEntry(
-            path, self._source_path, image_offset, self._fscache)
+        file_entry = pvfs_utils.OpenImageFile(
+            path, self._source_path, 'tsk', image_offset,
+            sector_size=self._BYTES_PER_SECTOR)
     else:
-      file_entry = pvfs_utils.OpenOSFileEntry(
-          os.path.join(self._source_path, path))
+      path = os.path.join(self._source_path, path)
+
+      path_spec = event.EventPathSpec()
+      path_spec.type = 'OS'
+      path_spec.file_path = utils.GetUnicodeString(path)
+
+      file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
 
     return file_entry
 
@@ -556,8 +545,7 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     """Indicates if the collector is reading from an image file."""
     return self._process_image
 
-  def SetImageInformation(
-      self, sector_offset=None, byte_offset=None, fscache=None):
+  def SetImageInformation(self, sector_offset=None, byte_offset=None):
     """Sets the image information.
 
        This function will enable image collection.
@@ -567,11 +555,9 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
                      image. The default is None.
       byte_offset: Optional byte offset into the image file if this is a disk
                    image. The default is None.
-      fscache: Optional file system cache (instance of FilesystemCache).
     """
     self._process_image = True
     self._byte_offset = byte_offset
-    self._fscache = fscache or pvfs.FilesystemCache()
     self._sector_offset = sector_offset
 
   def SetVssInformation(self, store_number=None):

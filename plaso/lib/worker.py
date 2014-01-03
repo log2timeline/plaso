@@ -41,7 +41,6 @@ from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import utils
 from plaso.pvfs import pfile
-from plaso.pvfs import pvfs
 
 
 class PlasoWorker(object):
@@ -96,11 +95,6 @@ class PlasoWorker(object):
     self._parsers = putils.FindAllParsers(
         pre_obj, config, getattr(config, 'parsers', ''))
     self._user_mapping = self._GetUserMapping()
-
-    if hasattr(config, 'image') and config.image:
-      self._fscache = pvfs.FilesystemCache()
-    else:
-      self._fscache = None
 
     self._filter = None
     filter_query = getattr(config, 'filter', None)
@@ -163,7 +157,7 @@ class PlasoWorker(object):
 
     # Either parse this file and all extracted files, or just the file.
     try:
-      file_entry = pfile.OpenPFileEntry(pathspec, fscache=self._fscache)
+      file_entry = pfile.PFileResolver.OpenFileEntry(pathspec)
       self.ParseFile(file_entry)
 
       if self.config.open_files:
@@ -182,8 +176,7 @@ class PlasoWorker(object):
       file_entry: A file entry object.
     """
     try:
-      for new_file_entry in self.SmartOpenFiles(
-          file_entry, fscache=self._fscache):
+      for new_file_entry in self.SmartOpenFiles(file_entry):
         self.ParseFile(new_file_entry)
     except IOError as e:
       logging.debug((
@@ -301,12 +294,11 @@ class PlasoWorker(object):
         file_entry.display_name))
 
   @classmethod
-  def SmartOpenFiles(cls, file_entry, fscache=None, depth=0):
+  def SmartOpenFiles(cls, file_entry, depth=0):
     """Generate a list of all available PathSpecs extracted from a file.
 
     Args:
       file_entry: A file entry object.
-      fscache: A pfile.FilesystemCache object.
       depth: Incrementing number that defines the current depth into
              a file (file inside a ZIP file is depth 1, file inside a tar.gz
              would be of depth 2).
@@ -320,8 +312,8 @@ class PlasoWorker(object):
     for pathspec in cls.SmartOpenFile(file_entry):
       try:
         pathspec_orig = copy.deepcopy(pathspec)
-        new_file_entry = pfile.OpenPFileEntry(
-            spec=pathspec, orig=pathspec_orig, fscache=fscache)
+        new_file_entry = pfile.PFileResolver.OpenFileEntry(
+            pathspec, orig=pathspec_orig)
         yield new_file_entry
       except IOError as e:
         logging.debug((
@@ -330,7 +322,7 @@ class PlasoWorker(object):
                 file_entry.display_name, e))
         continue
       for new_file_entry in cls.SmartOpenFiles(
-          new_file_entry, fscache=fscache, depth=(depth + 1)):
+          new_file_entry, depth=(depth + 1)):
         yield new_file_entry
 
   @classmethod
