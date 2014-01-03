@@ -29,6 +29,7 @@ from plaso.lib import storage_helper
 from plaso.lib import utils
 from plaso.parsers import filestat
 from plaso.pvfs import pfile_entry
+from plaso.pvfs import pfile_system
 from plaso.pvfs import pvfs
 from plaso.pvfs import utils as pvfs_utils
 from plaso.pvfs import vss
@@ -94,25 +95,6 @@ class GenericCollector(interface.PfileCollector):
         getattr(stat_object, 'ctime_nano', 0)))
 
     return ret_hash.hexdigest()
-
-  def _CopyPathToPathSpec(
-      self, path_spec_type, path, inode_number=None, store_number=None):
-    """Copies the path to a path specification equivalent."""
-    path_spec = event.EventPathSpec()
-    path_spec.type = path_spec_type
-    path_spec.file_path = utils.GetUnicodeString(path)
-
-    if path_spec_type in ['TSK', 'VSS']:
-      path_spec.container_path = self._source_path
-      path_spec.image_offset = self._GetImageByteOffset()
-      if inode_number is not None:
-        path_spec.image_inode = inode_number
-
-    if path_spec_type == 'VSS':
-      if store_number is not None:
-        path_spec.vss_store_number = store_number
-
-    return path_spec
 
   def _GetImageByteOffset(self):
     """Retrieves the image offset in bytes."""
@@ -242,14 +224,9 @@ class GenericCollector(interface.PfileCollector):
 
     # Read the root dir, and move from there.
     try:
-      file_system_container = self._fscache.Open(
+      file_system = self._fscache.Open(
           self._source_path, byte_offset=image_offset)
-      # TODO: why was os.path.sep passed here instead of / but not for the VSS?
-      root_path_spec = self._CopyPathToPathSpec(
-          'TSK', u'/', inode_number=file_system_container.fs.info.root_inum)
-      # TODO: do we need to set root here?
-      root_file_entry = pfile_entry.TSKFileEntry(
-          root_path_spec, root=None, fscache=self._fscache)
+      root_file_entry = file_system.GetRootFileEntry()
 
       # Work-around the limitation in TSKFileEntry that it needs to be open
       # to return stat information. This will be fixed by PyVFS.
@@ -330,15 +307,10 @@ class GenericCollector(interface.PfileCollector):
     image_offset = self._GetImageByteOffset()
 
     try:
-      file_system_container = self._fscache.Open(
+      file_system = self._fscache.Open(
           self._source_path, byte_offset=image_offset,
           store_number=store_number)
-      root_path_spec = self._CopyPathToPathSpec(
-          'VSS', u'/', inode_number=file_system_container.fs.info.root_inum,
-          store_number=store_number)
-      # TODO: do we need to set root here?
-      root_file_entry = pfile_entry.TSKFileEntry(
-          root_path_spec, root=None, fscache=self._fscache)
+      root_file_entry = file_system.GetRootFileEntry()
 
       # Work-around the limitation in TSKFileEntry that it needs to be open
       # to return stat information. This will be fixed by PyVFS.
@@ -359,7 +331,10 @@ class GenericCollector(interface.PfileCollector):
 
   def Collect(self):
     """Collects files from the source."""
-    source_path_spec = self._CopyPathToPathSpec('OS', self._source_path)
+    source_path_spec = event.EventPathSpec()
+    source_path_spec.type = 'OS'
+    source_path_spec.file_path = utils.GetUnicodeString(self._source_path)
+
     source_file_entry = pfile_entry.OsFileEntry(source_path_spec)
 
     if not source_file_entry.IsDirectory() and not source_file_entry.IsFile():
@@ -477,10 +452,13 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
       The paths found.
     """
     if self._process_image:
-      file_system_container = self._fscache.Open(
+      file_system = self._fscache.Open(
           self._source_path, byte_offset=self._byte_offset)
 
     else:
+      file_system = pfile_system.OsFileSystem(self._source_path)
+
+    if not self._process_image:
       # When processing the file system strip off the path separator at
       # the end of the source path.
       source_path = self._source_path
@@ -492,38 +470,19 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
       sub_paths_found = []
 
       for path in paths_found:
-        inode_number = None
-
         if self._process_image:
-          if self._process_vss:
-            path_spec_type = 'VSS'
-          else:
-            path_spec_type = 'TSK'
-
-          if not path:
-            full_path = u'/'
-            inode_number = file_system_container.fs.info.root_inum
-          else:
-            full_path = path
-
+          full_path = path
         else:
-          path_spec_type = 'OS'
-          full_path = pfile_entry.OsFileEntry.JoinPath([source_path, path])
+          full_path = file_system.JoinPath([source_path, path])
 
-        path_spec = self._CopyPathToPathSpec(
-            path_spec_type, full_path, inode_number=inode_number,
-            store_number=self._store_number)
+        if self._process_image and not path:
+          file_entry = file_system.GetRootFileEntry()
+        else:
+          path_spec = self._CopyPathToPathSpec(
+              file_system.TYPE_INDICATOR, full_path, inode_number=None,
+              store_number=self._store_number)
 
-        if path_spec_type == 'OS':
-          file_entry = pfile_entry.OsFileEntry(path_spec)
-
-        elif path_spec_type == 'TSK':
-          file_entry = pfile_entry.TSKFileEntry(
-              path_spec, root=None, fscache=self._fscache)
-
-        elif path_spec_type == 'VSS':
-          file_entry = pfile_entry.VssFileEntry(
-              path_spec, root=None, fscache=self._fscache)
+          file_entry = file_system.OpenFileEntry(path_spec)
 
         if isinstance(file_entry, pfile_entry.TSKFileEntry):
           # Work-around the limitation in TSKFileEntry that it needs to be open
@@ -557,17 +516,8 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
               sub_file_entry_match = re_match.group(0)
 
           if sub_file_entry_match:
-            if path_spec_type == 'OS':
-              sub_paths_found.append(pfile_entry.OsFileEntry.JoinPath([
-                  path, sub_file_entry_match]))
-
-            elif path_spec_type == 'TSK':
-              sub_paths_found.append(pfile_entry.TSKFileEntry.JoinPath([
-                  path, sub_file_entry_match]))
-
-            elif path_spec_type == 'VSS':
-              sub_paths_found.append(pfile_entry.TSKFileEntry.JoinPath([
-                  path, sub_file_entry_match]))
+            sub_paths_found.append(file_system.JoinPath([
+                path, sub_file_entry_match]))
 
       paths_found = sub_paths_found
 
