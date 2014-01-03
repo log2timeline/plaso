@@ -33,7 +33,6 @@ from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.pvfs import pfile
-from plaso.pvfs import pvfs
 from plaso.pvfs import vss
 
 
@@ -45,7 +44,6 @@ class ImageExtractor(object):
     super(ImageExtractor, self).__init__()
     self._image_path = None
     self._image_offset = 0
-    self._fscache = pvfs.FilesystemCache()
     self._image_collector = None
     self._pre_obj = None
 
@@ -114,7 +112,7 @@ class ImageExtractor(object):
         image_collector, filter_expression)
 
     for path_spec in filter_object.GetPathSpecs():
-      with pfile.OpenPFileEntry(path_spec, fscache=self._fscache) as file_entry:
+      with pfile.PFileResolver.OpenFileEntry(path_spec) as file_entry:
         FileSaver.SaveFile(file_entry, destination_path)
 
   def ExtractWithFilter(
@@ -180,10 +178,10 @@ class ImageExtractor(object):
 
     image_collector = collector_factory.GetGenericCollector(
         input_queue, output_queue, self._image_path)
-    image_collector.SetImageInformation(
-        byte_offset=self._image_offset, fscache=self._fscache)
+    image_collector.SetImageInformation(byte_offset=self._image_offset)
     if process_vss:
-      image_collector.SetImageInformation()
+      # TODO: don't we need a store number here?
+      image_collector.SetVssInformation()
 
     image_collector.Collect()
 
@@ -195,7 +193,7 @@ class ImageExtractor(object):
 
       _, _, extension = pathspec.file_path.rpartition('.')
       if extension.lower() in extensions:
-        file_entry = pfile.OpenPFileEntry(pathspec, fscache=self._fscache)
+        file_entry = pfile.PFileResolver.OpenFileEntry(pathspec)
         if getattr(pathspec, 'vss_store_number', None):
           FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number + 1
         else:
