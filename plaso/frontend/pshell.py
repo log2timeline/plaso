@@ -38,6 +38,7 @@ from plaso import preprocessors
 
 from plaso.frontend import preg
 from plaso.frontend import psort
+from plaso.frontend.utils import *  # pylint: disable-msg=W0401,W0614
 
 from plaso.lib import collector_filter
 from plaso.lib import engine
@@ -57,7 +58,7 @@ from plaso.lib import storage
 from plaso.lib import text_parser
 from plaso.lib import timelib
 from plaso.lib import worker
-from plaso.lib.putils import *    # pylint: disable-msg=W0401,W0614
+from plaso.lib.putils import *  # pylint: disable-msg=W0401,W0614
 
 from plaso.output import helper
 
@@ -111,13 +112,11 @@ def Main():
 
   namespace = {}
 
-  fscache = pvfs.FilesystemCache()
   pre_obj = preprocess.PlasoPreprocess()
   pre_obj.zone = pytz.UTC
 
   namespace.update(globals())
-  namespace.update({'l2t': l2t, 'fscache': fscache, 'pre_obj': pre_obj,
-                    'options': options})
+  namespace.update({'l2t': l2t, 'pre_obj': pre_obj, 'options': options})
 
   if len(sys.argv) > 1:
     test_file = sys.argv[1]

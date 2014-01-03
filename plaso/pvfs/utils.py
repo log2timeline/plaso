@@ -25,9 +25,9 @@ from plaso.lib import utils
 from plaso.pvfs import pfile
 
 
-def _OpenImageFile(
+def OpenImageFile(
     file_to_open, image_path, image_type='tsk', image_offset=0,
-    store_number=None, fscache=None, sector_size=512):
+    store_number=None, sector_size=512):
   """Opens a file entry object for a file in a raw disk image.
 
   Args:
@@ -37,7 +37,6 @@ def _OpenImageFile(
     opened.
     image_offset: Offset in sectors if this is a disk image.
     store_number: Optional VSS store index number. The default is None.
-    fscache: A FilesystemCache object that stores cached fs objects.
     sector_size: The size in bytes, defaults to 512.
 
   Returns:
@@ -63,26 +62,7 @@ def _OpenImageFile(
       file_to_open = file_to_open.replace('\\', '/')
     pathspec.file_path = file_to_open
 
-  return pfile.OpenPFileEntry(pathspec, fscache=fscache)
-
-
-def OpenTskFileEntry(
-    file_to_open, image_path, image_offset=0, fscache=None, sector_size=512):
-  """Opens a file entry object for a file in a raw disk image.
-
-  Args:
-    file_to_open: A path or an inode number to the file in question.
-    image_path: Full path to the image itself.
-    image_offset: Offset in sectors if this is a disk image.
-    fscache: A FilesystemCache object that stores cached fs objects.
-    sector_size: The size in bytes, defaults to 512.
-
-  Returns:
-    A file entry object.
-  """
-  return _OpenImageFile(
-      file_to_open, image_path, 'tsk', image_offset, fscache=fscache,
-      sector_size=sector_size)
+  return pfile.PFileResolver.OpenFileEntry(pathspec)
 
 
 def OpenOSFileEntry(path):
@@ -91,34 +71,13 @@ def OpenOSFileEntry(path):
   pathspec.type = 'OS'
   pathspec.file_path = utils.GetUnicodeString(path)
 
-  return pfile.OpenPFileEntry(pathspec)
+  return pfile.PFileResolver.OpenFileEntry(pathspec)
 
 
 def OpenOSFileIO(path):
   """Opens a file-like object based on an OS path."""
   file_entry = OpenOSFileEntry(path)
   return file_entry.Open()
-
-
-def OpenVssFileEntry(
-    file_to_open, image_path, store_number, image_offset=0, fscache=None,
-    sector_size=512):
-  """Opens a file entry object for a file in an image inside a VSS.
-
-  Args:
-    file_to_open: A path or an inode number to the file in question.
-    image_path: Full path to the image itself.
-    store_number: The VSS store index number.
-    image_offset: Offset in sectors if this is a disk image.
-    fscache: A FilesystemCache object that stores cached fs objects.
-    sector_size: The size in bytes, defaults to 512.
-
-  Returns:
-    A file entry object.
-  """
-  return _OpenImageFile(
-      file_to_open, image_path, 'vss', image_offset, store_number,
-      fscache=fscache, sector_size=sector_size)
 
 
 def Pfile2File(fh_in, path=None):

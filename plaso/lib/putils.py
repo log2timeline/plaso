@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains few methods for Plaso."""
-import binascii
+
 import logging
 
 from plaso.lib import output
@@ -23,7 +24,6 @@ from plaso.lib import parser
 from plaso.lib import plugin
 from plaso.lib import timelib
 from plaso.lib import utils
-from plaso.pvfs import pfile
 
 import pytz
 
@@ -134,114 +134,6 @@ def PrintTimestamp(timestamp):
   # TODO: this function is only used by frontend/pshell.py
   # refactor that code to use timelib and remove this function.
   return timelib.Timestamp.CopyToIsoFormat(timestamp, pytz.UTC)
-
-
-def GetEventData(evt, fscache=None, before=0, length=20):
-  """Return a hexdump like string of data surrounding event.
-
-  This function takes an event object protobuf, opens the file
-  that produced the event at the correct position, and creates
-  a hex dump of the data, with both hexadecimal and ASCII
-  characters printed out on the screen.
-
-  Args:
-    evt: The EventObject.
-    fscache: A FilesystemCache object that stores cached fs objects.
-    before: Number of bytes before the event that are included
-    in the printout.
-    length: Number of lines to print out in the hex output.
-
-  Returns:
-    A string containing a hexdump of the data surrounding the event.
-  """
-  if not evt:
-    return u''
-
-  if not hasattr(evt, 'pathspec'):
-    return u''
-
-  try:
-    file_entry = pfile.OpenPFileEntry(evt.pathspec.ToProto(), fscache=fscache)
-  except IOError as e:
-    return u'Error opening file: %s' % e
-
-  offset = getattr(evt, 'offset', 0)
-  if offset - before > 0:
-    offset -= before
-
-  return GetHexDumpStream(file_entry, offset, length)
-
-
-def GetHexDumpStream(file_entry, offset, length=20):
-  """Return a hex dump of the contents of a file.
-
-  Args:
-    file_entry: A file entry object.
-    offset: The offset into the file like object where the first
-    byte is read from.
-    length: Number of lines to print. A single line consists of 16 bytes,
-    making this variable a multiplier of 16 bytes.
-
-  Returns:
-    A string that contains the hex dump.
-  """
-  file_object = file_entry.Open()
-  file_object.seek(offset)
-  data = file_object.read(int(length) * 16)
-  file_object.close()
-  return GetHexDump(data, offset)
-
-
-def GetHexDump(data, offset=0):
-  """Return a hex dump from a data.
-
-  Returns a hex dump of the data passed. Additionally all ASCII
-  characters in the hex dump get translated back to their characters.
-
-  Args:
-    data: The binary data to be dumped into a hex string.
-    offset: An optional start point in bytes where the data lies, for
-    presentation purposes.
-
-  Returns:
-    A string that contains the hex dump.
-  """
-  hexdata = binascii.hexlify(data)
-  data_out = []
-
-  for entry_nr in range(0, len(hexdata) / 32):
-    point = 32 * entry_nr
-    data_out.append(GetHexDumpLine(hexdata[point:point + 32], offset, entry_nr))
-
-  if len(hexdata) % 32:
-    breakpoint = len(hexdata) / 32
-    leftovers = hexdata[breakpoint:]
-    pad = ' ' * (32 - len(leftovers))
-
-    data_out.append(GetHexDumpLine(leftovers + pad, offset, breakpoint))
-
-  return '\n'.join(data_out)
-
-
-def GetHexDumpLine(line, orig_ofs, entry_nr=0):
-  """Return a single line of 'xxd' dump like style."""
-  out = []
-  out.append('{0:07x}: '.format(orig_ofs + entry_nr * 16))
-
-  for bit in range(0, 8):
-    out.append('%s ' % line[bit * 4:bit * 4 + 4])
-
-  for bit in range(0, 16):
-    try:
-      data = binascii.unhexlify(line[bit * 2: bit * 2 + 2])
-    except TypeError:
-      data = '.'
-
-    if ord(data) > 31 and ord(data) < 128:
-      out.append(data)
-    else:
-      out.append('.')
-  return ''.join(out)
 
 
 def GetParsersFromPlugins(filter_strings, exclude_strings=None):

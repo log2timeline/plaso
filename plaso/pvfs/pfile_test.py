@@ -29,10 +29,6 @@ from plaso.pvfs import pvfs
 class PlasoPFileTest(unittest.TestCase):
   """The unit test for PFile implementation."""
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._fscache = pvfs.FilesystemCache()
-
   def PerformSyslogTests(self, file_object):
     """Perform a series of tests against a known syslog file.
 
@@ -105,12 +101,13 @@ class PlasoPFileTest(unittest.TestCase):
     path.image_inode = 15
     path.file_path = 'passwords.txt'
 
-    file_entry = pfile_entry.TSKFileEntry(path, fscache=self._fscache)
+    fscache = pvfs.FilesystemCache()
+    file_entry = pfile_entry.TSKFileEntry(path, fscache=fscache)
     file_object = file_entry.Open()
 
     # Test fs cache.
     fs_hash = u'%s:0:-1' % test_file
-    self.assertTrue(fs_hash in self._fscache.cached_filesystems)
+    self.assertTrue(fs_hash in fscache.cached_filesystems)
 
     # Read lines.
     self.assertEquals(file_object.readline(), 'place,user,password\n')
@@ -217,7 +214,7 @@ class PlasoPFileTest(unittest.TestCase):
 
     path.nested_pathspec = host_file
 
-    with pfile.OpenPFileEntry(path) as file_entry:
+    with pfile.PFileResolver.OpenFileEntry(path) as file_entry:
       self.PerformSyslogTests(file_entry.file_object)
 
     test_file = os.path.join('test_data', 'syslog.gz')
@@ -232,7 +229,7 @@ class PlasoPFileTest(unittest.TestCase):
 
     path.nested_pathspec = gzip
 
-    with pfile.OpenPFileEntry(path) as file_entry:
+    with pfile.PFileResolver.OpenFileEntry(path) as file_entry:
       self.PerformSyslogTests(file_entry.file_object)
 
   def testNestedTSK(self):
@@ -251,7 +248,7 @@ class PlasoPFileTest(unittest.TestCase):
 
     path.nested_pathspec = host_path
 
-    with pfile.OpenPFileEntry(path, fscache=self._fscache) as file_entry:
+    with pfile.PFileResolver.OpenFileEntry(path) as file_entry:
       self.PerformSyslogTests(file_entry.file_object)
 
   def testTarReadline(self):
