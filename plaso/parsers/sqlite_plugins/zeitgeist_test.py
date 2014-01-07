@@ -15,58 +15,52 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the Zeitgeist parser."""
+"""Tests for the Zeitgeist activity database plugin."""
 
 import os
 import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import zeitgeist as zeitgeist_formatter
-from plaso.lib import eventdata
 from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import interface
+from plaso.parsers.sqlite_plugins import test_lib
 from plaso.parsers.sqlite_plugins import zeitgeist
 from plaso.pvfs import utils
 
 import pytz
 
 
-class ZeitgeistPluginTest(unittest.TestCase):
-  """Tests for the Zeitgeist parser."""
+class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
+  """Tests for the Zeitgeist activity database plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = zeitgeist.ZeitgeistPlugin(pre_obj)
+    self._plugin = zeitgeist.ZeitgeistPlugin(pre_obj)
 
-  def testParseFile(self):
-    """Read a zeitgeist activity.sqlite file and run a few tests."""
-    test_file = os.path.join('test_data', 'activity.sqlite')
-
-    file_entry = utils.OpenOSFileEntry(test_file)
-    with interface.SQLiteDatabase(file_entry) as database:
-      generator = self.test_parser.Process(database)
-      self.assertTrue(generator)
-      events = list(generator)
+  def testProcess(self):
+    """Tests the Process function on a Zeitgeist activity database file."""
+    test_file = os.path.join(self.TEST_DATA_PATH, 'activity.sqlite')
+    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The sqlite file contains 44 events.
-    self.assertEquals(len(events), 44)
+    self.assertEquals(len(event_objects), 44)
 
     # Check the first event.
-    event_object = events[0]
+    event_object = event_objects[0]
 
-    expected_subject_uri = 'application://rhythmbox.desktop'
+    expected_subject_uri = u'application://rhythmbox.desktop'
     self.assertEquals(event_object.subject_uri, expected_subject_uri)
 
     # expr `date -u -d"2013-10-22T08:53:19+00:00" +"%s"` \* 1000000 + 477000
     self.assertEquals(event_object.timestamp, 1382431999477000)
 
-    # Test the event specific formatter.
     expected_msg = u'application://rhythmbox.desktop'
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
-    self.assertEquals(msg, expected_msg)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg)
 
 
 if __name__ == '__main__':
