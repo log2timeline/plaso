@@ -84,10 +84,7 @@ class PlistPlugin(plugin.BasePlugin):
   # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
   URLS = []
 
-  # We need access to both the top_level object and the plist name in order to
-  # properly evaluate whether this is the corretct plugin or not.
-  # pylint: disable-msg=arguments-differ
-  def Process(self, plist_name, top_level):
+  def Process(self, plist_name=None, top_level=None, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current plist being processed is a match for a
@@ -105,10 +102,13 @@ class PlistPlugin(plugin.BasePlugin):
 
     Raises:
       WrongPlistPlugin: If this plugin is not able to process the given file.
+      ValueError: If top_level or plist_name are not set.
 
     Returns:
       A generator of events processed by the plugin.
     """
+    if plist_name is None or top_level is None:
+      raise ValueError(u'Top level or plist name are not set.')
 
     self._top_level = top_level
 
@@ -117,6 +117,8 @@ class PlistPlugin(plugin.BasePlugin):
 
     if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
       raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+
+    super(PlistPlugin, self).Process(**kwargs)
 
     logging.debug(u'Plist Plugin Used: {} for: {}'.format(self.plugin_name,
                                                           plist_name))

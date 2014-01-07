@@ -519,10 +519,10 @@ class BsmParser(parser.BaseParser):
       raise errors.UnableToParseFile(
           u'Not a BSM File, unable to parse.',
           u'Reason given: {:s}'.format(e))
+
     if not is_bsm:
       raise errors.UnableToParseFile(
-          u'Not a BSM File, unable to parse.',
-          u'Reason given: {}'.format(e))
+          u'Not a BSM File, unable to parse.')
 
     event_object = self.ReadBSMEvent(file_object)
     while event_object:

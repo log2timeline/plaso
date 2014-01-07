@@ -15,77 +15,77 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the LS Quarantine database parser."""
+"""Tests for the LS Quarantine database plugin."""
 
 import os
 import unittest
 
 # pylint: disable-msg=unused-import
-from plaso.formatters import ls_quarantine as dummy_formatter
-from plaso.lib import eventdata
+from plaso.formatters import ls_quarantine as ls_quarantine_formatter
 from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import ls_quarantine
+from plaso.parsers.sqlite_plugins import test_lib
 from plaso.pvfs import utils
 
 import pytz
 
 
-class LSQuarantinePluginTest(unittest.TestCase):
-  """Tests for the LS Quarantine parser."""
+class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
+  """Tests for the LS Quarantine database plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = ls_quarantine.LsQuarantinePlugin(pre_obj)
+    self._plugin = ls_quarantine.LsQuarantinePlugin(pre_obj)
 
-  def testParseFile(self):
-    """Read a test LS Quarantine database."""
-    test_file = os.path.join('test_data', 'quarantine.db')
+  def testProcess(self):
+    """Tests the Process function on a LS Quarantine database file."""
+    test_file = os.path.join(self.TEST_DATA_PATH, 'quarantine.db')
+    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    event_objects = self._GetEventObjects(event_generator)
 
-    events = None
-    file_entry = utils.OpenOSFileEntry(test_file)
-    with interface.SQLiteDatabase(file_entry) as database:
-      generator = self.test_parser.Process(database)
-      self.assertTrue(generator)
-      events = list(generator)
+    # The quarantine database contains 14 event_objects.
+    self.assertEquals(len(event_objects), 14)
 
-    # The quarantine DB contains 14 events.
-    self.assertEquals(len(events), 14)
-
-    # Verify few entries.
-    vlc_event = events[3]
-    mackeeper_event = events[9]
-    speedtest_event = events[10]
-
+    # Examine a VLC event.
+    event_object = event_objects[3]
     # date -u -d"Jul 08, 2013 21:12:03" +"%s%N" (divided by 1000).
-    self.assertEquals(vlc_event.timestamp, 1373317923000000)
+    self.assertEquals(event_object.timestamp, 1373317923000000)
+    self.assertEquals(event_object.agent, u'Google Chrome')
+    vlc_url = (
+        u'http://download.cnet.com/VLC-Media-Player/3001-2139_4-10210434.html'
+        u'?spi=40ab24d3c71594a5017d74be3b0c946c')
+    self.assertEquals(event_object.url, vlc_url)
+
+    self.assertTrue(u'vlc-2.0.7-intel64.dmg' in event_object.data)
+
+    # Examine a MacKeeper event.
+    event_object = event_objects[9]
 
     # date -u -d"Jul 12, 2013 19:28:58" +"%s%N"
-    self.assertEquals(mackeeper_event.timestamp, 1373657338000000)
+    self.assertEquals(event_object.timestamp, 1373657338000000)
+
+    # Examine a SpeedTest event.
+    event_object = event_objects[10]
 
     # date -u -d"Jul 12, 2013 19:30:16" +"%s%N"
-    self.assertEquals(speedtest_event.timestamp, 1373657416000000)
-
-    self.assertEquals(vlc_event.agent, 'Google Chrome')
-    vlc_url = (
-        'http://download.cnet.com/VLC-Media-Player/3001-2139_4-10210434.html'
-        '?spi=40ab24d3c71594a5017d74be3b0c946c')
-    self.assertEquals(vlc_event.url, vlc_url)
-
-    self.assertTrue('vlc-2.0.7-intel64.dmg' in vlc_event.data)
+    self.assertEquals(event_object.timestamp, 1373657416000000)
 
     speedtest_message = (
-        '[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'
-        'speedtest.net.6/download.php?affid=460245286&trt=5&utm_campaign='
-        '3ES&tid_ext=P107fSKcSfqpMbcP3sI4fhKmeMchEB3dkAGpX4YIsvM;US;L;1 '
-        '<http://download.mackeeper.zeobit.com/package.php?'
-        'key=460245286&trt=5&landpr=Speedtest>')
-    message_string, _ = eventdata.EventFormatterManager.GetMessageStrings(
-        speedtest_event)
-    self.assertEquals(message_string, speedtest_message)
+        u'[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'
+        u'speedtest.net.6/download.php?affid=460245286&trt=5&utm_campaign='
+        u'3ES&tid_ext=P107fSKcSfqpMbcP3sI4fhKmeMchEB3dkAGpX4YIsvM;US;L;1 '
+        u'<http://download.mackeeper.zeobit.com/package.php?'
+        u'key=460245286&trt=5&landpr=Speedtest>')
+    speedtest_short = (
+        u'http://mackeeperapp.zeobit.com/aff/speedtest.net.6/download.php?'
+        u'affid=4602452...')
+
+    self._TestGetMessageStrings(
+        event_object, speedtest_message, speedtest_short)
 
 
 if __name__ == '__main__':

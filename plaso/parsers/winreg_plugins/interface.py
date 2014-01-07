@@ -60,22 +60,28 @@ class RegistryPlugin(plugin.BasePlugin):
     super(RegistryPlugin, self).__init__(pre_obj)
     self._config = pre_obj
     self._hive = hive
-    # TODO: Clean this up, this value is stored but not used. 
+
+    # TODO: Clean this up, this value is stored but not used.
     self._reg_cache = reg_cache
 
   @abc.abstractmethod
   def GetEntries(self):
     """Extracts event objects from the Windows Registry key."""
 
-  # TODO: Fix this, either make RegistryPlugin a separate interface
-  # or use kwargs to create a coherent plugin interface.
-  # pylint: disable-msg=arguments-differ
-  def Process(self, key):
-    """Determine if plugin should process and then process.
+  def Process(self, key=None, **kwargs):
+    """Processes the Windows Registry key or value if the plugin applies.
 
     Args:
       key: A Windows Registry key (instance of WinRegKey).
+
+    Raises:
+      ValueError: If the key value is not set.
     """
+    if key is None:
+      raise ValueError(u'Key is not set.')
+
+    super(RegistryPlugin, self).Process(**kwargs)
+    # TODO: Why do we need to store the key here, is it used anywhere?
     self._key = key
 
 
@@ -109,8 +115,8 @@ class KeyPlugin(RegistryPlugin):
   def GetEntries(self):
     """Extracts event objects from the Windows Registry key."""
 
-  def Process(self, key):
-    """Process the key based plugin."""
+  def Process(self, key=None, **kwargs):
+    """Process a Windows Registry key."""
     key_fixed = u''
     try:
       key_fixed = self._path_expander.ExpandPath(self.REG_KEY)
@@ -136,6 +142,7 @@ class KeyPlugin(RegistryPlugin):
     if key.path != key_fixed:
       return None
 
+    super(KeyPlugin, self).Process(key=key, **kwargs)
     self._key = key
     return self.GetEntries()
 
@@ -154,8 +161,10 @@ class ValuePlugin(RegistryPlugin):
   def GetEntries(self):
     """Extracts event objects from the Windows Registry key."""
 
-  def Process(self, key):
-    """Process the value based plugin."""
+  def Process(self, key=None, **kwargs):
+    """Processes the Windows Registry value."""
+    super(ValuePlugin, self).Process(key=key, **kwargs)
+
     values = frozenset([val.name for val in key.GetValues()])
     if self.REG_VALUES.issubset(values):
       self._key = key
