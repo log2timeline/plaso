@@ -35,7 +35,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class MacBsmEvent(event.EventObject):
-  """Convenience class for an Mac OS X BSM event."""
+  """Convenience class for a Mac OS X BSM event."""
 
   DATA_TYPE = 'mac:bsm:event'
 
@@ -102,9 +102,6 @@ class BsmParser(parser.BaseParser):
 
   IPV6_STRUCT = construct.Struct(
       'ipv6', construct.UBInt64('high'), construct.UBInt64('low'))
-
-  # TODO: Implement the following tokens:
-  #       au_to_ipc_perm, au_to_sock_unix
 
   # Tested structures.
   # INFO: I have ommited the ID in the structures declaration.
@@ -279,6 +276,17 @@ class BsmParser(parser.BaseParser):
       construct.UBInt8('object_type'),
       construct.UBInt32('object_id'))
 
+  # au_to_ipc_perm // au_to_ipc_perm
+  BSM_TOKEN_IPC_PERM = construct.Struct(
+      'bsm_token_ipc_perm',
+      construct.UBInt32('user_id'),
+      construct.UBInt32('group_id'),
+      construct.UBInt32('creator_user_id'),
+      construct.UBInt32('creator_group_id'),
+      construct.UBInt32('access_mode'),
+      construct.UBInt32('slot_seq'),
+      construct.UBInt32('key'))
+
   # au_to_iport // AUT_IPORT:
   BSM_TOKEN_PORT = construct.UBInt16('port_number')
 
@@ -372,6 +380,12 @@ class BsmParser(parser.BaseParser):
               construct.UBInt16('destination_port'),
               construct.UBInt32('destination_address'))))
 
+  # au_to_sock_unix // AUT_SOCKUNIX
+  BSM_TOKEN_SOCKET_UNIX = construct.Struct(
+      'bsm_token_au_to_sock_unix',
+      construct.UBInt16('family'),
+      construct.CString('path'))
+
   # au_to_data // au_to_data
   # how to print: bsmtoken.BSM_TOKEN_DATA_PRINT.
   # type: bsmtoken.BSM_TOKEN_DATA_TYPE.
@@ -455,6 +469,7 @@ class BsmParser(parser.BaseParser):
   # these structures.
   BSM_TYPE_LIST_NOT_TESTED = {
       49: ['BSM_TOKEN_ATTR32', BSM_TOKEN_ATTR32],
+      50: ['BSM_TOKEN_IPC_PERM', BSM_TOKEN_IPC_PERM],
       52: ['BSM_TOKEN_GROUPS', BSM_TOKEN_GROUPS],
       59: ['BSM_TOKEN_GROUPS', BSM_TOKEN_GROUPS],
       60: ['BSM_TOKEN_EXEC_ARGUMENTS', BSM_TOKEN_EXEC_ARGUMENTS],
@@ -467,7 +482,8 @@ class BsmParser(parser.BaseParser):
       124: ['BSM_TOKEN_PROCESS64_EX', BSM_TOKEN_PROCESS64_EX],
       125: ['BSM_TOKEN_SUBJECT64_EX', BSM_TOKEN_SUBJECT64_EX],
       126: ['BSM_TOKEN_ADDR_EXT', BSM_TOKEN_ADDR_EXT],
-      129: ['BSM_TOKEN_AUT_SOCKINET128', BSM_TOKEN_AUT_SOCKINET128]}
+      129: ['BSM_TOKEN_AUT_SOCKINET128', BSM_TOKEN_AUT_SOCKINET128],
+      130: ['BSM_TOKEN_SOCKET_UNIX', BSM_TOKEN_SOCKET_UNIX]}
 
   def __init__(self, pre_obj, config):
     """Initializes the parser.
@@ -502,7 +518,7 @@ class BsmParser(parser.BaseParser):
     except (IOError, construct.FieldError) as e:
       raise errors.UnableToParseFile(
           u'Not a BSM File, unable to parse.',
-          u'Reason given: {}'.format(e))
+          u'Reason given: {:s}'.format(e))
     if not is_bsm:
       raise errors.UnableToParseFile(
           u'Not a BSM File, unable to parse.',
@@ -641,7 +657,7 @@ class BsmParser(parser.BaseParser):
     except (IOError, construct.FieldError):
       return False
     if token_id not in self.BSM_TYPE_LIST:
-      logging.warning(
+      logging.debug(
           u'Unknown BSM token ID {}.'.format(token_id))
       return False
 
@@ -841,7 +857,7 @@ class BsmParser(parser.BaseParser):
           bsm_type,
           bsmtoken.BSM_PROTOCOLS.get(token.net_type, 'UNKNOWN'),
           token.net_type, token.port_number,
-          self._Ipv6Format(token.ipv6.high, token.ipv6.low))
+          self._IPv6Format(token.ipv6.high, token.ipv6.low))
     elif bsm_type == 'BSM_TOKEN_ADDR':
       return u'[{}: {}]'.format(bsm_type, self._IPv4Format(token))
     elif bsm_type == 'BSM_TOKEN_IP':
@@ -850,7 +866,7 @@ class BsmParser(parser.BaseParser):
       return u'[{0}: {1} ({2}). Address {3}]'.format(
           bsm_type,
           bsmtoken.BSM_PROTOCOLS.get(token.net_type, 'UNKNOWN'),
-          token.net_type, self._Ipv6Format(token.ipv6.high, token.ipv6.low))
+          token.net_type, self._IPv6Format(token.ipv6.high, token.ipv6.low))
     elif bsm_type == 'BSM_TOKEN_PORT':
       return u'[{}: {}]'.format(bsm_type, token)
     elif bsm_type == 'BSM_TOKEN_TRAILER':
@@ -940,10 +956,10 @@ class BsmParser(parser.BaseParser):
       return u'[{}: {}]'.format(bsm_type, u','.join(arguments))
     elif bsm_type == 'BSM_TOKEN_AUT_SOCKINET32_EX':
       if bsmtoken.BSM_PROTOCOLS.get(token.socket_domain, '') == 'INET6':
-        sadd = self._Ipv6Format(
+        sadd = self._IPv6Format(
             token.structure_addr_port.saddr_high,
             token.structure_addr_port.saddr_low)
-        dadd = self._Ipv6Format(
+        dadd = self._IPv6Format(
             token.structure_addr_port.daddr_high,
             token.structure_addr_port.daddr_low)
         return u'[{}: from {} port {} to {} port {}]'.format(
@@ -956,6 +972,14 @@ class BsmParser(parser.BaseParser):
             token.structure_addr_port.source_port,
             self._IPv4Format(token.structure_addr_port.destination_address),
             token.structure_addr_port.destination_port)
+    elif bsm_type == 'BSM_TOKEN_IPC_PERM':
+      return (u'[{}: user id {}, group id {}, create user id {}, '
+              u'ceate group id {}, access {}]'.format(
+          bsm_type, token.user_id, token.group_id,
+          token.creator_user_id, token.creator_group_id, token.access_mode))
+    elif bsm_type == 'BSM_TOKEN_SOCKET_UNIX':
+      return u'[{}: Family {}, Path {}]'.format(
+          bsm_type, token.family, token.path)
     elif bsm_type == 'BSM_TOKEN_OPAQUE':
       return u'[{}: {}]'.format(bsm_type, token.encode('hex'))
     elif bsm_type == 'BSM_TOKEN_SEQUENCE':
