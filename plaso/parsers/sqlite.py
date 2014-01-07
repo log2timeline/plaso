@@ -48,13 +48,9 @@ class SQLiteParser(parser.BaseParser):
     super(SQLiteParser, self).__init__(pre_obj, config)
     self._local_zone = False
     self.db = None
-    self._plugins = self._GetPlugins()
-
-  def _GetPlugins(self):
-    """Returns a list of all registered plugins."""
     parser_filter_string = getattr(self._config, 'parsers', None)
 
-    return plugin.GetRegisteredPlugins(
+    self._plugins = plugin.GetRegisteredPlugins(
         interface.SQLitePlugin, self._pre_obj, parser_filter_string)
 
   def Parse(self, file_entry):
@@ -76,6 +72,7 @@ class SQLiteParser(parser.BaseParser):
         raise errors.UnableToParseFile(
             u'Unable to parse SQLite database with error: {0:s}.'.format(e))
 
+      # Reset potential cache.
       for plugin_obj in self._plugins.itervalues():
         try:
           for event_object in plugin_obj.Process(database):

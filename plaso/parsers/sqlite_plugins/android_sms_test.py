@@ -14,7 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the Android SMS parser."""
+"""Tests for the Android SMS plugin."""
+
 import os
 import unittest
 
@@ -22,6 +23,7 @@ import unittest
 from plaso.formatters import android_sms as android_sms_formatter
 from plaso.lib import eventdata
 from plaso.lib import preprocess
+from plaso.parsers.sqlite_plugins import test_lib
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import interface
 from plaso.pvfs import utils
@@ -29,32 +31,27 @@ from plaso.pvfs import utils
 import pytz
 
 
-class AndroidSmsTest(unittest.TestCase):
-  """Tests for the Android SMS database parser."""
+class AndroidSmsTest(test_lib.SQLitePluginTestCase):
+  """Tests for the Android SMS database plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
 
-    self.test_parser = android_sms.AndroidSmsPlugin(pre_obj)
+    self._plugin = android_sms.AndroidSmsPlugin(pre_obj)
 
-  def testParseFile(self):
-    """Read an Android SMS mmssms.db file and run a few tests."""
-    test_file = os.path.join('test_data', 'mmssms.db')
-
-    events = None
-    file_entry = utils.OpenOSFileEntry(test_file)
-    with interface.SQLiteDatabase(file_entry) as database:
-      generator = self.test_parser.Process(database)
-      self.assertTrue(generator)
-      events = list(generator)
+  def testProcess(self):
+    """Test the Process function on an Android SMS mmssms.db file."""
+    test_file = os.path.join(self.TEST_DATA_PATH, 'mmssms.db')
+    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
-    self.assertEquals(len(events), 9)
+    self.assertEquals(len(event_objects), 9)
 
     # Check the first SMS sent.
-    event_object = events[0]
+    event_object = event_objects[0]
 
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.CREATION_TIME)
@@ -62,15 +59,11 @@ class AndroidSmsTest(unittest.TestCase):
     # date -u -d"2013-10-29 16:56:28.038000" +"%s.%N"
     self.assertEquals(event_object.timestamp, 1383065788038 * 1000)
 
-    expected_address = '1 555-521-5554'
+    expected_address = u'1 555-521-5554'
     self.assertEquals(event_object.address, expected_address)
 
-    expected_body = 'Yo Fred this is my new number.'
+    expected_body = u'Yo Fred this is my new number.'
     self.assertEquals(event_object.body, expected_body)
-
-    # Test the event specific formatter.
-    msg, short = eventdata.EventFormatterManager.GetMessageStrings(
-         event_object)
 
     expected_msg = (
         u'Type: SENT '
@@ -78,8 +71,7 @@ class AndroidSmsTest(unittest.TestCase):
         u'Status: READ '
         u'Message: Yo Fred this is my new number.')
     expected_short = u'Yo Fred this is my new number.'
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(short, expected_short)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
 
 if __name__ == '__main__':

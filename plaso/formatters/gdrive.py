@@ -14,31 +14,41 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This file contains a formatter for the Google Drive snaphots."""
+
 from plaso.lib import eventdata
+
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class GDriveCloudEntryFormatter(eventdata.EventFormatter):
+class GDriveCloudEntryFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Google Drive snapshot cloud entry."""
+
   DATA_TYPE = 'gdrive:snapshot:cloud_entry'
 
-  FORMAT_STRING = (u'File Path: {path} [{shared}] Size:{size} URL:{url} '
-                   u'doc_type:{doc_type}')
-  FORMAT_STRING_SHORT = u'{path}'
+  FORMAT_STRING_PIECES = [
+      u'File Path: {path}',
+      u'[{shared}]',
+      u'Size:{size}',
+      u'URL:{url} ',
+      u'doc_type:{doc_type}']
+  FORMAT_STRING_SHORT_PIECES = [u'{path}']
 
   SOURCE_LONG = 'Google Drive (cloud entry)'
   SOURCE_SHORT = 'LOG'
 
 
-class GDriveLocalEntryFormatter(eventdata.EventFormatter):
+class GDriveLocalEntryFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Google Drive snapshot local entry."""
+
   DATA_TYPE = 'gdrive:snapshot:local_entry'
 
-  FORMAT_STRING = u'File Path: {path} Size: {size}'
-  FORMAT_STRING_SHORT = u'{path}'
+  FORMAT_STRING_PIECES = [
+      u'File Path: {path}',
+      u'Size: {size}']
+
+  FORMAT_STRING_SHORT_PIECES = [u'{path}']
 
   SOURCE_LONG = 'Google Drive (local entry)'
   SOURCE_SHORT = 'LOG'

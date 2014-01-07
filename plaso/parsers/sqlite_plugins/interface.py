@@ -24,6 +24,7 @@ import tempfile
 from plaso.lib import errors
 from plaso.lib import plugin
 
+import pytz
 import sqlite3
 
 
@@ -46,10 +47,9 @@ class SQLitePlugin(plugin.BasePlugin):
     """Initialize the database plugin."""
     super(SQLitePlugin, self).__init__(pre_obj)
     self.db = None
+    self.zone = getattr(self._knowledge_base, 'zone', pytz.utc)
 
-  # pylint: disable-msg=arguments-differ
-  # TODO: change this so that the pylint override is not necessary.
-  def Process(self, database):
+  def Process(self, database=None, **kwargs):
     """Determine if this is the right plugin for this database.
 
     This function takes a SQLiteDatabase object and compares the list
@@ -68,11 +68,17 @@ class SQLitePlugin(plugin.BasePlugin):
     Raises:
       errors.WrongPlugin: If the database does not contain all the tables
       defined in the REQUIRED_TABLES set.
+      ValueError: If the database attribute is not passed in.
     """
+    if database is None:
+      raise ValueError(u'Database is not set.')
+
     if not frozenset(database.tables) >= self.REQUIRED_TABLES:
       raise errors.WrongPlugin(
           u'Not the correct database tables for: {}'.format(
               self.plugin_name))
+
+    super(SQLitePlugin, self).Process(**kwargs)
 
     self.db = database
     return self.GetEntries()
@@ -86,14 +92,9 @@ class SQLitePlugin(plugin.BasePlugin):
         sql_results = cursor.execute(query)
         row = sql_results.fetchone()
         while row:
-          event_generator = call_back(row=row, zone=self._knowledge_base.zone)
+          event_generator = call_back(row=row)
           if event_generator:
             for event_object in event_generator:
-              if event_object.timestamp < 0:
-                # TODO: For now we dependend on the timestamp to be
-                # set, change this soon so the timestamp does not need to
-                # be set.
-                event_object.timestamp = 0
               event_object.query = query
               if not hasattr(event_object, 'offset'):
                 if 'id' in row.keys():
@@ -105,9 +106,9 @@ class SQLitePlugin(plugin.BasePlugin):
       except sqlite3.DatabaseError as e:
         logging.debug('SQLite error occured: %s', e)
 
-  def Default(self, **kwarg):
+  def Default(self, dummy_row):
     """Default callback method for SQLite events, does nothing."""
-    logging.debug('Default handler: %s', kwarg)
+    logging.debug('Default handler: {0:s}'.format(dummy_row))
 
 
 class SQLiteDatabase(object):

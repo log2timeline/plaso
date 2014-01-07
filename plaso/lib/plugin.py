@@ -85,8 +85,7 @@ class BasePlugin(object):
   def GetEntries(self):
     """Extract and return EventObjects from the data structure."""
 
-  @abc.abstractmethod
-  def Process(self, *kwargs):
+  def Process(self, **kwargs):
     """Evaluate if this is the correct plugin and return a generator.
 
     The purpose of the process function is to evaluate if this particular
@@ -102,7 +101,12 @@ class BasePlugin(object):
 
     Returns:
       A generator, self.GetEntries(), if the correct plugin, otherwise None.
+
+    Raises:
+      ValueError: When there are unused keyword arguments.
     """
+    if kwargs:
+      raise ValueError(u'Unused keyword arguments.')
 
 
 def GetRegisteredPlugins(

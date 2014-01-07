@@ -213,13 +213,13 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([
       'moz_places', 'moz_historyvisits', 'moz_bookmarks', 'moz_items_annos'])
 
-  def ParseBookmarkAnnotationRow(self, row, **dummy_kwargs):
+  def ParseBookmarkAnnotationRow(self, row):
     """Parses a bookmark annotation row.
 
     Args:
       row: The row resulting from the query.
 
-    Returns:
+    Yields:
       An event container (FirefoxPlacesBookmarkAnnotation) containing the event
       data.
     """
@@ -234,15 +234,15 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
         container.data_type))
 
-    return container
+    yield container
 
-  def ParseBookmarkFolderRow(self, row, **dummy_kwargs):
+  def ParseBookmarkFolderRow(self, row):
     """Parses a bookmark folder row.
 
     Args:
       row: The row resulting from the query.
 
-    Returns:
+    Yields:
       An event container (FirefoxPlacesBookmarkFolder) containing the event
       data.
     """
@@ -262,15 +262,15 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
         container.data_type))
 
-    return container
+    yield container
 
-  def ParseBookmarkRow(self, row, **dummy_kwargs):
+  def ParseBookmarkRow(self, row):
     """Parses a bookmark row.
 
     Args:
       row: The row resulting from the query.
 
-    Returns:
+    Yields:
       An event container (FirefoxPlacesBookmark) containing the event data.
     """
     container = FirefoxPlacesBookmark(
@@ -286,9 +286,9 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
         container.data_type))
 
-    return container
+    yield container
 
-  def ParsePageVisitedRow(self, row, **dummy_kwargs):
+  def ParsePageVisitedRow(self, row):
     """Parses a page visited row.
 
     Args:
@@ -378,13 +378,13 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset(['moz_downloads'])
 
-  def ParseDownloadsRow(self, row, **dummy_kwargs):
+  def ParseDownloadsRow(self, row):
     """Parses a downloads row.
 
     Args:
       row: The row resulting from the query.
 
-    Returns:
+    Yields:
       An event container (FirefoxDownload) containing the event data.
     """
     container = FirefoxDownload(
@@ -399,4 +399,4 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
         row['endTime'], eventdata.EventTimestamp.END_TIME,
         container.data_type))
 
-    return container
+    yield container

@@ -81,11 +81,16 @@ class CookiePlugin(plugin.BasePlugin):
     Raises:
       errors.WrongPlugin: If the cookie name differs from the one
       supplied in COOKIE_NAME.
+      ValueError: If cookie_name or cookie_data are not set.
     """
+    if cookie_name is None or cookie_data is None:
+      raise ValueError(u'Cookie name or data are not set.')
+
     if cookie_name != self.COOKIE_NAME:
       raise errors.WrongPlugin(
           u'Not the correct cookie plugin for: {} [{}]'.format(
               cookie_name, self.plugin_name))
 
+    super(CookiePlugin, self).Process(**kwargs)
     self.cookie_data = cookie_data
     return self.GetEntries()

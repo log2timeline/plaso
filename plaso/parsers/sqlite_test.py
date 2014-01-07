@@ -36,9 +36,9 @@ class SQLiteParserTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    self.pre_obj = preprocess.PlasoPreprocess()
     self.config = Configuration()
-    self._parser = sqlite.SQLiteParser(pre_obj, self.config)
+    self._parser = sqlite.SQLiteParser(self.pre_obj, self.config)
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
     self.maxDiff = None
@@ -46,7 +46,7 @@ class SQLiteParserTest(unittest.TestCase):
   def testPluginList(self):
     """Test the plugin list returns the right values."""
     # pylint: disable-msg=protected-access
-    all_plugins = self._parser._GetPlugins()
+    all_plugins = self._parser._plugins
     self.assertGreaterEqual(len(all_plugins), 10)
 
     all_plugin_names = all_plugins.keys()
@@ -57,13 +57,15 @@ class SQLiteParserTest(unittest.TestCase):
 
     # Change the calculations of the parsers.
     self.config.parsers = 'chrome_history, firefox_history, -skype'
-    plugins = self._parser._GetPlugins()
+    self._parser = sqlite.SQLiteParser(self.pre_obj, self.config)
+    plugins = self._parser._plugins
 
     self.assertEquals(len(plugins), 2)
 
     # Test with a different plugin selection.
     self.config.parsers = 'sqlite, -skype'
-    plugins = self._parser._GetPlugins()
+    self._parser = sqlite.SQLiteParser(self.pre_obj, self.config)
+    plugins = self._parser._plugins
 
     # This should result in all plugins EXCEPT the skype one.
     self.assertEquals(len(plugins), len(all_plugins) - 1)

@@ -151,7 +151,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       'cfurl_cache_blob_data', 'cfurl_cache_receiver_data',
       'cfurl_cache_response'])
 
-  def ParseReceiverData(self, row, **dummy_kwargs):
+  def ParseReceiverData(self, row):
     """Parses a single row from the receiver and cache response table."""
     data = {}
     key_url = row['request_key']
