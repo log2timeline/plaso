@@ -72,10 +72,7 @@ class BencodePlugin(plugin.BasePlugin):
       event.BencodeEvent(key) - An event from the bencoded file.
     """
 
-  # Not sure why this is needed but pylint complains about the arguments
-  # differing from the interface, but it should not.
-  # pylint: disable-msg=arguments-differ
-  def Process(self, top_level):
+  def Process(self, top_level=None, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current bencode file being processed is a match for
@@ -92,12 +89,18 @@ class BencodePlugin(plugin.BasePlugin):
 
     Raises:
       WrongBencodePlugin: If this plugin is not able to process the given file.
+      ValueError: If top level is not set.
 
     Returns:
       A generator of events processed by the plugin.
     """
+    if top_level is None:
+      raise ValueError(u'Top level is not set.')
+
     if not set(top_level.keys()).issuperset(self.BENCODE_KEYS):
       raise errors.WrongBencodePlugin(self.plugin_name)
+
+    super(BencodePlugin, self).Process(**kwargs)
 
     logging.debug(u'Bencode Plugin Used: {}'.format(self.plugin_name))
     self.match = GetKeys(top_level, self.BENCODE_KEYS, 3)

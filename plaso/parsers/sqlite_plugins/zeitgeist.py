@@ -54,7 +54,7 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
              'ParseZeitgeistEventRow')]
   REQUIRED_TABLES = frozenset(['event', 'actor'])
 
-  def ParseZeitgeistEventRow(self, row, **_):
+  def ParseZeitgeistEventRow(self, row):
     """Parses zeitgeist event row.
 
     Args:

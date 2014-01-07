@@ -72,7 +72,7 @@ class AndroidSmsPlugin(interface.SQLitePlugin):
       1: 'READ'
     }
 
-  def ParseSmsRow(self, row, **dummy_kwargs):
+  def ParseSmsRow(self, row):
     """Parses an SMS row.
 
     Args:

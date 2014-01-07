@@ -17,6 +17,7 @@
 # limitations under the License.
 """Parser related functions and classes for testing."""
 
+import os
 import unittest
 
 from plaso.lib import event
@@ -28,11 +29,17 @@ from plaso.pvfs import utils as pvfs_utils
 class ParserTestCase(unittest.TestCase):
   """The unit test case for a parser."""
 
+  TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+
+  # Show full diff results, part of TestCase so does not follow our naming
+  # conventions.
+  maxDiff = None
+
   def _GetEventContainer(self, events):
     """Retrieves the event container from the events returned by the parser.
 
-       This function expects that there is only 1 event container in the events.
-  
+    This function expects that there is only 1 event container in the events.
+
     Args:
       events: a list of events containers or objects as returned by the parser
               (instances of EventObject or EventContainer).
@@ -49,8 +56,8 @@ class ParserTestCase(unittest.TestCase):
 
   def _GetEventContainers(self, events):
     """Retrieves the event containers from the events returned by the parser.
-  
-       This function does not allow for nested event event containers.
+
+    This function does not allow for nested event event containers.
 
     Args:
       events: a list of events containers or objects as returned by the parser
@@ -70,9 +77,9 @@ class ParserTestCase(unittest.TestCase):
 
   def _GetEventObjects(self, events):
     """Retrieves the event objects from the events returned by the parser.
-  
-       This function will extract events objects from event containers. It
-       does not allow for nested event event containers.
+
+    This function will extract events objects from event containers. It
+    does not allow for nested event event containers.
 
     Args:
       events: a list of events containers or objects as returned by the parser
@@ -98,7 +105,7 @@ class ParserTestCase(unittest.TestCase):
 
   def _ParseFile(self, parser_object, filename):
     """Parses a file using the parser class.
-  
+
     Args:
       parser_object: the parser object.
       filename: the name of the file to parse.

@@ -55,15 +55,20 @@ def GetTools():
 def GetToolsFrom(path):
   """Get tools from a given directory."""
   data = []
+
+  skip_files = ['presets.py', 'utils.py', '__init__.py']
+
   for _, _, filenames in os.walk(path):
     for filename in filenames:
       if '_test' in filename:
         continue
-      if 'presets.py' in filename:
+      if filename in skip_files:
         continue
-      if '.py' in filename and filename != '__init__.py':
-        if os.path.isfile(os.path.join(path, filename)):
-          data.append(os.path.join(path, filename))
+      if '.py' not in filename:
+        continue
+
+      if os.path.isfile(os.path.join(path, filename)):
+        data.append(os.path.join(path, filename))
 
   return data
 
