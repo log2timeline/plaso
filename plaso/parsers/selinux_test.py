@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a unit test for the selinux parser in plaso."""
+"""Tests for the selinux log file parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -34,7 +33,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
 class SELinuxUnitTest(test_lib.ParserTestCase):
-  """A unit test for the selinux."""
+  """Tests for the selinux log file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -45,7 +44,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'selinux.log')
+    test_file = self._GetTestFilePath(['selinux.log'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

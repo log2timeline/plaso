@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser Test for Windows Scheduled Task job files."""
+"""Tests for the Windows Scheduled Task job file parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -31,7 +30,7 @@ import pytz
 
 
 class WinJobTest(test_lib.ParserTestCase):
-  """The unit test for Windows Scheduled Task job parser."""
+  """Tests for the Windows Scheduled Task job file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class WinJobTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'wintask.job')
+    test_file = self._GetTestFilePath(['wintask.job'])
     events = self._ParseFile(self._parser, test_file)
     event_container = self._GetEventContainer(events)
 

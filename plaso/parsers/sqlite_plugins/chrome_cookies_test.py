@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the Google Chrome cookie database plugin."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -44,7 +43,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Chrome cookie database file."""
-    test_file = os.path.join(self.TEST_DATA_PATH, 'cookies.db')
+    test_file = self._GetTestFilePath(['cookies.db'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 

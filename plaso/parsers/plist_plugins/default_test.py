@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,29 +15,54 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a test for the default plist parser."""
+"""Tests for the default plist plugin."""
+
 import datetime
 import unittest
 
+# pylint: disable-msg=unused-import
+from plaso.formatters import plist as plist_formatter
 from plaso.parsers.plist_plugins import default
+from plaso.parsers.plist_plugins import test_lib
 
 import pytz
 
 
-class TestDefaultPlist(unittest.TestCase):
-  """The unit test for default plist parser."""
+class TestDefaultPlist(test_lib.PlistPluginTestCase):
+  """Tests for the default plist plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.plugin = default.DefaultPlugin(None)
+    self._plugin = default.DefaultPlugin(None)
 
-    self.top_level_dict_single = {
+  def testProcessSingle(self):
+    """Tests Process on a plist containing a root, value and timestamp."""
+    top_level_dict_single = {
         'DE-00-AD-00-BE-EF': {
             'Name': 'DBF Industries Slideshow Lazer', 'LastUsed':
             datetime.datetime(
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.utc)}}
 
-    self.top_level_dict_many_keys = {
+    events = list(self._plugin.Process('single', top_level_dict_single))
+    event_objects = self._GetEventObjects(events)
+
+    self.assertEquals(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    # Fri Nov  2 02:21:38.997672 CET 2012
+    self.assertEquals(event_object.timestamp, 1351819298997672)
+    self.assertEquals(event_object.root, u'/DE-00-AD-00-BE-EF')
+    self.assertEquals(event_object.key, u'LastUsed')
+
+    expected_string = (
+        u'/DE-00-AD-00-BE-EF/LastUsed')
+
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+
+  def testProcessMulti(self):
+    """Tests Process on a plist containing five keys with date values."""
+    top_level_dict_many_keys = {
         'DeviceCache': {
             '44-00-00-00-00-04': {
                 'Name': 'Apple Magic Trackpad 2', 'LMPSubversion': 796,
@@ -62,20 +88,17 @@ class TestDefaultPlist(unittest.TestCase):
                 datetime.datetime(
                     2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.utc)}}}
 
-  def testDefault_single(self):
-    """Ensure that the root, value, and timestamp are parsed correctly."""
-    event = list(self.plugin.Process('single', self.top_level_dict_single))
+    events = list(self._plugin.Process('nested', top_level_dict_many_keys))
+    event_objects = self._GetEventObjects(events)
 
-    self.assertEquals(len(event), 1)
-    self.assertEquals(event[0].root, '/DE-00-AD-00-BE-EF')
-    self.assertEquals(event[0].key, 'LastUsed')
-    self.assertEquals(event[0].timestamp, 1351819298997672)
+    self.assertEquals(len(event_objects), 5)
 
-  def testDefault_many_nested(self):
-    """Test to ensure the five keys with dates values are yielded."""
-    events = self.plugin.Process('nested', self.top_level_dict_many_keys)
+    event_object = event_objects[0]
 
-    self.assertEquals(len(list(events)), 5)
+    # Thu Apr  7 19:56:53.524275 CEST 2011
+    self.assertEquals(event_object.timestamp, 1302199013524275)
+    self.assertEquals(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
+    self.assertEquals(event_object.key, u'LastNameUpdate')
 
 
 if __name__ == '__main__':

@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the filestat parsing in Plaso."""
+"""Tests for filestat parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -30,7 +29,7 @@ from plaso.pvfs import pvfs
 
 
 class FileStatTest(test_lib.ParserTestCase):
-  """The unit test for filestat parser."""
+  """Tests for filestat parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class FileStatTest(test_lib.ParserTestCase):
     """Read a file within an image file and make few tests."""
     path = event.EventPathSpec()
     path.type = 'TSK'
-    path.container_path = os.path.join('test_data', 'image.dd')
+    path.container_path = self._GetTestFilePath(['image.dd'])
     path.image_offset = 0
     path.image_inode = 15
     path.file_path = 'passwords.txt'
@@ -56,7 +55,7 @@ class FileStatTest(test_lib.ParserTestCase):
     """Test a ZIP file."""
     path = event.EventPathSpec()
     path.type = 'ZIP'
-    path.container_path = os.path.join('test_data', 'syslog.zip')
+    path.container_path = self._GetTestFilePath(['syslog.zip'])
     path.file_path = 'syslog'
 
     events = self._ParseFileByPathSpec(self._parser, path)
@@ -69,7 +68,7 @@ class FileStatTest(test_lib.ParserTestCase):
     """Test a GZIP file."""
     path = event.EventPathSpec()
     path.type = 'GZIP'
-    path.file_path = os.path.join('test_data', 'syslog.gz')
+    path.file_path = self._GetTestFilePath(['syslog.gz'])
 
     events = self._ParseFileByPathSpec(self._parser, path)
 
@@ -79,7 +78,7 @@ class FileStatTest(test_lib.ParserTestCase):
     """Test a TAR file."""
     path = event.EventPathSpec()
     path.type = 'TAR'
-    path.container_path = os.path.join('test_data', 'syslog.tar')
+    path.container_path = self._GetTestFilePath(['syslog.tar'])
     path.file_path = 'syslog'
 
     events = self._ParseFileByPathSpec(self._parser, path)
@@ -90,7 +89,7 @@ class FileStatTest(test_lib.ParserTestCase):
     """Test a nested file."""
     path = event.EventPathSpec()
     path.type = 'GZIP'
-    path.file_path = os.path.join('test_data', 'syslog.tgz')
+    path.file_path = self._GetTestFilePath(['syslog.tgz'])
 
     host_file = event.EventPathSpec()
     host_file.type = 'TAR'
@@ -105,11 +104,11 @@ class FileStatTest(test_lib.ParserTestCase):
 
     path = event.EventPathSpec()
     path.type = 'OS'
-    path.file_path = os.path.join('test_data', 'syslog.gz')
+    path.file_path = self._GetTestFilePath(['syslog.gz'])
 
     gzip = event.EventPathSpec()
     gzip.type = 'GZIP'
-    gzip.file_path = os.path.join('test_data', 'syslog.gz')
+    gzip.file_path = self._GetTestFilePath(['syslog.gz'])
 
     path.nested_pathspec = gzip
 
@@ -122,7 +121,7 @@ class FileStatTest(test_lib.ParserTestCase):
     """Test a nested TSK file."""
     path = event.EventPathSpec()
     path.type = 'TSK'
-    path.container_path = os.path.join('test_data', 'syslog_image.dd')
+    path.container_path = self._GetTestFilePath(['syslog_image.dd'])
     path.image_offset = 0
     path.image_inode = 11
     path.file_path = 'logs/hidden.zip'

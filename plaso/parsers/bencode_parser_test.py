@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser Test for BitTorrent client activity files."""
+"""Tests for Bencode file parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -31,7 +30,7 @@ import pytz
 
 
 class BencodeTest(test_lib.ParserTestCase):
-  """The unit test for Bencode data plugins."""
+  """Tests for Bencode file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class BencodeTest(test_lib.ParserTestCase):
 
   def testTransmissionPlugin(self):
     """Read Transmission activity files and make few tests."""
-    test_file = os.path.join('test_data', 'bencode_transmission')
+    test_file = self._GetTestFilePath(['bencode_transmission'])
     events = self._ParseFile(self._parser, test_file)
     event_container = self._GetEventContainer(events)
 
@@ -75,7 +74,7 @@ class BencodeTest(test_lib.ParserTestCase):
 
   def testUTorrentPlugin(self):
     """Parse a uTorrent resume.dat file and make a few tests."""
-    test_file = os.path.join('test_data', 'bencode_utorrent')
+    test_file = self._GetTestFilePath(['bencode_utorrent'])
     events = self._ParseFile(self._parser, test_file)
     event_container = self._GetEventContainer(events)
 

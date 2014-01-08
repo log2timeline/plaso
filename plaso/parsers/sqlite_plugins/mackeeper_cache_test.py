@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the MacKeeper Cache database plugin."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -43,7 +42,7 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a MacKeeper Cache database file."""
-    test_file = os.path.join(self.TEST_DATA_PATH, 'mackeeper_cache.db')
+    test_file = self._GetTestFilePath(['mackeeper_cache.db'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 

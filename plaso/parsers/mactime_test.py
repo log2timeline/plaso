@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a unit test for the mactime parser in plaso."""
+"""Tests the for mactime parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -31,7 +30,7 @@ import pytz
 
 
 class MactimeUnitTest(test_lib.ParserTestCase):
-  """A unit test for the mactime parser."""
+  """Tests the for mactime parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class MactimeUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'mactime.body')
+    test_file = self._GetTestFilePath(['mactime.body'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

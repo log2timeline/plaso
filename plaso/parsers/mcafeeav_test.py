@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the McAfee AV Log parsers in plaso."""
+"""Tests for the McAfee AV Log parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -31,7 +30,7 @@ import pytz
 
 
 class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
-  """A unit test for the McAfee AV Access Protection Log parser."""
+  """Tests for the McAfee AV Log parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'AccessProtectionLog.txt')
+    test_file = self._GetTestFilePath(['AccessProtectionLog.txt'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

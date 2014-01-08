@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a unit test for the syslog parser in plaso."""
+"""Tests for the syslog parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -30,7 +29,7 @@ import pytz
 
 
 class SyslogUnitTest(test_lib.ParserTestCase):
-  """A unit test for the timelib."""
+  """Tests for the syslog parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class SyslogUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'syslog')
+    test_file = self._GetTestFilePath(['syslog'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 
