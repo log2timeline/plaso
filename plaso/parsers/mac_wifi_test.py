@@ -41,8 +41,8 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['wifi.log'])
-    events = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(event_generator)
 
     self.assertEqual(len(event_objects), 9)
 

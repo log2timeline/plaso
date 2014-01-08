@@ -42,8 +42,8 @@ class TestOleCfParser(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['Document.doc'])
-    events = self._ParseFile(self._parser, test_file)
-    event_containers = self._GetEventContainers(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_containers = self._GetEventContainers(event_generator)
 
     self.assertEquals(len(event_containers), 5)
 

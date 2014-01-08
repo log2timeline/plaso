@@ -41,8 +41,8 @@ class IDXTest(test_lib.ParserTestCase):
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""
     test_file = self._GetTestFilePath(['java_602.idx'])
-    events = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(event_generator)
 
     self.assertEquals(len(event_container.events), 2)
 
@@ -81,8 +81,8 @@ class IDXTest(test_lib.ParserTestCase):
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
     test_file = self._GetTestFilePath(['java.idx'])
-    events = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(event_generator)
 
     self.assertEquals(len(event_container.events), 2)
 

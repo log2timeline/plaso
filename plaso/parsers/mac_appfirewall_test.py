@@ -40,8 +40,8 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""
     test_file = self._GetTestFilePath(['appfirewall.log'])
-    events = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(event_generator)
 
     self.assertEqual(len(event_objects), 47)
 

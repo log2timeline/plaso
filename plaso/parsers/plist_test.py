@@ -35,8 +35,8 @@ class PlistParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['plist_binary'])
-    events = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(event_generator)
 
     # TODO: getting flaky results here!
     # using ./utils/run_tests.sh (12) or ./run_tests.py (13).

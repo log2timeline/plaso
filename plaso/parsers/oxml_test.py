@@ -41,8 +41,8 @@ class OXMLTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['Document.docx'])
-    events = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(event_generator)
 
     self.assertEquals(len(event_container.events), 2)
 
