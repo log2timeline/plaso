@@ -24,7 +24,6 @@ from plaso.formatters import mac_appfirewall as mac_appfirewall_formatter
 from plaso.lib import preprocess
 from plaso.parsers import mac_appfirewall
 from plaso.parsers import test_lib
-from plaso.pvfs import utils
 
 
 class MacAppFirewallUnitTest(test_lib.ParserTestCase):

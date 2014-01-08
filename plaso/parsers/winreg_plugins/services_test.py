@@ -24,7 +24,6 @@ from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import services
 from plaso.parsers.winreg_plugins import test_lib
-from plaso.pvfs import utils
 from plaso.winreg import test_lib as winreg_test_lib
 from plaso.winreg import winregistry
 

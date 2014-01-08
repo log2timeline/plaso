@@ -38,7 +38,7 @@ from plaso import preprocessors
 
 from plaso.frontend import preg
 from plaso.frontend import psort
-from plaso.frontend.utils import *  # pylint: disable-msg=W0401,W0614
+from plaso.frontend import utils as frontend_utils
 
 from plaso.lib import collector_filter
 from plaso.lib import engine
@@ -52,13 +52,13 @@ from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfilter
 from plaso.lib import preprocess
+from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import registry as class_registry
 from plaso.lib import storage
 from plaso.lib import text_parser
 from plaso.lib import timelib
 from plaso.lib import worker
-from plaso.lib.putils import *  # pylint: disable-msg=W0401,W0614
 
 from plaso.output import helper
 
@@ -67,7 +67,6 @@ from plaso.proto import transmission_pb2
 
 from plaso.pvfs import pfile
 from plaso.pvfs import pvfs
-from plaso.pvfs import utils
 from plaso.pvfs import vss
 
 from plaso.winreg import interface as win_registry_interface
@@ -77,11 +76,51 @@ import pytz
 import pyvshadow
 
 
+def FindAllOutputs():
+  """FindAllOutputs() - All available outputs."""
+  return putils.FindAllOutputs()
+
+
+def FindAllParsers():
+  """Finds all available parsers."""
+  return putils.FindAllParsers()
+  
+
+def GetEventData(event_proto, before):
+  """Prints a hexdump of the event data."""
+  return frontend_utils.OutputWriter.GetEventDataHexDump(event_proto, before)
+
+
+def OpenVssFile(path, image_path, store_number, image_offset):
+  """Opens a file-like object of a file in a VSS inside an image file."""
+  path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+      'VSS', path, container_path=image_path, image_offset=image_offset,
+      store_number=store_number)
+  return pfile.PFileResolver.OpenFileEntry(path_spec)
+
+
+def OpenTskFile(path, image_path, image_offset):
+  """Opens a file-like object of a file inside an image file."""
+  path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+      'TSK', path, container_path=image_path, image_offset=image_offset)
+  return pfile.PFileResolver.OpenFileEntry(path_spec)
+
+
+def Pfile2File(file_object, path):
+  """Saves a file-like object to the path."""
+  return frontend_utils.OutputWriter.WriteFile(file_object, path)
+
+
+def PrintTimestamp(timestamp):
+  """Prints a human readable timestamp from values stored in an event object."""
+  return putils.PrintTimestamp(timestamp)
+
+
 def Main():
   """Start the tool."""
   temp_location = tempfile.gettempdir()
 
-  options = Options()
+  options = putils.Options()
 
   # Set the default options.
   options.buffer_size = 0
@@ -127,6 +166,17 @@ def Main():
       except IOError:
         print 'Unable to load storage file, not a storage file?'
 
+  functions = [
+      FindAllParsers, FindAllOutputs, PrintTimestamp, OpenVssFile, OpenTskFile,
+      Pfile2File, GetEventData]
+
+  functions_strings = []
+  for function in functions:
+    docstring, _, _ = function.__doc__.partition(u'\n')
+    docstring = u'\t{0:s} - {1:s}'.format(function.__name__, docstring)
+    functions_strings.append(docstring)
+  functions_strings = u'\n'.join(functions_strings)
+
   banner = (
       '--------------------------------------------------------------\n'
       ' Welcome to Plaso console - home of the Plaso adventure land.\n'
@@ -138,21 +188,10 @@ def Main():
       'or help(parser).\n'
       '\n'
       'Base methods:\n'
-      '\tFindAllParsers() - All available parser.\n'
-      '\tFindAllOutputs() - All available outputs.\n'
-      '\tOpenOSFileIO(path) - Open a file-like object from a path.\n'
-      '\tPrintTimestamp(timestamp) - Print a human readable timestamp from '
-      'values stored in the EventObject.\n'
-      '\tOpenVssFile (file_to_open, image_path, store_number, image_offset) - '
-      'Open a PFile object from an image file, for a file inside a VSS.\n'
-      '\tOpenTskFile(file_to_open, image_path, image_offset) - Open a PFile '
-      'object from an image file.\n'
-      '\tPfile2File(fh_in, path) - Save a PFile object to a path in the OS.\n'
-      '\tGetEventData(event_proto, before) - Print out a hexdump of the event '
-      'for manual verification.\n'
+      '{0:s}'
       '\n'
       '\n'
-      'Happy command line console fu-ing.')
+      'Happy command line console fu-ing.').format(functions_strings)
 
   ipshell = InteractiveShellEmbed(
       user_ns=namespace, banner1=banner, exit_msg='')
