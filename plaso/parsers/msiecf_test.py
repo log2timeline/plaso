@@ -38,8 +38,8 @@ class MsiecfParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['index.dat'])
-    events = self._ParseFile(self._parser, test_file)
-    event_containers = self._GetEventContainers(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_containers = self._GetEventContainers(event_generator)
 
     # MSIE Cache File information:
     # 	File size:			32768 bytes

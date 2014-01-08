@@ -33,10 +33,10 @@ class WinRegTest(test_lib.ParserTestCase):
     pre_obj.current_control_set = 'ControlSet001'
     self._parser = winreg.WinRegistryParser(pre_obj)
 
-  def _GetPlugins(self, events):
+  def _GetPlugins(self, event_generator):
     """Return a dict with a plugin count given an event generator."""
     plugins = {}
-    for event_object in events:
+    for event_object in event_generator:
       if event_object.plugin in plugins:
         plugins[event_object.plugin] += 1
       else:
@@ -47,12 +47,14 @@ class WinRegTest(test_lib.ParserTestCase):
   def testNtuserParsing(self):
     """Parse a NTUSER.dat file and check few items."""
     test_file = self._GetTestFilePath(['NTUSER.DAT'])
-    events = self._ParseFile(self._parser, test_file)
+    event_generator = self._ParseFile(self._parser, test_file)
 
-    # pylint: disable-msg=W0212
-    self.assertEquals(self._parser._registry_type, 'NTUSER')
+    plugins = self._GetPlugins(event_generator)
 
-    plugins = self._GetPlugins(events)
+    # The _registry_type member is created dynamically by invoking
+    # the _GetPlugins function.
+    registry_type = getattr(self._parser, '_registry_type', '')
+    self.assertEquals(registry_type, 'NTUSER')
 
     self.assertTrue('winreg_userassist_2' in plugins)
     self.assertTrue('winreg_userassist_3' in plugins)
@@ -63,12 +65,14 @@ class WinRegTest(test_lib.ParserTestCase):
   def testSystemParsing(self):
     """Parse a SYSTEM hive an run few tests."""
     test_file = self._GetTestFilePath(['SYSTEM'])
-    events = self._ParseFile(self._parser, test_file)
+    event_generator = self._ParseFile(self._parser, test_file)
 
-    # pylint: disable-msg=W0212
-    self.assertEquals(self._parser._registry_type, 'SYSTEM')
+    plugins = self._GetPlugins(event_generator)
 
-    plugins = self._GetPlugins(events)
+    # The _registry_type member is created dynamically by invoking
+    # the _GetPlugins function.
+    registry_type = getattr(self._parser, '_registry_type', '')
+    self.assertEquals(registry_type, 'SYSTEM')
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
