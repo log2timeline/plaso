@@ -129,8 +129,8 @@ def Main():
   options.file_filter = ''
   options.filter = ''
   options.image = False
-  options.image_offset = 0
-  options.image_offset_bytes = 0
+  options.image_offset = None
+  options.image_offset_bytes = None
   options.local = True
   options.old_preprocess = False
   options.open_files = False
