@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the Google Chrome History database plugin."""
 
-import os
 import unittest
 
 from plaso.formatters import chrome
@@ -41,7 +40,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
-    test_file = os.path.join(self.TEST_DATA_PATH, 'History')
+    test_file = self._GetTestFilePath(['History'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 

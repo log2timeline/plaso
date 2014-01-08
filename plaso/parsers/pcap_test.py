@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for PCAP parser."""
+"""Tests for the PCAP parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -29,7 +28,7 @@ from plaso.parsers import test_lib
 
 
 class PCAPParserTest(test_lib.ParserTestCase):
-  """Tests for PCAP parser."""
+  """Tests for the PCAP parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class PCAPParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'test.pcap')
+    test_file = self._GetTestFilePath(['test.pcap'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the Opera browser history parsers."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -29,7 +28,7 @@ from plaso.parsers import test_lib
 
 
 class OperaTypedParserTest(test_lib.ParserTestCase):
-  """Tests for the Opera Typed History Parser."""
+  """Tests for the Opera Typed History parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -42,7 +41,7 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'typed_history.xml')
+    test_file = self._GetTestFilePath(['typed_history.xml'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 
@@ -85,7 +84,7 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
   def testParseFile(self):
     """Read a history file and run a few tests."""
-    test_file = os.path.join('test_data', 'global_history.dat')
+    test_file = self._GetTestFilePath(['global_history.dat'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

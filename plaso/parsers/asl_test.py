@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser test for Apple System Log files."""
+"""Tests for Apple System Log file parser."""
 
-import os
 import pytz
 import unittest
 
@@ -30,7 +29,7 @@ from plaso.parsers import test_lib
 
 
 class AslParserTest(test_lib.ParserTestCase):
-  """The unit test for ASL parser."""
+  """Tests for Apple System Log file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class AslParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'applesystemlog.asl')
+    test_file = self._GetTestFilePath(['applesystemlog.asl'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

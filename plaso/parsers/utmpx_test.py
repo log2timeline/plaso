@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser test for utmpx files."""
+"""Tests for utmpx file parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -30,7 +29,7 @@ import pytz
 
 
 class UtmpxParserTest(test_lib.ParserTestCase):
-  """The unit test for UTMPX parser."""
+  """Tests for utmpx file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -40,7 +39,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'utmpx_mac')
+    test_file = self._GetTestFilePath(['utmpx_mac'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

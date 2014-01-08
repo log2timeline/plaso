@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the Windows recycler parser."""
+"""Tests for the Windows recycler parsers."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -41,7 +40,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', '$II3DF3L.zip')
+    test_file = self._GetTestFilePath(['$II3DF3L.zip'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 
@@ -79,7 +78,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
-    test_file = os.path.join('test_data', 'INFO2')
+    test_file = self._GetTestFilePath(['INFO2'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

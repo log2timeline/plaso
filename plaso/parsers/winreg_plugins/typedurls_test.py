@@ -15,81 +15,83 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a test for typed URLs plugin in Plaso."""
+"""Tests for the MSIE typed URLs Windows Registry plugin."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
 from plaso.parsers import winreg
+from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import typedurls
-from plaso.pvfs import utils
-from plaso.winreg import winregistry
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class RegistryTypedURLsTest(unittest.TestCase):
-  """The unit test for typed URLs plugin."""
+class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the MSIE typed URLs Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    registry = winregistry.WinRegistry(
-        winregistry.WinRegistry.BACKEND_PYREGF)
+    self._plugin = typedurls.MsieTypedURLsPlugin()
 
-    test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
-    file_entry = utils.OpenOSFileEntry(test_file)
-    self.winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
+  def testProcess(self):
+    """Tests the Process function."""
+    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    key_path = u'\\Software\\Microsoft\\Internet Explorer\\TypedURLs'
+    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjects(event_generator)
 
-  def testMsieTypedURLs(self):
-    """Test the MISE Typed URLs plugin."""
-    key = self.winreg_file.GetKeyByPath(
-        '\\Software\\Microsoft\\Internet Explorer\\TypedURLs')
-    plugin = typedurls.MsieTypedURLsPlugin()
-    entries = list(plugin.Process(key))
+    self.assertEquals(len(event_objects), 13)
 
-    self.assertEquals(len(entries), 13)
+    event_object = event_objects[0]
 
-    self.assertEquals(entries[0].timestamp, 1331587433307749)
-    self.assertTrue(u'url1' in entries[0].regvalue)
+    # Mon Mar 12 21:23:53.307749 UTC 2012
+    self.assertEquals(event_object.timestamp, 1331587433307749)
 
-    expected_value_data = u'http://cnn.com/'
+    regvalue_identifier = u'url1'
+    expected_value = u'http://cnn.com/'
+    self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    self.assertEquals(entries[0].regvalue[u'url1'], expected_value_data)
+    expected_string = u'[{0:s}] {1:s}: {2:s}'.format(
+        key_path, regvalue_identifier, expected_value)
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
-    expected_string = (
-        u'[\\Software\\Microsoft\\Internet Explorer\\TypedURLs] '
-        u'url1: http://cnn.com/')
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(msg, expected_string)
+class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the typed paths Windows Registry plugin."""
 
-  def testTypedPaths(self):
-    """Test the Typed Paths plugin."""
-    key = self.winreg_file.GetKeyByPath(
-        '\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-        '\\TypedPaths')
-    plugin = typedurls.TypedPathsPlugin()
-    entries = list(plugin.Process(key))
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    self._plugin = typedurls.TypedPathsPlugin()
 
-    self.assertEquals(len(entries), 1)
+  def testProcess(self):
+    """Tests the Process function."""
+    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    key_path = (
+        u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths')
+    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(entries[0].timestamp, 1289375895811625)
-    self.assertTrue(u'url1' in entries[0].regvalue)
+    self.assertEquals(len(event_objects), 1)
 
-    expected_value_data = u'\\\\controller'
+    event_object = event_objects[0]
 
-    self.assertEquals(entries[0].regvalue[u'url1'], expected_value_data)
+    # Wed Nov 10 07:58:15.811625 UTC 2010
+    self.assertEquals(event_object.timestamp, 1289375895811625)
 
-    expected_string = (
-        u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
-        u'TypedPaths] url1: \\\\controller')
+    regvalue_identifier = u'url1'
+    expected_value = u'\\\\controller'
+    self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(msg, expected_string)
+    expected_msg = u'[{0:s}] {1:s}: {2:s}'.format(
+        key_path, regvalue_identifier, expected_value)
+    expected_msg_short = u'[{0:s}] {1:s}: \\\\cont...'.format(
+        key_path, regvalue_identifier)
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

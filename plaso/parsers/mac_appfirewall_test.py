@@ -14,9 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a unit test for Mac AppFirewall log parser."""
+"""Tests for Mac AppFirewall log file parser."""
 
-import os
 import pytz
 import unittest
 
@@ -29,7 +28,7 @@ from plaso.pvfs import utils
 
 
 class MacAppFirewallUnitTest(test_lib.ParserTestCase):
-  """A unit test for the Mac Wifi log parser."""
+  """Tests for Mac AppFirewall log file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -40,7 +39,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""
-    test_file = os.path.join('test_data', 'appfirewall.log')
+    test_file = self._GetTestFilePath(['appfirewall.log'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

@@ -23,74 +23,71 @@ import unittest
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.pvfs import pfile
-from plaso.pvfs import utils as pvfs_utils
 
 
 class ParserTestCase(unittest.TestCase):
   """The unit test case for a parser."""
 
-  TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
   maxDiff = None
 
-  def _GetEventContainer(self, events):
-    """Retrieves the event container from the events returned by the parser.
+  def _GetEventContainer(self, event_generator):
+    """Retrieves the event container from the event generator.
 
-    This function expects that there is only 1 event container in the events.
+    This function expects that there is only 1 event container returned by the
+    event generator.
 
     Args:
-      events: a list of events containers or objects as returned by the parser
-              (instances of EventObject or EventContainer).
+      event_generator: the event generator as returned by the parser.
 
     Returns:
       A list of event objects (instances of EventObject).
     """
-    self.assertEquals(len(events), 1)
+    self.assertEquals(len(event_generator), 1)
 
-    event_container = events[0]
+    event_container = event_generator[0]
     self.assertIsInstance(event_container, event.EventContainer)
 
     return event_container
 
-  def _GetEventContainers(self, events):
-    """Retrieves the event containers from the events returned by the parser.
+  def _GetEventContainers(self, event_generator):
+    """Retrieves the event containers from the event generator.
 
     This function does not allow for nested event event containers.
 
     Args:
-      events: a list of events containers or objects as returned by the parser
-              (instances of EventObject or EventContainer).
+      event_generator: the event generator as returned by the parser.
 
     Returns:
       A list of event containers (instances of EventContainer).
     """
     event_containers = []
 
-    for event_container in events:
+    for event_container in event_generator:
       self.assertIsInstance(event_container, event.EventContainer)
       self.assertNotEquals(event_container.containers, None)
       event_containers.append(event_container)
 
     return event_containers
 
-  def _GetEventObjects(self, events):
-    """Retrieves the event objects from the events returned by the parser.
+  def _GetEventObjects(self, event_generator):
+    """Retrieves the event objects from the event_generator.
 
-    This function will extract events objects from event containers. It
+    This function will extract event objects from event containers. It
     does not allow for nested event event containers.
 
     Args:
-      events: a list of events containers or objects as returned by the parser
-              (instances of EventObject or EventContainer).
+      event_generator: the event generator as returned by the parser.
 
     Returns:
       A list of event objects (instances of EventObject).
     """
     event_objects = []
 
-    for event_object in events:
+    for event_object in event_generator:
       if isinstance(event_object, event.EventContainer):
         self.assertNotEquals(event_object.containers, None)
 
@@ -103,22 +100,36 @@ class ParserTestCase(unittest.TestCase):
 
     return event_objects
 
-  def _ParseFile(self, parser_object, filename):
-    """Parses a file using the parser class.
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file relative to the test data directory.
 
     Args:
+      path_segments: the path segments inside the test data directory.
+
+    Returns: 
+      A path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)
+
+  def _ParseFile(self, parser_object, path):
+    """Parses a file using the parser object.
+  
+    Args:
       parser_object: the parser object.
-      filename: the name of the file to parse.
+      path: the path of the file to parse.
 
     Returns:
       A list of event containers or objects as returned by the parser
       (instances of EventObject or EventContainer).
     """
-    file_entry = pvfs_utils.OpenOSFileEntry(filename)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
     return list(parser_object.Parse(file_entry))
 
   def _ParseFileByPathSpec(self, parser_object, path_spec):
-    """Parses a file using the parser class.
+    """Parses a file using the parser object.
 
     Args:
       parser_object: the parser object.

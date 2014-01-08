@@ -18,7 +18,6 @@
 """Tests for the Mozilla Firefox history database plugin."""
 
 import collections
-import os
 import unittest
 
 from plaso.formatters import firefox
@@ -43,7 +42,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessPriorTo24(self):
     """Tests the Process function on a Firefox History database file."""
     # This is probably version 23 but potentially an older version.
-    test_file = os.path.join(self.TEST_DATA_PATH, 'places.sqlite')
+    test_file = self._GetTestFilePath(['places.sqlite'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 
@@ -188,7 +187,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
-    test_file = os.path.join(self.TEST_DATA_PATH, 'places_new.sqlite')
+    test_file = self._GetTestFilePath(['places_new.sqlite'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 
@@ -231,7 +230,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox Downloads database file."""
-    test_file = os.path.join(self.TEST_DATA_PATH, 'downloads.sqlite')
+    test_file = self._GetTestFilePath(['downloads.sqlite'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 

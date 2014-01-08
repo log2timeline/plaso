@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the LS Quarantine database plugin."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -43,7 +42,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a LS Quarantine database file."""
-    test_file = os.path.join(self.TEST_DATA_PATH, 'quarantine.db')
+    test_file = self._GetTestFilePath(['quarantine.db'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 

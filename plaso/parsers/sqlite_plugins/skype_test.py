@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the Skype main.db history database plugin."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -57,7 +56,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         id =  1 -> Chat
         id = 14 -> ChatRoom
     """
-    test_file = os.path.join(self.TEST_DATA_PATH, 'skype_main.db')
+    test_file = self._GetTestFilePath(['skype_main.db'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 

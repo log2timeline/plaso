@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser Test for Java Cache IDX files."""
+"""Tests for Java Cache IDX file parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -31,7 +30,7 @@ import pytz
 
 
 class IDXTest(test_lib.ParserTestCase):
-  """The unit test for Java IDX parser."""
+  """Tests for Java Cache IDX file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -41,7 +40,7 @@ class IDXTest(test_lib.ParserTestCase):
 
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""
-    test_file = os.path.join('test_data', 'java_602.idx')
+    test_file = self._GetTestFilePath(['java_602.idx'])
     events = self._ParseFile(self._parser, test_file)
     event_container = self._GetEventContainer(events)
 
@@ -81,7 +80,7 @@ class IDXTest(test_lib.ParserTestCase):
 
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
-    test_file = os.path.join('test_data', 'java.idx')
+    test_file = self._GetTestFilePath(['java.idx'])
     events = self._ParseFile(self._parser, test_file)
     event_container = self._GetEventContainer(events)
 
