@@ -30,7 +30,6 @@ from plaso.lib import utils
 from plaso.parsers import filestat
 from plaso.pvfs import pfile
 from plaso.pvfs import pfile_entry
-from plaso.pvfs import utils as pvfs_utils
 from plaso.pvfs import vss
 
 
@@ -517,19 +516,41 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
         # of path[1:] will be an empty string.
         yield path[1:]
 
+  def _OpenImageFile(
+      self, type_indicator, path, container_path, byte_offset=0,
+      store_number=None):
+    """Opens a file entry object for a file in a raw disk image.
+
+    Args:
+      type_indicator: the path specification type indicator.
+      path: the path to open.
+      container_path: the path of the image.
+      byte_offset: Optional byte offset into the image file if this is a disk
+                   image. The default is 0.
+      store_number: Optional VSS store index number. The default is None.
+
+    Returns:
+      A file entry object.
+    """
+    container_path = utils.GetUnicodeString(container_path)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+        type_indicator, path, container_path=container_path,
+        image_offset=byte_offset, store_number=store_number)
+
+    return pfile.PFileResolver.OpenFileEntry(path_spec)
+
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""
     if self._process_image:
-      image_offset = self._GetImageByteOffset() / self._BYTES_PER_SECTOR
+      image_offset = self._GetImageByteOffset()
 
       if self._process_vss:
-        file_entry = pvfs_utils.OpenImageFile(
-            path, self._source_path, 'vss', self._store_number, image_offset,
-            sector_size=self._BYTES_PER_SECTOR)
+        file_entry = self._OpenImageFile(
+            'VSS', path, self._source_path, byte_offset=image_offset,
+            store_number=self._store_number)
       else:
-        file_entry = pvfs_utils.OpenImageFile(
-            path, self._source_path, 'tsk', image_offset,
-            sector_size=self._BYTES_PER_SECTOR)
+        file_entry = self._OpenImageFile(
+            'TSK', path, self._source_path, byte_offset=image_offset)
     else:
       path = os.path.join(self._source_path, path)
 

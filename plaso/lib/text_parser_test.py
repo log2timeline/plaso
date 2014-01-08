@@ -26,7 +26,7 @@ from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 from plaso.lib import text_parser
-from plaso.pvfs import utils as pvfs_utils
+from plaso.pvfs import pfile
 
 import pyparsing
 import pytz
@@ -102,14 +102,16 @@ class TextParserTest(unittest.TestCase):
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
     test_file = os.path.join('test_data', 'text_parser', 'test1.txt')
-    file_entry = pvfs_utils.OpenOSFileEntry(test_file)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
     text_generator = self._parser.Parse(file_entry)
     self.assertRaises(errors.UnableToParseFile, list, text_generator)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
     test_file = os.path.join('test_data', 'text_parser', 'test2.txt')
-    file_entry = pvfs_utils.OpenOSFileEntry(test_file)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
     text_generator = self._parser.Parse(file_entry)
 
     first_entry = text_generator.next()

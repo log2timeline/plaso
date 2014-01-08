@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.pvfs import utils
 from plaso.parsers.winreg_plugins import officemru
 from plaso.parsers.winreg_plugins import test_lib
 
