@@ -171,7 +171,7 @@ def Main():
   #          'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
 
   function_group.add_argument(
-      '-o', '--offset', dest='image_offset', action='store', default=0,
+      '-o', '--offset', dest='image_offset', action='store', default=None,
       type=int, help=(
           'The sector offset to the image in sector sizes (default to 512 '
           'bytes, possible to overwrite with --sector_size). '
@@ -180,7 +180,7 @@ def Main():
 
   function_group.add_argument(
       '--ob', '--offset_bytes', dest='image_offset_bytes', action='store',
-      default=0, type=int, help='The bytes offset to the image')
+      default=None, type=int, help='The bytes offset to the image')
 
   # Build the version information.
   version_string = u'log2timeline - plaso backend {}'.format(

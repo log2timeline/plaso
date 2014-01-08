@@ -145,6 +145,32 @@ class PlasoPFileTest(unittest.TestCase):
     self.assertEquals(stat.size, 116)
     self.assertEquals(stat.ino, 15)
 
+  def testTSKFileEntryWithOffset(self):
+    """Reads a file from a volume within a parititioned image file."""
+    test_file = os.path.join('test_data', 'tsk_volume_system.raw')
+
+    path = event.EventPathSpec()
+    path.type = 'TSK'
+    path.container_path = test_file
+    path.image_inode = 11
+    path.file_path = 'lost+found'
+
+    # Test the offset in bytes.
+    path.image_offset = 352 * 512
+    fscache = pvfs.FilesystemCache()
+    file_entry = pfile_entry.TSKFileEntry(path, fscache=fscache)
+    _ = file_entry.Open()
+
+    self.assertEquals(file_entry.name, u'lost+found')
+
+    # Test the offset in sectors.
+    path.image_offset = 352
+    fscache = pvfs.FilesystemCache()
+    file_entry = pfile_entry.TSKFileEntry(path, fscache=fscache)
+
+    with self.assertRaises(errors.UnableToOpenFilesystem):
+      _ = file_entry.Open()
+
   def testZipFileEntry(self):
     test_file = os.path.join('test_data', 'syslog.zip')
 
