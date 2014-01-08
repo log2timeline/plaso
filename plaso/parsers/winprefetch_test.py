@@ -41,10 +41,9 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
     test_file = self._GetTestFilePath(['CMD.EXE-087B4001.pf'])
-    events = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(event_generator)
 
-    # Check the number of events in event container.
     self.assertEquals(len(event_container.events), 2)
     self.assertEquals(event_container.version, 17)
 
@@ -71,10 +70,9 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
     test_file = self._GetTestFilePath(['PING.EXE-B29F6629.pf'])
-    events = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(event_generator)
 
-    # Check the number of events in event container.
     self.assertEquals(len(event_container.events), 2)
     self.assertEquals(event_container.version, 23)
 
@@ -117,10 +115,9 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
     test_file = self._GetTestFilePath(['TASKHOST.EXE-3AE259FC.pf'])
-    events = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(event_generator)
 
-    # Check the number of events in event container.
     self.assertEquals(len(event_container.events), 5)
     self.assertEquals(event_container.version, 26)
 
