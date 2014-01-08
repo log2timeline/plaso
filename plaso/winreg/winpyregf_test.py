@@ -20,37 +20,44 @@
 import os
 import unittest
 
-from plaso.pvfs import utils
+from plaso.pvfs import pfile
 from plaso.winreg import winpyregf
 
 
 class RegistryUnitTest(unittest.TestCase):
   """An unit test for the plaso winpyregf library."""
 
-  def _KeyPathCompare(self, reg, path):
-    """Get a key, compare it's path to the path requested."""
-    key = reg.GetKeyByPath(path)
-    self.assertEquals(key.path, path)
+  def _KeyPathCompare(self, winreg_file, key_path):
+    """Retrieves a key from the file and checks if the path key matches.
+
+    Args:
+      winreg_file: the Windows Registry file (instance of WinPyregfFile).
+      key_path: the key path to retrieve and compare.
+    """
+    key = winreg_file.GetKeyByPath(key_path)
+    self.assertEquals(key.path, key_path)
 
   def testListKeys(self):
     test_file = os.path.join('test_data', 'NTUSER.DAT')
-    file_entry = utils.OpenOSFileEntry(test_file)
-    reg = winpyregf.WinRegistry(file_entry)
-    keys = list(reg)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    winreg_file = winpyregf.WinRegistry(file_entry)
+    keys = list(winreg_file)
 
     # Count the number of Registry keys in the hive.
     self.assertEquals(len(keys), 1126)
 
   def testWinPyregf(self):
     test_file = os.path.join('test_data', 'NTUSER.DAT')
-    file_entry = utils.OpenOSFileEntry(test_file)
-    reg = winpyregf.WinPyregfFile()
-    reg.Open(file_entry)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    winreg_file = winpyregf.WinPyregfFile()
+    winreg_file.Open(file_entry)
 
-    self._KeyPathCompare(reg, '\\')
-    self._KeyPathCompare(reg, '\\Printers')
-    self._KeyPathCompare(reg, '\\Printers\\Connections')
-    self._KeyPathCompare(reg, '\\Software')
+    self._KeyPathCompare(winreg_file, u'\\')
+    self._KeyPathCompare(winreg_file, u'\\Printers')
+    self._KeyPathCompare(winreg_file, u'\\Printers\\Connections')
+    self._KeyPathCompare(winreg_file, u'\\Software')
 
 
 if __name__ == '__main__':

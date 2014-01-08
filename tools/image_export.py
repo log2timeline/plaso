@@ -26,11 +26,11 @@ import sys
 from plaso import preprocessors
 
 from plaso.collector import factory as collector_factory
+from plaso.frontend import utils as frontend_utils
 from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import preprocess
-from plaso.lib import putils
 from plaso.lib import queue
 from plaso.pvfs import pfile
 from plaso.pvfs import vss
@@ -254,7 +254,7 @@ class FileSaver(object):
 
     if save_file:
       try:
-        putils.Pfile2File(
+        frontend_utils.OutputWriter.WriteFile(
             file_entry, os.path.join(directory, extracted_filename))
       except IOError as e:
         logging.error(

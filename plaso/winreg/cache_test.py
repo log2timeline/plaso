@@ -20,7 +20,7 @@
 import os
 import unittest
 
-from plaso.pvfs import utils
+from plaso.pvfs import pfile
 from plaso.winreg import cache
 from plaso.winreg import winregistry
 
@@ -34,7 +34,8 @@ class CacheTest(unittest.TestCase):
         winregistry.WinRegistry.BACKEND_PYREGF)
 
     test_file = os.path.join('test_data', 'SYSTEM')
-    file_entry = utils.OpenOSFileEntry(test_file)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
     winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
     winreg_cache = cache.WinRegistryCache(winreg_file, 'SYSTEM')
