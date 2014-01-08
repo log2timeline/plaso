@@ -18,26 +18,27 @@
 """Plist plugin related functions and classes for testing."""
 
 from plaso.parsers import test_lib
-from plaso.pvfs import utils as pvfs_utils
+from plaso.pvfs import pfile
 
 
 class PlistPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for a plist plugin."""
 
   def _ParsePlistFileWithPlugin(
-      self, parser_object, plugin_object, filename, plist_name):
+      self, parser_object, plugin_object, path, plist_name):
     """Parses a file using the parser and plugin object.
   
     Args:
       parser_object: the parser object.
       plugin_object: the pluging object.
-      filename: the name of the file to parse.
+      path: the path of the file to parse.
       plist_name: the name of the plist to parse.
 
     Returns:
       A generator of event objects as returned by the plugin.
     """
-    file_entry = pvfs_utils.OpenOSFileEntry(filename)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
 
     top_level_object = parser_object.GetTopLevel(file_entry)
     self.assertNotEquals(top_level_object, None)

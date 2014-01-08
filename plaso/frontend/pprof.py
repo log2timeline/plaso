@@ -40,7 +40,7 @@ from plaso.lib import preprocess
 from plaso.lib import utils
 from plaso.lib import queue
 from plaso.lib import worker
-from plaso.pvfs import utils as pvfs_utils
+from plaso.pvfs import pfile
 
 import pyevt
 import pyevtx
@@ -185,8 +185,10 @@ def ProcessStorage(options):
 
 def ProcessFile(options):
   """Process a file and produce profile results."""
+  path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+      'OS', options.file_to_parse)
   try:
-    file_entry = pvfs_utils.OpenOSFileEntry(options.file_to_parse)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
   except IOError as e:
     logging.error(u'Unable to open file: {0:s} with error: {1:s}'.format(
         options.file_to_parse, e))

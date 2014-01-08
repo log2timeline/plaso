@@ -25,7 +25,7 @@ from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
 from plaso.parsers.sqlite_plugins import zeitgeist
-from plaso.pvfs import utils
+from plaso.pvfs import pfile
 
 import pytz
 

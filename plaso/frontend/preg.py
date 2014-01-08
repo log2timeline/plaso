@@ -52,7 +52,7 @@ from plaso.lib import utils
 from plaso.lib import putils
 from plaso.parsers import winreg_plugins    # pylint: disable-msg=unused-import
 from plaso.parsers.winreg_plugins import interface
-from plaso.pvfs import utils as pvfs_utils
+from plaso.pvfs import pfile
 from plaso.pvfs import vss
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
@@ -135,7 +135,7 @@ class RegistryHexFormatter(RegistryFormatter):
     event_object.pathspec = RegCache.hive.file_object.pathspec
     ret_strings.append(utils.FormatHeader('Hex Output From Event.', '-'))
     ret_strings.append(
-        frontend_utils.GetEventData(event_object))
+        frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
 
     return u'\n'.join(ret_strings), u''
 
@@ -336,7 +336,7 @@ class MyMagics(magic.Magics):
           print '-'*80
           print utils.FormatOutputString('Attribute', value.name)
           print '-'*80
-          print frontend_utils.GetHexDump(value.data)
+          print frontend_utils.OutputWriter.GetHexDump(value.data)
           print ''
           print '+-'*40
           print ''
@@ -460,7 +460,8 @@ class MyMagics(magic.Magics):
             pad = ' ' * (32 - len(leftovers))
             hex_string += pad
 
-          value_string = frontend_utils.GetHexDumpLine(hex_string, 0)
+          value_string = frontend_utils.OutputWriter.GetHexDumpLine(
+              hex_string, 0)
         else:
           value_string = u''
 
@@ -494,7 +495,9 @@ def IsLoaded():
 def OpenHive(filename, collector=None, codepage='cp1252'):
   """Open a registry hive based on a collector or a filename."""
   if not collector:
-    file_object = pvfs_utils.OpenOSFileIO(filename)
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', filename)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    file_object = file_entry.Open()
   else:
     file_entry = collector.OpenFileEntry(filename)
     file_object = file_entry.Open()

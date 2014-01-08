@@ -38,7 +38,6 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
-
     self._plugin = chrome_cookies.ChromeCookiePlugin(pre_obj)
 
   def testProcess(self):

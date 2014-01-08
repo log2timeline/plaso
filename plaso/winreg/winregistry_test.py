@@ -20,7 +20,7 @@
 import os
 import unittest
 
-from plaso.pvfs import utils
+from plaso.pvfs import pfile
 from plaso.winreg import winregistry
 
 
@@ -32,20 +32,22 @@ class RegistryUnitTest(unittest.TestCase):
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
-    test_file1 = os.path.join('test_data', 'SOFTWARE')
-    file_entry1 = utils.OpenOSFileEntry(test_file1)
-    winreg_file1 = registry.OpenFile(file_entry1, codepage='cp1252')
+    test_file = os.path.join('test_data', 'SOFTWARE')
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
-    test_file2 = os.path.join('test_data', 'NTUSER-WIN7.DAT')
-    file_entry2 = utils.OpenOSFileEntry(test_file2)
-    winreg_file2 = registry.OpenFile(file_entry2, codepage='cp1252')
+    registry.MountFile(winreg_file, u'HKEY_LOCAL_MACHINE\\Software')
 
-    registry.MountFile(winreg_file1, u'HKEY_LOCAL_MACHINE\\Software')
+    test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
+    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
+    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
     with self.assertRaises(KeyError):
-      registry.MountFile(winreg_file2, u'HKEY_LOCAL_MACHINE\\Software')
+      registry.MountFile(winreg_file, u'HKEY_LOCAL_MACHINE\\Software')
 
-    registry.MountFile(winreg_file2, u'HKEY_CURRENT_USER')
+    registry.MountFile(winreg_file, u'HKEY_CURRENT_USER')
 
 
 if __name__ == '__main__':

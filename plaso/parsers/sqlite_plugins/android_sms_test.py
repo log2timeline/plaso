@@ -25,7 +25,7 @@ from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import test_lib
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import interface
-from plaso.pvfs import utils
+from plaso.pvfs import pfile
 
 import pytz
 
@@ -37,7 +37,6 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = preprocess.PlasoPreprocess()
     pre_obj.zone = pytz.UTC
-
     self._plugin = android_sms.AndroidSmsPlugin(pre_obj)
 
   def testProcess(self):
