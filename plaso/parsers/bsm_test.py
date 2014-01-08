@@ -14,9 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser test for Basic Security Module."""
+"""Tests for Basic Security Module (BSM) file parser."""
 
-import os
 import pytz
 import unittest
 
@@ -29,7 +28,7 @@ from plaso.parsers import test_lib
 from plaso.pvfs import utils
 
 class BsmParserTest(test_lib.ParserTestCase):
-  """The unit test for BSM parser."""
+  """Tests for Basic Security Module (BSM) file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -45,7 +44,7 @@ class BsmParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
-    test_file = os.path.join('test_data', 'openbsm.bsm')
+    test_file = self._GetTestFilePath(['openbsm.bsm'])
     events = self._ParseFile(self._parser_openbsm, test_file)
     event_objects = self._GetEventObjects(events)
 
@@ -95,7 +94,7 @@ class BsmParserTest(test_lib.ParserTestCase):
 
   def testParseFileMacOSX(self):
     """Tests the Parse function on a Mac OS X BSM file."""
-    test_file = os.path.join('test_data', 'apple.bsm')
+    test_file = self._GetTestFilePath(['apple.bsm'])
     events = self._ParseFile(self._parser_macbsm, test_file)
     event_objects = self._GetEventObjects(events)
 

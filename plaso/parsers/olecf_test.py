@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the OLECF parser."""
+"""Tests for the OLE Compound File (OLECF) parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -42,7 +41,7 @@ class TestOleCfParser(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'Document.doc')
+    test_file = self._GetTestFilePath(['Document.doc'])
     events = self._ParseFile(self._parser, test_file)
     event_containers = self._GetEventContainers(events)
 

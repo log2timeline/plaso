@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for Windows registry parsing in Plaso."""
+"""Tests for the Windows Registry file parser."""
 
-import os
 import unittest
 
 from plaso.lib import preprocess
@@ -26,7 +25,7 @@ from plaso.parsers import winreg
 
 
 class WinRegTest(test_lib.ParserTestCase):
-  """The unit test for winreg parser."""
+  """Tests for the Windows Registry file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -47,7 +46,7 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def testNtuserParsing(self):
     """Parse a NTUSER.dat file and check few items."""
-    test_file = os.path.join('test_data', 'NTUSER.DAT')
+    test_file = self._GetTestFilePath(['NTUSER.DAT'])
     events = self._ParseFile(self._parser, test_file)
 
     # pylint: disable-msg=W0212
@@ -63,7 +62,7 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def testSystemParsing(self):
     """Parse a SYSTEM hive an run few tests."""
-    test_file = os.path.join('test_data', 'SYSTEM')
+    test_file = self._GetTestFilePath(['SYSTEM'])
     events = self._ParseFile(self._parser, test_file)
 
     # pylint: disable-msg=W0212

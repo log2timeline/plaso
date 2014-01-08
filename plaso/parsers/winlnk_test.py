@@ -18,7 +18,6 @@
 """Tests for the Windows Shortcut (LNK) parser."""
 
 import unittest
-import os
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winlnk as winlnk_formatter
@@ -41,7 +40,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'example.lnk')
+    test_file = self._GetTestFilePath(['example.lnk'])
     events = self._ParseFile(self._parser, test_file)
     event_container = self._GetEventContainer(events)
 

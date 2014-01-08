@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the Windows EventLog (EVT) parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -41,7 +40,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'SysEvent.Evt')
+    test_file = self._GetTestFilePath(['SysEvent.Evt'])
     events = self._ParseFile(self._parser, test_file)
     event_containers = self._GetEventContainers(events)
 

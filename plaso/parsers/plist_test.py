@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the plist parsing."""
+"""Tests the plist parser."""
 
-import os
 import unittest
 
 from plaso.lib import preprocess
@@ -26,7 +25,7 @@ from plaso.parsers import test_lib
 
 
 class PlistParserTest(test_lib.ParserTestCase):
-  """The unit test for the plist parser."""
+  """Tests the plist parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -35,7 +34,7 @@ class PlistParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'plist_binary')
+    test_file = self._GetTestFilePath(['plist_binary'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

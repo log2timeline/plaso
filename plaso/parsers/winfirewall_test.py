@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the Windows firewall log parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -44,7 +43,7 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'firewall.log')
+    test_file = self._GetTestFilePath(['firewall.log'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

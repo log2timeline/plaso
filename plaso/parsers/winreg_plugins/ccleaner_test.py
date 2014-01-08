@@ -15,65 +15,60 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a test for CCleaner plugin in Plaso."""
+"""Tests for the CCleaner Windows Registry plugin."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import ccleaner
-from plaso.pvfs import utils
+from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import winregistry
 
 
 __author__ = 'Marc Seguin (segumarc@gmail.com)'
 
 
-class RegistryCCleanerTest(unittest.TestCase):
-  """The unit test for the CCleaner plugin."""
+class RegistryCCleanerTest(test_lib.RegistryPluginTestCase):
+  """Tests for the CCleaner Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    registry = winregistry.WinRegistry(
-        winregistry.WinRegistry.BACKEND_PYREGF)
+    self._plugin = ccleaner.CCleanerPlugin()
 
-    test_file = os.path.join('test_data', 'NTUSER-CCLEANER.DAT')
-    file_entry = utils.OpenOSFileEntry(test_file)
-    self.winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
+  def testProcess(self):
+    """Tests the Process function."""
+    test_file = self._GetTestFilePath(['NTUSER-CCLEANER.DAT'])
+    key_path = u'\\Software\\Piriform\\CCleaner'
+    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjects(event_generator)
 
-  def testCCleaner(self):
-    """Test the CCleaner plugin."""
-    key = self.winreg_file.GetKeyByPath(
-        '\\Software\\Piriform\\CCleaner')
-    plugin = ccleaner.CCleanerPlugin()
-    entries = list(plugin.Process(key))
+    self.assertEquals(len(event_objects), 17)
 
-    self.assertEquals(entries[0].timestamp, 1373709794000000)
-    self.assertTrue(u'UpdateKey' in entries[0].regvalue)
+    event_object = event_objects[0]
 
-    self.assertEquals(entries[0].regvalue[u'UpdateKey'],
-                      u'07/13/2013 10:03:14 AM')
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
+    self.assertEquals(event_object.timestamp, 1373709794000000)
 
-    expected_msg = (
-        u'[\\Software\\Piriform\\CCleaner]'
-        u' UpdateKey: 07/13/2013 10:03:14 AM')
+    regvalue_identifier = u'UpdateKey'
+    expected_value = u'07/13/2013 10:03:14 AM'
+    self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
-    self.assertEquals(msg, expected_msg)
+    expected_string = u'[{0:s}] {1:s}: {2:s}'.format(
+        key_path, regvalue_identifier, expected_value)
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
-    self.assertEquals(entries[2].timestamp, 0)
-    self.assertTrue(
-        u'(App)Delete Index.dat files' in entries[2].regvalue)
+    event_object = event_objects[2]
 
-    self.assertEquals(
-        entries[2].regvalue[u'(App)Delete Index.dat files'], u'True')
+    self.assertEquals(event_object.timestamp, 0)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[2])
-    self.assertEquals(
-        msg, (u'[\\Software\\Piriform\\CCleaner]'
-              u' (App)Delete Index.dat files: True'))
+    regvalue_identifier = u'(App)Delete Index.dat files'
+    expected_value = u'True'
+    self._TestRegvalue(event_object, regvalue_identifier, expected_value)
+
+    expected_string = u'[{0:s}] {1:s}: {2:s}'.format(
+        key_path, regvalue_identifier, expected_value)
+    self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
 
 if __name__ == '__main__':

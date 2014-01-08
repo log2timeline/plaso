@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the Microsoft Internet Explorer (MSIE) Cache Files (CF) parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -38,7 +37,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'index.dat')
+    test_file = self._GetTestFilePath(['index.dat'])
     events = self._ParseFile(self._parser, test_file)
     event_containers = self._GetEventContainers(events)
 
