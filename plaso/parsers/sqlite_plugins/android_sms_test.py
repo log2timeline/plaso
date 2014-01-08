@@ -16,7 +16,6 @@
 # limitations under the License.
 """Tests for the Android SMS plugin."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -43,7 +42,7 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""
-    test_file = os.path.join(self.TEST_DATA_PATH, 'mmssms.db')
+    test_file = self._GetTestFilePath(['mmssms.db'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 

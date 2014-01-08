@@ -15,68 +15,65 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains tests for the USBStor plugin."""
+"""Tests for the USBStor Windows Registry plugin."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
 from plaso.lib import preprocess
-from plaso.pvfs import utils
-from plaso.parsers import winreg
+from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import usbstor
-from plaso.winreg import winregistry
 
 
-class TestUSBStor(unittest.TestCase):
-  """Test for parsing a USBStor Registry key."""
+class USBStorPlugin(test_lib.RegistryPluginTestCase):
+  """Tests for the USBStor Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._pre_obj = preprocess.PlasoPreprocess()
-    self._pre_obj.current_control_set = 'ControlSet001'
+    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj.current_control_set = 'ControlSet001'
+    self._plugin = usbstor.USBStorPlugin(pre_obj=pre_obj)
 
-    registry = winregistry.WinRegistry(
-        winregistry.WinRegistry.BACKEND_PYREGF)
+  def testProcess(self):
+    """Tests the Process function."""
+    test_file = self._GetTestFilePath(['SYSTEM'])
+    # TODO: change into: u'{current_control_set}\\Enum\\USBSTOR'?
+    key_path = u'\\ControlSet001\\Enum\\USBSTOR'
+    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjects(event_generator)
 
-    test_file = os.path.join('test_data', 'SYSTEM')
-    file_entry = utils.OpenOSFileEntry(test_file)
-    self.winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
+    self.assertEquals(len(event_objects), 3)
 
-    # Show full diff results, part of TestCase so does not follow our naming
-    # conventions.
-    self.maxDiff = None
+    event_object = event_objects[0]
 
-  def testUSBStorPlugin(self):
-    """Test the user assist plugin."""
-    key = self.winreg_file.GetKeyByPath(
-        '\\ControlSet001\\Enum\\USBSTOR')
-    plugin = usbstor.USBStorPlugin(pre_obj=self._pre_obj)
-    entries = list(plugin.Process(key))
+    self.assertEquals(event_object.timestamp, 1333794697640871)
 
-    self.assertEquals(len(entries), 3)
-    self.assertEquals(entries[0].timestamp, 1333794697640871)
+    expected_value = u'Disk&Ven_HP&Prod_v100w&Rev_1024'
+    self._TestRegvalue(event_object, u'subkey_name', expected_value)
 
-    # Disk&Ven_HP&Prod_v100w&Rev_1024
-    self.assertEquals(entries[0].regvalue[u'device_type'], 'Disk')
-    self.assertEquals(entries[0].regvalue[u'vendor'], 'Ven_HP')
-    self.assertEquals(entries[0].regvalue[u'product'], 'Prod_v100w')
-    self.assertEquals(entries[0].regvalue[u'revision'], 'Rev_1024')
+    self._TestRegvalue(event_object, u'device_type', u'Disk')
+    self._TestRegvalue(event_object, u'vendor', u'Ven_HP')
+    self._TestRegvalue(event_object, u'product', u'Prod_v100w')
+    self._TestRegvalue(event_object, u'revision', u'Rev_1024')
 
-    expected_string = (
-      u'[\\ControlSet001\\Enum\\USBSTOR] '
+    expected_msg = (
+      u'[{0:s}] '
       u'device_type: Disk '
       u'friendly_name: HP v100w USB Device '
       u'product: Prod_v100w '
       u'revision: Rev_1024 '
       u'serial: AA951D0000007252&0 '
       u'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
-      u'vendor: Ven_HP')
+      u'vendor: Ven_HP').format(key_path)
 
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    self.assertEquals(msg, expected_string)
+    expected_msg_short = (
+      u'[{0:s}] '
+      u'device_type: Disk '
+      u'friendly_name: HP v100w USB D...').format(key_path)
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

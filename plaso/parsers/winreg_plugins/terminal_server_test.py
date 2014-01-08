@@ -15,96 +15,102 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the tests for the Terminal Server Registry plugins."""
+"""Tests for the Terminal Server Windows Registry plugin."""
 
 import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import terminal_server
-from plaso.winreg import test_lib
+from plaso.parsers.winreg_plugins import test_lib
+from plaso.winreg import test_lib as winreg_test_lib
 
 
-class TestTerminalServerClientPlugin(unittest.TestCase):
-  """The unit test for Terminal Server Client Registry parsing."""
+class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the erminal Server Client Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    self._plugin = terminal_server.ServersTerminalServerClientPlugin()
+
+  def testProcess(self):
+    """Tests the Process function."""
+    key_path = u'\\Software\\Microsoft\\Terminal Server Client\\Servers'
     values = []
 
-    values.append(test_lib.TestRegValue(
+    values.append(winreg_test_lib.TestRegValue(
         'UsernameHint', 'DOMAIN\\username'.encode('utf_16_le'),
-        test_lib.TestRegValue.REG_SZ, offset=1892))
+        winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
 
-    server_key = test_lib.TestRegKey(
-        '\\Software\\Microsoft\\Terminal Server Client\\Servers\\myserver.com',
-        1346145829002031, values, offset=1456)
+    server_key_path = (
+        u'\\Software\\Microsoft\\Terminal Server Client\\Servers\\myserver.com')
+    server_key = winreg_test_lib.TestRegKey(
+        server_key_path, 1346145829002031, values, offset=1456)
 
-    self.regkey = test_lib.TestRegKey(
-        '\\Software\\Microsoft\\Terminal Server Client\\Servers',
-        1346145829002031, None, offset=865, subkeys=[server_key])
+    winreg_key = winreg_test_lib.TestRegKey(
+        key_path, 1346145829002031, None, offset=865, subkeys=[server_key])
 
-  def testServersTerminalServerClientPlugin(self):
-    """Run a simple test against a mocked key with values."""
-    plugin = terminal_server.ServersTerminalServerClientPlugin()
-    generator = plugin.Process(self.regkey)
-    self.assertTrue(generator)
-    entries = list(generator)
+    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjects(event_generator)
 
-    expected_line1 = (
-        u'[\\Software\\Microsoft\\Terminal Server Client\\Servers] '
-        u'UsernameHint: DOMAIN\\username')
+    self.assertEquals(len(event_objects), 1)
 
-    self.assertEquals(len(entries), 1)
-    self.assertEquals(entries[0].timestamp, 1346145829002031)
+    event_object = event_objects[0]
 
-    msg1, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
+    self.assertEquals(event_object.timestamp, 1346145829002031)
 
-    self.assertEquals(msg1, expected_line1)
+    expected_msg = u'[{0:s}] UsernameHint: DOMAIN\\username'.format(key_path)
+    expected_msg_short = (
+        u'[{0:s}] UsernameHint: DOMAIN\\use...').format(key_path)
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
-class TestTerminalServerClientMRU(unittest.TestCase):
-  """The unit test for Terminal Server Client MRU Registry parsing."""
+class DefaulTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the erminal Server Client MRU Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    self._plugin = terminal_server.DefaulTerminalServerClientMRUPlugin()
+
+  def testProcess(self):
+    """Tests the Process function."""
+    key_path = u'\\Software\\Microsoft\\Terminal Server Client\\Default'
     values = []
 
-    values.append(test_lib.TestRegValue(
+    values.append(winreg_test_lib.TestRegValue(
         'MRU0', '192.168.16.60'.encode('utf_16_le'),
-        test_lib.TestRegValue.REG_SZ, offset=1892))
-    values.append(test_lib.TestRegValue(
+        winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
+    values.append(winreg_test_lib.TestRegValue(
         'MRU1', 'computer.domain.com'.encode('utf_16_le'),
-        test_lib.TestRegValue.REG_SZ, 612))
+        winreg_test_lib.TestRegValue.REG_SZ, 612))
 
-    self.regkey = test_lib.TestRegKey(
-        '\\Software\\Microsoft\\Terminal Server Client\\Default',
-        1346145829002031, values, 1456)
+    winreg_key = winreg_test_lib.TestRegKey(
+        key_path, 1346145829002031, values, 1456)
 
-  def testDefaulTerminalServerClientMRUPlugin(self):
-    """Run a simple test against a mocked key with values."""
-    plugin = terminal_server.DefaulTerminalServerClientMRUPlugin()
-    generator = plugin.Process(self.regkey)
-    self.assertTrue(generator)
-    entries = list(generator)
+    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjects(event_generator)
 
-    expected_line1 = (
-        u'[\\Software\\Microsoft\\Terminal Server Client\\Default] '
-        u'MRU0: 192.168.16.60')
-    expected_line2 = (
-        u'[\\Software\\Microsoft\\Terminal Server Client\\Default] '
-        u'MRU1: computer.domain.com')
+    self.assertEquals(len(event_objects), 2)
 
-    self.assertEquals(len(entries), 2)
-    self.assertEquals(entries[0].timestamp, 1346145829002031)
-    self.assertEquals(entries[1].timestamp, 0)
+    event_object = event_objects[0]
 
-    msg1, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[0])
-    msg2, _ = eventdata.EventFormatterManager.GetMessageStrings(entries[1])
+    # Tue Aug 28 09:23:49.002031 UTC 2012
+    self.assertEquals(event_object.timestamp, 1346145829002031)
 
-    self.assertEquals(msg1, expected_line1)
-    self.assertEquals(msg2, expected_line2)
+    expected_msg = u'[{0:s}] MRU0: 192.168.16.60'.format(key_path)
+    expected_msg_short = u'[{0:s}] MRU0: 192.168.16.60'.format(key_path)
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
+    event_object = event_objects[1]
+
+    self.assertEquals(event_object.timestamp, 0)
+
+    expected_msg = u'[{0:s}] MRU1: computer.domain.com'.format(key_path)
+    expected_msg_short = u'[{0:s}] MRU1: computer.domain.com'.format(key_path)
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

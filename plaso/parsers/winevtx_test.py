@@ -17,7 +17,6 @@
 # limitations under the License.
 """Tests for the Windows XML EventLog (EVTX) parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -38,7 +37,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'System.evtx')
+    test_file = self._GetTestFilePath(['System.evtx'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

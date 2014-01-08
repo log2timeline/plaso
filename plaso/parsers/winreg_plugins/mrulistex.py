@@ -15,8 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a simple MRUx plugin for Plaso."""
-# TODO rename this file to mrulistex.py in a separate CL.
+"""This file contains a MRUListEx Windows Registry plugin."""
 
 import construct
 import logging
@@ -25,8 +24,8 @@ from plaso.lib import event
 from plaso.parsers.winreg_plugins import interface
 
 
-class MRUexPlugin(interface.ValuePlugin):
-  """A simple generic MRU plugin for entries with a MRUListEx."""
+class MRUListExPlugin(interface.ValuePlugin):
+  """Class that defines a MRUListEx Windows Registry plugin."""
 
   NAME = 'winreg_mrulistex'
 
@@ -62,7 +61,8 @@ class MRUexPlugin(interface.ValuePlugin):
     try:
       mru_list = self.LIST_STRUCT.parse(raw_data)
     except construct.FieldError:
-      logging.warning(u'Unable to parse the MRU key: %s', self._key.path)
+      logging.warning(u'Unable to parse the MRU key: {0:s}'.format(
+          self._key.path))
       return
 
     event_timestamp = self._key.last_written_timestamp
@@ -79,9 +79,9 @@ class MRUexPlugin(interface.ValuePlugin):
         self._key.path, text_dict, timestamp=event_timestamp,
         source_append=': MRUx List')
 
-  def Process(self, key):
+  def Process(self, key=None, **kwargs):
     """Determine if we can process this registry key or not."""
     if 'BagMRU' in key.path or 'Explorer\\StreamMRU' in key.path:
       return None
 
-    return super(MRUexPlugin, self).Process(key)
+    return super(MRUListExPlugin, self).Process(key=key, **kwargs)

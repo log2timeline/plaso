@@ -15,9 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the Symantec AV Log parser."""
+"""Tests for the Symantec AV Log parser."""
 
-import os
 import unittest
 
 # pylint: disable-msg=unused-import
@@ -30,7 +29,7 @@ import pytz
 
 
 class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
-  """A unit test for the Symantec AV Log parser."""
+  """Tests for the Symantec AV Log parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -43,7 +42,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = os.path.join('test_data', 'Symantec.Log')
+    test_file = self._GetTestFilePath(['Symantec.Log'])
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
 

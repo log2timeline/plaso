@@ -34,11 +34,6 @@ class DefaultPlugin(interface.KeyPlugin):
   # tried and failed.
   WEIGHT = 3
 
-  def Process(self, key):
-    """Process the key and return a generator to extract EventObjects."""
-    self._key = key
-    return self.GetEntries()
-
   def GetEntries(self):
     """Returns an event object based on a Registry key name and values."""
     text_dict = {}
@@ -78,3 +73,14 @@ class DefaultPlugin(interface.KeyPlugin):
     yield event.WinRegistryEvent(
         self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
         offset=self._key.offset)
+
+  # Even though the DefaultPlugin is derived from KeyPlugin it needs to
+  # overwrite the Process function to make sure it is called when no other
+  # plugin is available.
+
+  def Process(self, key=None, **dummy_kwargs):
+    """Process the key and return a generator to extract event objects."""
+    # TODO: Why do we need to store the key here, is it used anywhere?
+    self._key = key
+    # Note that we should NOT call the Process function of the KeyPlugin here.
+    return self.GetEntries()
