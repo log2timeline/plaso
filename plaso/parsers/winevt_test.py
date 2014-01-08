@@ -41,8 +41,8 @@ class WinEvtParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['SysEvent.Evt'])
-    events = self._ParseFile(self._parser, test_file)
-    event_containers = self._GetEventContainers(events)
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_containers = self._GetEventContainers(event_generator)
 
     # Windows Event Log (EVT) information:
     #	Version                     : 1.1

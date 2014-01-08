@@ -44,11 +44,12 @@ class ParserTestCase(unittest.TestCase):
       event_generator: the event generator as returned by the parser.
 
     Returns:
-      A list of event objects (instances of EventObject).
+      An event container (instances of EventContainer).
     """
-    self.assertEquals(len(event_generator), 1)
+    events = list(event_generator)
+    self.assertEquals(len(events), 1)
 
-    event_container = event_generator[0]
+    event_container = events[0]
     self.assertIsInstance(event_container, event.EventContainer)
 
     return event_container
@@ -121,12 +122,11 @@ class ParserTestCase(unittest.TestCase):
       path: the path of the file to parse.
 
     Returns:
-      A list of event containers or objects as returned by the parser
-      (instances of EventObject or EventContainer).
+      A generator of event objects as returned by the parser.
     """
     path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
     file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
-    return list(parser_object.Parse(file_entry))
+    return parser_object.Parse(file_entry)
 
   def _ParseFileByPathSpec(self, parser_object, path_spec):
     """Parses a file using the parser object.
@@ -136,11 +136,10 @@ class ParserTestCase(unittest.TestCase):
       path_spec: the path specification of the file to parse.
 
     Returns:
-      A list of event containers or objects as returned by the parser
-      (instances of EventObject or EventContainer).
+      A generator of event objects as returned by the parser.
     """
     file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
-    return list(parser_object.Parse(file_entry))
+    return parser_object.Parse(file_entry)
 
   def _TestGetMessageStrings(
       self, event_object, expected_msg, expected_msg_short):
