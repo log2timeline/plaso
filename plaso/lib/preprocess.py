@@ -353,7 +353,7 @@ class WinRegistryPreprocess(PreprocessPlugin):
       obj_store: the object store.
       collector: the preprocess collector (instance of PreprocessCollector).
     """
-    super(WinRegistryPreprocess, self).__init__()
+    super(WinRegistryPreprocess, self).__init__(obj_store, collector)
     self._path_expander = None
 
   def GetValue(self):
@@ -365,18 +365,24 @@ class WinRegistryPreprocess(PreprocessPlugin):
               self.REG_PATH, self.REG_FILE))
 
     sys_dir = sys_dirs[0]
-    file_name = self._collector.GetFilePaths(sys_dir, self.REG_FILE)
-    if not file_name:
+    file_names = list(self._collector.GetFilePaths(sys_dir, self.REG_FILE))
+    if not file_names:
       raise errors.PreProcessFail(
           u'Unable to find file name: {}/{}'.format(
               sys_dir, self.REG_FILE))
+    if len(file_names) != 1:
+      raise errors.PreProcessFail(
+          u'Found more than a single file for: {}/{} [{}]'.format(
+              sys_dir, self.REG_FILE, len(file_names)))
+
+    file_name = file_names[0]
 
     try:
-      file_entry = self._collector.OpenFileEntry(file_name[0])
-      file_object = file_entry.Open()
+      file_entry = self._collector.OpenFileEntry(file_name)
+      _ = file_entry.Open()
     except IOError as e:
       raise errors.PreProcessFail(
-          u'Unable to open file: {} [{}]'.format(file_name[0], e))
+          u'Unable to open file: {} [{}]'.format(file_name, e))
 
     codepage = getattr(self._obj_store, 'code_page', 'cp1252')
 
@@ -385,10 +391,10 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
     try:
       winreg_file = self.winreg_file = win_registry.OpenFile(
-          file_object, codepage=codepage)
+          file_entry, codepage=codepage)
     except IOError as e:
       raise errors.PreProcessFail(
-          u'Unable to open the registry: {} [{}]'.format(file_name[0], e))
+          u'Unable to open the registry: {} [{}]'.format(file_name, e))
 
     if self._path_expander is None:
       reg_cache = cache.WinRegistryCache(winreg_file, self.REG_FILE)

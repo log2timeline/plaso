@@ -458,7 +458,12 @@ class Engine(object):
     if self.config.image:
       obj.collection_information['method'] = 'imaged processed'
       sector_size = self.config.bytes_per_sector
-      calculated_offset = self.config.image_offset * sector_size
+      if self.config.image_offset is None:
+        offset = 0
+      else:
+        offset = self.config.image_offset
+
+      calculated_offset = offset * sector_size
       ofs = self.config.image_offset_bytes or calculated_offset
       obj.collection_information['image_offset'] = ofs
     else:

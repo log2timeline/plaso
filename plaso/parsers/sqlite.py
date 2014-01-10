@@ -65,12 +65,14 @@ class SQLiteParser(parser.BaseParser):
     with interface.SQLiteDatabase(file_entry) as database:
       try:
         database.Open()
-      except IOError as e:
+      except IOError as exception:
         raise errors.UnableToParseFile(
-            u'Unable to open database with error: {0:s}'.format(e))
-      except sqlite3.DatabaseError as e:
+            u'Unable to open database with error: {0:s}'.format(
+                repr(exception)))
+      except sqlite3.DatabaseError as exception:
         raise errors.UnableToParseFile(
-            u'Unable to parse SQLite database with error: {0:s}.'.format(e))
+            u'Unable to parse SQLite database with error: {0:s}.'.format(
+                repr(exception)))
 
       # Reset potential cache.
       for plugin_obj in self._plugins.itervalues():
