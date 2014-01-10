@@ -155,7 +155,11 @@ class PreprocessCollector(object):
         continue
 
       if self._PATH_EXPANDER_RE.match(path_segment):
-        expression = self._GetExtendedPath(path_segment)
+        expression_list = self._GetExtendedPath(path_segment).split(u'/')
+        if expression_list[0] == u'' and len(expression_list) > 1:
+          expression_list = expression_list[1:]
+
+        path_segments_expressions_list.extend(expression_list)
 
       else:
         try:
@@ -171,7 +175,7 @@ class PreprocessCollector(object):
           logging.warning(error_string)
           raise errors.PathNotFound(error_string)
 
-      path_segments_expressions_list.append(expression)
+        path_segments_expressions_list.append(expression)
 
     return path_segments_expressions_list
 
@@ -220,7 +224,7 @@ class PreprocessCollector(object):
 
     path_segments_expressions_list.extend(
         self._GetPathSegmentExpressionsList(filename_expression))
-    
+
     return self._GetPaths(path_segments_expressions_list)
 
   @abc.abstractmethod

@@ -78,15 +78,15 @@ def GetPartitionMap(image_path):
   partition_map = []
   try:
     img = pytsk3.Img_Info(image_path)
-  except IOError as e:
+  except IOError as exception:
     raise errors.UnableToOpenFilesystem(
-        u'Unable to open image file with error: {0:s}'.format(e))
+        u'Unable to open image file with error: {0:s}'.format(exception))
 
   try:
     volume = pytsk3.Volume_Info(img)
-  except IOError:
+  except IOError as exception:
     raise errors.UnableToOpenFilesystem(
-        u'Unable to open file system with error: {0:s}'.format(e))
+        u'Unable to open file system with error: {0:s}'.format(exception))
 
   block_size = getattr(volume.info, 'block_size', 512)
   partition_map.append(block_size)

@@ -363,8 +363,8 @@ class GenericCollector(interface.PfileCollector):
        This function will enable image collection.
 
     Args:
-      sector_offset: Optional sector offset into the image file if this is a disk
-                     image. The default is None.
+      sector_offset: Optional sector offset into the image file if this is a
+                     disk image. The default is None.
       byte_offset: Optional byte offset into the image file if this is a disk
                    image. The default is None.
     """
@@ -483,6 +483,7 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
           continue
 
         for sub_file_entry in file_entry.GetSubFileEntries():
+
           sub_file_entry_match = u''
 
           # TODO: need to handle case (in)sentive matches.
@@ -572,8 +573,8 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
        This function will enable image collection.
 
     Args:
-      sector_offset: Optional sector offset into the image file if this is a disk
-                     image. The default is None.
+      sector_offset: Optional sector offset into the image file if this is a
+                     disk image. The default is None.
       byte_offset: Optional byte offset into the image file if this is a disk
                    image. The default is None.
     """
