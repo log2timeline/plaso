@@ -355,18 +355,18 @@ class TextCSVParser(parser.BaseParser):
     pass
 
   def ParseRow(self, row):
-    """Parse a line of the log file and return an extracted EventObject.
+    """Parse a line of the log file and yield extracted EventObject(s).
 
     Args:
       row: A dictionary containing all the fields as denoted in the
       COLUMNS class list.
 
-    Returns:
+    Yields:
       An EventObject extracted from a single line from the log file.
     """
     event_object = event.EventObject()
     event_object.row_dict = row
-    return event_object
+    yield event_object
 
   def Parse(self, file_entry):
     """Extract data from a CVS file.
@@ -412,24 +412,24 @@ class TextCSVParser(parser.BaseParser):
       raise errors.UnableToParseFile('File %s not a %s. (wrong magic)' % (
           file_entry.name, self.parser_name))
 
-    for evt in self._ParseRow(row):
-      if evt:
-        yield evt
+    for event_object in self._ParseRow(row):
+      if event_object:
+        yield event_object
 
     for row in reader:
-      for evt in self._ParseRow(row):
-        if evt:
-          yield evt
+      for event_object in self._ParseRow(row):
+        if event_object:
+          yield event_object
 
     file_object.close()
 
   def _ParseRow(self, row):
     """Parse a line and extract an EventObject from it if possible."""
-    for evt in self.ParseRow(row):
-      if not evt:
+    for event_object in self.ParseRow(row):
+      if not event_object:
         continue
-      evt.offset = self.entry_offset
-      yield evt
+      event_object.offset = self.entry_offset
+      yield event_object
 
     self.entry_offset += len(self.VALUE_SEPARATOR.join(row.values())) + 1
 
