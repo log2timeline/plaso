@@ -27,7 +27,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
   def _ParsePlistFileWithPlugin(
       self, parser_object, plugin_object, path, plist_name):
     """Parses a file using the parser and plugin object.
-  
+
     Args:
       parser_object: the parser object.
       plugin_object: the pluging object.
@@ -40,7 +40,8 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
     file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
 
-    top_level_object = parser_object.GetTopLevel(file_entry)
+    file_object = file_entry.Open()
+    top_level_object = parser_object.GetTopLevel(file_object)
     self.assertNotEquals(top_level_object, None)
 
     event_generator = plugin_object.Process(plist_name, top_level_object)
