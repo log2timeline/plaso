@@ -65,51 +65,40 @@ class PlistParser(parser.BaseParser):
     self._plugins = plugin.GetRegisteredPlugins(
         interface.PlistPlugin, pre_obj, plugin_filter_string)
 
-  def GetTopLevel(self, file_entry):
+  def GetTopLevel(self, file_object, file_name=''):
     """Returns the deserialized content of a plist as a dictionary object.
 
     Args:
-      file_entry: the file entry object.
+      file_object: A file-like object to parse.
+      file_name: The name of the file-like object.
 
     Returns:
       A dictionary object representing the contents of the plist.
     """
-    file_object = file_entry.Open()
-    file_size = file_object.get_size()
-
-    if file_size <= 0:
-      raise errors.UnableToParseFile(
-          u'[PLIST] file size: {0:d} bytes is less equal 0.'.format(file_size))
-
-    # 50MB is 10x larger than any plist seen to date.
-    if file_size > 50000000:
-      raise errors.UnableToParseFile(
-          u'[PLIST] file size: {0:d} bytes is larger than 50 MB.'.format(
-              file_size))
-
     try:
-      bpl = binplist.BinaryPlist(file_object)
-      top_level_object = bpl.Parse()
+      top_level_object = binplist.readPlist(file_object)
     except binplist.FormatError as e:
       raise errors.UnableToParseFile(
-          u'[PLIST] File is not a plist: {0:s}'.format(
+          u'[PLIST] File is not a plist file: {0:s}'.format(
               utils.GetUnicodeString(e)))
     except OverflowError as e:
       raise errors.UnableToParseFile(
-          u'[PLIST] unable to parse: {0:s} with error: {1:s}'.format(
-              file_entry.name, e))
+          u'[PLIST] Unable to parse: {0:s} with error: {1:s}'.format(
+              file_name, e))
 
-    file_object.close()
-
-    if not bpl:
+    if not top_level_object:
       raise errors.UnableToParseFile(
           u'[PLIST] File is not a plist: {0:s}'.format(
               utils.GetUnicodeString(e)))
 
-    if bpl.is_corrupt:
-      logging.warning(
-          u'[PLIST] corruption detected in binary plist: {0:s}'.format(
-              file_entry.name))
+    # Since we are using readPlist from binplist now instead of manually
+    # opening up the BinarPlist file we loose this option. Keep it commented
+    # out for now but this needs to be tested a bit more.
+    # TODO: Re-evaluate if we can delete this or still require it.
+    #if bpl.is_corrupt:
+    #  logging.warning(
+    #      u'[PLIST] corruption detected in binary plist: {0:s}'.format(
+    #          file_name))
 
     return top_level_object
 
@@ -122,8 +111,31 @@ class PlistParser(parser.BaseParser):
     Yields:
       A plist event object (instance of event.PlistEvent).
     """
-    top_level_object = self.GetTopLevel(file_entry)
+    # TODO: Should we rather query the stats object to get the size here?
+    file_object = file_entry.Open()
+    file_size = file_object.get_size()
+
+    if file_size <= 0:
+      file_object.close()
+      raise errors.UnableToParseFile(
+          u'[PLIST] file size: {0:d} bytes is less equal 0.'.format(file_size))
+
+    # 50MB is 10x larger than any plist seen to date.
+    if file_size > 50000000:
+      file_object.close()
+      raise errors.UnableToParseFile(
+          u'[PLIST] file size: {0:d} bytes is larger than 50 MB.'.format(
+              file_size))
+
+    top_level_object = None
+    try:
+      top_level_object = self.GetTopLevel(file_object, file_entry.name)
+    except errors.UnableToParseFile:
+      file_object.close()
+      raise
+
     if not top_level_object:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'[PLIST] couldn\'t parse: %s.  Skipping.' % file_entry.name)
 
@@ -131,8 +143,10 @@ class PlistParser(parser.BaseParser):
 
     for plist_plugin in self._plugins.itervalues():
       try:
-        for evt in plist_plugin.Process(plist_name, top_level_object):
-          evt.plugin = plist_plugin.plugin_name
-          yield evt
+        for event_object in plist_plugin.Process(plist_name, top_level_object):
+          event_object.plugin = plist_plugin.plugin_name
+          yield event_object
       except errors.WrongPlistPlugin as e:
         logging.debug(u'[PLIST] Wrong Plugin:{} for:{}'.format(e[0], e[1]))
+
+    file_object.close()
