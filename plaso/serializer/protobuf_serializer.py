@@ -918,65 +918,6 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
     return proto.SerializeToString()
 
 
-class ProtobufPathFilterSerializer(interface.PathFilterSerializer):
-  """Class that implements the protobuf path filter serializer."""
-
-  @classmethod
-  def ReadSerializedObject(cls, proto):
-    """Reads a path filter from serialized form.
-
-    Args:
-      proto: a protobuf object containing the serialized form (instance of
-             plaso_storage_pb2.PathFilter).
-
-    Returns:
-      A path filter (instance of PathFilter).
-    """
-    # TODO: implement.
-    pass
-
-  @classmethod
-  def ReadSerialized(cls, proto_string):
-    """Reads a path filter from serialized form.
-
-    Args:
-      serialized: a protobuf object containing the serialized form (instance of
-                  transmission_pb2.PathFilter).
-
-    Returns:
-      A path filter (instance of PathFilter).
-    """
-    # TODO: implement.
-    pass
-
-  @classmethod
-  def WriteSerializedObject(cls, path_filter):
-    """Writes a path filter to serialized form.
-
-    Args:
-      path_filter: a path filter (instance of PathFilter).
-
-    Returns:
-      A protobuf object containing the serialized form (instance of
-      plaso_storage_pb2.PathFilter).
-    """
-    # TODO: implement.
-    pass
-
-  @classmethod
-  def WriteSerialized(cls, path_filter):
-    """Writes a path filter to serialized form.
-
-    Args:
-      path_filter: a path filter (instance of PathFilter).
-
-    Returns:
-      A protobuf string containing the serialized form.
-    """
-    # TODO: implement.
-    pass
-
-
 class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
   """Class that implements the protobuf preprocessing object serializer."""
 

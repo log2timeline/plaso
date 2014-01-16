@@ -119,15 +119,3 @@ message PathBundle {
   // A list of PathSpec protobufs that were discovered using the pattern above.
   repeated PathSpec pathspecs = 2;
 };
-
-
-// PathFilter is a simple protobuf used to create collection filters in plaso.
-// An example would be:
-// PathFilter (
-//   filter_string: '{sysregistry}/.+evt'
-//   filter_string: '/Users/.+/NTUSER.DAT'
-// )
-message PathFilter {
-  // This repeated field presents a single filter criteria.
-  repeated string filter_string = 1;
-};

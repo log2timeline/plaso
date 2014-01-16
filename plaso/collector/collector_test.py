@@ -227,5 +227,52 @@ class CollectorTest(unittest.TestCase):
     self.assertEquals(paths[1], u'/passwords.txt')
 
 
+class CollectionFilterTest(unittest.TestCase):
+  """Test CollectionFilter check."""
+
+  def testFilter(self):
+    """Run the tests."""
+    filter_name = ''
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+      filter_name = temp_file.name
+      # 2 hits.
+      temp_file.write('/test_data/testdir/filter_.+.txt\n')
+      # A single hit.
+      temp_file.write('/test_data/.+evtx\n')
+      # A single hit.
+      temp_file.write('/AUTHORS\n')
+      temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
+      # This should not compile properly, missing file information.
+      temp_file.write('failing/\n')
+      # This should not fail during initial loading, but fail later on.
+      temp_file.write('bad re (no close on that parenthesis/file\n')
+
+    test_filter = collector.BuildCollectionFilterFromFile(filter_name)
+
+    try:
+      os.remove(filter_name)
+    except (OSError, IOError) as e:
+      logging.warning(
+          u'Unable to remove temporary file: {0:s} due to: {1:s}'.format(
+              filter_name, e))
+
+    # This filter will contain all the filter lines, even those that will fail
+    # during finding pathspecs, yet there is one that will fail, so we should
+    # have five hits.
+    list_of_filters = test_filter.BuildFilters()
+    self.assertEquals(len(list_of_filters), 5)
+
+    pre_obj = event.PreprocessObject()
+    test_preprocess_collector = collector.GenericPreprocessCollector(
+        pre_obj, u'./')
+    path_spec_generator = test_preprocess_collector.GetPathSpecs(test_filter)
+    path_specs = list(path_spec_generator)
+    # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
+    self.assertEquals(len(path_specs), 4)
+
+    with self.assertRaises(IOError):
+      _ = collector.BuildCollectionFilterFromFile('thisfiledoesnotexist')
+
+
 if __name__ == '__main__':
   unittest.main()
