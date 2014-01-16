@@ -133,11 +133,11 @@ class SpecificationStore(object):
 
     self._format_specifications[specification.identifier] = specification
 
-  def ReadFromFileObject(self, dummy_file_object):
+  def ReadFromFileObject(self, unused_file_object):
     """Reads the specification store from a file-like object.
 
     Args:
-      dummy_file_object: A file-like object.
+      unused_file_object: A file-like object.
 
     Raises:
       RuntimeError: because functionality is not implemented yet.

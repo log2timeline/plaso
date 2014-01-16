@@ -15,13 +15,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains few methods for Plaso."""
+"""Frontend utility classes and functions."""
 
 import binascii
 import tempfile
 import os
 
+from plaso.lib import timelib
 from plaso.pvfs import pfile
+
+import pytz
 
 
 # TODO: add tests for the functions in this class.
@@ -29,6 +32,11 @@ class OutputWriter(object):
   """Class that defines output writing methods for the frontends and tools."""
 
   DATA_BUFFER_SIZE = 32768
+
+  @classmethod
+  def GetDateTimeString(cls, timestamp):
+    """Returns a human readable date and time string in the ISO 8601 format."""
+    return timelib.Timestamp.CopyToIsoFormat(timestamp, pytz.UTC)
 
   @classmethod
   def GetEventDataHexDump(cls, event_object, before=0, length=20):
@@ -39,8 +47,8 @@ class OutputWriter(object):
 
     Args:
       event_object: The event object (instance of EventObject).
-      before: Optional number of bytes to include in the output before the event.
-              The default is none.
+      before: Optional number of bytes to include in the output before
+              the event. The default is none.
       length: Optional number of lines to include in the output.
               The default is 20.
 
@@ -54,9 +62,7 @@ class OutputWriter(object):
       return u'Event object has no path specification.'
 
     try:
-      # TODO: remove serialization.
-      path_spec = event_object.pathspec.ToProto()
-      file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+      file_entry = pfile.PFileResolver.OpenFileEntry(event_object.pathspec)
     except IOError as e:
       return u'Unable to open file with error: {0:s}'.format(e)
 
@@ -84,7 +90,8 @@ class OutputWriter(object):
               presentation purposes.
 
     Returns:
-      A string that contains the hexadecimal representation of the binary string.
+      A string that contains the hexadecimal representation of the binary
+      string.
     """
     hexdata = binascii.hexlify(data)
     output_strings = []

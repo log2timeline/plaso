@@ -19,7 +19,7 @@
 
 import unittest
 
-from plaso.lib import preprocess
+from plaso.lib import event
 from plaso.parsers import plist
 from plaso.parsers import test_lib
 
@@ -29,7 +29,7 @@ class PlistParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     self._parser = plist.PlistParser(pre_obj, None)
 
   def testParse(self):
@@ -43,7 +43,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     # self.assertEquals(len(event_objects), 12)
 
     timestamps, roots, keys = zip(
-        *[(event.timestamp, event.root, event.key) for event in event_objects])
+        *[(evt.timestamp, evt.root, evt.key) for evt in event_objects])
 
     expected_timestamps = frozenset([
         1345251192528750, 1351827808261762, 1345251268370453,

@@ -21,12 +21,10 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import selinux as selinux_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import selinux
 from plaso.parsers import test_lib
-
-import pytz
 
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
@@ -37,9 +35,8 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     pre_obj.year = 2013
-    pre_obj.zone = pytz.UTC
     self._parser = selinux.SELinuxParser(pre_obj, None)
 
   def testParse(self):

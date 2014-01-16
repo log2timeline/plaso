@@ -15,91 +15,90 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the worker class for Plaso.
+"""The event extraction worker."""
 
-The worker in Plaso monitors a queue filled with PathSpec protobufs,
-which describe files that need to be processed. The worker then opens
-up the file, as described in the protobuf, and sends it to a classifier
-that determines the file type. Based on the file type from the classifier
-the worker then sends the file to the appropriate parsers that take care
-of extracting EventObjects from it.
-"""
-
-import copy
-import gzip
 import logging
 import os
 import pdb
-import tarfile
-import zipfile
-import zlib
 
 from plaso import parsers   # pylint: disable-msg=unused-import
+from plaso.lib import classifier
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfilter
 from plaso.lib import putils
+from plaso.lib import queue
 from plaso.lib import utils
 from plaso.pvfs import pfile
+from plaso.pvfs import pvfs
 
 
-class PlasoWorker(object):
-  """A class that retrieves file information from a queue and parses them.
+class EventExtractionWorker(queue.PathSpecQueueConsumer):
+  """Class that extracts events for files and directories.
 
-  This class is designed to watch a queue filled with protobufs describing
-  the layout and paths to a file that needs to be further processed. The class
-  uses that description to create a PFile object, which is a file like object
-  and sends it to a classifier, followed by calls to the appropriate parsers.
+  This class is designed to watch a queue for path specifications of files
+  and directories (file entries) for which events need to be extracted.
 
-  The class therefore needs to determine if that particular file can be parsed
-  by the tool or not. If the tool is capable of parsing said file then it sends
-  all extracted EventObjects from it into the storage queue for further
-  processing.
+  The event extraction worker needs to determine if a parser suitable
+  for parsing a particular file is available. All extracted event objects
+  are pushed on a storage queue for further processing.
   """
 
-  # TODO: Change this when the classifier is ready and use that
-  # instead to determine if a file is compressed or not.
-  # So this is TEMPORARY until the classifier is ready and can be used.
-  # Otherwise we check all files for this support and it can sometimes
-  # be VERY slow, since some of the underlying libraries use unbound
-  # read operation, reading in entire files, that may be very large.
-  MAGIC_VALUES = {
-      'ZIP': {'length': 4, 'offset': 0, 'values': ['P', 'K', '\x03', '\x04']},
-      'TAR': {'length': 5, 'offset': 257, 'values': ['u', 's', 't', 'a', 'r']},
-      'GZ': {'length': 2, 'offset': 0, 'values': ['\x1f', '\x8b']},
-  }
-
-  # TODO: Remove this logic when the classifier is ready.
-  # This is only used temporary until files can be classified.
-  magic_max_length = 0
-
-  # Defines the maximum depth into a file (for SmartOpenFiles).
-  MAX_FILE_DEPTH = 3
-
-  def __init__(self, identifier, proc_queue, stor_queue, config, pre_obj):
-    """Constructor for the class.
+  def __init__(
+      self, identifier, process_queue, storage_queue_producer, config, pre_obj):
+    """Initializes the event extraction worker object.
 
     Args:
       identifier: A thread identifier, usually an incrementing integer.
-      proc_queue: A queue containing the files that need to be processed.
-      stor_queue: A queue that extracted EventObjects should be added to.
+      process_queue: the process queue (instance of Queue).
+      storage_queue_producer: the storage queue producer (instance of
+                              EventObjectQueueProducer).
       config: A config object that contains all the tool's configuration.
-      pre_obj: A PlasoPreprocess object containing information collected from
-      image.
+      pre_obj: A preprocess object containing information collected from
+               image (instance of PreprocessObject).
     """
+    super(EventExtractionWorker, self).__init__(process_queue)
+    # We need a file system cache per thread to prevent multi threading
+    # issues with file entries stored in images.
+    self._fscache = pvfs.FilesystemCache()
     self._identifier = identifier
-    self._proc_queue = proc_queue
-    self._stor_queue = stor_queue
-    self.config = config
-    self._pre_obj = pre_obj
     self._parsers = putils.FindAllParsers(
         pre_obj, config, getattr(config, 'parsers', ''))
-    self._user_mapping = self._GetUserMapping()
+    self._pre_obj = pre_obj
+    self._storage_queue_producer = storage_queue_producer
+    self._user_mapping = pre_obj.GetUserMappings()
+    self.config = config
 
     self._filter = None
     filter_query = getattr(config, 'filter', None)
     if filter_query:
       self._filter = pfilter.GetMatcher(filter_query)
+
+  # TODO: implement PathBundle support, if needed.
+  def _ConsumePathSpec(self, path_spec):
+    """Consumes a path specification callback for ConsumePathSpecs."""
+    if hasattr(self.config, 'text_prepend'):
+      path_spec.path_prepend = self.config.text_prepend
+
+    try:
+      file_entry = pfile.PFileResolver.OpenFileEntry(
+          path_spec, fscache=self._fscache)
+      self.ParseFile(file_entry)
+    except IOError as exception:
+      logging.warning(u'Unable to parse file: {0:s} with error: {1:s}'.format(
+          path_spec.comparable, exception))
+      logging.warning(u'Proto\n{0:s}\n{1:s}\n{2:s}'.format(
+          '-+' * 20, path_spec.comparable, '-+' * 20))
+
+    if self.config.open_files:
+      for sub_file_entry in classifier.SmartOpenFiles(file_entry):
+        try:
+          self.ParseFile(sub_file_entry)
+        except IOError as exception:
+          logging.warning((
+              u'Unable to parse file: {0:s} within file: {1:s} with error: '
+              u'{2:s}').format(
+                  sub_file_entry.display_name, path_spec.comparable, exception))
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
@@ -108,100 +107,11 @@ class PlasoWorker(object):
         u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
         self._identifier, self.pid))
 
-    for item in self._proc_queue.PopItems():
-      # TODO: Remove this "ugly" hack in favor of something more elegant
-      # and one that makes more sense.
-      if item.startswith('P'):
-        self.ParsePathSpec(item)
-      elif item.startswith('B'):
-        self.ParseBundle(item)
-      else:
-        logging.error(
-            u'Unable to unserialize pathspec, wrong type: {0:s}'.format(
-                item[0]))
+    self.ConsumePathSpecs()
 
     logging.info(
         'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
         self._identifier, os.getpid()))
-
-  def ParseBundle(self, bundle_string):
-    """Parse a file given a serialized pathspec bundle."""
-    bundle = event.EventPathBundle()
-    try:
-      bundle.FromProtoString(bundle_string)
-    except RuntimeError:
-      logging.debug((
-          u'Error while trying to parse a PathSpecBundle from the queue. '
-          u'The bundle that caused the error:\n{0:s}').format(bundle_string))
-      return
-
-    print bundle.ToProto()
-    # TODO: GO OVER ALL BUNDLE PARSERS!
-    #          self._ParseEvent(evt, file_entry, parsing_object.parser_name,
-    #                           stat_obj)
-
-  def ParsePathSpec(self, pathspec_string):
-    """Parse a file given a serialized pathspec."""
-    pathspec = event.EventPathSpec()
-    if hasattr(self.config, 'text_prepend'):
-      pathspec.path_prepend = self.config.text_prepend
-
-    try:
-      pathspec.FromProtoString(pathspec_string)
-    except RuntimeError:
-      logging.debug((
-          u'Error while trying to parse a PathSpec from the queue.'
-          u'The PathSpec that caused the error:\n{0:s}').format(
-              pathspec_string))
-      return
-
-    # Either parse this file and all extracted files, or just the file.
-    try:
-      file_entry = pfile.PFileResolver.OpenFileEntry(pathspec)
-      self.ParseFile(file_entry)
-
-      if self.config.open_files:
-        self.ParseAllFiles(file_entry)
-    except IOError as e:
-      logging.warning(u'Unable to parse file: {0:s} ({1:s})'.format(
-          pathspec.file_path, e))
-      logging.warning(
-          u'Proto\n{0:s}\n{1:s}\n{2:s}'.format(
-              '-+' * 20, pathspec.ToProto(), '-+' * 20))
-
-  def ParseAllFiles(self, file_entry):
-    """Parse every file that can be extracted from a PFile object.
-
-    Args:
-      file_entry: A file entry object.
-    """
-    try:
-      for new_file_entry in self.SmartOpenFiles(file_entry):
-        self.ParseFile(new_file_entry)
-    except IOError as e:
-      logging.debug((
-          u'Unable to open file: {{{0:s}}}, not sure if we can extract '
-          u'further files from it. Msg: {1:s}').format(
-              file_entry.display_name, e))
-
-  def _GetUserMapping(self):
-    """Return a user dict which maps SID/UID values and usernames."""
-    user_dict = {}
-
-    if not getattr(self, '_pre_obj', None):
-      return user_dict
-
-    for user in getattr(self._pre_obj, 'users', []):
-      sid = user.get('sid', '')
-      if sid:
-        value = sid
-      else:
-        value = user.get('uid', '')
-
-      if value:
-        user_dict[value] = user.get('name', value)
-
-    return user_dict
 
   def _ParseEvent(self, event_object, file_entry, parser_name, stat_obj):
     """Adjust value of an extracted EventObject before storing it."""
@@ -224,11 +134,8 @@ class PlasoWorker(object):
       if username:
         event_object.username = username
 
-    if not self._filter:
-      self._stor_queue.AddEvent(event_object.ToProtoString())
-    else:
-      if self._filter.Matches(event_object):
-        self._stor_queue.AddEvent(event_object.ToProtoString())
+    if not self._filter or self._filter.Matches(event_object):
+      self._storage_queue_producer.ProduceEventObject(event_object)
 
   def ParseFile(self, file_entry):
     """Run through classifier and appropriate parsers.
@@ -240,7 +147,7 @@ class PlasoWorker(object):
 
     # TODO: Not go through all parsers, just the ones
     # that the classifier classifies the file as.
-    # Do this when classifier is ready (cl/30332229).
+    # Do this when classifier is ready.
     # The classifier will return a "type" back, which refers
     # to a key in the self._parsers dict. If the results are
     # inconclusive the "all" key is used, or the key is not found.
@@ -273,16 +180,16 @@ class PlasoWorker(object):
       # Casting a wide net, catching all exceptions. Done to keep the worker
       # running, despite the parser hitting errors, so the worker doesn't die
       # if a single file is corrupted or there is a bug in a parser.
-      except Exception as e:
+      except Exception as exception:
         logging.warning((
-            u'An unexpected error occured during processing of '
-            u'file: {0:s} using module {1:s}. The error was: {2:s}.\nParsing '
-            u'of file is is terminated.').format(
-                file_entry.name, parsing_object.parser_name, e))
-        logging.debug(
-            u'The PathSpec that caused the error:\n(root)\n{0:s}\n{1:s}'.format(
-                file_entry.pathspec_root.ToProto(),
-                file_entry.pathspec.ToProto()))
+            u'Unable to process file: {0:s} using module {1:s} with error: '
+            u'{2:s}.').format(
+                file_entry.name, parsing_object.parser_name, exception))
+        logging.debug((
+            u'The PathSpec that caused the error:\n(root)\n{0:s}\n'
+            u'{1:s}').format(
+                file_entry.pathspec_root.comparable,
+                file_entry.pathspec.comparable))
         logging.exception(e)
 
         # Check for debug mode and single-threaded, then we would like
@@ -292,182 +199,3 @@ class PlasoWorker(object):
 
     logging.debug(u'[ParseFile] Parsing DONE: {0:s}'.format(
         file_entry.display_name))
-
-  @classmethod
-  def SmartOpenFiles(cls, file_entry, depth=0):
-    """Generate a list of all available PathSpecs extracted from a file.
-
-    Args:
-      file_entry: A file entry object.
-      depth: Incrementing number that defines the current depth into
-             a file (file inside a ZIP file is depth 1, file inside a tar.gz
-             would be of depth 2).
-
-    Yields:
-      A Pfile file-like object.
-    """
-    if depth >= cls.MAX_FILE_DEPTH:
-      return
-
-    for pathspec in cls.SmartOpenFile(file_entry):
-      try:
-        pathspec_orig = copy.deepcopy(pathspec)
-        new_file_entry = pfile.PFileResolver.OpenFileEntry(
-            pathspec, orig=pathspec_orig)
-        yield new_file_entry
-      except IOError as e:
-        logging.debug((
-            u'Unable to open file: {{{0:s}}}, not sure if we can extract '
-            u'further files from it. Msg: {1:s}').format(
-                file_entry.display_name, e))
-        continue
-      for new_file_entry in cls.SmartOpenFiles(
-          new_file_entry, depth=(depth + 1)):
-        yield new_file_entry
-
-  @classmethod
-  def SmartOpenFile(cls, file_entry):
-    """Return a generator for all pathspec protobufs extracted from a PFile.
-
-    If the file is compressed then extract all members and include
-    them into the processing queue.
-
-    Args:
-      file_entry: The file entry object.
-
-    Yields:
-      EventPathSpec objects describing how a file can be opened.
-    """
-    file_object = file_entry.Open()
-
-    # TODO: Remove when classifier gets deployed. Then we
-    # call the classifier here and use that for definition (and
-    # then we forward the classifier definition in the pathspec
-    # protobuf.
-    file_object.seek(0, os.SEEK_SET)
-
-    if not cls.magic_max_length:
-      for magic_value in cls.MAGIC_VALUES.values():
-        cls.magic_max_length = max(
-            cls.magic_max_length,
-            magic_value['length'] + magic_value['offset'])
-
-    header = file_object.read(cls.magic_max_length)
-
-    file_classification = ''
-    # Go over each and every magic value defined and compare
-    # each read byte (according to original offset and current one)
-    # If all match, then we have a particular file format and we
-    # can move on.
-    for m_value, m_dict in cls.MAGIC_VALUES.items():
-      length = m_dict['length'] + m_dict['offset']
-      if len(header) < length:
-        continue
-
-      offset = m_dict['offset']
-      magic = m_dict['values']
-
-      if header[offset:offset + len(magic)] == ''.join(magic):
-        file_classification = m_value
-        break
-
-    # TODO: refactor the file type specific code into sub functions.
-    if file_classification == 'ZIP':
-      try:
-        file_object.seek(0, os.SEEK_SET)
-        zip_file = zipfile.ZipFile(file_object, 'r')
-
-        # TODO: Make this is a more "sane" check, and perhaps
-        # not entirely skip the file if it has this particular
-        # ending, but for now, this both slows the tool down
-        # considerably and makes it also more unstable.
-        file_ending = file_entry.name.lower()[-4:]
-        if file_ending in ['.jar', '.sym', '.xpi']:
-          file_object.close()
-          logging.debug(u'ZIP but the wrong type of zip [{0:s}]: {1:s}'.format(
-              file_ending, file_entry.name))
-          return
-
-        container_path = file_entry.pathspec.file_path
-        root_pathspec = file_entry.pathspec_root
-        for info in zip_file.infolist():
-          if info.file_size > 0:
-            logging.debug(
-                u'Including: {0:s} from ZIP into process queue.'.format(
-                    info.filename))
-            pathspec = copy.deepcopy(root_pathspec)
-            transfer_zip = event.EventPathSpec()
-            transfer_zip.type = 'ZIP'
-            transfer_zip.file_path = utils.GetUnicodeString(info.filename)
-            transfer_zip.container_path = utils.GetUnicodeString(
-                container_path)
-            cls.SetNestedContainer(pathspec, transfer_zip)
-            yield pathspec
-      except zipfile.BadZipfile:
-        pass
-
-    elif file_classification == 'GZ':
-      try:
-        file_object.seek(0, os.SEEK_SET)
-        if file_entry.pathspec.type == 'GZIP':
-          raise errors.SameFileType
-        gzip_file = gzip.GzipFile(fileobj=file_object, mode='rb')
-        _ = gzip_file.read(4)
-        gzip_file.seek(0, os.SEEK_SET)
-        logging.debug(u'Including: {0:s} from GZIP into process queue.'.format(
-            file_entry.name))
-        transfer_gzip = event.EventPathSpec()
-        transfer_gzip.type = 'GZIP'
-        transfer_gzip.file_path = utils.GetUnicodeString(
-            file_entry.pathspec.file_path)
-        pathspec = copy.deepcopy(file_entry.pathspec_root)
-        cls.SetNestedContainer(pathspec, transfer_gzip)
-        yield pathspec
-      except (IOError, zlib.error, errors.SameFileType):
-        pass
-
-    # TODO: Add BZ2 support, in most cases it should be the same
-    # as gzip support, however the library does not accept file-like objects,
-    # it requires a filename/path.
-
-    elif file_classification == 'TAR':
-      try:
-        file_object.seek(0, os.SEEK_SET)
-        tar_file = tarfile.open(fileobj=file_object, mode='r')
-        root_pathspec = file_entry.pathspec_root
-        file_path = file_entry.pathspec.file_path
-        for name_info in tar_file.getmembers():
-          if not name_info.isfile():
-            continue
-          name = name_info.path
-          logging.debug(
-              u'Including: {0:s} from TAR into process queue.'.format(name))
-          pathspec = copy.deepcopy(root_pathspec)
-          transfer_tar = event.EventPathSpec()
-          transfer_tar.type = 'TAR'
-          transfer_tar.file_path = utils.GetUnicodeString(name)
-          transfer_tar.container_path = utils.GetUnicodeString(file_path)
-          cls.SetNestedContainer(pathspec, transfer_tar)
-          yield pathspec
-      except tarfile.ReadError:
-        pass
-
-    file_object.close()
-
-  @classmethod
-  def SetNestedContainer(cls, pathspec_root, pathspec_append):
-    """Append an EventPathSpec to the end of a nested_pathspec chain.
-
-    Args:
-      pathspec_root: The root EventPathSpec of the chain.
-      pathspec_append: The EventPathSpec that needs to be appended.
-    """
-    if not hasattr(pathspec_root, 'nested_pathspec'):
-      pathspec_root.nested_pathspec = pathspec_append
-    else:
-      cls.SetNestedContainer(pathspec_root.nested_pathspec, pathspec_append)
-
-
-# TODO: Add a main function that can be used to execute the
-# worker directly, so it can be run independently.
-

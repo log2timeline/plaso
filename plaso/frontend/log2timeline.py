@@ -27,12 +27,13 @@ import time
 import textwrap
 
 import plaso
-from plaso.collector import factory as collector_factory
-from plaso.lib import errors
+from plaso.collector import collector
 from plaso.lib import engine
+from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import info
 from plaso.lib import pfilter
-from plaso.lib import preprocess
+from plaso.lib import preprocess_interface
 from plaso.pvfs import pvfs
 
 
@@ -339,11 +340,11 @@ def Main():
 
   # Check to see if we are trying to parse a mount point.
   if options.recursive:
-    pre_obj = preprocess.PlasoPreprocess()
-    preprocess_collector = collector_factory.GetGenericPreprocessCollector(
+    pre_obj = event.PreprocessObject()
+    preprocess_collector = collector.GenericPreprocessCollector(
         pre_obj, options.filename)
 
-    guessed_os = preprocess.GuessOS(preprocess_collector)
+    guessed_os = preprocess_interface.GuessOS(preprocess_collector)
     if guessed_os != 'None':
       options.preprocess = True
       logging.info((

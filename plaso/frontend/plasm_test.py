@@ -14,7 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the Plaso front-end plasm."""
+"""Tests for the plasm front-end."""
 
 import tempfile
 
@@ -23,6 +23,7 @@ import unittest
 from plaso.frontend import plasm
 from plaso.lib import event
 from plaso.lib import pfilter
+from plaso.lib import queue
 from plaso.lib import storage
 
 
@@ -50,6 +51,7 @@ class TestArgs(object):
 
 
 class PlasmTest(unittest.TestCase):
+  """Tests for the plasm front-end."""
 
   def setUp(self):
     """Setup creates a Plaso Store to play with, as well as a basic filter."""
@@ -65,16 +67,20 @@ class PlasmTest(unittest.TestCase):
         '  parser is \'TestEvent\' and stuff is \'dude\'\n')
     self.tag_input_file.flush()
 
-    dumper = storage.SimpleStorageDumper(self.storage_file)
-    dumper.AddEvent(TestEvent(0).ToProtoString())
-    dumper.AddEvent(TestEvent(1000).ToProtoString())
-    dumper.AddEvent(TestEvent(2000000, '/tmp/whoaaaaa').ToProtoString())
-    dumper.AddEvent(TestEvent(2500000, '/tmp/whoaaaaa').ToProtoString())
-    dumper.AddEvent(TestEvent(5000000, '/tmp/whoaaaaa', 'dude').ToProtoString())
-    dumper.Close()
-    dumper.Run()
+    test_queue = queue.MultiThreadedQueue()
+    test_queue_producer = queue.EventObjectQueueProducer(test_queue)
+    test_queue_producer.ProduceEventObjects([
+        TestEvent(0),
+        TestEvent(1000),
+        TestEvent(2000000, '/tmp/whoaaaaa'),
+        TestEvent(2500000, '/tmp/whoaaaaa'),
+        TestEvent(5000000, '/tmp/whoaaaaa', 'dude')])
+    test_queue_producer.SignalEndOfInput()
 
-    self.storage = storage.PlasoStorage(self.storage_file)
+    storage_writer = storage.StorageFileWriter(test_queue, self.storage_file)
+    storage_writer.WriteEventObjects()
+
+    self.storage = storage.StorageFile(self.storage_file)
     self.storage.SetStoreLimit()
 
   def tearDown(self):
@@ -119,7 +125,7 @@ class PlasmTest(unittest.TestCase):
     for _ in plasm.EventObjectGenerator(self.storage, quiet=True):
       counter += 1
     self.assertEquals(counter, 5)
-    self.storage = storage.PlasoStorage(self.storage_file)
+    self.storage = storage.StorageFile(self.storage_file)
     pfilter.TimeRangeCache.ResetTimeConstraints()
     self.storage.SetStoreLimit()
     counter = 0
@@ -133,7 +139,7 @@ class PlasmTest(unittest.TestCase):
     tagging_engine = plasm.TaggingEngine(
         self.storage_name, self.tag_input_name, quiet=True)
     tagging_engine.Run()
-    test = storage.PlasoStorage(self.storage_name)
+    test = storage.StorageFile(self.storage_name)
     self.assertTrue(test.HasTagging())
     tagging = test.GetTagging()
     count = 0
@@ -156,7 +162,7 @@ class PlasmTest(unittest.TestCase):
     grouping_engine = plasm.GroupingEngine(self.storage_name, quiet=True)
     tagging_engine.Run()
     grouping_engine.Run()
-    test = storage.PlasoStorage(self.storage_name)
+    test = storage.StorageFile(self.storage_name)
     test.SetStoreLimit()
     self.assertTrue(test.HasGrouping())
     groups = test.GetGrouping()

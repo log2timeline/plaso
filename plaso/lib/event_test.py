@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -31,12 +32,11 @@ The tests involve:
 Error handling. The following tests are performed for error handling:
  + Access attributes that are not set.
 """
+
 import unittest
 
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.proto import plaso_storage_pb2
-from plaso.proto import transmission_pb2
 
 
 class TestEvent1(event.EventObject):
@@ -51,33 +51,13 @@ class TestEvent1(event.EventObject):
     self.attributes.update(attributes)
 
 
-class TestEvent2(event.EventObject):
-  """A test event object."""
-  DATA_TYPE = 'test:event2'
-
-  def __init__(self):
-    """Initializes the test event object."""
-    super(TestEvent2, self).__init__()
-    self.timestamp = 1234124
-    self.timestamp_desc = 'Written'
-
-    self.empty_string = u''
-    self.zero_integer = 0
-    self.integer = 34
-    self.string = 'Normal string'
-    self.unicode_string = u'And I\'m a unicorn.'
-    self.my_list = ['asf', 4234, 2, 54, 'asf']
-    self.my_dict = {'a': 'not b', 'c': 34, 'list': ['sf', 234], 'an': [234, 32]}
-    self.a_tuple = ('some item', [234, 52, 15], {'a': 'not a', 'b': 'not b'},
-                    35)
-    self.null_value = None
-
-
 class FailEvent(event.EventObject):
   """An test event object without the minimal required initialization."""
 
 
 class TestEventContainer(event.EventContainer):
+  """A test event container."""
+
   def __init__(self):
     """Initializes the test event container."""
     super(TestEventContainer, self).__init__()
@@ -131,42 +111,37 @@ class TestEventContainer(event.EventContainer):
     self.Append(container)
 
 
-class PlasoEventUnitTest(unittest.TestCase):
-  """The unit test for plaso storage."""
+class EventContainerTest(unittest.TestCase):
+  """Tests for the event container object."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.container = TestEventContainer()
+    self._container = TestEventContainer()
 
   def testAllCount(self):
     """Test if we have all the events inside the container."""
-    self.assertEquals(len(self.container), 7)
+    self.assertEquals(len(self._container), 7)
 
   def testContainerTimestamps(self):
     """Test first/last timestamps of containers."""
+    self.assertEquals(
+        self._container.first_timestamp, 1334940286000000)
+    self.assertEquals(
+        self._container.last_timestamp, 1338934459000000)
 
-    self.assertEquals(self.container.first_timestamp, 1334940286000000)
-    self.assertEquals(self.container.last_timestamp, 1338934459000000)
-
-    serialized = self.container.ToProtoString()
-    container = event.EventContainer()
-    container.FromProtoString(serialized)
-
-    self.assertEquals(container.first_timestamp, 1334940286000000)
-    self.assertEquals(container.last_timestamp, 1338934459000000)
     # The container should have two sub containers:
     #   One with three events.
     #   One with four events.
-    self.assertEquals(len(container), 7)
-    self.assertEquals(len(container.containers), 2)
+    self.assertEquals(len(self._container), 7)
+    self.assertEquals(len(self._container.containers), 2)
     # The parent container set one attribute, the hostname.
-    self.assertEquals(len(container.attributes), 1)
-    self.assertTrue('hostname' in container.attributes)
-    self.assertEquals(len(container.containers[0].attributes), 2)
+    self.assertEquals(len(self._container.attributes), 1)
+    self.assertTrue('hostname' in self._container.attributes)
+    self.assertEquals(len(self._container.containers[0].attributes), 2)
 
     first_array = []
     last_array = []
-    for c in self.container.containers:
+    for c in self._container.containers:
       first_array.append(c.first_timestamp)
       last_array.append(c.last_timestamp)
 
@@ -186,6 +161,58 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertIn(1335781787929596, first)
     self.assertIn(1338934459000000, last)
 
+  def testDoesNotExist(self):
+    """Calls to a non-existing attribute should result in an exception."""
+    events = list(self._container)
+
+    with self.assertRaises(AttributeError):
+      getattr(events[0], 'doesnotexist')
+
+  def testExistsInEventObject(self):
+    """Calls to an attribute that is stored within the EventObject itself."""
+    events = list(self._container.GetSortedEvents())
+
+    self.assertEquals(events[0].keyname, '//HKCU/Windows/Normal')
+
+  def testExistsRegalert(self):
+    """Calls to the attribute that stores the regalert."""
+    events = list(self._container.GetSortedEvents())
+
+    self.assertEquals(events[2].regalert, True)
+
+  def testExistsInParentObject(self):
+    """Call to an attribute that is contained within the parent object."""
+    events = list(self._container.GetSortedEvents())
+
+    self.assertEquals(events[0].filename, 'c:/Users/joesmith/NTUSER.DAT')
+
+  def testFailAddContainerEvent(self):
+    """Add an EventContainer that is isn't an EventContainer."""
+    with self.assertRaises(errors.NotAnEventContainerOrObject):
+      self._container.Append('asd')
+
+    with self.assertRaises(errors.NotAnEventContainerOrObject):
+      self._container.Append(FailEvent())
+
+  def testGetAttributes(self):
+    """Test the GetAttributes function."""
+    # TODO: clean up this code construction, retrieving the last event object
+    # in the container can be done in a cleaner way.
+    for event_object in self._container:
+      last_event_object = event_object
+
+    attr = last_event_object.GetAttributes()
+
+    self.assertEquals(len(attr), 9)
+
+    self.assertEquals(sorted(attr), [
+        'body', 'data_type', 'filename', 'hostname', 'text', 'timestamp',
+        'timestamp_desc', 'username', 'uuid'])
+
+
+class EventObjectTest(unittest.TestCase):
+  """Tests for the event object."""
+
   def testSameEvent(self):
     """Test the EventObject comparison."""
     event_a = event.EventObject()
@@ -196,7 +223,7 @@ class PlasoEventUnitTest(unittest.TestCase):
 
     event_a.timestamp = 123
     event_a.timestamp_desc = u'LAST WRITTEN'
-    event_a.data_type = u'mock:nothing'
+    event_a.data_type = 'mock:nothing'
     event_a.inode = 124
     event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
@@ -251,43 +278,6 @@ class PlasoEventUnitTest(unittest.TestCase):
     self.assertNotEquals(event_a, event_c)
     self.assertEquals(event_a, event_e)
     self.assertNotEquals(event_c, event_d)
-
-    serialized = event_a.ToProtoString()
-    test_event = event.EventObject()
-    test_event.FromProtoString(serialized)
-    self.assertEquals(event_a.EqualityString(), test_event.EqualityString())
-
-    event_f = event.EventObject()
-    event_f.timestamp = 123123123
-    event_f.timestamp_desc = u'LAST TESTED'
-    event_f.data_type = u'mock:something'
-    event_f.inode = 12456
-    event_f.filename = u'/home/gaur/skjol/leyndo/ekkilesamig.txt'
-    event_f.lesamig = False
-    event_f.metadata = {
-        u'author': u'Some Random Dude',
-        u'version': u'2012-01-12beta',
-        u'number': 155234,
-        u'last_changed': u'Long time ago'}
-    event_f.strings = [
-        u'This ', u'is a ', u'long string', u'split up', 134]
-    event_f.store_number = 123
-    event_f.store_index = 5134
-
-    tag = event.EventTag()
-    tag.store_number = 123
-    tag.store_index = 5134
-    tag.comment = 'Made by this manual testing machine'
-    tag.color = 'red'
-    tag.tags = ['Evil', 'evel', 'vont', 'illt', 'probably fine']
-
-    event_f.tag = tag
-
-    serialized_json = event_f.ToJson()
-    test_event_json = event.EventObject()
-    test_event_json.FromJson(serialized_json)
-    self.assertEquals(
-        event_f.EqualityString(), test_event_json.EqualityString())
 
   def testEqualityString(self):
     """Test the EventObject EqualityString."""
@@ -389,229 +379,32 @@ class PlasoEventUnitTest(unittest.TestCase):
 
     self.assertNotEquals(event_a.EqualityString(), event_b.EqualityString())
 
-  def testDoesNotExist(self):
-    """Calls to a non-existing attribute should result in an exception."""
-    events = list(self.container)
-
-    self.assertRaises(AttributeError, getattr, events[0], 'doesnotexist')
-
-  def testExistsInEventObject(self):
-    """Calls to an attribute that is stored within the EventObject itself."""
-    events = list(self.container.GetSortedEvents())
-
-    self.assertEquals(events[0].keyname, '//HKCU/Windows/Normal')
-
-  def testExistsRegalert(self):
-    """Calls to the attribute that stores the regalert."""
-    events = list(self.container.GetSortedEvents())
-
-    self.assertEquals(events[2].regalert, True)
-
-  def testExistsInParentObject(self):
-    """Call to an attribute that is contained within the parent object."""
-    events = list(self.container.GetSortedEvents())
-
-    self.assertEquals(events[0].filename, 'c:/Users/joesmith/NTUSER.DAT')
-
   def testNotInEventAndNoParent(self):
     """Call to an attribute that does not exist and no parent container ."""
     event_object = TestEvent1(0, {})
 
-    self.assertRaises(AttributeError, getattr, event_object, 'doesnotexist')
+    with self.assertRaises(AttributeError):
+      getattr(event_object, 'doesnotexist')
 
   def testFailEvent(self):
     """Calls to format_string_short that has not been defined."""
     e = FailEvent()
-    self.assertRaises(AttributeError, getattr, e, 'format_string_short')
 
-  def testFailAddContainerEvent(self):
-    """Add an EventContainer that is isn't an EventContainer."""
-    self.assertRaises(errors.NotAnEventContainerOrObject,
-                      self.container.Append, 'asd')
-    self.assertRaises(errors.NotAnEventContainerOrObject,
-                      self.container.Append, FailEvent())
-
-  def testGetAttributes(self):
-    """Test the GetAttributes function."""
-    # get the last event
-    for e in self.container:
-      my_event = e
-
-    attr = my_event.GetAttributes()
-
-    self.assertEquals(len(attr), 9)
-
-    self.assertEquals(sorted(attr), [
-        'body', 'data_type', 'filename', 'hostname', 'text', 'timestamp',
-        'timestamp_desc', 'username', 'uuid'])
-
-  def testSerialization(self):
-    """Test serialize event and attribute saving."""
-    evt = TestEvent2()
-
-    proto = evt.ToProto()
-    proto_ser = evt.ToProtoString()
-
-    self.assertEquals(len(list(proto.attributes)), 7)
-    attributes = dict(
-        event.AttributeFromProto(a) for a in proto.attributes)
-
-    # An empty string should not get stored.
-    self.assertFalse('empty_string' in attributes)
-
-    # An integer value containing 0 should get stored.
-    self.assertTrue('zero_integer' in attributes)
-
-    self.assertEquals(len(attributes.get('my_list', [])), 5)
-    self.assertEquals(attributes.get('string'), 'Normal string')
-    self.assertEquals(len(attributes.get('a_tuple')), 4)
-
-    # A None (or Null) value should not get stored.
-    self.assertFalse('null_value' in attributes)
-
-    # Go back
-    evt2 = event.EventObject()
-    evt2.FromProtoString(proto_ser)
-
-    self.assertEquals(evt2.timestamp, evt.timestamp)
-    self.assertEquals(evt.my_dict, evt2.my_dict)
-    self.assertEquals(evt.my_list, evt2.my_list)
-    self.assertEquals(evt.uuid, evt2.uuid)
-    self.assertEquals(evt.string, evt2.string)
-    self.assertFalse('empty_string' in evt2.attributes)
-    self.assertFalse('null_value' in evt2.attributes)
+    with self.assertRaises(AttributeError):
+      getattr(e, 'format_string_short')
 
 
-class EventTaggingUnitTest(unittest.TestCase):
-  """The unit test for the EventTag object."""
+class EventTagTest(unittest.TestCase):
+  """Tests for the event tag object."""
 
-  def testEventTag(self):
-    """Test the serialization and deserialization of EventTagging."""
-    proto = plaso_storage_pb2.EventTagging()
-    proto.store_number = 234
-    proto.store_index = 18
-    proto.comment = 'My first comment.'
-    proto.color = 'Red'
-    tag1 = proto.tags.add()
-    tag1.value = 'Malware'
-    tag2 = proto.tags.add()
-    tag2.value = 'Common'
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    self._event_tag = event.EventTag()
 
-    event_tag = event.EventTag()
-    event_tag.FromProto(proto)
-
-    self.assertEquals(event_tag.color, 'Red')
-    self.assertEquals(event_tag.comment, 'My first comment.')
-    self.assertEquals(event_tag.store_index, 18)
-    self.assertEquals(len(event_tag.tags), 2)
-
-    serialized1 = proto.SerializeToString()
-    serialized2 = event_tag.ToProtoString()
-
-    self.assertEquals(serialized1, serialized2)
-
-    event_tag_2 = event.EventTag()
-    event_tag_2.FromProtoString(serialized2)
-    self.assertEquals(event_tag.tags, event_tag_2.tags)
-
-    # Test setting an 'illegal' attribute.
-    self.assertRaises(
-        AttributeError, setattr, event_tag_2, 'notdefined', 'Value')
-
-
-class EventPathSpecUnitTest(unittest.TestCase):
-  """The unit test for the PathSpec object."""
-
-  def testEventPathSpec(self):
-    """Test serialize/deserialize EventPathSpec event."""
-    proto = transmission_pb2.PathSpec()
-    proto.file_path = '/tmp/nowhere'
-    proto.type = 0
-
-    evt = event.EventPathSpec()
-    evt.FromProto(proto)
-
-    self.assertEquals(evt.type, 'OS')
-
-    nested_proto = transmission_pb2.PathSpec()
-    nested_proto.container_path = 'SomeFilePath'
-    nested_proto.type = 2
-    nested_proto.file_path = 'My.zip'
-    nested_proto.image_offset = 35
-    nested_proto.image_inode = 6124543
-
-    proto.nested_pathspec.MergeFrom(nested_proto)
-    proto_str = proto.SerializeToString()
-
-    evt2 = event.EventPathSpec()
-    evt2.FromProtoString('P' + proto_str)
-
-    self.assertEquals(evt2.file_path, '/tmp/nowhere')
-    self.assertTrue(hasattr(evt2, 'nested_pathspec'))
-    nested_evt = evt2.nested_pathspec
-
-    self.assertEquals(nested_evt.image_offset, 35)
-    self.assertEquals(nested_evt.image_inode, 6124543)
-    self.assertEquals(nested_evt.type, 'ZIP')
-
-    proto_evt2 = evt2.ToProto()
-
-    self.assertEquals(proto_evt2.file_path, '/tmp/nowhere')
-
-
-class EventPathBundleTest(unittest.TestCase):
-  """The unit test for the PathBundle protobuf."""
-
-  def testEventBundle(self):
-    """Test the serialize/deserialize EventBundle event."""
-    pattern = '/tmp/.+'
-
-    proto = transmission_pb2.PathBundle()
-    proto.pattern = pattern
-
-    p1_proto = transmission_pb2.PathSpec()
-    p1_proto.file_path = '/tmp/nowhere'
-    # Type 0 = OS.
-    p1_proto.type = 0
-
-    first_pathspec = proto.pathspecs.add()
-    first_pathspec.MergeFrom(p1_proto)
-
-    nested_proto = transmission_pb2.PathSpec()
-    nested_proto.container_path = 'SomeFilePath'
-    nested_proto.type = 2
-    nested_proto.file_path = 'My.zip'
-    nested_proto.image_offset = 35
-    nested_proto.image_inode = 6124543
-
-    p1_proto.nested_pathspec.MergeFrom(nested_proto)
-
-    second_pathspec = proto.pathspecs.add()
-    second_pathspec.MergeFrom(p1_proto)
-
-    p2_proto = transmission_pb2.PathSpec()
-    # Type 1 = TSK.
-    p2_proto.type = 1
-    p2_proto.container_path = 'myimage.raw'
-    p2_proto.image_inode = 124
-    p2_proto.image_offset = 12345
-
-    third_pathspec = proto.pathspecs.add()
-    third_pathspec.MergeFrom(p2_proto)
-
-    bundle = event.EventPathBundle()
-    bundle.FromProto(proto)
-
-    # pylint: disable=W0212
-    self.assertEquals(len(bundle._pathspecs), 3)
-    self.assertEquals(len(list(bundle.ListFiles())), 3)
-    self.assertEquals(bundle.pattern, pattern)
-
-    nested_hash = u'-:-:-:-:/tmp/nowhere:SomeFilePath:35:-:6124543:My.zip:'
-    nested_pathspec = bundle.GetPathspecFromHash(nested_hash)
-
-    self.assertEquals(
-        nested_pathspec.ToProtoString(), 'P' + p1_proto.SerializeToString())
+  def testSetattr(self):
+    """Tests the set attribute function."""
+    with self.assertRaises(AttributeError):
+      setattr(self._event_tag, 'notdefined', 'Value')
 
 
 if __name__ == '__main__':

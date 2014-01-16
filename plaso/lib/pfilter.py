@@ -194,7 +194,7 @@ class ParserList(objectfilter.GenericBinaryOperator):
     self.compiled_list = presets.categories.get(
         self.right_operand.lower(), [])
 
-  def Operation(self, x, dummy_y):
+  def Operation(self, x, unused_y):
     """Return a bool depending on the parser list contains the parser."""
     if self.left_operand != 'parser':
       raise objectfilter.MalformedQueryError(
@@ -310,31 +310,31 @@ class TrueObject(object):
     """Save the text object so it can be used when comparing text."""
     self.txt = txt
 
-  def __getattr__(self, dummy_attr):
+  def __getattr__(self, unused_attr):
     """Return a TrueObject for every attribute request."""
     return self
 
-  def __eq__(self, dummy_x):
+  def __eq__(self, unused_x):
     """Return true for tests of equality."""
     return True
 
-  def __gt__(self, dummy_x):
+  def __gt__(self, unused_x):
     """Return true for checks for greater."""
     return True
 
-  def __ge__(self, dummy_x):
+  def __ge__(self, unused_x):
     """Return true for checks for greater or equal."""
     return True
 
-  def __lt__(self, dummy_x):
+  def __lt__(self, unused_x):
     """Return true for checks of less."""
     return True
 
-  def __le__(self, dummy_x):
+  def __le__(self, unused_x):
     """Return true for checks of less or equal."""
     return True
 
-  def __ne__(self, dummy_x):
+  def __ne__(self, unused_x):
     """Return true for all not equal comparisons."""
     return True
 

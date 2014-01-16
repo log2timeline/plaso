@@ -16,13 +16,12 @@
 # limitations under the License.
 """Tests for Basic Security Module (BSM) file parser."""
 
-import pytz
 import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import bsm as bsm_formatter
-from plaso.lib import preprocess
-from plaso.parsers import bsm as bsm_parser
+from plaso.lib import event
+from plaso.parsers import bsm
 from plaso.parsers import test_lib
 
 class BsmParserTest(test_lib.ParserTestCase):
@@ -30,15 +29,13 @@ class BsmParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    mac_pre_obj = preprocess.PlasoPreprocess()
+    mac_pre_obj = event.PreprocessObject()
     mac_pre_obj.guessed_os = 'MacOSX'
-    mac_pre_obj.zone = pytz.UTC
-    self._parser_macbsm = bsm_parser.BsmParser(mac_pre_obj, None)
+    self._parser_macbsm = bsm.BsmParser(mac_pre_obj, None)
 
-    openbsm_pre_obj = preprocess.PlasoPreprocess()
+    openbsm_pre_obj = event.PreprocessObject()
     openbsm_pre_obj.guessed_os = 'openbsm'
-    openbsm_pre_obj.zone = pytz.UTC
-    self._parser_openbsm = bsm_parser.BsmParser(openbsm_pre_obj, None)
+    self._parser_openbsm = bsm.BsmParser(openbsm_pre_obj, None)
 
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""

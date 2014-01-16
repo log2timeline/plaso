@@ -51,7 +51,6 @@ from plaso.lib import objectfilter
 from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfilter
-from plaso.lib import preprocess
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import registry as class_registry
@@ -72,7 +71,6 @@ from plaso.pvfs import vss
 from plaso.winreg import interface as win_registry_interface
 from plaso.winreg import winregistry
 
-import pytz
 import pyvshadow
 
 
@@ -84,7 +82,7 @@ def FindAllOutputs():
 def FindAllParsers():
   """Finds all available parsers."""
   return putils.FindAllParsers()
-  
+
 
 def GetEventData(event_proto, before):
   """Prints a hexdump of the event data."""
@@ -113,7 +111,7 @@ def Pfile2File(file_object, path):
 
 def PrintTimestamp(timestamp):
   """Prints a human readable timestamp from values stored in an event object."""
-  return putils.PrintTimestamp(timestamp)
+  return frontend_utils.OutputWriter.GetDateTimeString(timestamp)
 
 
 def Main():
@@ -151,8 +149,7 @@ def Main():
 
   namespace = {}
 
-  pre_obj = preprocess.PlasoPreprocess()
-  pre_obj.zone = pytz.UTC
+  pre_obj = event.PreprocessObject()
 
   namespace.update(globals())
   namespace.update({'l2t': l2t, 'pre_obj': pre_obj, 'options': options})
@@ -161,7 +158,7 @@ def Main():
     test_file = sys.argv[1]
     if os.path.isfile(test_file):
       try:
-        store = storage.PlasoStorage(test_file, read_only=True)
+        store = storage.StorageFile(test_file, read_only=True)
         namespace.update({'store': store})
       except IOError:
         print 'Unable to load storage file, not a storage file?'

@@ -83,7 +83,7 @@ class TestFormatter(output.LogOutputFormatter):
 
 
 class TestEventBuffer(output.EventBuffer):
-  """A dummy output buffer."""
+  """A test event buffer."""
 
   def __init__(self, store, formatter=None):
     self.record_count = 0
@@ -117,11 +117,11 @@ class PsortTest(unittest.TestCase):
 
   def testSetupStorage(self):
     storage_cls = psort.SetupStorage(self.test_file)
-    self.assertEquals(type(storage_cls), storage.PlasoStorage)
+    self.assertEquals(type(storage_cls), storage.StorageFile)
 
   def testReadEntries(self):
     """Ensure returned EventObjects from the storage are within timebounds."""
-    store = storage.PlasoStorage(self.test_file, read_only=True)
+    store = storage.StorageFile(self.test_file, read_only=True)
     timestamp_list = []
     pfilter.TimeRangeCache.ResetTimeConstraints()
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
@@ -149,16 +149,14 @@ class PsortTest(unittest.TestCase):
 
     output_fd = StringIO.StringIO()
 
-    with tempfile.NamedTemporaryFile() as fh:
-      store = storage.PlasoStorage(fh)
+    with tempfile.NamedTemporaryFile() as temp_file:
+      store = storage.StorageFile(temp_file)
       pfilter.TimeRangeCache.ResetTimeConstraints()
       store.SetStoreLimit()
+      store.AddEventObjects(events)
+      store.Close()
 
-      for my_event in events:
-        store.AddEntry(my_event.ToProtoString())
-      store.CloseStorage()
-
-      with psort.SetupStorage(fh.name) as store:
+      with psort.SetupStorage(temp_file.name) as store:
         store.store_range = [1]
         formatter = TestFormatter(store, output_fd)
         event_buffer = TestEventBuffer(store, formatter)

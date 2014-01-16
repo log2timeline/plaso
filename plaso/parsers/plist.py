@@ -21,7 +21,6 @@ Plaso's engine calls PlistParser when it encounters Plist files to be processed.
 """
 
 import logging
-import os
 
 from binplist import binplist
 
@@ -34,6 +33,7 @@ from plaso.lib import parser
 from plaso.lib import plugin
 from plaso.lib import utils
 from plaso.parsers.plist_plugins import interface
+from plaso.pvfs import pfile
 
 
 class PlistParser(parser.BaseParser):
@@ -137,9 +137,11 @@ class PlistParser(parser.BaseParser):
     if not top_level_object:
       file_object.close()
       raise errors.UnableToParseFile(
-          u'[PLIST] couldn\'t parse: %s.  Skipping.' % file_entry.name)
+          u'[PLIST] unable to parse: {0:s} skipping.'.format(file_entry.name))
 
-    plist_name = os.path.basename(file_entry.name)
+    file_system = pfile.PFileResolver.OpenFileSystem(
+        file_entry.pathspec)
+    plist_name = file_system.BasenamePath(file_entry.name)
 
     for plist_plugin in self._plugins.itervalues():
       try:

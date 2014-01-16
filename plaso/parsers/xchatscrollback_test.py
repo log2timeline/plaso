@@ -22,8 +22,8 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import xchatscrollback as xchatscrollback_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import xchatscrollback as xchatscrollback_parser
 from plaso.parsers import test_lib
 
@@ -36,7 +36,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     pre_obj.zone = pytz.timezone('UTC')
     self._parser = xchatscrollback_parser.XChatScrollbackParser(pre_obj, None)
 

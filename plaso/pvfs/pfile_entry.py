@@ -74,7 +74,7 @@ class BaseFileEntry(object):
     """Make it work with the with statement."""
     return self
 
-  def __exit__(self, dummy_type, dummy_value, dummy_traceback):
+  def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make it work with the with statement."""
     return
 

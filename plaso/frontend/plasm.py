@@ -31,7 +31,6 @@ from plaso import filters
 
 from plaso.lib import event
 from plaso.lib import output as output_lib
-from plaso.lib import preprocess
 from plaso.lib import storage
 
 # pylint: disable-msg=unused-import
@@ -41,19 +40,18 @@ from plaso.output import pstorage
 def SetupStorage(input_file_path, pre_obj=None):
   """Sets up the storage object.
 
-  Attempts to initialize the storage object from the PlasoStorage library.  If
-  we fail on a IO Error (common case for typos) log a warning and gracefully
-  exit.
+  Attempts to initialize a storage file. If we fail on a IOError, for which
+  a common cause are typos, log a warning and gracefully exit.
 
   Args:
     input_file_path: Filesystem path to the plaso storage container.
     pre_obj: A plaso preprocessing object.
 
   Returns:
-    A storage.PlasoStorage object.
+    A storage.StorageFile object.
   """
   try:
-    return storage.PlasoStorage(
+    return storage.StorageFile(
         input_file_path, pre_obj=pre_obj, read_only=False)
   except IOError as details:
     logging.error('IO ERROR: %s', details)
@@ -65,11 +63,11 @@ def SetupStorage(input_file_path, pre_obj=None):
 def EventObjectGenerator(plaso_storage, quiet=False):
   """Yields EventObject objects.
 
-  Yields event_objects out of a PlasoStorage object. If the 'quiet' argument
+  Yields event_objects out of a StorageFile object. If the 'quiet' argument
   is not present, it also outputs 50 '.'s indicating progress.
 
   Args:
-    plaso_storage: a storage.PlasoStorage object.
+    plaso_storage: a storage.StorageFile object.
     quiet: boolean value indicating whether to suppress progress output.
 
   Yields:
@@ -149,7 +147,7 @@ class TaggingEngine(object):
     """Iterates through a Plaso Store file, tagging events according to the
     tagging input file specified on the command line. It writes the tagging
     information to the Plaso Store file."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     pre_obj.collection_information = {}
     pre_obj.collection_information['file_processed'] = self.target_filename
     pre_obj.collection_information['method'] = 'Applying tags.'
@@ -237,7 +235,7 @@ class GroupingEngine(object):
       for location in locations:
         store_number, store_index = location
         # TODO(ojensen): getting higher number event_objects seems to be slow.
-        event_object = store.GetEntry(store_number, store_index)
+        event_object = store.GetEventObject(store_number, store_index)
         if not hasattr(event_object, 'timestamp'):
           continue
         timestamp = getattr(event_object, 'timestamp')

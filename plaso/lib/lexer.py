@@ -264,7 +264,7 @@ class Expression(object):
     """Print the tree."""
     return "%s %s" % (depth, self)
 
-  def Compile(self, dummy_filter_implemention):
+  def Compile(self, unused_filter_implemention):
     """Given a filter implementation, compile this expression."""
     raise NotImplementedError("%s does not implement Compile." %
                               self.__class__.__name__)
@@ -497,7 +497,7 @@ class SearchParser(Lexer):
 
     return self.stack[0]
 
-  def Error(self, message=None, dummy_weight=1):
+  def Error(self, message=None, unused_weight=1):
     """Raise an error message."""
     raise ParseError("%s in position %s: %s <----> %s )" % (
         message, len(self.processed_buffer), self.processed_buffer,

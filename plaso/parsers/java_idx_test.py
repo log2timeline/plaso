@@ -21,12 +21,10 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import java_idx as java_idx_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import java_idx
 from plaso.parsers import test_lib
-
-import pytz
 
 
 class IDXTest(test_lib.ParserTestCase):
@@ -34,8 +32,7 @@ class IDXTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
+    pre_obj = event.PreprocessObject()
     self._parser = java_idx.JavaIDXParser(pre_obj)
 
   def testParse602(self):

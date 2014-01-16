@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -20,14 +21,11 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import android_sms as android_sms_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
-from plaso.parsers.sqlite_plugins import test_lib
 from plaso.parsers.sqlite_plugins import android_sms
-from plaso.parsers.sqlite_plugins import interface
+from plaso.parsers.sqlite_plugins import test_lib
 from plaso.pvfs import pfile
-
-import pytz
 
 
 class AndroidSmsTest(test_lib.SQLitePluginTestCase):
@@ -35,8 +33,7 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
+    pre_obj = event.PreprocessObject()
     self._plugin = android_sms.AndroidSmsPlugin(pre_obj)
 
   def testProcess(self):
@@ -51,8 +48,8 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
     # Check the first SMS sent.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.CREATION_TIME)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     # date -u -d"2013-10-29 16:56:28.038000" +"%s.%N"
     self.assertEquals(event_object.timestamp, 1383065788038 * 1000)

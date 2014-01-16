@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The storage mechanism for Plaso.
+"""The storage mechanism.
 
 The storage mechanism can be described as a collection of storage files
 that are stored together in a single ZIP compressed container.
@@ -99,49 +99,119 @@ import collections
 import construct
 import heapq
 import logging
+# TODO: replace all instances of struct by construct!
 import struct
 import sys
-import time
 import zipfile
 
-from plaso.lib import analysis_interface
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import limit
 from plaso.lib import pfilter
 from plaso.lib import output
-from plaso.lib import preprocess
 from plaso.lib import queue
+from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
+from plaso.serializer import protobuf_serializer
 
 from google.protobuf import message
 import yaml
 
 
-class PlasoStorage(object):
-  """Abstract the storage reading and writing."""
+class _EventTagIndexValue(object):
+  """Class that defines the event tag index value."""
 
-  # Set the buffer size to 196MiB
-  MAX_BUFFER_SIZE = 1024 * 1024 * 196
+  TAG_STORE_STRUCT = construct.Struct(
+      'tag_store',
+      construct.ULInt32('store_number'),
+      construct.ULInt32('store_index'))
+
+  TAG_UUID_STRUCT = construct.Struct(
+      'tag_uuid',
+      construct.PascalString('event_uuid'))
+
+  TAG_INDEX_STRUCT = construct.Struct(
+      'tag_index',
+      construct.Byte('type'),
+      construct.ULInt32('offset'),
+      construct.IfThenElse(
+          'tag',
+          lambda ctx: ctx['type'] == 1,
+          TAG_STORE_STRUCT,
+          TAG_UUID_STRUCT))
+
+  TAG_TYPE_UNDEFINED = 0
+  TAG_TYPE_NUMERIC = 1
+  TAG_TYPE_UUID = 2
+
+  def __init__(self, identifier, store_number=0, store_offset=0):
+    """Initializes the tag index value.
+
+    Args:
+      identifier: the identifier string.
+      store_number: optional store number. The default is 0.
+      store_offset: optional offset relative to the start of the store.
+                    The default 0.
+    """
+    super(_EventTagIndexValue, self).__init__()
+    self.identifier = identifier
+    self.store_number = store_number
+    self.store_offset = store_offset
+
+  @classmethod
+  def Read(cls, file_object, store_number):
+    """Reads a tag index value from the file-like object.
+
+    Args:
+      file_object: the file-like object to read from.
+      store_number: the store number.
+
+    Returns:
+      The tag index value if successful or None.
+    """
+    try:
+      tag_index_struct = cls.TAG_INDEX_STRUCT.parse_stream(file_object)
+    except (construct.FieldError, AttributeError):
+      return None
+
+    tag_type = tag_index_struct.get('type', cls.TAG_TYPE_UNDEFINED)
+    if tag_type not in [cls.TAG_TYPE_NUMERIC, cls.TAG_TYPE_UUID]:
+      logging.warning('Unsupported tag type: {0:d}'.format(tag_type))
+      return None
+
+    tag_entry = tag_index_struct.get('tag', {})
+    if tag_type == cls.TAG_TYPE_NUMERIC:
+      tag_identifier = '{}:{}'.format(
+          tag_entry.get('store_number', 0),
+          tag_entry.get('store_index', 0))
+
+    else:
+      tag_identifier = tag_entry.get('event_uuid', '0')
+
+    store_offset = tag_index_struct.get('offset')
+    return _EventTagIndexValue(
+        tag_identifier, store_number=store_number, store_offset=store_offset)
+
+
+class StorageFile(object):
+  """Class that defines the storage file."""
+
+  _STREAM_DATA_SEGMENT_SIZE = 1024
+
+  # Set the maximum buffer size to 196 MiB
+  MAX_BUFFER_SIZE = 196 * 1024 * 1024
+
+  # Set the maximum protobuf string size to 40 MiB
+  MAX_PROTO_STRING_SIZE = 40 * 1024 * 1024
+
+  # Set the maximum report protobuf string size to 24 MiB
+  MAX_REPORT_PROTOBUF_SIZE = 24 * 1024 * 1024
 
   # Set the version of this storage mechanism.
   STORAGE_VERSION = 1
 
   # Define structs.
-  TAG_STORE_STRUCT = construct.Struct(
-      'tag_store', construct.ULInt32('store_number'),
-      construct.ULInt32('store_index'))
-
-  TAG_UUID_STRUCT = construct.Struct(
-      'tag_uuid', construct.PascalString('event_uuid'))
-
-  TAG_INDEX_STRUCT = construct.Struct(
-      'tag_index', construct.Byte('type'), construct.ULInt32('offset'),
-      construct.IfThenElse(
-          'tag', lambda ctx: ctx['type'] == 1, TAG_STORE_STRUCT,
-          TAG_UUID_STRUCT))
-
   INTEGER = construct.ULInt32('integer')
 
   source_short_map = {}
@@ -149,9 +219,9 @@ class PlasoStorage(object):
       'SourceShort'].values:
     source_short_map[value.name] = value.number
 
-  def __init__(self, output_file, buffer_size=0, read_only=False,
-               pre_obj=None):
-    """Constructor for PlasoStorage.
+  def __init__(
+      self, output_file, buffer_size=0, read_only=False, pre_obj=None):
+    """Initializes the storage file.
 
     Args:
       output_file: The name of the output file.
@@ -166,16 +236,28 @@ class PlasoStorage(object):
     """
     compression = zipfile.ZIP_DEFLATED
 
-    self._filenumber = 1
+    # TODO: set self._bound_first and remove the hasattr checks for
+    # a true of false evaluation.
     self._buffer = []
-    self._buffer_size = 0
-    self.protofiles = {}
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = 0
+    self._buffer_size = 0
+    self._event_tag_index = None
+    self._filenumber = 1
     self._max_buffer_size = buffer_size or self.MAX_BUFFER_SIZE
-    self._write_counter = 0
     self._pre_obj = pre_obj
+    self._proto_streams = {}
     self._read_only = read_only
+    self._write_counter = 0
+
+    self._analysis_report_serializer = (
+        protobuf_serializer.ProtobufAnalysisReportSerializer)
+    self._event_object_serializer = (
+        protobuf_serializer.ProtobufEventObjectSerializer)
+    self._event_tag_serializer = (
+        protobuf_serializer.ProtobufEventTagSerializer)
+    self._pre_obj_serializer = (
+        protobuf_serializer.ProtobufPreprocessObjectSerializer)
 
     if read_only:
       mode = 'r'
@@ -183,14 +265,14 @@ class PlasoStorage(object):
       mode = 'a'
 
     try:
-      self.zipfile = zipfile.ZipFile(output_file, mode, compression)
+      self._zipfile = zipfile.ZipFile(output_file, mode, compression)
     except zipfile.BadZipfile as e:
-      raise IOError('Not a ZIP file, cannot read. Error message: %s', e)
+      raise IOError(u'Unable to read ZIP file with error: {0:s}'.format(e))
     self._file_open = True
 
     if not read_only:
-      logging.debug('Writing to file. Buffer size used: %s',
-                    self._max_buffer_size)
+      logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
+          self._max_buffer_size))
 
       if pre_obj:
         pre_obj.counter = collections.Counter()
@@ -210,140 +292,173 @@ class PlasoStorage(object):
       self._count_parser = collections.Counter()
 
       # Need to get the last number in the list.
-      for name in self.zipfile.namelist():
-        if 'plaso_meta.' in name:
-          _, number = name.split('.')
-          if int(number) >= self._filenumber:
-            self._filenumber = int(number) + 1
+      for stream_name in self._GetStreamNames():
+        if stream_name.startswith('plaso_meta.'):
+          _, _, file_number = stream_name.partition('.')
+
+          try:
+            file_number = int(file_number, 10)
+            if file_number >= self._filenumber:
+              self._filenumber = file_number + 1
+          except ValueError:
+            # Ignore invalid metadata stream names.
+            pass
 
       self._first_filenumber = self._filenumber
 
-  def _StorePreObject(self, pre_obj):
-    """Store information gathered during preprocessing to the storage file."""
-    strings = []
-    try:
-      file_object = self.zipfile.open('information.dump', 'r')
-      while 1:
-        read_str = file_object.read(1024)
-        if not read_str:
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    self.Close()
+
+  def _BuildTagIndex(self):
+    """Builds the tag index that contains the offsets for each tag.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    self._event_tag_index = {}
+
+    for stream_name in self._GetStreamNames():
+      if not stream_name.startswith('plaso_tag_index.'):
+        continue
+
+      file_object = self._OpenStream(stream_name, 'r')
+      if file_object is None:
+        raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+      _, _, store_number = stream_name.rpartition('.')
+      # TODO: catch exception.
+      store_number = int(store_number, 10)
+
+      while True:
+        tag_index_value = _EventTagIndexValue.Read(
+            file_object, store_number)
+        if tag_index_value is None:
           break
-        strings.append(read_str)
-    except KeyError:
-      pass
 
-    # Store information about store range for this particular
-    # preprocessing object. This will determine which stores
-    # this information is applicaple for.
-    stores = list(self.GetProtoNumbers())
-    if stores:
-      end = stores[-1] + 1
-    else:
-      end = self._first_filenumber
-    pre_obj.store_range = (self._first_filenumber, end)
+        self._event_tag_index[tag_index_value.identifier] = tag_index_value
 
-    serialized = pre_obj.ToProtoString()
-    strings.append(struct.pack('<I', len(serialized)) + serialized)
-    self.zipfile.writestr('information.dump', ''.join(strings))
+  def _FlushBuffer(self):
+    """Flushes the buffered streams to disk."""
+    if not self._buffer_size:
+      return
 
-  def GetStorageInformation(self):
-    """Return gathered preprocessing information from a storage file."""
-    information = []
-    try:
-      file_object = self.zipfile.open('information.dump', 'r')
-    except KeyError:
-      return information
+    yaml_dict = {
+        'range': (self._buffer_first_timestamp, self._buffer_last_timestamp),
+        'version': self.STORAGE_VERSION,
+        'data_type': list(self._count_data_type.viewkeys()),
+        'parsers': list(self._count_parser.viewkeys()),
+        'count': len(self._buffer),
+        'type_count': self._count_data_type.most_common()}
+    self._count_data_type = collections.Counter()
+    self._count_parser = collections.Counter()
 
-    while 1:
-      unpacked = file_object.read(4)
-      if len(unpacked) != 4:
-        break
+    stream_name = 'plaso_meta.{0:06d}'.format(self._filenumber)
+    self._WriteStream(stream_name, yaml.safe_dump(yaml_dict))
 
-      size = struct.unpack('<I', unpacked)[0]
+    ofs = 0
+    proto_str = []
+    index_str = []
+    timestamp_str = []
+    for _ in range(len(self._buffer)):
+      timestamp, entry = heapq.heappop(self._buffer)
+      # TODO: Instead of appending to an array
+      # which is not optimal (loads up the entire max file
+      # size into memory) Zipfile should be extended to
+      # allow appending to files (implement lock).
+      index_str.append(struct.pack('<I', ofs))
+      timestamp_str.append(struct.pack('<q', timestamp))
+      packed = struct.pack('<I', len(entry)) + entry
+      ofs += len(packed)
+      proto_str.append(packed)
 
-      if size > 1024 * 1024 * 40:
-        raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
+    stream_name = 'plaso_index.{0:06d}'.format(self._filenumber)
+    self._WriteStream(stream_name, ''.join(index_str))
 
-      serialized = file_object.read(size)
-      info = preprocess.PlasoPreprocess()
-      try:
-        info.FromProtoString(serialized)
-      except message.DecodeError:
-        logging.error('Unable to parse preprocessing object, bailing out.')
-        break
+    stream_name = 'plaso_proto.{0:06d}'.format(self._filenumber)
+    self._WriteStream(stream_name, ''.join(proto_str))
 
-      information.append(info)
+    stream_name = 'plaso_timestamps.{0:06d}'.format(self._filenumber)
+    self._WriteStream(stream_name, ''.join(timestamp_str))
 
-    stores = list(self.GetProtoNumbers())
-    information[-1].stores = {}
-    information[-1].stores['Number'] = len(stores)
-    for store in stores:
-      information[-1].stores['Store %d' % store] = self.ReadMeta(store)
+    self._filenumber += 1
+    self._buffer_size = 0
+    self._buffer = []
+    self._buffer_first_timestamp = sys.maxint
+    self._buffer_last_timestamp = 0
 
-    return information
+  def _GetEventTagIndexValue(self, store_number, store_index, uuid):
+    """Retrieves an event tag index value.
 
-  def GetNumberOfEvents(self):
-    """Retrieves the number of event objects in a storage file."""
-    total_events = 0
-    if hasattr(self, 'GetStorageInformation'):
-      for store_info in self.GetStorageInformation():
-        if hasattr(store_info, 'stores'):
-          stores = store_info.stores.values()
-          for store_file in stores:
-            if type(store_file) is dict and 'count' in store_file:
-              total_events += store_file['count']
-    return total_events
+    Args:
+      store_number: the store number.
+      store_index: the store index.
+      uuid: the UUID string.
 
-  def _GetEntry(self, number, entry_index=-1):
-    """Return a serialized EventObject protobuf.
+    Returns:
+      An event tag index value (instance of _EventTagIndexValue).
+    """
+    if self._event_tag_index is None:
+      self._BuildTagIndex()
+
+    # Try looking up event tag by numeric identifier.
+    tag_identifier = '{0:d}:{1:d}'.format(store_number, store_index)
+    tag_index_value = self._event_tag_index.get(tag_identifier, None)
+
+    # Try looking up event tag by UUID.
+    if tag_index_value is None:
+      tag_index_value = self._event_tag_index.get(uuid, None)
+
+    return tag_index_value
+
+  def _GetStreamNames(self):
+    """Retrieves a generator of the storage stream names."""
+    if self._zipfile:
+      for stream_name in self._zipfile.namelist():
+        yield stream_name
+
+  def _GetEventObjectProtobufString(self, stream_number, entry_index=-1):
+    """Returns a specific event object protobuf string.
 
     By default the next entry in the appropriate proto file is read
     and returned, however any entry can be read using the index file.
 
     Args:
-      number: The proto file number.
+      stream_number: The proto stream number.
       entry_index: Read a specific entry in the file, otherwise the next one.
 
     Returns:
-      A list with two entries: the raw serialized EventObject protobuf and
-      an integer indicating the index that protobuf has in the storage file.
+      A tuple containing the event object protobuf string and the entry index
+      of the event object protobuf string within the storage file.
 
     Raises:
       EOFError: When we reach the end of the protobuf file.
       errors.WrongProtobufEntry: If the probotuf size is too large for storage.
+      IOError: if the stream cannot be opened.
     """
-    last_index = 0
-    if number in self.protofiles:
-      file_object, last_index = self.protofiles[number]
-    else:
-      file_object = self.zipfile.open('plaso_proto.%06d' % number, 'r')
-      self.protofiles[number] = (file_object, 0)
+    file_object, last_entry_index = self._GetProtoStream(stream_number)
 
-    if entry_index > -1:
-      index_file_object = self.zipfile.open('plaso_index.%06d' % number, 'r')
-      ofs = entry_index * 4
+    if entry_index >= 0:
+      stream_offset = self._GetProtoStreamOffset(stream_number, entry_index)
+      if stream_offset is None:
+        logging.error((
+            u'Unable to read entry index: {0:d} from proto stream: '
+            u'{1:d}').format(entry_index, stream_number))
 
-      # Since seek is not supported we need to read and ignore the data.
-      _ = index_file_object.read(ofs)
-      size_byte_stream = index_file_object.read(4)
-
-      if len(size_byte_stream) != 4:
-        logging.error('Unable to read entry number: %d from store %d',
-                      entry_index, number)
         return None, None
 
-      ofs = struct.unpack('<I', size_byte_stream)[0]
+      file_object, last_entry_index = self._GetProtoStreamSeekOffset(
+          stream_number, entry_index, stream_offset)
 
-      # Again, since seek is not supported we need to close the file and reopen
-      # it to be able to "fake" seek.
-      file_object = self.zipfile.open('plaso_proto.%06d' % number, 'r')
-      self.protofiles[number] = (file_object, entry_index)
-      last_index = entry_index
-      _ = file_object.read(ofs)
-
-    if not last_index and  hasattr(
-        self, '_bound_first') and self._bound_first and entry_index == -1:
+    if (not last_entry_index and hasattr(self, '_bound_first')
+        and self._bound_first and entry_index == -1):
       # We only get here if the following conditions are met:
-      #   1. last_index is not set (so this is the first read from this file).
+      #   1. last_entry_index is not set (so this is the first read
+      #      from this file).
       #   2. There is a lower bound (so we have a date filter).
       #   3. The lower bound is higher than zero (basically set to a value).
       #   4. We are accessing this function using 'get me the next entry' as an
@@ -357,11 +472,16 @@ class PlasoStorage(object):
       # entry into the storage file. That way we'll get to the right place in
       # the file and can start reading protobufs from the right location.
       index = 0
-      timestamp_filename = 'plaso_timestamps.%06d' % number
+
+      # TODO: why is the stream name set here but not used? Is this a left over?
+      stream_name = 'plaso_timestamps.{0:06d}'.format(stream_number)
 
       # Recent add-on to the storage file, not certain this file exists.
-      if timestamp_filename in self.zipfile.namelist():
-        timestamp_file_object = self.zipfile.open(timestamp_filename, 'r')
+      if stream_name in self._GetStreamNames():
+        timestamp_file_object = self._OpenStream(stream_name, 'r')
+        if timestamp_file_object is None:
+          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
         timestamp_compare = 0
         while timestamp_compare < self._bound_first:
           timestamp_raw = timestamp_file_object.read(8)
@@ -369,44 +489,429 @@ class PlasoStorage(object):
             break
           timestamp_compare = struct.unpack('<q', timestamp_raw)[0]
           index += 1
-        return self._GetEntry(number, index)
+        return self._GetEventObjectProtobufString(stream_number, index)
 
-    # Now we've seeked to the proper location in code.
-    unpacked = file_object.read(4)
+    size_data = file_object.read(4)
 
-    if len(unpacked) != 4:
+    if len(size_data) != 4:
       return None, None
+
+    proto_string_size = struct.unpack('<I', size_data)[0]
+
+    if proto_string_size > self.MAX_PROTO_STRING_SIZE:
+      raise errors.WrongProtobufEntry(
+          u'Protobuf string size value exceeds maximum: {0:d}'.format(
+              proto_string_size))
+
+    event_object_data = file_object.read(proto_string_size)
+    self._proto_streams[stream_number] = (file_object, last_entry_index + 1)
+
+    return event_object_data, last_entry_index
+
+  def _GetEventGroupProto(self, file_object):
+    """Return a single group entry."""
+    unpacked = file_object.read(4)
+    if len(unpacked) != 4:
+      return None
 
     size = struct.unpack('<I', unpacked)[0]
 
-    if size > 1024 * 1024 * 40:
-      raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
+    if size > StorageFile.MAX_PROTO_STRING_SIZE:
+      raise errors.WrongProtobufEntry(
+          u'Protobuf size too large: {0:d}'.format(size))
 
-    self.protofiles[number] = (file_object, last_index + 1)
-    return file_object.read(size), last_index
+    proto_serialized = file_object.read(size)
+    proto = plaso_storage_pb2.EventGroup()
 
-  def GetProtoEntry(self, number, entry_index=-1):
+    proto.ParseFromString(proto_serialized)
+    return proto
+
+  def _GetProtoStream(self, stream_number):
+    """Retrieves the proto stream.
+
+    Args:
+      stream_number: the number of the stream.
+
+    Returns:
+      A tuple of the stream file-like object and the last entry index to
+      which the offset of the stream file-like object points.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    if stream_number not in self._proto_streams:
+      stream_name = 'plaso_proto.{0:06d}'.format(stream_number)
+
+      file_object = self._OpenStream(stream_name, 'r')
+      if file_object is None:
+        raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+      # TODO: change this to a value object and track the stream offset as well.
+      # This allows to reduce the number of re-opens when the seek offset is
+      # beyond the current offset.
+      self._proto_streams[stream_number] = (file_object, 0)
+
+    return self._proto_streams[stream_number]
+
+  def _GetProtoStreamSeekOffset(
+      self, stream_number, entry_index, stream_offset):
+    """Retrieves the proto stream and seeks a specified offset in the stream.
+
+    Args:
+      stream_number: the number of the stream.
+      entry_index: the entry index.
+      stream_offset: the offset relative to the start of the stream.
+
+    Returns:
+      A tuple of the stream file-like object and the last index.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    # Since zipfile.ZipExtFile is not seekable we need to close the stream
+    # and reopen it to fake a seek.
+    if stream_number in self._proto_streams:
+      previous_file_object, _ = self._proto_streams[stream_number]
+      del self._proto_streams[stream_number]
+      previous_file_object.close()
+
+    stream_name = 'plaso_proto.{0:06d}'.format(stream_number)
+    file_object = self._OpenStream(stream_name, 'r')
+    if file_object is None:
+      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+    # Since zipfile.ZipExtFile is not seekable we need to read upto
+    # the stream offset.
+    _ = file_object.read(stream_offset)
+
+    self._proto_streams[stream_number] = (file_object, entry_index)
+
+    return self._proto_streams[stream_number]
+
+  def _GetProtoStreamOffset(self, stream_number, entry_index):
+    """Retrieves the offset of a proto stream entry from the index stream.
+
+    Args:
+      stream_number: the number of the stream.
+      entry_index: the entry index.
+
+    Returns:
+      The offset of the entry in the corresponding proto stream
+      or None on error.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    # TODO: cache the index file object in the same way as the proto
+    # stream file objects.
+
+    # TODO: once cached use the last entry index to determine if the stream
+    # file object should be re-opened.
+
+    stream_name = 'plaso_index.{0:06d}'.format(stream_number)
+    index_file_object = self._OpenStream(stream_name, 'r')
+    if index_file_object is None:
+      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+    # Since zipfile.ZipExtFile is not seekable we need to read upto
+    # the stream offset.
+    _ = index_file_object.read(entry_index * 4)
+
+    index_data = index_file_object.read(4)
+
+    index_file_object.close()
+
+    if len(index_data) != 4:
+      return None
+
+    return struct.unpack('<I', index_data)[0]
+
+  def _OpenStream(self, stream_name, mode='r'):
+    """Opens a stream.
+
+    Args:
+      stream_name: the name of the stream.
+      mode: the access mode. The default is read-only ('r').
+
+    Returns:
+      The stream file-like object (instance of zipfile.ZipExtFile) or None.
+    """
+    try:
+      return self._zipfile.open(stream_name, mode)
+    except KeyError:
+      return
+
+  def _ReadEventTag(self, file_object):
+    """Reads an event tag from the storage file.
+
+    Returns:
+      An event tag (instance of EventTag).
+    """
+    event_tag_data = file_object.read(4)
+    if len(event_tag_data) != 4:
+      return None
+
+    proto_string_size = self.INTEGER.parse(event_tag_data)
+
+    if proto_string_size > self.MAX_PROTO_STRING_SIZE:
+      raise errors.WrongProtobufEntry(
+          u'Protobuf string size value exceeds maximum: {0:d}'.format(
+              proto_string_size))
+
+    proto_string = file_object.read(proto_string_size)
+    return self._event_tag_serializer.ReadSerialized(proto_string)
+
+  def _ReadEventTagByIdentifier(self, store_number, store_index, uuid):
+    """Reads an event tag by identifier.
+
+    Args:
+      store_number: the store number.
+      store_index: the store index.
+      uuid: the UUID string.
+
+    Returns:
+      The event tag (instance of EventTag).
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    tag_index_value = self._GetEventTagIndexValue(
+        store_number, store_index, uuid)
+    if tag_index_value is None:
+      return
+
+    stream_name = 'plaso_tagging.{0:06d}'.format(tag_index_value.store_number)
+    tag_file_object = self._OpenStream(stream_name, 'r')
+    if tag_file_object is None:
+      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+    # Since zipfile.ZipExtFile is not seekable we need to read upto
+    # the store offset.
+    _  = tag_file_object.read(tag_index_value.store_offset)
+    return self._ReadEventTag(tag_file_object)
+
+  def _ReadStream(self, stream_name):
+    """Reads the data in a stream.
+
+    Args:
+      stream_name: the name of the stream.
+
+    Returns:
+      A byte string containing the data of the stream.
+    """
+    data_segments = []
+    file_object = self._OpenStream(stream_name, 'r')
+
+    # zipfile.ZipExtFile does not support the with-statement interface.
+    if file_object:
+      data = file_object.read(self._STREAM_DATA_SEGMENT_SIZE)
+      while data:
+        data_segments.append(data)
+        data = file_object.read(self._STREAM_DATA_SEGMENT_SIZE)
+
+      file_object.close()
+
+    return ''.join(data_segments)
+
+  def _WritePreprocessObject(self, pre_obj):
+    """Writes a preprocess object to the storage file.
+
+    Args:
+      pre_obj: the preprocess object (instance of PreprocessObject).
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    existing_stream_data = self._ReadStream('information.dump')
+
+    # Store information about store range for this particular
+    # preprocessing object. This will determine which stores
+    # this information is applicaple for.
+    stores = list(self.GetProtoNumbers())
+    if stores:
+      end = stores[-1] + 1
+    else:
+      end = self._first_filenumber
+    pre_obj.store_range = (self._first_filenumber, end)
+
+    pre_obj_data = self._pre_obj_serializer.WriteSerialized(pre_obj)
+
+    stream_data = ''.join([
+        existing_stream_data,
+        struct.pack('<I', len(pre_obj_data)), pre_obj_data])
+
+    self._WriteStream('information.dump', stream_data)
+
+  def _WriteStream(self, stream_name, stream_data):
+    """Write the data to a stream.
+
+    Args:
+      stream_name: the name of the stream.
+      stream_data: the data of the steam.
+    """
+    self._zipfile.writestr(stream_name, stream_data)
+
+  def Close(self):
+    """Closes the storage, flush the last buffer and closes the ZIP file."""
+    if self._file_open:
+      if self._pre_obj:
+        self._WritePreprocessObject(self._pre_obj)
+
+      self._FlushBuffer()
+      self._zipfile.close()
+      self._file_open = False
+      if not self._read_only:
+        logging.info((
+            u'[Storage] Closing the storage, number of events processed: '
+            u'{0:d}').format(self._write_counter))
+
+  def GetGrouping(self):
+    """Return a generator that reads all grouping information from storage.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    if not self.HasGrouping():
+      return
+
+    for stream_name in self._GetStreamNames():
+      if stream_name.startswith('plaso_grouping.'):
+        file_object = self._OpenStream(stream_name, 'r')
+        if file_object is None:
+          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+        group_entry = self._GetEventGroupProto(file_object)
+        while group_entry:
+          yield group_entry
+          group_entry = self._GetEventGroupProto(file_object)
+
+  def GetNumberOfEvents(self):
+    """Retrieves the number of event objects in a storage file."""
+    total_events = 0
+    if hasattr(self, 'GetStorageInformation'):
+      for store_info in self.GetStorageInformation():
+        if hasattr(store_info, 'stores'):
+          stores = store_info.stores.values()
+          for store_file in stores:
+            if type(store_file) is dict and 'count' in store_file:
+              total_events += store_file['count']
+
+    return total_events
+
+  def GetEventsFromGroup(self, group_proto):
+    """Return a generator with all EventObjects from a group."""
+    for group_event in group_proto.events:
+      yield self.GetEventObject(
+          group_event.store_number, group_event.store_index)
+
+  def GetTagging(self):
+    """Return a generator that reads all tagging information from storage.
+
+    This function reads all tagging files inside the storage and returns
+    back the EventTagging protobuf, and only that protobuf.
+
+    To get the full EventObject with tags attached it is possible to use
+    the GetTaggedEvent and pass the EventTagging protobuf to it.
+
+    Yields:
+      All EventTag objects stored inside the storage container.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    for stream_name in self._GetStreamNames():
+      if stream_name.startswith('plaso_tagging.'):
+        file_object = self._OpenStream(stream_name, 'r')
+        if file_object is None:
+          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+        tag_entry = self._ReadEventTag(file_object)
+        while tag_entry:
+          yield tag_entry
+          tag_entry = self._ReadEventTag(file_object)
+
+  def GetTaggedEvent(self, tag_event):
+    """Read in an EventTag object from a tag and return an EventObject.
+
+    This function uses the information inside the EventTag object
+    to open the EventObject that was tagged and returns it, with the
+    tag information attached to it.
+
+    Args:
+      tag_event: An EventTag object.
+
+    Returns:
+      An EventObject with the EventTag object attached.
+    """
+    evt = self.GetEventObject(tag_event.store_number, tag_event.store_index)
+    if not evt:
+      return None
+
+    evt.tag = tag_event
+
+    return evt
+
+  def GetProtoEntry(self, stream_number, entry_index=-1):
     """Return an EventObject protobuf.
 
     By default the next entry in the appropriate proto file is read
     and returned, however any entry can be read using the index file.
 
     Args:
-      number: The proto file number.
+      stream_number: The proto stream number.
       entry_index: Read a specific entry in the file, otherwise the next one.
 
     Returns:
       An event protobuf (EventObject) entry read from the file.
     """
-    proto = plaso_storage_pb2.EventObject()
-    proto_str, last_index = self._GetEntry(number, entry_index)
-    if not proto_str:
+    event_object_data, entry_index = self._GetEventObjectProtobufString(
+        stream_number, entry_index)
+    if not event_object_data:
       return None
-    proto.ParseFromString(proto_str)
-    proto.store_number = number
-    proto.store_index = last_index
+
+    proto = plaso_storage_pb2.EventObject()
+    proto.ParseFromString(event_object_data)
+    proto.store_number = stream_number
+    proto.store_index = entry_index
 
     return proto
+
+  def GetStorageInformation(self):
+    """Return gathered preprocessing information from a storage file."""
+    information = []
+
+    file_object = self._OpenStream('information.dump', 'r')
+    if file_object is None:
+      return information
+
+    while True:
+      unpacked = file_object.read(4)
+      if len(unpacked) != 4:
+        break
+
+      size = struct.unpack('<I', unpacked)[0]
+
+      if size > self.MAX_PROTO_STRING_SIZE:
+        raise errors.WrongProtobufEntry(
+            u'Protobuf size too large: {0:d}'.format(size))
+
+      serialized_pre_obj = file_object.read(size)
+      try:
+        info = self._pre_obj_serializer.ReadSerialized(serialized_pre_obj)
+      except message.DecodeError:
+        logging.error(u'Unable to parse preprocessing object, bailing out.')
+        break
+
+      information.append(info)
+
+    stores = list(self.GetProtoNumbers())
+    information[-1].stores = {}
+    information[-1].stores['Number'] = len(stores)
+    for store_number in stores:
+      store_identifier = 'Store {0:d}'.format(store_number)
+      information[-1].stores[store_identifier] = self.ReadMeta(store_number)
+
+    return information
 
   def SetStoreLimit(self, my_filter=None):    # pylint:disable-msg=W0613
     """Set a limit to the stores used for returning data."""
@@ -425,8 +930,9 @@ class PlasoStorage(object):
       # TODO: Read more criteria from here.
       first, last = self.ReadMeta(number).get('range', (0, limit.MAX_INT64))
       if last < first:
-        logging.error('last: %d first: %d container: %d (last < first)',
-                      last, first, number)
+        logging.error(
+            u'last: {0:d} first: {1:d} container: {2:d} (last < first)'.format(
+                last, first, number))
 
       if first <= self._bound_last and self._bound_first <= last:
         # TODO: Check at least parser and data_type (stored in metadata).
@@ -435,7 +941,7 @@ class PlasoStorage(object):
         self.store_range.append(number)
 
       else:
-        logging.debug('Store [%d] not used', number)
+        logging.debug(u'Store [{0:d}] not used'.format(number))
 
   def _GetTimeBounds(self):
     """Get the upper and lower time bounds."""
@@ -471,11 +977,11 @@ class PlasoStorage(object):
             if not event_object:
               return
         else:
-          event_object = self.GetEntry(store_number)
+          event_object = self.GetEventObject(store_number)
           if not event_object:
             return
           while event_object.timestamp < self._bound_first:
-            event_object = self.GetEntry(store_number)
+            event_object = self.GetEventObject(store_number)
             if not event_object:
               return
 
@@ -497,40 +1003,40 @@ class PlasoStorage(object):
     if proto_out:
       new_event_object = self.GetProtoEntry(store_number)
     else:
-      new_event_object = self.GetEntry(store_number)
+      new_event_object = self.GetEventObject(store_number)
 
     if new_event_object:
       heapq.heappush(
           self._merge_buffer,
           (new_event_object.timestamp, store_number, new_event_object))
 
-    tag = self.GetTag(
+    event_read.tag = self._ReadEventTagByIdentifier(
         event_read.store_number, event_read.store_index, event_read.uuid)
-    if tag:
-      event_read.tag = tag
 
     return event_read
 
-  def GetEntry(self, number, entry_index=-1):
-    """Return an EventObject.
+  def GetEventObject(self, stream_number, entry_index=-1):
+    """Reads an event object from the store.
 
     By default the next entry in the appropriate proto file is read
     and returned, however any entry can be read using the index file.
 
     Args:
-      number: The proto file number.
+      stream_number: The proto stream number.
       entry_index: Read a specific entry in the file, otherwise the next one.
 
     Returns:
       An event object (EventObject) entry read from the file.
     """
-    event_object = event.EventObject()
-    proto_str, last_index = self._GetEntry(number, entry_index)
-    if not proto_str:
+    event_object_data, entry_index = self._GetEventObjectProtobufString(
+        stream_number, entry_index)
+    if not event_object_data:
       return None
-    event_object.FromProtoString(proto_str)
-    event_object.store_number = number
-    event_object.store_index = last_index
+
+    event_object = self._event_object_serializer.ReadSerialized(
+        event_object_data)
+    event_object.store_number = stream_number
+    event_object.store_index = entry_index
 
     return event_object
 
@@ -565,20 +1071,22 @@ class PlasoStorage(object):
     # stage of the sort/merge algorithm.
     while True:
       try:
-        proto = self.GetEntry(number)
+        proto = self.GetEventObject(number)
         if not proto:
-          logging.debug('End of protobuf file plaso_proto.%06d reached.',
-                        number)
+          logging.debug(
+              u'End of protobuf file plaso_proto.{0:06d} reached.'.format(
+                  number))
           break
         yield proto
       except errors.WrongProtobufEntry as e:
-        logging.warning(('Problem while parsing a protobuf entry from: '
-                         'plaso_proto.%06d <%s>'), number, e)
+        logging.warning((
+            u'Problem while parsing a protobuf entry from: '
+            u'plaso_proto.{0:06d} <{1:s}>').format(number, e))
 
   def GetProtoNumbers(self):
     """Return all available protobuf numbers."""
     numbers = []
-    for name in self.zipfile.namelist():
+    for name in self._GetStreamNames():
       if 'plaso_proto' in name:
         _, num = name.split('.')
         numbers.append(int(num))
@@ -595,9 +1103,15 @@ class PlasoStorage(object):
 
     Returns:
       A dict object containing all the variables inside the metadata file.
+
+    Raises:
+      IOError: if the stream cannot be opened.
     """
-    meta_file = self.zipfile.open('plaso_meta.%06d' % number, 'r')
-    return yaml.safe_load(meta_file)
+    stream_name = 'plaso_meta.{0:06d}'.format(number)
+    file_object = self._OpenStream(stream_name, 'r')
+    if file_object is None:
+      raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+    return yaml.safe_load(file_object)
 
   def GetBufferSize(self):
     """Return the size of the buffer."""
@@ -607,129 +1121,89 @@ class PlasoStorage(object):
     """Return the current file number of the storage."""
     return self._filenumber
 
-  def AddEntry(self, event_str_or_obj):
-    """Add an entry into the buffer.
+  def AddEventObject(self, event_object):
+    """Adds an event object to the storage.
 
     Args:
-      event_str_or_obj: Either a serialized EventObject or an EventObject
-                        object that is appended to the buffer.
+      event_object: an event object (instance of EventObject).
 
     Raises:
       IOError: When trying to write to a closed storage file.
     """
     if not self._file_open:
-      raise IOError('Trying to add an entry to a closed storage file.')
+      raise IOError(u'Trying to add an entry to a closed storage file.')
 
-    if isinstance(event_str_or_obj, basestring):
-      evt = event.EventObject()
-      evt.FromProtoString(event_str_or_obj)
-      event_str = event_str_or_obj
-    else:
-      evt = event_str_or_obj
-      event_str = evt.ToProtoString()
+    if event_object.timestamp > self._buffer_last_timestamp:
+      self._buffer_last_timestamp = event_object.timestamp
 
-    if evt.timestamp > self._buffer_last_timestamp:
-      self._buffer_last_timestamp = evt.timestamp
-
-    if evt.timestamp < self._buffer_first_timestamp and evt.timestamp > 0:
-      self._buffer_first_timestamp = evt.timestamp
+    # TODO: support negative timestamps.
+    if (event_object.timestamp < self._buffer_first_timestamp and
+        event_object.timestamp > 0):
+      self._buffer_first_timestamp = event_object.timestamp
 
     # Add values to counters.
     if self._pre_obj:
       self._pre_obj.counter['total'] += 1
-      self._pre_obj.counter[evt.attributes.get('parser', 'N/A')] += 1
-      if 'plugin' in evt.GetAttributes():
-        self._pre_obj.plugin_counter[getattr(evt, 'plugin')] += 1
+      self._pre_obj.counter[event_object.attributes.get('parser', 'N/A')] += 1
+      if 'plugin' in event_object.GetAttributes():
+        self._pre_obj.plugin_counter[getattr(event_object, 'plugin')] += 1
 
     # Add to temporary counter.
-    self._count_data_type[evt.data_type] += 1
-    self._count_parser[evt.attributes.get('parser', 'unknown_parser')] += 1
+    self._count_data_type[event_object.data_type] += 1
+    parser = event_object.attributes.get('parser', 'unknown_parser')
+    self._count_parser[parser] += 1
 
-    heapq.heappush(self._buffer, (evt.timestamp, event_str))
-    self._buffer_size += len(event_str)
+    event_object_data = self._event_object_serializer.WriteSerialized(
+        event_object)
+
+    heapq.heappush(
+        self._buffer, (event_object.timestamp, event_object_data))
+    self._buffer_size += len(event_object_data)
     self._write_counter += 1
 
     if self._buffer_size > self._max_buffer_size:
-      self.FlushBuffer()
+      self._FlushBuffer()
 
-  def FlushBuffer(self):
-    """Flush a buffer to disk."""
+  def AddEventObjects(self, event_objects):
+    """Adds an event objects to the storage.
 
-    if not self._buffer_size:
-      return
-
-    meta_name = 'plaso_meta.%06d' % self._filenumber
-    proto_name = 'plaso_proto.%06d' % self._filenumber
-    index_name = 'plaso_index.%06d' % self._filenumber
-    timestamp_name = 'plaso_timestamps.%06d' % self._filenumber
-
-    yaml_dict = {'range': (self._buffer_first_timestamp,
-                           self._buffer_last_timestamp),
-                 'version': self.STORAGE_VERSION,
-                 'data_type': list(self._count_data_type.viewkeys()),
-                 'parsers': list(self._count_parser.viewkeys()),
-                 'count': len(self._buffer),
-                 'type_count': self._count_data_type.most_common()}
-    self._count_data_type = collections.Counter()
-    self._count_parser = collections.Counter()
-    self.zipfile.writestr(meta_name, yaml.safe_dump(yaml_dict))
-
-    ofs = 0
-    proto_str = []
-    index_str = []
-    timestamp_str = []
-    for _ in range(len(self._buffer)):
-      timestamp, entry = heapq.heappop(self._buffer)
-      # TODO: Instead of appending to an array
-      # which is not optimal (loads up the entire max file
-      # size into memory) Zipfile should be extended to
-      # allow appending to files (implement lock).
-      index_str.append(struct.pack('<I', ofs))
-      timestamp_str.append(struct.pack('<q', timestamp))
-      packed = struct.pack('<I', len(entry)) + entry
-      ofs += len(packed)
-      proto_str.append(packed)
-
-    self.zipfile.writestr(index_name, ''.join(index_str))
-    self.zipfile.writestr(proto_name, ''.join(proto_str))
-    self.zipfile.writestr(timestamp_name, ''.join(timestamp_str))
-
-    self._filenumber += 1
-    self._buffer_size = 0
-    self._buffer = []
-    self._buffer_first_timestamp = sys.maxint
-    self._buffer_last_timestamp = 0
+    Args:
+      event_objects: a list or generator of event objects (instances of
+                     EventObject).
+    """
+    for event_object in event_objects:
+      self.AddEventObject(event_object)
 
   def HasTagging(self):
     """Return a bool indicating whether or not a Tag file is stored."""
-    for name in self.zipfile.namelist():
+    for name in self._GetStreamNames():
       if 'plaso_tagging.' in name:
         return True
     return False
 
   def HasGrouping(self):
     """Return a bool indicating whether or not a Group file is stored."""
-    for name in self.zipfile.namelist():
+    for name in self._GetStreamNames():
       if 'plaso_grouping.' in name:
         return True
     return False
 
   def HasReports(self):
     """Return a bool indicating whether or not a Report file is stored."""
-    for name in self.zipfile.namelist():
+    for name in self._GetStreamNames():
       if 'plaso_report.' in name:
         return True
 
     return False
 
-  def StoreReport(self, report):
+  def StoreReport(self, analysis_report):
     """Store an analysis report.
 
     Args:
-      report: An analysis report object.
+      analysis_report: An analysis report object (instance of AnalysisReport).
     """
     report_number = 1
-    for name in self.zipfile.namelist():
+    for name in self._GetStreamNames():
       if 'plaso_report.' in name:
         _, _, number_string = name.partition('.')
         try:
@@ -740,19 +1214,25 @@ class PlasoStorage(object):
         if number >= report_number:
           report_number = number + 1
 
-    report_string = report.ToProtoString()
-    self.zipfile.writestr(
-        'plaso_report.%06d' % report_number, report_string)
+    stream_name = 'plaso_report.{0:06}'.format(report_number)
+    serialized_report_proto = self._analysis_report_serializer.WriteSerialized(
+        analysis_report)
+    self._WriteStream(stream_name, serialized_report_proto)
 
   def GetReports(self):
-    """Read in all stored analysis reports from storage and yield them."""
-    for name in self.zipfile.namelist():
-      if 'plaso_report.' in name:
-        report_file_object = self.zipfile.open(name, 'r')
-        report_string = report_file_object.read(1024 * 1024 * 24)
-        report = analysis_interface.AnalysisReport()
-        report.FromProtoString(report_string)
-        yield report
+    """Read in all stored analysis reports from storage and yield them.
+
+    Raises:
+      IOError: if the stream cannot be opened.
+    """
+    for stream_name in self._GetStreamNames():
+      if stream_name.startswith('plaso_report.'):
+        file_object = self._OpenStream(stream_name, 'r')
+        if file_object is None:
+          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+        report_string = file_object.read(self.MAX_REPORT_PROTOBUF_SIZE)
+        yield self._analysis_report_serializer.ReadSerialized(report_string)
 
   def StoreGrouping(self, rows):
     """Store group information into the storage file.
@@ -784,7 +1264,7 @@ class PlasoStorage(object):
     """
     group_number = 1
     if self.HasGrouping():
-      for name in self.zipfile.namelist():
+      for name in self._GetStreamNames():
         if 'plaso_grouping.' in name:
           _, number = name.split('.')
           if int(number) >= group_number:
@@ -812,6 +1292,7 @@ class PlasoStorage(object):
       if hasattr(row, 'last_timestamp'):
         group.last_timestamp = int(row.last_timestamp)
 
+      # TODO: implement event grouping.
       group_str = group.SerializeToString()
       packed = struct.pack('<I', len(group_str)) + group_str
       # TODO: Size is defined, should be used to determine if we've filled
@@ -822,8 +1303,8 @@ class PlasoStorage(object):
         logging.warning(u'Grouping has outgrown buffer size.')
       group_packed.append(packed)
 
-    self.zipfile.writestr('plaso_grouping.%06d' % group_number,
-                          ''.join(group_packed))
+    stream_name = 'plaso_grouping.{0:06d}'.format(group_number)
+    self._WriteStream(stream_name, ''.join(group_packed))
 
   def StoreTagging(self, tags):
     """Store tag information into the storage file.
@@ -838,26 +1319,30 @@ class PlasoStorage(object):
     Args:
       tags: A list or an object providing an iterator that contains
       EventTag objects.
+
+    Raises:
+      IOError: if the stream cannot be opened.
     """
     if not self._pre_obj:
-      self._pre_obj = preprocess.PlasoPreprocess()
+      self._pre_obj = event.PreprocessObject()
 
     if not hasattr(self._pre_obj, 'collection_information'):
       self._pre_obj.collection_information = {}
 
     self._pre_obj.collection_information['Action'] = 'Adding tags to storage.'
-    self._pre_obj.collection_information['time_of_run'] = time.time()
+    self._pre_obj.collection_information['time_of_run'] = (
+        timelib.Timestamp.GetNow())
     if not hasattr(self._pre_obj, 'counter'):
       self._pre_obj.counter = collections.Counter()
 
     tag_number = 1
-    for name in self.zipfile.namelist():
+    for name in self._GetStreamNames():
       if 'plaso_tagging.' in name:
         _, number = name.split('.')
         if int(number) >= tag_number:
           tag_number = int(number) + 1
-        if not hasattr(self, '_tag_memory'):
-          self._ReadTagInformationIntoMemory()
+        if self._event_tag_index is None:
+          self._BuildTagIndex()
 
     tag_packed = []
     tag_index = []
@@ -867,301 +1352,155 @@ class PlasoStorage(object):
       if hasattr(tag, 'tags'):
         for tag_entry in tag.tags:
           self._pre_obj.counter[tag_entry] += 1
-      if hasattr(self, '_tag_memory') and tag.string_key in self._tag_memory:
-        # This particular event has already been tagged on a previous
-        # occasion, we need to make sure we are appending to that particular
-        # tag.
-        tag_store, tag_offset = self._tag_memory[tag.string_key]
-        tag_file_object = self.zipfile.open(
-            'plaso_tagging.%06d' % tag_store , 'r')
-        _  = tag_file_object.read(tag_offset)
-        old_tag = self._GetTagEntry(tag_file_object)
+
+      if self._event_tag_index is not None:
+        tag_index_value = self._event_tag_index.get(tag.string_key, None)
+      else:
+        tag_index_value = None
+
+      # This particular event has already been tagged on a previous occasion,
+      # we need to make sure we are appending to that particular tag.
+      if tag_index_value is not None:
+        stream_name = 'plaso_tagging.{0:06d}'.format(
+            tag_index_value.store_number)
+
+        tag_file_object = self._OpenStream(stream_name, 'r')
+        if tag_file_object is None:
+          raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
+
+        # Since zipfile.ZipExtFile is not seekable we need to read upto
+        # the store offset.
+        _ = tag_file_object.read(tag_index_value.store_offset)
+
+        old_tag = self._ReadEventTag(tag_file_object)
+
+        # TODO: move the append functionality into EventTag.
+        # Maybe name the function extend or update?
         if hasattr(old_tag, 'tags'):
           tag.tags.extend(old_tag.tags)
+
         if hasattr(old_tag, 'comment'):
           if hasattr(tag, 'comment'):
             tag.comment += old_tag.comment
           else:
             tag.comment = old_tag.comment
+
         if hasattr(old_tag, 'color') and not hasattr(tag, 'color'):
           tag.color = old_tag.color
 
-      tag_str = tag.ToProtoString()
-      packed = struct.pack('<I', len(tag_str)) + tag_str
+      serialized_event_tag = self._event_tag_serializer.WriteSerialized(tag)
+
+      # TODO: move to write class function of _EventTagIndexValue.
+      packed = (
+          struct.pack('<I', len(serialized_event_tag)) + serialized_event_tag)
       ofs = struct.pack('<I', size)
       if getattr(tag, 'store_number', 0):
-        struct_string = construct.Byte(
-            'type').build(1) + ofs + self.TAG_STORE_STRUCT.build(tag)
+        struct_string = (
+            construct.Byte('type').build(1) + ofs +
+            _EventTagIndexValue.TAG_STORE_STRUCT.build(tag))
       else:
-        struct_string = construct.Byte(
-            'type').build(2) + ofs + self.TAG_UUID_STRUCT.build(tag)
+        struct_string = (
+            construct.Byte('type').build(2) + ofs +
+            _EventTagIndexValue.TAG_UUID_STRUCT.build(tag))
 
       tag_index.append(struct_string)
       size += len(packed)
       tag_packed.append(packed)
 
-    self.zipfile.writestr('plaso_tag_index.%06d' % tag_number,
-                          ''.join(tag_index))
-    self.zipfile.writestr('plaso_tagging.%06d' % tag_number,
-                          ''.join(tag_packed))
+    stream_name = 'plaso_tag_index.{0:06d}'.format(tag_number)
+    self._WriteStream(stream_name, ''.join(tag_index))
+
+    stream_name = 'plaso_tagging.{0:06d}'.format(tag_number)
+    self._WriteStream(stream_name, ''.join(tag_packed))
+
+    # TODO: Update the tags that have changed in the index instead
+    # of flushing the index.
 
     # If we already built a list of tag in memory we need to clear that
     # since the tags have changed.
-    if hasattr(self, '_tag_memory'):
-      del self._tag_memory
+    if self._event_tag_index is not None:
+      del self._event_tag_index
 
-  def GetGrouping(self):
-    """Return a generator that reads all grouping information from storage."""
-    if not self.HasGrouping():
-      return
 
-    for name in self.zipfile.namelist():
-      if 'plaso_grouping.' in name:
-        file_object = self.zipfile.open(name, 'r')
-        group_entry = GetEventGroupProto(file_object)
-        while group_entry:
-          yield group_entry
-          group_entry = GetEventGroupProto(file_object)
+class StorageFileWriter(queue.EventObjectQueueConsumer):
+  """Class that implements a storage file writer object."""
 
-  def GetTag(self, store_number, store_index, uuid):
-    """Return a EventTagging proto if it exists from a store number and index.
+  def __init__(self, storage_queue, output_file, buffer_size=0, pre_obj=None):
+    """Initializes the storage file writer.
 
     Args:
-      store_number: The EventObject store number.
-      store_index: The EventObject store index.
-      uuid: The EventObject UUID value.
-
-    Returns:
-      An EventTagging protobuf, if one exists.
-    """
-    if not hasattr(self, '_tag_memory'):
-      self._ReadTagInformationIntoMemory()
-
-    key_index = '{}:{}'.format(store_number, store_index)
-
-    if key_index not in self._tag_memory:
-      key_index = uuid
-
-    if key_index not in self._tag_memory:
-      return
-
-    tag_store, tag_offset = self._tag_memory.get(key_index)
-
-    tag_file_object = self.zipfile.open('plaso_tagging.%06d' % tag_store , 'r')
-    _  = tag_file_object.read(tag_offset)
-    return self._GetTagEntry(tag_file_object)
-
-  def _ReadTagInformationIntoMemory(self):
-    """Build a dict that maintains tag offset information for quick reading."""
-    self._tag_memory = {}
-
-    for name in self.zipfile.namelist():
-      if not 'plaso_tag_index.' in name:
-        continue
-      file_object = self.zipfile.open(name, 'r')
-      _, _, number_str = name.rpartition('.')
-      number = int(number_str)
-      while 1:
-        try:
-          tag_index = self.TAG_INDEX_STRUCT.parse_stream(file_object)
-        except (construct.FieldError, AttributeError):
-          break
-
-        tag_type = tag_index.get('type', 0)
-        tag_entry = tag_index.get('tag', {})
-        if tag_type == 1:
-          read_key = '{}:{}'.format(
-              tag_entry.get('store_number', 0),
-              tag_entry.get('store_index', 0))
-        elif tag_type == 2:
-          read_key = tag_entry.get('event_uuid', '0')
-        else:
-          logging.warning('Unknown tag type: {}'.format(tag_type))
-          break
-
-        offset = tag_index.get('offset')
-        self._tag_memory[read_key] = (number, offset)
-
-  def GetTagging(self):
-    """Return a generator that reads all tagging information from storage.
-
-    This function reads all tagging files inside the storage and returns
-    back the EventTagging protobuf, and only that protobuf.
-
-    To get the full EventObject with tags attached it is possible to use
-    the GetTaggedEvent and pass the EventTagging protobuf to it.
-
-    Yields:
-      All EventTag objects stored inside the storage container.
-    """
-    for name in self.zipfile.namelist():
-      if 'plaso_tagging.' in name:
-        file_object = self.zipfile.open(name, 'r')
-
-        tag_entry = self._GetTagEntry(file_object)
-        while tag_entry:
-          yield tag_entry
-          tag_entry = self._GetTagEntry(file_object)
-
-  def GetEventsFromGroup(self, group_proto):
-    """Return a generator with all EventObjects from a group."""
-    for group_event in group_proto.events:
-      yield self.GetEntry(group_event.store_number, group_event.store_index)
-
-  def GetTaggedEvent(self, tag_event):
-    """Read in an EventTag object from a tag and return an EventObject.
-
-    This function uses the information inside the EventTag object
-    to open the EventObject that was tagged and returns it, with the
-    tag information attached to it.
-
-    Args:
-      tag_event: An EventTag object.
-
-    Returns:
-      An EventObject with the EventTag object attached.
-    """
-    evt = self.GetEntry(tag_event.store_number, tag_event.store_index)
-    if not evt:
-      return None
-
-    evt.tag = tag_event
-
-    return evt
-
-  def _GetTagEntry(self, file_object):
-    """Read a single EventTag from a tag store file."""
-    unpacked = file_object.read(4)
-    if len(unpacked) != 4:
-      return None
-
-    size = self.INTEGER.parse(unpacked)
-
-    if size > 1024 * 1024 * 40:
-      raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
-
-    proto_serialized = file_object.read(size)
-    event_tag = event.EventTag()
-    event_tag.FromProtoString(proto_serialized)
-    return event_tag
-
-  def CloseStorage(self):
-    """Closes the storage, flush the last buffer and closes the ZIP file."""
-    if self._file_open:
-      if self._pre_obj:
-        self._StorePreObject(self._pre_obj)
-      self.FlushBuffer()
-      self.zipfile.close()
-      self._file_open = False
-      if not self._read_only:
-        logging.info(('[Storage] Closing the storage, nr. of events processed:'
-                      ' %d'), self._write_counter)
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make usable with "with" statement."""
-    self.CloseStorage()
-
-  def __enter__(self):
-    """Make usable with "with" statement."""
-    return self
-
-
-class SimpleStorageDumper(object):
-  """Watch a queue with EventObjects and process them for storage."""
-
-  def __init__(self, output_file, buffer_size=0, pre=None):
-    """Constructor for the storage.
-
-    Args:
+      storage_queue: the storage queue (instance of Queue).
       output_file: The path to the output file.
       buffer_size: The estimated size of a protobuf file.
-      pre: A preprocessing object.
+      pre_obj: A preprocessing object (instance of PreprocessObject).
     """
-    self._queue = queue.MultiThreadedQueue()
-    self.output_file = output_file
-    self.buffer_size = buffer_size
-    self._pre_obj = pre
+    super(StorageFileWriter, self).__init__(storage_queue)
+    self._buffer_size = buffer_size
+    self._output_file = output_file
+    self._pre_obj = pre_obj
+    self._storage_file = None
 
-  def Run(self):
-    """Start the storage."""
-    with PlasoStorage(
-        self.output_file, buffer_size=self.buffer_size,
-        pre_obj=self._pre_obj) as storage_buffer:
-      for item in self._queue.PopItems():
-        storage_buffer.AddEntry(item)
+  def _ConsumeEventObject(self, event_object):
+    """Consumes an event object callback for ConsumeEventObjects."""
+    self._storage_file.AddEventObject(event_object)
 
-  def AddEvent(self, item):
-    """Add an event to the storage."""
-    self._queue.Queue(item)
-
-  def Close(self):
-    """Close the queue, indicating to the storage to flush and close."""
-    self._queue.Close()
+  def WriteEventObjects(self):
+    """Writes the event objects that are pushed on the queue."""
+    self._storage_file = StorageFile(
+        self._output_file, buffer_size=self._buffer_size, pre_obj=self._pre_obj)
+    self.ConsumeEventObjects()
+    self._storage_file.Close()
 
 
-class BypassStorageDumper(object):
+class BypassStorageWriter(queue.EventObjectQueueConsumer):
   """Watch a queue with EventObjects and send them directly to output."""
 
-  def __init__(self, output_file, output_module_string='lst2csv', pre=None):
-    """Initialize an object that bypasses the storage library."""
-    self.output_file = output_file
-    output_class = output.GetOutputFormatter(output_module_string)
-    self._queue = queue.MultiThreadedQueue()
+  def __init__(self, output_file, output_module_string='lst2csv', pre_obj=None):
+    """Initializes the bypass storage writer.
 
-    self._pre_obj = pre
+    Args:
+      storage_queue: the storage queue (instance of Queue).
+      output_file: The path to the output file.
+      output_module_string: The output module string.
+      pre_obj: A preprocessing object (instance of PreprocessObject).
+    """
+    super(BypassStorageWriter, self).__init__()
+    self._output_file = output_file
+    self._output_module = None
+    self._output_module_string = output_module_string
+    self._pre_obj = pre_obj
     self._pre_obj.store_range = (1, 1)
 
-    if not output_class:
-      output_class = output.GetOutputFormatter('Lst2csv')
-
-    self.output_module = output_class(self, output_file, config=self._pre_obj)
-    self.output_module.Start()
-
-  def Run(self):
-    """Run the storage until no event comes in."""
-    for item in self._queue.PopItems():
-      self.ProcessEntry(item)
-
-  def AddEvent(self, item):
-    """Add an event to the output."""
-    self._queue.Queue(item)
-
-  def ProcessEntry(self, item):
-    """Process an event and send it to an output module."""
-    event_object = event.EventObject()
-    event_object.FromProtoString(item)
+  def _ConsumeEventObject(self, event_object):
+    """Consumes an event object callback for ConsumeEventObjects."""
+    # Set the store number and index to default values since they are not used.
     event_object.store_number = 1
     event_object.store_index = -1
 
-    self.output_module.WriteEvent(event_object)
+    self._output_module.WriteEvent(event_object)
 
+  # Typically you will have a storage object that has this function,
+  # as in you can call store.GetStorageInformation and that will read
+  # the information from the store. However in this case we are not
+  # actually using a storage file, we are using a "storage bypass" file,
+  # and since some parts of the codebase expect this to be set (an
+  # interface if you want to call it that way, although the storage
+  # has not been abstracted into an interface, perhaps it should be)
+  # then this has to be set. And the interface behavior is to return
+  # a list of all available storage information objects (or all pre_obj
+  # stored in the storage file)
   def GetStorageInformation(self):
     """Return information about the storage object (used by output modules)."""
-    ret = []
-    ret.append(self._pre_obj)
+    return [self._pre_obj]
 
-    return ret
+  def WriteEventObjects(self):
+    """Writes the event objects that are pushed on the queue."""
+    output_class = output.GetOutputFormatter(self._output_module_string)
+    if not output_class:
+      output_class = output.GetOutputFormatter('Lst2csv')
 
-  def Close(self):
-    """Close the storage, in this case indicate the output that we are done."""
-    self._queue.Close()
-    self.output_module.End()
-
-
-def GetEventGroupProto(file_object):
-  """Return a single group entry."""
-  unpacked = file_object.read(4)
-  if len(unpacked) != 4:
-    return None
-
-  size = struct.unpack('<I', unpacked)[0]
-
-  if size > 1024 * 1024 * 40:
-    raise errors.WrongProtobufEntry('Protobuf size too large: %d', size)
-
-  proto_serialized = file_object.read(size)
-  proto = plaso_storage_pb2.EventGroup()
-
-  proto.ParseFromString(proto_serialized)
-  return proto
-
+    self._output_module = output_class(
+        self, self._output_file, config=self._pre_obj)
+    self._output_module.Start()
+    self.ConsumeEventObjects()
+    self._output_module.End()
