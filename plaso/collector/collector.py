@@ -20,9 +20,9 @@
 import hashlib
 import logging
 import os
+import sre_constants
 
 from plaso.collector import interface
-from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import queue
@@ -163,7 +163,7 @@ class Collector(queue.PathSpecQueueProducer):
     for sub_file_entry in file_entry.GetSubFileEntries():
       if isinstance(sub_file_entry, pfile_entry.TSKFileEntry):
         # Work-around the limitation in TSKFileEntry that it needs to be open
-        # to return stat information. This will be fixed by PyVFS.
+        # to return stat information. This will be fixed by dfVFS.
         try:
           _  = sub_file_entry.Open()
         except AttributeError as e:
@@ -236,10 +236,9 @@ class Collector(queue.PathSpecQueueProducer):
     """Processes the source path based on the collection filter."""
     preprocessor_collector = GenericPreprocessCollector(
         self._pre_obj, self._source_path)
-    filter_object = collector_filter.CollectionFilter(
-        preprocessor_collector, self._filter_file_path)
+    filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
-    for path_spec in filter_object.GetPathSpecs():
+    for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
       self.ProducePathSpec(path_spec)
 
   def _ProcessImage(self):
@@ -261,7 +260,7 @@ class Collector(queue.PathSpecQueueProducer):
       root_file_entry = file_system.GetRootFileEntry()
 
       # Work-around the limitation in TSKFileEntry that it needs to be open
-      # to return stat information. This will be fixed by PyVFS.
+      # to return stat information. This will be fixed by dfVFS.
       try:
         _  = root_file_entry.Open()
       except AttributeError as e:
@@ -285,7 +284,7 @@ class Collector(queue.PathSpecQueueProducer):
           store_number + 1, vss_numbers))
       self._ProcessVss(store_number)
 
-    logging.debug(u'Simple Image Collector - Done.')
+    logging.debug(u'Collection from image completed.')
 
   def _ProcessImageWithFilter(self):
     """Processes the image with the collection filter."""
@@ -295,10 +294,9 @@ class Collector(queue.PathSpecQueueProducer):
         sector_offset=self._sector_offset, byte_offset=self._byte_offset)
 
     try:
-      filter_object = collector_filter.CollectionFilter(
-          preprocessor_collector, self._filter_file_path)
+      filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
-      for path_spec in filter_object.GetPathSpecs():
+      for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
         self.ProducePathSpec(path_spec)
 
       if self._process_vss:
@@ -317,11 +315,10 @@ class Collector(queue.PathSpecQueueProducer):
               sector_offset=self._sector_offset, byte_offset=self._byte_offset)
           vss_preprocessor_collector.SetVssInformation(
               store_number=store_number)
+          filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
-          filter_object = collector_filter.CollectionFilter(
-              vss_preprocessor_collector, self._filter_file_path)
-
-          for path_spec in filter_object.GetPathSpecs():
+          for path_spec in vss_preprocessor_collector.GetPathSpecs(
+              filter_object):
             self.ProducePathSpec(path_spec)
 
     finally:
@@ -344,7 +341,7 @@ class Collector(queue.PathSpecQueueProducer):
       root_file_entry = file_system.GetRootFileEntry()
 
       # Work-around the limitation in TSKFileEntry that it needs to be open
-      # to return stat information. This will be fixed by PyVFS.
+      # to return stat information. This will be fixed by dfVFS.
       try:
         _  = root_file_entry.Open()
       except AttributeError as e:
@@ -513,7 +510,7 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
 
         if isinstance(file_entry, pfile_entry.TSKFileEntry):
           # Work-around the limitation in TSKFileEntry that it needs to be open
-          # to return stat information. This will be fixed by PyVFS.
+          # to return stat information. This will be fixed by dfVFS.
           try:
             _  = file_entry.Open()
           except AttributeError as e:
@@ -585,6 +582,40 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
 
     return pfile.PFileResolver.OpenFileEntry(path_spec)
 
+  def GetPathSpecs(self, collection_filter):
+    """A generator yielding all pathspecs from the given filters."""
+    list_of_filters = collection_filter.BuildFilters()
+
+    for filter_path, filter_file in list_of_filters:
+      try:
+        paths = list(self.FindPaths(filter_path))
+
+      except errors.PathNotFound as exception:
+        logging.warning(u'Unable to find path: [{0:s}] {1:s}'.format(
+            filter_path, exception))
+        continue
+
+      for path in paths:
+        # TODO: Need to make sure "path" is a directory (easier using pyVFS
+        # ideas). Until then have a quick "try" attempt, remove that once
+        # proper stats are implemented.
+        try:
+          for file_path in self.GetFilePaths(path, filter_file):
+            file_entry = self.OpenFileEntry(file_path)
+            yield file_entry.pathspec_root
+
+        except errors.PreProcessFail as exception:
+          logging.warning((
+              u'Unable to parse filter: {0:s}/{1:s} - path not found '
+              u'[{2:s}].').format(filter_path, filter_file, exception))
+          continue
+
+        except sre_constants.error:
+          logging.warning((
+              u'Unable to parse the filter: {0:s}/{1:s} - illegal regular '
+              u'expression.').format(filter_path, filter_file))
+          continue
+
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""
     if self._process_image:
@@ -637,3 +668,17 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     """
     self._process_vss = True
     self._store_number = store_number
+
+
+def BuildCollectionFilterFromFile(filter_file_path):
+  """Returns a collection filter from a filter file."""
+  filter_strings = []
+
+  with open(filter_file_path, 'rb') as file_object:
+    for line in file_object:
+      line = line.strip()
+      if line.startswith(u'#'):
+        continue
+      filter_strings.append(line)
+
+  return event.CollectionFilter(filter_strings)
