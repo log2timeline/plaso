@@ -22,10 +22,7 @@ import logging
 from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import plugin
-from plaso.lib import timelib
 from plaso.lib import utils
-
-import pytz
 
 
 # TODO: Refactor the putils library so it does not end up being a trash can
@@ -54,8 +51,8 @@ def FindAllParsers(pre_obj=None, config=None, parser_filter_string=''):
   somewhere in the parser name.
 
   Args:
-    pre_obj: A PlasoPreprocess object containing information collected from
-        an image.
+    pre_obj: A preprocess object containing information collected from
+             an image (instance of PreprocessObject).
     config: A configuration object, could be an argparse object.
     parser_filter_string: A parser filter string, which is a comma
         separated value containing a list of parsers to include or exclude
@@ -127,13 +124,6 @@ def _FindClasses(class_object, *args):
 def FindAllOutputs():
   """Find all available output modules."""
   return _FindClasses(output.LogOutputFormatter, None)
-
-
-def PrintTimestamp(timestamp):
-  """Print a human readable timestamp using ISO 8601 format."""
-  # TODO: this function is only used by frontend/pshell.py
-  # refactor that code to use timelib and remove this function.
-  return timelib.Timestamp.CopyToIsoFormat(timestamp, pytz.UTC)
 
 
 def GetParsersFromPlugins(filter_strings, exclude_strings=None):

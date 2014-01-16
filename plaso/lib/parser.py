@@ -45,8 +45,8 @@ class BaseParser(object):
     """Parser constructor.
 
     Args:
-      pre_obj: A PlasoPreprocess object that may contain information gathered
-      from a preprocessing process.
+      pre_obj: A preprocess object that may contain information gathered
+               from a preprocessing process (instance of PreprocessObject).
       config: A configuration object, could be an instance of argparse but
               mostly an object that supports getattr to get configuration
               attributes, see a list of attributes here:

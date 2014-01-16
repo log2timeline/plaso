@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -16,8 +17,8 @@
 # limitations under the License.
 """This file contains an import statement for each plugin."""
 
-from plaso.lib import preprocess
-
+from plaso.lib import event
+from plaso.lib import preprocess_interface
 from plaso.preprocessors import linux
 from plaso.preprocessors import mac
 from plaso.preprocessors import win
@@ -30,13 +31,13 @@ class PreProcessList(object):
     """Constructor for the PreProcessList object.
 
     Args:
-      pre_obj: A PlasoPreprocess object that contains the information
-      gathered from preprocessing modules so far (and the object that
-      stores future collections).
+      pre_obj: A preprocess object that contains the information
+               gathered from preprocessing modules so far (and the object that
+               stores future collections) (instance of PreprocessObject).
       col_obj: A collector object that defines collection methods for
       different types of sources (OS, TKS, etc.)
     """
-    self._list = preprocess.PreprocessPlugin.classes
+    self._list = preprocess_interface.PreprocessPlugin.classes
     self._pre = pre_obj
     self._col = col_obj
 

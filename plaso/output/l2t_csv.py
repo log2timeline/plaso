@@ -55,7 +55,7 @@ class L2tcsv(output.FileLogOutputFormatter):
     try:
       self.EventBody(event_object)
     except errors.NoFormatterFound:
-      logging.error('Unable to output line, no formatter found.')
+      logging.error(u'Unable to output line, no formatter found.')
       logging.error(event_object)
 
   def EventBody(self, event_object):
@@ -70,7 +70,8 @@ class L2tcsv(output.FileLogOutputFormatter):
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: %s.' % event_object.DATA_TYPE)
+          u'Unable to find event formatter for: {0:s}.'.format(
+              event_object.DATA_TYPE))
 
     msg, msg_short = event_formatter.GetMessages(event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
@@ -97,13 +98,14 @@ class L2tcsv(output.FileLogOutputFormatter):
 
     hostname = getattr(event_object, 'hostname', '')
 
+    # TODO: move this into a base output class.
     username = getattr(event_object, 'username', '-')
     if self.store:
       if not hostname:
         hostname = self._hostnames.get(event_object.store_number, '-')
 
-      check_user = helper.GetUsernameFromPreProcess(
-          self._preprocesses.get(event_object.store_number), username)
+      pre_obj = self._preprocesses.get(event_object.store_number)
+      check_user =  pre_obj.GetUsernameById(username)
 
       if check_user != '-':
         username = check_user

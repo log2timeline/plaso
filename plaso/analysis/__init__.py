@@ -17,7 +17,7 @@
 # limitations under the License.
 """Import statements for analysis plugins and common methods."""
 
-from plaso.lib import analysis_interface
+from plaso.analysis import interface
 from plaso.lib import errors
 
 # Import statements of analysis plugins.
@@ -28,7 +28,7 @@ from plaso.analysis import chrome_extension
 def ListAllPluginNames(show_all=True):
   """Return a list of all available plugin names and it's doc string."""
   results = []
-  for cls_obj in analysis_interface.AnalysisPlugin.classes.itervalues():
+  for cls_obj in interface.AnalysisPlugin.classes.itervalues():
     doc_string, _, _ = cls_obj.__doc__.partition('\n')
 
     obj = cls_obj(None, None, None)
@@ -68,7 +68,7 @@ def LoadPlugins(plugin_names, pre_obj, incoming_queues, outgoing_queue):
   except AttributeError:
     raise errors.BadConfigOption(u'Plugin names should be a list of strings.')
 
-  for obj in analysis_interface.AnalysisPlugin.classes.itervalues():
+  for obj in interface.AnalysisPlugin.classes.itervalues():
     if obj.NAME.lower() in plugin_names_lower:
       queue_index = plugin_names_lower.index(obj.NAME.lower())
       try:

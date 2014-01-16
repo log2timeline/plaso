@@ -25,7 +25,7 @@ from plaso.collector import interface
 from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import storage_helper
+from plaso.lib import queue
 from plaso.lib import utils
 from plaso.parsers import filestat
 from plaso.pvfs import pfile
@@ -33,12 +33,34 @@ from plaso.pvfs import pfile_entry
 from plaso.pvfs import vss
 
 
-class GenericCollector(interface.PfileCollector):
-  """Class that implements a generic pfile-based collector object."""
+# TODO: refactor.
+def _SendContainerToStorage(event_container, stat, storage_queue_producer):
+  """Read events from a event container and send them to storage.
+
+  Args:
+    event_container: The event container object (instance of
+                     event.EventContainer).
+    stat: A stat object (instance of pfile.Stats).
+    storage_queue_producer: the storage queue producer (instance of
+                            EventObjectQueueProducer).
+  """
+  for event_object in event_container:
+    # TODO: move this logic into event container e.g. AsObjects() function.
+    event_object.filename = getattr(stat, 'full_path', '<unknown>')
+    event_object.display_name = getattr(
+        stat, 'display_path', event_object.filename)
+    event_object.parser = u'PfileStatParser'
+    event_object.inode = utils.GetInodeValue(stat.ino)
+
+    storage_queue_producer.ProduceEventObject(event_object)
+
+
+class Collector(queue.PathSpecQueueProducer):
+  """Class that implements a collector object."""
 
   _BYTES_PER_SECTOR = 512
 
-  def __init__(self, process_queue, output_queue, source_path):
+  def __init__(self, process_queue, storage_queue_producer, source_path):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -46,20 +68,31 @@ class GenericCollector(interface.PfileCollector):
        as a path specification (instance of event.EventPathSpec).
 
     Args:
-      proces_queue: The files processing queue (instance of
-                    queue.QueueInterface).
-      output_queue: The event output queue (instance of queue.QueueInterface).
-                    This queue is used as a buffer to the storage layer.
+      proces_queue: The files processing queue (instance of Queue).
+      storage_queue_producer: the storage queue producer (instance of
+                              EventObjectQueueProducer).
       source_path: Path of the source file or directory.
     """
-    super(GenericCollector, self).__init__(
-        process_queue, output_queue, source_path)
+    super(Collector, self).__init__(process_queue)
     self._byte_offset = None
+    self._filter_file_path = None
     self._hashlist = None
+    self._pre_obj = None
     self._process_image = None
     self._process_vss = None
     self._sector_offset = None
+    self._storage_queue_producer = storage_queue_producer
+    self._source_path = source_path
     self._vss_stores = None
+    self.collect_directory_metadata = True
+
+  def __enter__(self):
+    """Enters a with statement."""
+    return self
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Exits a with statement."""
+    return
 
   def _CalculateNTFSTimeHash(self, file_entry):
     """Return a hash value calculated from a NTFS file's metadata.
@@ -72,7 +105,6 @@ class GenericCollector(interface.PfileCollector):
     value has changed.
     """
     stat_object = file_entry.Stat()
-
     ret_hash = hashlib.md5()
 
     ret_hash.update('atime:{0}.{1}'.format(
@@ -153,7 +185,7 @@ class GenericCollector(interface.PfileCollector):
         if self.collect_directory_metadata:
           # TODO: solve this differently by putting the path specification
           # on the queue and have the filestat parser just extract the metadata.
-          # self._queue.Queue(sub_file_entry.pathspec.ToProtoString())
+          # self.ProducePathSpec(sub_file_entry.pathspec)
           stat_object = sub_file_entry.Stat()
           stat_object.full_path = sub_file_entry.pathspec.file_path
 
@@ -172,9 +204,10 @@ class GenericCollector(interface.PfileCollector):
           else:
             stat_object.display_path = sub_file_entry.pathspec.file_path
 
-          storage_helper.SendContainerToStorage(
+          # TODO: refactor.
+          _SendContainerToStorage(
               filestat.GetEventContainerFromStat(stat_object), stat_object,
-              self._storage_queue)
+              self._storage_queue_producer)
 
         sub_directories.append(sub_file_entry)
 
@@ -194,7 +227,7 @@ class GenericCollector(interface.PfileCollector):
           self._hashlist.setdefault(
               sub_file_entry.pathspec.image_inode, []).append(hash_value)
 
-        self._queue.Queue(sub_file_entry.pathspec.ToProtoString())
+        self.ProducePathSpec(sub_file_entry.pathspec)
 
     for sub_file_entry in sub_directories:
       self._ProcessDirectory(sub_file_entry)
@@ -206,8 +239,8 @@ class GenericCollector(interface.PfileCollector):
     filter_object = collector_filter.CollectionFilter(
         preprocessor_collector, self._filter_file_path)
 
-    for pathspec_string in filter_object.GetPathSpecs():
-      self._queue.Queue(pathspec_string)
+    for path_spec in filter_object.GetPathSpecs():
+      self.ProducePathSpec(path_spec)
 
   def _ProcessImage(self):
     """Processes the image."""
@@ -265,8 +298,8 @@ class GenericCollector(interface.PfileCollector):
       filter_object = collector_filter.CollectionFilter(
           preprocessor_collector, self._filter_file_path)
 
-      for pathspec_string in filter_object.GetPathSpecs():
-        self._queue.Queue(pathspec_string)
+      for path_spec in filter_object.GetPathSpecs():
+        self.ProducePathSpec(path_spec)
 
       if self._process_vss:
         logging.debug(u'Searching for VSS')
@@ -288,8 +321,8 @@ class GenericCollector(interface.PfileCollector):
           filter_object = collector_filter.CollectionFilter(
               vss_preprocessor_collector, self._filter_file_path)
 
-          for pathspec_string in filter_object.GetPathSpecs():
-            self._queue.Queue(pathspec_string)
+          for path_spec in filter_object.GetPathSpecs():
+            self.ProducePathSpec(path_spec)
 
     finally:
       logging.debug(u'Targeted Image Collector - Done.')
@@ -355,7 +388,19 @@ class GenericCollector(interface.PfileCollector):
         self._ProcessDirectory(source_file_entry)
 
       else:
-        self._queue.Queue(source_path_spec.ToProtoString())
+        self.ProducePathSpec(source_path_spec)
+
+    self.SignalEndOfInput()
+
+  def SetFilter(self, filter_file_path, pre_obj):
+    """Sets the collection filter.
+
+    Args:
+      filter_file_path: The path of the filter file.
+      pre_obj: The preprocessor object.
+    """
+    self._filter_file_path = filter_file_path
+    self._pre_obj = pre_obj
 
   def SetImageInformation(self, sector_offset=None, byte_offset=None):
     """Sets the image information.
@@ -363,10 +408,10 @@ class GenericCollector(interface.PfileCollector):
        This function will enable image collection.
 
     Args:
-      sector_offset: Optional sector offset into the image file if this is a
-                     disk image. The default is None.
-      byte_offset: Optional byte offset into the image file if this is a disk
-                   image. The default is None.
+      sector_offset: Optional sector offset into the image file if this is
+                     a disk image. The default is None.
+      byte_offset: Optional byte offset into the image file if this is
+                   a disk image. The default is None.
     """
     self._process_image = True
     self._byte_offset = byte_offset
@@ -394,7 +439,7 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     """Initializes the preprocess collector object.
 
     Args:
-      pre_obj: The preprocessing object (instance of PlasoPreprocess).
+      pre_obj: The preprocessing object (instance of PreprocessObject).
       source_path: Path of the source file or directory.
     """
     super(GenericPreprocessCollector, self).__init__(pre_obj, source_path)
@@ -573,10 +618,10 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
        This function will enable image collection.
 
     Args:
-      sector_offset: Optional sector offset into the image file if this is a
-                     disk image. The default is None.
-      byte_offset: Optional byte offset into the image file if this is a disk
-                   image. The default is None.
+      sector_offset: Optional sector offset into the image file if this is
+                     a disk image. The default is None.
+      byte_offset: Optional byte offset into the image file if this is
+                   a disk image. The default is None.
     """
     self._process_image = True
     self._byte_offset = byte_offset

@@ -21,10 +21,11 @@ import logging
 import re
 import urllib2
 
-from plaso.lib import analysis_interface
+from plaso.analysis import interface
+from plaso.lib import event
 
 
-class AnalyzeChromeExtensionPlugin(analysis_interface.AnalysisPlugin):
+class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
   """Convert Chrome extension ID's into names, requires Internet connection."""
 
   NAME = 'chrome_extension'
@@ -202,14 +203,24 @@ class AnalyzeChromeExtensionPlugin(analysis_interface.AnalysisPlugin):
         self._results[user].append((extension_string, extension_id))
 
   def CompileReport(self):
-    """Prepares the report object based on collected information."""
-    self._report.report_dict = self._results
-    text = u''
+    """Compiles a report of the analysis.
+
+    Returns:
+      The analysis report (instance of AnalysisReport).
+    """
+    report = event.AnalysisReport()
+
+    report.report_dict = self._results
+
+    lines_of_text = []
     for user, extensions in sorted(self._results.iteritems()):
-      text += u' == USER: {} ==\n'.format(user)
+      lines_of_text.append(u' == USER: {0:s} =='.format(user))
       for extension, extension_id in sorted(extensions):
-        text += u'  {} [{}]\n'.format(extension, extension_id)
+        lines_of_text.append(u'  {0:s} [{1:s}]'.format(extension, extension_id))
 
-      text += u'\n'
+      # An empty string is added to have SetText create an empty line.
+      lines_of_text.append(u'')
 
-    self._report.text = text
+    report.SetText(lines_of_text)
+
+    return report

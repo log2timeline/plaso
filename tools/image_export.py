@@ -25,12 +25,12 @@ import sys
 
 from plaso import preprocessors
 
-from plaso.collector import factory as collector_factory
+from plaso.collector import collector
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import preprocess
+from plaso.lib import preprocess_interface
 from plaso.lib import queue
 from plaso.pvfs import pfile
 from plaso.pvfs import vss
@@ -67,53 +67,36 @@ class ImageExtractor(object):
     if self._pre_obj is not None:
       return
 
-    self._pre_obj = preprocess.PlasoPreprocess()
+    self._pre_obj = event.PreprocessObject()
     try:
-      image_collector = collector_factory.GetGenericPreprocessCollector(
+      image_collector = collector.GenericPreprocessCollector(
           self._pre_obj, self._image_path)
       image_collector.SetImageInformation(byte_offset=self._image_offset)
 
     except errors.UnableToOpenFilesystem as e:
-      raise RuntimeError('Unable to proceed, not an image file? [%s]' % e)
+      raise RuntimeError(
+          u'Unable to proceed, not an image file? [{0:s}]'.format(e))
 
     plugin_list = preprocessors.PreProcessList(
         self._pre_obj, image_collector)
 
-    logging.info('Guessing OS')
-    guessed_os = preprocess.GuessOS(image_collector)
-    logging.info('OS: %s', guessed_os)
+    logging.info(u'Guessing OS')
+    guessed_os = preprocess_interface.GuessOS(image_collector)
+    logging.info(u'OS: {0:s}'.format(guessed_os))
 
-    logging.info('Running preprocess.')
+    logging.info(u'Running preprocess.')
     for weight in plugin_list.GetWeightList(guessed_os):
       for plugin in plugin_list.GetWeight(guessed_os, weight):
         try:
           plugin.Run()
         except errors.PreProcessFail as e:
           logging.warning(
-              'Unable to run preprocessor: %s, reason: %s',
-              plugin.__class__.__name__, e)
+              u'Unable to run preprocessor: {0:s} with error: {1:s}'.format(
+                  plugin.__class__.__name__, e))
 
-    logging.info('Preprocess done, saving files from image.')
+    logging.info(u'Preprocess done, saving files from image.')
 
     return image_collector
-
-  def _ExtractFiles(self, image_collector, filter_expression, destination_path):
-    """Extracts files that match the filter.
-
-    Args:
-      image_collector: The image collector object.
-      filter_expression: String containing a collection filter expression.
-      destination_path: The path where the extracted files should be stored.
-
-    Returns:
-      None, unless calc_md5 is set then it returns a dict with MD5 sums.
-    """
-    filter_object = collector_filter.CollectionFilter(
-        image_collector, filter_expression)
-
-    for path_spec in filter_object.GetPathSpecs():
-      with pfile.PFileResolver.OpenFileEntry(path_spec) as file_entry:
-        FileSaver.SaveFile(file_entry, destination_path)
 
   def ExtractWithFilter(
       self, filter_expression, destination_path, process_vss=False,
@@ -139,23 +122,32 @@ class ImageExtractor(object):
 
     # Save the regular files.
     FileSaver.calc_md5 = remove_duplicates
-    self._ExtractFiles(image_collector, filter_expression, destination_path)
+    filter_object = collector_filter.CollectionFilter(
+        image_collector, filter_expression)
+
+    for path_spec in filter_object.GetPathSpecs():
+      FileSaver.WriteFile(path_spec, destination_path)
 
     if process_vss:
-      logging.info('Extracting files from VSS.')
+      logging.info(u'Extracting files from VSS.')
       vss_numbers = vss.GetVssStoreCount(self._image_path, self._image_offset)
 
-      for store_nr in range(0, vss_numbers):
-        logging.info(
-            'Extracting files from VSS %d/%d', store_nr + 1, vss_numbers)
+      for store_number in range(0, vss_numbers):
+        logging.info(u'Extracting files from VSS {0:d}/{1:d}'.format(
+            store_number + 1, vss_numbers))
 
-        vss_collector = collector_factory.GetGenericPreprocessCollector(
+        vss_collector = collector.GenericPreprocessCollector(
             self._pre_obj, self._image_path)
         vss_collector.SetImageInformation(byte_offset=self._image_offset)
-        vss_collector.SetVssInformation(store_number=store_nr)
+        vss_collector.SetVssInformation(store_number=store_number)
 
-        FileSaver.prefix = 'vss_%d' % store_nr
-        self._ExtractFiles(vss_collector, filter_expression, destination_path)
+        filename_prefix = 'vss_{0:d}'.format(store_number)
+        filter_object = collector_filter.CollectionFilter(
+            vss_collector, filter_expression)
+
+        for path_spec in filter_object.GetPathSpecs():
+          FileSaver.WriteFile(
+              path_spec, destination_path, filename_prefix=filename_prefix)
 
   def ExtractWithExtensions(
        self, extensions, destination_path, process_vss=False,
@@ -163,11 +155,11 @@ class ImageExtractor(object):
     """Extracts files using extensions.
 
     Args:
-      extensions: List of extensions.
-      destination_path: The path where the extracted files should be stored.
-      process_vss: Optional boolean value to indicate if VSS should be detected
+      extensions: a list of extensions.
+      destination_path: the path where the extracted files should be stored.
+      process_vss: optional boolean value to indicate if VSS should be detected
                    and processed. The default is false.
-      remove_duplicates: Optional boolean value to indicate if duplicates should
+      remove_duplicates: optional boolean value to indicate if duplicates should
                          be detected and removed. The default is false.
     """
     if not os.path.isdir(destination_path):
@@ -176,7 +168,7 @@ class ImageExtractor(object):
     input_queue = queue.SingleThreadedQueue()
     output_queue = queue.SingleThreadedQueue()
 
-    image_collector = collector_factory.GetGenericCollector(
+    image_collector = collector.Collector(
         input_queue, output_queue, self._image_path)
     image_collector.SetImageInformation(byte_offset=self._image_offset)
     if process_vss:
@@ -187,37 +179,64 @@ class ImageExtractor(object):
 
     FileSaver.calc_md5 = remove_duplicates
 
-    for path_spec_string in input_queue.PopItems():
-      pathspec = event.EventPathSpec()
-      pathspec.FromProtoString(path_spec_string)
+    input_queue_consumer = ImageExtractorQueueConsumer(
+        input_queue, extensions, destination_path)
+    input_queue_consumer.ConsumePathSpecs()
 
-      _, _, extension = pathspec.file_path.rpartition('.')
-      if extension.lower() in extensions:
-        file_entry = pfile.PFileResolver.OpenFileEntry(pathspec)
-        if getattr(pathspec, 'vss_store_number', None):
-          FileSaver.prefix = 'vss_%d' % pathspec.vss_store_number + 1
-        else:
-          FileSaver.prefix = ''
 
-        FileSaver.SaveFile(file_entry, destination_path)
+class ImageExtractorQueueConsumer(queue.PathSpecQueueConsumer):
+  """Class that implements an image extractor queue consumer."""
+
+  def __init__(self, process_queue, extensions, destination_path):
+    """Initializes the image extractor queue consumer.
+
+    Args:
+      process_queue: the process queue (instance of Queue).
+      extensions: a list of extensions.
+      destination_path: the path where the extracted files should be stored.
+    """
+    super(ImageExtractorQueueConsumer, self).__init__(process_queue)
+    self._destination_path = destination_path
+    self._extensions = extensions
+
+  def _ConsumePathSpec(self, path_spec):
+    """Consumes a path specification callback for ConsumePathSpecs."""
+    # TODO: move this into a function of path spec e.g. GetExtension().
+    _, _, extension = path_spec.file_path.rpartition('.')
+    if extension.lower() in self._extensions:
+      vss_store_number = getattr(path_spec, 'vss_store_number', None)
+      if vss_store_number is not None:
+        filename_prefix = 'vss_{0:d}'.format(vss_store_number + 1)
+      else:
+        filename_prefix = ''
+
+      FileSaver.WriteFile(
+          path_spec, self._destination_path, filename_prefix=filename_prefix)
 
 
 class FileSaver(object):
   """A simple class that is used to save files."""
   md5_dict = {}
   calc_md5 = False
-  prefix = ''
 
   @classmethod
-  def SaveFile(cls, file_entry, destination_path):
-    """Take a file entry object and an export path and save the file."""
-    directory = ''
+  def WriteFile(cls, source_path_spec, destination_path, filename_prefix=''):
+    """Writes the contents of the source to the destination file.
+
+    Args:
+      source_path_spec: the path specification of the source file.
+      destination_path: the path of the destination file.
+      filename_prefix: optional prefix for the filename. The default is an
+                       empty string.
+    """
+    file_entry = pfile.PFileResolver.OpenFileEntry(source_path_spec)
+    directory = u''
     filename = file_entry.name
 
     # There will be issues on systems that use a different separator than a
     # forward slash. However a forward slash is always used in the pathspec.
-    if os.path.sep != '/':
-      filename = filename.replace('/', os.path.sep)
+    if os.path.sep != u'/':
+      filename = filename.replace(u'/', os.path.sep)
 
     if os.path.sep in filename:
       directory_string, _, filename = filename.rpartition(os.path.sep)
@@ -225,8 +244,8 @@ class FileSaver(object):
         directory = os.path.join(
             destination_path, *directory_string.split(os.path.sep))
 
-    if cls.prefix:
-      extracted_filename = '{}_{}'.format(cls.prefix, filename)
+    if filename_prefix:
+      extracted_filename = u'{0:s}_{1:s}'.format(filename_prefix, filename)
     else:
       extracted_filename = filename
 
@@ -256,10 +275,10 @@ class FileSaver(object):
       try:
         frontend_utils.OutputWriter.WriteFile(
             file_entry, os.path.join(directory, extracted_filename))
-      except IOError as e:
+      except IOError as exception:
         logging.error(
             u'[skipping] unable to save file: {0:s} with error: {1:s}'.format(
-                filename, e))
+                filename, exception))
 
 
 def CalculateHash(file_object):
@@ -332,19 +351,19 @@ def Main():
   logging.basicConfig(level=logging.INFO, format=format_str)
 
   if not os.path.isfile(options.image):
-    raise RuntimeError('Unable to proceed, image file does not exist.')
+    raise RuntimeError(u'Unable to proceed, image file does not exist.')
 
   if not (options.filter or options.extension_string):
     arg_parser.print_help()
     print ''
-    logging.error('Neither extension string nor filter defined.')
+    logging.error(u'Neither extension string nor filter defined.')
     sys.exit(1)
 
   if options.filter:
     if not os.path.isfile(options.filter):
       arg_parser.print_help()
       print ''
-      logging.error('Unable to proceed, filter file does not exist.')
+      logging.error(u'Unable to proceed, filter file does not exist.')
       sys.exit(1)
 
   if not options.vss:
@@ -370,7 +389,7 @@ def Main():
     image_extractor.ExtractWithExtensions(
         extensions, options.path, process_vss=options.vss,
         remove_duplicates=options.remove_duplicates)
-    logging.info('Files based on extension extracted.')
+    logging.info(u'Files based on extension extracted.')
 
 
 if __name__ == '__main__':

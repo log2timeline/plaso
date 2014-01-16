@@ -22,10 +22,10 @@ import logging
 import tempfile
 import unittest
 
-from plaso.collector import factory
+from plaso.collector import collector
 from plaso.lib import collector_filter
 from plaso.lib import errors
-from plaso.lib import preprocess
+from plaso.lib import event
 
 from plaso.proto import transmission_pb2
 
@@ -50,8 +50,8 @@ class CollectionFilterTest(unittest.TestCase):
       # This should not fail during initial loading, but fail later on.
       fh.write('bad re (no close on that parenthesis/file\n')
 
-    pre_obj = preprocess.PlasoPreprocess()
-    test_preprocess_collector = factory.GetGenericPreprocessCollector(
+    pre_obj = event.PreprocessObject()
+    test_preprocess_collector = collector.GenericPreprocessCollector(
         pre_obj, u'./')
     test_filter = collector_filter.CollectionFilter(
         test_preprocess_collector, filter_name)
@@ -69,13 +69,15 @@ class CollectionFilterTest(unittest.TestCase):
     filter_list = test_filter.BuildFiltersFromProto()
     self.assertEquals(len(filter_list), 5)
 
-    pathspecs = list(test_filter.GetPathSpecs())
+    path_specs = list(test_filter.GetPathSpecs())
     # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
-    self.assertEquals(len(pathspecs), 4)
+    self.assertEquals(len(path_specs), 4)
 
     with self.assertRaises(errors.BadConfigOption):
       _ = collector_filter.CollectionFilter(
           test_preprocess_collector, 'thisfiledoesnotexist')
+
+    # TODO: move to protobuf serializer test.
 
     # Build a proto using the same filter criteria as above.
     proto = transmission_pb2.PathFilter()

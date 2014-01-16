@@ -119,12 +119,13 @@ class Dynamic(output.FileLogOutputFormatter):
 
     return hostname
 
+  # TODO: move this into a base output class.
   def ParseUsername(self, event_object):
     """Return the username."""
     username = getattr(event_object, 'username', '-')
     if self.store:
-      check_user = helper.GetUsernameFromPreProcess(
-          self._preprocesses.get(event_object.store_number), username)
+      pre_obj = self._preprocesses.get(event_object.store_number)
+      check_user =  pre_obj.GetUsernameById(username)
 
       if check_user != '-':
         username = check_user

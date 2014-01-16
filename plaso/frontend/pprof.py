@@ -36,7 +36,6 @@ except ImportError:
 import plaso
 from plaso.frontend import psort
 from plaso.lib import event
-from plaso.lib import preprocess
 from plaso.lib import utils
 from plaso.lib import queue
 from plaso.lib import worker
@@ -47,16 +46,38 @@ import pyevtx
 import pylnk
 import pymsiecf
 import pyregf
-import pytz
 import pyvshadow
+
+
+class PprofEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
+  """Class that implements an event object queue consumer for pprof."""
+
+  def __init__(self, queue_object):
+    """Initializes the queue consumer.
+
+    Args:
+      queue_object: the queue object (instance of Queue).
+    """
+    super(PprofEventObjectQueueConsumer, self).__init__(queue_object)
+    self.counter = collections.Counter()
+    self.parsers = []
+
+  def _ConsumeEventObject(self, event_object):
+    """Consumes an event object callback for ConsumeEventObject."""
+    parser = getattr(event_object, 'parser', 'N/A')
+    if parser not in self.parsers:
+      self.parsers.append(parser)
+
+    self.counter[parser] += 1
+    self.counter['Total'] += 1
 
 
 def Main():
   """Start the tool."""
-  usage = """
-Run this tool against a single file to see how many events are extracted
-from it and which parsers recognize it.
-  """
+  usage = (
+      u'Run this tool against a single file to see how many events are '
+      u'extracted from it and which parsers recognize it.')
+
   arg_parser = argparse.ArgumentParser(description=usage)
 
   format_str = '[%(levelname)s] %(message)s'
@@ -194,11 +215,11 @@ def ProcessFile(options):
         options.file_to_parse, e))
     sys.exit(1)
 
-  pre_obj = preprocess.PlasoPreprocess()
-  pre_obj.zone = pytz.UTC
-  simple_queue = queue.SingleThreadedQueue()
-  my_worker = worker.PlasoWorker(
-      '0', None, simple_queue, config=options, pre_obj=pre_obj)
+  pre_obj = event.PreprocessObject()
+  storage_queue = queue.SingleThreadedQueue()
+  storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+  my_worker = worker.EventExtractionWorker(
+      '0', None, storage_queue_producer, config=options, pre_obj=pre_obj)
 
   if options.verbose:
     profiler = cProfile.Profile()
@@ -212,16 +233,10 @@ def ProcessFile(options):
   else:
     time_end = time.time()
 
-  counter = collections.Counter()
-  parsers = []
-  for item in simple_queue.PopItems():
-    event_object = event.EventObject()
-    event_object.FromProtoString(item)
-    parser = getattr(event_object, 'parser', 'N/A')
-    if parser not in parsers:
-      parsers.append(parser)
-    counter[parser] += 1
-    counter['Total'] += 1
+  storage_queue_producer.SignalEndOfInput()
+
+  event_object_consumer = PprofEventObjectQueueConsumer(storage_queue)
+  event_object_consumer.ConsumeEventObject()
 
   if not options.verbose:
     print utils.FormatHeader('Time Used')
@@ -234,11 +249,11 @@ def ProcessFile(options):
     print utils.FormatOutputString('', parser.parser_name)
 
   print utils.FormatHeader('Parsers Used')
-  for parser in sorted(parsers):
+  for parser in sorted(event_object_consumer.parsers):
     print utils.FormatOutputString('', parser)
 
   print utils.FormatHeader('Counter')
-  for key, value in counter.most_common():
+  for key, value in event_object_consumer.counter.most_common():
     print utils.FormatOutputString(key, value)
 
   if options.verbose:

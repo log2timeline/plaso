@@ -21,14 +21,10 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import chrome_cookies as chrome_cookies_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import chrome_cookies
-from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
-from plaso.pvfs import utils
-
-import pytz
 
 
 class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
@@ -36,8 +32,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
+    pre_obj = event.PreprocessObject()
     self._plugin = chrome_cookies.ChromeCookiePlugin(pre_obj)
 
   def testProcess(self):

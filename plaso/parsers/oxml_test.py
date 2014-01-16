@@ -21,8 +21,8 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import oxml as oxml_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import oxml
 from plaso.parsers import test_lib
 
@@ -32,11 +32,8 @@ class OXMLTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     self._parser = oxml.OpenXMLParser(pre_obj)
-    # Show full diff results, part of TestCase so does not
-    # follow our naming conventions.
-    self.maxDiff = None
 
   def testParse(self):
     """Tests the Parse function."""

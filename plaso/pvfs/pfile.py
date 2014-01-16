@@ -28,7 +28,6 @@ import logging
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import utils
-from plaso.proto import transmission_pb2
 from plaso.pvfs import pfile_entry
 from plaso.pvfs import pfile_system
 from plaso.pvfs import pvfs
@@ -69,7 +68,7 @@ class PFileResolver(object):
     return path_spec
 
   @classmethod
-  def OpenFileEntry(cls, path_spec, orig=None, file_entry=None):
+  def OpenFileEntry(cls, path_spec, orig=None, file_entry=None, fscache=None):
     """Opens a file entry defined by path specification.
 
     The location and how to open the file is described in the PathSpec protobuf
@@ -106,6 +105,7 @@ class PFileResolver(object):
       orig: an optional path specification that describes the root of the file.
       file_entry: A file entry object that is used as base for extracting
                   the needed file out.
+      fscache: optional file system cache.
 
     Returns:
       The file entry (instance of PFileEntry) or None if the path
@@ -117,19 +117,12 @@ class PFileResolver(object):
     if not PFILE_HANDLERS:
       InitPFile()
 
-    if isinstance(path_spec, basestring):
-      path_spec_string = path_spec
-      path_spec = event.EventPathSpec()
-      path_spec.FromProtoString(path_spec_string)
-
-    elif isinstance(path_spec, transmission_pb2.PathSpec):
-      path_spec_proto = path_spec
-      path_spec = event.EventPathSpec()
-      path_spec.FromProto(path_spec_proto)
+    if not fscache:
+      fscache = cls._fscache
 
     handler_class = PFILE_HANDLERS.get(path_spec.type, 'UNSET')
     try:
-      handler = handler_class(path_spec, root=orig, fscache=cls._fscache)
+      handler = handler_class(path_spec, root=orig, fscache=fscache)
     except errors.UnableToOpenFile:
       raise IOError(u'Unable to open the file: {0:s} using {1:s}'.format(
           path_spec.file_path, path_spec.type))
@@ -156,14 +149,17 @@ class PFileResolver(object):
     raise IOError(u'Unable to open the file.')
 
   @classmethod
-  def OpenFileSystem(cls, path_spec):
+  def OpenFileSystem(cls, path_spec, fscache=None):
     """Opens a file system defined by path specification."""
-    if path_spec.type in ['TSK', 'VSS']:
-      return cls._fscache.Open(
-          path_spec.container_path, byte_offset=path_spec.image_offset)
-
-    elif path_spec.type == 'OS':
+    if path_spec.type == 'OS':
       return pfile_system.OsFileSystem(path_spec.file_path)
+
+    elif path_spec.type in ['TSK', 'VSS']:
+      if not fscache:
+        fscache = cls._fscache
+
+      return fscache.Open(
+          path_spec.container_path, byte_offset=path_spec.image_offset)
 
     else:
       raise RuntimeError(u'Unsupported file system type.')

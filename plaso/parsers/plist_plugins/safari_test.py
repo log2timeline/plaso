@@ -21,7 +21,7 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.lib import preprocess
+from plaso.lib import event
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import safari
 from plaso.parsers.plist_plugins import test_lib
@@ -33,7 +33,7 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._plugin = safari.SafariHistoryPlugin(None)
-    self._parser = plist.PlistParser(preprocess.PlasoPreprocess(), None)
+    self._parser = plist.PlistParser(event.PreprocessObject(), None)
 
   def testProcess(self):
     """Tests the Process function."""

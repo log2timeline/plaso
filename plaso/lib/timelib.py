@@ -504,6 +504,11 @@ class Timestamp(object):
     return dt.isoformat()
 
   @classmethod
+  def GetNow(cls):
+    """Retrieves the current time (now) as a timestamp in UTC."""
+    return int((time.time() + time.timezone) * 1000000)
+
+  @classmethod
   def RoundToSeconds(cls, timestamp):
     """Takes a timestamp value and rounds it to a second precision."""
     leftovers = timestamp % cls.MICRO_SECONDS_PER_SECOND

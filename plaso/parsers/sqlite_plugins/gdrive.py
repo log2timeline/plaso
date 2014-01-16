@@ -160,7 +160,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
     return self.GetCloudPath(new_resource_id, path)
 
-  def ParseCloudEntryRow(self, row, **dummy_kwargs):
+  def ParseCloudEntryRow(self, row, **unused_kwargs):
     """Parses a cloud entry row.
 
     Args:
@@ -194,7 +194,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     # TODO: shouldn't this be yield?
     return container
 
-  def ParseLocalEntryRow(self, row, **dummy_kwargs):
+  def ParseLocalEntryRow(self, row, **unused_kwargs):
     """Parses a local entry row.
 
     Args:

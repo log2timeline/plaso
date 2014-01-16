@@ -31,26 +31,40 @@ import pyvshadow
 class PFileSystem(object):
   """Class that implements the pfile system object interface."""
 
-  PATH_SEPERATOR = u'/'
+  PATH_SEPARATOR = u'/'
 
   def __init__(self, fscache):
     """Initialize the file system object."""
     super(PFileSystem, self).__init__()
     self._fscache = fscache
 
+  def BasenamePath(self, path):
+    """Determines the basename of the path.
+
+    Args:
+      path: a string containing the path.
+
+    Returns:
+      A string containing the basename of the path.
+    """
+    if path.endswith(self.PATH_SEPARATOR):
+      path = path[:-1]
+    _, _, basename = path.rpartition(self.PATH_SEPARATOR)
+    return basename
+
   def JoinPath(self, path_segments):
     """Joins the path segments into a path."""
-    return self.PATH_SEPERATOR.join(path_segments)
+    return self.PATH_SEPARATOR.join(path_segments)
 
   def SplitPath(self, path):
     """Splits the path into path segments."""
-    return path.split(self.PATH_SEPERATOR)
+    return path.split(self.PATH_SEPARATOR)
 
 
 class OsFileSystem(PFileSystem):
   """Class that implements a file system object using os."""
 
-  PATH_SEPERATOR = os.path.sep
+  PATH_SEPARATOR = os.path.sep
   TYPE_INDICATOR = 'OS'
 
   def __init__(self, fscache):
@@ -65,7 +79,7 @@ class OsFileSystem(PFileSystem):
     """
     root_path_spec = event.EventPathSpec()
     root_path_spec.type = 'OS'
-    root_path_spec.file_path = self.PATH_SEPERATOR
+    root_path_spec.file_path = self.PATH_SEPARATOR
 
     return self.OpenFileEntry(root_path_spec)
 
@@ -113,7 +127,7 @@ class TSKFileSystem(PFileSystem):
     """
     root_path_spec = event.EventPathSpec()
     root_path_spec.type = 'TSK'
-    root_path_spec.file_path = self.PATH_SEPERATOR
+    root_path_spec.file_path = self.PATH_SEPARATOR
     root_path_spec.image_inode = self.tsk_fs.info.root_inum
     root_path_spec.container_path = self._source_path
     root_path_spec.image_offset = self._byte_offset
@@ -183,7 +197,7 @@ class VssFileSystem(TSKFileSystem):
     """
     root_path_spec = event.EventPathSpec()
     root_path_spec.type = 'VSS'
-    root_path_spec.file_path = self.PATH_SEPERATOR
+    root_path_spec.file_path = self.PATH_SEPARATOR
     root_path_spec.image_inode = self.tsk_fs.info.root_inum
     root_path_spec.container_path = self._source_path
     root_path_spec.image_offset = self._byte_offset

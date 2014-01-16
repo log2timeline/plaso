@@ -21,12 +21,10 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import bencode_parser as bencode_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import bencode_parser
 from plaso.parsers import test_lib
-
-import pytz
 
 
 class BencodeTest(test_lib.ParserTestCase):
@@ -34,8 +32,7 @@ class BencodeTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.pre_obj = preprocess.PlasoPreprocess()
-    self.pre_obj.zone = pytz.UTC
+    self.pre_obj = event.PreprocessObject()
     self._parser = bencode_parser.BencodeParser(self.pre_obj, None)
 
   def testTransmissionPlugin(self):

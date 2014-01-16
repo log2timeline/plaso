@@ -30,7 +30,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
 
     Args:
       parser_object: the parser object.
-      plugin_object: the pluging object.
+      plugin_object: the plugin object.
       path: the path of the file to parse.
       plist_name: the name of the plist to parse.
 

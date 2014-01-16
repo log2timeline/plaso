@@ -21,7 +21,7 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import mac_appfirewall as mac_appfirewall_formatter
-from plaso.lib import preprocess
+from plaso.lib import event
 from plaso.parsers import mac_appfirewall
 from plaso.parsers import test_lib
 
@@ -31,7 +31,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     pre_obj.year = 2013
     pre_obj.zone = pytz.timezone('UTC')
     self._parser = mac_appfirewall.MacAppFirewallParser(pre_obj, None)

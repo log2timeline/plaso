@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """An output module that saves data into an ElasticSearch database."""
+
 import logging
 import requests
 import sys
@@ -22,12 +24,12 @@ import uuid
 
 from plaso.lib import eventdata
 from plaso.lib import output
-from plaso.lib import putils
 from plaso.lib import timelib
 
 from plaso.output import helper
 
 import pyelasticsearch
+import pytz
 
 
 class Elastic(output.LogOutputFormatter):
@@ -112,8 +114,8 @@ class Elastic(output.LogOutputFormatter):
     # Adding attributes in that are calculated/derived.
     # We want to remove millisecond precision (causes some issues in
     # conversion).
-    ret_dict['datetime'] = putils.PrintTimestamp(
-        timelib.Timestamp.RoundToSeconds(event_object.timestamp))
+    ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
+        timelib.Timestamp.RoundToSeconds(event_object.timestamp), pytz.utc)
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
     ret_dict['message'] = msg
 
@@ -129,10 +131,11 @@ class Elastic(output.LogOutputFormatter):
 
     ret_dict['hostname'] = hostname
 
+    # TODO: move this into a base output class.
     username = getattr(event_object, 'username', '-')
     if self.store:
-      check_user = helper.GetUsernameFromPreProcess(
-          self._preprocesses.get(event_object.store_number), username)
+      pre_obj = self._preprocesses.get(event_object.store_number)
+      check_user =  pre_obj.GetUsernameById(username)
 
       if check_user != '-':
         username = check_user
