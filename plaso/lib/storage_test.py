@@ -24,8 +24,10 @@ import zipfile
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import pfilter
+from plaso.lib import queue
 from plaso.lib import storage
 from plaso.formatters import winreg   # pylint: disable-msg=unused-import
+from plaso.serializer import protobuf_serializer
 
 
 class DummyObject(object):
@@ -62,12 +64,12 @@ class GroupMock(object):
       yield dummy
 
 
-class PlasoStorageUnitTest(unittest.TestCase):
-  """The unit test for plaso storage."""
+class StorageFileTest(unittest.TestCase):
+  """Tests for the plaso storage file."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.events = []
+    self._event_objects = []
 
     event_1 = event.WinRegistryEvent(
         u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'},
@@ -92,45 +94,41 @@ class PlasoStorageUnitTest(unittest.TestCase):
     event_4 = event.TextEvent(12389344590000000, text_dict)
     event_4.parser = 'UNKNOWN'
 
-    self.events.append(event_1)
-    self.events.append(event_2)
-    self.events.append(event_3)
-    self.events.append(event_4)
+    self._event_objects.append(event_1)
+    self._event_objects.append(event_2)
+    self._event_objects.append(event_3)
+    self._event_objects.append(event_4)
 
-  def testSetStoreLimit(self):
-    """Test the store limit options."""
+  def testStorageWriter(self):
+    """Test the storage writer."""
+    self.assertEquals(len(self._event_objects), 4)
 
-  def testGetTimeBounds(self):
-    """Test the time bound calls."""
+    # The storage writer is normally run in a separate thread.
+    # For the purpose of this test it has to be run in sequence,
+    # hence the call to WriteEventObjects after all the event objects
+    # have been queued up.
+    test_queue = queue.MultiThreadedQueue()
+    test_queue_producer = queue.EventObjectQueueProducer(test_queue)
+    test_queue_producer.ProduceEventObjects(self._event_objects)
+    test_queue_producer.SignalEndOfInput()
 
-  def testGetSortedEntry(self):
-    """Test reading entries in the correct time order from the storage file."""
+    with tempfile.NamedTemporaryFile() as temp_file:
+      storage_writer = storage.StorageFileWriter(test_queue, temp_file)
+      storage_writer.WriteEventObjects()
 
-  def testStorageDumper(self):
-    """Test the storage dumper."""
-    self.assertEquals(len(self.events), 4)
+      z_file = zipfile.ZipFile(temp_file, 'r', zipfile.ZIP_DEFLATED)
 
-    with tempfile.NamedTemporaryFile() as fh:
-      # The dumper is normally run in another thread, but for the purpose
-      # of this test it is run in sequence, hence the call to .Run() after
-      # all has been queued up.
-      dumper = storage.SimpleStorageDumper(fh)
-      for e in self.events:
-        serial = e.ToProtoString()
-        dumper.AddEvent(serial)
-      dumper.Close()
-      dumper.Run()
-
-      z_file = zipfile.ZipFile(fh, 'r', zipfile.ZIP_DEFLATED)
-      self.assertEquals(len(z_file.namelist()), 4)
-
-      self.assertEquals(sorted(z_file.namelist()), [
+      expected_z_filename_list = [
           'plaso_index.000001', 'plaso_meta.000001', 'plaso_proto.000001',
-          'plaso_timestamps.000001'])
+          'plaso_timestamps.000001']
+
+      z_filename_list = sorted(z_file.namelist())
+      self.assertEquals(len(z_filename_list), 4)
+      self.assertEquals(z_filename_list, expected_z_filename_list)
 
   def testStorage(self):
     """Test the storage object."""
-    evts = []
+    event_objects = []
     timestamps = []
     group_mock = GroupMock()
     tags = []
@@ -139,12 +137,11 @@ class PlasoStorageUnitTest(unittest.TestCase):
     group_events = []
     same_events = []
 
-    with tempfile.NamedTemporaryFile() as fh:
-      store = storage.PlasoStorage(fh)
+    serializer = protobuf_serializer.ProtobufEventObjectSerializer
 
-      for event_object in self.events:
-        serial = event_object.ToProtoString()
-        store.AddEntry(serial)
+    with tempfile.NamedTemporaryFile() as temp_file:
+      store = storage.StorageFile(temp_file)
+      store.AddEventObjects(self._event_objects)
 
       # Add tagging.
       tag_1 = event.EventTag()
@@ -184,24 +181,24 @@ class PlasoStorageUnitTest(unittest.TestCase):
           color='red', first=13349402860000000, last=13349615269295969,
           cat='Malware')
       store.StoreGrouping(group_mock)
-      store.CloseStorage()
+      store.Close()
 
-      read_store = storage.PlasoStorage(fh, True)
+      read_store = storage.StorageFile(temp_file, read_only=True)
 
       self.assertTrue(read_store.HasTagging())
       self.assertTrue(read_store.HasGrouping())
 
-      for evt in read_store.GetEntries(1):
-        evts.append(evt)
-        timestamps.append(evt.timestamp)
-        if evt.data_type == 'windows:registry:key_value':
-          self.assertEquals(evt.timestamp_desc, 'Last Written')
+      for event_object in read_store.GetEntries(1):
+        event_objects.append(event_object)
+        timestamps.append(event_object.timestamp)
+        if event_object.data_type == 'windows:registry:key_value':
+          self.assertEquals(event_object.timestamp_desc, 'Last Written')
         else:
-          self.assertEquals(evt.timestamp_desc, 'Entry Written')
+          self.assertEquals(event_object.timestamp_desc, 'Entry Written')
 
       for tag in read_store.GetTagging():
-        evt = read_store.GetTaggedEvent(tag)
-        tags.append(evt)
+        event_object = read_store.GetTaggedEvent(tag)
+        tags.append(event_object)
 
       groups = list(read_store.GetGrouping())
       self.assertEquals(len(groups), 1)
@@ -209,10 +206,15 @@ class PlasoStorageUnitTest(unittest.TestCase):
 
       # Read the same events that were put in the group, just to compare
       # against.
-      same_events.append(read_store.GetEntry(1, 1).ToProtoString())
-      same_events.append(read_store.GetEntry(1, 2).ToProtoString())
+      event_object = read_store.GetEventObject(1, 1)
+      serialized_event_object = serializer.WriteSerialized(event_object)
+      same_events.append(serialized_event_object)
 
-    self.assertEquals(len(evts), 4)
+      event_object = read_store.GetEventObject(1, 2)
+      serialized_event_object = serializer.WriteSerialized(event_object)
+      same_events.append(serialized_event_object)
+
+    self.assertEquals(len(event_objects), 4)
     self.assertEquals(len(tags), 4)
 
     self.assertEquals(tags[0].timestamp, 12389344590000000)
@@ -239,8 +241,10 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(tags[3].tag.tags[0], 'Interesting')
     self.assertEquals(tags[3].tag.tags[1], 'Malware')
 
-    self.assertEquals(timestamps, [12389344590000000, 13349402860000000,
-                                   13349615269295969, 13359662069295961])
+    expected_timestamps = [
+        12389344590000000, 13349402860000000, 13349615269295969,
+        13359662069295961]
+    self.assertEquals(timestamps, expected_timestamps)
 
     self.assertEquals(groups[0].name, u'Malicious')
     self.assertEquals(groups[0].category, u'Malware')
@@ -253,8 +257,12 @@ class PlasoStorageUnitTest(unittest.TestCase):
     self.assertEquals(group_events[0].timestamp, 13349402860000000)
     self.assertEquals(group_events[1].timestamp, 13349615269295969L)
 
-    self.assertEquals(same_events, list(a.ToProtoString() for a in
-                                        group_events))
+    proto_group_events = []
+    for group_event in group_events:
+      serialized_event_object = serializer.WriteSerialized(group_event)
+      proto_group_events.append(serialized_event_object)
+
+    self.assertEquals(same_events, proto_group_events)
 
 
 class StoreStorageTest(unittest.TestCase):
@@ -268,7 +276,7 @@ class StoreStorageTest(unittest.TestCase):
     self.last = 1342824552000000  # Fri, 20 Jul 2012 22:49:12 GMT
 
   def testStorageSort(self):
-    """This test ensures that items read and output are in the correct order.
+    """This test ensures that items read and output are in the expected order.
 
     This method by design outputs data as it runs. In order to test this a
     a modified output renderer is used for which the flush functionality has
@@ -280,7 +288,7 @@ class StoreStorageTest(unittest.TestCase):
     pfilter.TimeRangeCache.ResetTimeConstraints()
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
-    store = storage.PlasoStorage(self.test_file, read_only=True)
+    store = storage.StorageFile(self.test_file, read_only=True)
 
     store.store_range = [6, 11, 12]
 
@@ -290,18 +298,13 @@ class StoreStorageTest(unittest.TestCase):
       read_list.append(event_object.timestamp)
       event_object = store.GetSortedEntry()
 
-    correct_order = [1342824534000000L,
-                     1342824535000000L,
-                     1342824546000000L,
-                     1342824546000000L,
-                     1342824546000000L,
-                     1342824552000000L,
-                     1342824552000000L,
-                     1342824552000000L,
-                     1342824552000000L,
-                     1342824552000000L]
+    expected_timestamps = [
+        1342824534000000L, 1342824535000000L, 1342824546000000L,
+        1342824546000000L, 1342824546000000L, 1342824552000000L,
+        1342824552000000L, 1342824552000000L, 1342824552000000L,
+        1342824552000000L]
 
-    self.assertEquals(read_list, correct_order)
+    self.assertEquals(read_list, expected_timestamps)
 
 
 if __name__ == '__main__':

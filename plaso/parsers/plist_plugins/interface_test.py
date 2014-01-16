@@ -96,7 +96,7 @@ class TestPlistPlugin(unittest.TestCase):
 
     # A depth of two should gives us root plus the two devices. Let's check.
     my_keys = []
-    for dummy_root, key, dummy_value in result:
+    for unused_root, key, unused_value in result:
       my_keys.append(key)
     expected = set(['DeviceCache', '44-00-00-00-00-04', '44-00-00-00-00-02'])
     self.assertTrue(expected == set(my_keys))

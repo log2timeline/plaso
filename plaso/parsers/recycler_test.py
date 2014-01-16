@@ -21,8 +21,8 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import recycler as recycler_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import recycler
 from plaso.parsers import test_lib
 
@@ -32,11 +32,8 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     self._parser = recycler.WinRecycleBinParser(pre_obj)
-    # Show full diff results, part of TestCase so does not follow our naming
-    # conventions.
-    self.maxDiff = None
 
   def testParse(self):
     """Tests the Parse function."""
@@ -69,12 +66,8 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     self._parser = recycler.WinRecycleInfo2Parser(pre_obj)
-
-    # Show full diff results, part of TestCase so does not follow our naming
-    # conventions.
-    self.maxDiff = None
 
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""

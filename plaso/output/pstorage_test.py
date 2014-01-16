@@ -36,7 +36,7 @@ class PstorageTest(unittest.TestCase):
 
   def testOutput(self):
     # Copy events to pstorage dump.
-    with storage.PlasoStorage(self.test_filename, read_only=True) as store:
+    with storage.StorageFile(self.test_filename, read_only=True) as store:
       formatter_cls = output.GetOutputFormatter('Pstorage')
       formatter = formatter_cls(store, self.dump_file)
       with output.EventBuffer(formatter, check_dedups=False) as output_buffer:
@@ -46,8 +46,8 @@ class PstorageTest(unittest.TestCase):
           event_object = formatter.FetchEntry()
 
     # Make sure original and dump have the same events.
-    original = storage.PlasoStorage(self.test_filename, read_only=True)
-    dump = storage.PlasoStorage(self.dump_file.name, read_only=True)
+    original = storage.StorageFile(self.test_filename, read_only=True)
+    dump = storage.StorageFile(self.dump_file.name, read_only=True)
     event_object_original = original.GetSortedEntry()
     event_object_dump = dump.GetSortedEntry()
     original_list = []

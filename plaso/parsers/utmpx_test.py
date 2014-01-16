@@ -21,11 +21,9 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import utmpx as utmpx_formatter
-from plaso.lib import preprocess
+from plaso.lib import event
 from plaso.parsers import test_lib
 from plaso.parsers import utmpx
-
-import pytz
 
 
 class UtmpxParserTest(test_lib.ParserTestCase):
@@ -33,8 +31,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
+    pre_obj = event.PreprocessObject()
     self._parser = utmpx.UtmpxParser(pre_obj, None)
 
   def testParse(self):

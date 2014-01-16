@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This is a simple filter implementation for the collector in Plaso."""
+
 import logging
 import os
 import sre_constants
@@ -91,7 +93,8 @@ class CollectionFilter(object):
         try:
           for file_path in self._collector.GetFilePaths(path, filter_file):
             file_entry = self._collector.OpenFileEntry(file_path)
-            yield file_entry.pathspec_root.ToProtoString()
+            yield file_entry.pathspec_root
+
         except errors.PreProcessFail as e:
           logging.warning(
               u'Unable to parse filter: {}/{} - path not found [{}].'.format(

@@ -75,44 +75,14 @@ def GetLegacy(evt):
   return '....'
 
 
-def GetUsernameFromPreProcess(pre_obj, id_value):
-  """Return a username from a preprocessing object and SID/UID if defined.
-
-  Args:
-    pre_obj: The PlasoPreprocess object that contains preprocessing information
-             for the store that this EventObject comes from.
-    id_value: This could be either a UID or a SID and should match the
-              appropriate UID or SID value that is stored inside the
-              PlasoPreprocess object.
-
-  Returns:
-    If a username is found within the PlasoPreprocess object it is returned,
-    otherwise the string '-' is returned back.
-  """
-  if not pre_obj:
-    return '-'
-
-  if not id_value:
-    return '-'
-
-  if hasattr(pre_obj, 'users'):
-    for user in pre_obj.users:
-      if user.get('sid', '') == id_value:
-        return user.get('name', '-')
-      if user.get('uid', '') == id_value:
-        return user.get('name', '-')
-
-  return '-'
-
-
 def BuildHostDict(storage_object):
-  """Return a dict object from a PlasoStorage object.
+  """Return a dict object from a StorageFile object.
 
-  Build a dict object based on the PlasoPreprocess objects stored inside
+  Build a dict object based on the preprocess objects stored inside
   a storage file.
 
   Args:
-    storage_object: The PlasoStorage object that stores all the EventObjects.
+    storage_object: The StorageFile object that stores all the EventObjects.
 
   Returns:
     A dict object that has the store number as a key and the hostname

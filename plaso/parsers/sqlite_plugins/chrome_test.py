@@ -19,13 +19,12 @@
 
 import unittest
 
-from plaso.formatters import chrome
+# pylint: disable-msg=unused-import
+from plaso.formatters import chrome as chrome_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import test_lib
-
-import pytz
 
 
 class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
@@ -33,8 +32,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
+    pre_obj = event.PreprocessObject()
     self._plugin = chrome.ChromeHistoryPlugin(pre_obj)
 
   def testProcess(self):
@@ -49,8 +47,8 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first page visited entry.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.PAGE_VISITED)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.PAGE_VISITED)
 
     # date -u -d"2011-04-07 12:03:11.000000" +"%s.%N"
     self.assertEquals(event_object.timestamp, 1302177791 * 1000000)
@@ -72,8 +70,8 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first file downloaded entry.
     event_object = event_objects[69]
 
-    self.assertEquals(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.FILE_DOWNLOADED)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.FILE_DOWNLOADED)
 
     # date -u -d"2011-05-23 08:35:30.000000" +"%s.%N"
     self.assertEquals(event_object.timestamp, 1306139730 * 1000000)

@@ -39,7 +39,7 @@ class DummyEvent(object):
 
 
 class TestOutput(output.LogOutputFormatter):
-  """This is a dummy test module that provides a simple XML."""
+  """This is a test output module that provides a simple XML."""
 
   def __init__(self, filehandle):
     """Fake the store."""
@@ -72,7 +72,7 @@ class PlasoOutputUnitTest(unittest.TestCase):
   """The unit test for plaso output formatting."""
 
   def testOutput(self):
-    """Test a dummy implementation of the output formatter."""
+    """Test a test implementation of the output formatter."""
     events = [DummyEvent(123456, 'My Event Is Now!'),
               DummyEvent(123458, 'There is no tomorrow.'),
               DummyEvent(123462, 'Tomorrow is now.'),
@@ -112,8 +112,7 @@ class PlasoOutputUnitTest(unittest.TestCase):
       if 'TestOutput' in name:
         module_seen = True
         self.assertEquals(description, (
-            'This is a dummy test module that '
-            'provides a simple XML.'))
+            'This is a test output module that provides a simple XML.'))
 
     self.assertTrue(module_seen)
 

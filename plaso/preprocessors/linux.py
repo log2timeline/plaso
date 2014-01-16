@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains preprocessors for Linux."""
+
 import csv
-from plaso.lib import preprocess
+
+from plaso.lib import preprocess_interface
 
 
-class LinuxHostname(preprocess.PreprocessPlugin):
+class LinuxHostname(preprocess_interface.PreprocessPlugin):
   """A preprocessing class that fetches hostname on Linux."""
 
   SUPPORTED_OS = ['Linux']
@@ -35,7 +38,7 @@ class LinuxHostname(preprocess.PreprocessPlugin):
     return result
 
 
-class LinuxUsernames(preprocess.PreprocessPlugin):
+class LinuxUsernames(preprocess_interface.PreprocessPlugin):
   """A preprocessing class that fetches usernames on Linux."""
 
   SUPPORTED_OS = ['Linux']

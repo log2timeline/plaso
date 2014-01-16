@@ -69,8 +69,8 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     """Constructor for the SlowLexicalTextParser.
 
     Args:
-      pre_obj: A PlasoPreprocess object that may contain information gathered
-      from a preprocessing process.
+      pre_obj: A pre process object that may contain information gathered
+               from a preprocessing process (instance of PreprocessObject).
       config: A configuration object.
       local_zone: A boolean value that determines if the entries
                   in the log file are stored in the local time
@@ -78,6 +78,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
                   timezone, like UTC.
     """
     # TODO: remove the multiple inheritance.
+    self._pre_obj = pre_obj
     lexer.SelfFeederMixIn.__init__(self)
     parser.BaseParser.__init__(self, pre_obj, config)
     self.line_ready = False
@@ -450,7 +451,7 @@ def PyParseRangeCheck(lower_bound, upper_bound):
   Returns:
     A callback method that can be used by pyparsing setParseAction.
   """
-  def CheckRange(dummy_string, dummy_location, tokens):
+  def CheckRange(unused_string, unused_location, tokens):
     """Parse the arguments."""
     try:
       check_number = tokens[0]
@@ -469,7 +470,7 @@ def PyParseRangeCheck(lower_bound, upper_bound):
   return CheckRange
 
 
-def PyParseIntCast(dummy_string, dummy_location, tokens):
+def PyParseIntCast(unused_string, unused_location, tokens):
   """Return an integer from a string.
 
   This is a pyparsing callback method that converts the matched
@@ -479,8 +480,8 @@ def PyParseIntCast(dummy_string, dummy_location, tokens):
   them all to an integer value.
 
   Args:
-    dummy_string: The original parsed string.
-    dummy_location: The location within the string where the match was made.
+    unused_string: The original parsed string.
+    unused_location: The location within the string where the match was made.
     tokens: A list of extracted tokens (where the string to be converted is
     stored).
   """
@@ -493,7 +494,7 @@ def PyParseIntCast(dummy_string, dummy_location, tokens):
       tokens[index] = 0
 
 
-def PyParseJoinList(dummy_string, dummy_location, tokens):
+def PyParseJoinList(unused_string, unused_location, tokens):
   """Return a joined token from a list of tokens.
 
   This is a callback method for pyparsing setParseAction that modifies
@@ -501,8 +502,8 @@ def PyParseJoinList(dummy_string, dummy_location, tokens):
   token.
 
   Args:
-    dummy_string: The original parsed string.
-    dummy_location: The location within the string where the match was made.
+    unused_string: The original parsed string.
+    unused_location: The location within the string where the match was made.
     tokens: A list of extracted tokens. This is the list that should be joined
     together and stored as a single token.
   """

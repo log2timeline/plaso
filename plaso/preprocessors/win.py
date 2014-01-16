@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -18,32 +19,32 @@
 
 import logging
 
-from plaso.lib import preprocess
+from plaso.lib import preprocess_interface
 from plaso.winreg import utils
 
 
-class WinGetSystemPath(preprocess.PreprocessGetPath):
+class WinGetSystemPath(preprocess_interface.PreprocessGetPath):
   """Get the system path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'systemroot'
   PATH = '(Windows|WinNT)/System32'
 
 
-class WinGetWinDirPath(preprocess.PreprocessGetPath):
+class WinGetWinDirPath(preprocess_interface.PreprocessGetPath):
   """Get the system path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'windir'
   PATH = '(Windows|WinNT|WINNT35|WTSRV)'
 
 
-class WinGetRegistryPath(preprocess.PreprocessGetPath):
+class WinGetRegistryPath(preprocess_interface.PreprocessGetPath):
   """Get the system registry path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'sysregistry'
   PATH = '(Windows|WinNT)/System32/config'
 
 
-class WinVersion(preprocess.WinRegistryPreprocess):
+class WinVersion(preprocess_interface.WinRegistryPreprocess):
   """Fetch information about the current Windows version."""
 
   ATTRIBUTE = 'osversion'
@@ -58,7 +59,7 @@ class WinVersion(preprocess.WinRegistryPreprocess):
       return u'{}'.format(value.data)
 
 
-class WinUsers(preprocess.WinRegistryPreprocess):
+class WinUsers(preprocess_interface.WinRegistryPreprocess):
   """Fetch information about user profiles."""
 
   ATTRIBUTE = 'users'
@@ -83,7 +84,7 @@ class WinUsers(preprocess.WinRegistryPreprocess):
     return users
 
 
-class WinHostName(preprocess.WinRegistryPreprocess):
+class WinHostName(preprocess_interface.WinRegistryPreprocess):
   """A preprocessing class that fetches the hostname information."""
 
   ATTRIBUTE = 'hostname'
@@ -101,7 +102,7 @@ class WinHostName(preprocess.WinRegistryPreprocess):
       return value.data
 
 
-class WinRegCodePage(preprocess.WinRegistryPreprocess):
+class WinRegCodePage(preprocess_interface.WinRegistryPreprocess):
   """A preprocessing class that fetches codepage information."""
 
   # Defines the preprocess attribute to be set.
@@ -124,7 +125,7 @@ class WinRegCodePage(preprocess.WinRegistryPreprocess):
     return 'cp1252'
 
 
-class WinRegTimeZone(preprocess.WinRegistryPreprocess):
+class WinRegTimeZone(preprocess_interface.WinRegistryPreprocess):
   """A preprocessing class that fetches timezone information."""
 
   # Defines the preprocess attribute to be set.

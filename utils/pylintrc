@@ -109,9 +109,9 @@ comment=no
 # Tells whether we should check for unused import in __init__ files.
 init-import=no
 
-# A regular expression matching the beginning of the name of dummy variables
-# (i.e. not used).
-dummy-variables-rgx=_|dummy
+# A regular expression matching the beginning of the name of unused variables.
+# By default this is _ and dummy but we prefer _ and unused.
+dummy-variables-rgx=_|unused
 
 # List of additional names supposed to be defined in builtins. Remember that
 # you should avoid to define new builtins when possible.

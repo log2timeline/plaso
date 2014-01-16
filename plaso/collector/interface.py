@@ -26,63 +26,6 @@ from plaso.lib import errors
 from plaso.winreg import path_expander as winreg_path_expander
 
 
-class PfileCollector(object):
-  """Class that implements a pfile-based collector object interface."""
-
-  def __init__(self, process_queue, output_queue, source_path):
-    """Initializes the collector object.
-
-       The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it added to the process queue
-       as a path specification (instance of event.EventPathSpec).
-
-    Args:
-      proces_queue: The files processing queue (instance of
-                    queue.QueueInterface).
-      output_queue: The event output queue (instance of queue.QueueInterface).
-                    This queue is used as a buffer to the storage layer.
-      source_path: Path of the source file or directory.
-    """
-    super(PfileCollector, self).__init__()
-    self._filter_file_path = None
-    self._pre_obj = None
-    self._queue = process_queue
-    self._source_path = source_path
-    self._storage_queue = output_queue
-    self.collect_directory_metadata = True
-
-  def __enter__(self):
-    """Enters a with statement."""
-    return self
-
-  def __exit__(self, dummy_type, dummy_value, dummy_traceback):
-    """Exits a with statement."""
-    self.Finish()
-
-  @abc.abstractmethod
-  def Collect(self):
-    """Discovers files adds their path specification to the process queue."""
-
-  def Finish(self):
-    """Finishes the collection and closes the process queue."""
-    self._queue.Close()
-
-  def Run(self):
-    """Runs the collection process and closes the process queue afterwards."""
-    self.Collect()
-    self.Finish()
-
-  def SetFilter(self, filter_file_path, pre_obj):
-    """Sets the collection filter.
-
-    Args:
-      filter_file_path: The path of the filter file.
-      pre_obj: The preprocessor object.
-    """
-    self._filter_file_path = filter_file_path
-    self._pre_obj = pre_obj
-
-
 class PreprocessCollector(object):
   """Class that implements the preprocess collector object interface."""
 

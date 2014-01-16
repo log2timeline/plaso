@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A plugin that extracts browser history from events."""
+
 import collections
 import logging
 import urllib
 
 from plaso import filters
-from plaso.lib import analysis_interface
+from plaso.analysis import interface
+from plaso.lib import event
 from plaso.lib import eventdata
 
 
@@ -130,7 +133,7 @@ class FilterClass(object):
     return second.replace('+', ' ')
 
 
-class AnalyzeBrowserSearchPlugin(analysis_interface.AnalysisPlugin):
+class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
   """Analyze browser search entries from events."""
 
   NAME = 'browser_search'
@@ -187,20 +190,31 @@ class AnalyzeBrowserSearchPlugin(analysis_interface.AnalysisPlugin):
         self._counter[u'{}:{}'.format(call_back_name, returned_line)] += 1
 
   def CompileReport(self):
-    """Return a report object back from the plugin."""
+    """Compiles a report of the analysis.
+
+    Returns:
+      The analysis report (instance of AnalysisReport).
+    """
+    report = event.AnalysisReport()
+
     results = {}
     for key, count in self._counter.iteritems():
       search_engine, _, search_term = key.partition(':')
       results.setdefault(search_engine, {})
       results[search_engine][search_term] = count
-    self._report.report_dict = results
+    report.report_dict = results
 
-    text = u''
+    lines_of_text = []
     for search_engine, terms in sorted(results.items()):
-      text += u' == ENGINE: {} ==\n'.format(search_engine)
+      lines_of_text.append(u' == ENGINE: {0:s} =='.format(search_engine))
+
       for search_term, count in sorted(
           terms.iteritems(), key=lambda x: (x[1], x[0]), reverse=True):
-        text += u'{} {}\n'.format(count, search_term)
-      text += u'\n'
+        lines_of_text.append(u'{0:d} {1:s}'.format(count, search_term))
 
-    self._report.text = text
+      # An empty string is added to have SetText create an empty line.
+      lines_of_text.append(u'')
+
+    report.SetText(lines_of_text)
+
+    return report

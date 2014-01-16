@@ -205,7 +205,7 @@ def Main():
     if filter_obj and call_back_obj:
       filter_dict[filter_obj] = (call_back, call_back_obj)
 
-  with storage.PlasoStorage(options.filename, read_only=True) as store:
+  with storage.StorageFile(options.filename, read_only=True) as store:
     event_object = store.GetSortedEntry()
     while event_object:
       for filter_obj, call_backs in filter_dict.items():

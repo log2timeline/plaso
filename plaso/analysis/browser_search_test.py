@@ -17,78 +17,56 @@
 # limitations under the License.
 """Tests for the browser_search analysis plugin."""
 
-import os
 import unittest
 
 from plaso.analysis import browser_search
+from plaso.analysis import test_lib
 # pylint: disable-msg=unused-import
 from plaso.formatters import chrome as chrome_formatter
-from plaso.lib import analysis_interface
-from plaso.lib import preprocess
+from plaso.lib import event
 from plaso.lib import queue
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome
-from plaso.pvfs import pfile
-
-import pytz
 
 
-class BrowserSearchAnalysisTest(unittest.TestCase):
+class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
   """Tests for the browser search analysis plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.utc
-    self._parser = sqlite.SQLiteParser(pre_obj, None)
-
-    # Create queues and other necessary objects.
-    self._incoming_queue = queue.SingleThreadedQueue()
-    self._outgoing_queue = queue.SingleThreadedQueue()
-
-    # Initialize plugin.
-    self._analysis_plugin = browser_search.AnalyzeBrowserSearchPlugin(
-        pre_obj, self._incoming_queue, self._outgoing_queue)
-
-    # Show full diff results, part of TestCase so does not follow our naming
-    # conventions.
-    self.maxDiff = None
+    self._pre_obj = event.PreprocessObject()
+    self._parser = sqlite.SQLiteParser(self._pre_obj, None)
 
   def testAnalyzeFile(self):
     """Read a storage file that contains URL data and analyze it."""
-    test_file = os.path.join('test_data', 'History')
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    incoming_queue = queue.SingleThreadedQueue()
+    outgoing_queue = queue.SingleThreadedQueue()
+    analysis_plugin = browser_search.AnalyzeBrowserSearchPlugin(
+        self._pre_obj, incoming_queue, outgoing_queue)
 
-    # Fill the incoming queue with events.
-    for event_object in self._parser.Parse(file_entry):
-      self._incoming_queue.AddEvent(event_object.ToJson())
+    test_file = self._GetTestFilePath(['History'])
+    event_generator = self._ParseFile(self._parser, test_file)
 
-    self._incoming_queue.Close()
+    test_queue_producer = queue.EventObjectQueueProducer(incoming_queue)
+    test_queue_producer.ProduceEventObjects(event_generator)
+    test_queue_producer.SignalEndOfInput()
 
-    # Run the analysis plugin.
-    self._analysis_plugin.RunPlugin()
+    analysis_plugin.RunPlugin()
 
-    # Get the report out.
-    self._outgoing_queue.Close()
-    output = []
-    for item in self._outgoing_queue.PopItems():
-      output.append(item)
+    outgoing_queue.SignalEndOfInput()
 
-    # There is only a report returned back.
-    self.assertEquals(len(output), 1)
+    test_analysis_plugin_consumer = test_lib.TestAnalysisPluginConsumer(
+        outgoing_queue)
+    test_analysis_plugin_consumer.ConsumeAnalysisReports()
 
-    report_string = output[0]
     self.assertEquals(
-        report_string[0], analysis_interface.MESSAGE_STRUCT.build(
-            analysis_interface.MESSAGE_REPORT))
+        test_analysis_plugin_consumer.number_of_analysis_reports, 1)
 
-    report = analysis_interface.AnalysisReport()
-    report.FromProtoString(report_string[1:])
+    analysis_report = test_analysis_plugin_consumer.analysis_reports[0]
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
-    expected_text = '\n'.join([
+    expected_text = u'\n'.join([
         u' == ENGINE: GoogleSearch ==',
         u'1 really really funny cats',
         u'1 java plugin',
@@ -97,10 +75,11 @@ class BrowserSearchAnalysisTest(unittest.TestCase):
         u'',
         u''])
 
-    self.assertEquals(expected_text, report.text)
-    self.assertEquals(report.plugin_name, 'browser_search')
+    self.assertEquals(analysis_report.text, expected_text)
+    self.assertEquals(analysis_report.plugin_name, 'browser_search')
 
-    self.assertEquals(report.report_dict.keys(), ['GoogleSearch'])
+    expected_keys = set([u'GoogleSearch'])
+    self.assertEquals(set(analysis_report.report_dict.keys()), expected_keys)
 
 
 if __name__ == '__main__':

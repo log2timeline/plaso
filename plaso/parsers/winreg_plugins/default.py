@@ -78,7 +78,7 @@ class DefaultPlugin(interface.KeyPlugin):
   # overwrite the Process function to make sure it is called when no other
   # plugin is available.
 
-  def Process(self, key=None, **dummy_kwargs):
+  def Process(self, key=None, **unused_kwargs):
     """Process the key and return a generator to extract event objects."""
     # TODO: Why do we need to store the key here, is it used anywhere?
     self._key = key

@@ -29,11 +29,6 @@ from plaso.lib import text_parser
 from plaso.pvfs import pfile
 
 import pyparsing
-import pytz
-
-
-class EmtpyObject(object):
-  """An empty object."""
 
 
 class TestTextEvent(event.TextEvent):
@@ -74,7 +69,7 @@ class TestTextParser(text_parser.SlowLexicalTextParser):
     self.attributes['iyear'] = int(year)
     self.attributes['iday'] = int(day)
 
-  def Scan(self, dummy_file_entry):
+  def Scan(self, unused_file_entry):
     pass
 
   def CreateEvent(self, timestamp, offset, attributes):
@@ -95,8 +90,7 @@ class TextParserTest(unittest.TestCase):
   """An unit test for the plaso parser library."""
 
   def setUp(self):
-    pre_obj = EmtpyObject()
-    pre_obj.zone = pytz.UTC
+    pre_obj = event.PreprocessObject()
     self._parser = TestTextParser(pre_obj, None)
 
   def testTextParserFail(self):

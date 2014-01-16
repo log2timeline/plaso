@@ -21,12 +21,10 @@ import collections
 import unittest
 
 from plaso.formatters import firefox
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers.sqlite_plugins import firefox
 from plaso.parsers.sqlite_plugins import test_lib
-
-import pytz
 
 
 class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
@@ -34,9 +32,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
-
+    pre_obj = event.PreprocessObject()
     self._plugin = firefox.FirefoxHistoryPlugin(pre_obj)
 
   def testProcessPriorTo24(self):
@@ -223,9 +219,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
-
+    pre_obj = event.PreprocessObject()
     self._plugin = firefox.FirefoxDownloadsPlugin(pre_obj)
 
   def testProcessVersion25(self):

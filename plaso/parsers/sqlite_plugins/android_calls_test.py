@@ -21,13 +21,9 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import android_calls as android_calls_formatter
-from plaso.lib import preprocess
-from plaso.parsers.sqlite_plugins import test_lib
+from plaso.lib import event
 from plaso.parsers.sqlite_plugins import android_calls
-from plaso.parsers.sqlite_plugins import interface
-from plaso.pvfs import pfile
-
-import pytz
+from plaso.parsers.sqlite_plugins import test_lib
 
 
 class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
@@ -35,9 +31,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
-
+    pre_obj = event.PreprocessObject()
     self._plugin = android_calls.AndroidCallPlugin(pre_obj)
 
   def testProcess(self):
