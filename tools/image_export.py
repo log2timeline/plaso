@@ -27,7 +27,6 @@ from plaso import preprocessors
 
 from plaso.collector import collector
 from plaso.frontend import utils as frontend_utils
-from plaso.lib import collector_filter
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import preprocess_interface
@@ -99,7 +98,7 @@ class ImageExtractor(object):
     return image_collector
 
   def ExtractWithFilter(
-      self, filter_expression, destination_path, process_vss=False,
+      self, filter_file_path, destination_path, process_vss=False,
       remove_duplicates=False):
     """Extracts files using a filter expression.
 
@@ -107,7 +106,8 @@ class ImageExtractor(object):
     potentially on every VSS if that is wanted.
 
     Args:
-      filter_expression: String containing a collection filter expression.
+      filter_file_path: The path of the file that contains the filter
+                        expressions.
       destination_path: The path where the extracted files should be stored.
       process_vss: Optional boolean value to indicate if VSS should be detected
                    and processed. The default is false.
@@ -122,10 +122,9 @@ class ImageExtractor(object):
 
     # Save the regular files.
     FileSaver.calc_md5 = remove_duplicates
-    filter_object = collector_filter.CollectionFilter(
-        image_collector, filter_expression)
+    filter_object = collector.BuildCollectionFilterFromFile(filter_file_path)
 
-    for path_spec in filter_object.GetPathSpecs():
+    for path_spec in image_collector.GetPathSpecs(filter_object):
       FileSaver.WriteFile(path_spec, destination_path)
 
     if process_vss:
@@ -142,10 +141,10 @@ class ImageExtractor(object):
         vss_collector.SetVssInformation(store_number=store_number)
 
         filename_prefix = 'vss_{0:d}'.format(store_number)
-        filter_object = collector_filter.CollectionFilter(
-            vss_collector, filter_expression)
+        filter_object = collector.BuildCollectionFilterFromFile(
+            filter_file_path)
 
-        for path_spec in filter_object.GetPathSpecs():
+        for path_spec in vss_collector.GetPathSpecs(filter_object):
           FileSaver.WriteFile(
               path_spec, destination_path, filename_prefix=filename_prefix)
 

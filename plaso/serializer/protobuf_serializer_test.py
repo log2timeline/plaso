@@ -355,5 +355,24 @@ class ProtobufEventTagSerializerTest(unittest.TestCase):
     self.assertEquals(proto_string, self._proto_string)
 
 
+class ProtobufPreprocessObjectSerializerTest(unittest.TestCase):
+  """Tests for the protobuf preprocess object serializer object."""
+
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    # TODO: add a preprocess object test.
+    pass
+
+  def testReadSerialized(self):
+    """Test the read serialized functionality."""
+    # TODO: add a preprocess object test.
+    pass
+
+  def testWriteSerialized(self):
+    """Test the write serialized functionality."""
+    # TODO: add a preprocess object test.
+    pass
+
+
 if __name__ == '__main__':
   unittest.main()
