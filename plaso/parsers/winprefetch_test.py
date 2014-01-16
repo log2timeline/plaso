@@ -21,8 +21,8 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winprefetch as winprefetch_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import test_lib
 from plaso.parsers import winprefetch
 
@@ -32,11 +32,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     self._parser = winprefetch.WinPrefetchParser(pre_obj)
-    # Show full diff results, part of TestCase so does not follow our naming
-    # conventions.
-    self.maxDiff = None
 
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""

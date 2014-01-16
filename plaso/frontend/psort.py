@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -21,6 +22,7 @@ Sample Usage:
 
 See additional details here: http://plaso.kiddaland.net/usage/psort
 """
+
 import argparse
 import collections
 import datetime
@@ -38,9 +40,8 @@ from plaso import filters
 from plaso import formatters   # pylint: disable-msg=unused-import
 from plaso import output   # pylint: disable-msg=unused-import
 
-from plaso.lib import analysis_interface
+from plaso.analysis import interface as analysis_interface
 from plaso.lib import bufferlib
-from plaso.lib import event
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
 from plaso.lib import queue
@@ -48,13 +49,85 @@ from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
+from plaso.serializer import protobuf_serializer
+
 import pytz
+
+
+class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
+  """Class that implements an analysis report queue consumer for psort."""
+
+  def __init__(
+      self, queue_object, storage_file, filter_string, preferred_encoding):
+    """Initializes the queue consumer.
+
+    Args:
+      queue_object: the queue object (instance of Queue).
+      storage_file: the storage file (instance of StorageFile).
+      filter_string: the filter string.
+      preferred_encoding: the preferred encoding.
+    """
+    super(PsortAnalysisReportQueueConsumer, self).__init__(queue_object)
+    self._filter_string = filter_string
+    self._preferred_encoding = preferred_encoding
+    self._storage_file = storage_file
+    self.anomalies = []
+    self.counter = {}
+    self.tags = []
+
+  def _ConsumeAnalysisReport(self, analysis_report):
+    """Consumes an analysis report callback for ConsumeAnalysisReports."""
+    self.counter['Total Reports'] += 1
+    self.counter[u'Report: {0:s}'.format(analysis_report.plugin_name)] += 1
+
+    self.anomalies.extend(analysis_report.GetAnomalies())
+    self.tags.extend(analysis_report.GetTags())
+
+    if self._filter:
+      analysis_report.filter_string = self._filter_string
+
+    # For now we print the report to disk and then save it.
+    # TODO: Have the option of saving to a separate file and
+    # do something more here, for instance saving into a HTML
+    # file, or something else (including potential images).
+    self._storage_file.StoreReport(analysis_report)
+
+    report_string = analysis_report.GetString()
+    try:
+      print report_string.encode(self._preferred_encoding)
+    except UnicodeDecodeError:
+      logging.error(
+          u'Unable to print report due to an unicode decode error. '
+          u'The report is stored inside the storage file and can be '
+          u'viewed using pinfo [if unable to view please submit a '
+          u'bug report https://code.google.com/p/plaso/issues/list')
+
+
+def _AppendEvent(event_object, output_buffer, analysis_queues):
+  """Appends an event object to an output buffer and queues."""
+  output_buffer.Append(event_object)
+
+  # Needed due to duplicate removals, if two events
+  # are merged then we'll just pick the first inode value.
+  inode = getattr(event_object, 'inode', None)
+  if isinstance(inode, basestring):
+    inode_list = inode.split(';')
+    try:
+      new_inode = int(inode_list[0], 10)
+    except (ValueError, IndexError):
+      new_inode = 0
+
+    event_object.inode = new_inode
+
+  # TODO: use queue producer interface.
+  for analysis_queue in analysis_queues:
+    analysis_queue.PushItem(event_object)
 
 
 def SetupStorage(input_file_path, read_only=True):
   """Sets up the storage object.
 
-  Attempts to initialize the storage object from the PlasoStorage library.  If
+  Attempts to initialize the storage object from the StorageFile library.  If
   we fail on a IO Error (common case for typos) log a warning and gracefully
   exit.
 
@@ -64,10 +137,10 @@ def SetupStorage(input_file_path, read_only=True):
                storage file.
 
   Returns:
-    A storage.PlasoStorage object.
+    A storage.StorageFile object.
   """
   try:
-    return storage.PlasoStorage(input_file_path, read_only=read_only)
+    return storage.StorageFile(input_file_path, read_only=read_only)
   except IOError as details:
     logging.error('IO ERROR: %s', details)
   else:
@@ -99,8 +172,10 @@ def ProcessOutput(
     if my_filter:
       event_match = event_object
       if isinstance(event_object, plaso_storage_pb2.EventObject):
-        event_match = event.EventObject()
-        event_match.FromProto(event_object)
+        # TODO: move serialization to storage, if low-level filtering is needed
+        # storage should provide functions for it.
+        serializer = protobuf_serializer.ProtobufEventObjectSerializer
+        event_match = serializer.ReadSerialized(event_object)
 
       if my_filter.Match(event_match):
         counter['Events Included'] += 1
@@ -145,27 +220,6 @@ def ProcessOutput(
   if my_limit:
     counter['Limited By'] = my_limit
   return counter
-
-
-def _AppendEvent(event_object, output_buffer, analysis_queues):
-  """Append an event object to an output buffer and queues."""
-  output_buffer.Append(event_object)
-
-  # Needed due to duplicate removals, if two events
-  # are merged then we'll just pick the first inode value.
-  inode = getattr(event_object, 'inode', None)
-  if isinstance(inode, basestring):
-    inode_list = inode.split(';')
-    try:
-      new_inode = int(inode_list[0], 10)
-    except (ValueError, IndexError):
-      new_inode = 0
-
-    event_object.inode = new_inode
-
-  event_serialized = event_object.ToJson()
-  for analysis_queue in analysis_queues:
-    analysis_queue.Queue(event_serialized)
 
 
 def ParseStorage(my_args):
@@ -259,7 +313,7 @@ def ParseStorage(my_args):
       pre_obj.collection_information['file_processed'] = my_args.storagefile
       pre_obj.collection_information['method'] = 'Running Analysis Plugins'
       pre_obj.collection_information['plugins'] = my_args.analysis_plugins
-      pre_obj.collection_information['time_of_run'] = time.time()
+      pre_obj.collection_information['time_of_run'] = timelib.Timestamp.GetNow()
 
       pre_obj.counter = collections.Counter()
 
@@ -324,41 +378,18 @@ def ParseStorage(my_args):
       logging.debug(u'All analysis plugins are now stopped.')
 
       # Go over each output.
-      analysis_output_queue.Close()
-      tags = []
-      for item in analysis_output_queue.PopItems():
-        item_type = analysis_interface.MESSAGE_STRUCT.parse(item[0:1])
-        item_str = item[1:]
+      analysis_queue_consumer = PsortAnalysisReportQueueConsumer(
+          analysis_output_queue, store, my_args.filter,
+          my_args.preferred_encoding)
 
-        if item_type == analysis_interface.MESSAGE_REPORT:
-          report = analysis_interface.AnalysisReport()
-          report.FromProtoString(item_str)
-          pre_obj.counter['Total Reports'] += 1
-          pre_obj.counter[u'Report: {}'.format(report.plugin_name)] += 1
+      analysis_queue_consumer.ConsumeAnalysisReports()
 
-          if my_args.filter:
-            report.filter_string = my_args.filter
+      if analysis_queue_consumer.tags:
+        store.StoreTagging(analysis_queue_consumer.tags)
 
-          # For now we print the report to disk and then save it.
-          # TODO: Have the option of saving to a separate file and
-          # do something more here, for instance saving into a HTML
-          # file, or something else (including potential images).
-          store.StoreReport(report)
-          try:
-            print report.GetString().encode(my_args.preferred_encoding)
-          except UnicodeDecodeError:
-            logging.error((
-                u'Unable to print report due to an unicode decode error. '
-                u'The report is stored inside the storage file and can be '
-                u'viewed using pinfo [if unable to view please submit a '
-                u'bug report https://code.google.com/p/plaso/issues/list'))
-        elif item_type == analysis_interface.MESSAGE_TAG:
-          tag = event.EventTag()
-          tag.FromProtoString(item_str)
-          tags.append(tag)
+      # TODO: analysis_queue_consumer.anomalies:
 
-      if tags:
-        store.StoreTagging(tags)
+      counter.extend(analysis_queue_consumer.counter)
 
   if filter_use and not counter['Limited By']:
     counter['Filter By Date'] = counter['Stored Events'] - counter[
@@ -580,8 +611,8 @@ def ProcessArguments(arguments):
         u'for the typically non-ASCII characters that need to be parsed and '
         u'processed. The tool will most likely crash and die, perhaps in a way '
         u'that may not be recoverable. A five second delay is introduced to '
-        'give you time to cancel the runtime and reconfigure your preferred '
-        'encoding, otherwise continue at own risk.')
+        u'give you time to cancel the runtime and reconfigure your preferred '
+        u'encoding, otherwise continue at own risk.')
     time.sleep(5)
 
   return my_args

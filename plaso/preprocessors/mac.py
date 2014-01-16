@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,17 +16,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains preprocessors for Mac OS X."""
+
 import logging
 
 from plaso.lib import errors
-from plaso.lib import preprocess
+from plaso.lib import preprocess_interface
 from plaso.lib import utils
 from plaso.parsers.plist_plugins import interface
 
 from binplist import binplist
 
 
-class OSXBuild(preprocess.MacXMLPlistPreprocess):
+class OSXBuild(preprocess_interface.MacXMLPlistPreprocess):
   """Fetches build information about a Mac OS X system."""
 
   ATTRIBUTE = 'build'
@@ -34,7 +36,7 @@ class OSXBuild(preprocess.MacXMLPlistPreprocess):
   PLIST_KEYS = ['ProductUserVisibleVersion']
 
 
-class OSXUsers(preprocess.PreprocessPlugin):
+class OSXUsers(preprocess_interface.PreprocessPlugin):
   """Get information about user accounts on a Mac OS X system."""
 
   SUPPORTED_OS = ['MacOSX']
@@ -102,7 +104,7 @@ class OSXUsers(preprocess.PreprocessPlugin):
     return users
 
 
-class OSXHostname(preprocess.MacXMLPlistPreprocess):
+class OSXHostname(preprocess_interface.MacXMLPlistPreprocess):
   """Fetches hostname information about a Mac OS X system."""
 
   ATTRIBUTE = 'hostname'
@@ -111,7 +113,7 @@ class OSXHostname(preprocess.MacXMLPlistPreprocess):
   PLIST_KEYS = ['ComputerName', 'LocalHostName']
 
 
-class OSXTimeZone(preprocess.PreprocessPlugin):
+class OSXTimeZone(preprocess_interface.PreprocessPlugin):
   """Gather timezone information from a Mac OS X system."""
 
   ATTRIBUTE = 'time_zone_str'
@@ -167,7 +169,7 @@ class OSXTimeZone(preprocess.PreprocessPlugin):
     raise errors.PreProcessFail(u'Value not found.')
 
 
-class OSXKeyboard(preprocess.MacPlistPreprocess):
+class OSXKeyboard(preprocess_interface.MacPlistPreprocess):
   """Fetches keyboard information from a Mac OS X system."""
 
   ATTRIBUTE = 'keyboard_layout'

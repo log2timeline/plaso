@@ -28,6 +28,7 @@ class FilesystemCache(object):
 
   def __init__(self):
     """Set up the filesystem cache."""
+    super(FilesystemCache, self).__init__()
     self.cached_filesystems = {}
 
   def Open(self, source_path, byte_offset=0, store_number=None):

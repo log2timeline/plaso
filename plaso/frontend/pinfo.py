@@ -19,25 +19,27 @@
 
 pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
 """
-# To make YAML loading work.
+# TODO: To make YAML loading work.
 
 import argparse
-import datetime
 import locale
 import logging
 import os
 import pprint
 import sys
 
+from plaso.lib import timelib
 from plaso.lib import storage
+
+import pytz
 
 
 def GetInformation(params):
   """Return generator for all potential storage information in a container."""
   try:
-    store = storage.PlasoStorage(params.storage_file, read_only=True)
+    store = storage.StorageFile(params.storage_file, read_only=True)
   except IOError as e:
-    logging.error(u'Unable to open storage file: %s', e)
+    logging.error(u'Unable to open storage file with error: {0:s}'.format(e))
     return
 
   infos = store.GetStorageInformation()
@@ -57,43 +59,52 @@ def GetInformation(params):
 def DisplayInformation(info, params, store, last_entry=False):
   """Return information gathered from storage."""
   header = u''
-  information = u''
+  lines_of_text = []
+
   printer = pprint.PrettyPrinter(indent=8)
   if hasattr(info, 'collection_information'):
-    date = datetime.datetime.utcfromtimestamp(
-        info.collection_information.get('time_of_run', 0))
     filename = info.collection_information.get('file_processed', 'N/A')
+    time_of_run = info.collection_information.get('time_of_run', 0)
+    time_of_run = timelib.Timestamp.CopyToIsoFormat(time_of_run, pytz.utc)
 
-    header = (u'{0}\n\t\tPlaso Storage Information\n{0}\nStorage file: {3}\nFil'
-              'e processed: {1}\nTime of processing: {2}\n').format(
-                  '-' * 80, filename, date.isoformat(), params.storage_file)
+    header = (
+        u'{0:s}\n'
+        u'\t\tPlaso Storage Information\n'
+        u'{0:s}\nStorage file: {3:s}\n'
+        u'File processed: {1:s}\n'
+        u'Time of processing: {2:s}\n').format(
+            '-' * 80, filename, time_of_run, params.storage_file)
 
     for key, value in info.collection_information.items():
-      information += u'\t{0} = {1}\n'.format(key, value)
+      lines_of_text.append(u'\t{0:s} = {1!s}'.format(key, value))
 
   if hasattr(info, 'counter'):
-    information += u'\nCounter Information:\n'
+    lines_of_text.append(u'\nCounter Information:')
     for key, value in info.counter.most_common():
-      information += u'\tCounter: %s = %d\n' % (key, value)
+      lines_of_text.append(u'\tCounter: {0:s} = {1:d}'.format(key, value))
 
   if hasattr(info, 'plugin_counter'):
-    information += u'\nPlugin Counter Information:\n'
+    lines_of_text.append(u'\nPlugin Counter Information:')
     for key, value in info.plugin_counter.most_common():
-      information += u'\tCounter: %s = %d\n' % (key, value)
+      lines_of_text.append(u'\tCounter: {0:s} = {1:d}'.format(key, value))
 
   if hasattr(info, 'stores'):
-    information += u'\nStore information:\n'
-    information += u'\tNumber of available stores: %d\n' % info.stores['Number']
+    lines_of_text.append(u'\nStore information:')
+    lines_of_text.append(
+        u'\tNumber of available stores: {0:d}'.format(info.stores['Number']))
     if params.verbose:
       for key, value in info.stores.items():
         if key == 'Number':
           continue
-        information += u'\t%s =\n%s\n' % (key, printer.pformat(value))
+        lines_of_text.append(
+            u'\t{0:s} =\n{0:s}'.format(key, printer.pformat(value)))
     else:
-      information += u'\tPrintout omitted (use verbose to see)\n'
+      lines_of_text.append(u'\tPrintout omitted (use verbose to see)')
 
-  preprocessing = u'Preprocessing information:\n'
+  information = u'\n'.join(lines_of_text)
+
   if params.verbose:
+    preprocessing = u'Preprocessing information:\n'
     for key, value in info.__dict__.items():
       if key == 'collection_information':
         continue
@@ -106,13 +117,12 @@ def DisplayInformation(info, params, store, last_entry=False):
   else:
     preprocessing = u'Preprocessing information omitted (run with verbose).'
 
-  if last_entry:
-    if store.HasReports():
-      reports = u'Reporting information omitted (run with verbose).'
-    else:
-      reports = u'No reports stored.'
-  else:
+  if not last_entry:
     reports = ''
+  elif store.HasReports():
+    reports = u'Reporting information omitted (run with verbose).'
+  else:
+    reports = u'No reports stored.'
 
   if params.verbose and last_entry and store.HasReports():
     report_list = []

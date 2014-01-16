@@ -29,19 +29,20 @@ import os
 import pdb
 import signal
 import sys
-import time
 import traceback
 
 import plaso
 from plaso import preprocessors
 from plaso import output as output_plugins   # pylint: disable-msg=unused-import
 
-from plaso.collector import factory as collector_factory
+from plaso.collector import collector
 from plaso.lib import errors
-from plaso.lib import preprocess
+from plaso.lib import event
+from plaso.lib import preprocess_interface
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import storage
+from plaso.lib import timelib
 from plaso.lib import worker
 
 import pytz
@@ -74,6 +75,8 @@ class Engine(object):
     Raises:
       errors.BadConfigOption: If the configuration options are wrong.
     """
+    self._collector = None
+    self._storage_queue_producer = None
     self.worker_threads = []
     self.config = config
 
@@ -85,7 +88,7 @@ class Engine(object):
             'File [{0:s}] does not exist.'.format(config.filename))
 
     if os.path.isfile(config.output):
-      logging.warning('Appending to an already existing file.')
+      logging.warning(u'Appending to an already existing file.')
 
     dirname = os.path.dirname(config.output)
     if not dirname:
@@ -117,16 +120,72 @@ class Engine(object):
 
       self.config.workers = cpus
 
+  def _GetCollector(self, config, pre_obj, collection_queue, storage_queue):
+    """Returns a collector object based on config."""
+    # Indicate whether the collection agent should collect directory
+    # stat information - this depends on whether the stat parser is
+    # loaded or not.
+    include_directory_stat = False
+    if hasattr(pre_obj, 'collection_information'):
+      loaded_parsers = pre_obj.collection_information.get('parsers', [])
+      if 'PfileStatParser' in loaded_parsers:
+        include_directory_stat = True
+
+    if config.image:
+      # Note that os.path.isfile() will return false when config.filename
+      # point to a device file.
+      if os.path.isdir(config.filename):
+        raise errors.BadConfigOption(
+            u'Source: {0:s} cannot be a directory.'.format(config.filename))
+
+      if config.file_filter:
+        logging.debug(u'Starting a collection on image with filter.')
+      else:
+        logging.debug(u'Starting a collection on image.')
+
+    else:
+      if (not os.path.isfile(config.filename) and
+          not os.path.isdir(config.filename)):
+        raise errors.BadConfigOption(
+            u'Source: {0:s} has to be a file or directory.'.format(
+                config.filename))
+
+      if config.file_filter:
+        logging.debug(u'Starting a collection on directory with filter.')
+      elif config.recursive:
+        logging.debug(u'Starting a collection on directory.')
+      else:
+        # No need for multiple workers when parsing a single file.
+        config.workers = 1
+
+    collector_object = collector.Collector(
+        collection_queue, storage_queue, unicode(config.filename))
+
+    if config.image:
+      collector_object.SetImageInformation(
+        sector_offset=config.image_offset,
+        byte_offset=config.image_offset_bytes)
+
+      if config.parse_vss:
+        collector_object.SetVssInformation(vss_stores=config.vss_stores)
+
+    if config.file_filter:
+      collector_object.SetFilter(config.file_filter, pre_obj)
+
+    collector_object.collect_directory_metadata = include_directory_stat
+
+    return collector_object
+
   def _PreProcess(self, pre_obj):
     """Run the preprocessors."""
 
-    logging.info('Starting to collect preprocessing information.')
-    logging.info('Filename: {0:s}'.format(self.config.filename))
+    logging.info(u'Starting to collect preprocessing information.')
+    logging.info(u'Filename: {0:s}'.format(self.config.filename))
 
     if not self.config.image and not self.config.recursive:
       return
 
-    preprocess_collector = collector_factory.GetGenericPreprocessCollector(
+    preprocess_collector = collector.GenericPreprocessCollector(
         pre_obj, self.config.filename)
 
     if self.config.image:
@@ -136,7 +195,7 @@ class Engine(object):
           byte_offset=self.config.image_offset_bytes)
 
     if not getattr(self.config, 'os', None):
-      self.config.os = preprocess.GuessOS(preprocess_collector)
+      self.config.os = preprocess_interface.GuessOS(preprocess_collector)
 
     plugin_list = preprocessors.PreProcessList(pre_obj, preprocess_collector)
     pre_obj.guessed_os = self.config.os
@@ -163,8 +222,7 @@ class Engine(object):
                   self.config.zone.zone))
           pre_obj.zone = self.config.zone
         else:
-          logging.warning('TimeZone was not properly set, defaults to UTC')
-          pre_obj.zone = pytz.UTC
+          logging.warning(u'TimeZone was not properly set, defaults to UTC')
     else:
       pre_obj.zone = self.config.zone
 
@@ -172,25 +230,25 @@ class Engine(object):
     """Start the process, set up all processing."""
 
     if self.config.single_thread:
-      logging.info('Starting the tool in a single thread.')
+      logging.info(u'Starting the tool in a single thread.')
       try:
         self._StartSingleThread()
       except Exception as e:
         # The tool should generally not be run in single threaded mode
         # for other reasons than to debug. Hence the general error
         # catching.
-        logging.error('An uncaught exception occured: {0:s}.\n{1:s}'.format(
+        logging.error(u'An uncaught exception occured: {0:s}.\n{1:s}'.format(
             e, traceback.format_exc()))
         if self.config.debug:
           pdb.post_mortem()
       return
 
     if self.config.local:
-      logging.debug('Starting a local instance.')
+      logging.debug(u'Starting a local instance.')
       self._StartLocal()
       return
 
-    logging.error('This version only supports local instance.')
+    logging.error(u'This version only supports local instance.')
     # TODO: Implement a more distributed version that is
     # scalable. That way each part of the tool can be run in a separate
     # machine.
@@ -212,47 +270,41 @@ class Engine(object):
     limited parsing.
     """
     pre_obj = self._StartRuntime()
-
-    # Start the necessary queues.
     collection_queue = queue.SingleThreadedQueue()
     storage_queue = queue.SingleThreadedQueue()
 
-    # Start with collection.
-    logging.debug('Starting collection.')
+    logging.debug(u'Starting collection.')
 
-    with GetCollector(
-        self.config, pre_obj, collection_queue, storage_queue) as my_collector:
-      my_collector.Collect()
+    self._collector = self._GetCollector(
+        self.config, pre_obj, collection_queue, storage_queue)
+    self._collector.Collect()
 
-    logging.debug('Collection done.')
+    logging.debug(u'Collection done.')
 
-    self.queues = [storage_queue, collection_queue]
     self.worker_threads = []
 
-    logging.debug('Starting worker.')
-    # Start processing entries.
-    my_worker = worker.PlasoWorker(
-        0, collection_queue, storage_queue, self.config, pre_obj)
+    logging.debug(u'Starting worker.')
+    self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+    my_worker = worker.EventExtractionWorker(
+        0, collection_queue, self._storage_queue_producer, self.config, pre_obj)
     my_worker.Run()
-    logging.debug('Worker process done.')
 
-    # End with the storage.
-    logging.debug('Starting storage.')
+    logging.debug(u'Worker process done.')
+
+    self._storage_queue_producer.SignalEndOfInput()
+
+    logging.debug(u'Starting storage.')
     if self.config.output_module:
-      my_storage = storage.BypassStorageDumper(
-          self.config.output, self.config.output_module, pre_obj)
-
-      for item in storage_queue.PopItems():
-        my_storage.ProcessEntry(item)
-
-      my_storage.Close()
+      storage_writer = storage.BypassStorageWriter(
+          storage_queue, self.config.output,
+          output_module_string=self.config.output_module, pre_obj=pre_obj)
     else:
-      with storage.PlasoStorage(
-          self.config.output, buffer_size=self.config.buffer_size,
-          pre_obj=pre_obj) as storage_buffer:
-        for item in storage_queue.PopItems():
-          storage_buffer.AddEntry(item)
-    logging.debug('Storage done.')
+      storage_writer = storage.StorageFileWriter(
+          storage_queue, self.config.output,
+          buffer_size=self.config.buffer_size, pre_obj=pre_obj)
+
+    storage_writer.WriteEventObjects()
+    logging.debug(u'Storage done.')
 
   def _StartRuntime(self):
     """Run preprocessing and other actions needed before starting threads."""
@@ -262,18 +314,18 @@ class Engine(object):
     if self.config.old_preprocess and os.path.isfile(self.config.output):
       # Check if the storage file contains a pre processing object.
       try:
-        with storage.PlasoStorage(
+        with storage.StorageFile(
             self.config.output, read_only=True) as store:
           storage_information = store.GetStorageInformation()
           if storage_information:
-            logging.info('Using preprocessing information from a prior run.')
+            logging.info(u'Using preprocessing information from a prior run.')
             pre_obj = storage_information[-1]
             run_preprocess = False
       except IOError:
         logging.warning(u'Storage file does not exist, running pre process.')
 
     if not pre_obj:
-      pre_obj = preprocess.PlasoPreprocess()
+      pre_obj = event.PreprocessObject()
 
     # Run preprocessing if necessary.
     if run_preprocess:
@@ -347,70 +399,70 @@ class Engine(object):
       errors.BadConfigOption: If the file being parsed does not exist.
     """
     pre_obj = self._StartRuntime()
+    collection_queue = queue.MultiThreadedQueue()
+    storage_queue = queue.MultiThreadedQueue()
 
-    # Start the collector.
     start_collection_thread = True
 
-    collection_queue = queue.MultiThreadedQueue()
-
     if self.config.output_module:
-      my_storage = storage.BypassStorageDumper(
-          self.config.output, self.config.output_module, pre_obj)
+      storage_writer = storage.BypassStorageWriter(
+          storage_queue, self.config.output, self.config.output_module, pre_obj)
     else:
-      my_storage = storage.SimpleStorageDumper(
-          self.config.output, self.config.buffer_size, pre_obj)
+      storage_writer = storage.StorageFileWriter(
+          storage_queue, self.config.output, self.config.buffer_size, pre_obj)
 
-    my_collector = GetCollector(
-        self.config, pre_obj, collection_queue, my_storage)
+    self._collector = self._GetCollector(
+        self.config, pre_obj, collection_queue, storage_queue)
 
-    self.queues = [collection_queue, my_storage]
-
-    # Start the storage.
-    logging.info('Starting storage thread.')
+    logging.info(u'Starting storage thread.')
     self.storage_thread = multiprocessing.Process(
-        name='StorageThread',
-        target=my_storage.Run)
+        name='StorageThread', target=storage_writer.WriteEventObjects)
     self.storage_thread.start()
 
-    logging.info('Starting to collect files for processing.')
     if start_collection_thread:
+      logging.info(u'Starting collection thread.')
       self.collection_thread = multiprocessing.Process(
-          name='Collection',
-          target=my_collector.Run)
+          name='Collection', target=self._collector.Collect)
       self.collection_thread.start()
 
-    # Start workers.
-    logging.debug('Starting workers.')
-    logging.info('Starting to extract events.')
+    logging.info(u'Starting workers to extract events.')
+    self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
     for worker_nr in range(self.config.workers):
-      logging.debug('Starting worker: %d', worker_nr)
-      my_worker = worker.PlasoWorker(
-          worker_nr, collection_queue, my_storage, self.config, pre_obj)
+      logging.debug(u'Starting worker: {0:d}'.format(worker_nr))
+      my_worker = worker.EventExtractionWorker(
+          worker_nr, collection_queue, self._storage_queue_producer,
+          self.config, pre_obj)
       self.worker_threads.append(multiprocessing.Process(
-          name='Worker_%d' % worker_nr,
+          name='Worker_{0:d}'.format(worker_nr),
           target=my_worker.Run))
       self.worker_threads[-1].start()
 
-    # Wait until threads complete their work.
-    logging.debug('Waiting for collection to complete.')
+    logging.info(u'Collecting and processing files.')
     if start_collection_thread:
       self.collection_thread.join()
-    logging.info('Collection is hereby DONE')
+    else:
+      self._collector.Collect()
 
-    logging.info('Waiting until all processing is done.')
+    logging.info(u'Collection is done, waiting for processing to complete.')
+    # TODO: Test to see if a process pool can be a better choice.
     for thread_nr, thread in enumerate(self.worker_threads):
       if thread.is_alive():
         thread.join()
-      else:
-        logging.warning(
-            (u'Worker process {} is already stopped, no need'
-             ' to wait for join.').format(thread_nr))
+
+      # Note that we explicitly must test against exitcode 0 here since
+      # thread.exitcode will be None if there is no exitcode.
+      elif thread.exitcode != 0:
+        logging.warning((
+            u'Worker process: {0:d} already exited with code: {1:d}.').format(
+                thread_nr, thread.exitcode))
         thread.terminate()
 
-    logging.info('Processing done, waiting for storage.')
-    my_storage.Close()
+    self._storage_queue_producer.SignalEndOfInput()
+
+    logging.info(u'Processing is done, waiting for storage to complete.')
     self.storage_thread.join()
-    logging.info('Storage process is done.')
+
+    logging.info(u'Storage is done.')
 
   def _StoreCollectionInformation(self, obj):
     """Store information about collection into an object."""
@@ -425,7 +477,7 @@ class Engine(object):
         self.config, 'parsers', '(no list set)')
     obj.collection_information['preferred_encoding'] = getattr(
         self.config, 'preferred_encoding', None)
-    obj.collection_information['time_of_run'] = time.time()
+    obj.collection_information['time_of_run'] = timelib.Timestamp.GetNow()
     filter_query = getattr(self.config, 'parsers', None)
     obj.collection_information['parsers'] = [
         x.parser_name for x in putils.FindAllParsers(
@@ -475,30 +527,31 @@ class Engine(object):
       obj.collection_information['runtime'] = 'multi threaded'
       obj.collection_information['workers'] = self.config.workers
 
+  # Note that this function is not called by the normal termination.
   def StopThreads(self):
     """Signals the tool to stop running nicely."""
     if self.config.single_thread and self.config.debug:
-      logging.warning('Running in debug mode, set up debugger.')
+      logging.warning(u'Running in debug mode, set up debugger.')
       pdb.post_mortem()
       return
 
-    logging.warning('Draining queues.')
+    logging.warning(u'Stopping collector.')
+    self._collector.SignalEndOfInput()
 
-    # TODO: Rewrite this so it makes more sense
-    # and does a more effective job at stopping processes.
-    for q in self.queues:
-      q.Close()
+    logging.warning(u'Stopping storage.')
+    self._storage_queue_producer.SignalEndOfInput()
 
     # Kill the collection thread.
     if hasattr(self, 'collection_thread'):
-      logging.warning('Terminating the collection thread.')
+      logging.warning(u'Terminating the collection thread.')
       self.collection_thread.terminate()
 
     try:
-      logging.warning('Waiting for workers to complete.')
+      logging.warning(u'Waiting for workers to complete.')
       for number, worker_thread in enumerate(self.worker_threads):
         pid = worker_thread.pid
-        logging.warning('Waiting for worker: %d [PID %d]', number, pid)
+        logging.warning(u'Waiting for worker: {0:d} [PID {1:d}]'.format(
+            number, pid))
         # Let's kill the process, different methods depending on the platform
         # used.
         if sys.platform.startswith('win'):
@@ -515,84 +568,28 @@ class Engine(object):
             logging.error(u'Unable to kill process {}: {}'.format(
                 pid, exception))
 
-        logging.warning('Worker: %d CLOSED', pid)
+        logging.warning(u'Worker: {0:d} CLOSED'.format(pid))
 
-      logging.warning('Workers completed.')
+      logging.warning(u'Workers completed.')
       if hasattr(self, 'storage_thread'):
-        logging.warning('Waiting for storage.')
+        logging.warning(u'Waiting for storage.')
         self.storage_thread.join()
-        logging.warning('Storage ended.')
+        logging.warning(u'Storage ended.')
 
-      logging.info('Exiting the tool.')
+      logging.info(u'Exiting the tool.')
       # Sometimes the main thread will be unresponsive.
       if not sys.platform.startswith('win'):
         os.kill(os.getpid(), signal.SIGKILL)
 
     except KeyboardInterrupt:
-      logging.warning('Terminating all processes.')
+      logging.warning(u'Terminating all processes.')
       for t in self.worker_threads:
         t.terminate()
-      logging.warning('Workers terminated.')
+      logging.warning(u'Workers terminated.')
       if hasattr(self, 'storage_thread'):
         self.storage_thread.terminate()
-        logging.warning('Storage terminated.')
+        logging.warning(u'Storage terminated.')
 
       # Sometimes the main thread will be unresponsive.
       if not sys.platform.startswith('win'):
         os.kill(os.getpid(), signal.SIGKILL)
-
-
-def GetCollector(config, pre_obj, collection_queue, storage_queue):
-  """Return back a collector based on config."""
-  # Indicate whether the collection agent should collect directory
-  # stat information - this depends on whether the stat parser is
-  # loaded or not.
-  include_directory_stat = False
-  if hasattr(pre_obj, 'collection_information'):
-    loaded_parsers = pre_obj.collection_information.get('parsers', [])
-    if 'PfileStatParser' in loaded_parsers:
-      include_directory_stat = True
-
-  if config.image:
-    # Note that os.path.isfile() will return false when config.filename
-    # point to a device file.
-    if os.path.isdir(config.filename):
-      raise errors.BadConfigOption(
-          u'Source: {0:s} cannot be a directory.'.format(config.filename))
-
-    if config.file_filter:
-      logging.debug(u'Starting a collection on image with filter.')
-    else:
-      logging.debug(u'Starting a collection on image.')
-
-  else:
-    if (not os.path.isfile(config.filename) and
-        not os.path.isdir(config.filename)):
-      raise errors.BadConfigOption(
-          u'Source: {0:s} has to be a file or directory.'.format(
-              config.filename))
-
-    if config.file_filter:
-      logging.debug(u'Starting a collection on directory with filter.')
-    elif config.recursive:
-      logging.debug(u'Starting a collection on directory.')
-    else:
-      # No need for multiple workers when parsing a single file.
-      config.workers = 1
-
-  collector_object = collector_factory.GetGenericCollector(
-      collection_queue, storage_queue, unicode(config.filename))
-
-  if config.image:
-    collector_object.SetImageInformation(
-      sector_offset=config.image_offset, byte_offset=config.image_offset_bytes)
-
-    if config.parse_vss:
-      collector_object.SetVssInformation(vss_stores=config.vss_stores)
-
-  if config.file_filter:
-    collector_object.SetFilter(config.file_filter, pre_obj)
-
-  collector_object.collect_directory_metadata = include_directory_stat
-
-  return collector_object

@@ -21,12 +21,10 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winjob as winjob_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import test_lib
 from plaso.parsers import winjob
-
-import pytz
 
 
 class WinJobTest(test_lib.ParserTestCase):
@@ -34,8 +32,7 @@ class WinJobTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
+    pre_obj = event.PreprocessObject()
     self._parser = winjob.WinJobParser(pre_obj)
 
   def testParse(self):

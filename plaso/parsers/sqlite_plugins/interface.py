@@ -106,9 +106,9 @@ class SQLitePlugin(plugin.BasePlugin):
       except sqlite3.DatabaseError as e:
         logging.debug('SQLite error occured: %s', e)
 
-  def Default(self, dummy_row):
+  def Default(self, unused_row):
     """Default callback method for SQLite events, does nothing."""
-    logging.debug('Default handler: {0:s}'.format(dummy_row))
+    logging.debug('Default handler: {0:s}'.format(unused_row))
 
 
 class SQLiteDatabase(object):

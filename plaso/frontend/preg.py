@@ -42,14 +42,14 @@ from IPython.core import magic
 
 from plaso import preprocessors
 
-from plaso.collector import factory as collector_factory
+from plaso.collector import collector
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.lib import timelib
 from plaso.lib import utils
-from plaso.lib import putils
+from plaso.lib import preprocess_interface
 from plaso.parsers import winreg_plugins    # pylint: disable-msg=unused-import
 from plaso.parsers.winreg_plugins import interface
 from plaso.pvfs import pfile
@@ -197,7 +197,7 @@ class RegCache(object):
     return getattr(cls.hive, 'name', 'N/A')
 
 
-def CdCompleter(dummy_self, dummy_event):
+def CdCompleter(unused_self, unused_event):
   """Completer function for the cd command, returning back sub keys."""
   return_list = []
   for key in RegCache.cur_key.GetSubkeys():
@@ -206,14 +206,14 @@ def CdCompleter(dummy_self, dummy_event):
   return return_list
 
 
-def PluginCompleter(dummy_self, event):
+def PluginCompleter(unused_self, event_object):
   """Completer function that returns a list of available plugins."""
   ret_list = []
 
   if not IsLoaded():
     return ret_list
 
-  if not '-h' in event.line:
+  if not '-h' in event_object.line:
     ret_list.append('-h')
 
   plugin_obj = interface.GetRegistryPlugins()
@@ -227,9 +227,9 @@ def PluginCompleter(dummy_self, event):
   return ret_list
 
 
-def VerboseCompleter(dummy_self, event):
+def VerboseCompleter(unused_self, event_object):
   """Completer function that suggests simple verbose settings."""
-  if '-v' in event.line:
+  if '-v' in event_object.line:
     return []
   else:
     return ['-v']
@@ -408,7 +408,7 @@ class MyMagics(magic.Magics):
 
   # Lowercase name since this is used inside the python console shell.
   @magic.line_magic
-  def pwd(self, dummy_line):
+  def pwd(self, unused_line):
     """Print the current path."""
     if not IsLoaded():
       return
@@ -432,7 +432,8 @@ class MyMagics(magic.Magics):
 
     sub = []
     for key in RegCache.cur_key.GetSubkeys():
-      timestamp, _, _ = putils.PrintTimestamp(
+      # TODO: move this construction into a separate function in OutputWriter.
+      timestamp, _, _ = frontend_utils.OutputWriter.GetDateTimeString(
           key.last_written_timestamp).partition('.')
 
       sub.append((u'{0:>19s} {1:>15s}  {2:s}'.format(
@@ -492,14 +493,14 @@ def IsLoaded():
   return False
 
 
-def OpenHive(filename, collector=None, codepage='cp1252'):
+def OpenHive(filename, hive_collector=None, codepage='cp1252'):
   """Open a registry hive based on a collector or a filename."""
-  if not collector:
+  if not hive_collector:
     path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', filename)
     file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
     file_object = file_entry.Open()
   else:
-    file_entry = collector.OpenFileEntry(filename)
+    file_entry = hive_collector.OpenFileEntry(filename)
     file_object = file_entry.Open()
 
   use_codepage = getattr(RegCache.pre_obj, 'code_page', codepage)
@@ -537,7 +538,7 @@ def PrintEvent(event_object, show_hex=False):
   return msg
 
 
-def ParseHive(hive_path, collectors, keys, use_plugins, verbose):
+def ParseHive(hive_path, hive_collectors, keys, use_plugins, verbose):
   """Opens a hive file, and prints out information about parsed keys.
 
   This function takes a path to a hive and a list of collectors (or
@@ -549,19 +550,19 @@ def ParseHive(hive_path, collectors, keys, use_plugins, verbose):
 
   Args:
     hive_path: Full path to the hive file in question.
-    collectors: A list of collectors to use.
+    hive_collectors: A list of collectors to use.
     keys: A list of registry keys (strings) that are to be parsed.
     use_plugins: A list of plugins used to parse the key, None if all
     plugins should be used.
     verbose: Print more verbose content, like hex dump of extracted events.
   """
   print_strings = []
-  for name, collector in collectors:
+  for name, hive_collector in hive_collectors:
     # Printing '*' 80 times.
     print_strings.append(u'*'*80)
     print_strings.append(
         u'{:>15} : {}{}'.format(u'Hive File', hive_path, name))
-    OpenHive(hive_path, collector)
+    OpenHive(hive_path, hive_collector)
     for key_str in keys:
       key_texts = []
       key_str_use = key_str
@@ -870,16 +871,16 @@ def RunModeRegistryFile(config):
     config: The configuration object (most likely an argparse object.
   """
   # Get all the hives and collectors.
-  hives, collectors = GetHivesAndCollectors(config)
+  hives, hive_collectors = GetHivesAndCollectors(config)
 
   for hive in hives:
-    for _, collector in collectors:
-      OpenHive(hive, collector)
+    for _, hive_collector in hive_collectors:
+      OpenHive(hive, hive_collector)
       config.plugin_name = RegCache.hive_type
       keys = GetRegistryKeysFromType(config, config.plugin_name)
       ExpandKeysRedirect(keys)
       plugins_to_run = GetRegistryPlugins(config)
-      ParseHive(hive, collectors, keys, plugins_to_run, config.verbose)
+      ParseHive(hive, hive_collectors, keys, plugins_to_run, config.verbose)
 
 
 def RunModeRegistryKey(config):
@@ -892,7 +893,7 @@ def RunModeRegistryKey(config):
   Args:
     config: The configuration object (most likely an argparse object.
   """
-  hives, collectors = GetHivesAndCollectors(config)
+  hives, hive_collectors = GetHivesAndCollectors(config)
 
   # Get the registry key.
   keys = [config.key]
@@ -901,7 +902,7 @@ def RunModeRegistryKey(config):
   ExpandKeysRedirect(keys)
 
   for hive in hives:
-    ParseHive(hive, collectors, keys, None, config.verbose)
+    ParseHive(hive, hive_collectors, keys, None, config.verbose)
 
 
 def GetHivesAndCollectors(config):
@@ -927,7 +928,7 @@ def GetHivesAndCollectors(config):
 
 def RunModeRegistryPlugin(config):
   """Run against a set of registry plugins."""
-  hives, collectors = GetHivesAndCollectors(config)
+  hives, hive_collectors = GetHivesAndCollectors(config)
 
   plugin_list = GetRegistryPlugins(config)
 
@@ -940,19 +941,18 @@ def RunModeRegistryPlugin(config):
         keys.append(temp_obj.REG_KEY)
 
   for hive in hives:
-    ParseHive(hive, collectors, keys, plugin_list, config.verbose)
+    ParseHive(hive, hive_collectors, keys, plugin_list, config.verbose)
 
 
 def StartPreProcess():
   """Run preprocessing on the image."""
-  RegCache.pre_obj = preprocess.PlasoPreprocess()
-  RegCache.pre_obj.zone = pytz.UTC
+  RegCache.pre_obj = event.PreprocessObject()
 
 
 def GetCollectorsFromAnImage(config):
   """Open up an image and return back a list of collectors."""
   bytes_per_sector = 512
-  collectors = []
+  preprocess_collectors = []
   StartPreProcess()
   if config.vss_stores:
     config.vss = True
@@ -973,7 +973,7 @@ def GetCollectorsFromAnImage(config):
     config.vss_stores = sorted(stores)
 
   try:
-    preprocess_collector = collector_factory.GetGenericPreprocessCollector(
+    preprocess_collector = collector.GenericPreprocessCollector(
         RegCache.pre_obj, config.image)
     byte_offset = config.offset * bytes_per_sector
     preprocess_collector.SetImageInformation(
@@ -982,12 +982,12 @@ def GetCollectorsFromAnImage(config):
   except errors.UnableToOpenFilesystem:
     ErrorAndDie(
         u'Unable to open the file system image: {}'.format(config.image))
-  collectors.append(('', preprocess_collector))
+  preprocess_collectors.append(('', preprocess_collector))
 
   # Run pre processing on image.
   pre_plugin_list = preprocessors.PreProcessList(
       RegCache.pre_obj, preprocess_collector)
-  guessed_os = preprocess.GuessOS(preprocess_collector)
+  guessed_os = preprocess_interface.GuessOS(preprocess_collector)
   for weight in pre_plugin_list.GetWeightList(guessed_os):
     for plugin in pre_plugin_list.GetWeight(guessed_os, weight):
       try:
@@ -1004,16 +1004,16 @@ def GetCollectorsFromAnImage(config):
           config.image, byte_offset))
 
     for store_number in config.vss_stores:
-      vss_collector = collector_factory.GetGenericPreprocessCollector(
+      vss_collector = collector.GenericPreprocessCollector(
           RegCache.pre_obj, config.image)
       vss_collector.SetImageInformation(
           sector_offset=config.offset, byte_offset=byte_offset)
       vss_collector.SetVssInformation(
           store_number=store_number)
-      collectors.append((
+      preprocess_collectors.append((
           ':VSS Store {}'.format(store_number + 1), vss_collector))
 
-  return collectors
+  return preprocess_collectors
 
 
 def GetRegistryPlugins(config):
@@ -1112,7 +1112,7 @@ def ExpandKeysRedirect(keys):
 def RunModeConsole(config):
   """Open up an iPython console."""
   namespace = {}
-  hives, collectors = GetHivesAndCollectors(config)
+  hives, hive_collectors = GetHivesAndCollectors(config)
 
   function_name_length = 23
   banners = []
@@ -1149,14 +1149,14 @@ def RunModeConsole(config):
   else:
     hive = None
 
-  if len(collectors) == 1:
-    collector = collectors[0][1]
-    collectors = []
+  if len(hive_collectors) == 1:
+    hive_collector = hive_collectors[0][1]
+    hive_collectors = []
   else:
-    collector = None
+    hive_collector = None
 
-  if hive and not collectors:
-    OpenHive(hive, collector)
+  if hive and not hive_collectors:
+    OpenHive(hive, hive_collector)
 
   if RegCache.hive and RegCache.GetHiveName() != 'N/A':
     banners.append(
@@ -1172,7 +1172,7 @@ def RunModeConsole(config):
     banners.append('To load a hive use:')
     text = 'OpenHive(hives[NR], collector)'
 
-    if collectors:
+    if hive_collectors:
       banners.append('')
       banners.append((
           'There is more than one collector available. To use any of them '
@@ -1180,7 +1180,7 @@ def RunModeConsole(config):
           'function use the collectors attribute.\nThe available collectors '
           'are:'))
       counter = 0
-      for name, _ in collectors:
+      for name, _ in hive_collectors:
         if not name:
           name = 'Current Value'
         banners.append(' {} = {}'.format(counter, name))
@@ -1204,7 +1204,7 @@ def RunModeConsole(config):
         '\nWhere NR is one of the following values:')
 
     counter = 0
-    for name, _ in collectors:
+    for name, _ in hive_collectors:
       if not name:
         name = 'Current Value'
       banners.append(' {} = {}'.format(counter, name))
@@ -1218,8 +1218,8 @@ def RunModeConsole(config):
   namespace.update({
       'hives': hives,
       'hive': hive,
-      'collector': collector,
-      'collectors': collectors})
+      'collector': hive_collector,
+      'collectors': hive_collectors})
 
   # Starting the shell.
   ipshell = InteractiveShellEmbed(

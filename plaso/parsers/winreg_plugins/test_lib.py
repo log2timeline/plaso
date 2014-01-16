@@ -45,7 +45,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """Parses a key within a Windows Registry file using the plugin object.
   
     Args:
-      plugin_object: the pluging object.
+      plugin_object: the plugin object.
       winreg_key: the Windows Registry Key.
 
     Returns:
@@ -67,5 +67,5 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       expected_value: the expected value of the 'regvalue' attribute.
     """
     self.assertTrue(hasattr(event_object, 'regvalue'))
-    self.assertTrue(identifier in event_object.regvalue)
+    self.assertIn(identifier, event_object.regvalue)
     self.assertEquals(event_object.regvalue[identifier], expected_value)

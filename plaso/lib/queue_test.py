@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,48 +15,82 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the unit tests for the queue mechanism."""
+"""Tests the queue."""
+
 import unittest
 
 from plaso.lib import queue
 
 
-def CheckOut(q):
-  return len(list(q.PopItems()))
+class TestQueueConsumer(queue.QueueConsumer):
+  """Class that implements the test queue consumer.
+
+     The queue consumer subscribes to updates on the queue.
+  """
+
+  def __init__(self, test_queue):
+    """Initializes the queue consumer.
+
+    Args:
+      test_queue: the test queue (instance of Queue).
+    """
+    super(TestQueueConsumer, self).__init__(test_queue)
+    self.items = []
+
+  def _ConsumeItem(self, item):
+    """Consumes an item callback for ConsumeItems."""
+    self.items.append(item)
+
+  @property
+  def number_of_items(self):
+    """The items."""
+    return len(self.items)
 
 
 class MultiThreadedQueueTest(unittest.TestCase):
-  """The unit test for multi threaded queue."""
+  """Tests the multi threaded queue."""
 
-  def test(self):
-    my_queue = queue.MultiThreadedQueue()
-    my_queue.Queue('some stuff')
-    my_queue.Queue('some stuff')
-    my_queue.Queue('some stuff')
-    my_queue.Queue('some stuff')
+  _ITEMS = frozenset(['item1', 'item2', 'item3', 'item4'])
+
+  def testPushPopItem(self):
+    """Tests the PushItem and PopItem functions."""
+    test_queue = queue.MultiThreadedQueue()
+
+    for item in self._ITEMS:
+      test_queue.PushItem(item)
 
     try:
-      self.assertEquals(len(my_queue), 4)
+      self.assertEquals(len(test_queue), len(self._ITEMS))
     except NotImplementedError:
       # On Mac OS X because of broken sem_getvalue()
       return
-    my_queue.Close()
-    self.assertEquals(CheckOut(my_queue), 4)
+
+    test_queue.SignalEndOfInput()
+    test_queue_consumer = TestQueueConsumer(test_queue)
+    test_queue_consumer.ConsumeItems()
+
+    self.assertEquals(test_queue_consumer.number_of_items, len(self._ITEMS))
 
 
 class SingleThreadedQueueTest(unittest.TestCase):
-  """The unit test for single threaded queue."""
+  """Tests the single threaded queue."""
 
-  def test(self):
-    my_queue = queue.SingleThreadedQueue()
-    my_queue.Queue('some stuff')
-    my_queue.Queue('some stuff')
-    my_queue.Queue('some stuff')
-    my_queue.Queue('some stuff')
+  _ITEMS = frozenset(['item1', 'item2', 'item3', 'item4'])
 
-    self.assertEquals(len(my_queue), 4)
-    my_queue.Close()
-    self.assertEquals(CheckOut(my_queue), 4)
+  def testPushPopItem(self):
+    """Tests the PushItem and PopItem functions."""
+    test_queue = queue.SingleThreadedQueue()
+
+    for item in self._ITEMS:
+      test_queue.PushItem(item)
+
+    self.assertEquals(len(test_queue), len(self._ITEMS))
+
+    test_queue.SignalEndOfInput()
+    test_queue_consumer = TestQueueConsumer(test_queue)
+    test_queue_consumer.ConsumeItems()
+
+    self.assertEquals(test_queue_consumer.number_of_items, len(self._ITEMS))
 
 
 if __name__ == '__main__':

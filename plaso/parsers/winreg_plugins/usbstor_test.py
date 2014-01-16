@@ -21,7 +21,7 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import preprocess
+from plaso.lib import event
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import usbstor
 
@@ -31,7 +31,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     pre_obj.current_control_set = 'ControlSet001'
     self._plugin = usbstor.USBStorPlugin(pre_obj=pre_obj)
 

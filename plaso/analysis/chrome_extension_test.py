@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,21 +16,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the browser_search analysis plugin."""
+
 import unittest
 
 from plaso.analysis import chrome_extension
-from plaso.lib import analysis_interface
+from plaso.analysis import test_lib
 from plaso.lib import event
-from plaso.lib import preprocess
 from plaso.lib import queue
 
-import pytz
 # We are accessing quite a lot of protected members in this test file.
 # Suppressing that message test file wide.
 # pylint: disable-msg=protected-access
 
 
-class ChromeExtensionTest(unittest.TestCase):
+class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   """Tests for the chrome extension analysis plugin."""
 
   # Few config options here.
@@ -66,43 +66,35 @@ class ChromeExtensionTest(unittest.TestCase):
       {u'name': u'dude', u'path': u'C:\\Users\\dude', u'sid': u'S-1'},
       {u'name': u'frank', u'path': u'C:\\Users\\frank', u'sid': u'S-2'}]
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    # Show full diff results, part of TestCase so does not follow our naming
-    # conventions.
-    self.maxDiff = None
-
-  def testSeparator(self):
-    """Test the separator detection."""
-    pre_obj = preprocess.PlasoPreprocess()
-    analysis_plugin = chrome_extension.AnalyzeChromeExtensionPlugin(
-        pre_obj, None, None)
-
-    analysis_plugin._sep = '/'
-    for path in self.MAC_PATHS:
-      self.assertEquals(analysis_plugin._GetSeparator(path), '/')
-
-    analysis_plugin._sep = '\\'
-    for path in self.WIN_PATHS:
-      self.assertEquals(analysis_plugin._GetSeparator(path), '\\')
-
-  def _CreateEvent(self, path):
-    """Create a mock event with a particular path."""
+  def _CreateTestEventObject(self, path):
+    """Create a test event object with a particular path."""
     event_object = event.EventObject()
     event_object.data_type = 'fs:stat'
     event_object.timestamp = 12345
-    event_object.timestamp_desc = 'Some stuff'
+    event_object.timestamp_desc = u'Some stuff'
     event_object.filename = path
 
     return event_object
 
+  def testSeparator(self):
+    """Test the separator detection."""
+    pre_obj = event.PreprocessObject()
+    analysis_plugin = chrome_extension.AnalyzeChromeExtensionPlugin(
+        pre_obj, None, None)
+
+    analysis_plugin._sep = u'/'
+    for path in self.MAC_PATHS:
+      self.assertEquals(analysis_plugin._GetSeparator(path), u'/')
+
+    analysis_plugin._sep = u'\\'
+    for path in self.WIN_PATHS:
+      self.assertEquals(analysis_plugin._GetSeparator(path), u'\\')
+
   def testMacAnalyzerPlugin(self):
     """Test the plugin against mock events."""
-    # Create queues and other necessary objects.
     incoming_queue = queue.SingleThreadedQueue()
     outgoing_queue = queue.SingleThreadedQueue()
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.utc
+    pre_obj = event.PreprocessObject()
 
     # Fill in the user section
     pre_obj.users = self.MAC_USERS
@@ -114,67 +106,61 @@ class ChromeExtensionTest(unittest.TestCase):
     # Test the user creation.
     user_paths = analysis_plugin._user_paths
     self.assertEquals(
-        set(user_paths.keys()), set(['frank', 'dude', 'hans', 'root']))
-    self.assertEquals(user_paths['frank'], '/users/frank')
-    self.assertEquals(user_paths['dude'], '/users/dude')
-    self.assertEquals(user_paths['hans'], '/users/hans')
-    self.assertEquals(user_paths['root'], '/var/root')
+        set(user_paths.keys()), set([u'frank', u'dude', u'hans', u'root']))
+    self.assertEquals(user_paths[u'frank'], u'/users/frank')
+    self.assertEquals(user_paths[u'dude'], u'/users/dude')
+    self.assertEquals(user_paths[u'hans'], u'/users/hans')
+    self.assertEquals(user_paths[u'root'], u'/var/root')
 
     # Fill the incoming queue with events.
-    for path in self.MAC_PATHS:
-      event_object = self._CreateEvent(path)
-      incoming_queue.AddEvent(event_object.ToJson())
-    incoming_queue.Close()
+    test_queue_producer = queue.EventObjectQueueProducer(incoming_queue)
+    test_queue_producer.ProduceEventObjects([
+        self._CreateTestEventObject(path) for path in self.MAC_PATHS])
+    test_queue_producer.SignalEndOfInput()
 
     # Run the analysis plugin.
     analysis_plugin.RunPlugin()
 
-    # Get the report out.
-    outgoing_queue.Close()
-    output = []
-    for item in outgoing_queue.PopItems():
-      output.append(item)
+    outgoing_queue.SignalEndOfInput()
+    test_analysis_plugin_consumer = test_lib.TestAnalysisPluginConsumer(
+        outgoing_queue)
+    test_analysis_plugin_consumer.ConsumeAnalysisReports()
+
+    self.assertEquals(
+        test_analysis_plugin_consumer.number_of_analysis_reports, 1)
+
+    analysis_report = test_analysis_plugin_consumer.analysis_reports[0]
 
     # Test the username detection.
     self.assertEquals(analysis_plugin._GetUserNameFromPath(
-        self.MAC_PATHS[0]), 'dude')
+        self.MAC_PATHS[0]), u'dude')
     self.assertEquals(analysis_plugin._GetUserNameFromPath(
-        self.MAC_PATHS[4]), 'hans')
+        self.MAC_PATHS[4]), u'hans')
 
-    # There is only a report returned back.
-    self.assertEquals(len(output), 1)
+    self.assertEquals(analysis_plugin._sep, u'/')
 
-    self.assertEquals(analysis_plugin._sep, '/')
+    # Due to the behavior of the join one additional empty string at the end
+    # is needed to create the last empty line.
+    expected_text = u'\n'.join([
+        u' == USER: dude ==',
+        u'  Google Drive [apdfllckaahabafndbhieahigkjlhalf]',
+        u'',
+        u' == USER: frank ==',
+        u'  Gmail [pjkljhegncpnkpknbcohdijeoejaedia]',
+        u'',
+        u''])
 
-    report_string = output[0]
-    self.assertEquals(
-        report_string[0], analysis_interface.MESSAGE_STRUCT.build(
-            analysis_interface.MESSAGE_REPORT))
+    self.assertEquals(analysis_report.text, expected_text)
+    self.assertEquals(analysis_report.plugin_name, 'chrome_extension')
 
-    report = analysis_interface.AnalysisReport()
-    report.FromProtoString(report_string[1:])
-
-    expected_text = """\
- == USER: dude ==
-  Google Drive [apdfllckaahabafndbhieahigkjlhalf]
-
- == USER: frank ==
-  Gmail [pjkljhegncpnkpknbcohdijeoejaedia]
-
-"""
-    self.assertEquals(expected_text, report.text)
-    self.assertEquals(report.plugin_name, 'chrome_extension')
-
-    self.assertEquals(
-        set(report.report_dict.keys()), set([u'frank', u'dude']))
+    expected_keys = set([u'frank', u'dude'])
+    self.assertEquals(set(analysis_report.report_dict.keys()), expected_keys)
 
   def testWinAnalyzePlugin(self):
     """Test the plugin against mock events."""
-    # Create queues and other necessary objects.
     incoming_queue = queue.SingleThreadedQueue()
     outgoing_queue = queue.SingleThreadedQueue()
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.utc
+    pre_obj = event.PreprocessObject()
 
     # Fill in the user section
     pre_obj.users = self.WIN_USERS
@@ -185,59 +171,54 @@ class ChromeExtensionTest(unittest.TestCase):
 
     # Test the user creation.
     user_paths = analysis_plugin._user_paths
-    self.assertEquals(set(user_paths.keys()), set(['frank', 'dude']))
-    self.assertEquals(user_paths['frank'], '/users/frank')
-    self.assertEquals(user_paths['dude'], '/users/dude')
+    self.assertEquals(set(user_paths.keys()), set([u'frank', u'dude']))
+    self.assertEquals(user_paths[u'frank'], u'/users/frank')
+    self.assertEquals(user_paths[u'dude'], u'/users/dude')
 
     # Fill the incoming queue with events.
-    for path in self.WIN_PATHS:
-      event_object = self._CreateEvent(path)
-      incoming_queue.AddEvent(event_object.ToJson())
-    incoming_queue.Close()
+    test_queue_producer = queue.EventObjectQueueProducer(incoming_queue)
+    test_queue_producer.ProduceEventObjects([
+        self._CreateTestEventObject(path) for path in self.WIN_PATHS])
+    test_queue_producer.SignalEndOfInput()
 
     # Run the analysis plugin.
     analysis_plugin.RunPlugin()
 
-    # Get the report out.
-    outgoing_queue.Close()
-    output = []
-    for item in outgoing_queue.PopItems():
-      output.append(item)
+    outgoing_queue.SignalEndOfInput()
+    test_analysis_plugin_consumer = test_lib.TestAnalysisPluginConsumer(
+        outgoing_queue)
+    test_analysis_plugin_consumer.ConsumeAnalysisReports()
+
+    self.assertEquals(
+        test_analysis_plugin_consumer.number_of_analysis_reports, 1)
+
+    analysis_report = test_analysis_plugin_consumer.analysis_reports[0]
 
     # Test the username detection.
     self.assertEquals(analysis_plugin._GetUserNameFromPath(
-        self.WIN_PATHS[0]), 'dude')
+        self.WIN_PATHS[0]), u'dude')
     self.assertEquals(analysis_plugin._GetUserNameFromPath(
-        self.WIN_PATHS[2]), 'frank')
+        self.WIN_PATHS[2]), u'frank')
 
-    # There is only a report returned back.
-    self.assertEquals(len(output), 1)
+    self.assertEquals(analysis_plugin._sep, u'\\')
 
-    self.assertEquals(analysis_plugin._sep, '\\')
+    # Due to the behavior of the join one additional empty string at the end
+    # is needed to create the last empty line.
+    expected_text = u'\n'.join([
+        u' == USER: dude ==',
+        u'  Google Keep [hmjkmjkepdijhoojdojkdfohbdgmmhki]',
+        u'',
+        u' == USER: frank ==',
+        u'  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]',
+        u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]',
+        u'',
+        u''])
 
-    report_string = output[0]
-    self.assertEquals(
-        report_string[0], analysis_interface.MESSAGE_STRUCT.build(
-            analysis_interface.MESSAGE_REPORT))
+    self.assertEquals(analysis_report.text, expected_text)
+    self.assertEquals(analysis_report.plugin_name, 'chrome_extension')
 
-    report = analysis_interface.AnalysisReport()
-    report.FromProtoString(report_string[1:])
-
-    expected_text = """\
- == USER: dude ==
-  Google Keep [hmjkmjkepdijhoojdojkdfohbdgmmhki]
-
- == USER: frank ==
-  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]
-  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]
-
-"""
-
-    self.assertEquals(expected_text, report.text)
-    self.assertEquals(report.plugin_name, 'chrome_extension')
-
-    self.assertEquals(
-        set(report.report_dict.keys()), set([u'frank', u'dude']))
+    expected_keys = set([u'frank', u'dude'])
+    self.assertEquals(set(analysis_report.report_dict.keys()), expected_keys)
 
 
 if __name__ == '__main__':

@@ -22,7 +22,6 @@ import unittest
 # pylint: disable-msg=unused-import
 from plaso.formatters import filestat as filestat_formatter
 from plaso.lib import event
-from plaso.lib import preprocess
 from plaso.parsers import filestat
 from plaso.parsers import test_lib
 from plaso.pvfs import pvfs
@@ -33,7 +32,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     self._parser = filestat.PfileStatParser(pre_obj)
 
   def testTSKFile(self):

@@ -66,7 +66,7 @@ class LogOutputFormatter(object):
     """Constructor for the output module.
 
     Args:
-      store: A PlasoStorage object that defines the storage.
+      store: A StorageFile object that defines the storage.
       filehandle: A file-like object that can be written to.
       config: The configuration object, containing config information.
       filter_use: A filter_interface.FilterObject object.
@@ -85,6 +85,8 @@ class LogOutputFormatter(object):
 
     self.encoding = getattr(config, 'preferred_encoding', 'utf-8')
 
+  # TODO: this function seems to be only called with the default arguments,
+  # so refactor this function away.
   def FetchEntry(self, store_number=-1, store_index=-1):
     """Fetches an entry from the storage.
 
@@ -100,7 +102,7 @@ class LogOutputFormatter(object):
       An EventObject, either the next one or from a specific location.
     """
     if store_number > 0:
-      return self.store.GetEntry(store_number, store_index)
+      return self.store.GetEventObject(store_number, store_index)
     else:
       return self.store.GetSortedEntry()
 

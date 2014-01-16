@@ -21,13 +21,9 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import skype as skype_formatter
-from plaso.lib import preprocess
-from plaso.parsers.sqlite_plugins import interface
+from plaso.lib import event
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import test_lib
-from plaso.pvfs import utils
-
-import pytz
 
 
 class SkypePluginTest(test_lib.SQLitePluginTestCase):
@@ -35,9 +31,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
-
+    pre_obj = event.PreprocessObject()
     self._plugin = skype.SkypePlugin(pre_obj)
 
   def testProcess(self):
@@ -64,14 +58,14 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     files = 0
     sms = 0
     chats = 0
-    for event in event_objects:
-      if event.data_type == 'skype:event:call':
+    for event_object in event_objects:
+      if event_object.data_type == 'skype:event:call':
         calls = calls + 1
-      if event.data_type == 'skype:event:transferfile':
+      if event_object.data_type == 'skype:event:transferfile':
         files = files + 1
-      if event.data_type == 'skype:event:sms':
+      if event_object.data_type == 'skype:event:sms':
         sms = sms + 1
-      if event.data_type == 'skype:event:chat':
+      if event_object.data_type == 'skype:event:chat':
         chats = chats + 1
 
     self.assertEquals(len(event_objects), 24)

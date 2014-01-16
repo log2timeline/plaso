@@ -21,12 +21,10 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import mactime as mactime_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import mactime
 from plaso.parsers import test_lib
-
-import pytz
 
 
 class MactimeUnitTest(test_lib.ParserTestCase):
@@ -34,8 +32,7 @@ class MactimeUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-    pre_obj.zone = pytz.UTC
+    pre_obj = event.PreprocessObject()
     self._parser = mactime.MactimeParser(pre_obj, None)
 
   def testParse(self):

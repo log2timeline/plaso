@@ -19,7 +19,7 @@
 
 import unittest
 
-from plaso.lib import preprocess
+from plaso.lib import event
 from plaso.parsers import test_lib
 from plaso.parsers import winreg
 
@@ -29,7 +29,7 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
+    pre_obj = event.PreprocessObject()
     pre_obj.current_control_set = 'ControlSet001'
     self._parser = winreg.WinRegistryParser(pre_obj)
 
