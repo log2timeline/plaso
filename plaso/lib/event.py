@@ -87,6 +87,34 @@ class AnalysisReport(object):
     self.text = u'\n'.join(lines_of_text)
 
 
+class CollectionFilter(object):
+  """Class that defines a collection filter for targeted collection."""
+
+  def __init__(self, filter_strings):
+    """Initializes the collection filter."""
+    super(CollectionFilter, self).__init__()
+    self._filter_strings = filter_strings
+
+  def BuildFilters(self):
+    """Return a list of filters consisting of tuples of paths and file names."""
+    list_of_filters = []
+
+    if not self._filter_strings:
+      return list_of_filters
+
+    for filter_string in self._filter_strings:
+      dir_path, _, file_path = filter_string.rstrip().rpartition(u'/')
+
+      if not file_path:
+        logging.warning(
+            u'Unable to parse the filter string: {0:s}'.format(filter_string))
+        continue
+
+      list_of_filters.append((dir_path, file_path))
+
+    return list_of_filters
+
+
 class EventContainer(object):
   """The EventContainer serves as a basic storage mechansim for plaso.
 
