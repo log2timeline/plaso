@@ -107,7 +107,7 @@ class ParserTestCase(unittest.TestCase):
     Args:
       path_segments: the path segments inside the test data directory.
 
-    Returns: 
+    Returns:
       A path of the test file.
     """
     # Note that we need to pass the individual path segments to os.path.join
@@ -116,7 +116,7 @@ class ParserTestCase(unittest.TestCase):
 
   def _ParseFile(self, parser_object, path):
     """Parses a file using the parser object.
-  
+
     Args:
       parser_object: the parser object.
       path: the path of the file to parse.
