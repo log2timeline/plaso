@@ -27,7 +27,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
   def _GetKeyFromFile(self, path, key_path):
     """Retrieves a Windows Registry key from a file.
-  
+
     Args:
       path: the path of the file.
       key_path: the path of the key to parse.
@@ -43,7 +43,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
   def _ParseKeyWithPlugin(self, plugin_object, winreg_key):
     """Parses a key within a Windows Registry file using the plugin object.
-  
+
     Args:
       plugin_object: the plugin object.
       winreg_key: the Windows Registry Key.
@@ -60,7 +60,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
   def _TestRegvalue(self, event_object, identifier, expected_value):
     """Tests a specific 'regvalue' attribute within the event object.
-  
+
     Args:
       event_object: the event object (instance of EventObject).
       identifier: the identifier of the 'regvalue' attribute.

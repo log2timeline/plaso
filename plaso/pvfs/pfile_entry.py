@@ -20,6 +20,7 @@
 import abc
 import bz2
 import gzip
+import logging
 import os
 import tarfile
 import zipfile
@@ -522,8 +523,18 @@ class TSKFileEntry(BaseFileEntry):
       if tsk_directory_entry.info.name.name in ['.', '..']:
         continue
 
-      directory_entry_path = u'/'.join([
-          self.pathspec.file_path, tsk_directory_entry.info.name.name])
+      # TODO: We have been seeing badly decoded filenames from the TSK
+      # layer that needs to be fixed either in dfVFS or upstream in TSK.
+      try:
+        directory_entry_path = u'/'.join([
+            self.pathspec.file_path, tsk_directory_entry.info.name.name])
+      except UnicodeDecodeError:
+        logging.warning(u'Unable to read directory name for inode: {}'.format(
+            tsk_directory_entry.info.meta.addr))
+        directory_entry_path = u'/'.join([
+            utils.GetUnicodeString(self.pathspec.file_path),
+            utils.GetUnicodeString(tsk_directory_entry.info.name.name)])
+
       path_spec = event.EventPathSpec()
 
       if hasattr(self.pathspec, 'vss_store_number'):
