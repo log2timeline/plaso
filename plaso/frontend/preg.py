@@ -36,6 +36,7 @@ try:
   # pylint: disable-msg=no-name-in-module
   from IPython.terminal.embed import InteractiveShellEmbed
 except ImportError:
+  # pylint: disable-msg=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 from IPython.core import magic
@@ -131,8 +132,7 @@ class RegistryHexFormatter(RegistryFormatter):
 
     ret_strings = [msg]
 
-    # pylint: disable-msg=W0212
-    event_object.pathspec = RegCache.hive.file_object.pathspec
+    event_object.pathspec = RegCache.hive.file_entry.pathspec
     ret_strings.append(utils.FormatHeader('Hex Output From Event.', '-'))
     ret_strings.append(
         frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
@@ -498,10 +498,8 @@ def OpenHive(filename, hive_collector=None, codepage='cp1252'):
   if not hive_collector:
     path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', filename)
     file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
-    file_object = file_entry.Open()
   else:
     file_entry = hive_collector.OpenFileEntry(filename)
-    file_object = file_entry.Open()
 
   use_codepage = getattr(RegCache.pre_obj, 'code_page', codepage)
 
@@ -509,7 +507,7 @@ def OpenHive(filename, hive_collector=None, codepage='cp1252'):
       winregistry.WinRegistry.BACKEND_PYREGF)
 
   try:
-    RegCache.hive = win_registry.OpenFile(file_object, codepage=use_codepage)
+    RegCache.hive = win_registry.OpenFile(file_entry, codepage=use_codepage)
   except IOError:
     ErrorAndDie(u'Unable to open registry hive: {}'.format(filename))
   RegCache.SetHiveType()

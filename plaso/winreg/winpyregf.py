@@ -253,6 +253,7 @@ class WinPyregfFile(interface.WinRegFile):
           u'Ignoring provided value.').format(codepage))
 
     self._file_object = file_entry.Open()
+    self.file_entry = file_entry
     self._pyregf_file.open_file_object(self._file_object)
 
     self._base_key = self._pyregf_file.get_root_key()

@@ -20,6 +20,7 @@
 Plaso's engine calls PlistParser when it encounters Plist files to be processed.
 """
 
+import binascii
 import logging
 
 from binplist import binplist
@@ -77,19 +78,23 @@ class PlistParser(parser.BaseParser):
     """
     try:
       top_level_object = binplist.readPlist(file_object)
-    except binplist.FormatError as e:
+    except binplist.FormatError as exception:
       raise errors.UnableToParseFile(
           u'[PLIST] File is not a plist file: {0:s}'.format(
-              utils.GetUnicodeString(e)))
-    except OverflowError as e:
+              utils.GetUnicodeString(exception)))
+    except (LookupError, binascii.Error) as exception:
+      raise errors.UnableToParseFile(
+          u'[PLIST] Unable to parse XML file, reason: {0:s}'.format(
+              exception))
+    except OverflowError as exception:
       raise errors.UnableToParseFile(
           u'[PLIST] Unable to parse: {0:s} with error: {1:s}'.format(
-              file_name, e))
+              file_name, exception))
 
     if not top_level_object:
       raise errors.UnableToParseFile(
           u'[PLIST] File is not a plist: {0:s}'.format(
-              utils.GetUnicodeString(e)))
+              utils.GetUnicodeString(file_name)))
 
     # Since we are using readPlist from binplist now instead of manually
     # opening up the BinarPlist file we loose this option. Keep it commented
