@@ -33,6 +33,10 @@ from plaso.pvfs import pfile
 from plaso.pvfs import pvfs
 
 
+# TODO: Implement _ConsumeItem or fix the interface so we don't have to
+# implement it.
+# We are not implementing _ConsumeItem in this class.
+# pylint: disable-msg=abstract-method
 class EventExtractionWorker(queue.PathSpecQueueConsumer):
   """Class that extracts events for files and directories.
 
@@ -190,7 +194,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
             u'{1:s}').format(
                 file_entry.pathspec_root.comparable,
                 file_entry.pathspec.comparable))
-        logging.exception(e)
+        logging.exception(exception)
 
         # Check for debug mode and single-threaded, then we would like
         # to debug this problem.
