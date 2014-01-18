@@ -45,7 +45,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     event_generator = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_objects), 4)
+    self.assertEquals(len(event_objects), 5)
 
     # Test case: normal entry.
     event_object = event_objects[0]

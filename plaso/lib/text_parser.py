@@ -107,16 +107,16 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
       else:
         self.attributes[attr] = ''
 
-  def ParseIncomplete(self, match, **_):
+  def ParseIncomplete(self, match, **unused_kwargs):
     """Indication that we've got a partial line to match against."""
     self.attributes['body'] += match.group(0)
     self.line_ready = True
 
-  def ParseMessage(self, **_):
+  def ParseMessage(self, **unused_kwargs):
     """Signal that a line is ready to be parsed."""
     self.line_ready = True
 
-  def SetMonth(self, match, **_):
+  def SetMonth(self, match, **unused_kwargs):
     """Parses the month.
 
        This is a callback function for the text parser (lexer) and is
@@ -129,7 +129,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     self.attributes['imonth'] = int(
         timelib.MONTH_DICT.get(match.group(1).lower(), 1))
 
-  def SetDay(self, match, **_):
+  def SetDay(self, match, **unused_kwargs):
     """Parses the day of the month.
 
        This is a callback function for the text parser (lexer) and is
@@ -141,11 +141,11 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     """
     self.attributes['iday'] = int(match.group(1))
 
-  def SetTime(self, match, **_):
+  def SetTime(self, match, **unused_kwargs):
     """Set the time attribute."""
     self.attributes['time'] = match.group(1)
 
-  def SetYear(self, match, **_):
+  def SetYear(self, match, **unused_kwargs):
     """Parses the year.
 
        This is a callback function for the text parser (lexer) and is
@@ -180,6 +180,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
     file_object.seek(0, os.SEEK_SET)
+
     error_count = 0
     file_verified = False
     # We need to clear out few values in the Lexer before continuing.
@@ -187,7 +188,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     self.error = 0
     self.buffer = ''
 
-    while 1:
+    while True:
       _ = self.NextToken()
 
       if self.state == 'INITIAL':
@@ -195,42 +196,62 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
         self.next_entry_offset = file_object.tell() - len(self.buffer)
 
       if not file_verified and self.error >= self.MAX_LINES * 2:
-        logging.debug('Lexer error count: %d and current state %s', self.error,
-                      self.state)
-        name = '%s (%s)' % (file_entry.name, file_entry.display_name)
-        raise errors.UnableToParseFile(u'File %s not a %s.' % (
+        logging.debug(
+            u'Lexer error count: {0:d} and current state {1:s}'.format(
+                self.error, self.state))
+        name = '{0:s} ({1:s})'.format(file_entry.name, file_entry.display_name)
+        file_object.close()
+        raise errors.UnableToParseFile(u'File {0:s} not a {1:s}.'.format(
             name, self.parser_name))
 
       if self.line_ready:
         try:
           yield self.ParseLine(self._pre_obj.zone)
           file_verified = True
-        except errors.TimestampNotCorrectlyFormed as e:
+
+        except errors.TimestampNotCorrectlyFormed as exception:
           error_count += 1
           if file_verified:
-            logging.debug('[%s VERIFIED] Error count: %d and ERROR: %d',
-                          file_entry.name, error_count, self.error)
-            logging.warning(('[%s] Unable to parse timestamp, skipping entry. '
-                             'Msg: [%s]'), self.parser_name, e)
+            logging.debug(
+                u'[{0:s} VERIFIED] Error count: {1:d} and ERROR: {2:d}'.format(
+                    file_entry.name, error_count, self.error))
+            logging.warning(
+                u'[{0:s}] Unable to parse timestamp with error: {1:s}'.format(
+                    self.parser_name, exception))
+
           else:
-            logging.debug('[%s EVALUATING] Error count: %d and ERROR: %d',
-                          file_entry.name, error_count, self.error)
+            logging.debug((
+                u'[{0:s} EVALUATING] Error count: {1:d} and ERROR: '
+                u'{2:d})').format(file_entry.name, error_count, self.error))
+
             if error_count >= self.MAX_LINES:
-              raise errors.UnableToParseFile(u'File %s not a %s.' % (
+              file_object.close()
+              raise errors.UnableToParseFile(u'File {0:s} not a {1:s}.'.format(
                   file_entry.name, self.parser_name))
 
         finally:
           self.ClearValues()
+
+      if self.Empty():
+        # Try to fill the buffer to prevent the parser from ending prematurely.
+        self.Feed()
+
       if self.Empty():
         break
 
     if not file_verified:
+      file_object.close()
       raise errors.UnableToParseFile(
-          u'File %s not a %s.' % (file_entry.name, self.parser_name))
+          u'File {0:s} not a {1:s}.'.format(file_entry.name, self.parser_name))
 
+    file_offset = file_object.get_offset()
+    if file_offset < file_object.get_size():
+      logging.error((
+          u'{0:s} prematurely terminated parsing: {1:s} at offset: '
+          u'0x{2:08x}.').format(self.parser_name, file_entry.name, file_offset))
     file_object.close()
 
-  def ParseString(self, match, **_):
+  def ParseString(self, match, **unused_kwargs):
     """Return a string with combined values from the lexer.
 
     Args:
@@ -247,18 +268,35 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
 
   def PrintLine(self):
     """"Return a string with combined values from the lexer."""
-    month = int(self.attributes['imonth'])
-    day = int(self.attributes['iday'])
-    year = int(self.attributes['iyear'])
+    year = getattr(self.attributes, 'iyear', None)
+    month = getattr(self.attributes, 'imonth', None)
+    day = getattr(self.attributes, 'iday', None)
+
+    if None in [year, month, day]:
+      date_string = u'[DATE NOT SET]'
+    else:
+      try:
+        year = int(year, 10)
+        month = int(month, 10)
+        day = int(day, 10)
+
+        date_string = u'{0:04d}-{1:02d}-{2:02d}'.format(year, month, day)
+      except ValueError:
+        date_string = u'[DATE INVALID]'
+
+    time_string = getattr(self.attributes, 'time', u'[TIME NOT SET]')
+    hostname_string = getattr(self.attributes, 'hostname', u'HOSTNAME NOT SET')
+    reporter_string = getattr(
+        self.attributes, 'reporter', u'[REPORTER NOT SET]')
+    body_string = getattr(self.attributes, 'body', u'[BODY NOT SET]')
 
     # TODO: this is a work in progress. The reason for the try-catch is that
     # the text parser is handed a non-text file and must deal with converting
     # arbitrary binary data.
     try:
-      line = u'%04d-%02d-%02d %s [%s] %s => %s' % (
-          year, month, day, self.attributes['time'],
-          self.attributes['hostname'], self.attributes['reporter'],
-          self.attributes['body'])
+      line = u'{0:s} {1:s} [{2:s}] {3:s} => {4:s}'.format(
+          date_string, time_string, hostname_string, reporter_string,
+          body_string)
     except UnicodeError:
       line = 'Unable to print line - due to encoding error.'
 
@@ -281,9 +319,9 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
       time_zone = pytz.UTC
 
     if len(times) < 3:
-      raise errors.TimestampNotCorrectlyFormed(
-          u'Unable to parse timestamp, not of the format HH:MM:SS [%s]' % (
-              self.PrintLine()))
+      raise errors.TimestampNotCorrectlyFormed((
+          u'Unable to parse timestamp, not of the format HH:MM:SS '
+          u'[{0:s}]').format(self.PrintLine()))
     try:
       secs = times[2].split('.')
       if len(secs) == 2:
@@ -299,7 +337,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
 
     except ValueError as e:
       raise errors.TimestampNotCorrectlyFormed(
-          u'Unable to parse: %s [er: %s]', self.PrintLine(), e)
+          u'Unable to parse: {0:s} [er: {1:s}]'.format(self.PrintLine(), e))
 
     return self.CreateEvent(
         timestamp, getattr(self, 'entry_offset', 0), self.attributes)
@@ -396,22 +434,30 @@ class TextCSVParser(parser.BaseParser):
       row = reader.next()
     except csv.Error:
       raise errors.UnableToParseFile(
-          u'File %s not a CSV file, unable to parse.' % file_entry.name)
+          u'File {0:s} not a CSV file, unable to parse.'.format(
+              file_entry.name))
 
-    if len(row) != len(self.COLUMNS):
-      raise errors.UnableToParseFile(
-          u'File %s not a %s. (wrong nr. of columns %d vs. %d)' % (
-              file_entry.name, self.parser_name, len(row), len(self.COLUMNS)))
+    number_of_columns = len(self.COLUMNS)
+    number_of_records = len(row)
+
+    if number_of_records != number_of_columns:
+      raise errors.UnableToParseFile((
+          u'File {0:s} not a {1:s}. (wrong nr. of columns {2:d} vs. '
+          u'{3:d})').format(
+              file_entry.name, self.parser_name, number_of_records,
+              number_of_columns))
 
     for key, value in row.items():
       if key == self.MAGIC_TEST_STRING or value == self.MAGIC_TEST_STRING:
-        raise errors.UnableToParseFile(
-            u'File %s not a %s (wrong nr. of columns, should be %d' % (
-                file_entry.name, self.parser_name, len(row)))
+        raise errors.UnableToParseFile((
+            u'File {0:s} not a {1:s} (wrong nr. of columns, should be '
+            u'{2:d}').format(
+                file_entry.name, self.parser_name, number_of_records))
 
     if not self.VerifyRow(row):
-      raise errors.UnableToParseFile('File %s not a %s. (wrong magic)' % (
-          file_entry.name, self.parser_name))
+      raise errors.UnableToParseFile(
+          u'File {0:s} not a {1:s}. (wrong magic)'.format(
+              file_entry.name, self.parser_name))
 
     for event_object in self._ParseRow(row):
       if event_object:
@@ -457,12 +503,16 @@ def PyParseRangeCheck(lower_bound, upper_bound):
       check_number = tokens[0]
     except IndexError:
       check_number = -1
+
     if check_number < lower_bound:
-      raise pyparsing.ParseException('Value [{}] is lower than {}'.format(
-          check_number, lower_bound))
+      raise pyparsing.ParseException(
+          u'Value: {0:d} precedes lower bound: {1:d}'.format(
+              check_number, lower_bound))
+
     if check_number > upper_bound:
-      raise pyparsing.ParseException('Value [{}] is higher than {}'.format(
-          check_number, upper_bound))
+      raise pyparsing.ParseException(
+          u'Value: {0:d} exceeds upper bound: {1:d}'.format(
+              check_number, upper_bound))
 
   # Since callback methods for pyparsing need to accept certain parameters
   # and there is no way to define conditions, like upper and lower bounds
