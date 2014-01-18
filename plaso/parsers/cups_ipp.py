@@ -32,7 +32,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 # INFO: http://tools.ietf.org/html/rfc291 (IPP 1.1, 2.0 not available)
 # TODO: RFC Pendings types: resolution, dateTime, rangeOfInteger.
 #       "dateTime" is not used by Mac OS, instead it uses integer types.
-# TODO: Only tested against CUPS IPP Mac OS X Control Files.
+# TODO: Only tested against CUPS IPP Mac OS X.
 
 
 class CupsIppEvent(event.EventObject):
@@ -58,7 +58,7 @@ class CupsIppEvent(event.EventObject):
         copies: Integer with the number of copies.
         application: String with the application that prints the document.
         doc_type: String with the type of document.
-        data_dic: Dictionary with all the data comming from the file.
+        data_dict: Dictionary with all the parsed data comming from the file.
     """
     super(CupsIppEvent, self).__init__()
     self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
