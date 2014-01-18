@@ -15,7 +15,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This file contains SELinux log file parser in plaso.
 
    Information updated 16 january 2013.
@@ -86,9 +85,12 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     # SELinux audit file and used to retrieve the audit type. From there two
     # next states are possible: TIME or failure, since TIME state is required.
     # An empty type is not accepted and it will cause a failure.
-    lexer.Token('INITIAL', r'^type=([\w]+)[ \t]+msg=audit',
+    # Examples:
+    #   type=SYSCALL msg=audit(...): ...
+    #   type=UNKNOWN[1323] msg=audit(...): ...
+    lexer.Token('INITIAL', r'^type=([\w]+(\[[0-9]+\])?)[ \t]+msg=audit',
                 'ParseType', 'TIMESTAMP'),
-    lexer.Token('TIMESTAMP', r'\(([0-9]+)\.([0-9]+):[0-9]*\):',
+    lexer.Token('TIMESTAMP', r'\(([0-9]+)\.([0-9]+):([0-9]*)\):',
                 'ParseTime', 'STRING'),
     # Get the log entry description and stay in the same state.
     lexer.Token('STRING', r'[ \t]*([^\r\n]+)', 'ParseString', ''),
@@ -117,20 +119,23 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
 
   def ParseTime(self, match, **_):
     """Parse the log timestamp."""
+    # TODO: do something with match.group(3) ?
     try:
-      self.timestamp = timelib.Timestamp.FromPosixTime(
-        int(match.group(1))) + (int(match.group(2))*1000)
-    except ValueError as e:
-      logging.error(('Error %s, unable to get UTC timestamp', e))
+      number_of_seconds = int(match.group(1), 10)
+      timestamp = timelib.Timestamp.FromPosixTime(number_of_seconds)
+      timestamp += int(match.group(2), 10) * 1000
+      self.timestamp = timestamp
+    except ValueError as exception:
+      logging.error(
+          u'Unable to retrieve timestamp with error: {0:s}'.format(exception))
       self.timestamp = 0
       raise lexer.ParseError(u'Not a valid timestamp.')
 
-  def ParseString(self, match, **_):
+  def ParseString(self, match, **unused_kwargs):
     """Add a string to the body attribute.
 
     This method extends the one from TextParser slightly,
     searching for the 'pid=[0-9]+' value inside the message body.
-
     """
     try:
       self.attributes['body'] += match.group(1)
@@ -144,9 +149,9 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     except IndexError:
       self.attributes['body'] += match.group(0).strip('\n')
 
-  def ParseFailed(self, **_):
+  def ParseFailed(self, **unused_kwargs):
     """Entry parsing failed callback."""
-    raise lexer.ParseError(u'Not a proper SELinux line.')
+    raise lexer.ParseError(u'Unable to parse SELinux log line.')
 
   def ParseLine(self, zone):
     """Parse a single line from the SELinux audit file.
@@ -159,12 +164,13 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
       timestamp are UTC.
 
     Returns:
-      An EventObject that is constructed from the selinux entry.
+      An event object (instance of EventObject) that is constructed
+      from the selinux entry.
     """
     if not self.timestamp:
       raise errors.TimestampNotCorrectlyFormed(
           u'Unable to parse entry, timestamp not defined.')
     offset = getattr(self, 'entry_offset', 0)
-    evt = SELinuxLineEvent(self.timestamp, offset, self.attributes)
+    event_object = SELinuxLineEvent(self.timestamp, offset, self.attributes)
     self.timestamp = 0
-    return evt
+    return event_object

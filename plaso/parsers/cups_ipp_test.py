@@ -21,18 +21,18 @@ import unittest
 
 # pylint: disable-msg=unused-import
 from plaso.formatters import cups_ipp as cups_ipp_formatter
+from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import preprocess
 from plaso.parsers import cups_ipp
 from plaso.parsers import test_lib
+
 
 class CupsIppParserTest(test_lib.ParserTestCase):
   """The unit test for Mac Cups IPP parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = preprocess.PlasoPreprocess()
-
+    pre_obj = event.PreprocessObject()
     self._parser = cups_ipp.CupsIppParser(pre_obj, None)
 
   def testParse(self):

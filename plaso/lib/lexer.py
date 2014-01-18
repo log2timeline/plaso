@@ -38,8 +38,8 @@ class Token(object):
       next_state: The next state we transition to if this Token matches.
       flags: re flags.
     """
-    self.state_regex = re.compile(state_regex, re.DOTALL | re.M | re.S | re.U |
-                                  flags)
+    self.state_regex = re.compile(
+        state_regex, re.DOTALL | re.M | re.S | re.U | flags)
     self.regex = re.compile(regex, re.DOTALL | re.M | re.S | re.U | flags)
     self.re_str = regex
     self.actions = []
@@ -100,6 +100,7 @@ class Lexer(object):
 
       # The match consumes the data off the buffer (the handler can put it back
       # if it likes)
+      # TODO: using joins might be more efficient here.
       self.processed_buffer += self.buffer[:m.end()]
       self.buffer = self.buffer[m.end():]
       self.processed += m.end()
@@ -136,7 +137,7 @@ class Lexer(object):
 
   def Feed(self, data):
     """Feed the buffer with data."""
-    self.buffer += data
+    self.buffer = ''.join([self.buffer, data])
 
   def Empty(self):
     """Return a boolean indicating if the buffer is empty."""
@@ -209,7 +210,6 @@ class SelfFeederMixIn(Lexer):
     """Feed data into the buffer."""
     data = self.file_object.read(size)
     Lexer.Feed(self, data)
-
     return len(data)
 
 
