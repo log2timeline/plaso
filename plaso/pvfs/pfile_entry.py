@@ -519,22 +519,21 @@ class TSKFileEntry(BaseFileEntry):
       if image_inode == 0:
         continue
 
+      # Pytsk returns a UTF-8 encoded byte string.
+      name = tsk_directory_entry.info.name.name
+      try:
+        directory_entry_name = name.decode('utf8')
+      except UnicodeError:
+        logging.warning(u'Non UTF-8 directory entry name for inode: {}'.format(
+            tsk_directory_entry.info.meta.addr))
+        directory_entry_name = name.decode('utf8', 'ignore')
+
       # Ignore the directory entries . and ..
-      if tsk_directory_entry.info.name.name in ['.', '..']:
+      if directory_entry_name in [u'.', u'..']:
         continue
 
-      # TODO: We have been seeing badly decoded filenames from the TSK
-      # layer that needs to be fixed either in dfVFS or upstream in TSK.
-      try:
-        directory_entry_path = u'/'.join([
-            self.pathspec.file_path, tsk_directory_entry.info.name.name])
-      except UnicodeDecodeError:
-        logging.warning(u'Unable to read directory name for inode: {}'.format(
-            tsk_directory_entry.info.meta.addr))
-        directory_entry_path = u'/'.join([
-            utils.GetUnicodeString(self.pathspec.file_path),
-            utils.GetUnicodeString(tsk_directory_entry.info.name.name)])
-
+      directory_entry_path = u'/'.join([
+          self.pathspec.file_path, directory_entry_name])
       path_spec = event.EventPathSpec()
 
       if hasattr(self.pathspec, 'vss_store_number'):
@@ -551,7 +550,7 @@ class TSKFileEntry(BaseFileEntry):
           path_spec, root=self.pathspec_root, fscache=self._fscache)
 
       # Work-around for limitations of pfile, will be fixed by PyVFS.
-      sub_file_entry.directory_entry_name = tsk_directory_entry.info.name.name
+      sub_file_entry.directory_entry_name = directory_entry_name
       yield sub_file_entry
 
   def IsAllocated(self):
