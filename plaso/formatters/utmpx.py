@@ -25,6 +25,7 @@ class UtmpxSessionFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'User: {user}',
       u'Status: {status}',
+      u'Computer Name: {computer_name}',
       u'Terminal: {terminal}']
 
   FORMAT_STRING_SHORT_PIECES = [u'User: {user}']
@@ -32,11 +33,3 @@ class UtmpxSessionFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_LONG = 'UTMPX session'
   SOURCE_SHORT = 'LOG'
 
-class UtmpxBootTimeFormatter(eventdata.EventFormatter):
-  """Formatter for the system boot time getted from utmpx file."""
-  DATA_TYPE = 'mac:utmpx:boottime'
-
-  FORMAT_STRING = u'System boot time from utmpx.'
-
-  SOURCE_LONG = 'UTMPX system boot time'
-  SOURCE_SHORT = 'LOG'

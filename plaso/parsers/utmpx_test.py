@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for utmpx file parser."""
+"""Tests for UTMPX file parser."""
 
 import unittest
 
@@ -43,53 +43,41 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 6)
 
     event_object = event_objects[0]
-
     # date -u -d"Wed, 13 Nov 2013 17:52:34" +"%s.%N"
     self.assertEqual(event_object.timestamp, 1384365154000000)
-
-    expected_string = (
-        u'System boot time from utmpx.')
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    expected_msg_short = u'User: N/A'
+    expected_msg = (
+        u'User: N/A Status: BOOT_TIME '
+        u'Computer Name: localhost Terminal: N/A')
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     event_object = event_objects[1]
-
     # date -u -d"Wed, 13 Nov 2013 17:52:41" +"%s736713"
     self.assertEqual(event_object.timestamp, 1384365161736713)
     self.assertEqual(event_object.user, u'moxilo')
     self.assertEqual(event_object.terminal, u'console', )
-    self.assertEqual(event_object.status, u'USER_PROCESS (0x07)')
-
+    self.assertEqual(event_object.status, u'USER_PROCESS')
+    self.assertEqual(event_object.computer_name, u'localhost')
     expected_msg = (
         u'User: moxilo Status: '
-        u'USER_PROCESS (0x07) Terminal: console')
+        u'USER_PROCESS '
+        u'Computer Name: localhost '
+        u'Terminal: console')
     expected_msg_short = (
         u'User: moxilo')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[3]
-
-    self.assertEqual(event_object.timestamp, 0)
-    self.assertEqual(event_object.user, u'N/A')
-    self.assertEqual(event_object. terminal, u'N/A')
-    self.assertEqual(event_object.status, u'EMPTY (0x00)')
-
-    expected_msg = (
-        u'User: N/A Status: EMPTY (0x00) Terminal: N/A')
-    expected_msg_short = (
-        u'User: N/A')
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
-
     event_object = event_objects[4]
-
     # date -u -d"Thu, 14 Nov 2013 04:32:56" +"%s641464"
     self.assertEqual(event_object.timestamp, 1384403576641464)
     self.assertEqual(event_object.user, u'moxilo')
     self.assertEqual(event_object.terminal, u'ttys002')
-    self.assertEqual(event_object.status, u'DEAD_PROCESS (0x08)')
-
+    self.assertEqual(event_object.status, u'DEAD_PROCESS')
     expected_msg = (
         u'User: moxilo Status: '
-        u'DEAD_PROCESS (0x08) Terminal: ttys002')
+        u'DEAD_PROCESS '
+        u'Computer Name: localhost '
+        u'Terminal: ttys002')
     expected_msg_short = (
         u'User: moxilo')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
