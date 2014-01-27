@@ -79,38 +79,44 @@ class HachoirParser(parser.BaseParser):
     try:
       fstream = hachoir_core.stream.InputIOStream(file_object, None, tags=[])
     except hachoir_core.error.HachoirError as exception:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     if not fstream:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, 'Not fstream'))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, 'Not fstream'))
 
     try:
       doc_parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     if not doc_parser:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, 'Not parser'))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, 'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(doc_parser)
     except (AssertionError, AttributeError) as exception:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     try:
       metatext = metadata.exportPlaintext(human=False)
     except AttributeError as exception:
-      raise errors.UnableToParseFile(u'[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     if not metatext:
       raise errors.UnableToParseFile(
-          u'[%s] unable to parse file %s: No metadata' % (
+          u'[{0:s}] unable to parse file {1:s}: No metadata'.format(
               self.parser_name, file_entry.name))
 
     event_container = event.EventContainer()
@@ -150,8 +156,9 @@ class HachoirParser(parser.BaseParser):
 
     length = len(event_container)
     if not length:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, 'None'))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, 'None'))
 
     event_container.metadata = attributes
     file_object.close()

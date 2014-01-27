@@ -41,9 +41,10 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
     """
     try:
       timestamp = evtx_record.get_written_time_as_integer()
-    except OverflowError as e:
+    except OverflowError as exception:
       logging.warning(
-          u'Unable to read the timestamp from record, error: %s', e)
+          u'Unable to read the timestamp from record, error: {0:s}'.format(
+              exception))
       timestamp = 0
 
     super(WinEvtxRecordEvent, self).__init__(
@@ -53,13 +54,18 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
     self.offset = evtx_record.offset
     try:
       self.record_number = evtx_record.identifier
-    except OverflowError as e:
-      logging.warning(u'Unable to assign the record number [%s].', e)
+    except OverflowError as exception:
+      logging.warning(
+          u'Unable to assign the record number with error: {0:s}.'.format(
+              exception))
 
     try:
       self.event_identifier = evtx_record.event_identifier
-    except OverflowError as e:
-      logging.warning(u'Unable to assign the event identifier [%s].', e)
+    except OverflowError as exception:
+      logging.warning(
+          u'Unable to assign the event identifier with error: {0:s}.'.format(
+              exception))
+
     self.event_level = evtx_record.event_level
     self.source_name = evtx_record.source_name
     # Computer name is the value stored in the event record and does not
@@ -103,25 +109,28 @@ class WinEvtxParser(parser.BaseParser):
     try:
       evtx_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     for record_index in range(0, evtx_file.number_of_records):
       try:
         evtx_record = evtx_file.get_record(record_index)
         yield WinEvtxRecordEvent(evtx_record)
       except IOError as exception:
-        logging.warning(
-            u'[%s] unable to parse event record: %d in file: %s: %s',
-            self.parser_name, record_index, file_entry.name, exception)
+        logging.warning((
+            u'[{0:s}] unable to parse event record: {1:s} in file: {2:s} '
+            u'with error: {3:s}').format(
+                self.parser_name, record_index, file_entry.name, exception))
 
     for record_index in range(0, evtx_file.number_of_recovered_records):
       try:
         evtx_record = evtx_file.get_recovered_record(record_index)
         yield WinEvtxRecordEvent(evtx_record, recovered=True)
       except IOError as exception:
-        logging.debug(
-            u'[%s] unable to parse recovered event record: %d in file: %s: '
-            '%s', self.parser_name, record_index, file_entry.name, exception)
+        logging.debug((
+            u'[{0:s}] unable to parse recovered event record: {1:d} in file: '
+            u'{2:s} with error: {3:s}').format(
+                self.parser_name, record_index, file_entry.name, exception))
 
     file_object.close()

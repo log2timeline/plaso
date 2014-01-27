@@ -136,7 +136,8 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     elif key == 'no_header_single_line':
       return self._ParseNoHeaderSingleLine(structure)
     else:
-      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def _ParseLogline(self, structure):
     """Parse a logline and store appropriate attributes."""

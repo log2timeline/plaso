@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains utility functions."""
+
 import logging
 
 from plaso.frontend import presets
 from plaso.lib import errors
 from plaso.lib import lexer
+
 
 RESERVED_VARIABLES = frozenset(
     ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue', 'timestamp',
@@ -137,7 +140,7 @@ class PathReplacer(lexer.Lexer):
 
   def GetPath(self):
     """Run the lexer and replace path."""
-    while 1:
+    while True:
       _ = self.NextToken()
       if self.Empty():
         break
