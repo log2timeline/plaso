@@ -179,8 +179,9 @@ class MsiecfParser(parser.BaseParser):
 
       self.version = msiecf_file.format_version
     except IOError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     for item_index in range(0, msiecf_file.number_of_items):
       try:
@@ -190,8 +191,9 @@ class MsiecfParser(parser.BaseParser):
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
       except IOError as exception:
-        logging.warning('[%s] unable to parse item: %d in file: %s: %s' % (
-            self.parser_name, item_index, file_entry.name, exception))
+        logging.warning(
+            u'[{0:s}] unable to parse item: {1:d} in file: {2:s}: {3:s}'.format(
+                self.parser_name, item_index, file_entry.name, exception))
 
     for item_index in range(0, msiecf_file.number_of_recovered_items):
       try:
@@ -201,8 +203,9 @@ class MsiecfParser(parser.BaseParser):
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
       except IOError as exception:
-        logging.info(
-            '[%s] unable to parse recovered item: %d in file: %s: %s' % (
-            self.parser_name, item_index, file_entry.name, exception))
+        logging.info((
+            u'[{0:s}] unable to parse recovered item: {1:d} in file: {2:s}: '
+            u'{3:s}').format(
+                self.parser_name, item_index, file_entry.name, exception))
 
     file_object.close()

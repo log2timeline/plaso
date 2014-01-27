@@ -405,14 +405,15 @@ class OleCfParser(parser.BaseParser):
       creation_time = olecf_item.get_creation_time_as_integer()
     except OverflowError as exception:
       logging.warning(
-          u'Unable to read the creaton time, error: %s', exception)
+          u'Unable to read the creaton time, error: {0:s}'.format(exception))
       creation_time = 0
 
     try:
       modification_time = olecf_item.get_modification_time_as_integer()
     except OverflowError as exception:
       logging.warning(
-          u'Unable to read the modification time, error: %s', exception)
+          u'Unable to read the modification time, error: {0:s}'.format(
+              exception))
       modification_time = 0
 
     # TODO: needed plug-in behaviors:
@@ -496,8 +497,9 @@ class OleCfParser(parser.BaseParser):
     try:
       olecf_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     # Need to yield every event container individually otherwise
     # a generator object is yielded.
