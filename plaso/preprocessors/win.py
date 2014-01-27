@@ -118,7 +118,7 @@ class WinRegCodePage(preprocess_interface.WinRegistryPreprocess):
     """Retrieves the codepage or cp1252 by default."""
     value = key.GetValue('ACP')
     if value and type(value.data) == unicode:
-      return u'cp%s' % value.data
+      return u'cp{0:s}'.format(value.data)
 
     logging.warning('Unable to determine ASCII string codepage, '
                     'defaulting to cp1252.')

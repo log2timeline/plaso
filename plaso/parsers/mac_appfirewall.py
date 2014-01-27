@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -120,7 +121,8 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     if key == 'logline' or key == 'repeated':
       return self._ParseLogLine(structure, key)
     else:
-      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def _ParseLogLine(self, structure, key):
     """Parse a logline and store appropriate attributes.
@@ -168,7 +170,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       action = structure.action.decode('utf-8')
     except UnicodeDecodeError:
       logging.warning(
-          'Decode UTF8 failed, the message string may be cut short.')
+          u'Decode UTF8 failed, the message string may be cut short.')
       action = structure.action.decode('utf-8', 'ignore')
     # Due to the use of CharsNotIn pyparsing structure contains whitespaces
     # that need to be removed.
@@ -210,16 +212,16 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     if not time:
       logging.error(
-          ('Unable to determine correct year of log file, using current '
-           'year'))
+          u'Unable to determine correct year of log file, defaulting to '
+          u'current year.')
       return timelib.GetCurrentYear()
 
     try:
       timestamp = datetime.datetime.fromtimestamp(time, zone)
-    except ValueError as e:
-      logging.error(
-          ('Unable to determine correct year of log file, using current '
-           'one, error msg: %s', e))
+    except ValueError as exception:
+      logging.error((
+          u'Unable to determine correct year of log file with error: {0:s}, '
+          u'defaulting to current year.').format(exception))
       return timelib.GetCurrentYear()
     return timestamp.year
 

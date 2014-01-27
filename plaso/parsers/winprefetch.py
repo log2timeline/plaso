@@ -250,7 +250,7 @@ class WinPrefetchParser(parser.BaseParser):
     format_version = file_header.get('version', None)
     if format_version not in [17, 23, 26]:
       raise errors.UnableToParseFile(
-          'Unsupported format version: %d' % format_version)
+          u'Unsupported format version: {0:d}'.format(format_version))
 
     file_information = self._ParseFileInformation(file_object, format_version)
 
