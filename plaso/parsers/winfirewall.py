@@ -99,7 +99,8 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     elif key == 'logline':
       return self._ParseLogLine(structure)
     else:
-      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def _ParseCommentRecord(self, structure):
     """Parse a comment and store appropriate attributes."""

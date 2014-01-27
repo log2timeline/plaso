@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,15 +15,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Formatter for Hachoir events."""
+
 from plaso.lib import eventdata
+
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class HachoirFormatter(eventdata.EventFormatter):
   """Formatter for Hachoir based events."""
+
   DATA_TYPE = 'metadata:hachoir'
   FORMAT_STRING = u'{data}'
 
@@ -40,8 +43,10 @@ class HachoirFormatter(eventdata.EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
-    event_object.data = u' '.join(
-        [u'%s: %s' % (key, value) for (key, value) in sorted(
-            event_object.metadata.items())])
+    string_parts = []
+    for key, value in sorted(event_object.metadata.items()):
+      string_parts.append(u'{0:s}: {1:s}'.format(key, value))
+
+    event_object.data = u' '.join(string_parts)
 
     return super(HachoirFormatter, self).GetMessages(event_object)

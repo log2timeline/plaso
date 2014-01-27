@@ -147,7 +147,8 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   def ParseRecord(self, key, structure):
     """Parse each record structure and return an EventObject if applicable."""
     if key != 'logline':
-      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
       return
     epoch = None
     try:

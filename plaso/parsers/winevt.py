@@ -45,12 +45,17 @@ class WinEvtRecordEventContainer(event.EventContainer):
     self.offset = evt_record.offset
     try:
       self.record_number = evt_record.identifier
-    except OverflowError as e:
-      logging.warning(u'Unable to assign the record  identifier [%s].', e)
+    except OverflowError as exception:
+      logging.warning(
+          u'Unable to assign the record identifier with error: {0:s}.'.format(
+              exception))
     try:
       self.event_identifier = evt_record.event_identifier
-    except OverflowError as e:
-      logging.warning(u'Unable to assign the event identifier [%s].', e)
+    except OverflowError as exception:
+      logging.warning(
+          u'Unable to assign the event identifier with error: {0:s}.'.format(
+              exception))
+
     self.event_type = evt_record.event_type
     self.event_category = evt_record.event_category
     self.source_name = evt_record.source_name
@@ -96,20 +101,24 @@ class WinEvtParser(parser.BaseParser):
 
     try:
       creation_time = evt_record.get_creation_time_as_integer()
-    except OverflowError as e:
+    except OverflowError as exception:
       logging.warning(
-          u'Unable to read the timestamp from record, error: %s', e)
+          u'Unable to read the timestamp from record with error: {0:s}'.format(
+              exception))
       creation_time = 0
+
     event_container.Append(event.PosixTimeEvent(
         creation_time, eventdata.EventTimestamp.CREATION_TIME,
         event_container.data_type))
 
     try:
       written_time = evt_record.get_written_time_as_integer()
-    except OverflowError as e:
+    except OverflowError as exception:
       logging.warning(
-          u'Unable to read the timestamp from record, error: %s', e)
+          u'Unable to read the timestamp from record with error: {0:s}'.format(
+              exception))
       written_time = 0
+
     event_container.Append(event.PosixTimeEvent(
         written_time, eventdata.EventTimestamp.WRITTEN_TIME,
         event_container.data_type))
@@ -136,17 +145,19 @@ class WinEvtParser(parser.BaseParser):
     try:
       evt_file.open_file_object(file_object)
     except IOError as exception:
-      raise errors.UnableToParseFile('[%s] unable to parse file %s: %s' % (
-          self.parser_name, file_entry.name, exception))
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     for record_index in range(0, evt_file.number_of_records):
       try:
         evt_record = evt_file.get_record(record_index)
         yield self._ParseRecord(evt_record)
       except IOError as exception:
-        logging.warning(
-            '[%s] unable to parse event record: %d in file: %s: %s' % (
-            self.parser_name, record_index, file_entry.name, exception))
+        logging.warning((
+            u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
+            u'with error: {3:s}').format(
+                self.parser_name, record_index, file_entry.name, exception))
 
     for record_index in range(0, evt_file.number_of_recovered_records):
       try:
@@ -154,8 +165,8 @@ class WinEvtParser(parser.BaseParser):
         yield self._ParseRecord(evt_record, recovered=True)
       except IOError as exception:
         logging.info((
-            u'[%s] unable to parse recovered event record: %d in file: %s: '
-            u'%s') % (
+            u'[{0:s}] unable to parse recovered event record: {1:d} in file: '
+            u'{2:s} with error: {3:s}').format(
                 self.parser_name, record_index, file_entry.name, exception))
 
     file_object.close()

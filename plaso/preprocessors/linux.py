@@ -33,9 +33,10 @@ class LinuxHostname(preprocess_interface.PreprocessPlugin):
     """Return the hostname."""
     file_entry = self._collector.OpenFileEntry(u'/etc/hostname')
     file_object = file_entry.Open()
-    result = u'%s' % file_object.read(512)
+    file_data = file_object.read(512)
     file_object.close()
-    return result
+
+    return u'{0:s}'.format(file_data)
 
 
 class LinuxUsernames(preprocess_interface.PreprocessPlugin):

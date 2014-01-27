@@ -238,7 +238,7 @@ class OperaGlobalHistoryParser(parser.BaseParser):
     Yields:
       A tuple of: title, url, timestamp, popularity_index.
     """
-    while 1:
+    while True:
       title, url, timestamp, popularity_index = self._ReadRecord(file_object)
       if not title:
         raise StopIteration

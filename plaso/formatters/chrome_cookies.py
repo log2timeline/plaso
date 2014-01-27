@@ -41,8 +41,8 @@ class ChromeCookieFormatter(eventdata.ConditionalEventFormatter):
   def GetMessages(self, event_object):
     """Format the message string."""
     if event_object.data_type != self.DATA_TYPE:
-      raise errors.WrongFormatter('Unsupported data type: %s.' % (
-          event_object.data_type))
+      raise errors.WrongFormatter(
+          u'Unsupported data type: {0:s}.'.format(event_object.data_type))
 
     # TODO: Move this to a more generic GA cookie formatter once
     # more cookie parsers are implemented, since this should be a

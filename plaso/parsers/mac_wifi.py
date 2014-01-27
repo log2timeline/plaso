@@ -186,10 +186,10 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
     try:
       timestamp = datetime.datetime.fromtimestamp(time, zone)
-    except ValueError as e:
-      logging.error(
-          ('Unable to determine correct year of syslog file, using current '
-           'one, error msg: %s', e))
+    except ValueError as exception:
+      logging.error((
+          u'Unable to determine correct year of syslog file, using current '
+          u'one, with error: {0:s}').format(exception))
       return timelib.GetCurrentYear()
     return timestamp.year
 
@@ -240,7 +240,8 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     if key == 'logline':
       return self._ParseLogLine(structure)
     elif key != 'header':
-      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, line):
     """Verify that this file is a Mac Wifi log file."""
