@@ -20,7 +20,7 @@
 # Since abc does not seem to have an @abc.abstractclassmethod we're using
 # @abc.abstractmethod instead and shutting up pylint about:
 # E0213: Method should have "self" as first argument.
-# pylint: disable-msg=E0213
+# pylint: disable-msg=no-self-argument
 
 import abc
 
