@@ -16,10 +16,6 @@
 # limitations under the License.
 """This file contains a parser for the Mozilla Firefox history."""
 
-# Shut up pylint
-# * W0622: Redefining built-in 'type'
-# pylint: disable=W0622
-
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.sqlite_plugins import interface
@@ -81,6 +77,7 @@ class FirefoxPlacesBookmark(event.EventContainer):
   }
   _TYPES.setdefault('N/A')
 
+  # pylint: disable=redefined-builtin
   def __init__(self, row_id, type, title, url, places_title, hostname,
                visit_count):
     """Initializes the event object.

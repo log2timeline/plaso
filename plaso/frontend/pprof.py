@@ -139,7 +139,7 @@ def Main():
 
   PrintHeader(options)
   # Stats attribute used for console sesssions.
-  # pylint: disable-msg=W0612
+  # pylint: disable-msg=unused-variable
   if options.storage:
     stats = ProcessStorage(options)
   else:
@@ -244,7 +244,7 @@ def ProcessFile(options):
 
   print utils.FormatHeader('Parsers Loaded')
   # Accessing protected member.
-  # pylint: disable-msg=W0212
+  # pylint: disable-msg=protected-access
   for parser in sorted(my_worker._parsers['all']):
     print utils.FormatOutputString('', parser.parser_name)
 

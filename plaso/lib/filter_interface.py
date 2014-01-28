@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -60,7 +61,7 @@ class FilterObject(object):
     return 0
 
   @abc.abstractmethod
-  def CompileFilter(self, filter_string):   # pylint: disable-msg=W0613
+  def CompileFilter(self, unused_filter_string):
     """Verify filter string and prepare the filter for later usage.
 
     This function verifies the filter string matches the definition of
@@ -68,8 +69,8 @@ class FilterObject(object):
     matching against passed in EventObjects.
 
     Args:
-      filter_string: A string passed in that should be recognized by the filter
-                     class.
+      unused_filter_string: A string passed in that should be recognized by
+                            the filter class.
 
     Raises:
       errors.WrongPlugin: If this filter string does not match the filter
@@ -77,17 +78,17 @@ class FilterObject(object):
     """
     raise errors.WrongPlugin('Not the correct filter for this string.')
 
-  def Match(self, event_object):    # pylint: disable-msg=W0613
+  def Match(self, unused_event_object):
     """Compare an EventObject to the filter expression and return a boolean.
 
     This function returns True if the filter should be passed through the filter
     and False otherwise.
 
     Args:
-      event_object: An EventObject that should be evaluated against the filter.
+      unused_event_object: An event object (instance of EventObject) that
+                           should be evaluated against the filter.
 
     Returns:
       Boolean indicating whether the filter matches the object or not.
     """
     return False
-

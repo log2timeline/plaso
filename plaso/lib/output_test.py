@@ -127,7 +127,7 @@ class EventBufferTest(unittest.TestCase):
       def CheckBufferLength(event_buffer, expected):
         if not event_buffer.check_dedups:
           expected = 0
-        # pylint: disable-msg=W0212
+        # pylint: disable-msg=protected-access
         self.assertEquals(len(event_buffer._buffer_dict), expected)
 
       formatter = TestOutput(fh)
