@@ -181,7 +181,7 @@ class SkypePlugin(interface.SQLitePlugin):
       ['Chats', 'Accounts', 'Conversations', 'Contacts', 'SMSes', 'Transfers',
        'CallMembers', 'Calls'])
 
-  def ParseAccountInformation(self, row):
+  def ParseAccountInformation(self, row, **unused_kwargs):
     """Parses the Accounts database."""
     container = SkypeAccountContainer(
         row['fullname'], row['given_displayname'], row['emails'],
@@ -213,7 +213,7 @@ class SkypePlugin(interface.SQLitePlugin):
 
     yield container
 
-  def ParseChat(self, row):
+  def ParseChat(self, row, **unused_kwargs):
     """Parses a chat message row.
 
     Args:
@@ -238,13 +238,13 @@ class SkypePlugin(interface.SQLitePlugin):
 
     yield SkypeChatEvent(row, to_account)
 
-  def ParseSMS(self, row):
+  def ParseSMS(self, row, **unused_kwargs):
     """Parse SMS."""
     dst_number = row['dstnum_sms'].replace(' ', '')
 
     yield SkypeSMSEvent(row, dst_number)
 
-  def ParseCall(self, row):
+  def ParseCall(self, row, **unused_kwargs):
     """Parse the calls taking into accounts some rows.
 
     Args:
@@ -297,7 +297,7 @@ class SkypePlugin(interface.SQLitePlugin):
           logging.debug(u'Unknown when the call {} was'
                         u'finished.'.format(row['id']))
 
-  def ParseFileTransfer(self, row):
+  def ParseFileTransfer(self, row, **unused_kwargs):
     """Parse the transfer files.
 
     Args:

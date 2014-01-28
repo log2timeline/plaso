@@ -25,13 +25,14 @@ from plaso.pvfs import pfile
 class SQLitePluginTestCase(test_lib.ParserTestCase):
   """The unit test case for SQLite database plugins."""
 
-  def _ParseDatabaseFileWithPlugin(self, plugin_object, path):
+  def _ParseDatabaseFileWithPlugin(self, plugin_object, path, cache=None):
     """Parses a file as a SQLite database and returns an event generator.
 
     Args:
       plugin_object: The plugin object that is used to extract an event
                      generator.
       path: The path to the SQLite database file.
+      cache: A cache object (instance of SQLiteCache).
 
     Returns:
       A generator of event objects as returned by the plugin.
@@ -39,7 +40,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
     file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
     with sqlite_interface.SQLiteDatabase(file_entry) as database:
-      event_generator = plugin_object.Process(database=database)
+      event_generator = plugin_object.Process(cache=cache, database=database)
 
     self.assertNotEquals(event_generator, None)
 

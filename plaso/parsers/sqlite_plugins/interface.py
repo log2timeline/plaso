@@ -28,6 +28,63 @@ import pytz
 import sqlite3
 
 
+class SQLiteCache(plugin.BasePluginCache):
+  """A cache storing query results for SQLite plugins."""
+
+  def CacheQueryResults(
+      self, sql_results, attribute_name, key_name, values):
+    """Build a dict object based on a SQL command.
+
+    This function will take a SQL command, execute it and for
+    each resulting row it will store a key in a dictionary.
+
+    An example:
+      sql_results = A SQL result object after executing the
+                    SQL command: 'SELECT foo, bla, bar FROM my_table'
+      attribute_name = 'all_the_things'
+      key_name = 'foo'
+      values = ['bla', 'bar']
+
+    Results from running this against the database:
+      'first', 'stuff', 'things'
+      'second', 'another stuff', 'another thing'
+
+    This will result in a dict object being created in the
+    cache, called 'all_the_things' and it will contain the following value:
+
+      all_the_things = {
+          'first': ['stuff', 'things'],
+          'second': ['another_stuff', 'another_thing']}
+
+    Args:
+      sql_results: The SQL result object (sqlite.Cursor) after executing
+                   a SQL command on the database.
+      attribute_name: The attribute name in the cache to store
+                      results to. This will be the name of the
+                      dict attribute.
+      key_name: The name of the result field that should be used
+                as a key in the resulting dict that is created.
+      values: A list of result fields that are stored as values
+              to the dict. If this list has only one value in it
+              the value will be stored directly, otherwise the value
+              will be a list containing the extracted results based
+              on the names provided in this list.
+    """
+    setattr(self, attribute_name, {})
+    attribute = getattr(self, attribute_name)
+
+    row = sql_results.fetchone()
+    while row:
+      if len(values) == 1:
+        attribute[row[key_name]] = row[values[0]]
+      else:
+        attribute[row[key_name]] = []
+        for value in values:
+          attribute[row[key_name]].append(row[value])
+
+      row = sql_results.fetchone()
+
+
 class SQLitePlugin(plugin.BasePlugin):
   """A SQLite plugin for Plaso."""
 
@@ -49,7 +106,7 @@ class SQLitePlugin(plugin.BasePlugin):
     self.db = None
     self.zone = getattr(self._knowledge_base, 'zone', pytz.utc)
 
-  def Process(self, database=None, **kwargs):
+  def Process(self, cache=None, database=None, **kwargs):
     """Determine if this is the right plugin for this database.
 
     This function takes a SQLiteDatabase object and compares the list
@@ -60,6 +117,7 @@ class SQLitePlugin(plugin.BasePlugin):
     objects.
 
     Args:
+      cache: A SQLiteCache object.
       database: A SQLiteDatabase object.
 
     Returns:
@@ -81,9 +139,9 @@ class SQLitePlugin(plugin.BasePlugin):
     super(SQLitePlugin, self).Process(**kwargs)
 
     self.db = database
-    return self.GetEntries()
+    return self.GetEntries(cache)
 
-  def GetEntries(self):
+  def GetEntries(self, cache=None):
     """Yields EventObjects extracted from a SQLite database."""
     for query, action in self.QUERIES:
       try:
@@ -92,7 +150,7 @@ class SQLitePlugin(plugin.BasePlugin):
         sql_results = cursor.execute(query)
         row = sql_results.fetchone()
         while row:
-          event_generator = call_back(row=row)
+          event_generator = call_back(row=row, cache=cache)
           if event_generator:
             for event_object in event_generator:
               event_object.query = query
@@ -106,7 +164,7 @@ class SQLitePlugin(plugin.BasePlugin):
       except sqlite3.DatabaseError as e:
         logging.debug('SQLite error occured: %s', e)
 
-  def Default(self, unused_row):
+  def Default(self, unused_row, unused_cache):
     """Default callback method for SQLite events, does nothing."""
     logging.debug('Default handler: {0:s}'.format(unused_row))
 

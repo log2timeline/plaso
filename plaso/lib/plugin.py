@@ -82,8 +82,15 @@ class BasePlugin(object):
     return self.NAME
 
   @abc.abstractmethod
-  def GetEntries(self):
-    """Extract and return EventObjects from the data structure."""
+  def GetEntries(self, cache=None):
+    """Extract and return EventObjects from the data structure.
+
+    Args:
+      cache: An optional cache object (BasePluginCache).
+
+    Yields:
+      EventObjects extracted from the data set.
+    """
 
   def Process(self, **kwargs):
     """Evaluate if this is the correct plugin and return a generator.
@@ -107,6 +114,18 @@ class BasePlugin(object):
     """
     if kwargs:
       raise ValueError(u'Unused keyword arguments.')
+
+
+class BasePluginCache(object):
+  """A generic cache object for plugins.
+
+  This cache object can be used to store various information that needs
+  to be cached to speed up code execution.
+  """
+
+  def GetResults(self, attribute):
+    """Return back a cached attribute if it exists."""
+    return getattr(self, attribute, None)
 
 
 def GetRegisteredPlugins(
