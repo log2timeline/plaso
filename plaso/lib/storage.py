@@ -913,7 +913,7 @@ class StorageFile(object):
 
     return information
 
-  def SetStoreLimit(self, my_filter=None):    # pylint:disable-msg=W0613
+  def SetStoreLimit(self, unused_my_filter=None):
     """Set a limit to the stores used for returning data."""
     # We are setting the bounds now, remove potential prior bound settings.
     if hasattr(self, '_bound_first'):

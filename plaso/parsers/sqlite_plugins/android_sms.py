@@ -18,9 +18,6 @@
 
 Android SMS messages are stored in SQLite database files named mmssms.dbs.
 """
-# Shut up pylint
-# * R0201: Method could be a function
-# pylint: disable=R0201
 
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -30,7 +27,9 @@ from plaso.parsers.sqlite_plugins import interface
 
 class AndroidSmsEvent(event.EventObject):
   """Convenience class for an Android SMS event."""
+
   DATA_TYPE = 'android:messaging:sms'
+
   def __init__(self, timestamp, address, sms_read, sms_type, body):
     """Initializes the event object.
 

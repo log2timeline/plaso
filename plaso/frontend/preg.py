@@ -399,7 +399,7 @@ class MyMagics(magic.Magics):
 
       # Set the registry key and the prompt.
       RegCache.cur_key = registry_key
-      ip = get_ipython()    # pylint: disable-msg=E0602
+      ip = get_ipython()    # pylint: disable-msg=undefined-variable
       ip.prompt_manager.in_template = u'{}->{} [\\#] '.format(
           StripCurlyBrace(RegCache.GetHiveName()),
           StripCurlyBrace(path).replace('\\', '\\\\'))
