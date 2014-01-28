@@ -429,14 +429,11 @@ class OleCfParser(parser.BaseParser):
     # TODO: for now ignore Document Summary Information and Summary Information
     # property streams outside of the root.
 
-    # Shut up pylint
-    # * W1401: Anomalous backslash in string: '\0'.
-    #          String constant might be missing an r prefix.
-    # pylint: disable-msg=W1401
+    # pylint: disable-msg=anomalous-backslash-in-string
     if level == 1 and olecf_item.name == '\005SummaryInformation':
       event_container = OleCfSummaryInfoEventContainer(olecf_item)
 
-    # pylint: disable-msg=W1401
+    # pylint: disable-msg=anomalous-backslash-in-string
     elif level == 1 and olecf_item.name == '\005DocumentSummaryInformation':
       event_container = OleCfDocumentSummaryInfoEventContainer(olecf_item)
 
