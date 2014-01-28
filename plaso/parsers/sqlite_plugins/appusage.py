@@ -80,7 +80,7 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset(['application_usage'])
 
-  def ParseApplicationUsageRow(self, row):
+  def ParseApplicationUsageRow(self, row, **unused_kwargs):
     """Parses an application usage row.
 
     Args:

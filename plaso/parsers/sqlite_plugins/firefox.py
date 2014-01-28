@@ -213,7 +213,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([
       'moz_places', 'moz_historyvisits', 'moz_bookmarks', 'moz_items_annos'])
 
-  def ParseBookmarkAnnotationRow(self, row):
+  def ParseBookmarkAnnotationRow(self, row, **unused_kwargs):
     """Parses a bookmark annotation row.
 
     Args:
@@ -236,7 +236,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
     yield container
 
-  def ParseBookmarkFolderRow(self, row):
+  def ParseBookmarkFolderRow(self, row, **unused_kwargs):
     """Parses a bookmark folder row.
 
     Args:
@@ -264,7 +264,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
     yield container
 
-  def ParseBookmarkRow(self, row):
+  def ParseBookmarkRow(self, row, **unused_kwargs):
     """Parses a bookmark row.
 
     Args:
@@ -288,7 +288,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
     yield container
 
-  def ParsePageVisitedRow(self, row):
+  def ParsePageVisitedRow(self, row, **unused_kwargs):
     """Parses a page visited row.
 
     Args:
@@ -378,7 +378,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset(['moz_downloads'])
 
-  def ParseDownloadsRow(self, row):
+  def ParseDownloadsRow(self, row, **unused_kwargs):
     """Parses a downloads row.
 
     Args:

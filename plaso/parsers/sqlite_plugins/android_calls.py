@@ -63,7 +63,7 @@ class AndroidCallPlugin(interface.SQLitePlugin):
       3: 'MISSED'
     }
 
-  def ParseCallsRow(self, row):
+  def ParseCallsRow(self, row, **unused_kwargs):
     """Parses a Call record row.
 
     Args:

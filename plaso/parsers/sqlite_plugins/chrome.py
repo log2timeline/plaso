@@ -147,7 +147,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
   CORE_MASK = 0xff
 
-  def ParseFileDownloadedRow(self, row):
+  def ParseFileDownloadedRow(self, row, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
@@ -162,7 +162,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         timestamp, row['id'], row['url'], row['full_path'],
         row['received_bytes'], row['total_bytes'])
 
-  def ParseNewFileDownloadedRow(self, row):
+  def ParseNewFileDownloadedRow(self, row, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
@@ -177,7 +177,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         timestamp, row['id'], row['url'], row['target_path'],
         row['received_bytes'], row['total_bytes'])
 
-  def ParseLastVisitedRow(self, row):
+  def ParseLastVisitedRow(self, row, **unused_kwargs):
     """Parses a last visited row.
 
     Args:

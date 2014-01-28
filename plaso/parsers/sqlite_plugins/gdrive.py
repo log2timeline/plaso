@@ -16,8 +16,8 @@
 # limitations under the License.
 """This file contains a parser for the Google Drive snaphots.
 
-   The Google Drive snapshots are stored in SQLite database files named
-   snapshot.db.
+The Google Drive snapshots are stored in SQLite database files named
+snapshot.db.
 """
 
 from plaso.lib import event
@@ -36,19 +36,17 @@ class GoogleDriveSnapshotCloudEntryEventContainer(event.EventContainer):
   # The following definition for values can be found on Patrick Olson's blog:
   # http://www.sysforensics.org/2012/05/google-drive-forensics-notes.html
   _DOC_TYPES = {
-      '0': 'FOLDER',
-      '1': 'FILE',
-      '2': 'PRESENTATION',
-      '3': 'UNKNOWN',
-      '4': 'SPREADSHEET',
-      '5': 'DRAWING',
-      '6': 'DOCUMENT',
-      '7': 'TABLE',
+      0: 'FOLDER',
+      1: 'FILE',
+      2: 'PRESENTATION',
+      3: 'UNKNOWN',
+      4: 'SPREADSHEET',
+      5: 'DRAWING',
+      6: 'DOCUMENT',
+      7: 'TABLE',
   }
   _DOC_TYPES.setdefault('UNKNOWN')
 
-  # TODO: check these descriptions. E.g. path is relative to what? local or
-  # inside GDrive.
   def __init__(self, url, path, size, doc_type):
     """Initializes the event container.
 
@@ -60,17 +58,17 @@ class GoogleDriveSnapshotCloudEntryEventContainer(event.EventContainer):
     """
     super(GoogleDriveSnapshotCloudEntryEventContainer, self).__init__()
 
-    # TODO: refactor to formatter.
     self.data_type = 'gdrive:snapshot:cloud_entry'
 
     self.url = url
     self.path = path
     self.size = size
-    self.doc_type = self._DOC_TYPES.get(doc_type, 'UNKNOWN')
+    self.document_type = self._DOC_TYPES.get(doc_type, 'UNKNOWN')
 
 
 class GoogleDriveSnapshotLocalEntryEvent(event.EventObject):
   """Convenience class for a Google Drive snapshot local entry event."""
+
   DATA_TYPE = 'gdrive:snapshot:local_entry'
 
   def __init__(self, timestamp, local_path, size):
@@ -97,84 +95,121 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
   NAME = 'google_drive'
 
   # Define the needed queries.
-  QUERIES = [(('SELECT resource_id, filename, modified, '
-               'created, size, doc_type, shared, checksum, url '
-               'FROM cloud_entry WHERE modified IS NOT NULL;'),
-              'ParseCloudEntryRow'),
-             (('SELECT inode_number, filename, modified, '
-               'checksum, size '
-               'FROM local_entry WHERE modified IS NOT NULL;'),
-              'ParseLocalEntryRow')]
+  QUERIES = [
+      ((u'SELECT e.resource_id, e.filename, e.modified, e.created, e.size, '
+        u'e.doc_type, e.shared, e.checksum, e.url, r.parent_resource_id FROM '
+        u'cloud_entry AS e, cloud_relations AS r WHERE r.child_resource_id = '
+        u'e.resource_id AND e.modified IS NOT NULL;'), 'ParseCloudEntryRow'),
+      ((u'SELECT inode_number, filename, modified, checksum, size FROM '
+        u'local_entry WHERE modified IS NOT NULL;'), 'ParseLocalEntryRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset([
       'cloud_entry', 'cloud_relations', 'local_entry', 'local_relations',
       'mapping', 'overlay_status'])
 
-  def GetLocalPath(self, inode, path):
+  # Queries used to build cache.
+  LOCAL_PATH_CACHE_QUERY = (
+      u'SELECT r.child_inode_number, r.parent_inode_number, e.filename FROM '
+      u'local_relations AS r, local_entry AS e WHERE r.child_inode_number = '
+      u'e.inode_number')
+  CLOUD_PATH_CACHE_QUERY = (
+      u'SELECT e.filename, e.resource_id, r.parent_resource_id AS parent '
+      u'FROM cloud_entry AS e, cloud_relations AS r WHERE e.doc_type = 0 '
+      u'AND e.resource_id = r.child_resource_id')
+
+  def GetLocalPath(self, inode, cache):
     """Return local path for a given inode.
 
     Args:
       inode: The inode number for the file.
-      path: A list containing the current path discovered so far,
-            for the initial run, this should be an empty list.
 
     Returns:
       A full path, including the filename of the given inode value.
     """
-    sql = ('SELECT e.filename, r.parent_inode_number FROM local_relations AS '
-           'r, local_entry AS e WHERE r.child_inode_number = ? AND '
-           'r.child_inode_number = e.inode_number')
-    cursor = self.db.cursor
-    results = cursor.execute(sql, (inode,))
+    local_path = cache.GetResults('local_path')
+    if not local_path:
+      cursor = self.db.cursor
+      results = cursor.execute(self.LOCAL_PATH_CACHE_QUERY)
+      cache.CacheQueryResults(
+          results, 'local_path', 'child_inode_number',
+          ('parent_inode_number', 'filename'))
+      local_path = cache.GetResults('local_path')
 
-    try:
-      new_path, new_inode = results.fetchone()
-      path.append(new_path)
-      return self.GetLocalPath(new_inode, path)
-    except TypeError:
-      path.reverse()
-      return u'/' + u'/'.join(path)
+    parent, path = local_path.get(inode, [None, None])
 
-  def GetCloudPath(self, resource_id, path):
+    # TODO: Read the local_sync_root from the sync_config.db and use that
+    # for a root value.
+    root_value = u'%local_sync_root%/'
+
+    if not path:
+      return root_value
+
+    paths = []
+    while path:
+      paths.append(path)
+      parent, path = local_path.get(parent, [None, None])
+
+    if not paths:
+      return root_value
+
+    # Paths are built top level to root so we need to reverse the list to
+    # represent them in the traditional order.
+    paths.reverse()
+    return root_value + u'/'.join(paths)
+
+  def GetCloudPath(self, resource_id, cache):
     """Return cloud path given a resource id.
 
     Args:
       resource_id: The resource_id for the file.
-      path: A list containing the current path discovered so far,
-            for the initial run, this should be an empty list.
 
     Returns:
-      A full path, including the filename of the given resource value.
+      A full path to the resource value.
     """
-    sql = ('SELECT e.filename, r.parent_resource_id FROM cloud_relations AS '
-           'r, cloud_entry AS e WHERE r.child_resource_id = ? AND '
-           'r.child_resource_id = e.resource_id')
-    results = self.db.execute(sql, (resource_id,))
-    new_path, new_resource_id = results.fetchone()
-    path.append(new_path)
+    cloud_path = cache.GetResults('cloud_path')
+    if not cloud_path:
+      cursor = self.db.cursor
+      results = cursor.execute(self.CLOUD_PATH_CACHE_QUERY)
+      cache.CacheQueryResults(
+          results, 'cloud_path', 'resource_id', ('filename', 'parent'))
+      cloud_path = cache.GetResults('cloud_path')
 
-    if new_resource_id == 'folder:root':
-      path.reverse()
-      return u'/' + u'/'.join(path)
+    if resource_id == u'folder:root':
+      return u'/'
 
-    return self.GetCloudPath(new_resource_id, path)
+    paths = []
+    parent_path, parent_id = cloud_path.get(resource_id, [u'', u''])
+    while parent_path:
+      if parent_path == u'folder:root':
+        break
+      paths.append(parent_path)
+      parent_path, parent_id = cloud_path.get(parent_id, [u'', u''])
 
-  def ParseCloudEntryRow(self, row, **unused_kwargs):
+    if not paths:
+      return u'/'
+
+    # Paths are built top level to root so we need to reverse the list to
+    # represent them in the traditional order.
+    paths.reverse()
+    return u'/' + u'/'.join(paths) + u'/'
+
+  def ParseCloudEntryRow(self, row, cache, **unused_kwargs):
     """Parses a cloud entry row.
 
     Args:
       row: The row resulting from the query.
+      cache: The local cache object.
 
-    Returns:
+    Yields:
       An event container (GoogleDriveSnapshotCloudEntryEventContainer)
       containing the event data.
     """
-    # TODO: this query is run for every row, can this be optimized by
-    # either a join or caching the mappings of resource_id and the path.
-    cloud_path = self.GetCloudPath(row['resource_id'], [])
+    cloud_path = self.GetCloudPath(row['parent_resource_id'], cache)
+    cloud_filename = u'{}{}'.format(cloud_path, row['filename'])
+
     container = GoogleDriveSnapshotCloudEntryEventContainer(
-        row['url'], cloud_path, row['size'],
+        row['url'], cloud_filename, row['size'],
         row['doc_type'])
 
     if row['shared']:
@@ -191,23 +226,20 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
           row['created'], eventdata.EventTimestamp.CREATION_TIME,
           container.data_type))
 
-    # TODO: shouldn't this be yield?
-    return container
+    yield container
 
-  def ParseLocalEntryRow(self, row, **unused_kwargs):
+  def ParseLocalEntryRow(self, row, cache, **unused_kwargs):
     """Parses a local entry row.
 
     Args:
       row: The row resulting from the query.
+      cache: The local cache object (instance of SQLiteCache).
 
     Yields:
       An event object (GoogleDriveSnapshotLocalEntryEvent) containing
       the event data.
     """
-    # TODO: this query is run for every row, can this be optimized by
-    # either a join or caching the mappings of resource_id and the path.
-    local_path = self.GetLocalPath(row['inode_number'], [])
+    local_path = self.GetLocalPath(row['inode_number'], cache)
 
     yield GoogleDriveSnapshotLocalEntryEvent(
         row['modified'], local_path, row['size'])
-
