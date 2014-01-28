@@ -66,7 +66,7 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
 
-  def ParseLSQuarantineRow(self, row):
+  def ParseLSQuarantineRow(self, row, **unused_kwargs):
     """Parses a launch services quarantine event row.
 
     Args:

@@ -30,9 +30,9 @@ class GDriveCloudEntryFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'File Path: {path}',
       u'[{shared}]',
-      u'Size:{size}',
-      u'URL:{url} ',
-      u'doc_type:{doc_type}']
+      u'Size: {size}',
+      u'URL: {url}',
+      u'Type: {document_type}']
   FORMAT_STRING_SHORT_PIECES = [u'{path}']
 
   SOURCE_LONG = 'Google Drive (cloud entry)'

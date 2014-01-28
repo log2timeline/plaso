@@ -74,10 +74,12 @@ class SQLiteParser(parser.BaseParser):
             u'Unable to parse SQLite database with error: {0:s}.'.format(
                 repr(exception)))
 
-      # Reset potential cache.
+      # Create a cache in which the resulting tables are cached.
+      cache = interface.SQLiteCache()
       for plugin_obj in self._plugins.itervalues():
         try:
-          for event_object in plugin_obj.Process(database):
+          for event_object in plugin_obj.Process(
+              cache=cache, database=database):
             event_object.plugin = plugin_obj.plugin_name
             yield event_object
         except errors.WrongPlugin:
