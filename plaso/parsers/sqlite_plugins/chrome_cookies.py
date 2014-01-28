@@ -115,7 +115,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
     self._cookie_plugins = cookie_interface.GetPlugins(
         pre_obj, ChromeCookieEvent.DATA_TYPE)
 
-  def ParseCookieRow(self, row):
+  def ParseCookieRow(self, row, **unused_kwargs):
     """Parses a cookie row.
 
     Args:
