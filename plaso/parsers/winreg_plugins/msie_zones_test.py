@@ -33,12 +33,12 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._plugin = msie_zones.MsieZoneSettingsSoftwareZonesPlugin()
+    self._test_file = self._GetTestFilePath(['SOFTWARE'])
 
-  def testProcess(self):
+  def testProcessForZone(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['SOFTWARE'])
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones'
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    winreg_key = self._GetKeyFromFile(self._test_file, key_path)
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
@@ -155,22 +155,12 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-
-class MsieZoneSettingsSoftwareLockdownZonesPluginTest(
-    test_lib.RegistryPluginTestCase):
-  """Tests for Internet Settings Lockdown Zones plugin on the Software hive."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._plugin = msie_zones.MsieZoneSettingsSoftwareLockdownZonesPlugin()
-
-  def testProcess(self):
-    """Tests the Process function."""
-    test_file = self._GetTestFilePath(['SOFTWARE'])
+  def testProcessForLockDown(self):
+    """Tests the Process function for the lockdown zone key."""
     key_path = (
         u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Lockdown_Zones')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    winreg_key = self._GetKeyFromFile(self._test_file, key_path)
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
@@ -289,15 +279,15 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = msie_zones.MsieZoneSettingsUserZonesPlugin()
+    self._plugin = msie_zones.MsieZoneSettingsPlugin()
+    self._test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
 
-  def testProcess(self):
+  def testProcessForZone(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Zones')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    winreg_key = self._GetKeyFromFile(self._test_file, key_path)
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
@@ -333,24 +323,12 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-
-class MsieZoneSettingsUserLockdownZonesPluginTest(
-    test_lib.RegistryPluginTestCase):
-  """Tests for Internet Settings Lockdown Zones plugin on the User hive."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._plugin = msie_zones.MsieZoneSettingsUserLockdownZonesPlugin()
-
-  def testMsieZoneSettingsUserLockdownZonesPlugin(self):
-    """Test the plugin for the Lockdown Zones."""
-  def testProcess(self):
+  def testProcessForLockDown(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Lockdown_Zones')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    winreg_key = self._GetKeyFromFile(self._test_file, key_path)
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 

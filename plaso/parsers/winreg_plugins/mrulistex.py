@@ -51,7 +51,7 @@ class MRUListExPlugin(interface.ValuePlugin):
 
     return u''
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Extract EventObjects from a MRU list."""
     mru_list_data = self._key.GetValue('MRUListEx')
 

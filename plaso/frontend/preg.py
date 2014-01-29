@@ -276,36 +276,30 @@ class MyMagics(magic.Magics):
           plugin_name, RegCache.hive_type)
       return
 
-    if not hasattr(plugin, 'REG_KEY'):
+    if not hasattr(plugin, 'REG_KEYS'):
       print 'Plugin {} has no key information.'.format(line)
-      return
-
-    try:
-      key_fixed = RegCache.path_expander.ExpandPath(plugin.REG_KEY)
-    except KeyError:
-      print u'Unable to use plugin {}'.format(line)
       return
 
     if '-h' in line:
       print utils.FormatHeader(plugin_name)
-      print utils.FormatOutputString('Registry Key', plugin.REG_KEY)
-      if plugin.REG_KEY != key_fixed:
-        print utils.FormatOutputString('Expanded Key', key_fixed)
-      print ''
       print utils.FormatOutputString('Description', plugin.__doc__)
+      print ''
+      for registry_key in plugin.expanded_keys:
+        print utils.FormatOutputString('Registry Key', registry_key)
       return
 
-    key = RegCache.hive.GetKeyByPath(key_fixed)
-    if not key:
-      print u'Key {} not found'.format(key_fixed)
-      return
+    for registry_key in plugin.expanded_keys:
+      key = RegCache.hive.GetKeyByPath(registry_key)
+      if not key:
+        print u'Key {} not found'.format(registry_key)
+        continue
 
-    # Move the current location to the key to be parsed.
-    self.cd(key_fixed)
-    # Parse the key.
-    print_strings = ParseKey(
-        RegCache.cur_key, verbose=True, use_plugins=[plugin_name])
-    print u'\n'.join(print_strings)
+      # Move the current location to the key to be parsed.
+      self.cd(registry_key)
+      # Parse the key.
+      print_strings = ParseKey(
+          RegCache.cur_key, verbose=False, use_plugins=[plugin_name])
+      print u'\n'.join(print_strings)
 
   # Lowercase name since this is used inside the python console shell.
   @magic.line_magic
@@ -930,13 +924,25 @@ def RunModeRegistryPlugin(config):
 
   plugin_list = GetRegistryPlugins(config)
 
-  # Need to get all the appropriate keys from these plugins.
+  # In order to get all the registry keys we need to expand
+  # them, but to do so we need to open up one hive so that we
+  # create the reg_cache object, which is necessary to fully
+  # expand all keys.
+  OpenHive(hives[0], hive_collectors[0])
+
+  # Get all the appropriate keys from these plugins.
   keys = []
-  for plugin in plugin_list:
-    for reg_plugin in config.plugins.GetAllKeyPlugins():
-      temp_obj = reg_plugin(None, None, None)
-      if temp_obj.plugin_name == plugin:
-        keys.append(temp_obj.REG_KEY)
+  for hive in hives:
+    for hive_collector in hive_collectors:
+      OpenHive(hive, hive_collector)
+      for plugin in plugin_list:
+        for reg_plugin in config.plugins.GetAllKeyPlugins():
+          temp_obj = reg_plugin(
+              RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
+        if temp_obj.plugin_name == plugin:
+          for registry_key in temp_obj.expanded_keys:
+            if registry_key not in keys:
+              keys.append(registry_key)
 
   for hive in hives:
     ParseHive(hive, hive_collectors, keys, plugin_list, config.verbose)
@@ -1051,9 +1057,10 @@ def GetRegistryKeysFromType(config, registry_type):
   """Return a list of all key plugins for a given registry type."""
   keys = []
   for reg_plugin in config.plugins.GetAllKeyPlugins():
-    temp_obj = reg_plugin(None, None, None)
+    temp_obj = reg_plugin(
+        RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
     if temp_obj.REG_TYPE == registry_type:
-      keys.append(temp_obj.REG_KEY)
+      keys.extend(temp_obj.expanded_keys)
 
   return keys
 

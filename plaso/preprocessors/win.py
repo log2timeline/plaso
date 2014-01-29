@@ -59,6 +59,38 @@ class WinVersion(preprocess_interface.WinRegistryPreprocess):
       return u'{}'.format(value.data)
 
 
+class WinProgramFiles(preprocess_interface.WinRegistryPreprocess):
+  """Fetch about the location for the Program Files directory."""
+
+  ATTRIBUTE = 'programfiles'
+
+  REGFILE = 'SOFTWARE'
+  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion'
+
+  def ParseKey(self, key):
+    """Extract the version information from the key."""
+    value = key.GetValue('ProgramFilesDir')
+    if value:
+      # Remove the first drive letter, eg: "C:\Program Files".
+      return u'{}'.format(value.data.partition('\\')[2])
+
+
+class WinProgramFilesX86(preprocess_interface.WinRegistryPreprocess):
+  """Fetch about the location for the Program Files directory."""
+
+  ATTRIBUTE = 'programfilesx86'
+
+  REGFILE = 'SOFTWARE'
+  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion'
+
+  def ParseKey(self, key):
+    """Extract the version information from the key."""
+    value = key.GetValue(u'ProgramFilesDir (x86)')
+    if value:
+      # Remove the first drive letter, eg: "C:\Program Files".
+      return u'{}'.format(value.data.partition('\\')[2])
+
+
 class WinUsers(preprocess_interface.WinRegistryPreprocess):
   """Fetch information about user profiles."""
 

@@ -28,12 +28,12 @@ from plaso.parsers.winreg_plugins import test_lib
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class MSWord2010FileMRUTest(test_lib.RegistryPluginTestCase):
+class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Microsoft Office MRUs Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = officemru.MSWord2010FileMRU()
+    self._plugin = officemru.OfficeMRUPlugin()
 
   def testProcess(self):
     """Tests the Process function."""

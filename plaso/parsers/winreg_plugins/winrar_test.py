@@ -31,7 +31,7 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = winrar.WinRarArcHistoryPlugin()
+    self._plugin = winrar.WinRarHistoryPlugin()
 
   def testProcess(self):
     """Tests the Process function."""

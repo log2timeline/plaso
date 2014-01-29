@@ -26,13 +26,22 @@ class BootVerificationPlugin(interface.KeyPlugin):
 
   NAME = 'winreg_boot_verify'
 
-  REG_KEY = '\\{current_control_set}\\Control\\BootVerificationProgram'
   REG_TYPE = 'SYSTEM'
+  REG_KEYS = [u'\\{current_control_set}\\Control\\BootVerificationProgram']
+
   URLS = ['http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Gather the BootVerification key values and return one event for all.
-    This key is rare, so its presence is suspect."""
+
+    This key is rare, so its presence is suspect.
+
+    Args:
+      unused_cache: An optional cache object that is not used.
+
+    Yields:
+      Extracted event objects from the boot verify key.
+    """
     text_dict = {}
     text_dict['BootVerification'] = u'REGALERT'
     for value in self._key.GetValues():
@@ -46,13 +55,22 @@ class BootExecutePlugin(interface.KeyPlugin):
 
   NAME = 'winreg_boot_execute'
 
-  REG_KEY = '\\{current_control_set}\\Control\\Session Manager'
   REG_TYPE = 'SYSTEM'
+  REG_KEYS = [u'\\{current_control_set}\\Control\\Session Manager']
+
   URLS = ['http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
-  def GetEntries(self):
-    """Gather the BootExecute Value, compare to default, return event. The
-    rest of the values in the Session Manager key are in a separate event."""
+  def GetEntries(self, unused_cache=None):
+    """Gather the BootExecute Value, compare to default, return event.
+
+    The rest of the values in the Session Manager key are in a separate event.
+
+    Args:
+      unused_cache: An optional cache object that is not used.
+
+    Yields:
+      Extracted event objects from the boot verify key.
+    """
     text_dict = {}
 
     for value in self._key.GetValues():
