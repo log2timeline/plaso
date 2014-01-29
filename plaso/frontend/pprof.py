@@ -31,7 +31,10 @@ try:
   # pylint: disable-msg=no-name-in-module
   from IPython.terminal.embed import InteractiveShellEmbed
 except ImportError:
+  # Support version older than 1.X of IPython.
+  # pylint: disable-msg=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
+
 
 import plaso
 from plaso.frontend import psort
@@ -49,6 +52,10 @@ import pyregf
 import pyvshadow
 
 
+# TODO: Remove this after the dfVFS integration.
+# TODO: Make sure we don't need to imlement the method _ConsumeItem, or
+# to have that not as an abstract method.
+# pylint: disable-msg=abstract-method
 class PprofEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
   """Class that implements an event object queue consumer for pprof."""
 
@@ -236,7 +243,7 @@ def ProcessFile(options):
   storage_queue_producer.SignalEndOfInput()
 
   event_object_consumer = PprofEventObjectQueueConsumer(storage_queue)
-  event_object_consumer.ConsumeEventObject()
+  event_object_consumer.ConsumeEventObjects()
 
   if not options.verbose:
     print utils.FormatHeader('Time Used')
