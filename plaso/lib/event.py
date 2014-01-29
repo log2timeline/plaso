@@ -975,10 +975,10 @@ class PreprocessObject(object):
     """
     try:
       self.zone = pytz.timezone(timezone_identifier)
-    except pytz.UnknownTimeZoneError:
+    except pytz.UnknownTimeZoneError as exception:
       logging.warning(
           u'Unable to set timezone: {0:s} with error: {1:s}.'.format(
-              timezone_identifier))
+              timezone_identifier, exception))
 
   def SetCollectionInformationValues(self, dict_object):
     """Sets the collection information values.

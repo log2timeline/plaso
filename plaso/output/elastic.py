@@ -135,10 +135,11 @@ class Elastic(output.LogOutputFormatter):
     username = getattr(event_object, 'username', '-')
     if self.store:
       pre_obj = self._preprocesses.get(event_object.store_number)
-      check_user =  pre_obj.GetUsernameById(username)
+      if pre_obj:
+        check_user =  pre_obj.GetUsernameById(username)
 
-      if check_user != '-':
-        username = check_user
+        if check_user != '-':
+          username = check_user
 
     if username == '-' and hasattr(event_object, 'user_sid'):
       username = getattr(event_object, 'user_sid', '-')
