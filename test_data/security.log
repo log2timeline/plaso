@@ -1,0 +1,9 @@
+Dec 26 19:11:56 secd[1] <Error> [user{} ]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle  
+Dec 26 19:11:57 secd[11] <Notice> [serverxpc{SOSCCThisDeviceIsInCircle} ]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle
+Dec 26 19:11:58 secd[111] <Debug> [user{} ]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle
+Dec 26 19:11:59 secd[1111] <Error> [user{SOSCCThisDeviceIsInCircle} C0x7fff872fa482]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle
+Dec  6 19:11:01 secd[1] <Error> [user{} ]:
+Dec  6 19:11:02 secd[11111] <Error> [user{SOSCCThisDeviceIsInCircle} C0x7fff872fa482 F0x106080db0]:
+Dec 31 23:59:59 secd[123] <Error> [user{} ]: Good byte old year :'(
+Jan  1 00:00:01 secd[456] <Error> [user{} ]: Happy new year!
+Dec 24 01:21:47 --- last message repeated 3 time ---
