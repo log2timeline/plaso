@@ -43,7 +43,7 @@ class WinRegistryGenericFormatter(eventdata.EventFormatter):
 
     string_parts = []
     for key, value in sorted(regvalue.items()):
-      string_parts.append(u'{0:s}: {1:s}'.format(key, value))
+      string_parts.append(u'{0:s}: {1}'.format(key, value))
 
     text = u' '.join(string_parts)
 
