@@ -142,12 +142,18 @@ class ServicesPlugin(interface.ValuePlugin):
             object_name_str)
     return None
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Create one event for each subkey under Services that has Type and Start.
 
     Adds descriptions of the ErrorControl, Type and StartvValues.
     Alerts on unusual settingssuch as Start/Type mismatches or drivers outside
     of C:/Windows/system32/drivers.
+
+    Args:
+      unused_cache: An optional cache object that is not used.
+
+    Yields:
+      Event objects extracted from the Windows service values.
     """
     text_dict = {}
 

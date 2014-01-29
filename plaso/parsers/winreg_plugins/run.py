@@ -21,19 +21,21 @@ from plaso.lib import event
 from plaso.parsers.winreg_plugins import interface
 
 
-class RunBase(interface.KeyPlugin):
-  """Base class for all Run Key plugins."""
+class RunUserPlugin(interface.KeyPlugin):
+  """Windows Registry plugin for parsing user specific auto runs."""
 
-  # TODO: Re-enable after we modify the key plugin so that it can define more
-  # than a single registry key.
-  #NAME = 'winreg_run'
+  NAME = 'winreg_run'
 
-  __abstract = True
+  REG_TYPE = 'NTUSER'
+
+  REG_KEYS = [
+      u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Run',
+      u'\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce']
 
   URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
   DESCRIPTION = 'Run Key'
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Collect the Values under the Run Key and return an event for each one."""
     for value in self._key.GetValues():
       # Ignore the default value.
@@ -52,69 +54,16 @@ class RunBase(interface.KeyPlugin):
           source_append=': {0:s}'.format(self.DESCRIPTION))
 
 
-class RunNtuserPlugin(RunBase):
-  """Gathers the Run Keys for User hive."""
-
-  NAME = 'winreg_run_user'
-
-  REG_KEY = '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
-  REG_TYPE = 'NTUSER'
-
-
-class RunOnceNtuserPlugin(RunBase):
-  """Gathers the RunOnce key for the User hive."""
-
-  NAME = 'winreg_runonce_user'
-
-  REG_KEY = '\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'RunOnce Key'
-
-
-class RunSoftwarePlugin(RunBase):
-  """Gathers the Run Key for Software hive."""
+class RunSoftwarePlugin(RunUserPlugin):
+  """Windows Registry plugin for parsing system wide auto runs."""
 
   NAME = 'winreg_run_software'
 
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion\\Run'
   REG_TYPE = 'SOFTWARE'
 
-
-class RunOnceSoftwarePlugin(RunBase):
-  """Gathers the RunOnce key for the Software hive."""
-
-  NAME = 'winreg_runonce_software'
-
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
-  REG_TYPE = 'SOFTWARE'
-  DESCRIPTION = 'RunOnce Key'
-
-
-class SetupRunOnceSoftwarePlugin(RunBase):
-  """Gathers the RunOnce\\Setup key for the Software hive."""
-
-  NAME = 'winreg_runonce_software_setup'
-
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\Setup'
-  REG_TYPE = 'SOFTWARE'
-  DESCRIPTION = 'RunOnce Setup Key'
-
-
-class RunServicesSoftwarePlugin(RunBase):
-  """Gathers the RunServices Key for Software hive."""
-
-  NAME = 'winreg_run_services'
-
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion\\RunServices'
-  REG_TYPE = 'SOFTWARE'
-  DESCRIPTION = 'RunServices Key'
-
-
-class RunServicesOnceSoftwarePlugin(RunBase):
-  """Gathers the RunServicesOnce Key for Software hive."""
-
-  NAME = 'winreg_runonce_services'
-
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce'
-  REG_TYPE = 'SOFTWARE'
-  DESCRIPTION = 'RunServicesOnce Key'
+  REG_KEYS = [
+      u'\\Microsoft\\Windows\\CurrentVersion\\Run',
+      u'\\Microsoft\\Windows\\CurrentVersion\\RunOnce',
+      u'\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\Setup',
+      u'\\Microsoft\\Windows\\CurrentVersion\\RunServices',
+      u'\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce']

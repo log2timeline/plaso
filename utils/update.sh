@@ -84,7 +84,7 @@ STATUS_CODES=`git status -s | cut -b1,2 | grep '\S\S' | grep -v '??' | sort | un
 if ! test -z "${STATUS_CODES}";
 then
   echo "Update aborted - detected double git status codes."
-  echo "Run: 'git stash git stash pop'.";
+  echo "Run: 'git stash && git stash pop'.";
 
   exit ${EXIT_FAILURE};
 fi

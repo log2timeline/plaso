@@ -32,11 +32,11 @@ class CCleanerPlugin(interface.KeyPlugin):
 
   NAME = 'winreg_ccleaner'
 
-  REG_KEY = '\\Software\\Piriform\\CCleaner'
+  REG_KEYS = [u'\\Software\\Piriform\\CCleaner']
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'CCleaner Registry key'
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Collect values under CCleaner and return event for each one."""
     for value in self._key.GetValues():
       if not value.name:

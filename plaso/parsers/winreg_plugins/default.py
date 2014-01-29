@@ -23,18 +23,25 @@ from plaso.parsers.winreg_plugins import interface
 
 
 class DefaultPlugin(interface.KeyPlugin):
-  """Class that implements the default Windows Registry plugin."""
+  """Default plugin that extracts minimum information from every registry key.
+
+  The default plugin will parse every registry key that is passed to it and
+  extract minimum information, such as a list of available values and if
+  possible content of those values. The timestamp used is the timestamp
+  when the registry key was last modified.
+  """
 
   NAME = 'winreg_default'
 
   REG_TYPE = 'any'
-  REG_KEY = '\\'
+  REG_KEYS = []
+
   # This is a special case, plugins normally never overwrite the priority.
   # However the default plugin should only run when all others plugins have
   # tried and failed.
   WEIGHT = 3
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Returns an event object based on a Registry key name and values."""
     text_dict = {}
 

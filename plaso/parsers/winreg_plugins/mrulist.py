@@ -30,8 +30,11 @@ class MRUListPlugin(interface.ValuePlugin):
   REG_VALUES = frozenset(['MRUList', 'a'])
   URLS = [u'http://forensicartifacts.com/tag/mru/']
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Extract EventObjects from a MRU list.
+
+    Args:
+      unused_cache: An optional cache object that is not used.
 
     Yields:
       A single event object that contains a MRU list.

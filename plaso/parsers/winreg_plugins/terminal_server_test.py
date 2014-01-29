@@ -31,7 +31,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = terminal_server.ServersTerminalServerClientPlugin()
+    self._plugin = terminal_server.TerminalServerClientPlugin()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -71,7 +71,7 @@ class DefaulTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = terminal_server.DefaulTerminalServerClientMRUPlugin()
+    self._plugin = terminal_server.TerminalServerClientMRUPlugin()
 
   def testProcess(self):
     """Tests the Process function."""

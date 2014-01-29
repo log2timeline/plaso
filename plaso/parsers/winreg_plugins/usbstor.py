@@ -31,11 +31,11 @@ class USBStorPlugin(interface.KeyPlugin):
 
   NAME = 'winreg_usbstor'
 
-  REG_KEY = '\\{current_control_set}\\Enum\\USBSTOR'
+  REG_KEYS = [u'\\{current_control_set}\\Enum\\USBSTOR']
   REG_TYPE = 'SYSTEM'
   DESCRIPTION = 'USBStor Entries'
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Collect Values under USBStor and return an event object for each one."""
     for subkey in self._key.GetSubkeys():
 
