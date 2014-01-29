@@ -25,17 +25,31 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class OutlookSearchMRUPlugin(interface.KeyPlugin):
-  """Base class for Outlook Search MRU Registry parsers."""
+  """Windows Registry plugin parsing Outlook Search MRU keys."""
 
-  # TODO: Re-enable after we modify the key plugin so that it can define more
-  # than a single registry key.
-  #NAME = 'winreg_outlook_mru'
-
-  __abstract = True
+  NAME = 'winreg_outlook_mru'
 
   DESCRIPTION = 'PST Paths'
 
-  def GetEntries(self):
+  REG_KEYS = [
+      u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search',
+      u'\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search']
+
+  # TODO: The catalog for Office 2013 (15.0) contains binary values not
+  # dword values. Check if Office 2007 and 2010 have the same. Re-enable the
+  # plug-ins once confirmed and OutlookSearchMRUPlugin has been extended to
+  # handle the binary data or create a OutlookSearchCatalogMRUPlugin.
+  # Registry keys for:
+  #   MS Outlook 2007 Search Catalog:
+  #     '\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog'
+  #   MS Outlook 2010 Search Catalog:
+  #     '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search\\Catalog'
+  #   MS Outlook 2013 Search Catalog:
+  #     '\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog'
+
+  REG_TYPE = 'NTUSER'
+
+  def GetEntries(self, unused_cache=None):
     """Collect the values under Outlook and return event for each one."""
     value_index = 0
     for value in self._key.GetValues():
@@ -62,52 +76,3 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
           source_append=': {0:s}'.format(self.DESCRIPTION))
 
       value_index += 1
-
-
-# TODO: Address different MS Office versions.
-# TODO: Merge into a single parser once key plugins support more than a single
-# key defined.
-class MSOutlook2010SearchMRUPlugin(OutlookSearchMRUPlugin):
-  """Gathers MS Outlook 2010 Data File locations from the User hive."""
-
-  NAME = 'winreg_msoutlook_2010'
-
-  REG_KEY = '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search'
-  REG_TYPE = 'NTUSER'
-
-
-class MSOutlook2013SearchMRUPlugin(OutlookSearchMRUPlugin):
-  """Gathers MS Outlook 2013 Data File locations from the User hive."""
-
-  NAME = 'winreg_msoutlook_2013'
-
-  REG_KEY = '\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search'
-  REG_TYPE = 'NTUSER'
-
-
-# TODO: The catalog for Office 2013 (15.0) contains binary values not
-# dword values. Check if Office 2007 and 2010 have the same. Re-enable the
-# plug-ins once confirmed and OutlookSearchMRUPlugin has been extended to
-# handle the binary data or create a OutlookSearchCatalogMRUPlugin.
-
-#class MSOutlook2007SearchCatalogMRUPlugin(OutlookSearchMRUPlugin):
-#  """Gathers MS Outlook 2007 Data File locations from the User hive."""
-#
-#  REG_KEY = '\\Software\\Microsoft\\Office\\12.0\\Outlook\\Catalog'
-#  REG_TYPE = 'NTUSER'
-
-
-#class MSOutlook2010SearchCatalogMRUPlugin(OutlookSearchMRUPlugin):
-#  """Gathers MS Outlook 2010 Data File locations from the User hive."""
-#
-#  REG_KEY = (
-#    '\\Software\\Microsoft\\Office\\14.0\\Outlook\\Search\\Catalog')
-#  REG_TYPE = 'NTUSER'
-
-
-#class MSOutlook2013SearchCatalogMRUPlugin(OutlookSearchMRUPlugin):
-#  """Gathers MS Outlook 2013 Data File locations from the User hive."""
-#
-#  REG_KEY = (
-#    '\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog')
-#  REG_TYPE = 'NTUSER'

@@ -29,7 +29,7 @@ class WinVerPlugin(interface.KeyPlugin):
 
   NAME = 'winreg_winver'
 
-  REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion'
+  REG_KEYS = [u'\\Microsoft\\Windows NT\\CurrentVersion']
   REG_TYPE = 'SOFTWARE'
   URLS = []
 
@@ -54,7 +54,7 @@ class WinVerPlugin(interface.KeyPlugin):
       return ''
     return value.data
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Gather minimal information about system install and return an event."""
     text_dict = {}
     text_dict[u'Owner'] = self.GetValueString('RegisteredOwner')

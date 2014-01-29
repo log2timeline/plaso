@@ -23,20 +23,41 @@ import logging
 from plaso.lib import event
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import interface
+from plaso.winnt import environ_expand
 from plaso.winnt import knownfolderid
 
 
 class UserAssistPlugin(interface.KeyPlugin):
-  """Base class for UserAssist plugins."""
+  """Plugin that parses an UserAssist key."""
 
-  # TODO: Re-enable when we can define more than a single key in a plugin.
-  #NAME = 'winreg_userassist'
-
-  __abstract = True
+  NAME = 'winreg_userassist'
 
   DESCRIPTION = 'UserAssistPlugin'
 
   REG_TYPE = 'NTUSER'
+  REG_KEYS = [
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{FA99DFC7-6AC2-453A-A5E2-5E2AFF4507BD}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{F2A1CB5A-E3CC-4A2E-AF9D-505A7009D442}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{CAA59E3C-4792-41A5-9909-6A6A8D32490E}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{B267E3AD-A825-4A09-82B9-EEC22AA3B847}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{A3D53349-6E61-4557-8FC7-0028EDCEEBF6}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{9E04CAB2-CC14-11DF-BB8C-A2F1DED72085}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{75048700-EF1F-11D0-9888-006097DEACF9}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{5E6AB780-7743-11CF-A12B-00AA004AE837}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{0D6D4F41-2994-4BA0-8FEF-620E43CD2812}}')]
 
   URL = [
       u'http://blog.didierstevens.com/programs/userassist/',
@@ -61,8 +82,11 @@ class UserAssistPlugin(interface.KeyPlugin):
     construct.Padding(44),
     construct.ULInt64('timestamp'))
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Parses a UserAssist Registry key.
+
+    Args:
+      unused_cache: An optional cache object that is not used.
 
     Yields:
       An event object for every entry in the UserAssist key.
@@ -116,6 +140,12 @@ class UserAssistPlugin(interface.KeyPlugin):
             path_segments[segment_index] = knownfolderid.IDENTIFIERS.get(
                 path_segments[segment_index], path_segments[segment_index])
 
+          value_name = u'\\'.join(path_segments)
+          # Check if we might need to substitute values.
+          if '%' in value_name:
+            value_name = environ_expand.ExpandWindowsEnvironmentVariables(
+                value_name, self._config)
+
         if not value.DataIsBinaryData():
           regalert_string = 'unsupported value data type: {0:s}'.format(
               value.data_type_string)
@@ -168,104 +198,3 @@ class UserAssistPlugin(interface.KeyPlugin):
       regalert_string = ''
       yield event.WinRegistryEvent(
           self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
-
-
-# TODO: Merge into a single class once key plugins support more than a single
-# key.
-class UserAssistPlugin1(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_1'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{0D6D4F41-2994-4BA0-8FEF-620E43CD2812}}')
-
-
-class UserAssistPlugin2(UserAssistPlugin):
-  """Plugin that parses the Microsoft Internet Toolbar UserAssist key."""
-
-  NAME = 'winreg_userassist_2'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{5E6AB780-7743-11CF-A12B-00AA004AE837}}')
-
-
-class UserAssistPlugin3(UserAssistPlugin):
-  """Plugin that parses the ActiveDesktop UserAssist key."""
-
-  NAME = 'winreg_userassist_3'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{75048700-EF1F-11D0-9888-006097DEACF9}}')
-
-
-class UserAssistPlugin4(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_4'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{9E04CAB2-CC14-11DF-BB8C-A2F1DED72085}}')
-
-
-class UserAssistPlugin5(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_5'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{A3D53349-6E61-4557-8FC7-0028EDCEEBF6}}')
-
-
-class UserAssistPlugin6(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_6'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{B267E3AD-A825-4A09-82B9-EEC22AA3B847}}')
-
-
-class UserAssistPlugin7(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_7'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{CAA59E3C-4792-41A5-9909-6A6A8D32490E}}')
-
-
-class UserAssistPlugin8(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_8'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}}')
-
-
-class UserAssistPlugin9(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_9'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{F2A1CB5A-E3CC-4A2E-AF9D-505A7009D442}}')
-
-
-class UserAssistPlugin10(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_10'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}}')
-
-
-class UserAssistPlugin11(UserAssistPlugin):
-  """Plugin that parses an UserAssist key."""
-
-  NAME = 'winreg_userassist_11'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\UserAssist\\{{FA99DFC7-6AC2-453A-A5E2-5E2AFF4507BD}}')

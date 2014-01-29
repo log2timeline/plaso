@@ -34,7 +34,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = typedurls.MsieTypedURLsPlugin()
+    self._plugin = typedurls.TypedURLsPlugin()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -65,7 +65,7 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = typedurls.TypedPathsPlugin()
+    self._plugin = typedurls.TypedURLsPlugin()
 
   def testProcess(self):
     """Tests the Process function."""

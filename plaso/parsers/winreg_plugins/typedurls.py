@@ -26,22 +26,26 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class TypedURLsPlugin(interface.KeyPlugin):
-  """Base class for typed URLs History plugins."""
+  """A Windows Registry plugin for typed URLs history."""
 
-  # TODO: Re-enable after we modify the key plugin so that it can define more
-  # than a single registry key.
-  #NAME = 'winreg_typed_urls'
-
-  __abstract = True
+  NAME = 'winreg_typed_urls'
 
   DESCRIPTION = 'Typed URLs'
 
+  REG_TYPE = 'NTUSER'
+  REG_KEYS = [
+      u'\\Software\\Microsoft\\Internet Explorer\\TypedURLs',
+      u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths']
+
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Collect typed URLs values.
 
-    Returns:
+    Args:
+      unused_cache: An optional cache object that is not used.
+
+    Yields:
       An event object for every typed URL.
     """
     for value in self._key.GetValues():
@@ -65,27 +69,4 @@ class TypedURLsPlugin(interface.KeyPlugin):
 
       yield event.WinRegistryEvent(
           self._key.path, text_dict, timestamp=timestamp,
-          source_append=': {0:s}'.format(self.DESCRIPTION))
-
-
-#TODO: Merge into a single class once key plugins support more than a single
-# key.
-class MsieTypedURLsPlugin(TypedURLsPlugin):
-  """Gathers the MSIE TypedURLs key for the User hive."""
-
-  NAME = 'winreg_typed_urls_1'
-
-  REG_KEY = '\\Software\\Microsoft\\Internet Explorer\\TypedURLs'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'MSIE typed URLs'
-
-
-class TypedPathsPlugin(TypedURLsPlugin):
-  """Gathers the TypedPaths key for the User hive."""
-
-  NAME = 'winreg_typed_urls_2'
-
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-             '\\TypedPaths')
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'Typed Paths'
+          source_append=u': {0:s}'.format(self.DESCRIPTION))

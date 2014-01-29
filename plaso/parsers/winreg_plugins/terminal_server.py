@@ -25,17 +25,17 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class TerminalServerClientPlugin(interface.KeyPlugin):
-  """Base class for Terminal Server Client Connection plugins."""
+  """Windows Registry plugin for Terminal Server Client Connection keys."""
 
-  # TODO: Re-enable after we modify the key plugin so that it can define more
-  # than a single registry key.
-  #NAME = 'winreg_rdp'
-
-  __abstract = True
-
+  NAME = 'winreg_rdp'
   DESCRIPTION = 'RDP Connection'
 
-  def GetEntries(self):
+  REG_TYPE = 'NTUSER'
+  REG_KEYS = [
+      u'\\Software\\Microsoft\\Terminal Server Client\\Servers',
+      u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
+
+  def GetEntries(self, unused_cache=None):
     """Collect Values in Servers and return event for each one."""
     for subkey in self._key.GetSubkeys():
       username_value = subkey.GetValue('UsernameHint')
@@ -55,15 +55,18 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
 
 
 class TerminalServerClientMRUPlugin(interface.KeyPlugin):
-  """Base class for Terminal Server Client Connection MRUs plugins."""
+  """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
 
   NAME = 'winreg_rdp_mru'
 
-  __abstract = True
-
   DESCRIPTION = 'RDP Connection'
 
-  def GetEntries(self):
+  REG_TYPE = 'NTUSER'
+  REG_KEYS = [
+      u'\\Software\\Microsoft\\Terminal Server Client\\Default',
+      u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
+
+  def GetEntries(self, unused_cache=None):
     """Collect MRU Values and return event for each one."""
     for value in self._key.GetValues():
       # TODO: add a check for the value naming scheme.
@@ -85,46 +88,4 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
 
       yield event.WinRegistryEvent(
           self._key.path, text_dict, timestamp=timestamp,
-          source_append=': {0:s}'.format(self.DESCRIPTION))
-
-
-# TODO: Merge into a single plugin once key plugins support multiple keys.
-class ServersTerminalServerClientPlugin(TerminalServerClientPlugin):
-  """Gathers the Servers key for the User hive."""
-
-  NAME = 'winreg_rdp_user'
-
-  REG_KEY = '\\Software\\Microsoft\\Terminal Server Client\\Servers'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'RDP Connection'
-
-
-class RDPDRTerminalServerClientPlugin(TerminalServerClientPlugin):
-  """Gathers the RDPDR key for the User hive."""
-
-  NAME = 'winreg_rdp_user_2'
-
-  REG_KEY = ('\\Software\\Microsoft\\Terminal Server Client\\'
-             'Default\\AddIns\\RDPDR')
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'RDP Connection'
-
-
-class DefaulTerminalServerClientMRUPlugin(TerminalServerClientMRUPlugin):
-  """Gathers the Default key for the User hive."""
-
-  NAME = 'winreg_rdp_user_3'
-
-  REG_KEY = '\\Software\\Microsoft\\Terminal Server Client\\Default'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'RDP Connection'
-
-
-class LocalDevicesTerminalServerClientMRUPlugin(TerminalServerClientMRUPlugin):
-  """Gathers the LocalDevices key for the User hive."""
-
-  NAME = 'winreg_rdp_user_4'
-
-  REG_KEY = '\\Software\\Microsoft\\Terminal Server Client\\LocalDevices'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'RDP Connection'
+          source_append=u': {0:s}'.format(self.DESCRIPTION))

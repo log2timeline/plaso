@@ -65,7 +65,7 @@ class RegistryPlugin(plugin.BasePlugin):
     self._reg_cache = reg_cache
 
   @abc.abstractmethod
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Extracts event objects from the Windows Registry key."""
 
   def Process(self, key=None, **kwargs):
@@ -90,8 +90,10 @@ class KeyPlugin(RegistryPlugin):
 
   __abstract = True
 
-  # The path of the Windows Registry key this plugin supports.
-  REG_KEY = None
+  # A list of all the Windows Registry key paths this plugins supports.
+  # Each of these key paths can contain a path that needs to be expanded,
+  # such as {current_control_set}, etc.
+  REG_KEYS = []
 
   WEIGHT = 1
 
@@ -111,40 +113,45 @@ class KeyPlugin(RegistryPlugin):
     self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
         pre_obj, reg_cache)
 
+    # Build a list of expanded keys this plugin supports.
+    self.expanded_keys = []
+    for registry_key in self.REG_KEYS:
+      key_fixed = u''
+      try:
+        key_fixed = self._path_expander.ExpandPath(registry_key)
+        self.expanded_keys.append(key_fixed)
+      except KeyError as exception:
+        logging.debug((
+            u'Unable to use registry key {0:s} for plugin {1:s}, error '
+            u'message: {1:s}').format(
+                registry_key, self.plugin_name, exception))
+        continue
+
+      if not key_fixed:
+        continue
+      # Special case of Wow6432 Windows Registry redirection.
+      # URL:  http://msdn.microsoft.com/en-us/library/windows/desktop/\
+      # ms724072%28v=vs.85%29.aspx
+      if key_fixed.startswith('\\Software'):
+        _, first, second = key_fixed.partition('\\Software')
+        self.expanded_keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(
+            first, second))
+      if self.REG_TYPE == 'SOFTWARE' or self.REG_TYPE == 'any':
+        self.expanded_keys.append(u'\\Wow6432Node{:s}'.format(key_fixed))
+
   @abc.abstractmethod
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Extracts event objects from the Windows Registry key."""
 
   def Process(self, key=None, **kwargs):
     """Process a Windows Registry key."""
-    key_fixed = u''
-    try:
-      key_fixed = self._path_expander.ExpandPath(self.REG_KEY)
-    except KeyError as e:
-      logging.warning(
-          u'Unable to use plugin {0:s}, error message: {1:s}'.format(
-              self.plugin_name, e))
-
-    if not key_fixed:
+    if not key:
       return
 
-    # Special case of Wow6432 Windows Registry redirection.
-    # URL:  http://msdn.microsoft.com/en-us/library/windows/desktop/\
-    # ms724072%28v=vs.85%29.aspx
-    if key_fixed.startswith('\\Software'):
-      _, first, second = key_fixed.partition('\\Software')
-      key_redirect = u'{0:s}\\Wow6432Node{1:s}'.format(first, second)
-
-      if key_redirect == key.path:
-        self._key = key
-        return self.GetEntries()
-
-    if key.path != key_fixed:
-      return None
-
     super(KeyPlugin, self).Process(key=key, **kwargs)
-    self._key = key
-    return self.GetEntries()
+
+    if key.path in self.expanded_keys:
+      return self.GetEntries()
 
 
 class ValuePlugin(RegistryPlugin):
@@ -158,7 +165,7 @@ class ValuePlugin(RegistryPlugin):
   WEIGHT = 2
 
   @abc.abstractmethod
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Extracts event objects from the Windows Registry key."""
 
   def Process(self, key=None, **kwargs):

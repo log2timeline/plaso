@@ -31,7 +31,7 @@ class RunNtuserPlugintest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = run.RunNtuserPlugin()
+    self._plugin = run.RunUserPlugin()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -62,7 +62,7 @@ class RunOnceNtuserPlugintest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = run.RunOnceNtuserPlugin()
+    self._plugin = run.RunUserPlugin()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -126,7 +126,7 @@ class RunOnceSoftwarePluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = run.RunOnceSoftwarePlugin()
+    self._plugin = run.RunSoftwarePlugin()
 
   def testProcess(self):
     """Tests the Process function."""
