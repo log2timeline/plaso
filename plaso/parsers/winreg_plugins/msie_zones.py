@@ -27,13 +27,17 @@ __author__ = 'Elizabeth Schweinsberg (beth@bethlogic.net)'
 
 
 class MsieZoneSettingsPlugin(interface.KeyPlugin):
-  """Base class for parsing the MSIE Zones settings."""
+  """Windows Registry plugin for parsing the MSIE Zones settings."""
 
-  # TODO: Re-enable after we modify the key plugin so that it can define more
-  # than a single registry key.
-  #NAME = 'winreg_msie_zone'
+  NAME = 'winreg_msie_zone'
 
-  __abstract = True
+  REG_TYPE = 'NTUSER'
+
+  REG_KEYS = [
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
+       u'\\Zones'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
+       u'\\Lockdown_Zones')]
 
   URLS = ['http://support.microsoft.com/kb/182569']
 
@@ -152,12 +156,15 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
   }
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
       Internet Settings\\Zones key
       Internet Settings\\Lockdown_Zones key
+
+    Args:
+      unused_cache: An optional cache object that is not used.
 
     Yields:
       An event object of the an individual Internet Setting Registry key.
@@ -253,29 +260,6 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
         yield event.WinRegistryEvent(
             path, text_dict, timestamp=zone_key.last_written_timestamp)
 
-# TODO: Make this a single class, change the key plugin so that it accepts a
-# list of keys instead of a single value.
-
-
-class MsieZoneSettingsUserZonesPlugin(MsieZoneSettingsPlugin):
-  """Parses the Zones key in the User hive."""
-
-  NAME = 'winreg_msie_zone_user'
-
-  REG_TYPE = 'NTUSER'
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
-             '\\Zones')
-
-
-class MsieZoneSettingsUserLockdownZonesPlugin(MsieZoneSettingsPlugin):
-  """Parses the Lockdown Zones key in the User hive."""
-
-  NAME = 'winreg_msie_lockdown_zone_user'
-
-  REG_TYPE = 'NTUSER'
-  REG_KEY = ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
-             '\\Lockdown_Zones')
-
 
 class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):
   """Parses the Zones key in the Software hive."""
@@ -283,34 +267,11 @@ class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):
   NAME = 'winreg_msie_zone_software'
 
   REG_TYPE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones'
-
-
-class MsieZoneSettingsSoftwareLockdownZonesPlugin(MsieZoneSettingsPlugin):
-  """Parses the Lockdown Zones key in the Software hive."""
-
-  NAME = 'winreg_msie_lockdownzone_software'
-
-  REG_TYPE = 'SOFTWARE'
-  REG_KEY = ('\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
-             '\\Lockdown_Zones')
-
-
-class MsieZoneSettingsWow64SoftwareZonesPlugin(MsieZoneSettingsPlugin):
-  """Parses the Zones key in the Wow6432Node key the Software hive."""
-
-  NAME = 'winreg_msie_zone_software_redirect'
-
-  REG_TYPE = 'SOFTWARE'
-  REG_KEY = ('\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion'
-             '\\Internet Settings\\Zones')
-
-
-class MsieZoneSettingsWow64SoftwareLockdownZonesPlugin(MsieZoneSettingsPlugin):
-  """Parses the Lockdown Zones key in the Wow6432Node key the Software hive."""
-
-  NAME = 'winreg_msie_lockdownzone_software_redirect'
-
-  REG_TYPE = 'SOFTWARE'
-  REG_KEY = ('\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion'
-             '\\Internet Settings\\Lockdown_Zones')
+  REG_KEYS = [
+      u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones',
+      (u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
+       u'\\Lockdown_Zones'),
+      (u'\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
+       u'\\Zones'),
+      (u'\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
+       u'\\Lockdown_Zones')]

@@ -46,7 +46,7 @@ class PreprocessCollector(object):
   def _GetExtendedPath(self, path):
     """Return an extened path without the generic path elements.
 
-    Remove common generic path elements, like {log_path}, {systemroot}
+    Remove common generic path elements, like {log_path}, {windir}
     and extend them to their real meaning.
 
     Args:
@@ -84,7 +84,7 @@ class PreprocessCollector(object):
     Args:
       path_expression: The path expression, which is a string that can contain
                        system specific placeholders such as e.g. "{log_path}"
-                       or "{systemroot}" or regular expressions such as e.g.
+                       or "{windir}" or regular expressions such as e.g.
                        "[0-9]+" to match a path segments that only consists of
                        numeric values.
 
@@ -133,7 +133,7 @@ class PreprocessCollector(object):
     Args:
       path_expression: The path expression, which is a string that can contain
                        system specific placeholders such as e.g. "{log_path}" or
-                       "{systemroot}" or regular expressions such as e.g.
+                       "{windir}" or regular expressions such as e.g.
                        "[0-9]+" to match a path segments that only consists of
                        numeric values.
 
@@ -154,7 +154,7 @@ class PreprocessCollector(object):
     Args:
       path_expression: The path expression, which is a string that can contain
                        system specific placeholders such as e.g. "{log_path}"
-                       or "{systemroot}" or regular expressions such as e.g.
+                       or "{windir}" or regular expressions such as e.g.
                        "[0-9]+" to match a path segments that only consists of
                        numeric values.
       filename_expression: The filename expression.

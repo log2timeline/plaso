@@ -31,9 +31,9 @@ class WindowsXPUserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = userassist.UserAssistPlugin3()
+    self._plugin = userassist.UserAssistPlugin()
 
-  def testProcess(self):
+  def testProcessOnWinXP(self):
     """Tests the Process function."""
     test_file = self._GetTestFilePath(['NTUSER.DAT'])
     key_path = (
@@ -61,15 +61,7 @@ class WindowsXPUserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-
-class Windows7UserAssistPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the Windows 7 UserAssist Windows Registry plugin."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._plugin = userassist.UserAssistPlugin8()
-
-  def testProcess(self):
+  def testProcessOnWin7(self):
     """Tests the Process function."""
     test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
     key_path = (

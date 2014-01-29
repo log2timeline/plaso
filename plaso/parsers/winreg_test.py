@@ -56,11 +56,9 @@ class WinRegTest(test_lib.ParserTestCase):
     registry_type = getattr(self._parser, '_registry_type', '')
     self.assertEquals(registry_type, 'NTUSER')
 
-    self.assertTrue('winreg_userassist_2' in plugins)
-    self.assertTrue('winreg_userassist_3' in plugins)
+    self.assertTrue('winreg_userassist' in plugins)
 
-    self.assertEquals(plugins['winreg_userassist_2'], 1)
-    self.assertEquals(plugins['winreg_userassist_3'], 15)
+    self.assertEquals(plugins['winreg_userassist'], 16)
 
   def testSystemParsing(self):
     """Parse a SYSTEM hive an run few tests."""

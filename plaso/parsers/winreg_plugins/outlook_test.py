@@ -31,7 +31,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = outlook.MSOutlook2013SearchMRUPlugin()
+    self._plugin = outlook.OutlookSearchMRUPlugin()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -73,25 +73,25 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 
 # class MSOutlook2013SearchCatalogMRUPluginTest(unittest.TestCase):
 #   """Tests for the Outlook Search Catalog MRU Windows Registry plugin."""
-# 
+#
 #   def setUp(self):
 #     """Sets up the needed objects used throughout the test."""
 #     self._plugin = outlook.MSOutlook2013SearchCatalogMRUPlugin()
-# 
+#
 #   def testProcess(self):
 #     """Tests the Process function."""
 #     key_path = (
 #         u'\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search\\Catalog')
 #     values = []
-# 
+#
 #     values.append(winreg_test_lib.TestRegValue(
 #         ('C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
 #          'username@example.com.ost'), '\x94\x01\x00\x00\x00\x00',
 #         winreg_test_lib.TestRegValue.REG_BINARY, offset=827))
-# 
+#
 #     winreg_key = winreg_test_lib.TestRegKey(
 #         key_path, 1346145829002031, values, 3421)
-# 
+#
 #     # TODO: add test for Catalog key.
 
 

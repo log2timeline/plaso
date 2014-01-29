@@ -27,20 +27,22 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class WinRarHistoryPlugin(interface.KeyPlugin):
-  """Base class for WinRAR History plugins."""
+  """Windows Registry plugin for parsing WinRAR History keys."""
   # TODO: Create NTUSER.DAT test file with WinRAR data.
 
-  # TODO: Re-enable after we modify the key plugin so that it can define more
-  # than a single registry key.
-  #NAME = 'winreg_winrar'
-
-  __abstract = True
+  NAME = 'winreg_winrar'
 
   DESCRIPTION = 'WinRAR History'
 
+  REG_TYPE = 'NTUSER'
+  REG_KEYS = [
+      u'\\Software\\WinRAR\\DialogEditHistory\\ExtrPath',
+      u'\\Software\\WinRAR\\DialogEditHistory\\ArcName',
+      u'\\Software\\WinRAR\\ArcHistory']
+
   _RE_VALUE_NAME = re.compile(r'^[0-9]+$', re.I)
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Collect values under WinRAR ArcHistory and return event for each one."""
     for value in self._key.GetValues():
       # Ignore any value not in the form: '[0-9]+'.
@@ -64,35 +66,3 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
       yield event.WinRegistryEvent(
           self._key.path, text_dict, timestamp=timestamp,
           source_append=': {0:s}'.format(self.DESCRIPTION))
-
-
-# TODO: Merge into a single class once key plugins support more than a single
-# key.
-class WinRarArcHistoryPlugin(WinRarHistoryPlugin):
-  """Gathers WinRAR ArcHistory from the User hive."""
-
-  NAME = 'winreg_winrar_1'
-
-  REG_KEY = '\\Software\\WinRAR\\ArcHistory'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'WinRAR Archive History'
-
-
-class WinRarArcNamePlugin(WinRarHistoryPlugin):
-  """Gathers WinRAR ArcName from the User hive."""
-
-  NAME = 'winreg_winrar_2'
-
-  REG_KEY = '\\Software\\WinRAR\\DialogEditHistory\\ArcName'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'WinRAR Archive Name'
-
-
-class WinRarExtrPathPlugin(WinRarHistoryPlugin):
-  """Gathers WinRAR ExtrPath from the User hive."""
-
-  NAME = 'winreg_winrar_3'
-
-  REG_KEY = '\\Software\\WinRAR\\DialogEditHistory\\ExtrPath'
-  REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'WinRAR Extraction Path'

@@ -27,6 +27,8 @@ try:
   # pylint: disable-msg=no-name-in-module
   from IPython.terminal.embed import InteractiveShellEmbed
 except ImportError:
+  # Support version older than 1.X of IPython.
+  # pylint: disable-msg=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 # pylint: disable-msg=unused-import
@@ -40,7 +42,6 @@ from plaso.frontend import preg
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
 
-from plaso.lib import collector_filter
 from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
