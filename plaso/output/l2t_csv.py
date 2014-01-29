@@ -43,7 +43,8 @@ class L2tcsv(output.FileLogOutputFormatter):
       self._preprocesses = {}
       for info in self.store.GetStorageInformation():
         if hasattr(info, 'store_range'):
-          for store_number in range(info.store_range[0], info.store_range[1]):
+          for store_number in range(
+              info.store_range[0], info.store_range[1] + 1):
             self._preprocesses[store_number] = info
 
     self.filehandle.WriteLine(
