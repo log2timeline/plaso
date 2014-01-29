@@ -107,9 +107,8 @@ class L2tcsv(output.FileLogOutputFormatter):
       pre_obj = self._preprocesses.get(event_object.store_number)
       if pre_obj:
         check_user = pre_obj.GetUsernameById(username)
-
-      if check_user != '-':
-        username = check_user
+        if check_user != '-':
+          username = check_user
 
     row = ('%02d/%02d/%04d' %(date_use.month, date_use.day, date_use.year),
            '%02d:%02d:%02d' %(date_use.hour, date_use.minute, date_use.second),
@@ -132,4 +131,3 @@ class L2tcsv(output.FileLogOutputFormatter):
     out_write = u'{0}\n'.format(
         u','.join(unicode(x).replace(',', ' ') for x in row))
     self.filehandle.WriteLine(out_write)
-
