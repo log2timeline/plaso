@@ -612,6 +612,8 @@ class PyparsingConstants(object):
   COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
       pyparsing.LineEnd())
   # TODO: Add more commonly used structs that can be used by parsers.
+  PID = pyparsing.Word(
+      pyparsing.nums, min=1, max=5).setParseAction(PyParseIntCast)
 
 
 class PyparsingSingleLineTextParser(parser.BaseParser):
