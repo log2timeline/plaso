@@ -105,7 +105,8 @@ class L2tcsv(output.FileLogOutputFormatter):
         hostname = self._hostnames.get(event_object.store_number, '-')
 
       pre_obj = self._preprocesses.get(event_object.store_number)
-      check_user =  pre_obj.GetUsernameById(username)
+      if pre_obj:
+        check_user = pre_obj.GetUsernameById(username)
 
       if check_user != '-':
         username = check_user
