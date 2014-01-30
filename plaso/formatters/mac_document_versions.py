@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2012 The Plaso Project Authors.
+# Copyright 2014 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This file contains a formatter for the Mac OS X Document Versions files."""
 
-__version__ = '1.1.0-dev'
-
-VERSION_DEV = True
-VERSION_DATE = '20140130'
+from plaso.lib import eventdata
 
 
-def GetVersion():
-  """Returns a version information for plaso."""
-  if not VERSION_DEV:
-    return __version__
+class MacDocumentVersionsFormatter(eventdata.ConditionalEventFormatter):
+  """The event formatter for page visited data in Document Versions."""
 
-  return u'{}_{}'.format(__version__, VERSION_DATE)
+  DATA_TYPE = 'mac:document_versions:file'
+
+  FORMAT_STRING_PIECES = [
+      u'Version of [{name}]',
+      u'({path})',
+      u'stored in {version_path}',
+      u'by {user_sid}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Stored a document version of [{name}]']
+
+  SOURCE_LONG = 'Document Versions'
+  SOURCE_SHORT = 'HISTORY'
