@@ -16,6 +16,12 @@
 # limitations under the License.
 """This file contains an import statement for each plist related plugin."""
 
+from plaso.parsers.plist_plugins import airport
+from plaso.parsers.plist_plugins import appleaccount
 from plaso.parsers.plist_plugins import bt
 from plaso.parsers.plist_plugins import safari
+from plaso.parsers.plist_plugins import softwareupdate
+from plaso.parsers.plist_plugins import spotlight
+from plaso.parsers.plist_plugins import spotlight_volume
+from plaso.parsers.plist_plugins import timemachine
 from plaso.parsers.plist_plugins import default
