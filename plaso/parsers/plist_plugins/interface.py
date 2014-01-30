@@ -25,6 +25,7 @@ and operation of plugins for plist files which will be used by PlistParser.
 """
 
 import logging
+import os
 
 from plaso.lib import errors
 from plaso.lib import plugin
@@ -125,7 +126,7 @@ class PlistPlugin(plugin.BasePlugin):
     self.match = GetKeys(top_level, self.PLIST_KEYS)
     return self.GetEntries()
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Yields PlistEvents from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
@@ -288,3 +289,66 @@ def GetKeysDefaultEmpty(top_level, keys, depth=1):
         if set(match.keys()) == keys:
           return match
   return match
+
+
+# INFO: Plist works over only one level of binary plist and return
+#       attributes that contains another binary plist as string data.
+#       This class is used to re-read this string information and parse it.
+# TODO: Remove this once support is built into dfVFS.
+class FakeFile(object):
+  """Class that simulates a file-like object."""
+
+  def __init__(self, data):
+    """Initializes the event object.
+
+    Args:
+      data: binary stream that we are exposing as a file-like-object.
+    """
+    self._data = data
+    self._offset = 0
+
+  def tell(self):
+    """The actual position in the data.
+
+    Returns:
+      An integer with the actual position.
+    """
+    return self._offset
+
+  def seek(self, offset, whence=os.SEEK_SET):
+    """Move to new file position.
+
+    Args:
+      offset: Number of bytes that the pointer must be displaced.
+      whence: The direction of the displacement.
+    """
+    if whence == os.SEEK_SET:
+      self._offset = offset
+    elif whence == os.SEEK_CUR:
+      self._offset += offset
+    elif whence == os.SEEK_END:
+      self._offset = len(self._data) + offset
+
+  def read(self, size=0):
+    """Read size bytes from byte stream and return them."""
+    if self._offset > len(self._data):
+      return ''
+
+    if not size:
+      data_to_return = self._data[self._offset:]
+      self._offset = len(self._data)
+      return data_to_return
+
+    if size >= len(self._data[self._offset:]):
+      data_to_return = self._data[self._offset:]
+      self._offset = len(self._data)
+      return data_to_return
+
+    data_to_return = self._data[self._offset:self._offset + size]
+    self._offset += size
+    return data_to_return
+
+  def close(self):
+    """Simulate the closing file."""
+    pass
+
