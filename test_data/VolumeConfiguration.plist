@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ConfigurationCreationDate</key>
+	<date>2013-05-27T12:23:50Z</date>
+	<key>ConfigurationCreationVersion</key>
+	<string>Version 10.8 (Build 12A269)</string>
+	<key>ConfigurationModificationDate</key>
+	<date>2013-06-25T05:54:43Z</date>
+	<key>ConfigurationModificationVersion</key>
+	<string>Version 10.8.4 (Build 12E3067)</string>
+	<key>Exclusions</key>
+	<array/>
+	<key>Options</key>
+	<dict>
+		<key>ConfigurationType</key>
+		<string>Default</string>
+	</dict>
+	<key>Stores</key>
+	<dict>
+		<key>4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD</key>
+		<dict>
+			<key>CreationDate</key>
+			<date>2013-06-25T05:54:43Z</date>
+			<key>CreationVersion</key>
+			<string>Version 10.8.4 (Build 12E3067)</string>
+			<key>IndexVersion</key>
+			<integer>95</integer>
+			<key>PartialPath</key>
+			<string>/.MobileBackups</string>
+			<key>PolicyDate</key>
+			<date>2013-06-25T05:54:43Z</date>
+			<key>PolicyLevel</key>
+			<string>kMDConfigSearchLevelReadWrite</string>
+			<key>PolicyVersion</key>
+			<string>Version 10.8.4 (Build 12E3067)</string>
+		</dict>
+		<key>AA82EDD7-613C-45E6-82EF-AAAABBBBCCCCDDDD</key>
+		<dict>
+			<key>CreationDate</key>
+			<date>2013-05-27T12:27:36Z</date>
+			<key>CreationVersion</key>
+			<string>Version 10.8 (Build 12A269)</string>
+			<key>IndexVersion</key>
+			<integer>95</integer>
+			<key>PartialPath</key>
+			<string>/</string>
+			<key>PolicyDate</key>
+			<date>2013-05-27T12:27:37Z</date>
+			<key>PolicyLevel</key>
+			<string>kMDConfigSearchLevelReadWrite</string>
+			<key>PolicyVersion</key>
+			<string>Version 10.8 (Build 12A269)</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
