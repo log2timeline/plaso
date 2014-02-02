@@ -29,13 +29,30 @@ class DefaultPlugin(interface.PlistPlugin):
 
   NAME = 'plist_default'
 
-  def Process(self, plist_name, top_level):
+  def Process(self, plist_name=None, top_level=None, **kwargs):
+    """Overwrite the default Process function so it always triggers.
+
+    Process() checks if the current plist being processed is a match for a
+    plugin by comparing the PATH and KEY requirements defined by a plugin.  If
+    both match processing continues; else raise WrongPlistPlugin.
+
+    The purpose of the default plugin is to always trigger on any given plist
+    file, thus it needs to overwrite the default behavior of comparing PATH
+    and KEY.
+
+    Args:
+      plist_name: Name of the plist file.
+      top_level: Plist in dictionary form.
+
+    Returns:
+      A generator of events processed by the plugin.
+    """
     self._top_level = top_level
     logging.debug(u'Plist {} plugin used for: {}'.format(
         self.plugin_name, plist_name))
     return self.GetEntries()
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Simple method to exact date values from a Plist.
 
     Yields:

@@ -56,7 +56,7 @@ class SafariHistoryPlugin(interface.PlistPlugin):
   PLIST_PATH = 'History.plist'
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Extracts Safari history items.
 
     Yields:

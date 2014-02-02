@@ -24,6 +24,7 @@ from plaso.formatters import firefox
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.sqlite_plugins import firefox
+from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
 
 
@@ -39,7 +40,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Firefox History database file."""
     # This is probably version 23 but potentially an older version.
     test_file = self._GetTestFilePath(['places.sqlite'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    cache = interface.SQLiteCache()
+    event_generator = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file, cache)
     event_objects = self._GetEventObjects(event_generator)
 
     # The places.sqlite file contains 205 events (1 page visit,
@@ -184,7 +187,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
     test_file = self._GetTestFilePath(['places_new.sqlite'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    cache = interface.SQLiteCache()
+    event_generator = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file, cache)
     event_objects = self._GetEventObjects(event_generator)
 
     # The places.sqlite file contains 84 events:
@@ -225,7 +230,9 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox Downloads database file."""
     test_file = self._GetTestFilePath(['downloads.sqlite'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    cache = interface.SQLiteCache()
+    event_generator = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file, cache)
     event_objects = self._GetEventObjects(event_generator)
 
     # The downloads.sqlite file contains 2 events (1 download)
