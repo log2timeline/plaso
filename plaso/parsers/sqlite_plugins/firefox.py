@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -210,6 +211,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([
       'moz_places', 'moz_historyvisits', 'moz_bookmarks', 'moz_items_annos'])
 
+  # Cache queries.
+  URL_CACHE_QUERY = (
+      'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
+      'moz_historyvisits h WHERE p.id = h.place_id')
+
   def ParseBookmarkAnnotationRow(self, row, **unused_kwargs):
     """Parses a bookmark annotation row.
 
@@ -285,11 +291,12 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
     yield container
 
-  def ParsePageVisitedRow(self, row, **unused_kwargs):
+  def ParsePageVisitedRow(self, row, cache, **unused_kwargs):
     """Parses a page visited row.
 
     Args:
       row: The row resulting from the query.
+      cache: A cache object (instance of SQLiteCache).
 
     Yields:
       An event object (FirefoxPlacesPageVisitedEvent) containing the event data.
@@ -298,7 +305,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     extras = []
     if row['from_visit']:
       extras.append(u'visited from: {0}'.format(
-          self._GetUrl(row['from_visit'])))
+          self._GetUrl(row['from_visit'], cache)))
 
     if row['hidden'] == '1':
       extras.append('(url hidden)')
@@ -337,20 +344,23 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         return hostname[::-1][0:]
     return hostname
 
-  def _GetUrl(self, url_id):
+  def _GetUrl(self, url_id, cache):
     """Return an URL from a reference to an entry in the from_visit table."""
-    query = ('SELECT url,rev_host,visit_date FROM moz_places, '
-             'moz_historyvisits WHERE moz_places.id = '
-             'moz_historyvisits.place_id AND moz_historyvisits.id=:id')
+    url_cache_results = cache.GetResults('url')
+    if not url_cache_results:
+      cursor = self.db.cursor
+      result_set = cursor.execute(self.URL_CACHE_QUERY)
+      cache.CacheQueryResults(
+          result_set, 'url', 'id', ('url', 'rev_host'))
+      url_cache_results = cache.GetResults('url')
 
-    cursor = self.db.cursor
-    result_set = cursor.execute(query, {'id': url_id})
-    row = result_set.fetchone()
+    url, reverse_host = url_cache_results.get(url_id, [u'', u''])
 
-    if row:
-      hostname = self._ReverseHostname(row['rev_host'])
-      return u'%s (%s)' % (row['url'], hostname)
-    return u''
+    if not url:
+      return u''
+
+    hostname = self._ReverseHostname(reverse_host)
+    return u'{:s} ({:s})'.format(url, hostname)
 
 
 class FirefoxDownloadsPlugin(interface.SQLitePlugin):

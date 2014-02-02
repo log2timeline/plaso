@@ -45,7 +45,7 @@ class TransmissionPlugin(interface.BencodePlugin):
   BENCODE_KEYS = frozenset(['activity-date', 'done-date', 'added-date',
                             'destination', 'seeding-time-seconds'])
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Extract data from Transmission's resume folder files.
 
     This is the main parsing engine for the parser. It determines if

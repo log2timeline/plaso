@@ -24,6 +24,7 @@ from plaso.formatters import chrome as chrome_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.sqlite_plugins import chrome
+from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
 
 
@@ -38,7 +39,9 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
     test_file = self._GetTestFilePath(['History'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    cache = interface.SQLiteCache()
+    event_generator = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file, cache)
     event_objects = self._GetEventObjects(event_generator)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).

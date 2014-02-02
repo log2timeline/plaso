@@ -33,7 +33,7 @@ class MockPlugin(interface.PlistPlugin):
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     yield plist_event.PlistEvent(
         u'/DeviceCache/44-00-00-00-00-00', u'LastInquiryUpdate',
         1351827808261762)
