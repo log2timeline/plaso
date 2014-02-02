@@ -51,7 +51,7 @@ class BencodePlugin(plugin.BasePlugin):
   NAME = 'bencode'
 
   @abc.abstractmethod
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Yields BencodeEvents from the values of entries within a bencoded file.
 
     This is the main method that a bencode plugin needs to implement.
