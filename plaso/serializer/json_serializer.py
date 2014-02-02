@@ -218,7 +218,11 @@ class JsonEventTagSerializer(interface.EventTagSerializer):
     Returns:
       An event tag (instance of EventTag).
     """
+    if not json_string:
+      return
+
     event_tag = event.EventTag()
+
     json_attributes = json.loads(json_string)
 
     for key, value in json_attributes.iteritems():

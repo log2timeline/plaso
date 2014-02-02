@@ -54,6 +54,10 @@ from plaso.serializer import protobuf_serializer
 import pytz
 
 
+# TODO: Function: _ConsumeItem is not defined, inspect if we need to define it
+# or change the interface so that is not an abstract method.
+# TODO: Remove this after dfVFS integration.
+# pylint: disable-msg=abstract-method
 class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
   """Class that implements an analysis report queue consumer for psort."""
 
@@ -72,7 +76,7 @@ class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
     self._preferred_encoding = preferred_encoding
     self._storage_file = storage_file
     self.anomalies = []
-    self.counter = {}
+    self.counter = collections.Counter()
     self.tags = []
 
   def _ConsumeAnalysisReport(self, analysis_report):
@@ -83,7 +87,7 @@ class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
     self.anomalies.extend(analysis_report.GetAnomalies())
     self.tags.extend(analysis_report.GetTags())
 
-    if self._filter:
+    if self._filter_string:
       analysis_report.filter_string = self._filter_string
 
     # For now we print the report to disk and then save it.
@@ -119,9 +123,8 @@ def _AppendEvent(event_object, output_buffer, analysis_queues):
 
     event_object.inode = new_inode
 
-  # TODO: use queue producer interface.
   for analysis_queue in analysis_queues:
-    analysis_queue.PushItem(event_object)
+    analysis_queue.ProduceEventObject(event_object)
 
 
 def SetupStorage(input_file_path, read_only=True):
@@ -328,11 +331,14 @@ def ParseStorage(my_args):
 
       # Start queues and load up plugins.
       analysis_output_queue = queue.MultiThreadedQueue()
+      analysis_producers = []
       analysis_queues = []
       analysis_plugins_list = [
           x.strip() for x in my_args.analysis_plugins.split(',')]
       for _ in xrange(0, len(analysis_plugins_list)):
         analysis_queues.append(queue.MultiThreadedQueue())
+        analysis_producers.append(
+            queue.AnalysisPluginProducer(analysis_queues[-1]))
 
       analysis_plugins = analysis.LoadPlugins(
           analysis_plugins_list, pre_obj, analysis_queues,
@@ -347,12 +353,12 @@ def ParseStorage(my_args):
         logging.info(
             u'Plugin: [{}] started.'.format(analysis_plugin.plugin_name))
     else:
-      analysis_queues = []
+      analysis_producers = []
 
     with output_lib.EventBuffer(formatter, my_args.dedup) as output_buffer:
       counter = ProcessOutput(
           output_buffer, formatter, filter_use, filter_buffer,
-          analysis_queues)
+          analysis_producers)
 
     for information in store.GetStorageInformation():
       if hasattr(information, 'counter'):
@@ -363,8 +369,8 @@ def ParseStorage(my_args):
     # Get all reports and tags from analysis plugins.
     if my_args.analysis_plugins:
       logging.info('Processing data from analysis plugins.')
-      for analysis_queue in analysis_queues:
-        analysis_queue.Close()
+      for analysis_producer in analysis_producers:
+        analysis_producer.SignalEndOfInput()
 
       # Wait for all analysis plugins to complete.
       for number, analysis_process in enumerate(analysis_processes):
@@ -376,6 +382,9 @@ def ParseStorage(my_args):
           logging.warning(u'Plugin {} already stopped.'.format(number))
           analysis_process.terminate()
       logging.debug(u'All analysis plugins are now stopped.')
+
+      # Close the output queue.
+      analysis_output_queue.SignalEndOfInput()
 
       # Go over each output.
       analysis_queue_consumer = PsortAnalysisReportQueueConsumer(
@@ -389,7 +398,8 @@ def ParseStorage(my_args):
 
       # TODO: analysis_queue_consumer.anomalies:
 
-      counter.extend(analysis_queue_consumer.counter)
+      for item, value in analysis_queue_consumer.counter.iteritems():
+        counter[item] = value
 
   if filter_use and not counter['Limited By']:
     counter['Filter By Date'] = counter['Stored Events'] - counter[
@@ -529,7 +539,10 @@ def ProcessArguments(arguments):
   my_args = parser.parse_args(args=arguments)
 
   format_str = '[%(levelname)s] %(message)s'
-  logging.basicConfig(level=logging.INFO, format=format_str)
+  if my_args.debug:
+    logging.basicConfig(level=logging.DEBUG, format=format_str)
+  else:
+    logging.basicConfig(level=logging.INFO, format=format_str)
 
   if my_args.timezone == 'list':
     print utils.FormatHeader('Zones')

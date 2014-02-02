@@ -32,6 +32,7 @@ import multiprocessing
 
 from plaso.lib import event
 from plaso.lib import errors
+from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
 
 
@@ -330,6 +331,18 @@ class EventObjectQueueProducer(QueueProducer):
     """
     for event_object in event_objects:
       self.ProduceEventObject(event_object)
+
+
+class AnalysisPluginProducer(EventObjectQueueProducer):
+  """Producer for Event Objects sent to analysis plugins."""
+
+  def __init__(self, queue_object):
+    super(AnalysisPluginProducer, self).__init__(queue_object)
+    # TODO: This producer should become unnecesary or obsolete once full
+    # pickle support is built into the EventObject, until then
+    # we keep it to indicate we want JSON serialization for
+    # analysis plugins due to speed considerations.
+    self._serializer = json_serializer.JsonEventObjectSerializer
 
 
 class PathSpecQueueConsumer(QueueConsumer):

@@ -22,6 +22,7 @@ import abc
 from plaso.lib import queue
 from plaso.lib import registry
 from plaso.lib import timelib
+from plaso.serializer import json_serializer
 
 
 class AnalysisPlugin(queue.EventObjectQueueConsumer):
@@ -86,6 +87,9 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
         outgoing_queue)
     self._config = pre_obj
     self.plugin_type = self.TYPE_REPORT
+    # TODO: Remove this once we can stop using a serializer for the analysis
+    # queue for event objects.
+    self._serializer = json_serializer.JsonEventObjectSerializer
 
   def _ConsumeEventObject(self, event_object):
     """Consumes an event object callback for ConsumeEventObjects."""
