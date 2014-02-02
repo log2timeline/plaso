@@ -142,18 +142,13 @@ class SkypePlugin(interface.SQLitePlugin):
 
   NAME = 'skype'
 
+  # Queries for building cache.
   QUERY_DEST_FROM_TRANSFER = (
-      u'SELECT partner_handle AS skypeid, '
-      u'partner_dispname AS skypename '
-      u'FROM transfers WHERE parent_id =:pk_id')
+      u'SELECT parent_id, partner_handle AS skypeid, '
+      u'partner_dispname AS skypename FROM transfers')
   QUERY_SOURCE_FROM_TRANSFER = (
-      u'SELECT partner_handle AS skypeid, '
-      u'partner_dispname AS skypename '
-      u'FROM transfers WHERE pk_id =:parent_id')
-
-  def __init__(self, pre_obj):
-    super(SkypePlugin, self).__init__(pre_obj)
-    self._mainaccount = None
+      u'SELECT pk_id, partner_handle AS skypeid, '
+      u'partner_dispname AS skypename FROM transfers')
 
   # Define the needed queries.
   QUERIES = [
@@ -297,11 +292,12 @@ class SkypePlugin(interface.SQLitePlugin):
           logging.debug(u'Unknown when the call {} was'
                         u'finished.'.format(row['id']))
 
-  def ParseFileTransfer(self, row, **unused_kwargs):
+  def ParseFileTransfer(self, row, cache, **unused_kwargs):
     """Parse the transfer files.
 
     Args:
       row: the row with all information related with the file transfers.
+      cache: a cache object (instance of SQLiteCache).
 
     Yields:
       An event SkypeTransferFileEvent when the user gets a file solicitude.
@@ -316,53 +312,50 @@ class SkypePlugin(interface.SQLitePlugin):
      Note: we don't have direct relationship between who sends
            the file and who accepts the file. Only acctions.
     """
-    self._GetSrcDstFromTransferFiles(row)
-    if row['status'] == 8:
-      if row['starttime']:
-        yield SkypeTransferFileEvent(row, row['starttime'], 'GETSOLICITUDE',
-                                     self.source, self.destination)
-      if row['accepttime']:
-        yield SkypeTransferFileEvent(row, row['accepttime'], 'ACCEPTED',
-                                     self.source, self.destination)
-      if row['finishtime']:
-        yield SkypeTransferFileEvent(row, row['finishtime'], 'FINISHED',
-                                     self.source, self.destination)
-    elif row['status'] == 2 and row['starttime']:
-      yield SkypeTransferFileEvent(row, row['starttime'], 'SENDSOLICITUDE',
-                                   self.source, self.destination)
+    source_dict = cache.GetResults('source')
+    if not source_dict:
+      cursor = self.db.cursor
+      results = cursor.execute(self.QUERY_SOURCE_FROM_TRANSFER)
+      cache.CacheQueryResults(
+          results, 'source', 'pk_id', ('skypeid', 'skypename'))
+      source_dict = cache.GetResults('source')
 
-  def _GetSrcDstFromTransferFiles(self, row):
-    """SQL query to get the source and destination of the file."""
+    dest_dict = cache.GetResults('destination')
+    if not dest_dict:
+      cursor = self.db.cursor
+      results = cursor.execute(self.QUERY_DEST_FROM_TRANSFER)
+      cache.CacheQueryResults(
+          results, 'destination', 'parent_id', ('skypeid', 'skypename'))
+      dest_dict = cache.GetResults('destination')
 
     source = u'Unknown'
     destination = u'Unknown'
 
-    if not row['parent_id']:
-      source = u'{} <{}>'.format(
-          row['partner_handle'], row['partner_dispname'])
-      if row['pk_id']:
-        id_query = row['pk_id']
-        if type(id_query) in (int, long):
-          cursor = self.db.cursor
-          result_set = cursor.execute(
-              self.QUERY_DEST_FROM_TRANSFER, {'pk_id': id_query})
-          row = result_set.fetchone()
-          if row:
-            destination = u'{} <{}>'.format(
-                row['skypeid'], row['skypename'])
-    else:
+    if row['parent_id']:
       destination = u'{} <{}>'.format(
           row['partner_handle'], row['partner_dispname'])
-      if row['parent_id']:
-        id_query = row['parent_id']
-        if type(id_query) in (int, long):
-          cursor = self.db.cursor
-          result_set = cursor.execute(
-              self.QUERY_SOURCE_FROM_TRANSFER, {'parent_id': id_query})
-          row = result_set.fetchone()
-          if row:
-            source = u'{} <{}>'.format(row['skypeid'], row['skypename'])
+      skype_id, skype_name = source_dict.get(row['parent_id'], [None, None])
+      if skype_name:
+        source = u'{} <{}>'.format(skype_id, skype_name)
+    else:
+      source = u'{} <{}>'.format(
+          row['partner_handle'], row['partner_dispname'])
 
-    self.source = source
-    self.destination = destination
+      if row['pk_id']:
+        skype_id, skype_name = dest_dict.get(row['pk_id'], [None, None])
+        if skype_name:
+          destination = u'{} <{}>'.format(skype_id, skype_name)
 
+    if row['status'] == 8:
+      if row['starttime']:
+        yield SkypeTransferFileEvent(
+            row, row['starttime'], 'GETSOLICITUDE', source, destination)
+      if row['accepttime']:
+        yield SkypeTransferFileEvent(
+            row, row['accepttime'], 'ACCEPTED', source, destination)
+      if row['finishtime']:
+        yield SkypeTransferFileEvent(
+            row, row['finishtime'], 'FINISHED', source, destination)
+    elif row['status'] == 2 and row['starttime']:
+      yield SkypeTransferFileEvent(
+          row, row['starttime'], 'SENDSOLICITUDE', source, destination)

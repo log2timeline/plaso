@@ -28,7 +28,6 @@ from plaso.parsers.sqlite_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-# TODO: Add tests: gdrive_test.py.
 class GoogleDriveSnapshotCloudEntryEventContainer(event.EventContainer):
   """Convenience class for a Google Drive snapshot cloud entry container."""
 

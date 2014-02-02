@@ -22,6 +22,7 @@ import unittest
 # pylint: disable-msg=unused-import
 from plaso.formatters import skype as skype_formatter
 from plaso.lib import event
+from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -51,7 +52,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         id = 14 -> ChatRoom
     """
     test_file = self._GetTestFilePath(['skype_main.db'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    cache = interface.SQLiteCache()
+    event_generator = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file, cache)
     event_objects = self._GetEventObjects(event_generator)
 
     calls = 0
@@ -81,6 +84,15 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     event_file = event_objects[18]
     chat_event_object = event_objects[1]
     chat_room_event_object = event_objects[14]
+
+    # Test cache processing and format strings.
+    expected_msg = (
+        u'Source: gen.beringer <Gen Beringer> Destination: '
+        u'european.bbq.competitor <European BBQ> File: secret-project.pdf '
+        u'[SENDSOLICITUDE]')
+
+    self._TestGetMessageStrings(
+        event_objects[17], expected_msg, expected_msg[0:77] + '...')
 
     # date -u -d"Jul 01, 2013 22:14:22" +"%s.%N"
     timestamp = 1372716862 * 1000000

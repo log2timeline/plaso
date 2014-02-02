@@ -30,8 +30,6 @@ class BtPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.bluetooth.plist'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
-  # Yield Events
-  #
   # LastInquiryUpdate = Device connected via Bluetooth Discovery.  Updated
   #   when a device is detected in discovery mode.  E.g. BT headphone power
   #   on.  Pairing is not required for a device to be discovered and cached.
@@ -42,7 +40,7 @@ class BtPlugin(interface.PlistPlugin):
   # LastServicesUpdate = Time set when device was polled to determine what it
   #   is.  Usually done at setup or manually requested via advanced menu.
 
-  def GetEntries(self):
+  def GetEntries(self, unused_cache=None):
     """Extracts relevant BT entries.
 
     Yields:

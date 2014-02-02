@@ -110,6 +110,11 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([
       'keyword_search_terms', 'meta', 'urls', 'visits', 'visit_source'])
 
+  # Query for cache building.
+  URL_CACHE_QUERY = (
+      'SELECT visits.id AS id, urls.url, urls.title FROM '
+      'visits, urls WHERE urls.id = visits.url')
+
   # The following definition for values can be found here:
   # http://src.chromium.org/svn/trunk/src/content/public/common/ \
   # page_transition_types_list.h
@@ -177,11 +182,12 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         timestamp, row['id'], row['url'], row['target_path'],
         row['received_bytes'], row['total_bytes'])
 
-  def ParseLastVisitedRow(self, row, **unused_kwargs):
+  def ParseLastVisitedRow(self, row, cache, **unused_kwargs):
     """Parses a last visited row.
 
     Args:
       row: The row resulting from the query.
+      cache: A cache object (instance of SQLiteCache).
 
     Yields:
       An event object (ChromeHistoryPageVisitedEvent) containing the event data.
@@ -214,7 +220,8 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     yield ChromeHistoryPageVisitedEvent(
         timelib.Timestamp.FromWebKitTime(int(row['visit_time'])),
         row['id'], row['url'], row['title'], self._GetHostname(row['url']),
-        row['typed_count'], self._GetUrl(row['from_visit']), u' '.join(extras))
+        row['typed_count'], self._GetUrl(row['from_visit'], cache), u' '.join(
+            extras))
 
   def _GetHostname(self, hostname):
     """Return a hostname from a full URL."""
@@ -227,17 +234,22 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     except IndexError:
       return 'N/A'
 
-  def _GetUrl(self, url):
+  def _GetUrl(self, url, cache):
     """Return an URL from a reference to an entry in the from_visit table."""
     if not url:
       return u''
-    query = ('SELECT urls.url, urls.title, visits.visit_time FROM visits, urls '
-             'WHERE urls.id = visits.url AND visits.id=:id')
 
-    cursor = self.db.cursor
-    result_set = cursor.execute(query, {'id': url})
-    row = result_set.fetchone()
+    url_cache_results = cache.GetResults('url')
+    if not url_cache_results:
+      cursor = self.db.cursor
+      result_set = cursor.execute(self.URL_CACHE_QUERY)
+      cache.CacheQueryResults(
+          result_set, 'url', 'id', ('url', 'title'))
+      url_cache_results = cache.GetResults('url')
 
-    if row:
-      return u'%s (%s)' % (row['url'], row['title'])
-    return u''
+    reference_url, reference_title = url_cache_results.get(url, [u'', u''])
+
+    if not reference_url:
+      return u''
+
+    return u'{} ({})'.format(reference_url, reference_title)

@@ -18,7 +18,7 @@
 
 from plaso.parsers.plist_plugins import airport
 from plaso.parsers.plist_plugins import appleaccount
-from plaso.parsers.plist_plugins import bt
+from plaso.parsers.plist_plugins import bluetooth
 from plaso.parsers.plist_plugins import safari
 from plaso.parsers.plist_plugins import softwareupdate
 from plaso.parsers.plist_plugins import spotlight
