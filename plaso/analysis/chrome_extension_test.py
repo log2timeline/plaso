@@ -113,7 +113,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     self.assertEquals(user_paths[u'root'], u'/var/root')
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.EventObjectQueueProducer(incoming_queue)
+    test_queue_producer = queue.AnalysisPluginProducer(incoming_queue)
     test_queue_producer.ProduceEventObjects([
         self._CreateTestEventObject(path) for path in self.MAC_PATHS])
     test_queue_producer.SignalEndOfInput()
@@ -176,7 +176,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     self.assertEquals(user_paths[u'dude'], u'/users/dude')
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.EventObjectQueueProducer(incoming_queue)
+    test_queue_producer = queue.AnalysisPluginProducer(incoming_queue)
     test_queue_producer.ProduceEventObjects([
         self._CreateTestEventObject(path) for path in self.WIN_PATHS])
     test_queue_producer.SignalEndOfInput()

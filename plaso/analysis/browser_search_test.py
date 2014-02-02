@@ -47,7 +47,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     test_file = self._GetTestFilePath(['History'])
     event_generator = self._ParseFile(self._parser, test_file)
 
-    test_queue_producer = queue.EventObjectQueueProducer(incoming_queue)
+    test_queue_producer = queue.AnalysisPluginProducer(incoming_queue)
     test_queue_producer.ProduceEventObjects(event_generator)
     test_queue_producer.SignalEndOfInput()
 
