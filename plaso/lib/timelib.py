@@ -506,7 +506,8 @@ class Timestamp(object):
   @classmethod
   def GetNow(cls):
     """Retrieves the current time (now) as a timestamp in UTC."""
-    return int((time.time() + time.timezone) * 1000000)
+    time_elements = time.gmtime()
+    return calendar.timegm(time_elements) * 1000000
 
   @classmethod
   def RoundToSeconds(cls, timestamp):
