@@ -53,12 +53,13 @@ categories = {
         'bencode', 'chrome_cookies', 'chrome_history', 'filestat',
         'firefox_downloads', 'firefox_history', 'google_drive', 'java_idx',
         'olecf', 'openxml', 'opera_global', 'opera_typed_history', 'selinux',
-        'skype', 'syslog', 'xchatscrollback', 'zeitgeist'],
+        'skype', 'syslog', 'utmp', 'xchatscrollback', 'zeitgeist'],
     'macosx': [
-        'appusage', 'asl_log', 'bencode', 'chrome_cookies', 'chrome_history',
-        'filestat', 'firefox_downloads', 'firefox_history', 'google_drive',
-        'java_idx', 'ls_quarantine', 'mackeeper_cache', 'macwifi', 'olecf',
-        'openxml', 'opera_global', 'opera_typed_history', 'plist',
+        'appusage', 'asl_log', 'bencode', 'bsm_log', 'chrome_cookies',
+        'chrome_history', 'filestat', 'firefox_downloads', 'firefox_history',
+        'google_drive', 'java_idx', 'ls_quarantine', 'mac_appfirewall_log',
+        'mac_document_versions', 'mac_securityd', 'mackeeper_cache', 'macwifi',
+        'olecf', 'openxml', 'opera_global', 'opera_typed_history', 'plist',
         'safari_history', 'skype', 'syslog', 'utmpx'],
     'android': [
         'android_calls', 'android_sms'],

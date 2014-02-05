@@ -122,7 +122,7 @@ class PreprocessCollector(object):
 
     return path_segments_expressions_list
 
-  # TODO: in PyVFS create a separate FindExpression of FindSpec object to
+  # TODO: in dfVFS create a separate FindExpression of FindSpec object to
   # define path expresssions.
   def FindPaths(self, path_expression):
     """Finds paths based on a path expression.
