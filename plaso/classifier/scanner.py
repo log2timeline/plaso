@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2013 The PyVFS Project Authors.
+# Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -500,7 +500,7 @@ class OffsetBoundScanner(ScanTreeScannerBase):
 
     if remainder > 0:
       footer_range_size += 1
-    
+
     footer_range_size *= self._READ_BUFFER_SIZE
 
     return range_list.Range(footer_range_start_offset, footer_range_size)
@@ -525,7 +525,7 @@ class OffsetBoundScanner(ScanTreeScannerBase):
 
     if remainder > 0:
       header_range_size += 1
-    
+
     header_range_size *= self._READ_BUFFER_SIZE
 
     return range_list.Range(header_range_start_offset, header_range_size)

@@ -131,11 +131,16 @@ class MacPlistPreprocess(PreprocessPlugin):
       raise errors.PreProcessFail(u'Unable to find path: %s' % self.PLIST_PATH)
 
     try:
-      file_entry = self._collector.OpenFileEntry(paths[0])
+      path = paths.next()
+    except StopIteration:
+      raise errors.PreProcessFail(u'Unable to open file: Path not found.')
+
+    try:
+      file_entry = self._collector.OpenFileEntry(path)
       file_object = file_entry.Open()
-    except IOError:
+    except IOError as exception:
       raise errors.PreProcessFail(
-          u'Unable to open file {}: {}'.format(paths[0], e))
+          u'Unable to open file {}: {}'.format(path, exception))
 
     return self.ParseFile(file_entry, file_object)
 
