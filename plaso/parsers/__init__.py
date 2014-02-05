@@ -39,6 +39,7 @@ from plaso.parsers import plist
 from plaso.parsers import recycler
 from plaso.parsers import selinux
 from plaso.parsers import skydrivelog
+from plaso.parsers import skydrivelogerr
 from plaso.parsers import sqlite
 from plaso.parsers import syslog
 from plaso.parsers import symantec
