@@ -23,6 +23,7 @@ from plaso.lib import errors
 from plaso.lib import preprocess_interface
 from plaso.lib import utils
 from plaso.parsers.plist_plugins import interface
+from plaso.pvfs import pfile
 
 from binplist import binplist
 
@@ -125,7 +126,7 @@ class OSXTimeZone(preprocess_interface.PreprocessPlugin):
 
   def GetValue(self):
     """Extract and return the value of the time zone settings."""
-    # TODO: This needs to be completely rewritten once PyVFS is
+    # TODO: This needs to be completely rewritten once dfVFS is
     # implemented.
     # Also this only works currently for the common case of symbolic
     # links in the /private/etc directory. Other cases exist that need
@@ -136,19 +137,23 @@ class OSXTimeZone(preprocess_interface.PreprocessPlugin):
       raise errors.PreProcessFail(u'Zonefile does not exist.')
 
     # TODO: This only works against an image file, need to support
-    # other use cases as well (again something fixed with PyVFS).
-    if self._collector.ReadingFromImage():
+    # other use cases as well (again something fixed with dfVFS).
+    if not self._collector.ReadingFromImage():
       raise errors.PreProcessFail(
           u'Currently only works against an image file.')
 
     # Try to open file.
     try:
       # We need to access the fs object directly, remove this
-      # once PyVFS is completed.
+      # once dfVFS is completed.
       # pylint: disable-msg=protected-access
-      zone_file = self._collector._fs_obj.fs.open(
+      root_path_spec = pfile.PFileResolver.CopyPathToPathSpec(
+          u'TSK', u'/', self._collector._source_path,
+          image_offset=self._collector._GetImageByteOffset())
+      file_system = pfile.PFileResolver.OpenFileSystem(root_path_spec)
+      zone_file = file_system.tsk_fs.open(
           self.ZONE_FILE_PATH)
-    except IOError:
+    except (IOError, errors.UnableToOpenFilesystem):
       raise errors.PreProcessFail(u'Unable to open zone file.')
 
     zone_info = zone_file.info
