@@ -43,6 +43,7 @@ from plaso.formatters import recycler
 from plaso.formatters import safari
 from plaso.formatters import selinux
 from plaso.formatters import skydrivelog
+from plaso.formatters import skydrivelogerr
 from plaso.formatters import skype
 from plaso.formatters import syslog
 from plaso.formatters import symantec
