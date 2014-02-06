@@ -49,26 +49,21 @@ class OSXUsers(preprocess_interface.PreprocessPlugin):
 
   def OpenPlistFile(self, filename):
     """Open a Plist file given a path and returns a plist top level object."""
-    try:
-      file_entry = self._collector.OpenFileEntry(filename)
-      file_object = file_entry.Open()
-    except IOError as e:
-      raise errors.PreProcessFail(
-          u'Unable to open file:{} [{}]'.format(
-              filename, utils.GetUnicodeString(e)))
+    file_entry = self._collector.OpenFileEntry(filename)
+    file_object = file_entry.Open()
 
     try:
       plist_file = binplist.BinaryPlist(file_object)
       top_level_object = plist_file.Parse()
     except binplist.FormatError as e:
-      raise errors.PreProcessFail(
+      raise IOError(
           u'File is not a plist:{}'.format(utils.GetUnicodeString(e)))
     except OverflowError as e:
-      raise errors.PreProcessFail(
+      raise IOError(
           u'Error processing:{} Error:{}'.format(file_entry.display_name, e))
 
     if not plist_file:
-      raise errors.PreProcessFail(
+      raise IOError(
           u'File is not a plist:{}'.format(utils.GetUnicodeString(
               file_entry.display_name)))
 
@@ -81,18 +76,22 @@ class OSXUsers(preprocess_interface.PreprocessPlugin):
     try:
       user_plists = self._collector.FindPaths(self.USER_PATH)
     except errors.PathNotFound:
-      return users
+      raise errors.PreProcessFail(u'Unable to find user files.')
 
     for plist in user_plists:
-      top_level_object = self.OpenPlistFile(plist)
+      try:
+        top_level_object = self.OpenPlistFile(plist)
+      except IOError:
+        logging.warning(u'Unable to parse userfile: {}'.format(plist))
+        continue
 
       try:
         match = interface.GetKeysDefaultEmpty(
             top_level_object, frozenset(['name', 'uid', 'home', 'realname']))
-      except KeyError as e:
+      except KeyError as exception:
         user, _, _ = plist.partition('.')
         logging.warning(u'Unable to read in data [{}] for user: {}'.format(
-            e, user))
+            exception, user))
         continue
 
       user = {
@@ -101,6 +100,9 @@ class OSXUsers(preprocess_interface.PreprocessPlugin):
           'name': match.get('name', ['<not set>'])[0],
           'realname': match.get('realname', ['N/A'])[0]}
       users.append(user)
+
+    if not users:
+      raise errors.PreProcessFail(u'Unable to find any users on the system.')
 
     return users
 
