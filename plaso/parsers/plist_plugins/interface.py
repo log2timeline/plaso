@@ -116,8 +116,21 @@ class PlistPlugin(plugin.BasePlugin):
     if plist_name.lower() != self.PLIST_PATH.lower():
       raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
 
-    if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
-      raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+    if isinstance(top_level, dict):
+      if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
+        raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+    else:
+      # This is a list and we need to just look at the first level
+      # of keys there.
+      keys = []
+      for top_level_entry in top_level:
+        if isinstance(top_level_entry, dict):
+          keys.extend(top_level_entry.keys())
+
+      # Compare this is a set, which removes possible duplicate entries
+      # in the list.
+      if not set(keys).issuperset(self.PLIST_KEYS):
+        raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
 
     super(PlistPlugin, self).Process(**kwargs)
 
