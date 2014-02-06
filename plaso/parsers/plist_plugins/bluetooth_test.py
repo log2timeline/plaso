@@ -32,7 +32,7 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = bluetooth.BtPlugin(None)
+    self._plugin = bluetooth.BluetoothPlugin(None)
     self._parser = plist.PlistParser(event.PreprocessObject(), None)
 
   def testProcess(self):

@@ -19,6 +19,7 @@
 from plaso.formatters import android_calls
 from plaso.formatters import android_sms
 from plaso.formatters import appusage
+from plaso.formatters import asl
 from plaso.formatters import bsm
 from plaso.formatters import bencode_parser
 from plaso.formatters import chrome
@@ -29,7 +30,9 @@ from plaso.formatters import gdrive
 from plaso.formatters import hachoir
 from plaso.formatters import java_idx
 from plaso.formatters import ls_quarantine
+from plaso.formatters import mac_document_versions
 from plaso.formatters import mac_wifi
+from plaso.formatters import mac_securityd
 from plaso.formatters import mackeeper_cache
 from plaso.formatters import mactime
 from plaso.formatters import mcafeeav

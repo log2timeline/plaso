@@ -53,7 +53,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
 
     self.assertEquals(event_object.name, u'Spain is beautiful.rtf')
     self.assertEquals(event_object.path, u'/Users/moxilo/Documents')
-    self.assertEquals(event_object.user_sid, 501)
+    self.assertEquals(event_object.user_sid, u'501')
     expected_version_path = (
         u'/.DocumentRevisions-V100/PerUID/501/1/'
         u'com.apple.documentVersions/'

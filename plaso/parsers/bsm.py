@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -26,10 +27,10 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
-
 from plaso.unix import bsmtoken
 
 import pytz
+
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
@@ -45,11 +46,11 @@ class MacBsmEvent(event.EventObject):
     """Initializes the event object.
 
     Args:
-      event_type: string with the text and ID that represents the event type.
-      timestamp: timestamp of the entry.
-      extra_tokens: list of the extra tokens of the entry.
-      return_value: string with the process return value and exit status.
-      record_length: record length in bytes (trailer number).
+      event_type: String with the text and ID that represents the event type.
+      timestamp: Entry Epoch timestamp in UTC.
+      extra_tokens: List of the extra tokens of the entry.
+      return_value: String with the process return value and exit status.
+      record_length: Record length in bytes (trailer number).
     """
     super(MacBsmEvent, self).__init__()
     self.timestamp = timestamp
@@ -70,10 +71,10 @@ class BsmEvent(event.EventObject):
     """Initializes the event object.
 
     Args:
-      event_type: text and integer ID that represents the type of the event.
-      timestamp: timestamp of the entry.
-      extra_tokens: list of the extra tokens of the entry.
-      record_length: record length in bytes (trailer number).
+      event_type: Text and integer ID that represents the type of the event.
+      timestamp: Timestamp of the entry.
+      extra_tokens: List of the extra tokens of the entry.
+      record_length: Record length in bytes (trailer number).
     """
     super(BsmEvent, self).__init__()
     self.timestamp = timestamp
@@ -657,8 +658,6 @@ class BsmParser(parser.BaseParser):
     except (IOError, construct.FieldError):
       return False
     if token_id not in self.BSM_TYPE_LIST:
-      logging.debug(
-          u'Unknown BSM token ID {}.'.format(token_id))
       return False
 
     bsm_type, structure = self.BSM_TYPE_LIST.get(token_id, ['', ''])
@@ -670,22 +669,15 @@ class BsmParser(parser.BaseParser):
       elif bsm_type == 'BSM_HEADER32_EX':
         header = structure.parse_stream(file_object)
       else:
-        logging.warning(
-            u'BSM header {} not supported.'.format(bsm_type))
         return False
     except (IOError, construct.FieldError):
       return False
     if header.bsm_header.version != self.AUDIT_HEADER_VERSION:
-      logging.warning(
-          u'BSM version {} not supported.'.format(header.bsm_header.version))
       return False
 
     try:
       token_id = self.BSM_TYPE.parse_stream(file_object)
     except (IOError, construct.FieldError):
-      logging.warning(
-          u'Unable to parse the Token ID at '
-          u'position "{}"'.format(file_object.tell()))
       return False
 
     # If is Mac OS X BSM file, next entry is a  text token indicating
