@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -23,6 +24,7 @@ from plaso.formatters import bsm as bsm_formatter
 from plaso.lib import event
 from plaso.parsers import bsm
 from plaso.parsers import test_lib
+
 
 class BsmParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""

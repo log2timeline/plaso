@@ -62,7 +62,7 @@ class AslEvent(event.EventObject):
     """
     super(AslEvent, self).__init__()
     self.pid = record_header.pid
-    self.user_sid = record_header.uid
+    self.user_sid = unicode(record_header.uid)
     self.group_id = record_header.gid
     self.timestamp = timestamp
     self.timestamp_desc = eventdata.EventTimestamp.CREATION_TIME
@@ -336,8 +336,13 @@ class AslParser(parser.BaseParser):
           # If the pointer is in a previous entry.
           if main_position > field:
             file_object.seek(field - main_position, os.SEEK_CUR)
-            values.append((self.ASL_RECORD_DYN_VALUE.parse_stream(
-                file_object)).value.partition('\x00')[0])
+            try:
+              values.append((self.ASL_RECORD_DYN_VALUE.parse_stream(
+                  file_object)).value.partition('\x00')[0])
+            except (IOError, construct.FieldError):
+              logging.warning(u'The pointer at {0}(0x{0:x}) points to an'
+                              u'invalid information.'.format(
+                                  main_position - self.POINTER.sizeof()))
             # Come back to the position in the entry.
             _ = file_object.read(main_position - file_object.tell())
           else:
@@ -379,9 +384,9 @@ class AslParser(parser.BaseParser):
 
     # If the entry has an extra fields, they works as a pairs:
     # The first is the name of the field and the second the value.
+    extra_information = ''
     if len(values) > 4:
       values = values[4:]
-      extra_information = ''
       for index in xrange(0, len(values) // 2):
         extra_information += (u'[{0}: {1}]'.format(
             values[index * 2], values[(index * 2) + 1]))
