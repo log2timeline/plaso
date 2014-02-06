@@ -28,7 +28,9 @@ from plaso.lib import timelib
 import pyparsing
 import pytz
 
+
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
+
 
 # INFO:
 # http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
@@ -152,7 +154,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     # TODO: improving this to get a valid year.
     if not self._year_use:
       # Get from the creation time of the file.
-      self._year_use = self._GetYear(self.fd.Stat(), self.local_zone)
+      self._year_use = self._GetYear(self.file_entry.Stat(), self.local_zone)
       # If fail, get from the current time.
       if not self._year_use:
         self._year_use = timelib.GetCurrentYear()

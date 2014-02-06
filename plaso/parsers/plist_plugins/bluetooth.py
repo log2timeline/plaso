@@ -22,10 +22,10 @@ from plaso.lib import timelib
 from plaso.parsers.plist_plugins import interface
 
 
-class BtPlugin(interface.PlistPlugin):
+class BluetoothPlugin(interface.PlistPlugin):
   """Basic plugin to extract interesting bluetooth related keys."""
 
-  NAME = 'plist_bt'
+  NAME = 'plist_bluetooth'
 
   PLIST_PATH = 'com.apple.bluetooth.plist'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])

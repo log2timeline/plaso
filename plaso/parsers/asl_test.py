@@ -32,7 +32,6 @@ class AslParserTest(test_lib.ParserTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-
     self._parser = asl.AslParser(pre_obj, None)
 
   def testParse(self):
@@ -54,7 +53,7 @@ class AslParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.sender, u'locationd')
     self.assertEqual(event_object.facility, u'com.apple.locationd')
     self.assertEqual(event_object.pid, 69)
-    self.assertEqual(event_object.user_sid, 205)
+    self.assertEqual(event_object.user_sid, u'205')
     self.assertEqual(event_object.group_id, 205)
     self.assertEqual(event_object.read_uid, 205)
     self.assertEqual(event_object.read_gid, 'ALL')

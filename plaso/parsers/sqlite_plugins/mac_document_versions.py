@@ -49,7 +49,7 @@ class MacDocumentVersionsEvent(event.EventObject):
     self.path = path
     self.version_path = version_path
     self.last_time = last_time
-    self.user_sid = user_sid
+    self.user_sid = unicode(user_sid)
 
 
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
@@ -94,7 +94,7 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
     if len(paths) < 2 or not paths[1].isdigit():
       user_sid = None
     else:
-      user_sid = int(paths[1])
+      user_sid = paths[1]
     version_path = self.ROOT_VERSION_PATH + row['version_path']
     path, _, _ = row['path'].rpartition('/')
     yield MacDocumentVersionsEvent(
