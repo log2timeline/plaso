@@ -32,6 +32,7 @@ import abc
 import logging
 import sys
 
+from plaso.lib import errors
 from plaso.lib import registry
 from plaso.lib import utils
 
@@ -271,7 +272,10 @@ class EventBuffer(object):
       return
 
     for event_object in self._buffer_dict.values():
-      self.formatter.WriteEvent(event_object)
+      try:
+        self.formatter.WriteEvent(event_object)
+      except errors.WrongFormatter as exception:
+        logging.error(u'Unable to write event: {:s}'.format(exception))
 
     self._buffer_dict = {}
 
