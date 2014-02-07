@@ -79,7 +79,7 @@ def CheckLibyal(libyal_python_modules):
     True if the libyal libraries are available, false otherwise.
   """
   result = True
-  for module_name in libyal_python_modules:
+  for module_name, module_version in libyal_python_modules:
     try:
       module_object = map(__import__, [module_name])[0]
     except ImportError:
@@ -100,12 +100,19 @@ def CheckLibyal(libyal_python_modules):
         result = False
         break
 
-      version_mismatch = installed_version != latest_version
-      if version_mismatch:
+      if module_version is not None and installed_version < module_version:
         print (
-            u'[WARNING]\t{0:s} ({1:s}) version mismatch: installed {2:d}, '
-            u'available: {3:d}').format(
+            u'[FAILURE]\t{0:s} ({1:s}) version: {2:d} is too old, {3:d} or '
+            u'later required.').format(
+                libyal_name, module_name, installed_version, module_version)
+        result = False
+
+      elif installed_version != latest_version:
+        print (
+            u'[INFO]\t\t{0:s} ({1:s}) version: {2:d} installed, '
+            u'version: {3:d} available.').format(
                 libyal_name, module_name, installed_version, latest_version)
+
       else:
         print u'[OK]\t\t{0:s} ({1:s}) version: {2:d}'.format(
             libyal_name, module_name, installed_version)
@@ -134,20 +141,23 @@ def CheckPythonModule(module_name, version_attribute_name, minimum_version):
     result = False
 
   if result:
-    module_version = getattr(module_object, version_attribute_name, None)
+    if version_attribute_name and minimum_version:
+      module_version = getattr(module_object, version_attribute_name, None)
 
-    # Split the version string and convert every digit into an integer.
-    # A string compare of both version strings will yield an incorrect result.
-    module_version_map = map(int, module_version.split('.'))
-    minimum_version_map = map(int, minimum_version.split('.'))
-    if module_version_map < minimum_version_map:
-      result = False
-      print (
-          u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
-          u'required.').format(module_name, module_version, minimum_version)
-    else:
-      print u'[OK]\t\t{0:s} version: {1:s}'.format(
+      # Split the version string and convert every digit into an integer.
+      # A string compare of both version strings will yield an incorrect result.
+      module_version_map = map(int, module_version.split('.'))
+      minimum_version_map = map(int, minimum_version.split('.'))
+      if module_version_map < minimum_version_map:
+        result = False
+        print (
+            u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
+            u'required.').format(module_name, module_version, minimum_version)
+      else:
+        print u'[OK]\t\t{0:s} version: {1:s}'.format(
           module_name, module_version)
+    else:
+      print u'[OK]\t\t{0:s}'.format(module_name)
 
   return result
 
@@ -190,7 +200,9 @@ if __name__ == '__main__':
   check_result = True
   print u'Checking availability and versions of plaso dependencies.'
 
-  # TODO: determine the version of bencode.
+  # The bencode module does not appear to have no version information.
+  if not CheckPythonModule('bencode', '', ''):
+    check_result = False
 
   if not CheckPythonModule('binplist', '__version__', '0.1.4'):
     check_result = False
@@ -206,8 +218,12 @@ if __name__ == '__main__':
 
   # TODO: determine the version of pytz.
   # pytz uses __version__ but has a different version indicator e.g. 2012d
+  if not CheckPythonModule('pytz', '', ''):
+    check_result = False
 
-  # TODO: determine the version of protobuf.
+  # The protobuf module does not appear to have version information.
+  if not CheckPythonModule('google.protobuf', '', ''):
+    check_result = False
 
   if not CheckPythonModule('sqlite3', 'sqlite_version', '3.7.8'):
     check_result = False
@@ -219,8 +235,14 @@ if __name__ == '__main__':
     check_result = False
 
   libyal_check_result = CheckLibyal([
-      'pyevt', 'pyevtx', 'pylnk', 'pymsiecf', 'pyolecf', 'pyregf',
-      'pyvshadow'])
+      ('pyevt', None),
+      ('pyevtx', None),
+      ('pylnk', 20130304),
+      ('pymsiecf', 20130317),
+      ('pyolecf', 20131012),
+      ('pyregf', 20130716),
+      ('pyvshadow', 20131209),
+  ])
 
   if not check_result:
     build_instructions_url = (

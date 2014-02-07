@@ -50,6 +50,8 @@ class TestTextParser(text_parser.SlowLexicalTextParser):
   To be able to achieve that one function has to be implemented, the ParseDate
   one.
   """
+  NAME = 'test_text'
+
   tokens = [
       lexer.Token('INITIAL',
                   r'^([\d\/]+) ', 'SetDate', 'TIME'),
