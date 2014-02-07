@@ -254,10 +254,15 @@ def GetKeys(top_level, keys, depth=1):
     depth: Defines how many levels deep to check for a match.
 
   Returns:
-    A dictionary with just the keys requested.
+    A dictionary with just the keys requested or an empty dict if the plist
+    is flat, eg. top_level is a list instead of a dict object.
   """
-  keys = set(keys)
   match = {}
+  if not isinstance(top_level, dict):
+    # Return an empty dict here if top_level is a list object, which happens
+    # if the plist file is flat.
+    return match
+  keys = set(keys)
 
   if depth == 1:
     for key in keys:
