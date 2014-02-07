@@ -70,7 +70,10 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         pre_obj, config, getattr(config, 'parsers', ''))
     self._pre_obj = pre_obj
     self._storage_queue_producer = storage_queue_producer
-    self._user_mapping = pre_obj.GetUserMappings()
+    if pre_obj:
+      self._user_mapping = pre_obj.GetUserMappings()
+    else:
+      self._user_mapping = {}
     self.config = config
 
     self._filter = None
