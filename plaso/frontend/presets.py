@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -53,7 +54,7 @@ categories = {
         'bencode', 'chrome_cookies', 'chrome_history', 'filestat',
         'firefox_downloads', 'firefox_history', 'google_drive', 'java_idx',
         'olecf', 'openxml', 'opera_global', 'opera_typed_history', 'selinux',
-        'skype', 'syslog', 'utmp', 'xchatscrollback', 'zeitgeist'],
+        'skype', 'syslog', 'xchatlog', 'xchatscrollback', 'zeitgeist'],
     'macosx': [
         'appusage', 'asl_log', 'bencode', 'bsm_log', 'chrome_cookies',
         'chrome_history', 'cups_ipp', 'filestat', 'firefox_downloads',
