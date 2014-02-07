@@ -53,4 +53,5 @@ from plaso.parsers import winjob
 from plaso.parsers import winlnk
 from plaso.parsers import winprefetch
 from plaso.parsers import winreg
+from plaso.parsers import xchatlog
 from plaso.parsers import xchatscrollback

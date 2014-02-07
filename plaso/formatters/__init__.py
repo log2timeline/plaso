@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -60,5 +61,6 @@ from plaso.formatters import winjob
 from plaso.formatters import winlnk
 from plaso.formatters import winprefetch
 from plaso.formatters import winreg
+from plaso.formatters import xchatlog
 from plaso.formatters import xchatscrollback
 from plaso.formatters import zeitgeist
