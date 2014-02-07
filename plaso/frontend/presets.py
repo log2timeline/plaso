@@ -58,10 +58,10 @@ categories = {
         'appusage', 'asl_log', 'bencode', 'bsm_log', 'chrome_cookies',
         'chrome_history', 'cups_ipp', 'filestat', 'firefox_downloads',
         'firefox_history', 'google_drive', 'java_idx', 'ls_quarantine',
-        'mac_appfirewall_log', 'mac_document_versions', 'mac_securityd',
-        'mackeeper_cache', 'macwifi', 'olecf', 'openxml', 'opera_global',
-        'opera_typed_history', 'plist', 'safari_history', 'skype', 'syslog',
-        'utmpx'],
+        'mac_appfirewall_log', 'mac_document_versions', 'mac_keychain',
+        'mac_securityd', 'mackeeper_cache', 'macwifi', 'olecf', 'openxml',
+        'opera_global', 'opera_typed_history', 'plist', 'safari_history',
+        'skype', 'syslog', 'utmpx'],
     'android': [
         'android_calls', 'android_sms'],
 }
