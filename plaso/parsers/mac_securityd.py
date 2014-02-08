@@ -173,14 +173,16 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     if not timestamp:
       logging.debug(u'Invalid timestamp {}'.format(structure.timestamp))
       return
-    self.last_month = month
+    self._last_month = month
 
     if key == 'logline':
-      times = 0
       self.previous_structure = structure
+      message = self._RawToUTF8(structure.message)
     else:
       times = structure.times
       structure = self.previous_structure
+      message = u'Repeated {} times: {}'.format(
+          times, structure.message)
 
     # It uses CarsNotIn structure which leaves whitespaces
     # at the beginning of the sender and the caller.
@@ -188,10 +190,6 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     caller = structure.caller.strip()
     if not caller:
       caller = 'unknown'
-    if times:
-      message = u'Repeated {} times: {}'.format(times, structure.message)
-    else:
-      message = self._RawToUTF8(structure.message)
     if not structure.security_api:
       security_api = u'unknown'
     else:

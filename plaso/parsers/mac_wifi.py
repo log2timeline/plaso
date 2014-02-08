@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2012 The Plaso Project Authors.
+# Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -217,7 +217,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     if not timestamp:
       logging.debug(u'Invalid timestamp {}'.format(structure.timestamp))
       return
-    self.last_month = month
+    self._last_month = month
 
     # Pyparsing reads in RAW, but the text is in UTF8.
     try:
