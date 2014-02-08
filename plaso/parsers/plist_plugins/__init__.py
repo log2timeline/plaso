@@ -19,6 +19,7 @@
 from plaso.parsers.plist_plugins import airport
 from plaso.parsers.plist_plugins import appleaccount
 from plaso.parsers.plist_plugins import bluetooth
+from plaso.parsers.plist_plugins import install_history
 from plaso.parsers.plist_plugins import macuser
 from plaso.parsers.plist_plugins import safari
 from plaso.parsers.plist_plugins import softwareupdate
