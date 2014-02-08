@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2012 The Plaso Project Authors.
+# Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,7 @@ from plaso.lib import timelib
 
 import pyparsing
 import pytz
+
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
@@ -156,7 +157,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     if not timestamp:
       logging.debug(u'Invalid timestamp {}'.format(structure.timestamp))
       return
-    self.last_month = month
+    self._last_month = month
 
     # If the actual entry is a repeated entry, we take the basic information
     # from the previous entry, but using the timestmap from the actual entry.
