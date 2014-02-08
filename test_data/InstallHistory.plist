@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>date</key>
+		<date>2013-11-12T02:59:35Z</date>
+		<key>displayName</key>
+		<string>OS X</string>
+		<key>displayVersion</key>
+		<string>10.9 (13A603)</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.BaseSystemBinaries</string>
+			<string>com.apple.pkg.BaseSystemResources</string>
+			<string>com.apple.pkg.Essentials</string>
+			<string>com.apple.pkg.BSD</string>
+			<string>com.apple.pkg.JavaTools</string>
+			<string>com.apple.pkg.AdditionalEssentials</string>
+			<string>com.apple.pkg.AdditionalSpeechVoices</string>
+			<string>com.apple.pkg.AsianLanguagesSupport</string>
+			<string>com.apple.pkg.MediaFiles</string>
+			<string>com.apple.pkg.JavaEssentials</string>
+			<string>com.apple.pkg.OxfordDictionaries</string>
+			<string>com.apple.pkg.X11redirect</string>
+			<string>com.apple.pkg.OSInstall</string>
+			<string>com.apple.pkg.update.compatibility.2013.001</string>
+		</array>
+		<key>processName</key>
+		<string>OS X Installer</string>
+	</dict>
+	<dict>
+		<key>date</key>
+		<date>2013-12-28T04:38:11Z</date>
+		<key>displayName</key>
+		<string>VMware Tools</string>
+		<key>displayVersion</key>
+		<string>9.6.1</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.vmware.tools.macos.pkg.files</string>
+		</array>
+		<key>processName</key>
+		<string>Installer</string>
+	</dict>
+	<dict>
+		<key>contentType</key>
+		<string>config-data</string>
+		<key>date</key>
+		<date>2013-12-28T12:14:43Z</date>
+		<key>displayName</key>
+		<string>XProtectPlistConfigData</string>
+		<key>displayVersion</key>
+		<string>1.0</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.XProtectPlistConfigData.2-45</string>
+		</array>
+		<key>processName</key>
+		<string>softwareupdated</string>
+	</dict>
+	<dict>
+		<key>contentType</key>
+		<string>config-data</string>
+		<key>date</key>
+		<date>2013-12-28T12:14:43Z</date>
+		<key>displayName</key>
+		<string>Core Services Application Configuration Data</string>
+		<key>displayVersion</key>
+		<string>1.0.25</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.CoreServicesAppConfigData.2-9</string>
+		</array>
+		<key>processName</key>
+		<string>softwareupdated</string>
+	</dict>
+	<dict>
+		<key>contentType</key>
+		<string>config-data</string>
+		<key>date</key>
+		<date>2013-12-28T12:14:43Z</date>
+		<key>displayName</key>
+		<string>Incompatible Kernel Extension Configuration Data</string>
+		<key>displayVersion</key>
+		<string>1.18.2</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.IncompatibleKextConfigData.3-9</string>
+		</array>
+		<key>processName</key>
+		<string>softwareupdated</string>
+	</dict>
+	<dict>
+		<key>contentType</key>
+		<string>config-data</string>
+		<key>date</key>
+		<date>2013-12-28T12:14:43Z</date>
+		<key>displayName</key>
+		<string>Chinese Word List Update</string>
+		<key>displayVersion</key>
+		<string>2.1</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.ChineseWordlistUpdate.5-17</string>
+		</array>
+		<key>processName</key>
+		<string>softwareupdated</string>
+	</dict>
+	<dict>
+		<key>contentType</key>
+		<string>config-data</string>
+		<key>date</key>
+		<date>2014-01-28T20:38:48Z</date>
+		<key>displayName</key>
+		<string>Chinese Word List Update</string>
+		<key>displayVersion</key>
+		<string>2.2</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.ChineseWordlistUpdate.5-30</string>
+		</array>
+		<key>processName</key>
+		<string>softwareupdated</string>
+	</dict>
+</array>
+</plist>
