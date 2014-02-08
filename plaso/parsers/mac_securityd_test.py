@@ -52,8 +52,8 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     expected_msg_short = (u'Text: securityd_xpc_dictionary_handler '
                           u'EscrowSecurityAl[3273] DeviceInCircle')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
-    # date -u -d"Thu, 26 Dec 2013 19:11:56" +"%s000000"
-    self.assertEqual(event_object.timestamp, 1388085116000000)
+    # date -u -d"Tue, 26 Feb 2013 19:11:56" +"%s000000"
+    self.assertEqual(event_object.timestamp, 1361905916000000)
     self.assertEqual(event_object.sender, u'secd')
     self.assertEqual(event_object.sender_pid, 1)
     self.assertEqual(event_object.facility, u'user')
@@ -119,9 +119,9 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     # date -u -d"Tue, 31 Dec 2013 23:59:59" +"%s000000"
     event_object = event_objects[6]
     self.assertEqual(event_object.timestamp, 1388534399000000)
-    # date -u -d"Wed, 01 Jan 2014 00:00:01" +"%s000000"
+    # date -u -d"Sat, 01 Mar 2014 00:00:01" +"%s000000"
     event_object = event_objects[7]
-    self.assertEqual(event_object.timestamp, 1388534401000000)
+    self.assertEqual(event_object.timestamp, 1393632001000000)
 
     # Repeated line.
     event_object = event_objects[8]
