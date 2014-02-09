@@ -101,6 +101,8 @@ class XChatLogEvent(event.TimestampEvent):
 class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat log files."""
 
+  NAME = 'xchatlog'
+
   ENCODING = 'UTF-8'
 
   # Common (header/footer/body) pyparsing structures.
