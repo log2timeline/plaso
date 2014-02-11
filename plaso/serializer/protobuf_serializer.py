@@ -17,17 +17,13 @@
 # limitations under the License.
 """The protobuf serializer object implementation."""
 
+from dfvfs.serializer import protobuf_serializer as dfvfs_protobuf_serializer
+from google.protobuf import message
+
 from plaso.lib import event
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
-from plaso.proto import transmission_pb2
 from plaso.serializer import interface
-
-from google.protobuf import message
-
-# TODO: for now the Read and Write function allow for an additional
-# parameter to indicate a message type identifier should be added or not.
-# pylint: disable-msg=arguments-differ
 
 
 class ProtobufEventAttributeSerializer(object):
@@ -268,10 +264,6 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
 
     Returns:
       An analysis report (instance of AnalysisReport).
-
-    Raises:
-      RuntimeError: when the protobuf string is not prefixed with
-                    the analysis report message type.
     """
     proto = plaso_storage_pb2.AnalysisReport()
     proto.ParseFromString(proto_string)
@@ -379,10 +371,6 @@ class ProtobufEventContainerSerializer(interface.EventContainerSerializer):
 
     Returns:
       An event container (instance of EventContainer).
-
-    Raises:
-      RuntimeError: when the protobuf string is not prefixed with
-                    the event container message type.
     """
     proto = plaso_storage_pb2.EventContainer()
     proto.ParseFromString(proto_string)
@@ -458,6 +446,8 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
   _SOURCE_SHORT_FROM_PROTO_MAP.setdefault(6)
   _SOURCE_SHORT_TO_PROTO_MAP.setdefault('LOG')
 
+  _path_spec_serializer = dfvfs_protobuf_serializer.ProtobufPathSpecSerializer
+
   @classmethod
   def ReadSerializedObject(cls, proto):
     """Reads an event object from serialized form.
@@ -479,8 +469,7 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
       elif proto_attribute.name == 'pathspec':
         if hasattr(proto_attribute, 'pathspec'):
           event_object.pathspec = (
-             ProtobufEventPathSpecSerializer.ReadSerializedObject(
-                 proto.pathspec))
+             cls._path_spec_serializer.ReadSerialized(proto.pathspec))
 
       elif proto_attribute.name == 'tag':
         if hasattr(proto_attribute, 'tag'):
@@ -524,10 +513,6 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
 
     Returns:
       An event object (instance of EventObject).
-
-    Raises:
-      RuntimeError: when the protobuf string is not prefixed with
-                    the event object message type.
     """
     proto = plaso_storage_pb2.EventObject()
     proto.ParseFromString(proto_string)
@@ -557,10 +542,9 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
       elif attribute_name == 'pathspec':
         attribute_value = getattr(event_object, attribute_name, None)
         if attribute_value:
-          event_path_spec_proto = (
-              ProtobufEventPathSpecSerializer.WriteSerializedObject(
-                  attribute_value))
-          proto.pathspec.MergeFrom(event_path_spec_proto)
+          attribute_value = cls._path_spec_serializer.WriteSerialized(
+              attribute_value)
+          setattr(proto, attribute_name, attribute_value)
 
       elif attribute_name == 'tag':
         attribute_value = getattr(event_object, attribute_name, None)
@@ -620,205 +604,6 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
     return proto.SerializeToString()
 
 
-class ProtobufEventPathBundleSerializer(interface.EventPathBundleSerializer):
-  """Class that implements the protobuf event path bundle serializer."""
-
-  @classmethod
-  def ReadSerializedObject(cls, proto):
-    """Reads an event path bundle from serialized form.
-
-    Args:
-      proto: a protobuf object containing the serialized form (instance of
-             transmission_pb2.PathBundle).
-
-    Returns:
-      An event path bundle (instance of EventPathBundle).
-
-    Raises:
-      RuntimeError: when the protobuf object does not contain a pattern or
-                    pathspecs field.
-    """
-    if not hasattr(proto, 'pattern'):
-      raise RuntimeError(u'Unsupported protobuf type - missing pattern field.')
-    if not hasattr(proto, 'pathspecs'):
-      raise RuntimeError(
-          u'Unsupported protobuf type - missing pathspecs field.')
-
-    event_path_bundle = event.EventPathBundle()
-    event_path_bundle.pattern = proto.pattern
-
-    for proto_pathspec in proto.pathspecs:
-      event_path_spec = ProtobufEventPathSpecSerializer.ReadSerializedObject(
-          proto_pathspec)
-      event_path_bundle.AppendPathspec(event_path_spec)
-
-    return event_path_bundle
-
-  @classmethod
-  def ReadSerialized(cls, proto_string):
-    """Reads an event path bundle from serialized form.
-
-    Args:
-      proto_string: a protobuf string containing the serialized form.
-
-    Returns:
-      An event path bundle (instance of EventPathBundle).
-
-    Raises:
-      RuntimeError: when the protobuf string is not prefixed with
-                    the path bundle message type.
-    """
-    proto = transmission_pb2.PathBundle()
-    proto.ParseFromString(proto_string)
-
-    return cls.ReadSerializedObject(proto)
-
-  @classmethod
-  def WriteSerializedObject(cls, event_path_bundle):
-    """Writes an event path bundle to serialized form.
-
-    Args:
-      event_path_bundle: an event path bundle (instance of EventPathBundle).
-
-    Returns:
-      A protobuf object containing the serialized form (instance of
-      transmission_pb2.PathBundle).
-    """
-    proto = transmission_pb2.PathBundle()
-    proto.pattern = event_path_bundle.pattern
-
-    for event_path_spec in event_path_bundle.GetPathspecs():
-      proto_pathspec = (
-          ProtobufEventPathSpecSerializer.WriteSerializedObject(
-            event_path_spec))
-
-      proto_pathspec_add = proto.pathspecs.add()
-      proto_pathspec_add.MergeFrom(proto_pathspec)
-
-    return proto
-
-  @classmethod
-  def WriteSerialized(cls, event_path_bundle):
-    """Writes an event path bundle to serialized form.
-
-    Args:
-      event_path_bundle: an event path bundle (instance of EventPathBundle).
-
-    Returns:
-      A protobuf string containing the serialized form.
-    """
-    proto = cls.WriteSerializedObject(event_path_bundle)
-    return proto.SerializeToString()
-
-
-class ProtobufEventPathSpecSerializer(interface.EventPathSpecSerializer):
-  """Class that implements the protobuf event path specification serializer."""
-
-  _TYPE_FROM_PROTO_MAP = {}
-  _TYPE_TO_PROTO_MAP = {}
-  for value in transmission_pb2.PathSpec.DESCRIPTOR.enum_types_by_name[
-      'FileType'].values:
-    _TYPE_FROM_PROTO_MAP[value.number] = value.name
-    _TYPE_TO_PROTO_MAP[value.name] = value.number
-  _TYPE_FROM_PROTO_MAP.setdefault(-1)
-
-  @classmethod
-  def ReadSerializedObject(cls, proto):
-    """Reads an event path specification from serialized form.
-
-    Args:
-      proto: a protobuf object containing the serialized form (instance of
-             transmission_pb2.PathSpec)
-
-    Returns:
-      An event path specification (instance of EventPathSpec).
-
-    Raises:
-      RuntimeError: when the protobuf object does not contain a type field.
-    """
-    if not hasattr(proto, 'type'):
-      raise RuntimeError(u'Unsupported protobuf type - missing type field.')
-
-    event_path_spec = event.EventPathSpec()
-
-    for proto_attribute, attribute_value in proto.ListFields():
-      if proto_attribute.name == 'type':
-        attribute_value = cls._TYPE_FROM_PROTO_MAP[attribute_value]
-
-      elif proto_attribute.name == 'nested_pathspec':
-        attribute_value = ProtobufEventPathSpecSerializer.ReadSerializedObject(
-            attribute_value)
-
-      setattr(event_path_spec, proto_attribute.name, attribute_value)
-
-    return event_path_spec
-
-  @classmethod
-  def ReadSerialized(cls, proto_string):
-    """Reads an event path specification from serialized form.
-
-    Args:
-      proto_string: a protobuf string containing the serialized form.
-
-    Returns:
-      An event path specification (instance of EventPathSpec).
-
-    Raises:
-      RuntimeError: when the protobuf string is not prefixed with
-                    the path specification message type.
-    """
-    proto = transmission_pb2.PathSpec()
-    proto.ParseFromString(proto_string)
-
-    return cls.ReadSerializedObject(proto)
-
-  @classmethod
-  def WriteSerializedObject(cls, event_path_spec):
-    """Writes an event path specification to serialized form.
-
-    Args:
-      event_path_spec: an event path specification (instance of EventPathSpec).
-
-    Returns:
-      A protobuf object containing the serialized form (instance of
-      transmission_pb2.PathSpec).
-    """
-    proto = transmission_pb2.PathSpec()
-
-    for attribute_name in event_path_spec.__dict__:
-      attribute_value = getattr(event_path_spec, attribute_name, None)
-
-      if attribute_name == 'nested_pathspec':
-        proto_nested_pathspec = (
-            ProtobufEventPathSpecSerializer.WriteSerializedObject(
-                attribute_value))
-
-        proto.nested_pathspec.MergeFrom(proto_nested_pathspec)
-
-      else:
-        if attribute_name == 'type':
-          attribute_value = cls._TYPE_TO_PROTO_MAP.get(
-              attribute_value, -1)
-
-        if attribute_value is not None:
-          setattr(proto, attribute_name, attribute_value)
-
-    return proto
-
-  @classmethod
-  def WriteSerialized(cls, event_path_spec):
-    """Writes an event path specification to serialized form.
-
-    Args:
-      event_path_spec: an event path specification (instance of EventPathSpec).
-
-    Returns:
-      A protobuf string containing the serialized form.
-    """
-    proto = cls.WriteSerializedObject(event_path_spec)
-    return proto.SerializeToString()
-
-
 class ProtobufEventTagSerializer(interface.EventTagSerializer):
   """Class that implements the protobuf event tag serializer."""
 
@@ -854,10 +639,6 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
 
     Returns:
       An event tag (instance of EventTag).
-
-    Raises:
-      RuntimeError: when the protobuf string is not prefixed with
-                    the event tag message type.
     """
     proto = plaso_storage_pb2.EventTagging()
     proto.ParseFromString(proto_string)
@@ -975,10 +756,6 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
 
     Returns:
       A preprocessing object (instance of PreprocessObject).
-
-    Raises:
-      RuntimeError: when the protobuf string is not prefixed with
-                    the preprocess object message type.
     """
     proto = plaso_storage_pb2.PreProcess()
     proto.ParseFromString(proto_string)

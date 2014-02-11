@@ -244,7 +244,7 @@ class WinPrefetchParser(parser.BaseParser):
     Yields:
       An event container (EventContainer) that contains the parsed attributes.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     file_header = self._ParseFileHeader(file_object)
 
     format_version = file_header.get('version', None)

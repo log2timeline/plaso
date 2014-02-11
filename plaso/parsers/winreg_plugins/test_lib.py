@@ -17,8 +17,11 @@
 # limitations under the License.
 """Windows Registry plugin related functions and classes for testing."""
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.parsers import test_lib
-from plaso.pvfs import pfile
 from plaso.winreg import winregistry
 
 
@@ -35,9 +38,10 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A Windows Registry key (instance of WinRegKey).
     """
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=path)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     registry = winregistry.WinRegistry(winregistry.WinRegistry.BACKEND_PYREGF)
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
     winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
     return winreg_file.GetKeyByPath(key_path)
 

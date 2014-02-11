@@ -74,7 +74,7 @@ class HachoirParser(parser.BaseParser):
       An event container (EventContainer) that contains the parsed
       attributes.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
 
     try:
       fstream = hachoir_core.stream.InputIOStream(file_object, None, tags=[])

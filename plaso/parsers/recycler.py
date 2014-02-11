@@ -84,7 +84,7 @@ class WinRecycleBinParser(parser.BaseParser):
     Yields:
       An event object.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     try:
       magic_header = self.MAGIC_STRUCT.parse_stream(file_object)
     except (construct.FieldError, IOError) as e:
@@ -141,7 +141,7 @@ class WinRecycleInfo2Parser(parser.BaseParser):
     Yields:
       An event object.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     try:
       magic_header = self.INT32_LE.parse_stream(file_object)
     except (construct.FieldError, IOError) as e:

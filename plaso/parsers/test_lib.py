@@ -20,9 +20,12 @@
 import os
 import unittest
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.pvfs import pfile
 
 
 class ParserTestCase(unittest.TestCase):
@@ -124,7 +127,8 @@ class ParserTestCase(unittest.TestCase):
     Returns:
       A generator of event objects as returned by the parser.
     """
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(parser_object, path_spec)
 
   def _ParseFileByPathSpec(self, parser_object, path_spec):
@@ -137,7 +141,7 @@ class ParserTestCase(unittest.TestCase):
     Returns:
       A generator of event objects as returned by the parser.
     """
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
     event_generator = parser_object.Parse(file_entry)
     self.assertNotEquals(event_generator, None)

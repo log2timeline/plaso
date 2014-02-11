@@ -178,7 +178,7 @@ class WinJobParser(parser.BaseParser):
       An EventContainer (WinJobEventContainer) with extracted EventObjects
       that contain the extracted attributes.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     try:
       header = self.JOB_FIXED_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as e:

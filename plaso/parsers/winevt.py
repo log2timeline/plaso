@@ -138,7 +138,7 @@ class WinEvtParser(parser.BaseParser):
       An event container (WinEvtRecordEventContainer) that contains
       the parsed data.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     evt_file = pyevt.file()
     evt_file.set_ascii_codepage(self._codepage)
 

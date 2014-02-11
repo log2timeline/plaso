@@ -15,17 +15,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the tests for the Windows Registry objects cache."""
+"""Tests for the Windows Registry objects cache."""
 
-import os
 import unittest
 
-from plaso.pvfs import pfile
 from plaso.winreg import cache
+from plaso.winreg import test_lib
 from plaso.winreg import winregistry
 
 
-class CacheTest(unittest.TestCase):
+class CacheTest(test_lib.WinRegTestCase):
   """Tests for the Windows Registry objects cache."""
 
   def testBuildCache(self):
@@ -33,9 +32,8 @@ class CacheTest(unittest.TestCase):
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
-    test_file = os.path.join('test_data', 'SYSTEM')
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    test_file = self._GetTestFilePath(['SYSTEM'])
+    file_entry = self._GetTestFileEntry(test_file)
     winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
     winreg_cache = cache.WinRegistryCache(winreg_file, 'SYSTEM')

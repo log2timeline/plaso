@@ -22,7 +22,7 @@ import unittest
 from plaso.lib import queue
 
 
-class TestQueueConsumer(queue.QueueConsumer):
+class TestQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements the test queue consumer.
 
      The queue consumer subscribes to updates on the queue.

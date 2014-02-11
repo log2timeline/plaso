@@ -30,6 +30,8 @@ import collections
 import logging
 import multiprocessing
 
+from dfvfs.path import path_spec as dfvfs_path_spec
+
 from plaso.lib import event
 from plaso.lib import errors
 from plaso.serializer import json_serializer
@@ -144,26 +146,6 @@ class QueueConsumer(object):
     """
     super(QueueConsumer, self).__init__()
     self._queue = queue_object
-
-  @abc.abstractmethod
-  def _ConsumeItem(self, item):
-    """Consumes an item callback for ConsumeItems."""
-
-  def ConsumeItems(self):
-    """Consumes the items that are pushed on the queue."""
-    while True:
-      try:
-        item = self._queue.PopItem()
-      except errors.QueueEmpty:
-        break
-
-      if isinstance(item, QueueEndOfInput):
-        # Push the item back onto the queue to make sure all
-        # queue consumers are stopped.
-        self._queue.PushItem(item)
-        break
-
-      self._ConsumeItem(item)
 
 
 class QueueProducer(object):
@@ -345,6 +327,33 @@ class AnalysisPluginProducer(EventObjectQueueProducer):
     self._serializer = json_serializer.JsonEventObjectSerializer
 
 
+class ItemQueueConsumer(QueueConsumer):
+  """Class that implements the item queue consumer.
+
+     The consumer subscribes to updates on the queue.
+  """
+
+  @abc.abstractmethod
+  def _ConsumeItem(self, item):
+    """Consumes an item callback for ConsumeItems."""
+
+  def ConsumeItems(self):
+    """Consumes the items that are pushed on the queue."""
+    while True:
+      try:
+        item = self._queue.PopItem()
+      except errors.QueueEmpty:
+        break
+
+      if isinstance(item, QueueEndOfInput):
+        # Push the item back onto the queue to make sure all
+        # queue consumers are stopped.
+        self._queue.PushItem(item)
+        break
+
+      self._ConsumeItem(item)
+
+
 class PathSpecQueueConsumer(QueueConsumer):
   """Class that implements the path specification queue consumer.
 
@@ -373,7 +382,7 @@ class PathSpecQueueConsumer(QueueConsumer):
         self._queue.PushItem(item)
         break
 
-      if not isinstance(item, event.EventPathSpec):
+      if not isinstance(item, dfvfs_path_spec.PathSpec):
         raise RuntimeError(u'Unsupported item type on queue.')
 
       self._ConsumePathSpec(item)
@@ -389,6 +398,6 @@ class PathSpecQueueProducer(QueueProducer):
     """Produces a path specification onto the queue.
 
     Args:
-      path_spec: the path specification object (instance of EventPathSpec).
+      path_spec: the path specification object (instance of dfvfs.PathSpec).
     """
     self._queue.PushItem(path_spec)

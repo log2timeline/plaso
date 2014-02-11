@@ -511,7 +511,7 @@ class BsmParser(parser.BaseParser):
     Yields:
       An BSM event for each entry in the file.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:

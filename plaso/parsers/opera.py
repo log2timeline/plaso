@@ -21,14 +21,15 @@ import logging
 import os
 import urllib2
 
+from dfvfs.helpers import text_file
+from xml.etree import ElementTree
+
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 from plaso.lib import utils
-
-from xml.etree import ElementTree
 
 
 class OperaTypedHistoryEvent(event.EventObject):
@@ -97,12 +98,14 @@ class OperaTypedHistoryParser(parser.BaseParser):
       An event container (EventContainer) that contains the parsed
       attributes.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
+
+    text_file_object = text_file.TextFile(file_object)
 
     # Need to verify the first line to make sure this is a) XML and
     # b) the right XML.
-    first_line = file_object.readline(90)
+    first_line = text_file_object.readline(90)
 
     if not first_line.startswith('<?xml version="1.0'):
       raise errors.UnableToParseFile(
@@ -112,7 +115,7 @@ class OperaTypedHistoryParser(parser.BaseParser):
     # reads the entire file in memory to parse the XML string and
     # we only care about the XML file with the correct root key,
     # which denotes a typed_history.xml file.
-    second_line = file_object.readline(50).strip()
+    second_line = text_file_object.readline(50).strip()
 
     if second_line != '<typed_history>':
       raise errors.UnableToParseFile(
@@ -151,7 +154,7 @@ class OperaGlobalHistoryParser(parser.BaseParser):
 
     return False
 
-  def _ReadRecord(self, file_object, max_line_length=0):
+  def _ReadRecord(self, text_file_object, max_line_length=0):
     """Return a single record from an Opera global_history file.
 
     A single record consists of four lines, with each line as:
@@ -161,7 +164,7 @@ class OperaGlobalHistoryParser(parser.BaseParser):
       Popularity index (-1 if first time visited).
 
     Args:
-      file_object: A file-like object.
+      text_file_object: A text file object (instance of dfvfs.TextFile).
       max_line_length: An integer that denotes the maximum byte
                        length for each line read.
 
@@ -172,25 +175,25 @@ class OperaGlobalHistoryParser(parser.BaseParser):
       errors.NotAText: If the file being read is not a text file.
     """
     if max_line_length:
-      title_raw = file_object.readline(max_line_length)
+      title_raw = text_file_object.readline(max_line_length)
       if len(title_raw) == max_line_length and not title_raw.endswith('\n'):
         return None, None, None, None
       if not utils.IsText(title_raw):
         raise errors.NotAText(u'Title line is not a text.')
       title = title_raw.strip()
     else:
-      title = file_object.readline().strip()
+      title = text_file_object.readline().strip()
 
     if not title:
       return None, None, None, None
 
-    url = file_object.readline().strip()
+    url = text_file_object.readline().strip()
 
     if not url:
       return None, None, None, None
 
-    timestamp_line = file_object.readline().strip()
-    popularity_line = file_object.readline().strip()
+    timestamp_line = text_file_object.readline().strip()
+    popularity_line = text_file_object.readline().strip()
 
     try:
       timestamp = int(timestamp_line, 10)
@@ -223,7 +226,7 @@ class OperaGlobalHistoryParser(parser.BaseParser):
 
     return title_unicode, url, timestamp, popularity_index
 
-  def _ReadRecords(self, file_object):
+  def _ReadRecords(self, text_file_object):
     """Yield records read from an Opera global_history file.
 
     A single record consists of four lines, with each line as:
@@ -233,13 +236,15 @@ class OperaGlobalHistoryParser(parser.BaseParser):
       Popularity index (-1 if first time visited).
 
     Args:
-      file_object: A file-like object.
+      text_file_object: A text file object (instance of dfvfs.TextFile).
 
     Yields:
       A tuple of: title, url, timestamp, popularity_index.
     """
     while True:
-      title, url, timestamp, popularity_index = self._ReadRecord(file_object)
+      title, url, timestamp, popularity_index = self._ReadRecord(
+          text_file_object)
+
       if not title:
         raise StopIteration
       if not url:
@@ -259,12 +264,14 @@ class OperaGlobalHistoryParser(parser.BaseParser):
       An event container (EventContainer) that contains the parsed
       attributes.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
+
+    text_file_object = text_file.TextFile(file_object)
 
     try:
       title, url, timestamp, popularity_index = self._ReadRecord(
-          file_object, 400)
+          text_file_object, 400)
     except errors.NotAText:
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a text file].')
@@ -285,7 +292,7 @@ class OperaGlobalHistoryParser(parser.BaseParser):
 
     # Read in the rest of the history file.
     for title, url, timestamp, popularity_index in self._ReadRecords(
-        file_object):
+        text_file_object):
       yield OperaGlobalHistoryEvent(timestamp, url, title, popularity_index)
 
     file_object.close()

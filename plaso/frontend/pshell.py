@@ -22,6 +22,10 @@ import os
 import sys
 import tempfile
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 try:
   # Support version 1.X of IPython.
   # pylint: disable-msg=no-name-in-module
@@ -63,16 +67,9 @@ from plaso.lib import worker
 from plaso.output import helper
 
 from plaso.proto import plaso_storage_pb2
-from plaso.proto import transmission_pb2
-
-from plaso.pvfs import pfile
-from plaso.pvfs import pvfs
-from plaso.pvfs import vss
 
 from plaso.winreg import interface as win_registry_interface
 from plaso.winreg import winregistry
-
-import pyvshadow
 
 
 def FindAllOutputs():
@@ -91,18 +88,44 @@ def GetEventData(event_proto, before):
 
 
 def OpenVssFile(path, image_path, store_number, image_offset):
-  """Opens a file-like object of a file in a VSS inside an image file."""
-  path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-      'VSS', path, container_path=image_path, image_offset=image_offset,
-      store_number=store_number)
-  return pfile.PFileResolver.OpenFileEntry(path_spec)
+  """Opens a file entry inside a VSS inside an image file."""
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_OS, location=image_path)
+
+  if image_offset > 0:
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
+        parent=path_spec)
+  else:
+    volume_path_spec = path_spec
+
+  store_number -= 1
+
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_VSHADOW, store_index=store_number,
+      parent=volume_path_spec)
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_TSK, location=path, parent=path_spec)
+
+  return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
 
 def OpenTskFile(path, image_path, image_offset):
-  """Opens a file-like object of a file inside an image file."""
-  path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-      'TSK', path, container_path=image_path, image_offset=image_offset)
-  return pfile.PFileResolver.OpenFileEntry(path_spec)
+  """Opens a file entry of a file inside an image file."""
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_OS, location=image_path)
+
+  if image_offset > 0:
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
+        parent=path_spec)
+  else:
+    volume_path_spec = path_spec
+
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_TSK, location=path, parent=volume_path_spec)
+
+  return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
 
 def Pfile2File(file_object, path):
