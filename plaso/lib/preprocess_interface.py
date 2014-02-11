@@ -22,7 +22,6 @@ import logging
 
 from plaso.lib import errors
 from plaso.lib import registry
-from plaso.lib import utils
 from plaso.parsers.plist_plugins import interface as plist_interface
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
@@ -137,7 +136,7 @@ class MacPlistPreprocess(PreprocessPlugin):
 
     try:
       file_entry = self._collector.OpenFileEntry(path)
-      file_object = file_entry.Open()
+      file_object = file_entry.GetFileObject()
     except IOError as exception:
       raise errors.PreProcessFail(
           u'Unable to open file {}: {}'.format(path, exception))
@@ -145,21 +144,22 @@ class MacPlistPreprocess(PreprocessPlugin):
     return self.ParseFile(file_entry, file_object)
 
   def ParseFile(self, file_entry, file_object):
-    """Parse the file and return parsed key."""
+    """Parses the plist file and returns the parsed key."""
     try:
       plist_file = binplist.BinaryPlist(file_object)
       top_level_object = plist_file.Parse()
-    except binplist.FormatError as e:
+    except binplist.FormatError as exception:
       raise errors.PreProcessFail(
-          u'File is not a plist:{}'.format(utils.GetUnicodeString(e)))
-    except OverflowError as e:
+          u'File is not a plist: {0:s} with error: {1:s}'.format(
+              file_entry.path_spec.comparable, exception))
+    except OverflowError as exception:
       raise errors.PreProcessFail(
-          u'Error processing:{} Error:{}'.format(file_entry.display_name, e))
+          u'Unable to process plist: {0:s} with error: {1:s}'.format(
+              file_entry.path_spec.comparable, exception))
 
     if not plist_file:
       raise errors.PreProcessFail(
-          u'File is not a plist:{}'.format(utils.GetUnicodeString(
-              file_entry.display_name)))
+          u'File is not a plist: {0:s}'.format(file_entry.path_spec.comparable))
 
     match = None
     key_name = ''
@@ -284,7 +284,7 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
     try:
       file_entry = self._collector.OpenFileEntry(file_name)
-      _ = file_entry.Open()
+      _ = file_entry.GetFileObject()
     except IOError as e:
       raise errors.PreProcessFail(
           u'Unable to open file: {} [{}]'.format(file_name, e))

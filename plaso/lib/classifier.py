@@ -20,7 +20,6 @@
 # TODO: rewrite most of the classifier in C and integrate with the code in:
 # plaso/classifier
 
-import copy
 import gzip
 import logging
 import os
@@ -28,10 +27,11 @@ import tarfile
 import zipfile
 import zlib
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.lib import errors
-from plaso.lib import event
-from plaso.pvfs import pfile
-from plaso.lib import utils
 
 
 class Classifier(object):
@@ -61,26 +61,22 @@ class Classifier(object):
              would be of depth 2).
 
     Yields:
-      A Pfile file-like object.
+      A file entry object (instance of dfvfs.FileEntry).
     """
     if depth >= cls.MAX_FILE_DEPTH:
       return
 
-    for pathspec in cls.SmartOpenFile(file_entry):
-      try:
-        pathspec_orig = copy.deepcopy(pathspec)
-        new_file_entry = pfile.PFileResolver.OpenFileEntry(
-            pathspec, orig=pathspec_orig)
-        yield new_file_entry
-      except IOError as e:
+    for path_spec in cls.SmartOpenFile(file_entry):
+      new_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+      if new_file_entry is None:
         logging.debug((
-            u'Unable to open file: {{{0:s}}}, not sure if we can extract '
-            u'further files from it. Msg: {1:s}').format(
-                file_entry.display_name, e))
+            u'Unable to open file: {0:s}').format(path_spec.comparable))
         continue
-      for new_file_entry in cls.SmartOpenFiles(
-          new_file_entry, depth=(depth + 1)):
-        yield new_file_entry
+      yield new_file_entry
+
+      depth += 1
+      for sub_file_entry in cls.SmartOpenFiles(new_file_entry, depth=depth):
+        yield sub_file_entry
 
   @classmethod
   def SmartOpenFile(cls, file_entry):
@@ -93,9 +89,9 @@ class Classifier(object):
       file_entry: The file entry object.
 
     Yields:
-      EventPathSpec objects describing how a file can be opened.
+      Path specifications (instance of dfvfs.PathSpec) of embedded file entries.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
 
     # TODO: Remove when classifier gets deployed. Then we
     # call the classifier here and use that for definition (and
@@ -138,74 +134,66 @@ class Classifier(object):
         # not entirely skip the file if it has this particular
         # ending, but for now, this both slows the tool down
         # considerably and makes it also more unstable.
-        file_ending = file_entry.name.lower()[-4:]
-        if file_ending in ['.jar', '.sym', '.xpi']:
+        _, _, filename_extension = file_entry.name.rpartition(u'.')
+
+        if filename_extension in [u'.jar', u'.sym', u'.xpi']:
           file_object.close()
-          logging.debug(u'ZIP but the wrong type of zip [{0:s}]: {1:s}'.format(
-              file_ending, file_entry.name))
+          logging.debug(
+              u'Unsupported ZIP sub type: {0:s} detected in file: {1:s}'.format(
+                  filename_extension, file_entry.path_spec.comparable))
           return
 
-        container_path = file_entry.pathspec.file_path
-        root_pathspec = file_entry.pathspec_root
         for info in zip_file.infolist():
           if info.file_size > 0:
             logging.debug(
                 u'Including: {0:s} from ZIP into process queue.'.format(
                     info.filename))
-            pathspec = copy.deepcopy(root_pathspec)
-            transfer_zip = event.EventPathSpec()
-            transfer_zip.type = 'ZIP'
-            transfer_zip.file_path = utils.GetUnicodeString(info.filename)
-            transfer_zip.container_path = utils.GetUnicodeString(
-                container_path)
-            pathspec.AddNestedContainer(transfer_zip)
-            yield pathspec
+
+            yield path_spec_factory.Factory.NewPathSpec(
+                definitions.TYPE_INDICATOR_ZIP, location=info.filename,
+                parent=file_entry.path_spec)
+
       except zipfile.BadZipfile:
         pass
 
     elif file_classification == 'GZ':
       try:
-        file_object.seek(0, os.SEEK_SET)
-        if file_entry.pathspec.type == 'GZIP':
+        type_indicator = file_entry.path_spec.type_indicator
+        if type_indicator == definitions.TYPE_INDICATOR_GZIP:
           raise errors.SameFileType
+
+        file_object.seek(0, os.SEEK_SET)
         gzip_file = gzip.GzipFile(fileobj=file_object, mode='rb')
         _ = gzip_file.read(4)
-        gzip_file.seek(0, os.SEEK_SET)
-        logging.debug(u'Including: {0:s} from GZIP into process queue.'.format(
-            file_entry.name))
-        transfer_gzip = event.EventPathSpec()
-        transfer_gzip.type = 'GZIP'
-        transfer_gzip.file_path = utils.GetUnicodeString(
-            file_entry.pathspec.file_path)
-        pathspec = copy.deepcopy(file_entry.pathspec_root)
-        pathspec.AddNestedContainer(transfer_gzip)
-        yield pathspec
+
+        logging.debug((
+            u'Including: {0:s} as GZIP compressed stream into process '
+            u'queue.').format(file_entry.name))
+
+        yield path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_GZIP, parent=file_entry.path_spec)
+
       except (IOError, zlib.error, errors.SameFileType):
         pass
 
-    # TODO: Add BZ2 support, in most cases it should be the same
-    # as gzip support, however the library does not accept file-like objects,
-    # it requires a filename/path.
-
+    # TODO: Add BZ2 support.
     elif file_classification == 'TAR':
       try:
         file_object.seek(0, os.SEEK_SET)
         tar_file = tarfile.open(fileobj=file_object, mode='r')
-        root_pathspec = file_entry.pathspec_root
-        file_path = file_entry.pathspec.file_path
+
         for name_info in tar_file.getmembers():
           if not name_info.isfile():
             continue
+
           name = name_info.path
           logging.debug(
               u'Including: {0:s} from TAR into process queue.'.format(name))
-          pathspec = copy.deepcopy(root_pathspec)
-          transfer_tar = event.EventPathSpec()
-          transfer_tar.type = 'TAR'
-          transfer_tar.file_path = utils.GetUnicodeString(name)
-          transfer_tar.container_path = utils.GetUnicodeString(file_path)
-          pathspec.AddNestedContainer(transfer_tar)
-          yield pathspec
+
+          yield path_spec_factory.Factory.NewPathSpec(
+              definitions.TYPE_INDICATOR_TAR, location=name,
+              parent=file_entry.path_spec)
+
       except tarfile.ReadError:
         pass
 

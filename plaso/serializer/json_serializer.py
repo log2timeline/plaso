@@ -145,66 +145,6 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
     return json.dumps(event_attributes, cls=_EventTypeJsonEncoder)
 
 
-class JsonEventPathBundleSerializer(interface.EventPathBundleSerializer):
-  """Class that implements the json event path bundle serializer."""
-
-  @classmethod
-  def ReadSerialized(cls, json_string):
-    """Reads an event path bundle from serialized form.
-
-    Args:
-      json_string: a JSON string containing the serialized form.
-
-    Returns:
-      An event path bundle (instance of EventPathBundle).
-    """
-    # TODO: implement.
-    pass
-
-  @classmethod
-  def WriteSerialized(cls, event_path_bundle):
-    """Writes an event path bundle to serialized form.
-
-    Args:
-      event_path_bundle: an event path bundle (instance of EventPathBundle).
-
-    Returns:
-      A JSON string containing the serialized form.
-    """
-    # TODO: implement.
-    pass
-
-
-class JsonEventPathSpecSerializer(interface.EventPathSpecSerializer):
-  """Class that implements the json event path specification serializer."""
-
-  @classmethod
-  def ReadSerialized(cls, json_string):
-    """Reads an event path specification from serialized form.
-
-    Args:
-      json_string: an object containing the serialized form.
-
-    Returns:
-      An event path specification (instance of EventPathSpec).
-    """
-    # TODO: implement.
-    pass
-
-  @classmethod
-  def WriteSerialized(cls, event_path_spec):
-    """Writes an event path specification to serialized form.
-
-    Args:
-      event_path_spec: an event path specification (instance of EventPathSpec).
-
-    Returns:
-      An object containing the serialized form.
-    """
-    # TODO: implement.
-    pass
-
-
 class JsonEventTagSerializer(interface.EventTagSerializer):
   """Class that implements the json event tag serializer."""
 

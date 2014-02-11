@@ -26,6 +26,8 @@ import sys
 import time
 import textwrap
 
+import pytsk3
+
 import plaso
 from plaso.collector import collector
 from plaso.lib import engine
@@ -34,11 +36,48 @@ from plaso.lib import event
 from plaso.lib import info
 from plaso.lib import pfilter
 from plaso.lib import preprocess_interface
-from plaso.pvfs import pvfs
 
 
 # The number of bytes in a MiB.
 BYTES_IN_A_MIB = 1024 * 1024
+
+
+# TODO: move or rewrite this after the dfVFS refactor.
+def GetPartitionMap(image_path):
+  """Returns a list of dict objects representing partition information.
+
+  Args:
+    image_path: The path to the image file.
+
+  Returns:
+    A list that contains a dict object for each partition in the image. The
+    dict contains the partition number (address), description of it alongside
+    an offset and length of the partition size.
+  """
+  partition_map = []
+  try:
+    img = pytsk3.Img_Info(image_path)
+  except IOError as exception:
+    raise errors.UnableToOpenFilesystem(
+        u'Unable to open image file with error: {0:s}'.format(exception))
+
+  try:
+    volume = pytsk3.Volume_Info(img)
+  except IOError as exception:
+    raise errors.UnableToOpenFilesystem(
+        u'Unable to open file system with error: {0:s}'.format(exception))
+
+  block_size = getattr(volume.info, 'block_size', 512)
+  partition_map.append(block_size)
+
+  for part in volume:
+    partition_map.append({
+        'address': part.addr,
+        'description': part.desc,
+        'offset': part.start,
+        'length': part.len})
+
+  return partition_map
 
 
 def Main():
@@ -315,7 +354,7 @@ def Main():
       file_use = options.output
 
     try:
-      partition_map = pvfs.GetPartitionMap(file_use)
+      partition_map = GetPartitionMap(file_use)
     except errors.UnableToOpenFilesystem as e:
       print e
       sys.exit(1)
@@ -369,7 +408,7 @@ def Main():
     options.image = True
 
   if options.partition_number:
-    partition_map = pvfs.GetPartitionMap(options.filename)
+    partition_map = GetPartitionMap(options.filename)
     offset = 0
     options.image = True
     options.bytes_per_sector = partition_map[0]

@@ -17,9 +17,12 @@
 # limitations under the License.
 """SQLite database plugin related functions and classes for testing."""
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.parsers import test_lib
 from plaso.parsers.sqlite_plugins import interface as sqlite_interface
-from plaso.pvfs import pfile
 
 
 class SQLitePluginTestCase(test_lib.ParserTestCase):
@@ -37,8 +40,10 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     Returns:
       A generator of event objects as returned by the plugin.
     """
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=path)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
     with sqlite_interface.SQLiteDatabase(file_entry) as database:
       event_generator = plugin_object.Process(cache=cache, database=database)
 

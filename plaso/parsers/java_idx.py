@@ -130,7 +130,7 @@ class JavaIDXParser(parser.BaseParser):
       An EventContainer (JavaIDXEventContainer) with extracted EventObjects
       that contain the extracted attributes.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     try:
       magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as e:

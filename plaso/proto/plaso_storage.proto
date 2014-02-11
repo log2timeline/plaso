@@ -21,8 +21,6 @@ syntax = "proto2";
 
 package plaso_storage;
 
-import "plaso/proto/transmission.proto";
-
 // Each EventObject/EventContainer can contain any attribute
 // as long as it can be expressed in any of the supported
 // formats (eg, string, int, array, dict).
@@ -101,7 +99,7 @@ message EventObject {
   optional string display_name = 7;
 
   // The full PathSpec where the file was extracted from.
-  optional transmission.PathSpec pathspec = 8;
+  optional bytes pathspec = 8;
 
   // The offset into the original file from where the event came from.
   optional int64 offset = 9;

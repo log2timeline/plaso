@@ -21,6 +21,9 @@ import logging
 import os
 import pdb
 
+from dfvfs.resolver import context
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso import parsers   # pylint: disable-msg=unused-import
 from plaso.lib import classifier
 from plaso.lib import errors
@@ -29,14 +32,8 @@ from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import utils
-from plaso.pvfs import pfile
-from plaso.pvfs import pvfs
 
 
-# TODO: Implement _ConsumeItem or fix the interface so we don't have to
-# implement it.
-# We are not implementing _ConsumeItem in this class.
-# pylint: disable-msg=abstract-method
 class EventExtractionWorker(queue.PathSpecQueueConsumer):
   """Class that extracts events for files and directories.
 
@@ -62,9 +59,9 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
                image (instance of PreprocessObject).
     """
     super(EventExtractionWorker, self).__init__(process_queue)
-    # We need a file system cache per thread to prevent multi threading
-    # issues with file entries stored in images.
-    self._fscache = pvfs.FilesystemCache()
+    # We need a resolver context per process to prevent multi processing
+    # issues with file objects stored in images.
+    self._resolver_context = context.Context()
     self._identifier = identifier
     self._parsers = putils.FindAllParsers(
         pre_obj, config, getattr(config, 'parsers', ''))
@@ -84,28 +81,22 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
   # TODO: implement PathBundle support, if needed.
   def _ConsumePathSpec(self, path_spec):
     """Consumes a path specification callback for ConsumePathSpecs."""
-    if hasattr(self.config, 'text_prepend'):
-      path_spec.path_prepend = self.config.text_prepend
-
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        path_spec, resolver_context=self._resolver_context)
     try:
-      file_entry = pfile.PFileResolver.OpenFileEntry(
-          path_spec, fscache=self._fscache)
       self.ParseFile(file_entry)
     except IOError as exception:
       logging.warning(u'Unable to parse file: {0:s} with error: {1:s}'.format(
           path_spec.comparable, exception))
-      logging.warning(u'Proto\n{0:s}\n{1:s}\n{2:s}'.format(
-          '-+' * 20, path_spec.comparable, '-+' * 20))
 
     if self.config.open_files:
       for sub_file_entry in classifier.SmartOpenFiles(file_entry):
         try:
           self.ParseFile(sub_file_entry)
         except IOError as exception:
-          logging.warning((
-              u'Unable to parse file: {0:s} within file: {1:s} with error: '
-              u'{2:s}').format(
-                  sub_file_entry.display_name, path_spec.comparable, exception))
+          logging.warning(
+              u'Unable to parse file: {0:s} with error: {2:s}'.format(
+                  sub_file_entry.path_spec.comparable, exception))
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
@@ -126,10 +117,19 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # Need to apply time skew, and other information extracted from
     # the configuration of the tool.
 
-    event_object.display_name = file_entry.display_name
+    # TODO: dfVFS refactor: deperecate text_prepend in favor of an event tag.
+    if self.config.text_prepend:
+      event_object.text_prepend = self.config.text_prepend
+
+    # TODO: dfVFS refactor: move display name to output since the path
+    # specification contains the full information.
+    event_object.display_name = file_entry.path_spec.comparable.replace(
+        u'\n', u';')
+
     event_object.filename = file_entry.name
-    event_object.pathspec = file_entry.pathspec_root
+    event_object.pathspec = file_entry.path_spec
     event_object.parser = parser_name
+
     if hasattr(self._pre_obj, 'hostname'):
       event_object.hostname = self._pre_obj.hostname
     if not hasattr(event_object, 'inode') and hasattr(stat_obj, 'ino'):
@@ -150,7 +150,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     Args:
       file_entry: A file entry object.
     """
-    logging.debug(u'[ParseFile] Parsing: {0:s}'.format(file_entry.display_name))
+    logging.debug(u'[ParseFile] Parsing: {0:s}'.format(
+        file_entry.path_spec.comparable))
 
     # TODO: Not go through all parsers, just the ones
     # that the classifier classifies the file as.
@@ -159,7 +160,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # to a key in the self._parsers dict. If the results are
     # inconclusive the "all" key is used, or the key is not found.
     # key = self._parsers.get(classification, 'all')
-    stat_obj = file_entry.Stat()
+    stat_obj = file_entry.GetStat()
     for parsing_object in self._parsers['all']:
       logging.debug(u'Checking [{0:s}] against: {1:s}'.format(
           file_entry.name, parsing_object.parser_name))
@@ -176,27 +177,27 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
               self._ParseEvent(
                   sub_event, file_entry, parsing_object.parser_name, stat_obj)
 
-      except errors.UnableToParseFile as e:
+      except errors.UnableToParseFile as exception:
         logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
-            parsing_object.parser_name, file_entry.name, e))
-      except IOError as e:
-        logging.debug(u'Unable to parse: {0:s} [{1:s}] using {2:s}'.format(
-            file_entry.name, file_entry.display_name,
-            parsing_object.parser_name))
+            parsing_object.parser_name, file_entry.name, exception))
+
+      except IOError as exception:
+        logging.debug(
+            u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
+                parsing_object.parser_name, file_entry.path_spec.comparable,
+                exception))
 
       # Casting a wide net, catching all exceptions. Done to keep the worker
       # running, despite the parser hitting errors, so the worker doesn't die
       # if a single file is corrupted or there is a bug in a parser.
       except Exception as exception:
-        logging.warning((
-            u'Unable to process file: {0:s} using module {1:s} with error: '
-            u'{2:s}.').format(
-                file_entry.name, parsing_object.parser_name, exception))
-        logging.debug((
-            u'The PathSpec that caused the error:\n(root)\n{0:s}\n'
-            u'{1:s}').format(
-                file_entry.pathspec_root.comparable,
-                file_entry.pathspec.comparable))
+        logging.warning(
+            u'[{0:s}] Unable to process file: {1:s} with error: {2:s}.'.format(
+                parsing_object.parser_name, file_entry.path_spec.comparable,
+                exception))
+        logging.debug(
+            u'The path specification that caused the error: {0:s}'.format(
+                file_entry.path_spec.comparable))
         logging.exception(exception)
 
         # Check for debug mode and single-threaded, then we would like
@@ -204,5 +205,5 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         if self.config.single_thread and self.config.debug:
           pdb.post_mortem()
 
-    logging.debug(u'[ParseFile] Parsing DONE: {0:s}'.format(
-        file_entry.display_name))
+    logging.debug(u'Done parsing: {0:s}'.format(
+        file_entry.path_spec.comparable))

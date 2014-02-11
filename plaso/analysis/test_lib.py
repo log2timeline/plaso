@@ -20,8 +20,11 @@
 import os
 import unittest
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.lib import queue
-from plaso.pvfs import pfile
 
 
 class TestAnalysisPluginConsumer(queue.AnalysisReportQueueConsumer):
@@ -61,7 +64,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
     Args:
       path_segments: the path segments inside the test data directory.
 
-    Returns: 
+    Returns:
       A path of the test file.
     """
     # Note that we need to pass the individual path segments to os.path.join
@@ -70,7 +73,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
 
   def _ParseFile(self, parser_object, path):
     """Parses a file using the parser object.
-  
+
     Args:
       parser_object: the parser object.
       path: the path of the file to parse.
@@ -78,8 +81,9 @@ class AnalysisPluginTestCase(unittest.TestCase):
     Returns:
       A generator of event objects as returned by the parser.
     """
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=path)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
     event_generator = parser_object.Parse(file_entry)
     self.assertNotEquals(event_generator, None)

@@ -26,6 +26,10 @@ import pstats
 import sys
 import time
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 try:
   # Support version 1.X of IPython.
   # pylint: disable-msg=no-name-in-module
@@ -35,6 +39,11 @@ except ImportError:
   # pylint: disable-msg=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
+import pyevt
+import pyevtx
+import pylnk
+import pymsiecf
+import pyregf
 
 import plaso
 from plaso.frontend import psort
@@ -42,14 +51,6 @@ from plaso.lib import event
 from plaso.lib import utils
 from plaso.lib import queue
 from plaso.lib import worker
-from plaso.pvfs import pfile
-
-import pyevt
-import pyevtx
-import pylnk
-import pymsiecf
-import pyregf
-import pyvshadow
 
 
 # TODO: Remove this after the dfVFS integration.
@@ -170,7 +171,6 @@ def PrintHeader(options):
   print utils.FormatOutputString('pylnk', pylnk.get_version())
   print utils.FormatOutputString('pymsiecf', pymsiecf.get_version())
   print utils.FormatOutputString('pyregf', pyregf.get_version())
-  print utils.FormatOutputString('pyvshadow', pyvshadow.get_version())
 
   if options.filter:
     print utils.FormatHeader('Filter Used')
@@ -213,13 +213,12 @@ def ProcessStorage(options):
 
 def ProcessFile(options):
   """Process a file and produce profile results."""
-  path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-      'OS', options.file_to_parse)
-  try:
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
-  except IOError as e:
-    logging.error(u'Unable to open file: {0:s} with error: {1:s}'.format(
-        options.file_to_parse, e))
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_OS, location=options.file_to_parse)
+  file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+  if file_entry is None:
+    logging.error(u'Unable to open file: {0:s}'.format(options.file_to_parse))
     sys.exit(1)
 
   pre_obj = event.PreprocessObject()

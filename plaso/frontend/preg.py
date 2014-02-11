@@ -31,6 +31,10 @@ import os
 import sys
 import textwrap
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 try:
   # Support version 1.X of IPython.
   # pylint: disable-msg=no-name-in-module
@@ -42,7 +46,6 @@ except ImportError:
 from IPython.core import magic
 
 from plaso import preprocessors
-
 from plaso.collector import collector
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -53,8 +56,6 @@ from plaso.lib import utils
 from plaso.lib import preprocess_interface
 from plaso.parsers import winreg_plugins    # pylint: disable-msg=unused-import
 from plaso.parsers.winreg_plugins import interface
-from plaso.pvfs import pfile
-from plaso.pvfs import vss
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
@@ -132,7 +133,7 @@ class RegistryHexFormatter(RegistryFormatter):
 
     ret_strings = [msg]
 
-    event_object.pathspec = RegCache.hive.file_entry.pathspec
+    event_object.pathspec = RegCache.hive.file_entry.path_spec
     ret_strings.append(utils.FormatHeader('Hex Output From Event.', '-'))
     ret_strings.append(
         frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
@@ -488,10 +489,11 @@ def IsLoaded():
 
 
 def OpenHive(filename, hive_collector=None, codepage='cp1252'):
-  """Open a registry hive based on a collector or a filename."""
+  """Open a Registry hive based on a collector or a filename."""
   if not hive_collector:
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', filename)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=filename)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
   else:
     file_entry = hive_collector.OpenFileEntry(filename)
 
@@ -979,9 +981,9 @@ def GetCollectorsFromAnImage(config):
   try:
     preprocess_collector = collector.GenericPreprocessCollector(
         RegCache.pre_obj, config.image)
-    byte_offset = config.offset * bytes_per_sector
+    image_offset = config.offset * bytes_per_sector
     preprocess_collector.SetImageInformation(
-        sector_offset=config.offset, byte_offset=byte_offset)
+        sector_offset=config.offset, byte_offset=image_offset)
 
   except errors.UnableToOpenFilesystem:
     ErrorAndDie(
@@ -1002,20 +1004,34 @@ def GetCollectorsFromAnImage(config):
 
   # Check for VSS.
   if config.vss:
-    byte_offset = config.offset * bytes_per_sector
+    image_offset = config.offset * bytes_per_sector
     if not config.vss_stores:
-      config.vss_stores = range(0, vss.GetVssStoreCount(
-          config.image, byte_offset))
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=config.image)
 
-    for store_number in config.vss_stores:
+      if image_offset > 0:
+        volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
+            parent=path_spec)
+      else:
+        volume_path_spec = path_spec
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
+          parent=volume_path_spec)
+
+      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+      config.vss_stores = range(0, vss_file_entry.number_of_sub_file_entries)
+
+    for store_index in config.vss_stores:
       vss_collector = collector.GenericPreprocessCollector(
           RegCache.pre_obj, config.image)
       vss_collector.SetImageInformation(
-          sector_offset=config.offset, byte_offset=byte_offset)
-      vss_collector.SetVssInformation(
-          store_number=store_number)
+          sector_offset=config.offset, byte_offset=image_offset)
+      vss_collector.SetVssInformation(store_index=store_index)
       preprocess_collectors.append((
-          ':VSS Store {}'.format(store_number + 1), vss_collector))
+          ':VSS Store {}'.format(store_index + 1), vss_collector))
 
   return preprocess_collectors
 

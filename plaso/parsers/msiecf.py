@@ -170,7 +170,7 @@ class MsiecfParser(parser.BaseParser):
       An event container (MsiecfUrlEventContainer) that contains
       the parsed data.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     msiecf_file = pymsiecf.file()
     msiecf_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
 
