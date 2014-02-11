@@ -254,7 +254,7 @@ class WinPyregfFile(interface.WinRegFile):
           u'Unable to set the Windows Registry file codepage: {0:s}. '
           u'Ignoring provided value.').format(codepage))
 
-    self._file_object = file_entry.Open()
+    self._file_object = file_entry.GetFileObject()
     self.file_entry = file_entry
     self._pyregf_file.open_file_object(self._file_object)
 
@@ -322,7 +322,7 @@ class WinRegistry(object):
           u'Unable to set the Registry codepage to: {}. Not setting it'.format(
               codepage))
 
-    self._file_object = file_entry.Open()
+    self._file_object = file_entry.GetFileObject()
     self._pyregf_file.open_file_object(self._file_object)
 
   def GetRoot(self):

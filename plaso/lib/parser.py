@@ -24,8 +24,6 @@ parser.
 
 import abc
 
-from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import registry
 
 
@@ -83,42 +81,3 @@ class BaseParser(object):
       NotImplementedError when not implemented.
     """
     raise NotImplementedError
-
-
-class BundleParser(BaseParser):
-  """A base class for parsers that need more than a single file to parse."""
-
-  __abstract = True
-
-  # A list of all file patterns to match against. This list will be used by the
-  # collector to find all available files to parse.
-  PATTERNS = []
-
-  @abc.abstractmethod
-  def ParseBundle(self, file_entries):
-    """Return a generator of EventObjects from a list of files.
-
-    Args:
-      file_entries: A list of file entry objects.
-
-    Yields:
-      EventObject for each extracted event.
-    """
-    pass
-
-  def Parse(self, path_spec_bundle):
-    """Return a generator for EventObjects extracted from a path bundle."""
-    if not isinstance(path_spec_bundle, event.EventPathBundle):
-      raise errors.UnableToParseFile(u'Not a file bundle.')
-
-    bundle_pattern = getattr(path_spec_bundle, 'pattern', None)
-
-    if not bundle_pattern:
-      raise errors.UnableToParseFile(u'No bundle pattern defined.')
-
-    if u'|'.join(self.PATTERNS) != bundle_pattern:
-      raise errors.UnableToParseFile(u'No bundle pattern defined.')
-
-    file_entries = list(path_spec_bundle)
-
-    return self.ParseBundle(file_entries)

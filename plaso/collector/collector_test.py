@@ -69,19 +69,47 @@ class TestCollectorQueueConsumer(queue.PathSpecQueueConsumer):
 
   def GetFilePaths(self):
     """Retrieves a list of file paths from the path specifications."""
-    return [path_spec.file_path for path_spec in self.path_specs]
+    file_paths = []
+    for path_spec in self.path_specs:
+      location = getattr(path_spec, 'location', None)
+      if location is not None:
+        file_paths.append(location)
+    return file_paths
 
 
-class CollectorTest(unittest.TestCase):
-  """The unit test for the OS collector."""
+class CollectorTestCase(unittest.TestCase):
+  """The collector test case."""
+
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+
+  # Show full diff results, part of TestCase so does not follow our naming
+  # conventions.
+  maxDiff = None
+
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file relative to the test data directory.
+
+    Args:
+      path_segments: the path segments inside the test data directory.
+
+    Returns:
+      A path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)
+
+
+class CollectorTest(CollectorTestCase):
+  """Tests for the collector."""
 
   def testFileSystemCollection(self):
     """Test collection on the file system."""
     test_files = [
-        os.path.join('test_data', 'syslog.tgz'),
-        os.path.join('test_data', 'syslog.zip'),
-        os.path.join('test_data', 'syslog.bz2'),
-        os.path.join('test_data', 'wtmp.1')]
+        self._GetTestFilePath(['syslog.tgz']),
+        self._GetTestFilePath(['syslog.zip']),
+        self._GetTestFilePath(['syslog.bz2']),
+        self._GetTestFilePath(['wtmp.1'])]
 
     with TempDirectory() as dirname:
       for a_file in test_files:
@@ -158,7 +186,7 @@ class CollectorTest(unittest.TestCase):
 
     This means that the collection script should collect 6 files in total.
     """
-    test_file = os.path.join('test_data', 'syslog_image.dd')
+    test_file = self._GetTestFilePath(['syslog_image.dd'])
 
     test_collection_queue = queue.SingleThreadedQueue()
     test_storage_queue = queue.SingleThreadedQueue()
@@ -177,7 +205,7 @@ class CollectorTest(unittest.TestCase):
 
   def testImageWithFilterCollection(self):
     """Test collection on a storage media image file with a filter."""
-    test_file = os.path.join('test_data', 'image.dd')
+    test_file = self._GetTestFilePath(['image.dd'])
 
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:

@@ -22,35 +22,40 @@ import logging
 import os
 import sre_constants
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.collector import interface
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import queue
 from plaso.lib import utils
 from plaso.parsers import filestat
-from plaso.pvfs import pfile
-from plaso.pvfs import pfile_entry
-from plaso.pvfs import vss
 
 
 # TODO: refactor.
-def _SendContainerToStorage(event_container, stat, storage_queue_producer):
+def _SendContainerToStorage(file_entry, storage_queue_producer):
   """Read events from a event container and send them to storage.
 
   Args:
-    event_container: The event container object (instance of
-                     event.EventContainer).
-    stat: A stat object (instance of pfile.Stats).
+    file_entry: The file entry object (instance of dfvfs.FileEntry).
     storage_queue_producer: the storage queue producer (instance of
                             EventObjectQueueProducer).
   """
-  for event_object in event_container:
-    # TODO: move this logic into event container e.g. AsObjects() function.
-    event_object.filename = getattr(stat, 'full_path', '<unknown>')
-    event_object.display_name = getattr(
-        stat, 'display_path', event_object.filename)
+  stat_object = file_entry.GetStat()
+  event_generator = filestat.GetEventContainerFromStat(stat_object)
+
+  for event_object in event_generator:
+    # TODO: dfVFS refactor: move display name to output since the path
+    # specification contains the full information.
+    event_object.display_name = file_entry.path_spec.comparable.replace(
+        u'\n', u';')
+
+    event_object.filename = file_entry.name
+    event_object.pathspec = file_entry.path_spec
     event_object.parser = u'PfileStatParser'
-    event_object.inode = utils.GetInodeValue(stat.ino)
+    event_object.inode = utils.GetInodeValue(stat_object.ino)
 
     storage_queue_producer.ProduceEventObject(event_object)
 
@@ -65,7 +70,7 @@ class Collector(queue.PathSpecQueueProducer):
 
        The collector discovers all the files that need to be processed by
        the workers. Once a file is discovered it added to the process queue
-       as a path specification (instance of event.EventPathSpec).
+       as a path specification (instance of dfvfs.PathSpec).
 
     Args:
       proces_queue: The files processing queue (instance of Queue).
@@ -104,7 +109,7 @@ class Collector(queue.PathSpecQueueProducer):
       A hash value (string) that can be used to determine if a file's timestamp
     value has changed.
     """
-    stat_object = file_entry.Stat()
+    stat_object = file_entry.GetStat()
     ret_hash = hashlib.md5()
 
     ret_hash.update('atime:{0}.{1}'.format(
@@ -135,79 +140,28 @@ class Collector(queue.PathSpecQueueProducer):
 
     return self._byte_offset
 
-  def _GetVssStores(self):
-    """Returns a list of VSS stores that need to be processed."""
-    image_offset = self._GetImageByteOffset()
-
-    list_of_vss_stores = []
-    if not self._process_vss:
-      return list_of_vss_stores
-
-    logging.debug(u'Searching for VSS')
-    vss_numbers = vss.GetVssStoreCount(self._source_path, image_offset)
-    if self._vss_stores:
-      for nr in self._vss_stores:
-        if nr > 0 and nr <= vss_numbers:
-          list_of_vss_stores.append(nr)
-    else:
-      list_of_vss_stores = range(0, vss_numbers)
-
-    return list_of_vss_stores
-
   def _ProcessDirectory(self, file_entry):
     """Processes a directory and extract its metadata if necessary."""
     # Need to do a breadth-first search otherwise we'll hit the Python
     # maximum recursion depth.
     sub_directories = []
 
-    for sub_file_entry in file_entry.GetSubFileEntries():
-      if isinstance(sub_file_entry, pfile_entry.TSKFileEntry):
-        # Work-around the limitation in TSKFileEntry that it needs to be open
-        # to return stat information. This will be fixed by dfVFS.
-        try:
-          _  = sub_file_entry.Open()
-        except AttributeError as e:
-          logging.error(
-              u'Unable to read file: {0:s} from image with error: {1:s}'.format(
-                  sub_file_entry.pathspec.file_path, e))
-          continue
-
+    for sub_file_entry in file_entry.sub_file_entries:
       if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
         continue
 
-      if isinstance(sub_file_entry, pfile_entry.TSKFileEntry):
-        # For TSK-based file entries only, ignore the virtual /$OrphanFiles
-        # directory.
-        if sub_file_entry.pathspec.file_path == u'/$OrphanFiles':
+      # For TSK-based file entries only, ignore the virtual /$OrphanFiles
+      # directory.
+      if sub_file_entry.type_indicator == definitions.TYPE_INDICATOR_TSK:
+        if file_entry.IsRoot() and sub_file_entry.name == u'$OrphanFiles':
           continue
 
       if sub_file_entry.IsDirectory():
         if self.collect_directory_metadata:
           # TODO: solve this differently by putting the path specification
           # on the queue and have the filestat parser just extract the metadata.
-          # self.ProducePathSpec(sub_file_entry.pathspec)
-          stat_object = sub_file_entry.Stat()
-          stat_object.full_path = sub_file_entry.pathspec.file_path
-
-          if isinstance(sub_file_entry, pfile_entry.TSKFileEntry):
-            stat_object.display_path = u'{0:s}:{1:s}'.format(
-                self._source_path, sub_file_entry.pathspec.file_path)
-
-            try:
-              _ = stat_object.display_path.decode('utf-8')
-            except UnicodeDecodeError:
-              logging.warning(
-                  u'UnicodeDecodeError: stat_object.display_path: {0:s}'.format(
-                      stat_object.display_path))
-              stat_object.display_path = utils.GetUnicodeString(
-                  stat_object.display_path)
-          else:
-            stat_object.display_path = sub_file_entry.pathspec.file_path
-
-          # TODO: refactor.
-          _SendContainerToStorage(
-              filestat.GetEventContainerFromStat(stat_object), stat_object,
-              self._storage_queue_producer)
+          # self.ProducePathSpec(sub_file_entry.path_spec)
+          _SendContainerToStorage(file_entry, self._storage_queue_producer)
 
         sub_directories.append(sub_file_entry)
 
@@ -219,15 +173,14 @@ class Collector(queue.PathSpecQueueProducer):
         if self._process_vss:
           hash_value = self._CalculateNTFSTimeHash(sub_file_entry)
 
-          if sub_file_entry.pathspec.image_inode in self._hashlist:
-            if hash_value in self._hashlist[
-                sub_file_entry.pathspec.image_inode]:
+          inode = getattr(sub_file_entry.path_spec, 'inode', 0)
+          if inode in self._hashlist:
+            if hash_value in self._hashlist[inode]:
               continue
 
-          self._hashlist.setdefault(
-              sub_file_entry.pathspec.image_inode, []).append(hash_value)
+          self._hashlist.setdefault(inode, []).append(hash_value)
 
-        self.ProducePathSpec(sub_file_entry.pathspec)
+        self.ProducePathSpec(sub_file_entry.path_spec)
 
     for sub_file_entry in sub_directories:
       self._ProcessDirectory(sub_file_entry)
@@ -243,127 +196,139 @@ class Collector(queue.PathSpecQueueProducer):
 
   def _ProcessImage(self):
     """Processes the image."""
-    image_offset = self._GetImageByteOffset()
-    logging.debug(
-        u'Collecting from image file: {0:s}'.format(self._source_path))
+    logging.debug(u'Collecting from image file: {0:s}'.format(
+        self._source_path))
 
-    # Check if we will in the future collect from VSS.
     if self._process_vss:
       self._hashlist = {}
 
-    # Read the root dir, and move from there.
-    try:
-      root_path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-          'TSK', u'/', container_path=self._source_path,
-          image_offset=image_offset)
-      file_system = pfile.PFileResolver.OpenFileSystem(root_path_spec)
-      root_file_entry = file_system.GetRootFileEntry()
+    image_offset = self._GetImageByteOffset()
 
-      # Work-around the limitation in TSKFileEntry that it needs to be open
-      # to return stat information. This will be fixed by dfVFS.
-      try:
-        _  = root_file_entry.Open()
-      except AttributeError as e:
-        logging.error((
-            u'Unable to read root file entry from image with error: '
-            u'{0:s}').format(e))
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=self._source_path)
 
-      self._ProcessDirectory(root_file_entry)
+    if image_offset > 0:
+      volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
+          parent=path_spec)
+    else:
+      volume_path_spec = path_spec
 
-    except errors.UnableToOpenFilesystem as e:
-      logging.error(u'Unable to read image with error {0:s}.'.format(e))
-      return
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK, location=u'/', parent=volume_path_spec)
 
-    vss_numbers = 0
+    root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    self._ProcessDirectory(root_file_entry)
+
     if self._process_vss:
       logging.info(u'Collecting from VSS.')
-      vss_numbers = vss.GetVssStoreCount(self._source_path, image_offset)
 
-    for store_number in self._GetVssStores():
-      logging.info(u'Collecting from VSS store number: {0:d}/{1:d}'.format(
-          store_number + 1, vss_numbers))
-      self._ProcessVss(store_number)
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
+          parent=volume_path_spec)
+
+      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+      number_of_vss = vss_file_entry.number_of_sub_file_entries
+
+      for store_index in range(0, number_of_vss):
+        logging.info(u'Collecting from VSS volume: {0:d} out of: {1:d}'.format(
+            store_index + 1, number_of_vss))
+        self._ProcessVss(volume_path_spec, store_index)
 
     logging.debug(u'Collection from image completed.')
 
   def _ProcessImageWithFilter(self):
     """Processes the image with the collection filter."""
+    image_offset = self._GetImageByteOffset()
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=self._source_path)
+
+    if image_offset > 0:
+      volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
+          parent=path_spec)
+    else:
+      volume_path_spec = path_spec
+
+    # TODO: Change the preprocessor collector into a find function.
     preprocessor_collector = GenericPreprocessCollector(
         self._pre_obj, self._source_path)
     preprocessor_collector.SetImageInformation(
         sector_offset=self._sector_offset, byte_offset=self._byte_offset)
+    filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
-    try:
-      filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
+    for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
+      self.ProducePathSpec(path_spec)
 
-      for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
-        self.ProducePathSpec(path_spec)
+    if self._process_vss:
+      logging.debug(u'Searching for VSS')
 
-      if self._process_vss:
-        logging.debug(u'Searching for VSS')
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
+          parent=volume_path_spec)
 
-        image_offset = self._GetImageByteOffset()
-        vss_numbers = vss.GetVssStoreCount(self._source_path, image_offset)
+      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-        for store_number in self._GetVssStores():
-          logging.info(u'Collecting from VSS store number: {0:s}/{1:s}'.format(
-              store_number + 1, vss_numbers))
+      number_of_vss = vss_file_entry.number_of_sub_file_entries
 
-          vss_preprocessor_collector = GenericPreprocessCollector(
-              self._pre_obj, self._source_path)
-          vss_preprocessor_collector.SetImageInformation(
-              sector_offset=self._sector_offset, byte_offset=self._byte_offset)
-          vss_preprocessor_collector.SetVssInformation(
-              store_number=store_number)
-          filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
+      if not self._vss_stores:
+        list_of_vss_stores = range(0, number_of_vss)
+      else:
+        list_of_vss_stores = []
 
-          for path_spec in vss_preprocessor_collector.GetPathSpecs(
-              filter_object):
-            self.ProducePathSpec(path_spec)
+        for store_index in self._vss_stores:
+          if store_index > 0 and store_index <= number_of_vss:
+            list_of_vss_stores.append(store_index - 1)
 
-    finally:
-      logging.debug(u'Targeted Image Collector - Done.')
+      for store_index in list_of_vss_stores:
+        logging.info(
+            u'Collecting from VSS volume: {0:d} out of: {1:d}'.format(
+                store_index + 1, number_of_vss))
 
-  def _ProcessVss(self, store_number):
+        # TODO: Change the preprocessor collector into a find function.
+        vss_preprocessor_collector = GenericPreprocessCollector(
+            self._pre_obj, self._source_path)
+        vss_preprocessor_collector.SetImageInformation(
+            sector_offset=self._sector_offset, byte_offset=self._byte_offset)
+        vss_preprocessor_collector.SetVssInformation(store_index=store_index)
+        filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
+
+        for path_spec in vss_preprocessor_collector.GetPathSpecs(
+            filter_object):
+          self.ProducePathSpec(path_spec)
+
+    logging.debug(u'Targeted Image Collector - Done.')
+
+  def _ProcessVss(self, volume_path_spec, store_index):
     """Processes a Volume Shadow Snapshot (VSS) in the image.
 
     Args:
-      store_number: The VSS store index number.
+      volume_path_spec: The path specification of the volume containing
+                        the VSS.
+      store_index: The VSS store index number.
     """
-    logging.debug(u'Collecting from VSS store {0:s}'.format(store_number))
-    image_offset = self._GetImageByteOffset()
+    logging.debug(u'Collecting from VSS store {0:s}'.format(store_index))
 
-    try:
-      root_path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-          'VSS', u'/', container_path=self._source_path,
-          image_offset=image_offset, store_number=store_number)
-      file_system = pfile.PFileResolver.OpenFileSystem(root_path_spec)
-      root_file_entry = file_system.GetRootFileEntry()
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
+        parent=volume_path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK, location=u'/', parent=path_spec)
 
-      # Work-around the limitation in TSKFileEntry that it needs to be open
-      # to return stat information. This will be fixed by dfVFS.
-      try:
-        _  = root_file_entry.Open()
-      except AttributeError as e:
-        logging.error((
-            u'Unable to read root file entry from image with error: '
-            u'{0:s}').format(e))
-
-      self._ProcessDirectory(root_file_entry)
-
-    except errors.UnableToOpenFilesystem as e:
-      logging.error(u'Unable to read filesystem with error: {0:s}.'.format(e))
+    root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    self._ProcessDirectory(root_file_entry)
 
     logging.debug(
-        u'Collection from VSS store: {0:d} COMPLETED.'.format(store_number))
+        u'Collection from VSS store: {0:d} COMPLETED.'.format(store_index))
 
   def Collect(self):
     """Collects files from the source."""
-    source_path_spec = event.EventPathSpec()
-    source_path_spec.type = 'OS'
-    source_path_spec.file_path = utils.GetUnicodeString(self._source_path)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=self._source_path)
 
-    source_file_entry = pfile_entry.OsFileEntry(source_path_spec)
+    source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
     if not source_file_entry.IsDirectory() and not source_file_entry.IsFile():
       raise errors.CollectorError(
@@ -385,7 +350,7 @@ class Collector(queue.PathSpecQueueProducer):
         self._ProcessDirectory(source_file_entry)
 
       else:
-        self.ProducePathSpec(source_path_spec)
+        self.ProducePathSpec(path_spec)
 
     self.SignalEndOfInput()
 
@@ -444,7 +409,7 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     self._process_image = None
     self._process_vss = None
     self._sector_offset = None
-    self._store_number = None
+    self._store_index = None
 
   def _GetImageByteOffset(self):
     """Retrieves the image offset in bytes."""
@@ -468,22 +433,32 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     Yields:
       The paths found.
     """
-    if not self._process_image:
-      type_indicator = 'OS'
-    elif not self._process_vss:
-      type_indicator = 'TSK'
-    else:
-      type_indicator = 'VSS'
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=self._source_path)
 
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-         type_indicator, u'/', container_path=self._source_path,
-         image_offset=self._GetImageByteOffset())
-    file_system = pfile.PFileResolver.OpenFileSystem(path_spec)
+    if self._process_image:
+      image_offset = self._GetImageByteOffset()
+
+      if image_offset > 0:
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_TSK_PARTITION,
+            start_offset=image_offset, parent=path_spec)
+
+      if self._process_vss:
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_VSHADOW, store_index=self._store_index,
+            parent=path_spec)
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK, location=u'/', parent=path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    file_system = file_entry.GetFileSystem()
 
     if not self._process_image:
       # When processing the file system strip off the path separator at
       # the end of the source path.
-      source_path = self._source_path
+      source_path = os.path.abspath(self._source_path)
       if source_path.endswith(os.path.sep):
         source_path = source_path[:-1]
 
@@ -492,6 +467,7 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
       sub_paths_found = []
 
       for path in paths_found:
+        # TODO: dfVFS refactor, fix this in find rewrite.
         if self._process_image:
           full_path = path
         else:
@@ -500,49 +476,41 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
         if self._process_image and not path:
           file_entry = file_system.GetRootFileEntry()
         else:
-          path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-              file_system.TYPE_INDICATOR, full_path,
-              container_path=self._source_path,
-              image_offset=self._GetImageByteOffset(), inode_number=None,
-              store_number=self._store_number)
+          # We need to pass only used arguments to the path specification
+          # factory otherwise it will raise.
+          kwargs = {}
+          if self._process_image:
+            kwargs['parent'] = path_spec.parent
+          kwargs['location'] = full_path
 
-          file_entry = file_system.OpenFileEntry(path_spec)
-
-        if isinstance(file_entry, pfile_entry.TSKFileEntry):
-          # Work-around the limitation in TSKFileEntry that it needs to be open
-          # to return stat information. This will be fixed by dfVFS.
-          try:
-            _  = file_entry.Open()
-          except AttributeError as e:
-            logging.error((
-                u'Unable to read file: {0:s} from image with error: '
-                u'{1:s}').format(file_entry.pathspec.file_path, e))
-            continue
+          sub_path_spec = path_spec_factory.Factory.NewPathSpec(
+              file_system.TYPE_INDICATOR, **kwargs)
+          file_entry = path_spec_resolver.Resolver.OpenFileEntry(sub_path_spec)
 
         # Since there are more path segment expressions and the file entry
         # is not a directory this cannot be the path we're looking for.
         if not file_entry.IsDirectory():
           continue
 
-        for sub_file_entry in file_entry.GetSubFileEntries():
-
+        for sub_file_entry in file_entry.sub_file_entries:
           sub_file_entry_match = u''
 
           # TODO: need to handle case (in)sentive matches.
           if isinstance(path_segment_expression, basestring):
-            if path_segment_expression == sub_file_entry.directory_entry_name:
-              sub_file_entry_match = sub_file_entry.directory_entry_name
+            if path_segment_expression == sub_file_entry.name:
+              sub_file_entry_match = sub_file_entry.name
 
           else:
-            re_match = path_segment_expression.match(
-                sub_file_entry.directory_entry_name)
+            re_match = path_segment_expression.match(sub_file_entry.name)
 
             if re_match:
               sub_file_entry_match = re_match.group(0)
 
           if sub_file_entry_match:
-            sub_paths_found.append(file_system.JoinPath([
-                path, sub_file_entry_match]))
+            sub_file_entry_match = file_system.JoinPath([
+                path, sub_file_entry_match])
+
+            sub_paths_found.append(sub_file_entry_match)
 
       paths_found = sub_paths_found
 
@@ -554,33 +522,11 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
         yield path
 
       else:
+        # TODO: dfVFS refactor, is this still needed?
         # When processing the file system strip off the path separator at
         # start of the resulting path. If path is an empty string the result
         # of path[1:] will be an empty string.
         yield path[1:]
-
-  def _OpenImageFile(
-      self, type_indicator, path, container_path, byte_offset=0,
-      store_number=None):
-    """Opens a file entry object for a file in a raw disk image.
-
-    Args:
-      type_indicator: the path specification type indicator.
-      path: the path to open.
-      container_path: the path of the image.
-      byte_offset: Optional byte offset into the image file if this is a disk
-                   image. The default is 0.
-      store_number: Optional VSS store index number. The default is None.
-
-    Returns:
-      A file entry object.
-    """
-    container_path = utils.GetUnicodeString(container_path)
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-        type_indicator, path, container_path=container_path,
-        image_offset=byte_offset, store_number=store_number)
-
-    return pfile.PFileResolver.OpenFileEntry(path_spec)
 
   def GetPathSpecs(self, collection_filter):
     """A generator yielding all pathspecs from the given filters."""
@@ -596,20 +542,24 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
         continue
 
       for path in paths:
+        # TODO: dfVFS refactor, fix this in find rewrite.
         # TODO: Need to make sure "path" is a directory (easier using pyVFS
         # ideas). Until then have a quick "try" attempt, remove that once
         # proper stats are implemented.
         try:
           for file_path in self.GetFilePaths(path, filter_file):
             file_entry = self.OpenFileEntry(file_path)
-            yield file_entry.pathspec_root
+            if file_entry:
+              yield file_entry.path_spec
 
+        # TODO: dfVFS refactor, unlikely to be still raised.
         except errors.PreProcessFail as exception:
           logging.warning((
               u'Unable to parse filter: {0:s}/{1:s} - path not found '
               u'[{2:s}].').format(filter_path, filter_file, exception))
           continue
 
+        # TODO: dfVFS refactor, this should be local to where it can be raised.
         except sre_constants.error:
           logging.warning((
               u'Unable to parse the filter: {0:s}/{1:s} - illegal regular '
@@ -619,25 +569,31 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""
     if self._process_image:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=self._source_path)
+
       image_offset = self._GetImageByteOffset()
 
+      if image_offset > 0:
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
+            parent=path_spec)
+
       if self._process_vss:
-        file_entry = self._OpenImageFile(
-            'VSS', path, self._source_path, byte_offset=image_offset,
-            store_number=self._store_number)
-      else:
-        file_entry = self._OpenImageFile(
-            'TSK', path, self._source_path, byte_offset=image_offset)
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_VSHADOW, store_index=self._store_index,
+            parent=path_spec)
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK, location=path, parent=path_spec)
+
     else:
       path = os.path.join(self._source_path, path)
 
-      path_spec = event.EventPathSpec()
-      path_spec.type = 'OS'
-      path_spec.file_path = utils.GetUnicodeString(path)
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=path)
 
-      file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
-
-    return file_entry
+    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def ReadingFromImage(self):
     """Indicates if the collector is reading from an image file."""
@@ -658,16 +614,16 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     self._byte_offset = byte_offset
     self._sector_offset = sector_offset
 
-  def SetVssInformation(self, store_number=None):
+  def SetVssInformation(self, store_index=None):
     """Sets the Volume Shadow Snapshots (VSS) information.
 
        This function will enable VSS collection.
 
     Args:
-      store_number: Optional VSS store index number. The default is None.
+      store_index: Optional VSS store index number. The default is None.
     """
     self._process_vss = True
-    self._store_number = store_number
+    self._store_index = store_index
 
 
 def BuildCollectionFilterFromFile(filter_file_path):

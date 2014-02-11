@@ -130,7 +130,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     if not self._year_use:
       # TODO: Find a decent way to actually calculate the correct year
       # from the syslog file, instead of relying on stats object.
-      stat = self.file_entry.Stat()
+      stat = self.file_entry.GetStat()
       self._year_use = self.GetYear(stat, zone)
 
       if not self._year_use:

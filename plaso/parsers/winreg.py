@@ -88,7 +88,7 @@ class WinRegistryParser(parser.BaseParser):
     Yields:
       An event object.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
 
     # TODO: Remove this magic reads when the classifier has been
     # implemented, until then we need to make sure we are dealing with

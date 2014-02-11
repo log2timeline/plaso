@@ -199,7 +199,7 @@ class AslParser(parser.BaseParser):
     Yields:
       An ASL event for each entry in the file.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
     try:
       header = self.ASL_HEADER_STRUCT.parse_stream(file_object)

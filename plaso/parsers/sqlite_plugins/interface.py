@@ -208,7 +208,7 @@ class SQLiteDatabase(object):
 
   def Open(self):
     """Opens up a database connection and build a list of table names."""
-    file_object = self._file_entry.Open()
+    file_object = self._file_entry.GetFileObject()
 
     # TODO: Remove this when the classifier gets implemented
     # and used. As of now, there is no check made against the file

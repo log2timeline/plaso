@@ -23,9 +23,7 @@ from plaso.lib import timelib
 
 
 # TODO: move this function to lib or equiv since it is used from the collector
-# as well.
-
-
+# as well. Change this into a class after the dfVFS refactor.
 def GetEventContainerFromStat(stat_object):
   """Return an EventContainer object from a file stat object.
 
@@ -38,18 +36,21 @@ def GetEventContainerFromStat(stat_object):
   stored as a Posix timestamps.
 
   Args:
-    stat_object: A stat object.
+    stat_object: A stat object (instance of dfvfs.VFSStat).
 
   Returns:
     An EventContainer that contains an EventObject for each extracted
     timestamp contained in the stat object or None if the stat object
     does not contain time values.
   """
-  # TODO: this is highly fragile improve this solution.
+  # TODO: change this with file entry attributes.
+  time_attributes = frozenset([
+      'atime', 'bkup_time', 'ctime', 'crtime', 'dtime', 'mtime'])
+
   time_values = []
-  for item, _ in stat_object:
-    if item[-4:] == 'time':
-      time_values.append(item)
+  for attribute_name in time_attributes:
+    if hasattr(stat_object, attribute_name):
+      time_values.append(attribute_name)
 
   if not time_values:
     return
@@ -57,19 +58,29 @@ def GetEventContainerFromStat(stat_object):
   is_allocated = getattr(stat_object, 'allocated', True)
 
   event_container = PfileStatEventContainer(
-      is_allocated, stat_object.attributes.get('size', None))
+      is_allocated, getattr(stat_object, 'size', None))
 
   for time_value in time_values:
-    timestamp = getattr(stat_object, time_value, 0)
-    event_object = event.EventObject()
-    event_object.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
-    event_object.timestamp += getattr(stat_object, '%s_nano' % time_value, 0)
-
-    if not event_object.timestamp:
+    timestamp = getattr(stat_object, time_value, None)
+    if timestamp is None:
       continue
 
+    nano_time_value = '{0:s}_nano'.format(time_value)
+    nano_time_value = getattr(stat_object, nano_time_value, None)
+
+    timestamp = timelib.Timestamp.FromPosixTime(timestamp)
+    if nano_time_value is not None:
+      timestamp += nano_time_value
+
+    # TODO: this also ignores any timestamp that equals 0.
+    # Is this the desired behavior?
+    if not timestamp:
+      continue
+
+    event_object = event.EventObject()
+    event_object.timestamp = timestamp
     event_object.timestamp_desc = time_value
-    event_object.fs_type = getattr(stat_object, 'fs_type', 'N/A')
+    event_object.fs_type = getattr(stat_object, 'fs_type', u'N/A')
 
     event_container.Append(event_object)
 
@@ -110,7 +121,7 @@ class PfileStatParser(parser.BaseParser):
       An event container (EventContainer) that contains the parsed
       attributes.
     """
-    stat_object = file_entry.Stat()
+    stat_object = file_entry.GetStat()
 
     if stat_object:
       event_container = GetEventContainerFromStat(stat_object)

@@ -21,8 +21,9 @@ import binascii
 import tempfile
 import os
 
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.lib import timelib
-from plaso.pvfs import pfile
 
 import pytz
 
@@ -62,7 +63,8 @@ class OutputWriter(object):
       return u'Event object has no path specification.'
 
     try:
-      file_entry = pfile.PFileResolver.OpenFileEntry(event_object.pathspec)
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          event_object.pathspec)
     except IOError as e:
       return u'Unable to open file with error: {0:s}'.format(e)
 
@@ -70,7 +72,7 @@ class OutputWriter(object):
     if offset - before > 0:
       offset -= before
 
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     file_object.seek(offset, os.SEEK_SET)
     data = file_object.read(int(length) * 16)
     file_object.close()

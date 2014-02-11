@@ -107,7 +107,7 @@ class BencodeParser(parser.BaseParser):
       An event.BencodeEvent containing information extracted from a bencoded
       file.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     top_level_object = self.GetTopLevel(file_object)
 
     if not top_level_object:

@@ -34,7 +34,6 @@ from plaso.lib import parser
 from plaso.lib import plugin
 from plaso.lib import utils
 from plaso.parsers.plist_plugins import interface
-from plaso.pvfs import pfile
 
 
 class PlistParser(parser.BaseParser):
@@ -117,7 +116,7 @@ class PlistParser(parser.BaseParser):
       A plist event object (instance of event.PlistEvent).
     """
     # TODO: Should we rather query the stats object to get the size here?
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     file_size = file_object.get_size()
 
     if file_size <= 0:
@@ -144,8 +143,7 @@ class PlistParser(parser.BaseParser):
       raise errors.UnableToParseFile(
           u'[PLIST] unable to parse: {0:s} skipping.'.format(file_entry.name))
 
-    file_system = pfile.PFileResolver.OpenFileSystem(
-        file_entry.pathspec)
+    file_system = file_entry.GetFileSystem()
     plist_name = file_system.BasenamePath(file_entry.name)
 
     for plist_plugin in self._plugins.itervalues():

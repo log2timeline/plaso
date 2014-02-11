@@ -102,25 +102,44 @@ class UtmpxParser(parser.BaseParser):
     super(UtmpxParser, self).__init__(pre_obj, config)
     self._utmpx_record_size = self.MAC_UTMPX_ENTRY.sizeof()
 
-  def Parse(self, file_entry):
-    """Extract data from a UTMPX file.
+  def _ReadEntry(self, file_object):
+    """Reads an UTMPX entry.
 
     Args:
-      file_entry: a file entry object.
+      file_object: a file-like object that points to an UTMPX file.
 
     Returns:
-      An UtmpxMacOsXEvent for each logon/logoff event.
+      An event object constructed from the UTMPX entry.
     """
-    file_object = file_entry.Open()
-    if not self._VerifyStructure(file_object):
-      raise errors.UnableToParseFile(
-          u'The file is not an UTMPX file.')
+    data = file_object.read(self._utmpx_record_size)
+    if len(data) != self._utmpx_record_size:
+      return
 
-    event_object = self._ReadEntry(file_object)
-    while event_object:
-      event_object.offset = file_object.tell()
-      yield event_object
-      event_object = self._ReadEntry(file_object)
+    try:
+      entry = self.MAC_UTMPX_ENTRY.parse(data)
+    except (IOError, construct.FieldError) as exception:
+      logging.warning(
+          u'Unable to parse Mac OS X UTMPX entry with error: {0:s}'.format(
+              exception))
+      return
+
+    user, _, _ = entry.user.partition('\x00')
+    if not user:
+      user = u'N/A'
+    terminal, _, _ = entry.tty_name.partition('\x00')
+    if not terminal:
+      terminal = u'N/A'
+    computer_name, _, _ = entry.hostname.partition('\x00')
+    if not computer_name:
+      computer_name = u'localhost'
+
+    value_status = self.MAC_STATUS_TYPE.get(entry.status_type, u'N/A')
+    status = u'{0}'.format(value_status)
+
+    timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
+        entry.timestamp, entry.microsecond)
+
+    return UtmpxMacOsXEvent(timestamp, user, terminal, status, computer_name)
 
   def _VerifyStructure(self, file_object):
     """Verify that we are dealing with an UTMPX entry.
@@ -137,7 +156,7 @@ class UtmpxParser(parser.BaseParser):
     except (IOError, construct.FieldError):
       return False
     user, _, _ = header.user.partition('\x00')
-    if user != 'utmpx-1.00':
+    if user != u'utmpx-1.00':
       return False
     if self.MAC_STATUS_TYPE[header.status_type] != 'SIGNATURE':
       return False
@@ -150,41 +169,23 @@ class UtmpxParser(parser.BaseParser):
 
     return True
 
-  def _ReadEntry(self, file_object):
-    """Reads an UTMPX entry.
+  def Parse(self, file_entry):
+    """Extract data from a UTMPX file.
 
     Args:
-      file_object: a file-like object that points to an UTMPX file.
+      file_entry: a file entry object.
 
     Returns:
-      An event object constructed from the UTMPX entry.
+      An event object (instance of UtmpxMacOsXEvent) for each logon/logoff
+      event.
     """
-    data = file_object.read(self._utmpx_record_size)
-    if len(data) != self._utmpx_record_size:
-      return
+    file_object = file_entry.GetFileObject()
+    if not self._VerifyStructure(file_object):
+      raise errors.UnableToParseFile(
+          u'The file is not an UTMPX file.')
 
-    try:
-      entry = self.MAC_UTMPX_ENTRY.parse(data)
-    except (IOError, construct.FieldError) as e:
-      logging.warning(
-          u'Unable to parse Mac OS X UTMPX entry with error: {0:s}'.format(e))
-      return
-
-    user, _, _ = entry.user.partition('\x00')
-    if not user:
-      user = 'N/A'
-    terminal, _, _ = entry.tty_name.partition('\x00')
-    if not terminal:
-      terminal = 'N/A'
-    computer_name, _, _ = entry.hostname.partition('\x00')
-    if not computer_name:
-      computer_name = 'localhost'
-
-    value_status = self.MAC_STATUS_TYPE.get(entry.status_type, 'N/A')
-    status = u'{0}'.format(value_status)
-
-    timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
-        entry.timestamp, entry.microsecond)
-
-    return UtmpxMacOsXEvent(timestamp, user, terminal, status, computer_name)
-
+    event_object = self._ReadEntry(file_object)
+    while event_object:
+      event_object.offset = file_object.tell()
+      yield event_object
+      event_object = self._ReadEntry(file_object)

@@ -17,10 +17,7 @@
 # limitations under the License.
 """File for PyVFS migration to contain generic VFS related functionality."""
 
-from plaso.lib import errors
 from plaso.pvfs import pfile_system
-
-import pytsk3
 
 
 class FilesystemCache(object):
@@ -63,40 +60,3 @@ class FilesystemCache(object):
       self.cached_filesystems[file_system_hash] = file_system
 
     return self.cached_filesystems[file_system_hash]
-
-
-def GetPartitionMap(image_path):
-  """Returns a list of dict objects representing partition information.
-
-  Args:
-    image_path: The path to the image file.
-
-  Returns:
-    A list that contains a dict object for each partition in the image. The
-    dict contains the partition number (address), description of it alongside
-    an offset and length of the partition size.
-  """
-  partition_map = []
-  try:
-    img = pytsk3.Img_Info(image_path)
-  except IOError as exception:
-    raise errors.UnableToOpenFilesystem(
-        u'Unable to open image file with error: {0:s}'.format(exception))
-
-  try:
-    volume = pytsk3.Volume_Info(img)
-  except IOError as exception:
-    raise errors.UnableToOpenFilesystem(
-        u'Unable to open file system with error: {0:s}'.format(exception))
-
-  block_size = getattr(volume.info, 'block_size', 512)
-  partition_map.append(block_size)
-
-  for part in volume:
-    partition_map.append({
-        'address': part.addr,
-        'description': part.desc,
-        'offset': part.start,
-        'length': part.len})
-
-  return partition_map

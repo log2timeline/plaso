@@ -17,8 +17,11 @@
 # limitations under the License.
 """Plist plugin related functions and classes for testing."""
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.parsers import test_lib
-from plaso.pvfs import pfile
 
 
 class PlistPluginTestCase(test_lib.ParserTestCase):
@@ -37,10 +40,11 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A generator of event objects as returned by the plugin.
     """
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', path)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=path)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     top_level_object = parser_object.GetTopLevel(file_object)
     self.assertNotEquals(top_level_object, None)
 
