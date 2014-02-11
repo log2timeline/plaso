@@ -84,7 +84,7 @@ class WinLnkParser(parser.BaseParser):
       An event container (EventContainer) that contains the parsed
       attributes.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     lnk_file = pylnk.file()
     lnk_file.set_ascii_codepage(self._codepage)
 

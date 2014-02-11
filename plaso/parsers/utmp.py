@@ -125,7 +125,7 @@ class UtmpParser(parser.BaseParser):
       An UtmpEvent for each entry.
     """
 
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     try:
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
@@ -238,4 +238,3 @@ class UtmpParser(parser.BaseParser):
     if not text:
       return default_string
     return text
-

@@ -225,6 +225,9 @@ if __name__ == '__main__':
   if not CheckPythonModule('google.protobuf', '', ''):
     check_result = False
 
+  if not CheckPythonModule('dfvfs', '__version__', '20140211'):
+    check_result = False
+
   if not CheckPythonModule('sqlite3', 'sqlite_version', '3.7.8'):
     check_result = False
 
@@ -237,10 +240,13 @@ if __name__ == '__main__':
   libyal_check_result = CheckLibyal([
       ('pyevt', None),
       ('pyevtx', None),
+      ('pyewf', 20131210),
       ('pylnk', 20130304),
       ('pymsiecf', 20130317),
       ('pyolecf', 20131012),
+      ('pyqcow', 20131204),
       ('pyregf', 20130716),
+      ('pyvhdi', 20131210),
       ('pyvshadow', 20131209),
   ])
 

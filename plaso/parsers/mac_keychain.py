@@ -204,9 +204,9 @@ class KeychainParser(parser.BaseParser):
       file_entry: a file entry object.
 
     Yields:
-      A KeychainEvent (instance of EventObject) for each record.
+      An event object (instance of KeychainInternetRecordEvent) for each record.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     table_offsets = self._VerifyStructure(file_object)
     if not table_offsets:
       raise errors.UnableToParseFile(
@@ -423,7 +423,7 @@ class KeychainParser(parser.BaseParser):
     try:
       record = self.RECORD_HEADER_APP.parse_stream(file_object)
     except (IOError, construct.FieldError):
-      logging.warning(u'Unknown record header at 0x{:x}'.format(offset))
+      logging.warning(u'Unknown record header at 0x{0:08x}'.format(offset))
       return
     (ssgp_hash, creation_time, last_mod_time, text_description,
      comments, entry_name, account_name) = self._ReadEntryHeader(
@@ -441,4 +441,3 @@ class KeychainParser(parser.BaseParser):
       yield KeychainApplicationRecordEvent(
           last_mod_time, eventdata.EventTimestamp.MODIFICATION_TIME,
           entry_name, account_name, text_description, comments, ssgp_hash)
-

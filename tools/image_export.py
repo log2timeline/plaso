@@ -23,16 +23,17 @@ import logging
 import os
 import sys
 
-from plaso import preprocessors
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso import preprocessors
 from plaso.collector import collector
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import preprocess_interface
 from plaso.lib import queue
-from plaso.pvfs import pfile
-from plaso.pvfs import vss
 
 
 class ImageExtractor(object):
@@ -129,16 +130,32 @@ class ImageExtractor(object):
 
     if process_vss:
       logging.info(u'Extracting files from VSS.')
-      vss_numbers = vss.GetVssStoreCount(self._image_path, self._image_offset)
+      os_path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=self._image_path)
 
-      for store_number in range(0, vss_numbers):
-        logging.info(u'Extracting files from VSS {0:d}/{1:d}'.format(
-            store_number + 1, vss_numbers))
+      if self._image_offset > 0:
+        volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK_PARTITION,
+          start_offset=self._image_offset, parent=os_path_spec)
+      else:
+        volume_path_spec = os_path_spec
+
+      vss_path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
+          parent=volume_path_spec)
+
+      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(vss_path_spec)
+
+      number_of_vss = vss_file_entry.number_of_sub_file_entries
+
+      for store_number in range(0, number_of_vss):
+        logging.info(u'Extracting files from VSS {0:d} out of {1:d}'.format(
+            store_number + 1, number_of_vss))
 
         vss_collector = collector.GenericPreprocessCollector(
             self._pre_obj, self._image_path)
         vss_collector.SetImageInformation(byte_offset=self._image_offset)
-        vss_collector.SetVssInformation(store_number=store_number)
+        vss_collector.SetVssInformation(store_index=store_number)
 
         filename_prefix = 'vss_{0:d}'.format(store_number)
         filter_object = collector.BuildCollectionFilterFromFile(
@@ -228,7 +245,7 @@ class FileSaver(object):
       filename_prefix: optional prefix for the filename. The default is an
                        empty string.
     """
-    file_entry = pfile.PFileResolver.OpenFileEntry(source_path_spec)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
     directory = u''
     filename = file_entry.name
 
@@ -259,7 +276,7 @@ class FileSaver(object):
 
     save_file = True
     if cls.calc_md5:
-      stat = file_entry.Stat()
+      stat = file_entry.GetStat()
       inode = stat.attributes.get('ino', 0)
       md5sum = CalculateHash(file_entry)
       if inode in cls.md5_dict:

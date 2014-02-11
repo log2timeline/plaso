@@ -169,7 +169,7 @@ class CupsIppParser(parser.BaseParser):
     Yields:
       An CUPS IPP event for each time in the file.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:

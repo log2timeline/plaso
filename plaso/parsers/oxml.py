@@ -90,7 +90,7 @@ class OpenXMLParser(parser.BaseParser):
       An event container (EventContainer) that contains the parsed
       attributes.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
 
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(

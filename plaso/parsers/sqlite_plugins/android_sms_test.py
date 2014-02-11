@@ -25,7 +25,6 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import test_lib
-from plaso.pvfs import pfile
 
 
 class AndroidSmsTest(test_lib.SQLitePluginTestCase):

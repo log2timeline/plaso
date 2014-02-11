@@ -17,14 +17,13 @@
 # limitations under the License.
 """This file contains the tests for the Windows Registry library."""
 
-import os
 import unittest
 
-from plaso.pvfs import pfile
+from plaso.winreg import test_lib
 from plaso.winreg import winregistry
 
 
-class RegistryUnitTest(unittest.TestCase):
+class RegistryUnitTest(test_lib.WinRegTestCase):
   """Tests for the Windows Registry library."""
 
   def testMountFile(self):
@@ -32,16 +31,14 @@ class RegistryUnitTest(unittest.TestCase):
     registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
-    test_file = os.path.join('test_data', 'SOFTWARE')
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    test_file = self._GetTestFilePath(['SOFTWARE'])
+    file_entry = self._GetTestFileEntry(test_file)
     winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
     registry.MountFile(winreg_file, u'HKEY_LOCAL_MACHINE\\Software')
 
-    test_file = os.path.join('test_data', 'NTUSER-WIN7.DAT')
-    path_spec = pfile.PFileResolver.CopyPathToPathSpec('OS', test_file)
-    file_entry = pfile.PFileResolver.OpenFileEntry(path_spec)
+    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    file_entry = self._GetTestFileEntry(test_file)
     winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
     with self.assertRaises(KeyError):

@@ -129,58 +129,6 @@ class EventObjectSerializer(object):
     """
 
 
-class EventPathBundleSerializer(object):
-  """Class that implements the event path bundle serializer interface."""
-
-  @abc.abstractmethod
-  def ReadSerialized(cls, serialized):
-    """Reads an event path bundle from serialized form.
-
-    Args:
-      serialized: an object containing the serialized form.
-
-    Returns:
-      An event path bundle (instance of EventPathBundle).
-    """
-
-  @abc.abstractmethod
-  def WriteSerialized(cls, event_path_bundle):
-    """Writes an event path bundle to serialized form.
-
-    Args:
-      event_path_bundle: an event path bundle (instance of EventPathBundle).
-
-    Returns:
-      An object containing the serialized form.
-    """
-
-
-class EventPathSpecSerializer(object):
-  """Class that implements the event path specification serializer interface."""
-
-  @abc.abstractmethod
-  def ReadSerialized(cls, serialized):
-    """Reads an event path specification from serialized form.
-
-    Args:
-      serialized: an object containing the serialized form.
-
-    Returns:
-      An event path specification (instance of EventPathSpec).
-    """
-
-  @abc.abstractmethod
-  def WriteSerialized(cls, event_path_spec):
-    """Writes an event path specification to serialized form.
-
-    Args:
-      event_path_spec: an event path specification (instance of EventPathSpec).
-
-    Returns:
-      An object containing the serialized form.
-    """
-
-
 class EventTagSerializer(object):
   """Class that implements the event tag serializer interface."""
 

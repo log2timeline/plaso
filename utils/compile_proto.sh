@@ -22,4 +22,3 @@ compile()
 }
 
 compile plaso_storage.proto
-compile transmission.proto

@@ -102,7 +102,7 @@ class WinEvtxParser(parser.BaseParser):
     Yields:
       An event object (WinEvtxRecordEvent) that contains the parsed data.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
     evtx_file = pyevtx.file()
     evtx_file.set_ascii_codepage(self._codepage)
 

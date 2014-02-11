@@ -531,7 +531,7 @@ class PcapParser(parser.BaseParser):
       An event container (PcapEventContainer) that contains
       the parsed data.
     """
-    file_object = file_entry.Open()
+    file_object = file_entry.GetFileObject()
 
     # TODO: this is a hack for a limitation in dpkt that expects the file
     # object to have a name. This needs to be fixed properly by creating
