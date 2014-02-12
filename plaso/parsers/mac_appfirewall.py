@@ -63,6 +63,8 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on appfirewall.log file."""
   NAME = 'mac_appfirewall_log'
 
+  ENCODING = u'utf-8'
+
   # Regular expressions for known actions.
 
   # Define how a log line should look like.
@@ -207,9 +209,9 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
   def _GetYear(self, stat, zone):
     """Retrieves the year either from the input file or from the settings."""
-    time = stat.attributes.get('crtime', 0)
+    time = getattr(stat, 'crtime', 0)
     if not time:
-      time = stat.attributes.get('ctime', 0)
+      time = getattr(stat, 'ctime', 0)
 
     if not time:
       logging.error(
