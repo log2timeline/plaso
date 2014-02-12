@@ -62,6 +62,8 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
   NAME = 'macwifi'
 
+  ENCODING = u'utf-8'
+
   # Regular expressions for known actions.
   RE_CONNECTED = re.compile(r'Already\sassociated\sto\s(.*)\.\sBailing')
   RE_WIFI_PARAMETERS = re.compile(
@@ -174,9 +176,9 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
   def _GetYear(self, stat, zone):
     """Retrieves the year either from the input file or from the settings."""
-    time = stat.attributes.get('crtime', 0)
+    time = getattr(stat, 'crtime', 0)
     if not time:
-      time = stat.attributes.get('ctime', 0)
+      time = getattr(stat, 'ctime', 0)
 
     if not time:
       logging.error(
@@ -219,13 +221,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       return
     self._last_month = month
 
-    # Pyparsing reads in RAW, but the text is in UTF8.
-    try:
-      text = structure.text.decode('utf-8')
-    except UnicodeDecodeError:
-      logging.warning(
-          'Decode UTF8 failed, the message string may be cut short.')
-      text = structure.text.decode('utf-8', 'ignore')
+    text = structure.text
 
     # Due to the use of CharsNotIn pyparsing structure contains whitespaces
     # that need to be removed.

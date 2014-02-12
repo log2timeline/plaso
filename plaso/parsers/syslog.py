@@ -94,9 +94,9 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
 
   def GetYear(self, stat, zone):
     """Retrieves the year either from the input file or from the settings."""
-    time = stat.attributes.get('crtime', 0)
+    time = getattr(stat, 'crtime', 0)
     if not time:
-      time = stat.attributes.get('ctime', 0)
+      time = getattr(stat, 'ctime', 0)
 
     if not time:
       logging.error(

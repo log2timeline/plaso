@@ -1,4 +1,4 @@
-Feb 26 19:11:56 secd[1] <Error> [user{} ]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle  
+Feb 26 19:11:56 secd[1] <Error> [user{} ]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle Þetta ætti að virka líka, setja íslensku inn.
 Dec 26 19:11:57 secd[11] <Notice> [serverxpc{SOSCCThisDeviceIsInCircle} ]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle
 Dec 26 19:11:58 secd[111] <Debug> [user{} ]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle
 Dec 26 19:11:59 secd[1111] <Error> [user{SOSCCThisDeviceIsInCircle} C0x7fff872fa482]: securityd_xpc_dictionary_handler EscrowSecurityAl[3273] DeviceInCircle
