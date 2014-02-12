@@ -56,7 +56,7 @@ def IsText(bytes_in, encoding=None):
   # Start with the assumption we are dealing with a text.
   is_ascii = True
 
-  # Check if this is ASCII string.
+  # Check if this is ASCII text string.
   for char in bytes_in:
     if not 31 < ord(char) < 128:
       is_ascii = False
@@ -66,24 +66,32 @@ def IsText(bytes_in, encoding=None):
   if is_ascii:
     return is_ascii
 
+  # Is this already a unicode text?
+  if type(bytes_in) == unicode:
+    return True
+
   # Check if this is UTF-8
   try:
-    _ = bytes_in.encode('utf-8')
+    _ = bytes_in.decode('utf-8')
     return True
-  except UnicodeError:
+  except UnicodeDecodeError:
     pass
 
-  try:
-    _ = bytes_in.encode('utf-16')
-    return True
-  except UnicodeError:
-    pass
+  # TODO: UTF 16 decode is successful in too
+  # many edge cases where we are not really dealing with
+  # a text at all. Leaving this out for now, consider
+  # re-enabling or making a better determination.
+  #try:
+  #  _ = bytes_in.decode('utf-16-le')
+  #  return True
+  #except UnicodeDecodeError:
+  #  pass
 
   if encoding:
     try:
-      _ = bytes_in.encode(encoding)
+      _ = bytes_in.decode(encoding)
       return True
-    except UnicodeError:
+    except UnicodeDecodeError:
       pass
     except LookupError:
       logging.error(

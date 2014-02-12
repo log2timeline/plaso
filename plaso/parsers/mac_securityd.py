@@ -75,6 +75,8 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
   NAME = 'mac_securityd'
 
+  ENCODING = u'utf-8'
+
   # Default ASL Securityd log.
   SECURITYD_LINE = (
     text_parser.PyparsingConstants.MONTH.setResultsName('month') +
@@ -177,7 +179,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
     if key == 'logline':
       self.previous_structure = structure
-      message = self._RawToUTF8(structure.message)
+      message = structure.message
     else:
       times = structure.times
       structure = self.previous_structure
@@ -229,9 +231,9 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
   def _GetYear(self, stat, zone):
     """Retrieves the year either from the input file or from the settings."""
-    time = stat.attributes.get('crtime', 0)
+    time = getattr(stat, 'crtime', 0)
     if not time:
-      time = stat.attributes.get('ctime', 0)
+      time = getattr(stat, 'ctime', 0)
 
     if not time:
       logging.error(
@@ -247,23 +249,3 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
            'one, error msg: %s', e))
       return timelib.GetCurrentYear()
     return timestamp.year
-
-  # TODO: this method has been used in other pyparsing parsers. It should be
-  #       implemented as a plaso method.
-  def _RawToUTF8(self, text):
-    """Pyparsing reads in RAW, but the text must be in UTF8.
-
-    Args:
-      text: A raw byte string.
-
-    Returns:
-      A decoded UTF-8 string..
-    """
-    try:
-      text = text.decode('utf-8')
-    except UnicodeDecodeError:
-      logging.warning(
-          u'Decode UTF8 failed, the message string may be cut short.')
-      text = text.decode('utf-8', 'ignore')
-    return text
-

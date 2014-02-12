@@ -81,7 +81,7 @@ class PlistParser(parser.BaseParser):
       raise errors.UnableToParseFile(
           u'[PLIST] File is not a plist file: {0:s}'.format(
               utils.GetUnicodeString(exception)))
-    except (LookupError, binascii.Error) as exception:
+    except (LookupError, binascii.Error, ValueError) as exception:
       raise errors.UnableToParseFile(
           u'[PLIST] Unable to parse XML file, reason: {0:s}'.format(
               exception))
