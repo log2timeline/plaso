@@ -110,7 +110,7 @@ def OpenVssFile(path, image_path, store_number, image_offset):
   return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
 
-def OpenTskFile(path, image_path, image_offset):
+def OpenTskFile(image_path, image_offset, path=None, inode=None):
   """Opens a file entry of a file inside an image file."""
   path_spec = path_spec_factory.Factory.NewPathSpec(
       definitions.TYPE_INDICATOR_OS, location=image_path)
@@ -122,8 +122,15 @@ def OpenTskFile(path, image_path, image_offset):
   else:
     volume_path_spec = path_spec
 
-  path_spec = path_spec_factory.Factory.NewPathSpec(
-      definitions.TYPE_INDICATOR_TSK, location=path, parent=volume_path_spec)
+  if inode is not None:
+    if path is None:
+      path = u''
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK, inode=inode, location=path,
+        parent=volume_path_spec)
+  else:
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK, location=path, parent=volume_path_spec)
 
   return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 

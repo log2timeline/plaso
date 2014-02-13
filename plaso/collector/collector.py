@@ -23,6 +23,7 @@ import os
 import sre_constants
 
 from dfvfs.lib import definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -49,8 +50,8 @@ def _SendContainerToStorage(file_entry, storage_queue_producer):
   for event_object in event_generator:
     # TODO: dfVFS refactor: move display name to output since the path
     # specification contains the full information.
-    event_object.display_name = file_entry.path_spec.comparable.replace(
-        u'\n', u';')
+    event_object.display_name = u'{:s}:{:s}'.format(
+        file_entry.path_spec.type_indicator, file_entry.name)
 
     event_object.filename = file_entry.name
     event_object.pathspec = file_entry.path_spec
@@ -87,7 +88,7 @@ class Collector(queue.PathSpecQueueProducer):
     self._process_vss = None
     self._sector_offset = None
     self._storage_queue_producer = storage_queue_producer
-    self._source_path = source_path
+    self._source_path = os.path.abspath(source_path)
     self._vss_stores = None
     self.collect_directory_metadata = True
 
@@ -147,7 +148,12 @@ class Collector(queue.PathSpecQueueProducer):
     sub_directories = []
 
     for sub_file_entry in file_entry.sub_file_entries:
-      if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
+      try:
+        if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
+          continue
+      except dfvfs_errors.BackEndError as exception:
+        logging.warning(u'Unable to process file: {0:s} <{1:s}>'.format(
+            sub_file_entry.display_name, exception))
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles

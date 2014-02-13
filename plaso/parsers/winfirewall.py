@@ -46,7 +46,9 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   BLANK = pyparsing.Literal('-')
   WORD = pyparsing.Word(pyparsing.alphanums + '-') | BLANK
   INT = pyparsing.Word(pyparsing.nums, min=1) | BLANK
-  IP = text_parser.PyparsingConstants.IPV4_ADDRESS | BLANK
+  IP = (
+      text_parser.PyparsingConstants.IPV4_ADDRESS |
+      text_parser.PyparsingConstants.IPV6_ADDRESS | BLANK)
   PORT = pyparsing.Word(pyparsing.nums, min=1, max=6) | BLANK
 
   # Define how a log line should look like.
