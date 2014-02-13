@@ -457,11 +457,10 @@ class Engine(object):
                 thread_nr, thread.exitcode))
         thread.terminate()
 
-    self._storage_queue_producer.SignalEndOfInput()
-
     logging.info(u'Processing is done, waiting for storage to complete.')
-    self.storage_thread.join()
 
+    self._storage_queue_producer.SignalEndOfInput()
+    self.storage_thread.join()
     logging.info(u'Storage is done.')
 
   def _StoreCollectionInformation(self, obj):

@@ -169,7 +169,8 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
       An event object (EventObject) that contains the parsed
       attributes.
     """
-    path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', u';')
+    path_spec_printable = u'{:s}:{:s}'.format(
+        file_entry.path_spec.type_indicator, file_entry.name)
     file_object = file_entry.GetFileObject()
 
     self.file_entry = file_entry
@@ -826,6 +827,16 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       return
 
     self._buffer += filehandle.read(self.BUFFER_SIZE)
+
+    # If a parser specifically indicates specific encoding we need
+    # to handle the buffer as it is an unicode string.
+    # If it fails we fail back to the original raw string.
+    if self.encoding:
+      try:
+        buffer_decoded = self._buffer.decode(self.encoding)
+        self._buffer = buffer_decoded
+      except UnicodeDecodeError:
+        pass
 
   def _NextLine(self, filehandle):
     """Move to the next newline in the buffer."""
