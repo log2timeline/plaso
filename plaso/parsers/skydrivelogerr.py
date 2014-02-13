@@ -33,12 +33,11 @@ class SkyDriveLogErrorEvent(event.TimestampEvent):
   """Convenience class for a SkyDrive error log line event."""
   DATA_TYPE = 'skydrive:error:line'
 
-  def __init__(self, timestamp, offset, module, source_code, text, detail):
+  def __init__(self, timestamp, module, source_code, text, detail):
     """Initializes the event object.
 
     Args:
       timestamp: Milliseconds since epoch in UTC.
-      offset: The offset of the event in the file.
       module: The module name that generated the log line.
       source_code: Logging source file and line number.
       text: The error text message.
@@ -46,7 +45,6 @@ class SkyDriveLogErrorEvent(event.TimestampEvent):
     """
     super(SkyDriveLogErrorEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
-    self.offset = offset
     self.module = module
     self.source_code = source_code
     self.text = text
@@ -58,7 +56,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
 
   NAME = 'skydrive_log_error'
 
-  ENCODING = 'UTF-8'
+  ENCODING = 'utf-8'
 
   # Common SDE (SkyDriveError) structures.
   INTEGER_CAST = text_parser.PyParseIntCast
@@ -117,7 +115,6 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       ('header', SDE_HEADER),
   ]
 
-
   def __init__(self, pre_obj, config=None):
     """Initializes the parser.
 
@@ -127,7 +124,6 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     """
     super(SkyDriveLogErrorParser, self).__init__(pre_obj, config)
     self.use_local_zone = False
-    self.offset = 0
 
   def VerifyStructure(self, line):
     """Verify that this file is a SkyDrive Error log file."""
@@ -162,7 +158,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       return
     # Replace newlines with spaces in structure.detail to preserve output.
     return SkyDriveLogErrorEvent(
-        timestamp, self.offset, structure.module, structure.source_code,
+        timestamp, structure.module, structure.source_code,
         structure.text, structure.detail.replace(u'\r\n', u' '))
 
   def _ParseHeader(self, structure):
@@ -187,7 +183,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
         structure.log_start, structure.ver_str, structure.ver_num)
     detail = u'{} {}'.format(structure.lt_str, structure.details)
     return SkyDriveLogErrorEvent(
-        timestamp, self.offset, None, None, text, detail)
+        timestamp, None, None, text, detail)
 
   def _GetTimestampFromHeader(self, structure):
     """Gets a timestamp from the structure.
@@ -235,6 +231,4 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       logging.warning(u'SkyDriveLogError invalid log line timestamp')
       return 0
     return timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second, microsecond) 
-
-
+        year, month, day, hour, minute, second, microsecond)

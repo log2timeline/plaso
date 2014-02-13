@@ -123,8 +123,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
     # TODO: dfVFS refactor: move display name to output since the path
     # specification contains the full information.
-    event_object.display_name = file_entry.path_spec.comparable.replace(
-        u'\n', u';')
+    event_object.display_name = u'{:s}:{:s}'.format(
+        file_entry.path_spec.type_indicator, file_entry.name)
 
     event_object.filename = file_entry.name
     event_object.pathspec = file_entry.path_spec

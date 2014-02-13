@@ -42,7 +42,7 @@ class MacBsmEvent(event.EventObject):
 
   def __init__(
       self, event_type, timestamp, extra_tokens,
-      return_value, record_length):
+      return_value, record_length, offset):
     """Initializes the event object.
 
     Args:
@@ -51,6 +51,7 @@ class MacBsmEvent(event.EventObject):
       extra_tokens: List of the extra tokens of the entry.
       return_value: String with the process return value and exit status.
       record_length: Record length in bytes (trailer number).
+      offset: The offset in bytes to where the record starts in the file.
     """
     super(MacBsmEvent, self).__init__()
     self.timestamp = timestamp
@@ -59,6 +60,7 @@ class MacBsmEvent(event.EventObject):
     self.extra_tokens = extra_tokens
     self.return_value = return_value
     self.record_length = record_length
+    self.offset = offset
 
 
 class BsmEvent(event.EventObject):
@@ -67,7 +69,7 @@ class BsmEvent(event.EventObject):
   DATA_TYPE = 'bsm:event'
 
   def __init__(
-      self, event_type, timestamp, extra_tokens, record_length):
+      self, event_type, timestamp, extra_tokens, record_length, offset):
     """Initializes the event object.
 
     Args:
@@ -75,6 +77,7 @@ class BsmEvent(event.EventObject):
       timestamp: Timestamp of the entry.
       extra_tokens: List of the extra tokens of the entry.
       record_length: Record length in bytes (trailer number).
+      offset: The offset in bytes to where the record starts in the file.
     """
     super(BsmEvent, self).__init__()
     self.timestamp = timestamp
@@ -82,6 +85,7 @@ class BsmEvent(event.EventObject):
     self.event_type = event_type
     self.extra_tokens = extra_tokens
     self.record_length = record_length
+    self.offset = offset
 
 
 class BsmParser(parser.BaseParser):
@@ -626,7 +630,7 @@ class BsmParser(parser.BaseParser):
         trailer = 'Trailer unknown'
       return MacBsmEvent(
           event_type, timestamp, u'. '.join(extra_tokens),
-          return_value, trailer)
+          return_value, trailer, offset)
     else:
       # Generic BSM format.
       if extra_tokens:
@@ -638,7 +642,7 @@ class BsmParser(parser.BaseParser):
       else:
         trailer = 'Trailer unknown'
       return BsmEvent(
-          event_type, timestamp, u'. '.join(extra_tokens), trailer)
+          event_type, timestamp, u'. '.join(extra_tokens), trailer, offset)
 
   def VerifyFile(self, file_object):
     """Check if the file is a BSM file.
