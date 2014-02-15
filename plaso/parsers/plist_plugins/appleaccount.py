@@ -67,19 +67,23 @@ class AppleAccountPlugin(interface.PlistPlugin):
 
     for name_account, account in self.match['Accounts'].iteritems():
       general_description = u'{} ({} {})'.format(
-          name_account, account['FirstName'], account['LastName'])
+          name_account, account.get('FirstName', '<FirstName>'),
+          account.get('LastName', '<LastName>'))
       key = name_account
       description = u'Configured Apple account {}'.format(general_description)
       time = timelib.Timestamp.FromPythonDatetime(
           account['CreationDate'])
       yield plist_event.PlistEvent(root, key, time, description)
-      description = u'Connected Apple account {}'.format(general_description)
-      time = timelib.Timestamp.FromPythonDatetime(
-          account['LastSuccessfulConnect'])
-      yield plist_event.PlistEvent(root, key, time, description)
-      description = u'Last validation Apple account {}'.format(
-          general_description)
-      time = timelib.Timestamp.FromPythonDatetime(
-          account['ValidationDate'])
-      yield plist_event.PlistEvent(root, key, time, description)
 
+      if 'LastSuccessfulConnect' in account:
+        description = u'Connected Apple account {}'.format(general_description)
+        time = timelib.Timestamp.FromPythonDatetime(
+            account['LastSuccessfulConnect'])
+        yield plist_event.PlistEvent(root, key, time, description)
+
+      if 'ValidationDate' in account:
+        description = u'Last validation Apple account {}'.format(
+            general_description)
+        time = timelib.Timestamp.FromPythonDatetime(
+            account['ValidationDate'])
+        yield plist_event.PlistEvent(root, key, time, description)

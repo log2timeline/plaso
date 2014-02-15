@@ -156,6 +156,17 @@ class UtmpxParser(parser.BaseParser):
     except (IOError, construct.FieldError):
       return False
     user, _, _ = header.user.partition('\x00')
+
+    # The UTMPX_ENTRY structure will often succesfully compile on various
+    # structures, such as binary plist files, and thus we need to do some
+    # additional validation. The first one is to check if the user name
+    # can be converted into a unicode string, otherwise we can assume
+    # we are dealing with non UTMPX data.
+    try:
+      _ = unicode(user)
+    except UnicodeDecodeError:
+      return False
+
     if user != u'utmpx-1.00':
       return False
     if self.MAC_STATUS_TYPE[header.status_type] != 'SIGNATURE':

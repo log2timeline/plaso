@@ -167,20 +167,20 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     """Parse each record structure and return an EventObject if applicable."""
     if key == 'logline':
       if not self.xchat_year:
-        logging.debug(u'XChatLogParser, missing year information')
+        logging.debug(u'XChatLogParser, missing year information.')
         return
       timestamp = self._GetTimestamp(structure, self.xchat_year)
       if not timestamp:
-        logging.debug(u'XChatLogParser, cannot get timestamp from line')
+        logging.debug(u'XChatLogParser, cannot get timestamp from line.')
         return
       # The text string contains multiple unnecessary whitespaces that need to
-      # be removed, thus the split and re-join. 
+      # be removed, thus the split and re-join.
       return XChatLogEvent(
           timestamp, u' '.join(structure.text.split()), structure.nickname)
     elif key == 'header':
       timestamp = self._GetTimestamp(structure)
       if not timestamp:
-        logging.warning(u'XChatLogParser, cannot get timestamp from header')
+        logging.warning(u'XChatLogParser, cannot get timestamp from header.')
         return
       if structure.log_action == u'BEGIN':
         return XChatLogEvent(timestamp, u'XChat start logging')
@@ -189,14 +189,15 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
         self.xchat_year = 0
         return XChatLogEvent(timestamp, u'XChat end logging')
       else:
-        logging.warning(u'Unknown log action: %s' % structure.log_action)
+        logging.warning(u'Unknown log action: {:s}.'.format(
+            structure.log_action))
     elif key == 'header_signature':
       # If this key is matched (after others keys failed) we got a different
       # localized header and we should stop parsing until a new good header
       # is found. Stop parsing is done setting xchat_year to 0.
       # Note that the code assumes that LINE_STRUCTURES will be used in the
       # exact order as defined!
-      logging.warning(u'Unknown locale header')
+      logging.warning(u'Unknown locale header.')
       self.xchat_year = 0
     else:
       logging.warning(

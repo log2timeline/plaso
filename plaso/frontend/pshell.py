@@ -82,7 +82,7 @@ def FindAllParsers():
   return putils.FindAllParsers()
 
 
-def GetEventData(event_proto, before):
+def GetEventData(event_proto, before=0):
   """Prints a hexdump of the event data."""
   return frontend_utils.OutputWriter.GetEventDataHexDump(event_proto, before)
 
