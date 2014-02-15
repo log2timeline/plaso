@@ -271,9 +271,11 @@ class StoreStorageTest(unittest.TestCase):
   def setUp(self):
     """Setup sets parameters that will be reused throughout this test."""
     # TODO: have sample output generated from the test.
+    # TODO: Use input data with a defined year.  syslog parser chooses a
+    # year based on system clock; forcing updates to test file if regenerated.
     self.test_file = os.path.join('test_data', 'psort_test.out')
-    self.first = 1342799054000000  # Fri, 20 Jul 2012 15:44:14 GMT
-    self.last = 1342824552000000  # Fri, 20 Jul 2012 22:49:12 GMT
+    self.first = 1342799054000000  # 2012-07-20T15:44:14+00:00
+    self.last = 1479431743000000 # 2016-11-18T01:15:43+00:00
 
   def testStorageSort(self):
     """This test ensures that items read and output are in the expected order.
@@ -290,7 +292,7 @@ class StoreStorageTest(unittest.TestCase):
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
     store = storage.StorageFile(self.test_file, read_only=True)
 
-    store.store_range = [6, 11, 12]
+    store.store_range = [1, 5, 6]
 
     read_list = []
     event_object = store.GetSortedEntry()
@@ -299,10 +301,8 @@ class StoreStorageTest(unittest.TestCase):
       event_object = store.GetSortedEntry()
 
     expected_timestamps = [
-        1342824534000000L, 1342824535000000L, 1342824546000000L,
-        1342824546000000L, 1342824546000000L, 1342824552000000L,
-        1342824552000000L, 1342824552000000L, 1342824552000000L,
-        1342824552000000L]
+        1344270407000000L, 1392438730000000L, 1427151678000000L,
+        1451584472000000L]
 
     self.assertEquals(read_list, expected_timestamps)
 
