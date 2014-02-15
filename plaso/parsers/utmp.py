@@ -105,6 +105,12 @@ class UtmpParser(parser.BaseParser):
       8: 'DEAD_PROCESS',
       9: 'ACCOUNTING'}
 
+  # Set a default test value for few fields, this is supposed to be a text
+  # that is highly unlikely to be seen in a terminal field, or a username field.
+  # It is important that this value does show up in such fields, but otherwise
+  # it can be a free flowing text field.
+  _DEFAULT_TEST_VALUE = u'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
+
   def __init__(self, pre_obj, config=None):
     """Initializes the parser.
 
@@ -137,17 +143,32 @@ class UtmpParser(parser.BaseParser):
           u'Not an UTMP file, unknown type '
           u'[{}].').format(structure.type))
     if not self._VerifyTextField(structure.terminal):
-      raise errors.UnableToParseFile((
-          u'Not an UTMP file, unknown terminal'
-          u'[{}].').format(structure.terminal))
+      raise errors.UnableToParseFile(
+          u'Not an UTMP file, unknown terminal.')
     if not self._VerifyTextField(structure.username):
-      raise errors.UnableToParseFile((
-          u'Not an UTMP file, unknown username'
-          u'[{}].').format(structure.username))
+      raise errors.UnableToParseFile(
+          u'Not an UTMP file, unknown username.')
     if not self._VerifyTextField(structure.hostname):
-      raise errors.UnableToParseFile((
-          u'Not an UTMP file, unknown hostname '
-          u'[{}].').format(structure.hostname))
+      raise errors.UnableToParseFile(
+          u'Not an UTMP file, unknown hostname.')
+
+    # Check few values.
+    terminal = self._GetTextFromNullTerminatedString(
+        structure.terminal, self._DEFAULT_TEST_VALUE)
+    if terminal == self._DEFAULT_TEST_VALUE:
+      raise errors.UnableToParseFile(
+          u'Not an UTMP file, no terminal set.')
+
+    username = self._GetTextFromNullTerminatedString(
+        structure.username, self._DEFAULT_TEST_VALUE)
+
+    if username == self._DEFAULT_TEST_VALUE:
+      raise errors.UnableToParseFile(
+          u'Not an UTMP file, no username set.')
+
+    if not structure.timestamp:
+      raise errors.UnableToParseFile(
+          u'Not an UTMP file, no timestamp set in the first record.')
 
     file_object.seek(0, os.SEEK_SET)
     event_object = self._ReadUtmpEvent(file_object)
@@ -209,9 +230,8 @@ class UtmpParser(parser.BaseParser):
       except (IOError, construct.FieldError, socket.error):
         ip_address = u'N/A'
     else:
-      ip_address = u'.'.join(
-          [entry.address_a, entry.address_b,
-           entry.address_c, entry.address_d])
+      ip_address = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+          entry.address_a, entry.address_b, entry.address_c, entry.address_d)
 
     return UtmpEvent(entry.timestamp, entry.microsecond, user,
         computer_name, terminal, status, ip_address, entry)
@@ -233,7 +253,7 @@ class UtmpParser(parser.BaseParser):
       text = text.decode('utf-8')
     except UnicodeDecodeError:
       logging.warning(
-          u'Decode UTF8 failed, the message string may be cut short.')
+          u'[UTMP] Decode UTF8 failed, the message string may be cut short.')
       text = text.decode('utf-8', 'ignore')
     if not text:
       return default_string

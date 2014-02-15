@@ -48,12 +48,12 @@ class MactimeUnitTest(test_lib.ParserTestCase):
     # Test this entry:
     # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961583|
     # 1337961584|1337961585|0
-    event_object = event_objects[11]
+    event_object = event_objects[10]
 
     self.assertEquals(event_object.timestamp, 0)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEquals(event_object.inode, u'16')
+    self.assertEquals(event_object.inode, 16)
 
     event_object = event_objects[8]
 
@@ -64,13 +64,13 @@ class MactimeUnitTest(test_lib.ParserTestCase):
     expected_string = u'/a_directory/another_file'
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
-    event_object = event_objects[9]
+    event_object = event_objects[11]
 
     self.assertEquals(event_object.timestamp, 1337961584000000)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    event_object = event_objects[10]
+    event_object = event_objects[9]
 
     self.assertEquals(event_object.timestamp, 1337961585000000)
     self.assertEquals(
