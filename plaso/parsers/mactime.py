@@ -81,8 +81,17 @@ class MactimeParser(text_parser.TextCSVParser):
     for key, value in row.items():
       if key == 'md5' and value == '0':
         continue
-      if key not in ('atime', 'mtime', 'ctime', 'crtime'):
+      if key in self._TIMESTAMP_DESC_MAP.keys():
+        continue
+
+      if key == 'inode':
+        try:
+          container.inode = int(value, 10)
+        except ValueError:
+          pass
+      else:
         setattr(container, key, value)
+
       # TODO: Refactor into a helper so this can be used by other
       # modules as well.
       if key == 'uid':
@@ -94,7 +103,7 @@ class MactimeParser(text_parser.TextCSVParser):
             if user.get('uid', '') == value:
               container.username = user.get('name', 'N/A')
 
-    for key in ('atime', 'mtime', 'ctime', 'crtime'):
+    for key in self._TIMESTAMP_DESC_MAP.keys():
       value = row.get(key, 0)
       if value:
         container.Append(MactimeEvent(

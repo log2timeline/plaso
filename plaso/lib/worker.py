@@ -21,6 +21,7 @@ import logging
 import os
 import pdb
 
+from dfvfs.lib import definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -90,13 +91,13 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
           path_spec.comparable, exception))
 
     if self.config.open_files:
-      for sub_file_entry in classifier.SmartOpenFiles(file_entry):
-        try:
+      try:
+        for sub_file_entry in classifier.Classifier.SmartOpenFiles(file_entry):
           self.ParseFile(sub_file_entry)
-        except IOError as exception:
-          logging.warning(
-              u'Unable to parse file: {0:s} with error: {2:s}'.format(
-                  sub_file_entry.path_spec.comparable, exception))
+      except IOError as exception:
+        logging.warning(
+            u'Unable to parse file: {0:s} with error: {1:s}'.format(
+                file_entry.path_spec.comparable, exception))
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
@@ -121,12 +122,28 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     if self.config.text_prepend:
       event_object.text_prepend = self.config.text_prepend
 
+    file_path = getattr(file_entry.path_spec, 'location', file_entry.name)
+    # If we are parsing a mount point we don't want to include the full
+    # path to file's location here, we are only interested in the relative
+    # path to the mount point.
+    type_indicator = getattr(file_entry.path_spec, 'type_indicator', '')
+    # TODO: Solve this differently, quite possibly inside dfVFS using mount
+    # path spec.
+    if type_indicator == definitions.TYPE_INDICATOR_OS and getattr(
+        self.config, 'os', None):
+      mount_path = getattr(self.config, 'filename', '')
+      if mount_path:
+        # Let's keep the end separator so paths begin with '/' or '\'.
+        if mount_path.endswith(os.sep):
+          mount_path = mount_path[:-1]
+        _, _, file_path = file_path.partition(mount_path)
+
     # TODO: dfVFS refactor: move display name to output since the path
     # specification contains the full information.
     event_object.display_name = u'{:s}:{:s}'.format(
-        file_entry.path_spec.type_indicator, file_entry.name)
+        file_entry.path_spec.type_indicator, file_path)
 
-    event_object.filename = file_entry.name
+    event_object.filename = file_path
     event_object.pathspec = file_entry.path_spec
     event_object.parser = parser_name
 

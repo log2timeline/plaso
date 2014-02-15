@@ -467,14 +467,12 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
         event_object.source_short = cls._SOURCE_SHORT_FROM_PROTO_MAP[value]
 
       elif proto_attribute.name == 'pathspec':
-        if hasattr(proto_attribute, 'pathspec'):
-          event_object.pathspec = (
-             cls._path_spec_serializer.ReadSerialized(proto.pathspec))
+        event_object.pathspec = (
+           cls._path_spec_serializer.ReadSerialized(proto.pathspec))
 
       elif proto_attribute.name == 'tag':
-        if hasattr(proto_attribute, 'tag'):
-          event_object.tag = ProtobufEventTagSerializer.ReadSerializedObject(
-             proto.tag)
+        event_object.tag = ProtobufEventTagSerializer.ReadSerializedObject(
+           proto.tag)
 
       elif proto_attribute.name == 'attributes':
         continue

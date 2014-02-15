@@ -325,7 +325,9 @@ def Main():
   # This frontend only deals with local setup of the tool.
   options.local = True
 
-  format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
+  format_str = (
+      u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+      u'<%(module)s> %(message)s')
   if options.debug:
     if options.logfile:
       logging.basicConfig(
