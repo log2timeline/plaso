@@ -156,7 +156,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     # TODO: improving this to get a valid year.
     if not self._year_use:
       # Get from the creation time of the file.
-      self._year_use = self._GetYear(self.file_entry.Stat(), self.local_zone)
+      self._year_use = self._GetYear(self.file_entry.GetStat(), self.local_zone)
       # If fail, get from the current time.
       if not self._year_use:
         self._year_use = timelib.GetCurrentYear()
