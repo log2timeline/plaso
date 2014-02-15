@@ -112,8 +112,8 @@ class PsortTest(unittest.TestCase):
     """Setup sets parameters that will be reused throughout this test."""
     # TODO: have sample output generated from the test.
     self.test_file = os.path.join('test_data', 'psort_test.out')
-    self.first = 1342799054000000  # Fri, 20 Jul 2012 15:44:14 GMT
-    self.last = 1342824552000000  # Fri, 20 Jul 2012 22:49:12 GMT
+    self.first = 1343166324000000 # 2012-07-24T21:45:24+00:00
+    self.last = 1479431743000000  # 2016-11-18T01:15:43+00:00
 
   def testSetupStorage(self):
     storage_cls = psort.SetupStorage(self.test_file)
@@ -133,7 +133,7 @@ class PsortTest(unittest.TestCase):
       timestamp_list.append(event_object.timestamp)
       event_object = store.GetSortedEntry()
 
-    self.assertEquals(len(timestamp_list), 10)
+    self.assertEquals(len(timestamp_list), 8)
     self.assertTrue(timestamp_list[0] >= self.first and
                     timestamp_list[-1] <= self.last)
 
