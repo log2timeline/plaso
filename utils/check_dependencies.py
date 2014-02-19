@@ -133,33 +133,30 @@ def CheckPythonModule(module_name, version_attribute_name, minimum_version):
     True if the Python module is available and conforms to the minimum required
     version. False otherwise.
   """
-  result = True
   try:
     module_object = map(__import__, [module_name])[0]
   except ImportError:
     print u'[FAILURE]\tmissing: {0:s}.'.format(module_name)
-    result = False
+    return False
 
-  if result:
-    if version_attribute_name and minimum_version:
-      module_version = getattr(module_object, version_attribute_name, None)
+  if version_attribute_name and minimum_version:
+    module_version = getattr(module_object, version_attribute_name, None)
 
-      # Split the version string and convert every digit into an integer.
-      # A string compare of both version strings will yield an incorrect result.
-      module_version_map = map(int, module_version.split('.'))
-      minimum_version_map = map(int, minimum_version.split('.'))
-      if module_version_map < minimum_version_map:
-        result = False
-        print (
-            u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
-            u'required.').format(module_name, module_version, minimum_version)
-      else:
-        print u'[OK]\t\t{0:s} version: {1:s}'.format(
-          module_name, module_version)
-    else:
-      print u'[OK]\t\t{0:s}'.format(module_name)
+    # Split the version string and convert every digit into an integer.
+    # A string compare of both version strings will yield an incorrect result.
+    module_version_map = map(int, module_version.split('.'))
+    minimum_version_map = map(int, minimum_version.split('.'))
+    if module_version_map < minimum_version_map:
+      print (
+          u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
+          u'required.').format(module_name, module_version, minimum_version)
+      return False
 
-  return result
+    print u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version)
+  else:
+    print u'[OK]\t\t{0:s}'.format(module_name)
+
+  return True
 
 
 def CheckPytsk():
@@ -168,32 +165,45 @@ def CheckPytsk():
   Returns:
     True if the pytsk3 Python module is available, false otherwise.
   """
-  result = True
   module_name = 'pytsk3'
-  minimum_version = '4.1.2'
+
   try:
     module_object = map(__import__, [module_name])[0]
   except ImportError:
     print u'[FAILURE]\tmissing: {0:s}.'.format(module_name)
-    result = False
+    return False
 
-  if result:
-    module_version = module_object.TSK_VERSION_STR
+  minimum_version = '4.1.2'
+  module_version = module_object.TSK_VERSION_STR
 
-    # Split the version string and convert every digit into an integer.
-    # A string compare of both version strings will yield an incorrect result.
-    module_version_map = map(int, module_version.split('.'))
-    minimum_version_map = map(int, minimum_version.split('.'))
-    if module_version_map < minimum_version_map:
-      result = False
-      print (
-          u'[FAILURE]\tSleuthKit version: {0:s} is too old, {1:s} or later '
-          u'required.').format(module_version, minimum_version)
-    else:
-      print u'[OK]\t\t{0:s} version: {1:s}'.format(
-          module_name, module_version)
+  # Split the version string and convert every digit into an integer.
+  # A string compare of both version strings will yield an incorrect result.
+  module_version_map = map(int, module_version.split('.'))
+  minimum_version_map = map(int, minimum_version.split('.'))
+  if module_version_map < minimum_version_map:
+    print (
+        u'[FAILURE]\tSleuthKit version: {0:s} is too old, {1:s} or later '
+        u'required.').format(module_version, minimum_version)
+    return False
 
-  return result
+  print u'[OK]\t\tSleuthKit version: {0:s}'.format(module_version)
+
+  if not hasattr(module_object, 'get_version'):
+    print u'[FAILURE]\t{0:s} is too old, {1:s} or later required.'.format(
+        module_name, minimum_version)
+    return False
+
+  minimum_version = '20140217'
+  module_version = module_object.get_version()
+  if module_version < minimum_version:
+    print (
+        u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
+        u'required.').format(module_name, module_version, minimum_version)
+    return False
+
+  print u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version)
+
+  return True
 
 
 if __name__ == '__main__':
