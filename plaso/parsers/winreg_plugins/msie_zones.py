@@ -156,7 +156,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
   }
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
@@ -164,18 +164,18 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       Internet Settings\\Lockdown_Zones key
 
     Args:
-      unused_cache: An optional cache object that is not used.
+      key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
       An event object of the an individual Internet Setting Registry key.
     """
     text_dict = {}
 
-    if self._key.number_of_values == 0:
+    if key.number_of_values == 0:
       text_dict[u'Value'] = u'No values stored in key'
 
     else:
-      for value in self._key.GetValues():
+      for value in key.GetValues():
         if not value.name:
           value_name = '(default)'
         else:
@@ -196,26 +196,26 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
         text_dict[value_name] = value_string
 
     yield event.WinRegistryEvent(
-        self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
-        offset=self._key.offset)
+        key.path, text_dict, timestamp=key.last_written_timestamp,
+        offset=key.offset)
 
-    if self._key.number_of_subkeys == 0:
+    if key.number_of_subkeys == 0:
       logging.info('No subkeys for Internet Settings/Zones')
 
       text_dict = {}
       text_dict['Zone Subkeys'] = u'REGALERT No Zones set for Internet Settings'
 
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
-          offset=self._key.offset)
+          key.path, text_dict, timestamp=key.last_written_timestamp,
+          offset=key.offset)
 
     else:
-      for zone_key in self._key.GetSubkeys():
+      for zone_key in key.GetSubkeys():
         # TODO: these values are stored in the Description value of the
         # zone key. This solution will break on zone values that are larger
         # than 5.
         path = u'{0:s}\\{1:s}'.format(
-            self._key.path, self.ZONE_NAMES[zone_key.name])
+            key.path, self.ZONE_NAMES[zone_key.name])
 
         text_dict = {}
 

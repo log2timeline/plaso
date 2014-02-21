@@ -35,13 +35,13 @@ class InstallHistoryPlugin(interface.PlistPlugin):
       ['date', 'displayName', 'displayVersion',
        'processName', 'packageIdentifiers'])
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, top_level, **unused_kwargs):
     """Extracts relevant install history entries.
 
     Yields:
       EventObject objects extracted from the plist.
     """
-    for entry in self._top_level:
+    for entry in top_level:
       time = timelib.Timestamp.FromPythonDatetime(
           entry.get('date'))
       packages = []

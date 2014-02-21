@@ -291,12 +291,13 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
     yield container
 
-  def ParsePageVisitedRow(self, row, cache, **unused_kwargs):
+  def ParsePageVisitedRow(self, row, cache, database, **unused_kwargs):
     """Parses a page visited row.
 
     Args:
       row: The row resulting from the query.
       cache: A cache object (instance of SQLiteCache).
+      database: A database object (instance of SQLiteDatabase).
 
     Yields:
       An event object (FirefoxPlacesPageVisitedEvent) containing the event data.
@@ -305,7 +306,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     extras = []
     if row['from_visit']:
       extras.append(u'visited from: {0}'.format(
-          self._GetUrl(row['from_visit'], cache)))
+          self._GetUrl(row['from_visit'], cache, database)))
 
     if row['hidden'] == '1':
       extras.append('(url hidden)')
@@ -344,11 +345,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         return hostname[::-1][0:]
     return hostname
 
-  def _GetUrl(self, url_id, cache):
+  def _GetUrl(self, url_id, cache, database):
     """Return an URL from a reference to an entry in the from_visit table."""
     url_cache_results = cache.GetResults('url')
     if not url_cache_results:
-      cursor = self.db.cursor
+      cursor = database.cursor
       result_set = cursor.execute(self.URL_CACHE_QUERY)
       cache.CacheQueryResults(
           result_set, 'url', 'id', ('url', 'rev_host'))

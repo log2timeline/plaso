@@ -35,16 +35,16 @@ class USBStorPlugin(interface.KeyPlugin):
   REG_TYPE = 'SYSTEM'
   DESCRIPTION = 'USBStor Entries'
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect Values under USBStor and return an event object for each one."""
-    for subkey in self._key.GetSubkeys():
+    for subkey in key.GetSubkeys():
 
       text_dict = {}
       text_dict['subkey_name'] = subkey.name
 
       # Time last USB device of this class was first inserted.
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=subkey.last_written_timestamp,
+          key.path, text_dict, timestamp=subkey.last_written_timestamp,
           usage=eventdata.EventTimestamp.FIRST_CONNECTED,
           source_append=': {0:s}'.format(self.DESCRIPTION))
 
@@ -80,7 +80,7 @@ class USBStorPlugin(interface.KeyPlugin):
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
         yield event.WinRegistryEvent(
-            self._key.path, text_dict,
+            key.path, text_dict,
             timestamp=devicekey.last_written_timestamp,
             usage=eventdata.EventTimestamp.LAST_CONNECTED,
             source_append=': {0:s}'.format(self.DESCRIPTION))
@@ -104,6 +104,6 @@ class USBStorPlugin(interface.KeyPlugin):
         # Add first Insertion times.
         for timestamp in first_insert:
           yield event.WinRegistryEvent(
-              self._key.path, text_dict, timestamp=timestamp,
+              key.path, text_dict, timestamp=timestamp,
               usage=eventdata.EventTimestamp.LAST_CONNECTED,
               source_append=': {0:s}'.format(self.DESCRIPTION))

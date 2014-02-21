@@ -42,9 +42,9 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
 
   _RE_VALUE_NAME = re.compile(r'^[0-9]+$', re.I)
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect values under WinRAR ArcHistory and return event for each one."""
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       # Ignore any value not in the form: '[0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
         continue
@@ -54,7 +54,7 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
         continue
 
       if value.name == '0':
-        timestamp = self._key.last_written_timestamp
+        timestamp = key.last_written_timestamp
       else:
         timestamp = 0
 
@@ -64,5 +64,5 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
       # TODO: shouldn't this behavior be, put all the values
       # into a single event object with the last written time of the key?
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=timestamp,
+          key.path, text_dict, timestamp=timestamp,
           source_append=': {0:s}'.format(self.DESCRIPTION))

@@ -35,9 +35,9 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Servers',
       u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect Values in Servers and return event for each one."""
-    for subkey in self._key.GetSubkeys():
+    for subkey in key.GetSubkeys():
       username_value = subkey.GetValue('UsernameHint')
 
       if (username_value and username_value.data and
@@ -50,7 +50,7 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       text_dict['UsernameHint'] = username
 
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
+          key.path, text_dict, timestamp=key.last_written_timestamp,
           source_append=': {0:s}'.format(self.DESCRIPTION))
 
 
@@ -66,9 +66,9 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Default',
       u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect MRU Values and return event for each one."""
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       # TODO: add a check for the value naming scheme.
       # Ignore the default value.
       if not value.name:
@@ -82,10 +82,10 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       text_dict[value.name] = value.data
 
       if value.name == 'MRU0':
-        timestamp = self._key.last_written_timestamp
+        timestamp = key.last_written_timestamp
       else:
         timestamp = 0
 
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=timestamp,
+          key.path, text_dict, timestamp=timestamp,
           source_append=u': {0:s}'.format(self.DESCRIPTION))

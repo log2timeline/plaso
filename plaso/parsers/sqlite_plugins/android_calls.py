@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -80,11 +81,14 @@ class AndroidCallPlugin(interface.SQLitePlugin):
         row['date'], row['number'], row['name'], row['duration'], call_type,
         'Call Started')
 
-    try:
-      duration = int(row['duration'])
-      if duration:
-        yield AndroidCallEvent(
-            row['date'] + duration * 1000, row['number'], row['name'],
-            row['duration'], call_type, 'Call Ended')
-    except ValueError:
-      pass
+    duration = row['duration']
+    if isinstance(duration, basestring):
+      try:
+        duration = int(duration, 10)
+      except ValueError:
+        duration = 0
+
+    if duration:
+      yield AndroidCallEvent(
+          row['date'] + duration * 1000, row['number'], row['name'],
+          row['duration'], call_type, 'Call Ended')

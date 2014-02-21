@@ -292,12 +292,13 @@ class SkypePlugin(interface.SQLitePlugin):
           logging.debug(u'Unknown when the call {} was'
                         u'finished.'.format(row['id']))
 
-  def ParseFileTransfer(self, row, cache, **unused_kwargs):
+  def ParseFileTransfer(self, row, cache, database, **unused_kwargs):
     """Parse the transfer files.
 
     Args:
       row: the row with all information related with the file transfers.
       cache: a cache object (instance of SQLiteCache).
+      database: A database object (instance of SQLiteDatabase).
 
     Yields:
       An event SkypeTransferFileEvent when the user gets a file solicitude.
@@ -314,7 +315,7 @@ class SkypePlugin(interface.SQLitePlugin):
     """
     source_dict = cache.GetResults('source')
     if not source_dict:
-      cursor = self.db.cursor
+      cursor = database.cursor
       results = cursor.execute(self.QUERY_SOURCE_FROM_TRANSFER)
       cache.CacheQueryResults(
           results, 'source', 'pk_id', ('skypeid', 'skypename'))
@@ -322,7 +323,7 @@ class SkypePlugin(interface.SQLitePlugin):
 
     dest_dict = cache.GetResults('destination')
     if not dest_dict:
-      cursor = self.db.cursor
+      cursor = database.cursor
       results = cursor.execute(self.QUERY_DEST_FROM_TRANSFER)
       cache.CacheQueryResults(
           results, 'destination', 'parent_id', ('skypeid', 'skypename'))
