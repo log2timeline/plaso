@@ -188,12 +188,12 @@ def CheckPytsk():
 
   print u'[OK]\t\tSleuthKit version: {0:s}'.format(module_version)
 
+  minimum_version = '20140217'
   if not hasattr(module_object, 'get_version'):
     print u'[FAILURE]\t{0:s} is too old, {1:s} or later required.'.format(
         module_name, minimum_version)
     return False
 
-  minimum_version = '20140217'
   module_version = module_object.get_version()
   if module_version < minimum_version:
     print (
