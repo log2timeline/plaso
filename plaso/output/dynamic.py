@@ -131,7 +131,8 @@ class Dynamic(output.FileLogOutputFormatter):
         username = check_user
 
     if username == '-' and hasattr(event_object, 'user_sid'):
-      return getattr(event_object, 'user_sid', '-')
+      return pre_obj.GetUsernameById(
+          getattr(event_object, 'user_sid', '-'))
 
     return username
 

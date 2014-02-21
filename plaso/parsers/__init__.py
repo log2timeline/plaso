@@ -20,6 +20,7 @@
 from plaso.parsers import asl
 from plaso.parsers import bencode_parser
 from plaso.parsers import bsm
+from plaso.parsers import cups_ipp
 from plaso.parsers import filestat
 from plaso.parsers import hachoir
 from plaso.parsers import java_idx
@@ -42,8 +43,8 @@ from plaso.parsers import selinux
 from plaso.parsers import skydrivelog
 from plaso.parsers import skydrivelogerr
 from plaso.parsers import sqlite
-from plaso.parsers import syslog
 from plaso.parsers import symantec
+from plaso.parsers import syslog
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
 from plaso.parsers import winevt
