@@ -28,7 +28,11 @@ import time
 
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.proto import transmission_pb2
 from dfvfs.resolver import resolver as path_spec_resolver
+from dfvfs.serializer import protobuf_serializer
+
+from google.protobuf import text_format
 
 try:
   # Support version 1.X of IPython.
@@ -69,14 +73,21 @@ class PprofEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     super(PprofEventObjectQueueConsumer, self).__init__(queue_object)
     self.counter = collections.Counter()
     self.parsers = []
+    self.plugins = []
 
   def _ConsumeEventObject(self, event_object):
     """Consumes an event object callback for ConsumeEventObject."""
-    parser = getattr(event_object, 'parser', 'N/A')
+    parser = getattr(event_object, 'parser', u'N/A')
     if parser not in self.parsers:
       self.parsers.append(parser)
 
+    plugin = getattr(event_object, 'plugin', u'N/A')
+    if plugin not in self.plugins:
+      self.plugins.append(plugin)
+
     self.counter[parser] += 1
+    if plugin != u'N/A':
+      self.counter[u'[Plugin] {}'.format(plugin)] += 1
     self.counter['Total'] += 1
 
 
@@ -106,6 +117,12 @@ def Main():
       help='A list of parsers to include (see log2timeline documentation).')
 
   arg_parser.add_argument(
+      '--proto', dest='proto_file', action='store', default='', type=unicode,
+      metavar='PROTO_FILE', help=(
+          'A file containing an ASCII PathSpec protobuf describing how to '
+          'open up the file for parsing.'))
+
+  arg_parser.add_argument(
       '-s', '--storage', dest='storage', action='store', type=unicode,
       metavar='PSORT_PARAMETER', default='', help=(
           'Run the profiler against a storage file, with the parameters '
@@ -133,7 +150,7 @@ def Main():
 
   options = arg_parser.parse_args()
 
-  if not options.file_to_parse:
+  if not (options.file_to_parse or options.proto_file):
     arg_parser.print_help()
     print ''
     arg_parser.print_usage()
@@ -141,7 +158,7 @@ def Main():
     logging.error('Not able to run without a file to process.')
     sys.exit(1)
 
-  if not os.path.isfile(options.file_to_parse):
+  if options.file_to_parse and not os.path.isfile(options.file_to_parse):
     logging.error(u'File [{0:s}] needs to exist.'.format(options.file_to_parse))
     sys.exit(1)
 
@@ -213,8 +230,24 @@ def ProcessStorage(options):
 
 def ProcessFile(options):
   """Process a file and produce profile results."""
-  path_spec = path_spec_factory.Factory.NewPathSpec(
-      definitions.TYPE_INDICATOR_OS, location=options.file_to_parse)
+  if options.proto_file and os.path.isfile(options.proto_file):
+    with open(options.proto_file) as fh:
+      proto_string = fh.read()
+
+      proto = transmission_pb2.PathSpec()
+      try:
+        text_format.Merge(proto_string, proto)
+      except text_format.ParseError as exception:
+        logging.error(u'Unable to parse file, error: {}'.format(
+            exception))
+        sys.exit(1)
+
+      serializer = protobuf_serializer.ProtobufPathSpecSerializer
+      path_spec = serializer.ReadSerializedObject(proto)
+  else:
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=options.file_to_parse)
+
   file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   if file_entry is None:
@@ -224,6 +257,12 @@ def ProcessFile(options):
   pre_obj = event.PreprocessObject()
   storage_queue = queue.SingleThreadedQueue()
   storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+
+  # Set few options the engine expects to be there.
+  # TODO: Can we rather set this directly in argparse?
+  options.single_thread = True
+  options.debug = False
+  options.text_prepend = u''
   my_worker = worker.EventExtractionWorker(
       '0', None, storage_queue_producer, config=options, pre_obj=pre_obj)
 
@@ -251,12 +290,27 @@ def ProcessFile(options):
   print utils.FormatHeader('Parsers Loaded')
   # Accessing protected member.
   # pylint: disable-msg=protected-access
+  plugins = []
   for parser in sorted(my_worker._parsers['all']):
     print utils.FormatOutputString('', parser.parser_name)
+    parser_plugins = getattr(parser, '_plugins', [])
+    plugins.extend(parser_plugins)
+
+  print utils.FormatHeader('Plugins Loaded')
+  for plugin in sorted(plugins):
+    if isinstance(plugin, basestring):
+      print utils.FormatOutputString('', plugin)
+    else:
+      plugin_string = getattr(plugin, 'NAME', u'N/A')
+      print utils.FormatOutputString('', plugin_string)
 
   print utils.FormatHeader('Parsers Used')
   for parser in sorted(event_object_consumer.parsers):
     print utils.FormatOutputString('', parser)
+
+  print utils.FormatHeader('Plugins Used')
+  for plugin in sorted(event_object_consumer.plugins):
+    print utils.FormatOutputString('', plugin)
 
   print utils.FormatHeader('Counter')
   for key, value in event_object_consumer.counter.most_common():

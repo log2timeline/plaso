@@ -241,7 +241,8 @@ class Sql4n6(output.LogOutputFormatter):
 
     tags = []
     if hasattr(event_object, 'tag'):
-      tags = event_object.tag.tags
+      if hasattr(event_object.tag, 'tags'):
+        tags = event_object.tag.tags
     taglist = ','.join(tags)
     row = (str(self.zone),
            helper.GetLegacy(event_object),
