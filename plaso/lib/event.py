@@ -861,16 +861,19 @@ class PreprocessObject(object):
     if self._user_ids_to_names is None:
       self._user_ids_to_names = {}
 
-      for user in getattr(self, 'users', []):
-        if hasattr(user, 'sid'):
-          user_id = user.get('sid', '')
-        elif hasattr(user, 'uid'):
-          user_id = user.get('uid', '')
-        else:
-          user_id = ''
+    if self._user_ids_to_names:
+      return self._user_ids_to_names
 
-        if user_id:
-          self._user_ids_to_names[user_id] = user.get('name', user_id)
+    for user in getattr(self, 'users', []):
+      if u'sid' in user:
+        user_id = user.get('sid', '')
+      elif 'uid' in user:
+        user_id = user.get('uid', '')
+      else:
+        user_id = ''
+
+      if user_id:
+        self._user_ids_to_names[user_id] = user.get('name', user_id)
 
     return self._user_ids_to_names
 

@@ -216,6 +216,14 @@ class PluginList(object):
     if issubclass(plugin_class, ValuePlugin):
       self._value_plugins.setdefault(plugin_type, []).append(plugin_class)
 
+  def __iter__(self):
+    """Return an iterator of all Windows Registry plugins."""
+    ret = []
+    _ = map(ret.extend, self._key_plugins.values())
+    _ = map(ret.extend, self._value_plugins.values())
+    for item in ret:
+      yield item
+
   def GetAllKeyPlugins(self):
     """Return all key plugins as a list."""
     ret = []
