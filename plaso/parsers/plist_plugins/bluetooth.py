@@ -40,7 +40,7 @@ class BluetoothPlugin(interface.PlistPlugin):
   # LastServicesUpdate = Time set when device was polled to determine what it
   #   is.  Usually done at setup or manually requested via advanced menu.
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, match, **unused_kwargs):
     """Extracts relevant BT entries.
 
     Yields:
@@ -48,12 +48,12 @@ class BluetoothPlugin(interface.PlistPlugin):
     """
     root = '/DeviceCache'
 
-    for device, value in self.match['DeviceCache'].items():
+    for device, value in match['DeviceCache'].items():
       name = value.get('Name', '')
       if name:
         name = u''.join(('Name:', name))
 
-      if device in self.match['PairedDevices']:
+      if device in match['PairedDevices']:
         desc = 'Paired:True {}'.format(name)
         key = device
         if 'LastInquiryUpdate' in value:

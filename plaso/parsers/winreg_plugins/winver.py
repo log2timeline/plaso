@@ -36,16 +36,17 @@ class WinVerPlugin(interface.KeyPlugin):
   INT_STRUCT = construct.ULInt32('install')
 
   # TODO: Refactor remove this function in a later CL.
-  def GetValueString(self, value_name):
+  def GetValueString(self, key, value_name):
     """Retrieves a specific string value from the Registry key.
 
     Args:
+      key: A Windows Registry key (instance of WinRegKey).
       value_name: The name of the value.
 
     Returns:
       A string value if one is available, otherwise an empty string.
     """
-    value = self._key.GetValue(value_name)
+    value = key.GetValue(value_name)
 
     if not value:
       return ''
@@ -54,15 +55,15 @@ class WinVerPlugin(interface.KeyPlugin):
       return ''
     return value.data
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Gather minimal information about system install and return an event."""
     text_dict = {}
-    text_dict[u'Owner'] = self.GetValueString('RegisteredOwner')
-    text_dict[u'sp'] = self.GetValueString('CSDBuildNumber')
-    text_dict[u'Product name'] = self.GetValueString('ProductName')
+    text_dict[u'Owner'] = self.GetValueString(key, 'RegisteredOwner')
+    text_dict[u'sp'] = self.GetValueString(key, 'CSDBuildNumber')
+    text_dict[u'Product name'] = self.GetValueString(key, 'ProductName')
     text_dict[u' Windows Version Information'] = u''
 
-    install_raw = self._key.GetValue('InstallDate').raw_data
+    install_raw = key.GetValue('InstallDate').raw_data
     # TODO: move this to a function in utils with a more descriptive name
     # e.g. CopyByteStreamToInt32BigEndian.
     try:
@@ -71,7 +72,7 @@ class WinVerPlugin(interface.KeyPlugin):
       install = 0
 
     event_object = event.WinRegistryEvent(
-        self._key.path, text_dict,
+        key.path, text_dict,
         timestamp=timelib.Timestamp.FromPosixTime(install))
     event_object.prodname = text_dict[u'Product name']
     event_object.source_long = 'SOFTWARE WinVersion key'

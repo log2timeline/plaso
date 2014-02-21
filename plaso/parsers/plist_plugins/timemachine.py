@@ -48,8 +48,11 @@ class TimeMachinePlugin(interface.PlistPlugin):
     construct.PascalString(
     'value', length_field = construct.UBInt8('length')))
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, match, **unused_kwargs):
     """Extracts relevant TimeMachine entries.
+
+    Args:
+      match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
@@ -58,7 +61,7 @@ class TimeMachinePlugin(interface.PlistPlugin):
     root = '/Destinations'
     key = 'item/SnapshotDates'
     # For each TimeMachine devices.
-    for destination in self.match['Destinations']:
+    for destination in match['Destinations']:
       hd_uuid = destination['DestinationID']
       if not hd_uuid:
         hd_uuid = u'Unknown device'
@@ -72,4 +75,3 @@ class TimeMachinePlugin(interface.PlistPlugin):
         time = timelib.Timestamp.FromPythonDatetime(timestamp)
         description = u'TimeMachine Backup in {} ({})'.format(alias, hd_uuid)
         yield plist_event.PlistEvent(root, key, time, description)
-

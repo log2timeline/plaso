@@ -142,7 +142,7 @@ class ServicesPlugin(interface.ValuePlugin):
             object_name_str)
     return None
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Create one event for each subkey under Services that has Type and Start.
 
     Adds descriptions of the ErrorControl, Type and StartvValues.
@@ -150,15 +150,15 @@ class ServicesPlugin(interface.ValuePlugin):
     of C:/Windows/system32/drivers.
 
     Args:
-      unused_cache: An optional cache object that is not used.
+      key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
       Event objects extracted from the Windows service values.
     """
     text_dict = {}
 
-    service_type_value = self._key.GetValue('Type')
-    service_start_value = self._key.GetValue('Start')
+    service_type_value = key.GetValue('Type')
+    service_start_value = key.GetValue('Start')
 
     if service_type_value and service_start_value:
       service_type = service_type_value.data
@@ -179,21 +179,21 @@ class ServicesPlugin(interface.ValuePlugin):
       text_dict['Start'] = service_start_str
 
       # Convert ErrorControl to Human Readable.
-      if self._key.GetValue('ErrorControl'):
-        error_control = self._key.GetValue('ErrorControl').data
+      if key.GetValue('ErrorControl'):
+        error_control = key.GetValue('ErrorControl').data
         text_dict['ErrorControl'] = self.SERVICE_ERROR.get(
             error_control, error_control)
 
-      object_name = self.GetObjectName(self._key, service_type)
+      object_name = self.GetObjectName(key, service_type)
       if object_name:
         text_dict['ObjectName'] = object_name
 
-      image_path = self.GetImagePath(self._key, service_type)
+      image_path = self.GetImagePath(key, service_type)
       if image_path:
         text_dict['ImagePath'] = image_path
 
       # Gather all the other string and integer values and insert as they are.
-      for value in self._key.GetValues():
+      for value in key.GetValues():
         if not value.name:
           continue
         if value.name not in text_dict:
@@ -203,5 +203,5 @@ class ServicesPlugin(interface.ValuePlugin):
             text_dict[value.name] = u', '.join(value.data)
 
       event_object = event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+          key.path, text_dict, timestamp=key.last_written_timestamp)
       yield event_object

@@ -57,15 +57,18 @@ class AppleAccountPlugin(interface.PlistPlugin):
   # LastSuccessfulConnect: last time when the account was connected.
   # ValidationDate: last time when the account was validated.
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, match, **unused_kwargs):
     """Extracts relevant Apple Account entries.
+
+    Args:
+      match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
     """
     root = '/Accounts'
 
-    for name_account, account in self.match['Accounts'].iteritems():
+    for name_account, account in match['Accounts'].iteritems():
       general_description = u'{} ({} {})'.format(
           name_account, account.get('FirstName', '<FirstName>'),
           account.get('LastName', '<LastName>'))

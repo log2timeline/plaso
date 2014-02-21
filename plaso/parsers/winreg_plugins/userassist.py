@@ -82,17 +82,17 @@ class UserAssistPlugin(interface.KeyPlugin):
     construct.Padding(44),
     construct.ULInt64('timestamp'))
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
-      unused_cache: An optional cache object that is not used.
+      key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
       An event object for every entry in the UserAssist key.
     """
-    version_value = self._key.GetValue('Version')
-    count_subkey = self._key.GetSubkey('Count')
+    version_value = key.GetValue('Version')
+    count_subkey = key.GetSubkey('Count')
     regalert_string = ''
 
     if not version_value:
@@ -110,7 +110,7 @@ class UserAssistPlugin(interface.KeyPlugin):
       text_dict['Version'] = 'REGALERT {0:s}.'.format(regalert_string)
       regalert_string = ''
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+          key.path, text_dict, timestamp=key.last_written_timestamp)
 
     else:
       for value in count_subkey.GetValues():
@@ -197,4 +197,4 @@ class UserAssistPlugin(interface.KeyPlugin):
       text_dict[value_name] = 'REGALERT {0:s}.'.format(regalert_string)
       regalert_string = ''
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+          key.path, text_dict, timestamp=key.last_written_timestamp)

@@ -36,9 +36,9 @@ class CCleanerPlugin(interface.KeyPlugin):
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'CCleaner Registry key'
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect values under CCleaner and return event for each one."""
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       if not value.name:
         continue
       text_dict = {}
@@ -48,16 +48,16 @@ class CCleanerPlugin(interface.KeyPlugin):
 
       if value.name == 'UpdateKey':
         zone = getattr(self._config, 'timezone', pytz.utc)
-        update_key = self._key.GetValue('UpdateKey')
+        update_key = key.GetValue('UpdateKey')
         reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict,
+            key.path, text_dict,
             timelib.Timestamp.FromTimeString(update_key.data,zone))
       elif value.name == '0':
         reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, self._key.timestamp)
+            key.path, text_dict, key.timestamp)
       else:
         reg_evt = event.WinRegistryEvent(
-            self._key.path, text_dict, 0)
+            key.path, text_dict, 0)
 
       reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
       yield reg_evt

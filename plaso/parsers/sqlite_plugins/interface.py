@@ -103,7 +103,6 @@ class SQLitePlugin(plugin.BasePlugin):
   def __init__(self, pre_obj):
     """Initialize the database plugin."""
     super(SQLitePlugin, self).__init__(pre_obj)
-    self.db = None
     self.zone = getattr(self._knowledge_base, 'zone', pytz.utc)
 
   def Process(self, cache=None, database=None, **kwargs):
@@ -118,7 +117,7 @@ class SQLitePlugin(plugin.BasePlugin):
 
     Args:
       cache: A SQLiteCache object.
-      database: A SQLiteDatabase object.
+      database: A database object (instance of SQLiteDatabase).
 
     Returns:
       A generator that yields event objects.
@@ -138,19 +137,26 @@ class SQLitePlugin(plugin.BasePlugin):
 
     super(SQLitePlugin, self).Process(**kwargs)
 
-    self.db = database
-    return self.GetEntries(cache)
+    return self.GetEntries(cache=cache, database=database)
 
-  def GetEntries(self, cache=None):
-    """Yields EventObjects extracted from a SQLite database."""
+  def GetEntries(self, cache=None, database=None, **kwargs):
+    """Yields EventObjects extracted from a SQLite database.
+
+    Args:
+      cache: A SQLiteCache object.
+      database: A database object (instance of SQLiteDatabase).
+
+    Yields:
+      EventObject extracted from the SQlite database.
+    """
     for query, action in self.QUERIES:
       try:
         call_back = getattr(self, action, self.Default)
-        cursor = self.db.cursor
+        cursor = database.cursor
         sql_results = cursor.execute(query)
         row = sql_results.fetchone()
         while row:
-          event_generator = call_back(row=row, cache=cache)
+          event_generator = call_back(row=row, cache=cache, database=database)
           if event_generator:
             for event_object in event_generator:
               event_object.query = query

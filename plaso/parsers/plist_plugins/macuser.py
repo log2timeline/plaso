@@ -68,20 +68,23 @@ class MacUserPlugin(interface.PlistPlugin):
   #        It is translated by the library as a 2001-01-01 00:00:00 (COCAO
   #        zero time representation). If this happens, the event is not yield.
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, match, **unused_kwargs):
     """Extracts relevant user timestamp entries.
+
+    Args:
+      match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
     """
     root = '/'
-    account = self.match['name'][0]
-    uid = self.match['uid'][0]
+    account = match['name'][0]
+    uid = match['uid'][0]
     cocoa_zero = (
         timelib.Timestamp.COCOA_TIME_TO_POSIX_BASE *
         timelib.Timestamp.MICRO_SECONDS_PER_SECOND)
     # INFO: binplist return a string with the Plist XML.
-    for policy in self.match['passwordpolicyoptions']:
+    for policy in match['passwordpolicyoptions']:
       xml_policy = ElementTree.fromstring(policy)
       for dict_elements in xml_policy.iterfind('dict'):
         key_values = [value.text for value in dict_elements.getchildren()]
@@ -96,7 +99,7 @@ class MacUserPlugin(interface.PlistPlugin):
           # a binary plist data; However binplist only extract one
           # level of binary plist, then it returns this information
           # as a string.
-          fake_file = interface.FakeFile(self.match['ShadowHashData'][0])
+          fake_file = interface.FakeFile(match['ShadowHashData'][0])
           try:
             plist_file = binplist.BinaryPlist(file_obj=fake_file)
             top_level = plist_file.Parse()

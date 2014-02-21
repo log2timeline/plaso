@@ -17,6 +17,8 @@
 # limitations under the License.
 """This file contains an interface for browser cookie plugins."""
 
+import abc
+
 from plaso.lib import errors
 from plaso.lib import plugin
 
@@ -33,11 +35,6 @@ def GetPlugins(pre_obj, data_type):
     plugins.append(plugin_cls(pre_obj, data_type))
 
   return plugins
-
-
-# We do not want to implement the GetEntries function here, that should be
-# done by child plugins, thus we suppress the pylint message.
-# pylint: disable-msg=abstract-method
 
 
 class CookiePlugin(plugin.BasePlugin):
@@ -92,5 +89,15 @@ class CookiePlugin(plugin.BasePlugin):
               cookie_name, self.plugin_name))
 
     super(CookiePlugin, self).Process(**kwargs)
-    self.cookie_data = cookie_data
-    return self.GetEntries()
+    return self.GetEntries(cookie_data=cookie_data)
+
+  @abc.abstractmethod
+  def GetEntries(self, cookie_data=None, **kwargs):
+    """Extract and return EventObjects from the data structure.
+
+    Args:
+      cookie_data: The cookie data, as a byte string.
+
+    Yields:
+      An EventObject extracted from the cookie data.
+    """
