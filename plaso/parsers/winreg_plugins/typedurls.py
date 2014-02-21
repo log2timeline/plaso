@@ -39,16 +39,16 @@ class TypedURLsPlugin(interface.KeyPlugin):
 
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect typed URLs values.
 
     Args:
-      unused_cache: An optional cache object that is not used.
+      key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
       An event object for every typed URL.
     """
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       # Ignore any value not in the form: 'url[0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
         continue
@@ -60,7 +60,7 @@ class TypedURLsPlugin(interface.KeyPlugin):
       # TODO: shouldn't this behavior be, put all the typed urls
       # into a single event object with the last written time of the key?
       if value.name == 'url1':
-        timestamp = self._key.last_written_timestamp
+        timestamp = key.last_written_timestamp
       else:
         timestamp = 0
 
@@ -68,5 +68,5 @@ class TypedURLsPlugin(interface.KeyPlugin):
       text_dict[value.name] = value.data
 
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=timestamp,
+          key.path, text_dict, timestamp=timestamp,
           source_append=u': {0:s}'.format(self.DESCRIPTION))

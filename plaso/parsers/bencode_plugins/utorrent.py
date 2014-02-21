@@ -50,7 +50,7 @@ class UTorrentPlugin(interface.BencodePlugin):
   # returned for analysis.
   BENCODE_KEYS = frozenset(['.fileguard'])
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, data, **unused_kwargs):
     """Extracts uTorrent active torrents.
 
     This is the main parsing engine for the plugin. It determines if
@@ -70,13 +70,16 @@ class UTorrentPlugin(interface.BencodePlugin):
     with a key name for a particular download with a '.torrent' file
     extension.
 
+    Args:
+      data: Bencode data in dictionary form.
+
     Yields:
       An EventContainer (UTorrentEventContainer) with extracted
       EventObjects that contain the extracted attributes.
     """
 
     # Walk through one of the torrent keys to ensure it's from a valid file.
-    for key, value in self.data.iteritems():
+    for key, value in data.iteritems():
       if not u'.torrent' in key:
         continue
 
@@ -86,7 +89,7 @@ class UTorrentPlugin(interface.BencodePlugin):
       if not caption or not path or seedtime < 0:
         raise errors.WrongBencodePlugin(self.plugin_name)
 
-    for torrent, value in self.data.iteritems():
+    for torrent, value in data.iteritems():
       if not u'.torrent' in torrent:
         continue
 

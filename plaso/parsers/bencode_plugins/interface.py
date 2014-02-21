@@ -51,13 +51,13 @@ class BencodePlugin(plugin.BasePlugin):
   NAME = 'bencode'
 
   @abc.abstractmethod
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, data=None, match=None, **kwargs):
     """Yields BencodeEvents from the values of entries within a bencoded file.
 
     This is the main method that a bencode plugin needs to implement.
 
     The contents of the bencode keys defined in BENCODE_KEYS can be made
-    availible to the plugin as both a self.matched{'KEY': 'value'} and as the
+    availible to the plugin as both a matched{'KEY': 'value'} and as the
     entire bencoded data dictionary. The plugin should implement logic to parse
     the most relevant data set into a useful event for incorporation into the
     Plaso timeline.
@@ -67,6 +67,11 @@ class BencodePlugin(plugin.BasePlugin):
       key = Key the value resided in.
       time = Date this artifact was created in microseconds(usec) from epoch.
       desc = Short description.
+
+    Args:
+      data: Bencode data in dictionary form.
+      match: A dictionary containing only the keys selected in the
+             BENCODE_KEYS.
 
     Yields:
       event.BencodeEvent(key) - An event from the bencoded file.
@@ -80,7 +85,7 @@ class BencodePlugin(plugin.BasePlugin):
     both match processing continues; else raise WrongBencodePlugin.
 
     This function also extracts the required keys as defined in
-    self.BENCODE_KEYS from the file and stores the result in self.match[key]
+    self.BENCODE_KEYS from the file and stores the result in match[key]
     and calls self.GetEntries() which holds the processing logic implemented by
     the plugin.
 
@@ -103,11 +108,9 @@ class BencodePlugin(plugin.BasePlugin):
     super(BencodePlugin, self).Process(**kwargs)
 
     logging.debug(u'Bencode Plugin Used: {}'.format(self.plugin_name))
-    self.match = GetKeys(top_level, self.BENCODE_KEYS, 3)
+    match = GetKeys(top_level, self.BENCODE_KEYS, 3)
 
-    self.data = top_level
-
-    return self.GetEntries()
+    return self.GetEntries(data=top_level, match=match)
 
 
 def RecurseKey(recur_item, root='', depth=15):

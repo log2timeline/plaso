@@ -29,7 +29,7 @@ class DefaultPlugin(interface.PlistPlugin):
 
   NAME = 'plist_default'
 
-  def Process(self, plist_name=None, top_level=None, **kwargs):
+  def Process(self, plist_name, top_level, **kwargs):
     """Overwrite the default Process function so it always triggers.
 
     Process() checks if the current plist being processed is a match for a
@@ -47,18 +47,20 @@ class DefaultPlugin(interface.PlistPlugin):
     Returns:
       A generator of events processed by the plugin.
     """
-    self._top_level = top_level
     logging.debug(u'Plist {} plugin used for: {}'.format(
         self.plugin_name, plist_name))
-    return self.GetEntries()
+    return self.GetEntries(top_level=top_level)
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, top_level, **unused_kwargs):
     """Simple method to exact date values from a Plist.
+
+    Args:
+      top_level: Plist in dictionary form.
 
     Yields:
       An EventObject from Plists values that are date objects.
     """
-    for root, key, value in interface.RecurseKey(self._top_level):
+    for root, key, value in interface.RecurseKey(top_level):
       if isinstance(value, datetime.datetime):
         time = timelib.Timestamp.FromPythonDatetime(value)
         yield plist_event.PlistEvent(root, key, time)

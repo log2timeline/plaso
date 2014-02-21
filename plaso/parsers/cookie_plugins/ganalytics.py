@@ -59,11 +59,11 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
       'utmctr': 'Keywords used to find site.',
       'utmcct': 'Path to the page of referring link.'}
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, cookie_data, **unused_kwargs):
     """Process the cookie."""
     # The structure of the field:
     #   <domain hash>.<last time>.<sessions>.<sources>.<variables>
-    fields = self.cookie_data.split('.')
+    fields = cookie_data.split('.')
 
     if len(fields) > 5:
       variables = '.'.join(fields[4:])
@@ -107,12 +107,12 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
       (u'http://www.dfinews.com/articles/2012/02/'
        u'google-analytics-cookies-and-forensic-implications')]
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, cookie_data, **unused_kwargs):
     """Yield event objects extracted from the cookie."""
     # Values has the structure of:
     # <domain hash>.<visitor ID>.<first visit>.<previous>.<last>.<# of
     # sessions>
-    fields = self.cookie_data.split('.')
+    fields = cookie_data.split('.')
 
     # Check for a valid record.
     if len(fields) != 6:
@@ -151,11 +151,11 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
       (u'http://www.dfinews.com/articles/2012/02/'
        u'google-analytics-cookies-and-forensic-implications')]
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, cookie_data, **unused_kwargs):
     """Yield event objects extracted from the cookie."""
     # Values has the structure of:
     #   <domain hash>.<pages viewed>.10.<last time>
-    fields = self.cookie_data.split('.')
+    fields = cookie_data.split('.')
 
     # Check for a valid record.
     if len(fields) != 4:

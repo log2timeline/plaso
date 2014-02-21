@@ -182,12 +182,13 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         timestamp, row['id'], row['url'], row['target_path'],
         row['received_bytes'], row['total_bytes'])
 
-  def ParseLastVisitedRow(self, row, cache, **unused_kwargs):
+  def ParseLastVisitedRow(self, row, cache, database, **unused_kwargs):
     """Parses a last visited row.
 
     Args:
       row: The row resulting from the query.
       cache: A cache object (instance of SQLiteCache).
+      database: A database object (instance of SQLiteDatabase).
 
     Yields:
       An event object (ChromeHistoryPageVisitedEvent) containing the event data.
@@ -220,8 +221,8 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     yield ChromeHistoryPageVisitedEvent(
         timelib.Timestamp.FromWebKitTime(int(row['visit_time'])),
         row['id'], row['url'], row['title'], self._GetHostname(row['url']),
-        row['typed_count'], self._GetUrl(row['from_visit'], cache), u' '.join(
-            extras))
+        row['typed_count'], self._GetUrl(
+            row['from_visit'], cache, database), u' '.join(extras))
 
   def _GetHostname(self, hostname):
     """Return a hostname from a full URL."""
@@ -234,14 +235,14 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     except IndexError:
       return 'N/A'
 
-  def _GetUrl(self, url, cache):
+  def _GetUrl(self, url, cache, database):
     """Return an URL from a reference to an entry in the from_visit table."""
     if not url:
       return u''
 
     url_cache_results = cache.GetResults('url')
     if not url_cache_results:
-      cursor = self.db.cursor
+      cursor = database.cursor
       result_set = cursor.execute(self.URL_CACHE_QUERY)
       cache.CacheQueryResults(
           result_set, 'url', 'id', ('url', 'title'))

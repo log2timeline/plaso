@@ -45,7 +45,7 @@ class TransmissionPlugin(interface.BencodePlugin):
   BENCODE_KEYS = frozenset(['activity-date', 'done-date', 'added-date',
                             'destination', 'seeding-time-seconds'])
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, data, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 
     This is the main parsing engine for the parser. It determines if
@@ -55,29 +55,32 @@ class TransmissionPlugin(interface.BencodePlugin):
     Transmission stores an individual Bencoded file for each active download
     in a folder named resume under the user's application data folder.
 
-    Returns:
+    Args:
+      data: Bencode data in dictionary form.
+
+    Yields:
       An EventContainer (TransmissionEventContainer) with extracted
       EventObjects that contain the extracted attributes.
     """
 
     # Place the obtained values into the event container.
     container = TransmissionEventContainer(
-        self.data['destination'],
-        self.data['seeding-time-seconds'])
+        data['destination'],
+        data['seeding-time-seconds'])
 
     # Create timeline events based on extracted values.
     container.Append(event.PosixTimeEvent(
-        self.data['added-date'],
+        data['added-date'],
         eventdata.EventTimestamp.ADDED_TIME,
         container.DATA_TYPE))
 
     container.Append(event.PosixTimeEvent(
-        self.data['done-date'],
+        data['done-date'],
         eventdata.EventTimestamp.FILE_DOWNLOADED,
         container.DATA_TYPE))
 
     container.Append(event.PosixTimeEvent(
-        self.data['activity-date'],
+        data['activity-date'],
         eventdata.EventTimestamp.ACCESS_TIME,
         container.DATA_TYPE))
 

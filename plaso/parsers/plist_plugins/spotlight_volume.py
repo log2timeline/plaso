@@ -33,13 +33,16 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
   PLIST_PATH = 'VolumeConfiguration.plist'
   PLIST_KEYS = frozenset(['Stores'])
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, match, **unused_kwargs):
     """Extracts relevant VolumeConfiguration Spotlight entries.
+
+    Args:
+      match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
     """
-    for volume_name, volume in self.match['Stores'].iteritems():
+    for volume_name, volume in match['Stores'].iteritems():
       time = timelib.Timestamp.FromPythonDatetime(
           volume['CreationDate'])
       description = u'Spotlight Volume {} ({}) activated.'.format(

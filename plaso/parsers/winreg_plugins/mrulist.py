@@ -30,31 +30,31 @@ class MRUListPlugin(interface.ValuePlugin):
   REG_VALUES = frozenset(['MRUList', 'a'])
   URLS = [u'http://forensicartifacts.com/tag/mru/']
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Extract EventObjects from a MRU list.
 
     Args:
-      unused_cache: An optional cache object that is not used.
+      key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
       A single event object that contains a MRU list.
     """
-    mru_list_value = self._key.GetValue('MRUList')
+    mru_list_value = key.GetValue('MRUList')
 
     if not mru_list_value:
       text_dict = {}
       text_dict['MRUList'] = 'REGALERT: Internal error missing MRUList value.'
 
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+          key.path, text_dict, timestamp=key.last_written_timestamp)
 
     else:
-      timestamp = self._key.last_written_timestamp
+      timestamp = key.last_written_timestamp
 
       entry_list = []
       text_dict = {}
       for entry_index, mru_value_name in enumerate(mru_list_value.data):
-        value = self._key.GetValue(mru_value_name)
+        value = key.GetValue(mru_value_name)
 
         if not value:
           mru_value_string = 'REGALERT: No such MRU value: {0}.'.format(
@@ -79,7 +79,7 @@ class MRUListPlugin(interface.ValuePlugin):
             entry_index + 1, mru_value_name)] = mru_value_string
 
       event_object = event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=timestamp,
+          key.path, text_dict, timestamp=timestamp,
           source_append=': MRU List')
       event_object.mru_list = entry_list
       yield event_object
