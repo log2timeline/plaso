@@ -49,10 +49,10 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
 
   REG_TYPE = 'NTUSER'
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect the values under Outlook and return event for each one."""
     value_index = 0
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       # Ignore the default value.
       if not value.name:
         continue
@@ -67,12 +67,12 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
       text_dict[value.name] = '0x{0:08x}'.format(value.data)
 
       if value_index == 0:
-        timestamp = self._key.last_written_timestamp
+        timestamp = key.last_written_timestamp
       else:
         timestamp = 0
 
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=timestamp,
+          key.path, text_dict, timestamp=timestamp,
           source_append=': {0:s}'.format(self.DESCRIPTION))
 
       value_index += 1

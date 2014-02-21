@@ -35,9 +35,9 @@ class RunUserPlugin(interface.KeyPlugin):
   URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
   DESCRIPTION = 'Run Key'
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect the Values under the Run Key and return an event for each one."""
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       # Ignore the default value.
       if not value.name:
         continue
@@ -50,7 +50,7 @@ class RunUserPlugin(interface.KeyPlugin):
       text_dict[value.name] = value.data
 
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=self._key.last_written_timestamp,
+          key.path, text_dict, timestamp=key.last_written_timestamp,
           source_append=': {0:s}'.format(self.DESCRIPTION))
 
 

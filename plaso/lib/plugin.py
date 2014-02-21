@@ -24,8 +24,6 @@ This is provided as a separate file to make it easier to inherit in other
 projects that may want to use the Plaso plugin system.
 """
 
-import abc
-
 from plaso.lib import registry
 from plaso.lib import utils
 
@@ -81,16 +79,22 @@ class BasePlugin(object):
     """Return the name of the plugin."""
     return self.NAME
 
-  @abc.abstractmethod
-  def GetEntries(self, cache=None):
+  def GetEntries(self, **kwargs):
     """Extract and return EventObjects from the data structure.
 
     Args:
-      cache: An optional cache object (BasePluginCache).
+      kwargs: Depending on the plugin they may require different sets of
+      arguments to be able to evaluate whether or not this is the correct
+      plugin.
 
     Yields:
       EventObjects extracted from the data set.
+
+    Raises:
+      ValueError: When there are unused keyword arguments.
     """
+    if kwargs:
+      raise ValueError(u'Unused keyword arguments.')
 
   def Process(self, **kwargs):
     """Evaluate if this is the correct plugin and return a generator.

@@ -111,8 +111,6 @@ class PlistPlugin(plugin.BasePlugin):
     if plist_name is None or top_level is None:
       raise ValueError(u'Top level or plist name are not set.')
 
-    self._top_level = top_level
-
     if plist_name.lower() != self.PLIST_PATH.lower():
       raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
 
@@ -134,12 +132,12 @@ class PlistPlugin(plugin.BasePlugin):
 
     super(PlistPlugin, self).Process(**kwargs)
 
-    logging.debug(u'Plist Plugin Used: {} for: {}'.format(self.plugin_name,
-                                                          plist_name))
-    self.match = GetKeys(top_level, self.PLIST_KEYS)
-    return self.GetEntries()
+    logging.debug(u'Plist Plugin Used: {} for: {}'.format(
+        self.plugin_name, plist_name))
+    match = GetKeys(top_level, self.PLIST_KEYS)
+    return self.GetEntries(top_level=top_level, match=match)
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, top_level=None, match=None, **unused_kwargs):
     """Yields PlistEvents from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
@@ -171,7 +169,11 @@ class PlistPlugin(plugin.BasePlugin):
       time = Date this artifact was created in microseconds(usec) from epoch.
       desc = Short description.  E.g. 'Device LastInquiryUpdated'
 
-    See plist/bt.py for the implemented example plugin.
+    See plist/bluetooth.py for the implemented example plugin.
+
+    Args:
+      top_level: Plist in dictionary form.
+      match: A dictionary containing extracted keys from PLIST_KEYS.
 
     Yields:
       event.PlistEvent(root, key, time, desc) - An event from the plist.

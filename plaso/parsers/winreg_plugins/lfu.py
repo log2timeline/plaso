@@ -31,23 +31,23 @@ class BootVerificationPlugin(interface.KeyPlugin):
 
   URLS = ['http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Gather the BootVerification key values and return one event for all.
 
     This key is rare, so its presence is suspect.
 
     Args:
-      unused_cache: An optional cache object that is not used.
+      key: The extracted registry key.
 
     Yields:
       Extracted event objects from the boot verify key.
     """
     text_dict = {}
     text_dict['BootVerification'] = u'REGALERT'
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       text_dict[value.name] = value.data
     yield event.WinRegistryEvent(
-        self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+        key.path, text_dict, timestamp=key.last_written_timestamp)
 
 
 class BootExecutePlugin(interface.KeyPlugin):
@@ -60,20 +60,20 @@ class BootExecutePlugin(interface.KeyPlugin):
 
   URLS = ['http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Gather the BootExecute Value, compare to default, return event.
 
     The rest of the values in the Session Manager key are in a separate event.
 
     Args:
-      unused_cache: An optional cache object that is not used.
+      key: The extracted registry key.
 
     Yields:
       Extracted event objects from the boot verify key.
     """
     text_dict = {}
 
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       if value.name == 'BootExecute':
         # MSDN: claims that the data type of this value is REG_BINARY
         # although REG_MULTI_SZ is known to be used as well.
@@ -95,11 +95,11 @@ class BootExecutePlugin(interface.KeyPlugin):
           boot_dict['BootExecute'] = value_string
 
         yield event.WinRegistryEvent(
-            self._key.path, boot_dict,
-            timestamp=self._key.last_written_timestamp)
+            key.path, boot_dict,
+            timestamp=key.last_written_timestamp)
 
       else:
         text_dict[value.name] = value.data
 
     yield event.WinRegistryEvent(
-        self._key.path, text_dict, timestamp=self._key.last_written_timestamp)
+        key.path, text_dict, timestamp=key.last_written_timestamp)

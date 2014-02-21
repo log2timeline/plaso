@@ -56,18 +56,21 @@ class SafariHistoryPlugin(interface.PlistPlugin):
   PLIST_PATH = 'History.plist'
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, match, **unused_kwargs):
     """Extracts Safari history items.
+
+    Args:
+      match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
     """
-    if self.match.get('WebHistoryFileVersion', 0) != 1:
+    if match.get('WebHistoryFileVersion', 0) != 1:
       logging.warning(u'Unable to parse Safari version: {}'.format(
-          self.match.get('WebHistoryFileVersion', 0)))
+          match.get('WebHistoryFileVersion', 0)))
       return
 
-    for history_entry in self.match.get('WebHistoryDates', {}):
+    for history_entry in match.get('WebHistoryDates', {}):
       try:
         time = timelib.Timestamp.FromCocoaTime(float(
             history_entry.get('lastVisitedDate', 0)))

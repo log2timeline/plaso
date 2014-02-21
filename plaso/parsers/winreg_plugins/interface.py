@@ -65,7 +65,7 @@ class RegistryPlugin(plugin.BasePlugin):
     self._reg_cache = reg_cache
 
   @abc.abstractmethod
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key=None, **kwargs):
     """Extracts event objects from the Windows Registry key."""
 
   def Process(self, key=None, **kwargs):
@@ -81,8 +81,6 @@ class RegistryPlugin(plugin.BasePlugin):
       raise ValueError(u'Key is not set.')
 
     super(RegistryPlugin, self).Process(**kwargs)
-    # TODO: Why do we need to store the key here, is it used anywhere?
-    self._key = key
 
 
 class KeyPlugin(RegistryPlugin):
@@ -140,7 +138,7 @@ class KeyPlugin(RegistryPlugin):
         self.expanded_keys.append(u'\\Wow6432Node{:s}'.format(key_fixed))
 
   @abc.abstractmethod
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key=None, **kwargs):
     """Extracts event objects from the Windows Registry key."""
 
   def Process(self, key=None, **kwargs):
@@ -151,7 +149,7 @@ class KeyPlugin(RegistryPlugin):
     super(KeyPlugin, self).Process(key=key, **kwargs)
 
     if key.path in self.expanded_keys:
-      return self.GetEntries()
+      return self.GetEntries(key=key)
 
 
 class ValuePlugin(RegistryPlugin):
@@ -165,7 +163,7 @@ class ValuePlugin(RegistryPlugin):
   WEIGHT = 2
 
   @abc.abstractmethod
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key=None, **kwargs):
     """Extracts event objects from the Windows Registry key."""
 
   def Process(self, key=None, **kwargs):
@@ -174,8 +172,7 @@ class ValuePlugin(RegistryPlugin):
 
     values = frozenset([val.name for val in key.GetValues()])
     if self.REG_VALUES.issubset(values):
-      self._key = key
-      return self.GetEntries()
+      return self.GetEntries(key=key)
 
 
 class PluginList(object):

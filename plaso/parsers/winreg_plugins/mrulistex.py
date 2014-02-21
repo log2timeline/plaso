@@ -35,9 +35,9 @@ class MRUListExPlugin(interface.ValuePlugin):
 
   LIST_STRUCT = construct.Range(1, 500, construct.ULInt32('entry_number'))
 
-  def GetText(self, mru_entry):
+  def GetText(self, key, mru_entry):
     """Return a string from a MRU value."""
-    value = self._key.GetValue(mru_entry)
+    value = key.GetValue(mru_entry)
     if not value:
       return u''
 
@@ -51,9 +51,9 @@ class MRUListExPlugin(interface.ValuePlugin):
 
     return u''
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Extract EventObjects from a MRU list."""
-    mru_list_data = self._key.GetValue('MRUListEx')
+    mru_list_data = key.GetValue('MRUListEx')
 
     # TODO: there is no need to use raw data refactor to use data.
     raw_data = mru_list_data.raw_data
@@ -62,10 +62,10 @@ class MRUListExPlugin(interface.ValuePlugin):
       mru_list = self.LIST_STRUCT.parse(raw_data)
     except construct.FieldError:
       logging.warning(u'Unable to parse the MRU key: {0:s}'.format(
-          self._key.path))
+          key.path))
       return
 
-    event_timestamp = self._key.last_written_timestamp
+    event_timestamp = key.last_written_timestamp
 
     text_dict = {}
     for nr, entry in enumerate(mru_list):
@@ -73,10 +73,10 @@ class MRUListExPlugin(interface.ValuePlugin):
       if entry == 0xFFFFFFFF:
         break
       value_text = u'Index: {} [MRU Value {:d}]'.format(nr + 1, entry)
-      text_dict[value_text] = self.GetText(unicode(entry))
+      text_dict[value_text] = self.GetText(key, unicode(entry))
 
     yield event.WinRegistryEvent(
-        self._key.path, text_dict, timestamp=event_timestamp,
+        key.path, text_dict, timestamp=event_timestamp,
         source_append=': MRUx List')
 
   def Process(self, key=None, **kwargs):

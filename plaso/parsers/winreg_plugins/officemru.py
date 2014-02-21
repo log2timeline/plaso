@@ -55,10 +55,10 @@ class OfficeMRUPlugin(interface.KeyPlugin):
   # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, key, **unused_kwargs):
     """Collect Values under Office 2010 MRUs and return events for each one."""
     # TODO: Test other Office versions to makesure this plugin is applicable.
-    for value in self._key.GetValues():
+    for value in key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):
         continue
@@ -92,5 +92,5 @@ class OfficeMRUPlugin(interface.KeyPlugin):
       text_dict[value.name] = value.data
 
       yield event.WinRegistryEvent(
-          self._key.path, text_dict, timestamp=timestamp,
+          key.path, text_dict, timestamp=timestamp,
           source_append=': {0:s}'.format(self.DESCRIPTION))

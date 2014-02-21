@@ -33,13 +33,16 @@ class AirportPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.airport.preferences.plist'
   PLIST_KEYS = frozenset(['RememberedNetworks'])
 
-  def GetEntries(self, unused_cache=None):
+  def GetEntries(self, match, **unused_kwargs):
     """Extracts relevant Airport entries.
+
+    Args:
+      match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
     """
-    for wifi in self.match['RememberedNetworks']:
+    for wifi in match['RememberedNetworks']:
       time = timelib.Timestamp.FromPythonDatetime(
           wifi['LastConnected'])
       description = (

@@ -117,18 +117,20 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       u'FROM cloud_entry AS e, cloud_relations AS r WHERE e.doc_type = 0 '
       u'AND e.resource_id = r.child_resource_id')
 
-  def GetLocalPath(self, inode, cache):
+  def GetLocalPath(self, inode, cache, database):
     """Return local path for a given inode.
 
     Args:
       inode: The inode number for the file.
+      cache: A cache object (instance of SQLiteCache).
+      database: A database object (instance of SQLiteDatabase).
 
     Returns:
       A full path, including the filename of the given inode value.
     """
     local_path = cache.GetResults('local_path')
     if not local_path:
-      cursor = self.db.cursor
+      cursor = database.cursor
       results = cursor.execute(self.LOCAL_PATH_CACHE_QUERY)
       cache.CacheQueryResults(
           results, 'local_path', 'child_inode_number',
@@ -157,18 +159,20 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     paths.reverse()
     return root_value + u'/'.join(paths)
 
-  def GetCloudPath(self, resource_id, cache):
+  def GetCloudPath(self, resource_id, cache, database):
     """Return cloud path given a resource id.
 
     Args:
       resource_id: The resource_id for the file.
+      cache: The local cache object.
+      database: A database object (instance of SQLiteDatabase).
 
     Returns:
       A full path to the resource value.
     """
     cloud_path = cache.GetResults('cloud_path')
     if not cloud_path:
-      cursor = self.db.cursor
+      cursor = database.cursor
       results = cursor.execute(self.CLOUD_PATH_CACHE_QUERY)
       cache.CacheQueryResults(
           results, 'cloud_path', 'resource_id', ('filename', 'parent'))
@@ -193,7 +197,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     paths.reverse()
     return u'/' + u'/'.join(paths) + u'/'
 
-  def ParseCloudEntryRow(self, row, cache, **unused_kwargs):
+  def ParseCloudEntryRow(self, row, cache, database, **unused_kwargs):
     """Parses a cloud entry row.
 
     Args:
@@ -204,7 +208,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       An event container (GoogleDriveSnapshotCloudEntryEventContainer)
       containing the event data.
     """
-    cloud_path = self.GetCloudPath(row['parent_resource_id'], cache)
+    cloud_path = self.GetCloudPath(row['parent_resource_id'], cache, database)
     cloud_filename = u'{}{}'.format(cloud_path, row['filename'])
 
     container = GoogleDriveSnapshotCloudEntryEventContainer(
@@ -227,18 +231,19 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
     yield container
 
-  def ParseLocalEntryRow(self, row, cache, **unused_kwargs):
+  def ParseLocalEntryRow(self, row, cache, database, **unused_kwargs):
     """Parses a local entry row.
 
     Args:
       row: The row resulting from the query.
       cache: The local cache object (instance of SQLiteCache).
+      database: A database object (instance of SQLiteDatabase).
 
     Yields:
       An event object (GoogleDriveSnapshotLocalEntryEvent) containing
       the event data.
     """
-    local_path = self.GetLocalPath(row['inode_number'], cache)
+    local_path = self.GetLocalPath(row['inode_number'], cache, database)
 
     yield GoogleDriveSnapshotLocalEntryEvent(
         row['modified'], local_path, row['size'])
