@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the OLE Compound File (OLECF) parser."""
+"""Tests for the OLE Compound File summary and document summary plugins."""
 
 import unittest
 
@@ -23,48 +23,31 @@ import unittest
 from plaso.formatters import olecf as olecf_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.parsers import olecf
-from plaso.parsers import test_lib
+from plaso.parsers.olecf_plugins import summary
+from plaso.parsers.olecf_plugins import test_lib
 
 
-class TestOleCfParser(test_lib.ParserTestCase):
-  """Tests for the OLECF parser."""
+class TestSummaryInfoPlugin(test_lib.OleCfPluginTestCase):
+  """Tests for the OLECF summary plugins."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    self._parser = olecf.OleCfParser(pre_obj, None)
+    self._summary_plugin = summary.SummaryInfoPlugin(pre_obj)
+    self._document_summary_plugin = summary.DocumentSummaryPlugin(pre_obj)
+    self._test_file = self._GetTestFilePath(['Document.doc'])
 
-  def testParse(self):
-    """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['Document.doc'])
-    event_generator = self._ParseFile(self._parser, test_file)
+  def testProcessSummaryInfo(self):
+    """Tests the Process function on a SummaryInfo stream."""
+    event_generator = self._ParseOleCfFileWithPlugin(
+        self._test_file, self._summary_plugin)
     event_containers = self._GetEventContainers(event_generator)
 
-    self.assertEquals(len(event_containers), 5)
+    # There should only be one summary info stream.
+    self.assertEquals(len(event_containers), 1)
 
-    # Check the Root Entry event.
     event_container = event_containers[0]
-
-    self.assertEquals(len(event_container.events), 1)
-    self.assertEquals(event_container.name, u'Root Entry')
-
-    event_object = event_container.events[0]
-
-    self.assertEquals(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
-    # May 16, 2013 02:29:49.795000000 UTC.
-    self.assertEquals(event_object.timestamp, 1368671389795000)
-
-    expected_string = (
-        u'Name: Root Entry')
-
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
-
-    # Check the Summary Information.
-    event_container = event_containers[1]
-
-    self.assertEquals(len(event_container.events), 2)
+    self.assertEquals(len(event_container.events), 3)
     self.assertEquals(event_container.name, u'Summary Information')
 
     self.assertEquals(event_container.title, u'Table of Context')
@@ -104,8 +87,16 @@ class TestOleCfParser(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    # Check the Document Summary Information.
-    event_container = event_containers[2]
+  def testProcessDocumentSummaryInfo(self):
+    """Tests the Process function on a SummaryInfo stream."""
+    event_generator = self._ParseOleCfFileWithPlugin(
+        self._test_file, self._document_summary_plugin)
+    event_containers = self._GetEventContainers(event_generator)
+
+    # There should only be one summary info stream.
+    self.assertEquals(len(event_containers), 1)
+
+    event_container = event_containers[0]
 
     self.assertEquals(len(event_container.events), 1)
     self.assertEquals(event_container.name, u'Document Summary Information')
