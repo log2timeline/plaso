@@ -20,6 +20,7 @@
 import hashlib
 import logging
 import os
+import re
 import sre_constants
 
 from dfvfs.lib import definitions
@@ -27,12 +28,12 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.collector import interface
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import queue
 from plaso.lib import utils
 from plaso.parsers import filestat
+from plaso.winreg import path_expander as winreg_path_expander
 
 
 # TODO: refactor.
@@ -400,10 +401,11 @@ class Collector(queue.PathSpecQueueProducer):
     self._vss_stores = vss_stores
 
 
-class GenericPreprocessCollector(interface.PreprocessCollector):
+class GenericPreprocessCollector(object):
   """Class that implements a generic preprocess collector object."""
 
   _BYTES_PER_SECTOR = 512
+  _PATH_EXPANDER_RE = re.compile(r'^[{][a-z_]+[}]$')
 
   def __init__(self, pre_obj, source_path):
     """Initializes the preprocess collector object.
@@ -412,12 +414,34 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
       pre_obj: The preprocessing object (instance of PreprocessObject).
       source_path: Path of the source file or directory.
     """
-    super(GenericPreprocessCollector, self).__init__(pre_obj, source_path)
+    super(GenericPreprocessCollector, self).__init__()
     self._byte_offset = None
+    self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
+        pre_obj, None)
     self._process_image = None
     self._process_vss = None
     self._sector_offset = None
+    self._source_path = source_path
     self._store_index = None
+
+  def _GetExtendedPath(self, path):
+    """Return an extened path without the generic path elements.
+
+    Remove common generic path elements, like {log_path}, {windir}
+    and extend them to their real meaning.
+
+    Args:
+      path: The path before extending it.
+
+    Returns:
+      A string containing the extended path.
+    """
+    try:
+      return self._path_expander.ExpandPath(path)
+    except KeyError as exception:
+      logging.error(
+          u'Unable to expand path {0:s} with error: {1:s}'.format(
+              path, exception))
 
   def _GetImageByteOffset(self):
     """Retrieves the image offset in bytes."""
@@ -441,25 +465,7 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
     Yields:
       The paths found.
     """
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=self._source_path)
-
-    if self._process_image:
-      image_offset = self._GetImageByteOffset()
-
-      if image_offset > 0:
-        path_spec = path_spec_factory.Factory.NewPathSpec(
-            definitions.TYPE_INDICATOR_TSK_PARTITION,
-            start_offset=image_offset, parent=path_spec)
-
-      if self._process_vss:
-        path_spec = path_spec_factory.Factory.NewPathSpec(
-            definitions.TYPE_INDICATOR_VSHADOW, store_index=self._store_index,
-            parent=path_spec)
-
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_TSK, location=u'/', parent=path_spec)
-
+    path_spec = self._GetSourcePathSpec()
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     file_system = file_entry.GetFileSystem()
 
@@ -536,6 +542,114 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
         # of path[1:] will be an empty string.
         yield path[1:]
 
+  def _GetPathSegmentExpressionsList(self, path_expression):
+    """Retrieves a list of paths  segment expressions on a path expression.
+
+       A path segment expression is either a regular expression or a string
+       containing an expanded path segment.
+
+    Args:
+      path_expression: The path expression, which is a string that can contain
+                       system specific placeholders such as e.g. "{log_path}"
+                       or "{windir}" or regular expressions such as e.g.
+                       "[0-9]+" to match a path segments that only consists of
+                       numeric values.
+
+    Returns:
+      A list of path segments expressions.
+    """
+    path_segments_expressions_list = []
+    for path_segment in path_expression.split(u'/'):
+      # Ignore empty path segments.
+      if not path_segment:
+        continue
+
+      # TODO: add startswith('{') and endswith('}') to improve average
+      # case performance here. Combine this with find rewrite.
+      if self._PATH_EXPANDER_RE.match(path_segment):
+        expression_list = self._GetExtendedPath(path_segment).split(u'/')
+        if expression_list[0] == u'' and len(expression_list) > 1:
+          expression_list = expression_list[1:]
+
+        path_segments_expressions_list.extend(expression_list)
+
+      else:
+        try:
+          # We compile the regular expression so it spans the full path
+          # segment.
+          expression_string = u'^{0:s}$'.format(path_segment)
+          expression = re.compile(expression_string, re.I | re.S)
+
+        except sre_constants.error as exception:
+          error_string = (
+              u'Unable to compile regular expression for path segment: {0:s} '
+              u'with error: {1:s}').format(path_segment, exception)
+          logging.warning(error_string)
+          raise errors.PathNotFound(error_string)
+
+        path_segments_expressions_list.append(expression)
+
+    return path_segments_expressions_list
+
+  def _GetPathSpec(self, path):
+    """Retrieves the path specification."""
+    if self._process_image:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=self._source_path)
+
+      image_offset = self._GetImageByteOffset()
+
+      if image_offset > 0:
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
+            parent=path_spec)
+
+      if self._process_vss:
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_VSHADOW, store_index=self._store_index,
+            parent=path_spec)
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK, location=path, parent=path_spec)
+
+    else:
+      path = os.path.join(self._source_path, path)
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=path)
+
+    return path_spec
+
+  def _GetSourcePathSpec(self):
+    """Retrieves the source path specification."""
+    if self._process_image:
+      return self._GetPathSpec(u'/')
+
+    return path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=self._source_path)
+
+  def GetFilePaths(self, path_expression, filename_expression):
+    """Retrieves paths based on a path and filename expression.
+
+    Args:
+      path_expression: The path expression, which is a string that can contain
+                       system specific placeholders such as e.g. "{log_path}"
+                       or "{windir}" or regular expressions such as e.g.
+                       "[0-9]+" to match a path segments that only consists of
+                       numeric values.
+      filename_expression: The filename expression.
+
+    Returns:
+      A list of paths.
+    """
+    path_segments_expressions_list = self._GetPathSegmentExpressionsList(
+        path_expression)
+
+    path_segments_expressions_list.extend(
+        self._GetPathSegmentExpressionsList(filename_expression))
+
+    return self._GetPaths(path_segments_expressions_list)
+
   def GetPathSpecs(self, collection_filter):
     """A generator yielding all pathspecs from the given filters."""
     list_of_filters = collection_filter.BuildFilters()
@@ -574,38 +688,36 @@ class GenericPreprocessCollector(interface.PreprocessCollector):
               u'expression.').format(filter_path, filter_file))
           continue
 
+  # TODO: in dfVFS create a separate FindExpression of FindSpec object to
+  # define path expresssions.
+  def FindPaths(self, path_expression):
+    """Finds paths based on a path expression.
+
+       An empty path expression will return all paths. Note that the path
+       expression uses / as the path (segment) separator.
+
+    Args:
+      path_expression: The path expression, which is a string that can contain
+                       system specific placeholders such as e.g. "{log_path}" or
+                       "{windir}" or regular expressions such as e.g.
+                       "[0-9]+" to match a path segments that only consists of
+                       numeric values.
+
+    Returns:
+      A list of paths.
+
+    Raises:
+      errors.PathNotFound: If unable to compile any regular expression.
+    """
+    path_segments_expressions_list = self._GetPathSegmentExpressionsList(
+        path_expression)
+
+    return self._GetPaths(path_segments_expressions_list)
+
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""
-    if self._process_image:
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_OS, location=self._source_path)
-
-      image_offset = self._GetImageByteOffset()
-
-      if image_offset > 0:
-        path_spec = path_spec_factory.Factory.NewPathSpec(
-            definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
-            parent=path_spec)
-
-      if self._process_vss:
-        path_spec = path_spec_factory.Factory.NewPathSpec(
-            definitions.TYPE_INDICATOR_VSHADOW, store_index=self._store_index,
-            parent=path_spec)
-
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_TSK, location=path, parent=path_spec)
-
-    else:
-      path = os.path.join(self._source_path, path)
-
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_OS, location=path)
-
+    path_spec = self._GetPathSpec(path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
-  def ReadingFromImage(self):
-    """Indicates if the collector is reading from an image file."""
-    return self._process_image
 
   def SetImageInformation(self, sector_offset=None, byte_offset=None):
     """Sets the image information.

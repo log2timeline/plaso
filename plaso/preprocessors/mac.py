@@ -19,13 +19,12 @@
 
 import logging
 
+from binplist import binplist
+
 from plaso.lib import errors
 from plaso.lib import preprocess_interface
 from plaso.lib import utils
 from plaso.parsers.plist_plugins import interface
-from plaso.pvfs import pfile
-
-from binplist import binplist
 
 
 class OSXBuild(preprocess_interface.MacXMLPlistPreprocess):
@@ -133,6 +132,7 @@ class OSXTimeZone(preprocess_interface.PreprocessPlugin):
     """Extract and return the value of the time zone settings."""
     # TODO: This needs to be completely rewritten once dfVFS is
     # implemented.
+
     # Also this only works currently for the common case of symbolic
     # links in the /private/etc directory. Other cases exist that need
     # to be supported as well.
@@ -141,39 +141,13 @@ class OSXTimeZone(preprocess_interface.PreprocessPlugin):
     except errors.PathNotFound:
       raise errors.PreProcessFail(u'Zonefile does not exist.')
 
-    # TODO: This only works against an image file, need to support
-    # other use cases as well (again something fixed with dfVFS).
-    if not self._collector.ReadingFromImage():
-      raise errors.PreProcessFail(
-          u'Currently only works against an image file.')
+    zone_file_entry = self._collector.OpenFileEntry(self.ZONE_FILE_PATH)
+    if zone_file_entry is None:
+      raise errors.PreProcessFail(u'Unable to open zone file: {0:s}.'.format(
+          self.ZONE_FILE_PATH))
 
-    # Try to open file.
-    try:
-      # We need to access the fs object directly, remove this
-      # once dfVFS is completed.
-      # pylint: disable-msg=protected-access
-      root_path_spec = pfile.PFileResolver.CopyPathToPathSpec(
-          u'TSK', u'/', self._collector._source_path,
-          image_offset=self._collector._GetImageByteOffset())
-      file_system = pfile.PFileResolver.OpenFileSystem(root_path_spec)
-      zone_file = file_system.tsk_fs.open(
-          self.ZONE_FILE_PATH)
-    except (IOError, errors.UnableToOpenFilesystem):
-      raise errors.PreProcessFail(u'Unable to open zone file.')
-
-    zone_info = zone_file.info
-
-    if not zone_info:
-      raise errors.PreProcessFail(u'No info object for zone file.')
-
-    meta = zone_info.meta
-
-    if not meta:
-      raise errors.PreProcessFail(u'No meta object for zone file.')
-
-    if meta.nlink == 1:
-      zone_text = meta.link
-      _, _, zone = zone_text.partition('zoneinfo/')
+    if zone_file_entry.link:
+      _, _, zone = zone_file_entry.link.partition('zoneinfo/')
       return zone
 
     raise errors.PreProcessFail(u'Value not found.')
