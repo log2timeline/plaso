@@ -25,7 +25,6 @@ from plaso.lib import eventdata
 from plaso.lib import event
 from plaso.parsers import mac_securityd as mac_securityd_parser
 from plaso.parsers import test_lib
-from plaso.pvfs import utils
 
 
 class MacSecurityUnitTest(test_lib.ParserTestCase):
