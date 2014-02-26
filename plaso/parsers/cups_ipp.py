@@ -174,10 +174,10 @@ class CupsIppParser(parser.BaseParser):
 
     try:
       header = self.CUPS_IPP_HEADER.parse_stream(file_object)
-    except (IOError, construct.FieldError) as e:
-      raise errors.UnableToParseFile((
+    except (IOError, construct.FieldError) as exception:
+      raise errors.UnableToParseFile(
           u'Not a CUPS IPP Header, unable to parse.',
-          u'Reason given: {}').format(e))
+          u'Reason given: {}'.format(exception))
 
     if (header.major_version != self.IPP_MAJOR_VERSION or
         header.minor_version != self.IPP_MINOR_VERSION):
@@ -198,17 +198,17 @@ class CupsIppParser(parser.BaseParser):
       name, value = self.ReadPair(file_object)
 
     # Yield the events.
-    if data_dict['time-at-creation'][0]:
+    if u'time-at-creation' in data_dict:
       yield CupsIppEvent(
           data_dict['time-at-creation'][0],
           eventdata.EventTimestamp.CREATION_TIME,
           data_dict)
-    if data_dict['time-at-processing'][0]:
+    if u'time-at-processing' in data_dict:
       yield CupsIppEvent(
           data_dict['time-at-processing'][0],
           eventdata.EventTimestamp.START_TIME,
           data_dict)
-    if data_dict['time-at-completed'][0]:
+    if u'time-at-completed' in data_dict:
       yield CupsIppEvent(
           data_dict['time-at-completed'][0],
           eventdata.EventTimestamp.END_TIME,

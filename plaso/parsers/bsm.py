@@ -520,10 +520,10 @@ class BsmParser(parser.BaseParser):
 
     try:
       is_bsm = self.VerifyFile(file_object)
-    except (IOError, construct.FieldError) as e:
+    except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
           u'Not a BSM File, unable to parse.',
-          u'Reason given: {:s}'.format(e))
+          u'Reason given: {:s}'.format(exception))
 
     if not is_bsm:
       raise errors.UnableToParseFile(
@@ -603,10 +603,10 @@ class BsmParser(parser.BaseParser):
       try:
         file_object.seek(
             (offset + length) - file_object.tell(), os.SEEK_CUR)
-      except (IOError, construct.FieldError) as e:
+      except (IOError, construct.FieldError) as exception:
         logging.warning(
             (u'Unable to jumping to the next entry. ',
-            u'Reason given: {}'.format(e)))
+            u'Reason given: {}'.format(exception)))
         return
 
     if self.os and self.os == 'MacOSX':
