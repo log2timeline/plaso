@@ -243,9 +243,9 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
     try:
       timestamp = datetime.datetime.fromtimestamp(time, zone)
-    except ValueError as e:
+    except ValueError as exception:
       logging.error(
           ('Unable to determine correct year of log file, using current '
-           'one, error msg: %s', e))
+           'one, error msg: %s', exception))
       return timelib.GetCurrentYear()
     return timestamp.year

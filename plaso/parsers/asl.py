@@ -27,7 +27,8 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
-__author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
+
+__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 # TODO: get the real name for the user of the group having the uid or gid.
 
@@ -203,10 +204,10 @@ class AslParser(parser.BaseParser):
     file_object.seek(0, os.SEEK_SET)
     try:
       header = self.ASL_HEADER_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as e:
+    except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
           u'Not an ASL Header, unable to parse.',
-          u'Reason given: {}'.format(e))
+          u'Reason given: {}'.format(exception))
 
     if header.magic != self.ASL_MAGIC:
       raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
@@ -252,9 +253,9 @@ class AslParser(parser.BaseParser):
 
     try:
       record_header = self.ASL_RECORD_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as e:
+    except (IOError, construct.FieldError) as exception:
       logging.warning(u'Unable to parse ASL event, '
-                      u'reason given: {}'.format(e))
+                      u'reason given: {}'.format(exception))
       return None, None
 
     # Variable tam_fields = is the real length of the dynamic fields.
@@ -295,9 +296,9 @@ class AslParser(parser.BaseParser):
     while tam_fields > 0:
       try:
         raw_field = file_object.read(8)
-      except (IOError, construct.FieldError) as e:
+      except (IOError, construct.FieldError) as exception:
         logging.warning(u'Unable to parse ASL event, '
-                        u'reason given: {}'.format(e))
+                        u'reason given: {}'.format(exception))
         return None, None
       try:
         # Try to read as a String.
@@ -311,9 +312,9 @@ class AslParser(parser.BaseParser):
       # If it is not a string, it must be a pointer.
       try:
         field = self.POINTER.parse(raw_field)
-      except ValueError:
+      except ValueError as exception:
         logging.warning(u'Unable to parse ASL event, '
-                        u'reason given: {}'.format(e))
+                        u'reason given: {}'.format(exception))
         return None, None
       if field != 0:
         # The next IF ELSE is only for performance issues, avoiding seek.
@@ -325,9 +326,9 @@ class AslParser(parser.BaseParser):
           try:
             values.append((self.ASL_RECORD_DYN_VALUE.parse(
                 dynamic_part[pos:])).value.partition('\x00')[0])
-          except (IOError, construct.FieldError) as e:
+          except (IOError, construct.FieldError) as exception:
             logging.warning(u'Unable to parse ASL event, '
-                            u'reason given: {}'.format(e))
+                            u'reason given: {}'.format(exception))
             return None, None
         else:
           # Only if it is a pointer that points to the
