@@ -318,7 +318,7 @@ class Collector(queue.PathSpecQueueProducer):
                         the VSS.
       store_index: The VSS store index number.
     """
-    logging.debug(u'Collecting from VSS store {0:s}'.format(store_index))
+    logging.debug(u'Collecting from VSS store {0:d}'.format(store_index))
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
