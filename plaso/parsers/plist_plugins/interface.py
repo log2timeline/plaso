@@ -118,6 +118,10 @@ class PlistPlugin(plugin.BasePlugin):
       if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
         raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
     else:
+      # Make sure we are getting back an object that has an iterator.
+      if not hasattr(top_level, '__iter__'):
+        raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+
       # This is a list and we need to just look at the first level
       # of keys there.
       keys = []

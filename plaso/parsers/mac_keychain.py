@@ -215,7 +215,14 @@ class KeychainParser(parser.BaseParser):
     for table_offset in table_offsets:
       # Skipping X bytes, unknown data at this point.
       file_object.seek(table_offset - file_object.tell(), os.SEEK_CUR)
-      table = self.TABLE_HEADER.parse_stream(file_object)
+      try:
+        table = self.TABLE_HEADER.parse_stream(file_object)
+      except construct.FieldError as exception:
+        logging.warning((
+            u'Unable to parse table header, moving to the next one, '
+            u'reason: {:s}').format(
+                exception))
+        continue
       # Table_offset: absolute byte in the file where the table starts.
       # table.first_record: first record in the table, relative to the
       #                     first byte of the table.
