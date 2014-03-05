@@ -119,7 +119,7 @@ class WinEvtxParser(parser.BaseParser):
         yield WinEvtxRecordEvent(evtx_record)
       except IOError as exception:
         logging.warning((
-            u'[{0:s}] unable to parse event record: {1:s} in file: {2:s} '
+            u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
             u'with error: {3:s}').format(
                 self.parser_name, record_index, file_entry.name, exception))
 
