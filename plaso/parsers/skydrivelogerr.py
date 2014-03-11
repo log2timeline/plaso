@@ -198,14 +198,11 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       timestamp: A plaso timelib timestamp event or 0.
     """
     year, month, day = structure.date
-    try:
-      hour = int(structure.hh, 10)
-      minute = int(structure.mm, 10)
-      second = int(structure.ss, 10)
-      microsecond = int(structure.ms, 10) * 1000
-    except ValueError:
-      logging.warning(u'SkyDriveLogError invalid header timestamp')
-      return 0
+    hour = structure.get('hh', 0)
+    minute = structure.get('mm', 0)
+    second = structure.get('ss', 0)
+    microsecond = structure.get('ms', 0) * 1000
+
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, microsecond)
 
@@ -223,12 +220,14 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     """
     hour, minute, second = structure.time[0]
     microsecond = structure.time[1] * 1000
-    try:
-      year = int(structure.year_short, 10) + 2000
-      month = int(structure.month, 10)
-      day = int(structure.day, 10)
-    except ValueError:
-      logging.warning(u'SkyDriveLogError invalid log line timestamp')
+    # TODO: Verify if timestamps are locale dependent.
+    year = structure.get('year_short', 0)
+    month = structure.get('month', 0)
+    day = structure.get('day', 0)
+    if year < 0 or not month or not day:
       return 0
+
+    year += 2000
+
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, microsecond)

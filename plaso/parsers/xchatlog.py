@@ -222,21 +222,19 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       return 0
     hour, minute, second = parse_result.time
     if not year:
-      try:
-        year = int(parse_result.year, 10)
-      except ValueError:
-        # This condition could happen when parsing the header line: if unable
-        # to get a valid year, returns a '0' timestamp, thus preventing any
-        # log line parsing (since xchat_year is unset to '0') until a new good
-        # (it means supported) header with a valid year information is found.
-        # TODO: reconsider this behaviour.
-        return 0
+      # This condition could happen when parsing the header line: if unable
+      # to get a valid year, returns a '0' timestamp, thus preventing any
+      # log line parsing (since xchat_year is unset to '0') until a new good
+      # (it means supported) header with a valid year information is found.
+      # TODO: reconsider this behaviour.
+      year = parse_result.get('year', 0)
+
+      if not year:
+        return year
+
       self.xchat_year = year
-    try:
-      day = int(parse_result.day, 10)
-    except ValueError:
-      logging.debug(u'XChatLog line invalid day: {}'.format(parse_result.day))
-      return 0
+
+    day = parse_result.get('day', 0)
     timestamp = timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, 0, self.local_zone)
     return timestamp
