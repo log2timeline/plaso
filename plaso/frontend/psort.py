@@ -364,7 +364,8 @@ def ParseStorage(my_args):
       if hasattr(information, 'counter'):
         counter['Stored Events'] += information.counter['total']
 
-    logging.info('Output processing is done.')
+    if not my_args.quiet:
+      logging.info('Output processing is done.')
 
     # Get all reports and tags from analysis plugins.
     if my_args.analysis_plugins:

@@ -54,7 +54,8 @@ class WinRegistryParser(parser.BaseParser):
     """
     super(WinRegistryParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
-    self._plugins = interface.GetRegistryPlugins()
+    parser_filter_string = getattr(self._config, 'parsers', None)
+    self._plugins = interface.GetRegistryPlugins(parser_filter_string)
 
   def _RecurseKey(self, key):
     """A generator that takes a key and yields every subkey of it."""
