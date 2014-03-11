@@ -299,18 +299,22 @@ class PluginList(object):
     return set(self._key_plugins).union(self._value_plugins)
 
 
-def GetRegistryPlugins():
+def GetRegistryPlugins(filter_list=None):
   """Build a list of all available Windows Registry plugins.
 
      This function uses the class registration library to find all classes that
      have implemented the RegistryPlugin class.
+
+  Args:
+    filter_list: An optional filter criteria to limit the plugins loaded.
 
   Returns:
     A plugins list (instance of PluginList).
   """
   plugins_list = PluginList()
 
-  for plugin_cls in plugin.GetRegisteredPlugins(RegistryPlugin).itervalues():
+  for plugin_cls in plugin.GetRegisteredPlugins(
+      RegistryPlugin, parser_filter_string=filter_list).itervalues():
     plugin_type = plugin_cls.REG_TYPE
     plugins_list.AddPlugin(
         plugin_type, plugin_cls.classes.get(plugin_cls.plugin_name))
