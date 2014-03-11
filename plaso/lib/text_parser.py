@@ -545,13 +545,23 @@ def PyParseIntCast(unused_string, unused_location, tokens):
     tokens: A list of extracted tokens (where the string to be converted is
     stored).
   """
+  # Cast the regular tokens.
   for index, token in enumerate(tokens):
     try:
       tokens[index] = int(token)
     except ValueError:
-      logging.error(u'Unable to cast [{}] to an int, returning -1'.format(
+      logging.error(u'Unable to cast [{}] to an int, setting to 0'.format(
           token))
       tokens[index] = 0
+
+  # We also need to cast the dictionary built tokens.
+  for key in tokens.keys():
+    try:
+      tokens[key] = int(tokens[key], 10)
+    except ValueError:
+      logging.error(u'Unable to cast [{} = {}] to an int, setting to 0'.format(
+          key, tokens[key]))
+      tokens[key] = 0
 
 
 def PyParseJoinList(unused_string, unused_location, tokens):
@@ -820,13 +830,14 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     """A constructor for the pyparsing assistant."""
     super(PyparsingMultiLineTextParser, self).__init__(pre_obj, config)
     self._buffer = ''
+    self._buffer_size = self.BUFFER_SIZE
 
   def _FillBuffer(self, filehandle):
     """Fill the buffer."""
-    if len(self._buffer) > self.BUFFER_SIZE:
+    if len(self._buffer) > self._buffer_size:
       return
 
-    self._buffer += filehandle.read(self.BUFFER_SIZE)
+    self._buffer += filehandle.read(self._buffer_size)
 
     # If a parser specifically indicates specific encoding we need
     # to handle the buffer as it is an unicode string.

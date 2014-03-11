@@ -202,7 +202,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     try:
       hour, minute, second = time
       timestamp = timelib.Timestamp.FromTimeParts(
-          year, month, int(day, 10), hour, minute, second)
+          year, month, day, hour, minute, second)
     except ValueError:
       timestamp = 0
     return timestamp
