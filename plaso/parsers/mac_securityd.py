@@ -196,14 +196,10 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       security_api = u'unknown'
     else:
       security_api = structure.security_api
-    try:
-      sender_pid = int(structure.sender_pid, 10)
-    except ValueError:
-      logging.debug(u'Unknown PID {}'.format(structure.sender_pid))
-      sender_pid = None
 
     return MacSecuritydLogEvent(
-        timestamp, structure, sender, sender_pid, security_api, caller, message)
+        timestamp, structure, sender, structure.sender_pid, security_api,
+        caller, message)
 
   def _GetTimestamp(self, day, month, year, time):
     """Gets a timestamp from a pyparsing ParseResults timestamp.
@@ -213,21 +209,17 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     08, Nov, [20, 36, 37]
 
     Args:
-      timestamp_string: The pyparsing ParseResults object
-
-    Returns:
       day: An integer representing the day.
       month: An integer representing the month.
       year: An integer representing the year.
-      timestamp: A plaso timelib timestamp event or 0.
+      time: A list containing the hours, minutes, seconds.
+
+    Returns:
+      timestamp: A plaso timestamp.
     """
-    try:
-      hour, minute, second = time
-      timestamp = timelib.Timestamp.FromTimeParts(
-          year, month, int(day, 10), hour, minute, second)
-    except ValueError:
-      timestamp = 0
-    return timestamp
+    hours, minutes, seconds = time
+    return timelib.Timestamp.FromTimeParts(
+        year, month, day, hours, minutes, seconds)
 
   def _GetYear(self, stat, zone):
     """Retrieves the year either from the input file or from the settings."""
