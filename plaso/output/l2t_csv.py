@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -30,7 +31,7 @@ from plaso.output import helper
 
 
 class L2tcsv(output.FileLogOutputFormatter):
-  """The CSV format used by log2timeline, with 17 fixed fields."""
+  """CSV format used by log2timeline, with 17 fixed fields."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -48,8 +49,8 @@ class L2tcsv(output.FileLogOutputFormatter):
             self._preprocesses[store_number] = info
 
     self.filehandle.WriteLine(
-        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        'version,filename,inode,notes,format,extra\n')
+        u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        u'version,filename,inode,notes,format,extra\n')
 
   def WriteEvent(self, event_object):
     """Write a single event."""
@@ -68,6 +69,9 @@ class L2tcsv(output.FileLogOutputFormatter):
     Raises:
       errors.NoFormatterFound: If no formatter for that event is found.
     """
+    if not hasattr(event_object, 'timestamp'):
+      return
+
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
@@ -76,9 +80,6 @@ class L2tcsv(output.FileLogOutputFormatter):
 
     msg, msg_short = event_formatter.GetMessages(event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
-
-    if not hasattr(event_object, 'timestamp'):
-      return
 
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
@@ -97,13 +98,13 @@ class L2tcsv(output.FileLogOutputFormatter):
           event_object.pathspec, 'image_inode'):
         inode = event_object.pathspec.image_inode
 
-    hostname = getattr(event_object, 'hostname', '')
+    hostname = getattr(event_object, 'hostname', u'')
 
     # TODO: move this into a base output class.
-    username = getattr(event_object, 'username', '-')
+    username = getattr(event_object, 'username', u'-')
     if self.store:
       if not hostname:
-        hostname = self._hostnames.get(event_object.store_number, '-')
+        hostname = self._hostnames.get(event_object.store_number, u'-')
 
       pre_obj = self._preprocesses.get(event_object.store_number)
       if pre_obj:
@@ -117,18 +118,18 @@ class L2tcsv(output.FileLogOutputFormatter):
            helper.GetLegacy(event_object),
            source_short,
            source_long,
-           getattr(event_object, 'timestamp_desc', '-'),
+           getattr(event_object, 'timestamp_desc', u'-'),
            username,
            hostname,
            msg_short,
            msg,
            '2',
-           getattr(event_object, 'display_name', '-'),
+           getattr(event_object, 'display_name', u'-'),
            inode,
-           getattr(event_object, 'notes', '-'),  # Notes field placeholder.
-           getattr(event_object, 'parser', '-'),
-           extra.replace('\n','-').replace('\r', ''))
+           getattr(event_object, 'notes', u'-'),  # Notes field placeholder.
+           getattr(event_object, 'parser', u'-'),
+           extra.replace('\n', u'-').replace('\r', u''))
 
     out_write = u'{0}\n'.format(
-        u','.join(unicode(x).replace(',', ' ') for x in row))
+        u','.join(unicode(x).replace(',', u' ') for x in row))
     self.filehandle.WriteLine(out_write)
