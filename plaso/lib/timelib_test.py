@@ -281,6 +281,14 @@ class TimeLibUnitTest(unittest.TestCase):
         timelib.Timestamp.CopyToDatetime(timestamp, timezone),
         datetime.datetime(2013, 3, 14, 21, 20, 8, 850041, tzinfo=timezone))
 
+  def testCopyToPosix(self):
+    """Test converting microseconds to seconds."""
+    # expr `date -u -d"Oct 1, 2013 12:00:00" +"%s"` \* 1000000
+    timestamp = 1380628800000000 #
+    expected_timestamp = 1380628800000000 // 1000000
+    self.assertEquals(
+        timelib.Timestamp.CopyToPosix(timestamp), expected_timestamp)
+
   def testTimestampFromTimeString(self):
     """The the FromTimeString function."""
     # Test daylight savings.
