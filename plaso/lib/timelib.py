@@ -504,6 +504,18 @@ class Timestamp(object):
     return dt.isoformat()
 
   @classmethod
+  def CopyToPosix(cls, timestamp):
+    """Converts microsecond timestamps to POSIX timestamps.
+
+    Args:
+      timestamp: An integer containing the microsecond timestamp.
+
+    Returns:
+      An integer value containing the timestamp.
+    """
+    return timestamp // cls.MICRO_SECONDS_PER_SECOND
+
+  @classmethod
   def GetNow(cls):
     """Retrieves the current time (now) as a timestamp in UTC."""
     time_elements = time.gmtime()
