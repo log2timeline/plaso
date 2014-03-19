@@ -142,6 +142,9 @@ def CheckPythonModule(module_name, version_attribute_name, minimum_version):
   if version_attribute_name and minimum_version:
     module_version = getattr(module_object, version_attribute_name, None)
 
+    if not module_version:
+      return False
+
     # Split the version string and convert every digit into an integer.
     # A string compare of both version strings will yield an incorrect result.
     module_version_map = map(int, module_version.split('.'))

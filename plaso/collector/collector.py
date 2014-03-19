@@ -339,6 +339,11 @@ class Collector(queue.PathSpecQueueProducer):
 
     source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
+    if not source_file_entry:
+      logging.warning(u'No files to collect.')
+      self.SignalEndOfInput()
+      return
+
     if not source_file_entry.IsDirectory() and not source_file_entry.IsFile():
       raise errors.CollectorError(
           u'Source path: {0:s} not a file or directory.'.format(
