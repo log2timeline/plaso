@@ -395,7 +395,7 @@ def Main():
   # The option of running both options.
   if options.filter:
     image_extractor.ExtractWithFilter(
-        options.filter, options.path,
+        options.path, options.filter,
         process_vss=options.vss,
         remove_duplicates=options.remove_duplicates)
 
