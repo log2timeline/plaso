@@ -556,7 +556,7 @@ def StringToDatetime(timestring, timezone=pytz.utc, dayfirst=False):
   try:
     datetimeobject = dateutil.parser.parse(timestring, dayfirst=dayfirst)
 
-  except ValueError as error_msg:
+  except (TypeError, ValueError) as error_msg:
     logging.error(
         u'Unable to copy {} to a datetime object, error: {}'.format(
             timestring, error_msg))
