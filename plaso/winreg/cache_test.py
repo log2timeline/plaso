@@ -36,10 +36,10 @@ class CacheTest(test_lib.WinRegTestCase):
     file_entry = self._GetTestFileEntry(test_file)
     winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
 
-    winreg_cache = cache.WinRegistryCache(winreg_file, 'SYSTEM')
+    winreg_cache = cache.WinRegistryCache()
 
     # Test if this function does not raise an exception.
-    winreg_cache.BuildCache()
+    winreg_cache.BuildCache(winreg_file, 'SYSTEM')
 
     self.assertEqual(
        winreg_cache.attributes['current_control_set'], 'ControlSet001')

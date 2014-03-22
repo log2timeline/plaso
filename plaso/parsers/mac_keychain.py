@@ -238,6 +238,8 @@ class KeychainParser(parser.BaseParser):
           for object_record in self._ReadEntryApplication(file_object):
             yield object_record
 
+    file_object.close()
+
   def _VerifyStructure(self, file_object):
     """Verify that we are dealing with an Keychain entry.
 

@@ -255,7 +255,6 @@ class WinPyregfFile(interface.WinRegFile):
           u'Ignoring provided value.').format(codepage))
 
     self._file_object = file_entry.GetFileObject()
-    self.file_entry = file_entry
     self._pyregf_file.open_file_object(self._file_object)
 
     self._base_key = self._pyregf_file.get_root_key()
@@ -322,8 +321,8 @@ class WinRegistry(object):
           u'Unable to set the Registry codepage to: {}. Not setting it'.format(
               codepage))
 
-    self._file_object = file_entry.GetFileObject()
-    self._pyregf_file.open_file_object(self._file_object)
+    file_object = file_entry.GetFileObject()
+    self._pyregf_file.open_file_object(file_object)
 
   def GetRoot(self):
     """Return the root key of the Registry hive."""

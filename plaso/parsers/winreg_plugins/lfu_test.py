@@ -35,7 +35,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    registry_cache = cache.WinRegistryCache(None, 'SYSTEM')
+    registry_cache = cache.WinRegistryCache()
     registry_cache.attributes['current_control_set'] = 'ControlSet001'
     self._plugin = lfu.BootExecutePlugin(
         pre_obj=pre_obj, reg_cache=registry_cache)
@@ -107,7 +107,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    registry_cache = cache.WinRegistryCache(None, 'SYSTEM')
+    registry_cache = cache.WinRegistryCache()
     registry_cache.attributes['current_control_set'] = 'ControlSet001'
     self._plugin = lfu.BootVerificationPlugin(
         pre_obj=pre_obj, reg_cache=registry_cache)

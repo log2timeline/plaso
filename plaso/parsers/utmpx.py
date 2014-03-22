@@ -200,3 +200,5 @@ class UtmpxParser(parser.BaseParser):
       event_object.offset = file_object.tell()
       yield event_object
       event_object = self._ReadEntry(file_object)
+
+    file_object.close()
