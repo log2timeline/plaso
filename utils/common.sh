@@ -35,7 +35,17 @@ linter()
   # First find all files that need linter
   FILES=`git status -s | grep -v "^?" | awk "{ ${AWK_SCRIPT} }" | grep "\.py$"`;
 
-  LINTER="pylint --rcfile=utils/pylintrc"
+  PYLINT_VERSION=`pylint --version 2> /dev/null | grep 'pylint' | sed 's/^pylint \(.*\),/\1/'`;
+
+  RESULT=`echo -e "${PYLINT_VERSION}\n1.1.0" | sort -V | head -n1`;
+
+  if test "${RESULT}" = "${PYLINT_VERSION}";
+  then
+    PYLINTRC="utils/pylintrc";
+  else
+    PYLINTRC="utils/pylintrc-1.1.0";
+  fi
+  LINTER="pylint --rcfile=${PYLINTRC}";
 
   echo "Run through pylint.";
 
