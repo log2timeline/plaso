@@ -110,3 +110,4 @@ class OleCfParser(parser.BaseParser):
           event_object.plugin = default_plugin.plugin_name
           yield event_object
 
+    file_object.close()

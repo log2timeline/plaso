@@ -534,6 +534,8 @@ class BsmParser(parser.BaseParser):
       yield event_object
       event_object = self.ReadBSMEvent(file_object)
 
+    file_object.close()
+
   def ReadBSMEvent(self, file_object):
     """Returns a BsmEvent from a single BSM entry.
 

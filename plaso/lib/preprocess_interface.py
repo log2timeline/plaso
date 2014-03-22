@@ -302,8 +302,8 @@ class WinRegistryPreprocess(PreprocessPlugin):
           u'Unable to open the registry: {} [{}]'.format(file_name, e))
 
     if self._path_expander is None:
-      reg_cache = cache.WinRegistryCache(winreg_file, self.REG_FILE)
-      reg_cache.BuildCache()
+      reg_cache = cache.WinRegistryCache()
+      reg_cache.BuildCache(winreg_file, self.REG_FILE)
       self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
           self._obj_store, reg_cache)
 

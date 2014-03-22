@@ -177,6 +177,8 @@ class UtmpParser(parser.BaseParser):
       yield event_object
       event_object = self._ReadUtmpEvent(file_object)
 
+    file_object.close()
+
   def _VerifyTextField(self, text):
     """Check if a bytestream is a null terminated string.
 
