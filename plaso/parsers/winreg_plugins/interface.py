@@ -46,12 +46,10 @@ class RegistryPlugin(plugin.BasePlugin):
   # higher level of prioritization to Windows Registry plugins.
   WEIGHT = 3
 
-  def __init__(self, hive=None, pre_obj=None, reg_cache=None):
+  def __init__(self, pre_obj=None, reg_cache=None):
     """Initializes Windows Registry plugin object.
 
     Args:
-      hive: Optional Windows Registry hive (instance of WinRegistry).
-            The default is None.
       pre_obj: Optional preprocessing object that contains information gathered
                during preprocessing of data. The default is None.
       reg_cache: Optional Windows Registry objects cache (instance of
@@ -59,7 +57,6 @@ class RegistryPlugin(plugin.BasePlugin):
     """
     super(RegistryPlugin, self).__init__(pre_obj)
     self._config = pre_obj
-    self._hive = hive
 
     # TODO: Clean this up, this value is stored but not used.
     self._reg_cache = reg_cache
@@ -95,19 +92,16 @@ class KeyPlugin(RegistryPlugin):
 
   WEIGHT = 1
 
-  def __init__(self, hive=None, pre_obj=None, reg_cache=None):
+  def __init__(self, pre_obj=None, reg_cache=None):
     """Initializes key-based Windows Registry plugin object.
 
     Args:
-      hive: Optional Windows Registry hive (instance of WinRegistry).
-            The default is None.
       pre_obj: Optional preprocessing object that contains information gathered
                during preprocessing of data. The default is None.
       reg_cache: Optional Windows Registry objects cache (instance of
                  WinRegistryCache). The default is None.
     """
-    super(KeyPlugin, self).__init__(
-        hive=hive, pre_obj=pre_obj, reg_cache=reg_cache)
+    super(KeyPlugin, self).__init__(pre_obj=pre_obj, reg_cache=reg_cache)
     self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
         pre_obj, reg_cache)
 

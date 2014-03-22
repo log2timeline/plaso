@@ -89,22 +89,23 @@ class WinRegistryParser(parser.BaseParser):
     Yields:
       An event object.
     """
-    file_object = file_entry.GetFileObject()
-
     # TODO: Remove this magic reads when the classifier has been
     # implemented, until then we need to make sure we are dealing with
     # a Windows NT Registry file before proceeding.
     magic = 'regf'
+
+    file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
     data = file_object.read(len(magic))
-
-    registry = winregistry.WinRegistry(
-        winregistry.WinRegistry.BACKEND_PYREGF)
+    file_object.close()
 
     if data != magic:
       raise errors.UnableToParseFile((
           u'[{0:s}] unable to parse file: {1:s} with error: invalid '
           u'signature.').format(self.parser_name, file_entry.name))
+
+    registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
 
     # Determine type, find all parsers
     try:
@@ -136,8 +137,8 @@ class WinRegistryParser(parser.BaseParser):
         u'Windows Registry file {0:s}: detected as: {1:s}'.format(
             file_entry.name, registry_type))
 
-    registry_cache = cache.WinRegistryCache(winreg_file, registry_type)
-    registry_cache.BuildCache()
+    registry_cache = cache.WinRegistryCache()
+    registry_cache.BuildCache(winreg_file, registry_type)
 
     plugins = {}
     number_of_plugins = 0
@@ -146,7 +147,7 @@ class WinRegistryParser(parser.BaseParser):
       plugins[weight] = []
       for plugin in plist:
         plugins[weight].append(plugin(
-            hive=winreg_file, pre_obj=self._pre_obj, reg_cache=registry_cache))
+            pre_obj=self._pre_obj, reg_cache=registry_cache))
         number_of_plugins += 1
 
     logging.debug(
@@ -174,4 +175,4 @@ class WinRegistryParser(parser.BaseParser):
               yield event_object
             break
 
-    file_object.close()
+    winreg_file.Close()

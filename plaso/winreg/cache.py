@@ -36,24 +36,22 @@ class WinRegistryCache(object):
      across all files parsed within an image.
   """
 
-  def __init__(self, hive, reg_type):
-    """Initialize the cache object.
+  def __init__(self):
+    """Initialize the cache object."""
+    super(WinRegistryCache, self).__init__()
+    self.attributes = {}
+
+  def BuildCache(self, hive, reg_type):
+    """Builds up the cache.
 
     Args:
       hive: The WinRegistry object.
       reg_type: The Registry type, eg. "SYSTEM", "NTUSER".
     """
-    super(WinRegistryCache, self).__init__()
-    self._reg_type = reg_type
-    self._hive = hive
-    self.attributes = {}
-
-  def BuildCache(self):
-    """Builds up the cache."""
     for _, cl in WinRegCachePlugin.classes.items():
       try:
-        plugin = cl(self._hive, self._reg_type)
-        value = plugin.Process()
+        plugin = cl(reg_type)
+        value = plugin.Process(hive)
         if value:
           self.attributes[plugin.ATTRIBUTE] = value
       except errors.WrongPlugin:
@@ -72,11 +70,10 @@ class WinRegCachePlugin(object):
   REG_TYPE = ''
   REG_KEY = ''
 
-  def __init__(self, hive, reg_type):
+  def __init__(self, reg_type):
     """Initialize the plugin.
 
     Args:
-      hive: The Windows Registry hive object (instance of WinRegistry).
       reg_type: The detected Windows Registry type. This value should match
                 the REG_TYPE value defined by the plugins.
     """
@@ -84,14 +81,16 @@ class WinRegCachePlugin(object):
     if self.REG_TYPE.lower() != reg_type.lower():
       raise errors.WrongPlugin(u'Not the correct Windows Registry type.')
 
-    self._hive = hive
+  def Process(self, hive):
+    """Extract the correct key and get the value.
 
-  def Process(self):
-    """Extract the correct key and get the value."""
+    Args:
+      hive: The Windows Registry hive object (instance of WinRegistry).
+    """
     if not self.REG_KEY:
       return
 
-    key = self._hive.GetKeyByPath(self.REG_KEY)
+    key = hive.GetKeyByPath(self.REG_KEY)
 
     if not key:
       return

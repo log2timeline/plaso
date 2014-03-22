@@ -184,8 +184,8 @@ class RegCache(object):
   def BuildCache(cls):
     """Build the registry cache."""
     # Calculate the registry cache.
-    cls.reg_cache = cache.WinRegistryCache(cls.hive, cls.hive_type)
-    cls.reg_cache.BuildCache()
+    cls.reg_cache = cache.WinRegistryCache()
+    cls.reg_cache.BuildCache(cls.hive, cls.hive_type)
     cls.path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
         cls.pre_obj, cls.reg_cache)
 
