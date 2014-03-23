@@ -17,6 +17,7 @@
 # limitations under the License.
 """Basic Security Module Parser."""
 
+import binascii
 import construct
 import logging
 import os
@@ -30,7 +31,6 @@ from plaso.lib import timelib
 from plaso.unix import bsmtoken
 
 import pytz
-
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
@@ -995,8 +995,23 @@ class BsmParser(parser.BaseParser):
     """
     ipv6_string = self.IPV6_STRUCT.build(
         construct.Container(high=high, low=low))
-    return socket.inet_ntop(
-        socket.AF_INET6, ipv6_string)
+    # socket.inet_ntop not supported in Windows.
+    if hasattr(socket, 'inet_ntop'):
+      return socket.inet_ntop(socket.AF_INET6, ipv6_string)
+    else:
+      # TODO: this approach returns double "::", illegal IPv6 addr.
+      str_address = binascii.hexlify(ipv6_string)
+      address = []
+      blank = False
+      for pos in range(0, len(str_address), 4):
+        if str_address[pos:pos+4] == '0000':
+          if not blank:
+            address.append('')
+            blank = True
+        else:
+          blank = False
+          address.append(str_address[pos:pos+4].lstrip('0'))
+      return u':'.join(address)
 
   def _IPv4Format(self, address):
     """Change an integer IPv4 address value for its 4 octets representation.
