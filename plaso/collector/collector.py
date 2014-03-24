@@ -344,9 +344,11 @@ class Collector(queue.PathSpecQueueProducer):
       self.SignalEndOfInput()
       return
 
-    if not source_file_entry.IsDirectory() and not source_file_entry.IsFile():
+    if (not source_file_entry.IsDirectory() and
+        not source_file_entry.IsFile() and
+        not source_file_entry.IsDevice()):
       raise errors.CollectorError(
-          u'Source path: {0:s} not a file or directory.'.format(
+          u'Source path: {0:s} not a device, file or directory.'.format(
               self._source_path))
 
     if self._process_image:
