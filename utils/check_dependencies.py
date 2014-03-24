@@ -82,11 +82,13 @@ def CheckLibyal(libyal_python_modules):
   for module_name, module_version in libyal_python_modules:
     try:
       module_object = map(__import__, [module_name])[0]
+      module_loaded = True
     except ImportError:
       print u'[FAILURE]\tmissing: {0:s}.'.format(module_name)
+      module_loaded = False
       result = False
 
-    if result:
+    if module_loaded:
       libyal_name = u'lib{}'.format(module_name[2:])
 
       installed_version = int(module_object.get_version())
@@ -259,6 +261,7 @@ if __name__ == '__main__':
       ('pyolecf', 20131012),
       ('pyqcow', 20131204),
       ('pyregf', 20130716),
+      ('pysmdev', 20140323),
       ('pyvhdi', 20131210),
       ('pyvshadow', 20131209),
   ])
