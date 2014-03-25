@@ -222,6 +222,9 @@ if __name__ == '__main__':
   if not CheckPythonModule('binplist', '__version__', '0.1.4'):
     check_result = False
 
+  if not CheckPythonModule('six', '__version__', '1.2.0'):
+    check_result = False
+
   if not CheckPythonModule('construct', '__version__', '2.5.1'):
     check_result = False
 
