@@ -42,6 +42,23 @@ from plaso.lib import preprocess_interface
 BYTES_IN_A_MIB = 1024 * 1024
 
 
+class LoggingFilter(logging.Filter):
+  """Class that implements basic filtering of log events for plaso.
+
+  Some libraries, like binplist, introduce excessive amounts of
+  logging that clutters down the debug logs of plaso, making them
+  almost non-usable. This class implements a filter designed to make
+  the debug logs more clutter-free.
+  """
+
+  def filter(self, record):
+    """Filter messages sent to the logging infrastructure."""
+    if record.module == 'binplist' and record.levelno == logging.DEBUG:
+      return False
+
+    return True
+
+
 # TODO: move or rewrite this after the dfVFS refactor.
 def GetPartitionMap(image_path):
   """Returns a list of dict objects representing partition information.
@@ -328,12 +345,17 @@ def Main():
   format_str = (
       u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
       u'<%(module)s> %(message)s')
+
   if options.debug:
     if options.logfile:
       logging.basicConfig(
           level=logging.DEBUG, format=format_str, filename=options.logfile)
     else:
       logging.basicConfig(level=logging.DEBUG, format=format_str)
+
+    logging_filter = LoggingFilter()
+    root_logger = logging.getLogger()
+    root_logger.addFilter(logging_filter)
   elif options.logfile:
     logging.basicConfig(
         level=logging.INFO, format=format_str, filename=options.logfile)

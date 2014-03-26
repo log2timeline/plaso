@@ -110,7 +110,14 @@ class Engine(object):
 
     if self.config.workers < 1:
       # One worker for each "available" CPU (minus other processes).
-      cpus = multiprocessing.cpu_count()
+      # The number three here is derived from the fact that the engine starts
+      # up:
+      #   + A collector process.
+      #   + A storage process.
+      # If we want to utilize all CPU's on the system we therefore need to start
+      # up workers that amounts to the total number of CPU's - 3 (these two plus
+      # the main process). Thus the number three.
+      cpus = multiprocessing.cpu_count() - 3
 
       if cpus <= self.MINIMUM_WORKERS:
         cpus = self.MINIMUM_WORKERS

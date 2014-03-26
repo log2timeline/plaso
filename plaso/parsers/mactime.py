@@ -21,6 +21,7 @@ The format specifications can be read here:
   http://wiki.sleuthkit.org/index.php?title=Body_file
 """
 
+import logging
 import re
 
 from plaso.lib import event
@@ -104,10 +105,17 @@ class MactimeParser(text_parser.TextCSVParser):
               container.username = user.get('name', 'N/A')
 
     for key in self._TIMESTAMP_DESC_MAP.keys():
-      value = row.get(key, 0)
+      value = row.get(key, '0')
       if value:
+        try:
+          int_value = int(value, 10)
+        except ValueError as exception:
+          logging.error(
+              u'Unable to convert value to an integer, with error: {}'.format(
+                  exception))
+          continue
         container.Append(MactimeEvent(
-            int(value), self._TIMESTAMP_DESC_MAP[key]))
+            int_value, self._TIMESTAMP_DESC_MAP[key]))
 
     if len(container) > 0:
       return container
