@@ -19,6 +19,7 @@
 
 import logging
 import os
+import random
 import sys
 import tempfile
 
@@ -35,12 +36,16 @@ except ImportError:
   # pylint: disable-msg=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
+from IPython.config.loader import Config
+
 # pylint: disable-msg=unused-import
 from plaso import filters
 from plaso import formatters
 from plaso import output
 from plaso import parsers
 from plaso import preprocessors
+
+from plaso.collector import collector
 
 from plaso.frontend import preg
 from plaso.frontend import psort
@@ -185,6 +190,38 @@ def Main():
   namespace.update(globals())
   namespace.update({'l2t': l2t, 'pre_obj': pre_obj, 'options': options})
 
+  # Include few random phrases that get thrown in once the user exists the
+  # shell.
+  _my_random_phrases = [
+      u'I haven\'t seen timelines like this since yesterday.',
+      u'Timelining is super relaxing.',
+      u'Why did I not use the shell before?',
+      u'I like a do da cha cha',
+      u'I AM the Shogun of Harlem!',
+      (u'It doesn\'t matter if you win or lose, it\'s what you do with your '
+       u'dancin\' shoes'),
+      u'I have not had a night like that since the seventies.',
+      u'Baker Team. They\'re all dead, sir.',
+      (u'I could have killed \'em all, I could\'ve killed you. In town '
+       u'you\'re the law, out here it\'s me.'),
+      (u'Are you telling me that 200 of our men against your boy is a no-win '
+       u'situation for us?'),
+      u'Hunting? We ain\'t huntin\' him, he\'s huntin\' us!',
+      u'You picked the wrong man to push',
+      u'Live for nothing or die for something',
+      u'I am the Fred Astaire of karate.',
+      (u'God gave me a great body and it\'s my duty to take care of my '
+       u'physical temple.'),
+      u'This maniac should be wearing a number, not a badge',
+      u'Do you hate being dead?',
+      u'You\'ve got 5 seconds... and 3 are up.',
+      u'He is in a gunfire right now. I\'m gonna have to take a message',
+      u'That would be better than losing your teeth',
+      u'The less you know, the more you make',
+      (u'A SQL query goes into a bar, walks up to two tables and asks, '
+       u'"Can I join you?"'),
+      u'To understand what recursion is, you must first understand recursion']
+
   if len(sys.argv) > 1:
     test_file = sys.argv[1]
     if os.path.isfile(test_file):
@@ -209,20 +246,37 @@ def Main():
       '--------------------------------------------------------------\n'
       ' Welcome to Plaso console - home of the Plaso adventure land.\n'
       '--------------------------------------------------------------\n'
+      'This is the place where everything is allowed, as long as it is '
+      'written in Python.\n\n'
       'Objects available:\n\toptions - set of options to the engine.\n'
       '\tl2t - A copy of the log2timeline engine.\n'
       '\n'
-      'All libraries have been imported and can be used, see help(pfile) '
+      'All libraries have been imported and can be used, see help(engine) '
       'or help(parser).\n'
       '\n'
       'Base methods:\n'
       '{0:s}'
       '\n'
       '\n'
-      'Happy command line console fu-ing.').format(functions_strings)
+      'p.s. typing in "pdb" and pressing enter puts the shell in debug'
+      'mode which causes all exceptions being sent to pdb.\n'
+      'Happy command line console fu-ing.\n\n').format(functions_strings)
+
+  exit_message = u'You are now leaving the winter wonderland.\n\n{}'.format(
+      random.choice(_my_random_phrases))
+
+  shell_config = Config()
+  # Make slight adjustments to the iPython prompt.
+  shell_config.PromptManager.out_template = (
+      r'{color.Normal}[{color.Red}\#{color.Normal}]<<< ')
+  shell_config.PromptManager.in_template = (
+      r'[{color.LightBlue}\T{color.Normal}] {color.LightPurple}\Y2\n'
+      r'{color.Normal}[{color.Red}\#{color.Normal}] \$ ')
+  shell_config.PromptManager.in2_template = r'.\D.>>>'
 
   ipshell = InteractiveShellEmbed(
-      user_ns=namespace, banner1=banner, exit_msg='')
+      user_ns=namespace, config=shell_config, banner1=banner,
+      exit_msg=exit_message)
   ipshell.confirm_exit = False
   ipshell()
 

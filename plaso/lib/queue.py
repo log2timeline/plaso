@@ -32,6 +32,8 @@ import multiprocessing
 
 from dfvfs.path import path_spec as dfvfs_path_spec
 
+from google.protobuf import message
+
 from plaso.lib import event
 from plaso.lib import errors
 from plaso.serializer import json_serializer
@@ -302,8 +304,13 @@ class EventObjectQueueProducer(QueueProducer):
     # TODO: the event object cannot be correctly serialized by the queue
     # hence a manual serialization is done as a work around but the root
     # cause should be fixed.
-    event_object = self._serializer.WriteSerialized(event_object)
-    self._queue.PushItem(event_object)
+    try:
+      event_object = self._serializer.WriteSerialized(event_object)
+      self._queue.PushItem(event_object)
+    except (ValueError, message.EncodeError) as exception:
+      logging.error(
+          u'Unable to produce a serialized event object, with error:{}'.format(
+              exception))
 
   def ProduceEventObjects(self, event_objects):
     """Produces event objects onto the queue.

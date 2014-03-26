@@ -66,17 +66,42 @@ class CupsIppEvent(event.EventObject):
     self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
     self.timestamp_desc = timestamp_desc
     # TODO: Find a better solution than to have join for each attribute.
-    self.user = u', '.join(data_dict.get('user', None))
-    self.owner = u', '.join(data_dict.get('owner', None))
-    self.computer_name = u', '.join(data_dict.get('computer_name', None))
-    self.printer_id = u', '.join(data_dict.get('printer_id', None))
-    self.uri = u', '.join(data_dict.get('uri', None))
-    self.job_id = u', '.join(data_dict.get('job_id', None))
-    self.job_name = u', '.join(data_dict.get('job_name', None))
+    self.user = self._ListToString(data_dict.get('user', None))
+    self.owner = self._ListToString(data_dict.get('owner', None))
+    self.computer_name = self._ListToString(data_dict.get(
+        'computer_name', None))
+    self.printer_id = self._ListToString(data_dict.get('printer_id', None))
+    self.uri = self._ListToString(data_dict.get('uri', None))
+    self.job_id = self._ListToString(data_dict.get('job_id', None))
+    self.job_name = self._ListToString(data_dict.get('job_name', None))
     self.copies = data_dict.get('copies', 0)[0]
-    self.application = u', '.join(data_dict.get('application', None))
-    self.doc_type = u', '.join(data_dict.get('doc_type', None))
+    self.application = self._ListToString(data_dict.get('application', None))
+    self.doc_type = self._ListToString(data_dict.get('doc_type', None))
     self.data_dict = data_dict
+
+  def _ListToString(self, values):
+    """Returns a string from a list value using comma as a delimiter.
+
+    If any value inside the list contains comma, which is the delimiter,
+    the entire field is surrounded with double quotes.
+
+    Args:
+      values: A list containing strings.
+
+    Returns:
+      A string containing all the values joined using comma as a delimiter.
+    """
+    if values is None:
+      return None
+
+    if type(values) not in (list, tuple):
+      return None
+
+    for index, value in enumerate(values):
+      if ',' in value:
+        values[index] = u'"{}"'.format(value)
+
+    return u', '.join(values)
 
 
 class CupsIppParser(parser.BaseParser):
