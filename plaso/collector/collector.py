@@ -226,7 +226,14 @@ class Collector(queue.PathSpecQueueProducer):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_TSK, location=u'/', parent=volume_path_spec)
 
-    root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    try:
+      root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    except IOError as exception:
+      logging.error((
+          u'Unable to proceed, not able to read file system in image, with '
+          u'error: {:s}').format(
+              exception))
+      return
     self._ProcessDirectory(root_file_entry)
 
     if self._process_vss:
