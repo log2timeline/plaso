@@ -90,7 +90,7 @@ class MacUserPlugin(interface.PlistPlugin):
         key_values = [value.text for value in dict_elements.getchildren()]
         policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
 
-      if policy_dict['passwordLastSetTime']:
+      if policy_dict.get('passwordLastSetTime', 0):
         timestamp = timelib.Timestamp.FromTimeString(
              policy_dict.get('passwordLastSetTime', '0'))
         if timestamp > cocoa_zero:
@@ -118,7 +118,7 @@ class MacUserPlugin(interface.PlistPlugin):
           yield plist_event.PlistEvent(
               root, u'passwordLastSetTime', timestamp, description)
 
-      if policy_dict['lastLoginTimestamp']:
+      if policy_dict.get('lastLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
              policy_dict.get('lastLoginTimestamp', '0'))
         description = u'Last login from {} ({})'.format(
@@ -127,7 +127,7 @@ class MacUserPlugin(interface.PlistPlugin):
           yield plist_event.PlistEvent(
               root, u'lastLoginTimestamp', timestamp, description)
 
-      if policy_dict['failedLoginTimestamp']:
+      if policy_dict.get('failedLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
              policy_dict.get('failedLoginTimestamp', '0'))
         description = u'Last failed login from {} ({}) ({} times)'.format(
