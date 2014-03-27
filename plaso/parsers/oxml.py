@@ -120,7 +120,7 @@ class OpenXMLParser(parser.BaseParser):
         try:
           xml = zip_container.read(properties.get('Target'))
           root = ElementTree.fromstring(xml)
-        except (OverflowError, IndexError, ValueError) as exception:
+        except (OverflowError, IndexError, KeyError, ValueError) as exception:
           logging.warning(
             u'[{0:s}] unable to read property with error: {1:s}.'.format(
                 self.parser_name, exception))

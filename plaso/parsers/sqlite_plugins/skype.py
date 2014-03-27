@@ -254,9 +254,14 @@ class SkypePlugin(interface.SQLitePlugin):
         the status from this all is FINISHED.
     """
     try:
-      aux = row['guid'].split('-')
-      src_aux = aux[0]
-      dst_aux = aux[1]
+      aux = row['guid']
+      if aux:
+        aux_list = aux.split('-')
+        src_aux = aux_list[0]
+        dst_aux = aux_list[1]
+      else:
+        src_aux = u'Unknown [no GUID]'
+        dst_aux = u'Unknown [no GUID]'
     except IndexError:
       src_aux = u'Unknown [{}]'.format(row['guid'])
       dst_aux = u'Unknown [{}]'.format(row['guid'])
