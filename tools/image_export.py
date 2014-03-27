@@ -289,8 +289,9 @@ class FileSaver(object):
 
     if save_file:
       try:
+        file_object = file_entry.GetFileObject()
         frontend_utils.OutputWriter.WriteFile(
-            file_entry, os.path.join(directory, extracted_filename))
+            file_object, os.path.join(directory, extracted_filename))
       except IOError as exception:
         logging.error(
             u'[skipping] unable to save file: {0:s} with error: {1:s}'.format(
