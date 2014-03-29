@@ -163,9 +163,21 @@ def GetRegisteredPlugins(
   all_plugins = {}
 
   for plugin_name, plugin_cls in parent_class.classes.iteritems():
-    parent_name = getattr(plugin_cls, 'parent_class', 'NOTHERE')
+    # Go through the entire chain of parents to see if we have a match.
+    # We need to do that in case some plugins inherit from other plugins
+    # to add minor enhancements and need to be included in the list of plugins.
+    # This is common behavior with registry plugins for instance.
+    plugin_parent = plugin_cls
+    plugin_match = False
+    while plugin_parent != object:
+      parent_name = getattr(plugin_parent, 'parent_class_name', 'NOTHERE')
 
-    if parent_name != parent_class.NAME:
+      if parent_name == parent_class.NAME:
+        plugin_match = True
+        break
+      plugin_parent = getattr(plugin_parent, 'parent_class', object)
+
+    if not plugin_match:
       continue
 
     if plugin_name in all_plugins:

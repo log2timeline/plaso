@@ -39,7 +39,8 @@ class MetaclassRegistry(abc.ABCMeta):
 
     # Register the name of the immedient parent class.
     if bases:
-      cls.parent_class = getattr(bases[0], 'NAME', bases[0])
+      cls.parent_class_name = getattr(bases[0], 'NAME', bases[0])
+      cls.parent_class = bases[0]
 
     # Attach the classes dict to the baseclass and have all derived classes
     # use the same one:

@@ -220,7 +220,8 @@ def PluginCompleter(unused_self, event_object):
   plugin_obj = interface.GetRegistryPlugins()
 
   for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
-    plugin_obj = plugin_cls(RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
+    plugin_obj = plugin_cls(
+        pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
     if plugin_obj.plugin_name == 'DefaultPlugin':
       continue
     ret_list.append(plugin_obj.plugin_name)
@@ -266,7 +267,8 @@ class MyMagics(magic.Magics):
     plugin_obj = interface.GetRegistryPlugins()
     plugin_found = False
     for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
-      plugin = plugin_cls(RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
+      plugin = plugin_cls(
+          pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
       if plugin.plugin_name == plugin_name:
         # If we found the correct plugin.
         plugin_found = True
@@ -638,12 +640,13 @@ def ParseKey(key, verbose=False, use_plugins=None):
     plugins[weight] = []
     for plugin in plugin_list:
       if use_plugins:
-        plugin_obj = plugin(RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
+        plugin_obj = plugin(
+            pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
         if plugin_obj.plugin_name in use_plugins:
           plugins[weight].append(plugin_obj)
       else:
         plugins[weight].append(plugin(
-            RegCache.hive, RegCache.pre_obj, RegCache.reg_cache))
+            pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache))
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:
@@ -940,7 +943,7 @@ def RunModeRegistryPlugin(config):
       for plugin in plugin_list:
         for reg_plugin in config.plugins.GetAllKeyPlugins():
           temp_obj = reg_plugin(
-              RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
+              pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
         if temp_obj.plugin_name == plugin:
           for registry_key in temp_obj.expanded_keys:
             if registry_key not in keys:
@@ -1074,7 +1077,7 @@ def GetRegistryKeysFromType(config, registry_type):
   keys = []
   for reg_plugin in config.plugins.GetAllKeyPlugins():
     temp_obj = reg_plugin(
-        RegCache.hive, RegCache.pre_obj, RegCache.reg_cache)
+        pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
     if temp_obj.REG_TYPE == registry_type:
       keys.extend(temp_obj.expanded_keys)
 
