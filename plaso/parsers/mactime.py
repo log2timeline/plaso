@@ -75,8 +75,7 @@ class MactimeParser(text_parser.TextCSVParser):
     return True
 
   def ParseRow(self, row):
-    """Parse a single row and return an extracted EventObject from it."""
-
+    """Parse a single row and yields an extracted EventContainer from it."""
     container = event.EventContainer()
 
     for key, value in row.items():
@@ -118,5 +117,5 @@ class MactimeParser(text_parser.TextCSVParser):
             int_value, self._TIMESTAMP_DESC_MAP[key]))
 
     if len(container) > 0:
-      return container
+      yield container
 
