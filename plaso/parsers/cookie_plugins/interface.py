@@ -27,7 +27,7 @@ def GetPlugins(pre_obj, data_type):
   """Returns a list of all cookie plugins."""
   plugins = []
   for plugin_cls in CookiePlugin.classes.itervalues():
-    parent_name = getattr(plugin_cls, 'parent_class', 'NOTHERE')
+    parent_name = getattr(plugin_cls, 'parent_class_name', 'NOTHERE')
 
     if parent_name != 'cookie':
       continue

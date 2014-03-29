@@ -183,9 +183,10 @@ class ImageExtractor(object):
 
     input_queue = queue.SingleThreadedQueue()
     output_queue = queue.SingleThreadedQueue()
+    output_producer = queue.EventObjectQueueProducer(output_queue)
 
     image_collector = collector.Collector(
-        input_queue, output_queue, self._image_path)
+        input_queue, output_producer, self._image_path)
     image_collector.SetImageInformation(byte_offset=self._image_offset)
     if process_vss:
       # TODO: don't we need a store number here?
@@ -218,7 +219,10 @@ class ImageExtractorQueueConsumer(queue.PathSpecQueueConsumer):
   def _ConsumePathSpec(self, path_spec):
     """Consumes a path specification callback for ConsumePathSpecs."""
     # TODO: move this into a function of path spec e.g. GetExtension().
-    _, _, extension = path_spec.file_path.rpartition('.')
+    location = getattr(path_spec, 'location', None)
+    if not location:
+      location = path_spec.file_path
+    _, _, extension = location.rpartition('.')
     if extension.lower() in self._extensions:
       vss_store_number = getattr(path_spec, 'vss_store_number', None)
       if vss_store_number is not None:
@@ -247,7 +251,9 @@ class FileSaver(object):
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
     directory = u''
-    filename = file_entry.name
+    filename = getattr(source_path_spec, 'location', None)
+    if not filename:
+      filename = source_path_spec.file_path
 
     # There will be issues on systems that use a different separator than a
     # forward slash. However a forward slash is always used in the pathspec.
