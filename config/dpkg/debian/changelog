@@ -1,16 +1,22 @@
-plaso-static (1.1.0-1) unstable; urgency=low
+python-plaso (1.1.0-1) unstable; urgency=low
 
   * Version 1.1.0 development release.
 
  -- Log2Timeline <log2timeline-dev@googlegroups.com>  Sat, 14 Dec 2013 12:15:00 +0100
 
-plaso-static (1.0.2-1) unstable; urgency=low
+python-plaso (1.0.2-2) unstable; urgency=low
 
   * Version 1.0.2 alpha release.
 
+ -- Log2Timeline <log2timeline-dev@googlegroups.com>  Mon, 28 Oct 2013 12:20:23 -0700
+
+python-plaso (1.0.2-1) unstable; urgency=low
+
+  * Version 1.0.2 RC1 release.
+
  -- Log2Timeline <log2timeline-dev@googlegroups.com>  Sat, 19 Oct 2013 09:15:00 +0200
 
-plaso-static (1.0-1) unstable; urgency=low
+python-plaso (1.0-1) unstable; urgency=low
 
   * Initial release.
 
