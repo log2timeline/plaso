@@ -25,7 +25,7 @@ from dfvfs.lib import definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso import parsers   # pylint: disable-msg=unused-import
+from plaso import parsers   # pylint: disable=unused-import
 from plaso.lib import classifier
 from plaso.lib import errors
 from plaso.lib import event
@@ -72,7 +72,11 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       self._user_mapping = pre_obj.GetUserMappings()
     else:
       self._user_mapping = {}
+
     self.config = config
+
+    self._debug_mode = config.debug
+    self._single_thread_mode = config.single_thread
 
     self._filter = None
     filter_query = getattr(config, 'filter', None)
@@ -219,7 +223,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
         # Check for debug mode and single-threaded, then we would like
         # to debug this problem.
-        if self.config.single_thread and self.config.debug:
+        if self._single_thread_mode and self._debug_mode:
           pdb.post_mortem()
 
     logging.debug(u'Done parsing: {0:s}'.format(

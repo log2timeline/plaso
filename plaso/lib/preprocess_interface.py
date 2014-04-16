@@ -73,27 +73,33 @@ class PreprocessPlugin(object):
   # Defines the preprocess attribute to be set.
   ATTRIBUTE = ''
 
-  def __init__(self, obj_store, collector):
+  def __init__(self, obj_store):
     """Initializes the preprocess plugin object.
 
     Args:
       obj_store: the object store.
-      collector: the preprocess collector (instance of PreprocessCollector).
     """
     super(PreprocessPlugin, self).__init__()
     self._obj_store = obj_store
-    self._collector = collector
 
-  def Run(self):
-    """Set the attribute of the object store to the value from GetValue."""
-    setattr(self._obj_store, self.ATTRIBUTE, self.GetValue())
+  def Run(self, collector):
+    """Set the attribute of the object store to the value from GetValue.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
+    setattr(self._obj_store, self.ATTRIBUTE, self.GetValue(collector))
     logging.info(
         u'[PreProcess] Set attribute: %s to %s', self.ATTRIBUTE,
         getattr(self._obj_store, self.ATTRIBUTE, 'N/A'))
 
   @abc.abstractmethod
-  def GetValue(self):
-    """Return the value for the attribute."""
+  def GetValue(self, collector):
+    """Return the value for the attribute.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
     raise NotImplementedError
 
   @property
@@ -118,11 +124,15 @@ class MacPlistPreprocess(PreprocessPlugin):
   # others will be searched.
   PLIST_KEYS = ['']
 
-  def GetValue(self):
-    """Return the value gathered from a plist file for preprocessing."""
+  def GetValue(self, collector):
+    """Return the value gathered from a plist file for preprocessing.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
     try:
       file_path, _, file_name = self.PLIST_PATH.rpartition('/')
-      paths = self._collector.GetFilePaths(file_path, file_name)
+      paths = collector.GetFilePaths(file_path, file_name)
     except errors.PathNotFound as e:
       raise errors.PreProcessFail(u'Unable to find path: %s' % e)
 
@@ -135,7 +145,7 @@ class MacPlistPreprocess(PreprocessPlugin):
       raise errors.PreProcessFail(u'Unable to open file: Path not found.')
 
     try:
-      file_entry = self._collector.OpenFileEntry(path)
+      file_entry = collector.OpenFileEntry(path)
       file_object = file_entry.GetFileObject()
     except IOError as exception:
       raise errors.PreProcessFail(
@@ -251,43 +261,48 @@ class WinRegistryPreprocess(PreprocessPlugin):
   REG_PATH = '{sysregistry}'
   REG_FILE = 'SOFTWARE'
 
-  def __init__(self, obj_store, collector):
+  def __init__(self, obj_store):
     """Initializes the Window Registry preprocess plugin object.
 
     Args:
       obj_store: the object store.
-      collector: the preprocess collector (instance of PreprocessCollector).
     """
-    super(WinRegistryPreprocess, self).__init__(obj_store, collector)
+    super(WinRegistryPreprocess, self).__init__(obj_store)
     self._path_expander = None
 
-  def GetValue(self):
-    """Return the value gathered from a registry key for preprocessing."""
-    sys_dirs = list(self._collector.FindPaths(self.REG_PATH))
+  def GetValue(self, collector):
+    """Return the value gathered from a registry key for preprocessing.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
+    sys_dirs = list(collector.FindPaths(self.REG_PATH))
     if not sys_dirs:
       raise errors.PreProcessFail(
-          u'Unable to find file name: {}/{}'.format(
+          u'Unable to find file name: {0:s}/{1:s}'.format(
               self.REG_PATH, self.REG_FILE))
 
     sys_dir = sys_dirs[0]
-    file_names = list(self._collector.GetFilePaths(sys_dir, self.REG_FILE))
+    file_names = list(collector.GetFilePaths(sys_dir, self.REG_FILE))
     if not file_names:
       raise errors.PreProcessFail(
-          u'Unable to find file name: {}/{}'.format(
+          u'Unable to find file name: {0:s}/{1:s}'.format(
               sys_dir, self.REG_FILE))
     if len(file_names) != 1:
       raise errors.PreProcessFail(
-          u'Found more than a single file for: {}/{} [{}]'.format(
+          u'Found more than a single file for: {0:s}/{1:s} [{2:d}]'.format(
               sys_dir, self.REG_FILE, len(file_names)))
 
     file_name = file_names[0]
 
     try:
-      file_entry = self._collector.OpenFileEntry(file_name)
-      _ = file_entry.GetFileObject()
-    except IOError as e:
+      file_entry = collector.OpenFileEntry(file_name)
+      file_object = file_entry.GetFileObject()
+      file_object.close()
+    except IOError as exception:
       raise errors.PreProcessFail(
-          u'Unable to open file: {} [{}]'.format(file_name, e))
+          u'Unable to open file: {0:s} with error: {1:s}'.format(
+              file_name, exception))
 
     codepage = getattr(self._obj_store, 'code_page', 'cp1252')
 
@@ -295,11 +310,13 @@ class WinRegistryPreprocess(PreprocessPlugin):
         winregistry.WinRegistry.BACKEND_PYREGF)
 
     try:
-      winreg_file = self.winreg_file = win_registry.OpenFile(
-          file_entry, codepage=codepage)
-    except IOError as e:
+      winreg_file = win_registry.OpenFile(file_entry, codepage=codepage)
+    except IOError as exception:
       raise errors.PreProcessFail(
-          u'Unable to open the registry: {} [{}]'.format(file_name, e))
+          u'Unable to open Registry file: {0:s} with error: {1:s}'.format(
+              file_name, exception))
+
+    self.winreg_file = winreg_file
 
     if self._path_expander is None:
       reg_cache = cache.WinRegistryCache()
@@ -314,13 +331,14 @@ class WinRegistryPreprocess(PreprocessPlugin):
 
     try:
       key = winreg_file.GetKeyByPath(key_path)
-    except IOError as e:
+    except IOError as exception:
       raise errors.PreProcessFail(
-          u'Error fetching registry key: {} Error {}'.format(key_path, e))
+          u'Unable to fetch Registry key: {0:s} with error: {1:s}'.format(
+              key_path, exception))
 
     if not key:
       raise errors.PreProcessFail(
-          u'Registry key %s does not exist.' % self.REG_KEY)
+          u'Registry key {0:s} does not exist.'.format(self.REG_KEY))
 
     return self.ParseKey(key)
 
@@ -337,10 +355,14 @@ class PreprocessGetPath(PreprocessPlugin):
   ATTRIBUTE = 'nopath'
   PATH = 'doesnotexist'
 
-  def GetValue(self):
-    """Return the path as found by the collector."""
+  def GetValue(self, collector):
+    """Return the path as found by the collector.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
     try:
-      paths = list(self._collector.FindPaths(self.PATH))
+      paths = list(collector.FindPaths(self.PATH))
     except errors.PathNotFound as e:
       raise errors.PreProcessFail(u'Unable to find path: %s' % e)
     if paths:
