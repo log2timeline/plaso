@@ -86,15 +86,16 @@ class EventFormatterManager(object):
 
           # Raise on duplicate formatters.
           if formatter.DATA_TYPE in cls.event_formatters:
-            raise RuntimeError(
-                'event formatter for data type: %s defined in: %s and %s.' %(
+            raise RuntimeError((
+                u'event formatter for data type: {:s} defined in: {:s} and '
+                u'{:s}.').format(
                     formatter.DATA_TYPE, cls_formatter,
                     cls.event_formatters[
                         formatter.DATA_TYPE].__class__.__name__))
           cls.event_formatters[formatter.DATA_TYPE] = formatter
         except RuntimeError as exeception:
           # Ignore broken formatters.
-          logging.warning('%s', exeception)
+          logging.warning(u'{:s}'.format(exeception))
 
       cls.event_formatters.setdefault(None)
 
@@ -102,7 +103,8 @@ class EventFormatterManager(object):
       return cls.event_formatters[event_object.data_type]
     else:
       logging.warning(
-          u'Using default formatter for data type: %s', event_object.data_type)
+          u'Using default formatter for data type: {:s}'.format(
+              event_object.data_type))
       return cls.default_formatter
 
   @classmethod
@@ -155,7 +157,7 @@ class EventFormatter(object):
   # approach is to define it as human readable string in the format
   # root:branch: ... :leaf, e.g. a page visited entry inside a Chrome History
   # database is defined as: chrome:history:page_visited.
-  DATA_TYPE = 'internal'
+  DATA_TYPE = u'internal'
 
   # The format string.
   FORMAT_STRING = u''
@@ -198,17 +200,17 @@ class EventFormatter(object):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
-      raise errors.WrongFormatter('Unsupported data type: %s.' % (
+      raise errors.WrongFormatter(u'Unsupported data type: {:s}.'.format(
           event_object.data_type))
 
     event_values = event_object.GetValues()
 
     try:
       msg = self.format_string.format(**event_values)
-    except KeyError as error:
+    except KeyError as exception:
       msgs = []
       msgs.append(u'Format error: [{0:s}] for: <{1:s}>'.format(
-          error, self.format_string))
+          exception, self.format_string))
       for attr, value in event_object.attributes.items():
         msgs.append(u'{0}: {1}'.format(attr, value))
 
@@ -217,7 +219,7 @@ class EventFormatter(object):
     # Strip carriage return and linefeed form the message strings.
     # Using replace function here because it is faster
     # than re.sub() or string.strip().
-    msg = msg.replace('\r', '').replace('\n', '')
+    msg = msg.replace('\r', u'').replace('\n', u'')
 
     if not self.format_string_short:
       msg_short = msg
@@ -226,21 +228,21 @@ class EventFormatter(object):
         msg_short = self.format_string_short.format(**event_values)
         # Using replace function here because it is faster
         # than re.sub() or string.strip().
-        msg_short = msg_short.replace('\r', '').replace('\n', '')
+        msg_short = msg_short.replace('\r', u'').replace('\n', u'')
       except KeyError:
         msg_short = u'Unable to format short message string: {0:s}'.format(
             self.format_string_short)
 
     # Truncate the short message string if necessary.
     if len(msg_short) > 80:
-      msg_short = u'%s...' % msg_short[0:77]
+      msg_short = u'{:s}...'.format(msg_short[0:77])
 
     return msg, msg_short
 
   def GetSources(self, event_object):
     """Return a list containing source short and long."""
     if self.DATA_TYPE != event_object.data_type:
-      raise errors.WrongFormatter('Unsupported data type: %s.' % (
+      raise errors.WrongFormatter('Unsupported data type: {:s}.'.format(
           event_object.data_type))
 
     return self.source_string_short, self.source_string
@@ -299,9 +301,9 @@ class ConditionalEventFormatter(EventFormatter):
         attribute_name = regexp_name.findall(result[0])[0]
         self._format_string_pieces_map.append(attribute_name)
       else:
-        raise RuntimeError(
-            'Invalid format string piece: [%s] contains more than 1 attribute '
-            'name.', format_string_piece)
+        raise RuntimeError((
+            u'Invalid format string piece: [{:s}] contains more than 1 '
+            u'attribute name.').format(format_string_piece))
 
     self._format_string_short_pieces_map = []
     for format_string_piece in self.FORMAT_STRING_SHORT_PIECES:
@@ -315,9 +317,9 @@ class ConditionalEventFormatter(EventFormatter):
         attribute_name = regexp_name.findall(result[0])[0]
         self._format_string_short_pieces_map.append(attribute_name)
       else:
-        raise RuntimeError(
-            'Invalid short format string piece: [%s] contains more than 1 '
-            'attribute name.', format_string_piece)
+        raise RuntimeError((
+            u'Invalid short format string piece: [{:s}] contains more '
+            u'than 1 attribute name.').format(format_string_piece))
 
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
@@ -330,6 +332,10 @@ class ConditionalEventFormatter(EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {:s}.'.format(
+          event_object.data_type))
+
     # Using getattr here to make sure the attribute is not set to None.
     # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
     string_pieces = []
@@ -360,7 +366,7 @@ class ConditionalEventFormatter(EventFormatter):
 class DefaultFormatter(EventFormatter):
   """Default formatter for events that do not have any defined formatter."""
 
-  DATA_TYPE = 'event'
+  DATA_TYPE = u'event'
   FORMAT_STRING = u'<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'
   FORMAT_STRING_SHORT = u'<DEFAULT> {attribute_driven}'
 
@@ -388,5 +394,6 @@ class DefaultFormatter(EventFormatter):
 
 class TextEventFormatter(EventFormatter):
   """Text event formatter."""
-  DATA_TYPE = 'text'
+
+  DATA_TYPE = u'text'
   FORMAT_STRING = u'{text}'

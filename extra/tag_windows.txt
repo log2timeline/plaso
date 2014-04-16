@@ -5,9 +5,23 @@ Application Execution
   data_type is 'windows:evtx:record' and strings contains 'user mode service' and strings contains 'demand start'
   data_type is 'fs:stat' and filename contains 'Windows/Tasks/At'
   data_type is 'windows:tasks:job'
+  data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 592
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4688
 
 Document Opened
   data_type is 'windows:registry:key_value' AND plugin contains 'mru' AND regvalue.__all__ not contains '.exe' AND timestamp > 0
+
+Logon
+  data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 540
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4624
+
+Logoff
+  data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 538
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4634
+
+Task Scheduled
+  data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 602
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4698
 
 AutoRun
   data_type is 'windows:registry:key_value' and plugin contains 'Run'
