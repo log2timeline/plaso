@@ -21,77 +21,81 @@ class Error(Exception):
   """Base error class."""
 
 
-class CollectorError(Exception):
+class BadConfigOption(Error):
+  """Raised when the engine is started with a faulty parameter."""
+
+
+class CollectorError(Error):
   """Class that defines collector errors."""
 
 
-class TimestampNotCorrectlyFormed(Error):
-  """Raised when there is an error adding a timestamp to an EventObject."""
+class FileSystemScannerError(Error):
+  """Class that defines file system scanner errors."""
 
 
 class NotAnEventContainerOrObject(Error):
   """Expect an EventContainer/EventObject yet don't get it it's faulty."""
 
 
-class UnableToParseFile(Error):
-  """Raised when a parser is not designed to parse a file."""
-
-
-class WrongProtobufEntry(Error):
-  """Raised when an EventObject cannot be serialized as a protobuf."""
-
-
-class UnableToOpenFile(Error):
-  """Raised when a PlasoFile class attempts to open a file it cannot open."""
-
-
-class SameFileType(Error):
-  """Raised when a PFile is being evaluated against the same driver type."""
-
-
-class BadConfigOption(Error):
-  """Raised when the engine is started with a faulty parameter."""
-
-
-class PreProcessFail(Error):
-  """Raised when a preprocess module is unable to gather information."""
-
-
-class PathNotFound(Error):
-  """Raised when a preprocessor fails to fill in a path variable."""
-
-
-class QueueEmpty(Error):
-  """Class that implements a queue empty exception."""
-
-
-class UnableToOpenFilesystem(Error):
-  """Raised when unable to open filesystem."""
-
-
-class WrongFormatter(Error):
-  """Raised when the formatter is not applicable for a particular event."""
+class NotAText(Error):
+  """Raised when trying to read a text on a non-text sample."""
 
 
 class NoFormatterFound(Error):
   """Raised when no formatter is found for a particular event."""
 
 
-class WinRegistryValueError(Error):
-  """Raised when there is an issue reading a registry value."""
+class PathNotFound(Error):
+  """Raised when a preprocessor fails to fill in a path variable."""
 
 
-class WrongPlugin(Error):
-  """Raised when the plugin is of the wrong type."""
+class PreProcessFail(Error):
+  """Raised when a preprocess module is unable to gather information."""
 
 
-class WrongPlistPlugin(Error):
-  """Error reporting wrong plist plugin used."""
+class QueueEmpty(Error):
+  """Class that implements a queue empty exception."""
+
+
+class SameFileType(Error):
+  """Raised when a file is being evaluated against the same driver type."""
+
+
+class TimestampNotCorrectlyFormed(Error):
+  """Raised when there is an error adding a timestamp to an EventObject."""
+
+
+class UnableToOpenFile(Error):
+  """Raised when a PlasoFile class attempts to open a file it cannot open."""
+
+
+class UnableToOpenFilesystem(Error):
+  """Raised when unable to open filesystem."""
+
+
+class UnableToParseFile(Error):
+  """Raised when a parser is not designed to parse a file."""
 
 
 class WrongBencodePlugin(Error):
   """Error reporting wrong bencode plugin used."""
 
 
-class NotAText(Error):
-  """Raised when trying to read a text on a non-text sample."""
+class WrongFormatter(Error):
+  """Raised when the formatter is not applicable for a particular event."""
+
+
+class WrongPlistPlugin(Error):
+  """Error reporting wrong plist plugin used."""
+
+
+class WrongPlugin(Error):
+  """Raised when the plugin is of the wrong type."""
+
+
+class WrongProtobufEntry(Error):
+  """Raised when an EventObject cannot be serialized as a protobuf."""
+
+
+class WinRegistryValueError(Error):
+  """Raised when there is an issue reading a registry value."""

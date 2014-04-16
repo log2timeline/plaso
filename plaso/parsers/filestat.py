@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a parser for the Stat object of a PFile."""
+"""File system stat object parser."""
 
 from plaso.lib import event
 from plaso.lib import parser
@@ -107,7 +107,7 @@ class PfileStatEventContainer(event.EventContainer):
 
 
 class PfileStatParser(parser.BaseParser):
-  """Parse the PFile Stat object to extract filesystem timestamps."""
+  """Class that defines a file system stat object parser."""
 
   NAME = 'filestat'
 

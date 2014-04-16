@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains log2timeline, the friendly front-end to plaso."""
+"""The log2timeline front-end."""
 
 import argparse
 import locale
@@ -30,6 +30,7 @@ import pytsk3
 
 import plaso
 from plaso.collector import collector
+from plaso.collector import scanner
 from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
@@ -37,9 +38,7 @@ from plaso.lib import info
 from plaso.lib import pfilter
 from plaso.lib import preprocess_interface
 
-
-# The number of bytes in a MiB.
-BYTES_IN_A_MIB = 1024 * 1024
+import pytz
 
 
 class LoggingFilter(logging.Filter):
@@ -59,42 +58,206 @@ class LoggingFilter(logging.Filter):
     return True
 
 
-# TODO: move or rewrite this after the dfVFS refactor.
-def GetPartitionMap(image_path):
-  """Returns a list of dict objects representing partition information.
+class Log2TimelineFrontend(object):
+  """Class that implements the log2timeline front-end."""
 
-  Args:
-    image_path: The path to the image file.
+  _BYTES_IN_A_MIB = 1024 * 1024
 
-  Returns:
-    A list that contains a dict object for each partition in the image. The
-    dict contains the partition number (address), description of it alongside
-    an offset and length of the partition size.
-  """
-  partition_map = []
-  try:
-    img = pytsk3.Img_Info(image_path)
-  except IOError as exception:
-    raise errors.UnableToOpenFilesystem(
-        u'Unable to open image file with error: {0:s}'.format(exception))
+  def __init__(self):
+    """Initializes the front-end object."""
+    super(Log2TimelineFrontend, self).__init__()
+    self._engine = None
+    self._input_reader = scanner.StdinScannerInputReader()
+    self._output_writer = scanner.StdoutScannerOutputWriter()
 
-  try:
-    volume = pytsk3.Volume_Info(img)
-  except IOError as exception:
-    raise errors.UnableToOpenFilesystem(
-        u'Unable to open file system with error: {0:s}'.format(exception))
+  def CleanUpAfterAbort(self):
+    """Cleans up after an abort."""
+    self._engine.StopThreads()
 
-  block_size = getattr(volume.info, 'block_size', 512)
-  partition_map.append(block_size)
+  # TODO: move or rewrite this after dfVFS image support integration.
+  def GetPartitionMap(self, image_path):
+    """Returns a list of dict objects representing partition information.
 
-  for part in volume:
-    partition_map.append({
-        'address': part.addr,
-        'description': part.desc,
-        'offset': part.start,
-        'length': part.len})
+    Args:
+      image_path: The path to the image file.
 
-  return partition_map
+    Returns:
+      A list that contains a dict object for each partition in the image. The
+      dict contains the partition number (address), description of it alongside
+      an offset and length of the partition size.
+
+    Raises:
+      UnableToOpenFilesystem: if the parition map cannot be determined.
+    """
+    partition_map = []
+    try:
+      img = pytsk3.Img_Info(image_path)
+    except IOError as exception:
+      raise errors.UnableToOpenFilesystem(
+          u'Unable to open image file with error: {0:s}'.format(exception))
+
+    try:
+      volume = pytsk3.Volume_Info(img)
+    except IOError as exception:
+      raise errors.UnableToOpenFilesystem(
+          u'Unable to open file system with error: {0:s}'.format(exception))
+
+    block_size = getattr(volume.info, 'block_size', 512)
+    partition_map.append(block_size)
+
+    for part in volume:
+      partition_map.append({
+          'address': part.addr,
+          'description': part.desc,
+          'offset': part.start,
+          'length': part.len})
+
+    return partition_map
+
+  def GetTimeZoneList(self):
+    """Returns a generator of the names of all the supported time zones."""
+    yield 'local'
+    for zone in pytz.all_timezones:
+      yield zone
+
+  def ParseOptions(self, options):
+    """Parses the options and initializes the processing engine.
+
+    Args:
+      options: the command line arguments.
+
+    Raises:
+      BadConfigOption: if the option are invalid.
+    """
+    if not options:
+      raise errors.BadConfigOption(u'Missing options.')
+
+    if options.buffer_size:
+      # TODO: turn this into a generic function that supports
+      # more size suffixes both MB and MiB and also that does not
+      # allow m as a valid indicator for MiB since m represents
+      # milli not Mega.
+      try:
+        if options.buffer_size[-1].lower() == 'm':
+          options.buffer_size = int(options.buffer_size[:-1], 10)
+          options.buffer_size *= self._BYTES_IN_A_MIB
+        else:
+          options.buffer_size = int(options.buffer_size, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid buffer size: {0:s}.'.format(options.buffer_size))
+
+    if options.file_filter and not os.path.isfile(options.file_filter):
+      raise errors.BadConfigOption(
+          u'No such collection filter file: {0:s}.'.format(options.file_filter))
+
+    path_spec = self.ScanSource(options)
+    self.PrintOptions(options)
+
+    if not options.image:
+      options.recursive = os.path.isdir(options.filename)
+    else:
+      options.recursive = False
+
+    self._engine = engine.Engine(options)
+    self._engine.SetSource(options.filename, path_spec)
+
+    if options.image_offset_bytes is not None:
+      self._engine.SetImageInformation(options.image_offset_bytes)
+
+      if options.vss_stores:
+        self._engine.SetVssInformation(options.vss_stores)
+
+    self._engine.SetOutput(options.output)
+
+  def PrintParitionMap(self, source):
+    """Prints the partition map.
+
+    Args:
+      source: the source to retrieve the partion map from.
+    """
+    partition_map = self.GetPartitionMap(source)
+
+    print 'Sector size: {}'.format(partition_map[0])
+    print u'Index  {:10s} {:10s} {}'.format('Offset', 'Length', 'Description')
+    for entry in partition_map[1:]:
+      print u'{:02d}:    {:010d} {:010d} {}'.format(
+          entry['address'], entry['offset'], entry['length'],
+          entry['description'])
+
+  def PrintOptions(self, options):
+    """Prints the options.
+
+    Args:
+      options: the command line arguments.
+    """
+    self._output_writer.Write('\n')
+    self._output_writer.Write(
+        'Source\t\t\t: {0:s}\n'.format(options.filename))
+    self._output_writer.Write(
+        'Is storage media image\t: {0!s}\n'.format(options.image))
+
+    if options.image:
+      self._output_writer.Write(
+          'Partition offset\t: 0x{0:08x}\n'.format(options.image_offset_bytes))
+
+      if options.vss_stores:
+        self._output_writer.Write(
+            'VSS stores\t\t: {0!s}\n'.format(options.vss_stores))
+
+    if options.file_filter:
+      self._output_writer.Write(
+          'Filter file\t\t: {0:s}\n'.format(options.file_filter))
+
+    self._output_writer.Write('\n')
+
+  def ProcessSource(self):
+    """Processes the source.
+
+    Raises:
+      RuntimeError: if the engine was not created.
+    """
+    # TODO: change this after cleaning up the engine code.
+    if not self._engine:
+      raise RuntimeError(
+          u'Missing engine object make sure to set up the engine first.')
+    self._engine.Start()
+
+  def ScanSource(self, options):
+    """Scans the source for volume and file systems.
+
+    Args:
+      options: the command line arguments.
+
+    Returns:
+      The base path specification (instance of dfvfs.PathSpec).
+    """
+    if not hasattr(options, 'filename'):
+      return
+
+    file_system_scanner = scanner.FileSystemScanner(
+        input_reader=self._input_reader, output_writer=self._output_writer)
+
+    if hasattr(options, 'image_offset_bytes'):
+      file_system_scanner.SetPartitionOffset(options.image_offset_bytes)
+    elif hasattr(options, 'image_offset'):
+      bytes_per_sector = getattr(options, 'bytes_per_sector', 512)
+      file_system_scanner.SetPartitionOffset(
+          options.image_offset * bytes_per_sector)
+
+    if hasattr(options, 'partition_number'):
+      file_system_scanner.SetPartitionNumber(options.partition_number)
+
+    if hasattr(options, 'vss_stores'):
+      file_system_scanner.SetVssStores(options.vss_stores)
+
+    path_spec = file_system_scanner.Scan(options.filename)
+
+    options.image = file_system_scanner.is_storage_media_image
+    options.image_offset_bytes = file_system_scanner.partition_offset
+    options.vss_stores = file_system_scanner.vss_stores
+
+    return path_spec
 
 
 def Main():
@@ -114,7 +277,7 @@ def Main():
       """)
   description = (
       """
-      log2timeline is the main frontend to the plaso backend, used to
+      log2timeline is the main front-end to the plaso back-end, used to
       collect and correlate events extracted from a filesystem.
 
       More information can be gathered from here:
@@ -201,9 +364,9 @@ def Main():
 
   deep_group.add_argument(
       '--vss_stores', dest='vss_stores', action='store', type=str, default=None,
-      help=('List of stores to parse, format is X..Y where X and Y are intege'
-            'rs, or a list of entries separated with a comma, eg: X,Y,Z or a '
-            'list of ranges and entries, eg: X,Y-Z,G,H-J.'))
+      help=('A range of stores can be defined as: 3..5. Multiple stores can '
+            'be defined as: 1,3,5 (a list of comma separated values). Ranges '
+            'and lists can also be combined as: 1,3..5. The first store is 1.'))
 
   performance_group.add_argument(
       '--single_thread', dest='single_thread', action='store_true',
@@ -240,12 +403,12 @@ def Main():
       default=None, type=int, help='The bytes offset to the image')
 
   # Build the version information.
-  version_string = u'log2timeline - plaso backend {}'.format(
+  version_string = u'log2timeline - plaso back-end {}'.format(
       plaso.GetVersion())
 
   info_group.add_argument(
       '-v', '--version', action='version', version=version_string,
-      help='Show the current version of the backend.')
+      help='Show the current version of the back-end.')
 
   info_group.add_argument(
       '--info', dest='show_info', action='store_true', default=False,
@@ -295,11 +458,11 @@ def Main():
           'appended to.'))
 
   arg_parser.add_argument(
-      'filename', action='store', metavar='FILENAME_OR_MOUNT_POINT',
+      'filename', action='store', metavar='SOURCE',
       nargs='?', type=unicode, help=(
-          'The path to the file, directory, image file or mount point that the'
-          ' tool should parse. If this is a directory it will recursively go '
-          'through it, same with an image file.'))
+          'The path to the source device, file or directory. If the source is '
+          'a supported storage media device or image file, archive file or '
+          'a directory, the files within are processed recursively.'))
 
   arg_parser.add_argument(
       'filter', action='store', metavar='FILTER', nargs='?', default=None,
@@ -317,8 +480,8 @@ def Main():
         u'for the typically non-ASCII characters that need to be parsed and '
         u'processed. The tool will most likely crash and die, perhaps in a way '
         u'that may not be recoverable. A five second delay is introduced to '
-        'give you time to cancel the runtime and reconfigure your preferred '
-        'encoding, otherwise continue at own risk.')
+        u'give you time to cancel the runtime and reconfigure your preferred '
+        u'encoding, otherwise continue at own risk.')
     time.sleep(5)
 
   u_argv = [x.decode(preferred_encoding) for x in sys.argv]
@@ -326,20 +489,22 @@ def Main():
   options = arg_parser.parse_args()
   options.preferred_encoding = preferred_encoding
 
+  front_end = Log2TimelineFrontend()
+
   if options.tzone == 'list':
     print '=' * 40
     print '       ZONES'
     print '-' * 40
-    for zone in engine.GetTimeZoneList():
-      print '  %s' % zone
+    for zone in front_end.GetTimeZoneList():
+      print '  {0:s}'.format(zone)
     print '=' * 40
-    sys.exit(0)
+    return True
 
   if options.show_info:
     print info.GetPluginInformation()
-    sys.exit(0)
+    return True
 
-  # This frontend only deals with local setup of the tool.
+  # This front-end only deals with local setup of the tool.
   options.local = True
 
   format_str = (
@@ -367,29 +532,21 @@ def Main():
     print ''
     arg_parser.print_usage()
     print ''
-    logging.error(
-        'Wrong usage: need to define an output.')
-    sys.exit(1)
+    logging.error(u'Wrong usage: need to define an output.')
+    return False
 
   if options.partition_map:
     if options.filename:
-      file_use = options.filename
+      source = options.filename
     else:
-      file_use = options.output
+      source = options.output
 
     try:
-      partition_map = GetPartitionMap(file_use)
-    except errors.UnableToOpenFilesystem as e:
-      print e
-      sys.exit(1)
-
-    print 'Sector size: {}'.format(partition_map[0])
-    print u'Index  {:10s} {:10s} {}'.format('Offset', 'Length', 'Description')
-    for entry in partition_map[1:]:
-      print u'{:02d}:    {:010d} {:010d} {}'.format(
-          entry['address'], entry['offset'], entry['length'],
-          entry['description'])
-    sys.exit(0)
+      front_end.PrintParitionMap(source)
+    except errors.UnableToOpenFilesystem as exception:
+      print exception
+      return False
+    return True
 
   if not options.filename:
     arg_parser.print_help()
@@ -397,15 +554,27 @@ def Main():
     arg_parser.print_usage()
     print ''
     logging.error(u'No input file supplied.')
-    sys.exit(1)
+    return False
 
-  options.recursive = os.path.isdir(options.filename)
+  if options.filter and not pfilter.GetMatcher(options.filter):
+    logging.error((
+        u'Filter error, unable to proceed. There is a problem with your '
+        u'filter: {0:s}').format(options.filter))
+    return False
+
+  try:
+    front_end.ParseOptions(options)
+  except errors.BadConfigOption as exception:
+    arg_parser.print_help()
+    print ''
+    logging.error('{0:s}'.format(exception))
+    return False
 
   # Check to see if we are trying to parse a mount point.
   if options.recursive:
     pre_obj = event.PreprocessObject()
     preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, options.filename)
+        pre_obj, options.filename, source_path_spec=None)
 
     guessed_os = preprocess_interface.GuessOS(preprocess_collector)
     if guessed_os != 'None':
@@ -413,95 +582,26 @@ def Main():
       logging.info((
           u'Running against a mount point [{0:s}]. Turning on '
           u'preprocessing.').format(guessed_os))
-      logging.info(
+      logging.warning(
           u'It is highly recommended to run the tool directly against '
           u'the image, instead of parsing a mount point (you may get '
           u'inconsistence results depending on the driver you use to mount '
-          u'the image. Please consider running against the raw image. A '
-          u'5 second wait has been introduced to give you time to read this '
-          u'over.')
+          u'the image. Please consider running against the raw image. '
+          u'Processing will continue in 5 seconds.')
       time.sleep(5)
 
-  if options.filter and not pfilter.GetMatcher(options.filter):
-    logging.error(
-        (u'Filter error, unable to proceed. There is a problem with your '
-         'filter: %s'), options.filter)
-    sys.exit(1)
-
-  if options.image_offset or options.image_offset_bytes:
-    options.image = True
-
-  if options.partition_number:
-    partition_map = GetPartitionMap(options.filename)
-    offset = 0
-    options.image = True
-    options.bytes_per_sector = partition_map[0]
-    for entry in partition_map[1:]:
-      if options.partition_number == entry['address']:
-        offset = entry['offset']
-        break
-    options.image_offset = offset
-    logging.info(u'Offset set to: {}'.format(options.image_offset))
-
-  if options.image:
-    options.preprocess = True
-
-  if options.buffer_size:
-    if options.buffer_size[-1].lower() == 'm':
-      options.buffer_size = int(options.buffer_size[:-1]) * BYTES_IN_A_MIB
-    else:
-      try:
-        options.buffer_size = int(options.buffer_size)
-      except ValueError:
-        logging.error(('Wrong usage: Buffer size needs to be an integer or'
-                       ' end with M'))
-        sys.exit(1)
-
-  if options.vss_stores:
-    options.parse_vss = True
-    stores = []
-    try:
-      for store in options.vss_stores.split(','):
-        if '..' in store:
-          begin, end = store.split('..')
-          for nr in range(int(begin), int(end)):
-            if nr not in stores:
-              stores.append(nr)
-        else:
-          if int(store) not in stores:
-            stores.append(int(store))
-    except ValueError:
-      arg_parser.print_help()
-      print ''
-      logging.error('VSS store range is wrongly formed.')
-      sys.exit(1)
-
-    options.vss_stores = sorted(stores)
-
-  if options.parse_vss:
-    options.image = True
-    options.preprocess = True
-
-  if options.file_filter:
-    if not os.path.isfile(options.file_filter):
-      logging.error(
-          u'Error with collection filter, file: {} does not exist.'.format(
-              options.file_filter))
-      sys.exit(1)
-
   try:
-    l2t = engine.Engine(options)
-  except errors.BadConfigOption as e:
-    logging.warning(u'Unable to run tool, bad configuration: %s', e)
-    sys.exit(1)
-
-  try:
-    l2t.Start()
-    logging.info('Run completed.')
+    front_end.ProcessSource()
+    logging.info(u'Processing completed.')
   except KeyboardInterrupt:
-    logging.warning('Tool being killed.')
-    l2t.StopThreads()
+    logging.warning(u'Aborted by user.')
+    front_end.CleanUpAfterAbort()
+    return False
+  return True
 
 
 if __name__ == '__main__':
-  Main()
+  if not Main():
+    sys.exit(1)
+  else:
+    sys.exit(0)

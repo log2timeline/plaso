@@ -27,26 +27,24 @@ from plaso.preprocessors import win
 class PreProcessList(object):
   """An object that displays all the available preprocessors."""
 
-  def __init__(self, pre_obj, col_obj):
+  def __init__(self, pre_obj):
     """Constructor for the PreProcessList object.
 
     Args:
       pre_obj: A preprocess object that contains the information
                gathered from preprocessing modules so far (and the object that
                stores future collections) (instance of PreprocessObject).
-      col_obj: A collector object that defines collection methods for
       different types of sources (OS, TKS, etc.)
     """
     self._list = preprocess_interface.PreprocessPlugin.classes
     self._pre = pre_obj
-    self._col = col_obj
 
   def GetWeight(self, os, weight):
     """Return all preprocessors of certain weight for a particular OS."""
     ret_list = []
     for cls_obj in self._list.values():
       if os in cls_obj.SUPPORTED_OS and cls_obj.WEIGHT == weight:
-        ret_list.append(cls_obj(self._pre, self._col))
+        ret_list.append(cls_obj(self._pre))
 
     return ret_list
 
