@@ -46,9 +46,14 @@ class OSXUsers(preprocess_interface.PreprocessPlugin):
   # Define the path to the user account information.
   USER_PATH = '/private/var/db/dslocal/nodes/Default/users/[^_].+.plist'
 
-  def OpenPlistFile(self, filename):
-    """Open a Plist file given a path and returns a plist top level object."""
-    file_entry = self._collector.OpenFileEntry(filename)
+  def _OpenPlistFile(self, filename, collector):
+    """Open a Plist file given a path and returns a plist top level object.
+
+    Args:
+      filename: the filename of the plist file.
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
+    file_entry = collector.OpenFileEntry(filename)
     file_object = file_entry.GetFileObject()
 
     try:
@@ -71,18 +76,22 @@ class OSXUsers(preprocess_interface.PreprocessPlugin):
 
     return top_level_object
 
-  def GetValue(self):
-    """Return the value for discovered user accounts, as a list of users."""
+  def GetValue(self, collector):
+    """Return the value for discovered user accounts, as a list of users.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
     users = []
 
     try:
-      user_plists = self._collector.FindPaths(self.USER_PATH)
+      user_plists = collector.FindPaths(self.USER_PATH)
     except errors.PathNotFound:
       raise errors.PreProcessFail(u'Unable to find user files.')
 
     for plist in user_plists:
       try:
-        top_level_object = self.OpenPlistFile(plist)
+        top_level_object = self._OpenPlistFile(plist, collector)
       except IOError:
         logging.warning(u'Unable to parse userfile: {}'.format(plist))
         continue
@@ -128,8 +137,12 @@ class OSXTimeZone(preprocess_interface.PreprocessPlugin):
 
   ZONE_FILE_PATH = u'/private/etc/localtime'
 
-  def GetValue(self):
-    """Extract and return the value of the time zone settings."""
+  def GetValue(self, collector):
+    """Extract and return the value of the time zone settings.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
     # TODO: This needs to be completely rewritten once dfVFS is
     # implemented.
 
@@ -137,11 +150,11 @@ class OSXTimeZone(preprocess_interface.PreprocessPlugin):
     # links in the /private/etc directory. Other cases exist that need
     # to be supported as well.
     try:
-      _ = self._collector.FindPaths(self.ZONE_FILE_PATH)
+      _ = collector.FindPaths(self.ZONE_FILE_PATH)
     except errors.PathNotFound:
       raise errors.PreProcessFail(u'Zonefile does not exist.')
 
-    zone_file_entry = self._collector.OpenFileEntry(self.ZONE_FILE_PATH)
+    zone_file_entry = collector.OpenFileEntry(self.ZONE_FILE_PATH)
     if zone_file_entry is None:
       raise errors.PreProcessFail(u'Unable to open zone file: {0:s}.'.format(
           self.ZONE_FILE_PATH))

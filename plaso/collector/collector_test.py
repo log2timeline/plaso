@@ -118,7 +118,7 @@ class CollectorTest(CollectorTestCase):
       test_collection_queue = queue.SingleThreadedQueue()
       test_store = queue.SingleThreadedQueue()
       test_collector = collector.Collector(
-          test_collection_queue, test_store, dirname)
+          test_collection_queue, test_store, dirname, source_path_spec=None)
       test_collector.Collect()
 
       test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -141,7 +141,7 @@ class CollectorTest(CollectorTestCase):
     test_collection_queue = queue.SingleThreadedQueue()
     test_store = queue.SingleThreadedQueue()
     test_collector = collector.Collector(
-          test_collection_queue, test_store, './')
+        test_collection_queue, test_store, './', source_path_spec=None)
     test_collector.SetFilter(filter_name, pre_obj)
     test_collector.Collect()
 
@@ -197,8 +197,9 @@ class CollectorTest(CollectorTestCase):
     test_storage_queue_producer = queue.EventObjectQueueProducer(
         test_storage_queue)
     test_collector = collector.Collector(
-          test_collection_queue, test_storage_queue_producer, test_file)
-    test_collector.SetImageInformation(byte_offset=0)
+        test_collection_queue, test_storage_queue_producer, test_file,
+        source_path_spec=None)
+    test_collector.SetImageInformation(0)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -224,13 +225,14 @@ class CollectorTest(CollectorTestCase):
     test_storage_queue_producer = queue.EventObjectQueueProducer(
         test_storage_queue)
     test_collector = collector.Collector(
-          test_collection_queue, test_storage_queue_producer, test_file)
-    test_collector.SetImageInformation(byte_offset=0)
+        test_collection_queue, test_storage_queue_producer, test_file,
+        source_path_spec=None)
+    test_collector.SetImageInformation(0)
     test_collector.SetFilter(filter_name, pre_obj)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
-          test_collection_queue)
+        test_collection_queue)
     test_collector_queue_consumer.ConsumePathSpecs()
 
     try:
@@ -296,7 +298,7 @@ class CollectionFilterTest(unittest.TestCase):
 
     pre_obj = event.PreprocessObject()
     test_preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, u'./')
+        pre_obj, u'./', source_path_spec=None)
     path_spec_generator = test_preprocess_collector.GetPathSpecs(test_filter)
     path_specs = list(path_spec_generator)
     # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.

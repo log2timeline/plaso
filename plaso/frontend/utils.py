@@ -23,6 +23,7 @@ import os
 
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.lib import errors
 from plaso.lib import timelib
 
 import pytz
@@ -168,3 +169,48 @@ class OutputWriter(object):
 
     output_file_object.close()
     return output_path
+
+
+def ParseVssStores(vss_stores):
+  """Parses the VSS stores command line option.
+
+  Args:
+    vss_stores: the VSS stores option as provided via the command line
+                arguments.
+
+  Returns:
+    The list of VSS stores.
+
+  Raises:
+    BadConfigOption: if the VSS stores option is invalid.
+  """
+  if not vss_stores:
+    return
+
+  stores = []
+  for vss_store_range in vss_stores.split(','):
+    # Determine if the range is formatted as 1..3 otherwise it indicates
+    # a single store number.
+    if '..' in vss_store_range:
+      first_store, last_store = vss_store_range.split('..')
+      try:
+        first_store = int(first_store, 10)
+        last_store = int(last_store, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid VSS store range: {0:s}.'.format(vss_store_range))
+
+      for store_number in range(first_store, last_store):
+        if store_number not in stores:
+          stores.append(store_number)
+    else:
+      try:
+        store_number = int(vss_store_range, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid VSS store range: {0:s}.'.format(vss_store_range))
+
+      if store_number not in stores:
+        stores.append(store_number)
+
+  return sorted(stores)
