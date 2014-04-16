@@ -133,7 +133,7 @@ class RegistryHexFormatter(RegistryFormatter):
 
     ret_strings = [msg]
 
-    event_object.pathspec = RegCache.hive.file_entry.path_spec
+    event_object.pathspec = RegCache.file_entry.path_spec
     ret_strings.append(utils.FormatHeader('Hex Output From Event.', '-'))
     ret_strings.append(
         frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
@@ -151,6 +151,7 @@ class RegCache(object):
   pre_obj = None
   path_expander = None
   reg_cache = None
+  file_entry = None
 
   REG_TYPES = {
       'NTUSER': ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
@@ -509,6 +510,7 @@ def OpenHive(filename, hive_collector=None, codepage='cp1252'):
   except IOError:
     ErrorAndDie(u'Unable to open registry hive: {}'.format(filename))
   RegCache.SetHiveType()
+  RegCache.file_entry = file_entry
   RegCache.BuildCache()
   RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
 
