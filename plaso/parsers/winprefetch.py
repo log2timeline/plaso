@@ -27,23 +27,20 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 
 
-class WinPrefetchEventContainer(event.EventContainer):
-  """Convenience class for a Windows Prefetch event container."""
+class WinPrefetchExecutionEventContainer(event.EventContainer):
+  """Class that defines a Windows Prefetch execution event."""
 
-  def __init__(self, file_header, file_information, volume_information,
-               volume_path):
+  def __init__(self, file_header, file_information, mapped_files):
     """Initializes the event container.
 
     Args:
-      file_header: The file header structure.
-      file_information: The file information structure.
-      volume_information: The volume information structure.
-      volume_path: The volume path string.
+      file_header: The file header construct object.
+      file_information: The file information construct object.
+      mapped_files: The list of mapped filenames.
     """
-    super(WinPrefetchEventContainer, self).__init__()
+    super(WinPrefetchExecutionEventContainer, self).__init__()
 
-    self.data_type = 'windows:prefetch'
-
+    self.data_type = 'windows:prefetch:execution'
     self.offset = 0
 
     self.version = file_header.get('version', None)
@@ -52,11 +49,21 @@ class WinPrefetchEventContainer(event.EventContainer):
     self.prefetch_hash = file_header.get('prefetch_hash', None)
 
     self.run_count = file_information.get('run_count', None)
+    self.mapped_files = mapped_files
 
-    if volume_information:
-      self.volume_serial = volume_information.get('volume_serial', None)
+    self.number_of_volumes = file_information.get('number_of_volumes', 0)
+    self.volume_serial_numbers = []
+    self.volume_device_paths = []
 
-    self.volume_path = volume_path
+  def AppendVolume(self, volume_serial_number, volume_device_path):
+    """Appends a volume.
+
+    Args:
+      volume_serial_number: The volume serial number string.
+      volume_device_path: The volume device path string.
+    """
+    self.volume_serial_numbers.append(volume_serial_number)
+    self.volume_device_paths.append(volume_device_path)
 
 
 class WinPrefetchParser(parser.BaseParser):
@@ -79,10 +86,11 @@ class WinPrefetchParser(parser.BaseParser):
   FILE_INFORMATION_V17 = construct.Struct(
       'file_information_v17',
       construct.Padding(16),
-      construct.ULInt32('dll_offset'),
-      construct.ULInt32('dll_size'),
-      construct.ULInt32('volume_information_offset'),
-      construct.Padding(8),
+      construct.ULInt32('filenames_offset'),
+      construct.ULInt32('filenames_size'),
+      construct.ULInt32('volumes_information_offset'),
+      construct.ULInt32('number_of_volumes'),
+      construct.ULInt32('volumes_information_size'),
       construct.ULInt64('last_run_time'),
       construct.Padding(16),
       construct.ULInt32('run_count'),
@@ -91,10 +99,12 @@ class WinPrefetchParser(parser.BaseParser):
   FILE_INFORMATION_V23 = construct.Struct(
       'file_information_v23',
       construct.Padding(16),
-      construct.ULInt32('dll_offset'),
-      construct.ULInt32('dll_size'),
-      construct.ULInt32('volume_information_offset'),
-      construct.Padding(16),
+      construct.ULInt32('filenames_offset'),
+      construct.ULInt32('filenames_size'),
+      construct.ULInt32('volumes_information_offset'),
+      construct.ULInt32('number_of_volumes'),
+      construct.ULInt32('volumes_information_size'),
+      construct.Padding(8),
       construct.ULInt64('last_run_time'),
       construct.Padding(16),
       construct.ULInt32('run_count'),
@@ -103,10 +113,12 @@ class WinPrefetchParser(parser.BaseParser):
   FILE_INFORMATION_V26 = construct.Struct(
       'file_information_v26',
       construct.Padding(16),
-      construct.ULInt32('dll_offset'),
-      construct.ULInt32('dll_size'),
-      construct.ULInt32('volume_information_offset'),
-      construct.Padding(16),
+      construct.ULInt32('filenames_offset'),
+      construct.ULInt32('filenames_size'),
+      construct.ULInt32('volumes_information_offset'),
+      construct.ULInt32('number_of_volumes'),
+      construct.ULInt32('volumes_information_size'),
+      construct.Padding(8),
       construct.ULInt64('last_run_time'),
       construct.ULInt64('last_run_time1'),
       construct.ULInt64('last_run_time2'),
@@ -119,17 +131,27 @@ class WinPrefetchParser(parser.BaseParser):
       construct.ULInt32('run_count'),
       construct.Padding(96))
 
-  # Note that at the moment for the purpose of this parser
-  # the v23 and v26 volume information structures are the same as v17.
   VOLUME_INFORMATION_V17 = construct.Struct(
       'volume_information_v17',
-      construct.ULInt32('name_offset'),
-      construct.ULInt32('name_number_of_characters'),
+      construct.ULInt32('device_path_offset'),
+      construct.ULInt32('device_path_number_of_characters'),
       construct.ULInt64('creation_time'),
-      construct.ULInt32('volume_serial'),
+      construct.ULInt32('serial_number'),
       construct.Padding(8),
       construct.ULInt32('directory_strings_offset'),
       construct.Padding(4))
+
+  # Note that at the moment for the purpose of this parser
+  # the v23 and v26 volume information structures are the same.
+  VOLUME_INFORMATION_V23 = construct.Struct(
+      'volume_information_v23',
+      construct.ULInt32('device_path_offset'),
+      construct.ULInt32('device_path_number_of_characters'),
+      construct.ULInt64('creation_time'),
+      construct.ULInt32('serial_number'),
+      construct.Padding(8),
+      construct.ULInt32('directory_strings_offset'),
+      construct.Padding(68))
 
   def _ParseFileHeader(self, file_object):
     """Parses the file header.
@@ -183,66 +205,102 @@ class WinPrefetchParser(parser.BaseParser):
       raise errors.UnableToParseFile('Unable to read file information')
     return file_information
 
-  def _ParseVolumeInformation(self, file_object, volume_information_offset):
-    """Parses the volume information.
+  def _ParseFilenames(self, file_object, file_information):
+    """Parses the filenames.
 
     Args:
       file_object: A file-like object to read data from.
-      volume_information_offset: The offset relative from start of the file
-                                 to the volume information.
+      file_information: The file information construct object.
 
     Returns:
-      The volume information construct object or None if not available.
+      A list of filenames.
     """
-    if volume_information_offset > 0:
-      file_object.seek(volume_information_offset, os.SEEK_SET)
+    filenames_offset = file_information.get('filenames_offset', 0)
+    filenames_size = file_information.get('filenames_size', 0)
 
-      try:
-        volume_information = self.VOLUME_INFORMATION_V17.parse_stream(
-            file_object)
-      except (IOError, construct.FieldError) as exception:
-        raise errors.UnableToParseFile(
-            u'Unable to parse volume information v17. '
-            u'Reason given: {}'.format(exception))
+    if filenames_offset > 0 and filenames_size > 0:
+      file_object.seek(filenames_offset, os.SEEK_SET)
+      filenames_data = file_object.read(filenames_size)
+      filenames = binary.ArrayOfUt16StreamCopyToString(filenames_data)
+
     else:
-      volume_information = None
-    return volume_information
+      filenames = []
 
-  def _ParseVolumePath(self, file_object, volume_path_offset, volume_path_size):
-    """Parses the volume path.
+    return filenames
+
+  def _ParseVolumesInformationSection(
+      self, file_object, format_version, file_information):
+    """Parses the volumes information section.
+
+    Args:
+      file_object: A file-like object to read data from.
+      format_version: The format version.
+      file_information: The file information construct object.
+
+    Yields:
+      A volume information construct object.
+    """
+    volumes_information_offset = file_information.get(
+        'volumes_information_offset', 0)
+
+    if volumes_information_offset > 0:
+      number_of_volumes = file_information.get('number_of_volumes', 0)
+      file_object.seek(volumes_information_offset, os.SEEK_SET)
+
+      while number_of_volumes > 0:
+        try:
+          if format_version == 17:
+            yield self.VOLUME_INFORMATION_V17.parse_stream(file_object)
+          else:
+            yield self.VOLUME_INFORMATION_V23.parse_stream(file_object)
+        except (IOError, construct.FieldError) as exception:
+          raise errors.UnableToParseFile((
+              u'Unable to parse volume information v{0:d} with error: '
+              u'{1:s}').format(format_version, exception))
+
+        number_of_volumes -= 1
+
+  def _ParseVolumeDevicePath(
+      self, file_object, file_information, volume_information):
+    """Parses the volume device path.
 
     This function expects the current offset of the file-like object to point
     as the end of the volume information structure.
 
     Args:
       file_object: A file-like object to read data from.
-      volume_path_offset: The offset relative from start of the volume
-                          information to the volume path.
-      volume_path_size: The byte size of the volume path data.
+      file_information: The file information construct object.
+      volume_information: The volume information construct object.
 
     Returns:
-      A Unicode string containing the volume path or None if not available.
+      A Unicode string containing the device path or None if not available.
     """
-    if volume_path_offset >= 36 and volume_path_size > 0:
-      # Correct for the part of volume information structure we've already read.
-      volume_path_offset -= 36
-      file_object.seek(volume_path_offset, os.SEEK_CUR)
+    volumes_information_offset = file_information.get(
+        'volumes_information_offset', 0)
 
-      volume_path = binary.ReadUtf16Stream(
-          file_object, byte_size=volume_path_size)
-    else:
-      volume_path = None
+    device_path = None
+    if volumes_information_offset > 0:
+      device_path_offset = volume_information.get('device_path_offset', 0)
+      device_path_size = 2 * volume_information.get(
+          'device_path_number_of_characters', 0)
 
-    return volume_path
+      if device_path_offset >= 36 and device_path_size > 0:
+        device_path_offset += volumes_information_offset
+        file_object.seek(device_path_offset, os.SEEK_SET)
+
+        device_path = binary.ReadUtf16Stream(
+            file_object, byte_size=device_path_size)
+
+    return device_path
 
   def Parse(self, file_entry):
-    """Extract data from a Windows Prefetch file.
+    """Extracts events from a Windows Prefetch file.
 
     Args:
-      file_entry: A file entry object.
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
-      An event container (EventContainer) that contains the parsed attributes.
+      Event objects (instances of EventObject) of the extracted events.
     """
     file_object = file_entry.GetFileObject()
     file_header = self._ParseFileHeader(file_object)
@@ -253,47 +311,31 @@ class WinPrefetchParser(parser.BaseParser):
           u'Unsupported format version: {0:d}'.format(format_version))
 
     file_information = self._ParseFileInformation(file_object, format_version)
+    mapped_files = self._ParseFilenames(file_object, file_information)
 
-    volume_information_offset = file_information.get(
-        'volume_information_offset', 0)
+    container = WinPrefetchExecutionEventContainer(
+        file_header, file_information, mapped_files)
 
-    volume_information = self._ParseVolumeInformation(
-        file_object, volume_information_offset)
+    executable = binary.Ut16StreamCopyToString(
+        file_header.get('executable', u''))
 
-    if volume_information:
-      volume_path_offset = volume_information.get('name_offset', 0)
-      volume_path_size = 2 * volume_information.get(
-          'name_number_of_characters', 0)
-    else:
-      volume_path_offset = 0
-      volume_path_size = 0
+    for volume_information in self._ParseVolumesInformationSection(
+        file_object, format_version, file_information):
+      volume_serial_number = volume_information.get('serial_number', 0)
+      volume_device_path = self._ParseVolumeDevicePath(
+          file_object, file_information, volume_information)
 
-    volume_path = self._ParseVolumePath(
-        file_object, volume_path_offset, volume_path_size)
+      container.AppendVolume(volume_serial_number, volume_device_path)
 
-    container = WinPrefetchEventContainer(
-        file_header, file_information, volume_information, volume_path)
+      timestamp = volume_information.get('creation_time', 0)
+      if timestamp:
+        container.Append(event.FiletimeEvent(
+            timestamp, eventdata.EventTimestamp.CREATION_TIME,
+            container.data_type))
 
-    dll_offset = file_information.get('dll_offset', 0)
-    dll_size = file_information.get('dll_size', 0)
-
-    if dll_offset > 0 and dll_size > 0:
-      file_object.seek(dll_offset, os.SEEK_SET)
-      dll_data = file_object.read(dll_size)
-      mapped_files = binary.ArrayOfUt16StreamCopyToString(dll_data)
-
-      if volume_path:
-        executable = binary.Ut16StreamCopyToString(
-            file_header.get('executable', ''))
-
-        for dll_name in mapped_files:
-          if dll_name.endswith(executable):
-            _, _, path = dll_name.partition(volume_path)
-            container.path = path
-    else:
-      mapped_files = []
-
-    container.mapped_files = mapped_files
+      for mapped_file in mapped_files:
+        if mapped_file.endswith(executable):
+          _, _, container.path = mapped_file.partition(volume_device_path)
 
     timestamp = file_information.get('last_run_time', 0)
     container.Append(event.FiletimeEvent(
@@ -312,14 +354,6 @@ class WinPrefetchParser(parser.BaseParser):
               timestamp,
               u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME),
               container.data_type))
-
-    if volume_information:
-      timestamp = volume_information.get('creation_time', 0)
-
-      if timestamp:
-        container.Append(event.FiletimeEvent(
-            timestamp, eventdata.EventTimestamp.CREATION_TIME,
-            container.data_type))
 
     file_object.close()
     yield container

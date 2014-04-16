@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import winprefetch as winprefetch_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -45,7 +45,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_container.version, 17)
 
     # The last run time.
-    event_object = event_container.events[0]
+    event_object = event_container.events[1]
 
     # date -u -d"Mar 10, 2013 10:11:49.281250000 UTC" +"%s.%N"
     # 1362910309.281250000
@@ -56,7 +56,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.prefetch_hash, 0x087b4001)
 
     # The creation time.
-    event_object = event_container.events[1]
+    event_object = event_container.events[0]
 
     # date -u -d "Mar 10, 2013 10:19:46.234375000 UTC" +"%s.%N"
     # 1362910786.234375000
@@ -74,7 +74,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_container.version, 23)
 
     # The last run time.
-    event_object = event_container.events[0]
+    event_object = event_container.events[1]
 
     # Date: 2012-04-06T19:00:55.932955+00:00.
     self.assertEquals(event_object.timestamp, 1333738855932955)
@@ -82,7 +82,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
 
     # The creation time.
-    event_object = event_container.events[1]
+    event_object = event_container.events[0]
 
     # Date: 2010-11-10T17:37:26.484375+00:00.
     self.assertEquals(event_object.timestamp, 1289410646484375)
@@ -94,16 +94,16 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(
         event_object.path, u'\\WINDOWS\\SYSTEM32\\PING.EXE')
     self.assertEquals(event_object.run_count, 14)
-    self.assertEquals(event_object.volume_path, u'\\DEVICE\\HARDDISKVOLUME1')
-    self.assertEquals(event_object.volume_serial, 0xac036525)
+    self.assertEquals(
+        event_object.volume_device_paths[0], u'\\DEVICE\\HARDDISKVOLUME1')
+    self.assertEquals(event_object.volume_serial_numbers[0], 0xac036525)
 
     expected_msg = (
-        u'Superfetch [PING.EXE] was executed - run count 14 path: '
+        u'Prefetch [PING.EXE] was executed - run count 14 path: '
         u'\\WINDOWS\\SYSTEM32\\PING.EXE '
         u'hash: 0xB29F6629 '
-        u'[ volume serial: 0xAC036525 '
-        u'volume path: '
-        u'\\DEVICE\\HARDDISKVOLUME1]')
+        u'volume: 1 [serial number: 0xAC036525, '
+        u'device path: \\DEVICE\\HARDDISKVOLUME1]')
 
     expected_msg_short = u'PING.EXE was run 14 time(s)'
 
@@ -119,7 +119,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_container.version, 26)
 
     # The last run time.
-    event_object = event_container.events[0]
+    event_object = event_container.events[1]
 
     # date -u -d"Oct 04, 2013 15:40:09.037833300 UTC" +"%s.%N"
     # 1380901209.037833300
@@ -130,7 +130,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.prefetch_hash, 0x3ae259fc)
 
     # The previous last run time.
-    event_object = event_container.events[1]
+    event_object = event_container.events[2]
 
     # date -u -d"Oct 04, 2013 15:28:09.010356500 UTC" +"%s.%N"
     # 1380900489.010356500
@@ -140,7 +140,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME))
 
     # The creation time.
-    event_object = event_container.events[4]
+    event_object = event_container.events[0]
 
     # date -u -d"Oct 04, 2013 15:57:26.146547600 UTC" +"%s.%N"
     # 1380902246.146547600
