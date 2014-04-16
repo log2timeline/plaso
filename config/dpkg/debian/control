@@ -8,7 +8,7 @@ Homepage: http://code.google.com/p/plaso/
 
 Package: python-plaso
 Architecture: any
-Depends: binplist, construct, libprotobuf7, libyaml-0-2, libevt-python, libevtx-python, libewf-python, liblnk-python, libmsiecf-python, libolecf-python, libqcow-python, libregf-python, libtsk, libsmdev-python, libvdhi-python, libvshadow-python, ipython, python-bencode, python-dateutil, python-dfvfs, python-dpkt, python-hachoir-core, python-hachoir-metadata, python-hachoir-parser, python-protobuf, python-pyparsing, python-six, python-yaml, python-tz, pytsk3, ${shlibs:Depends}, ${misc:Depends}
+Depends: binplist, construct, libprotobuf7, libyaml-0-2, libevt-python, libevtx-python, libewf-python, liblnk-python, libmsiecf-python, libolecf-python, libqcow-python, libregf-python, libtsk, libsmdev-python, libvhdi-python, libvshadow-python, ipython, python-bencode, python-dateutil, python-dfvfs, python-dpkt, python-hachoir-core, python-hachoir-metadata, python-hachoir-parser, python-protobuf, python-pyparsing, python-six, python-yaml, python-tz, pytsk3, ${shlibs:Depends}, ${misc:Depends}
 Recommends: libevt-tools, libevtx-tools, libewf-tools, liblnk-tools, libmsiecf-tools, libolecf-tools, libqcow-tools, libregf-tools, libsmdev-tools, libvhdi-tools, libvshadow-tools, libtsk-dev, sleuthkit
 Description: Plaso Log2Timeline
  Log2Timeline is a framework to create super timelines.

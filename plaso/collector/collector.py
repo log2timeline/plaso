@@ -65,9 +65,9 @@ def _SendContainerToStorage(file_entry, storage_queue_producer):
 class Collector(queue.PathSpecQueueProducer):
   """Class that implements a collector object."""
 
-  _BYTES_PER_SECTOR = 512
-
-  def __init__(self, process_queue, storage_queue_producer, source_path):
+  def __init__(
+      self, process_queue, storage_queue_producer, source_path,
+      source_path_spec=None):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -75,10 +75,13 @@ class Collector(queue.PathSpecQueueProducer):
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      proces_queue: The files processing queue (instance of Queue).
+      process_queue: The files processing queue (instance of Queue).
       storage_queue_producer: the storage queue producer (instance of
                               EventObjectQueueProducer).
       source_path: Path of the source file or directory.
+      source_path_spec: Optional source path specification (instance of
+                        dfvfs.PathSpec) as determined by the file system
+                        scanner. The default is None.
     """
     super(Collector, self).__init__(process_queue)
     self._byte_offset = None
@@ -87,9 +90,9 @@ class Collector(queue.PathSpecQueueProducer):
     self._pre_obj = None
     self._process_image = None
     self._process_vss = None
-    self._sector_offset = None
     self._storage_queue_producer = storage_queue_producer
     self._source_path = os.path.abspath(source_path)
+    self._source_path_spec = source_path_spec
     self._vss_stores = None
     self.collect_directory_metadata = True
 
@@ -131,16 +134,6 @@ class Collector(queue.PathSpecQueueProducer):
         getattr(stat_object, 'ctime_nano', 0)))
 
     return ret_hash.hexdigest()
-
-  def _GetImageByteOffset(self):
-    """Retrieves the image offset in bytes."""
-    if self._byte_offset is None:
-      if self._sector_offset is not None:
-        self._byte_offset = self._sector_offset * self._BYTES_PER_SECTOR
-      else:
-        self._byte_offset = 0
-
-    return self._byte_offset
 
   def _ProcessDirectory(self, file_entry):
     """Processes a directory and extract its metadata if necessary."""
@@ -197,7 +190,8 @@ class Collector(queue.PathSpecQueueProducer):
   def _ProcessFileSystemWithFilter(self):
     """Processes the source path based on the collection filter."""
     preprocessor_collector = GenericPreprocessCollector(
-        self._pre_obj, self._source_path)
+        self._pre_obj, self._source_path,
+        source_path_spec=self._source_path_spec)
     filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
     for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
@@ -211,20 +205,24 @@ class Collector(queue.PathSpecQueueProducer):
     if self._process_vss:
       self._hashlist = {}
 
-    image_offset = self._GetImageByteOffset()
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=self._source_path)
-
-    if image_offset > 0:
-      volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
-          parent=path_spec)
+    if self._source_path_spec:
+      volume_path_spec = self._source_path_spec.parent
+      path_spec = self._source_path_spec
     else:
-      volume_path_spec = path_spec
+      # If source path spec was not defined fallback on the old method.
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=self._source_path)
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_TSK, location=u'/', parent=volume_path_spec)
+      if self._byte_offset > 0:
+        volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_TSK_PARTITION,
+            start_offset=self._byte_offset, parent=path_spec)
+      else:
+        volume_path_spec = path_spec
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK, location=u'/',
+          parent=volume_path_spec)
 
     try:
       root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
@@ -256,23 +254,36 @@ class Collector(queue.PathSpecQueueProducer):
 
   def _ProcessImageWithFilter(self):
     """Processes the image with the collection filter."""
-    image_offset = self._GetImageByteOffset()
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=self._source_path)
-
-    if image_offset > 0:
-      volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
-          parent=path_spec)
+    if self._source_path_spec:
+      volume_path_spec = self._source_path_spec.parent
+      path_spec = self._source_path_spec
     else:
-      volume_path_spec = path_spec
+      # If source path spec was not defined fallback on the old method.
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=self._source_path)
+
+      if self._byte_offset > 0:
+        volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+            definitions.TYPE_INDICATOR_TSK_PARTITION,
+            start_offset=self._byte_offset, parent=path_spec)
+      else:
+        volume_path_spec = path_spec
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK, location=u'/',
+          parent=volume_path_spec)
+
+    # Make sure the pre-process collector fallsback on the old method
+    # when no source path spec is defined.
+    if self._source_path_spec:
+      source_path_spec = path_spec
+    else:
+      source_path_spec = None
 
     # TODO: Change the preprocessor collector into a find function.
     preprocessor_collector = GenericPreprocessCollector(
-        self._pre_obj, self._source_path)
-    preprocessor_collector.SetImageInformation(
-        sector_offset=self._sector_offset, byte_offset=self._byte_offset)
+        self._pre_obj, self._source_path, source_path_spec=source_path_spec)
+    preprocessor_collector.SetImageInformation(self._byte_offset)
     filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
     for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
@@ -296,6 +307,8 @@ class Collector(queue.PathSpecQueueProducer):
 
         for store_index in self._vss_stores:
           if store_index > 0 and store_index <= number_of_vss:
+            # In plaso 1 represents the first store index in
+            # pyvshadow 0 represents the first store index so 1 is subtracted.
             list_of_vss_stores.append(store_index - 1)
 
       for store_index in list_of_vss_stores:
@@ -303,11 +316,17 @@ class Collector(queue.PathSpecQueueProducer):
             u'Collecting from VSS volume: {0:d} out of: {1:d}'.format(
                 store_index + 1, number_of_vss))
 
+        # Make sure the pre-process collector fallsback on the old method
+        # when no source path spec is defined.
+        if self._source_path_spec:
+          source_path_spec = path_spec
+        else:
+          source_path_spec = None
+
         # TODO: Change the preprocessor collector into a find function.
         vss_preprocessor_collector = GenericPreprocessCollector(
-            self._pre_obj, self._source_path)
-        vss_preprocessor_collector.SetImageInformation(
-            sector_offset=self._sector_offset, byte_offset=self._byte_offset)
+            self._pre_obj, self._source_path, source_path_spec=source_path_spec)
+        vss_preprocessor_collector.SetImageInformation(self._byte_offset)
         vss_preprocessor_collector.SetVssInformation(store_index=store_index)
         filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
@@ -341,8 +360,12 @@ class Collector(queue.PathSpecQueueProducer):
 
   def Collect(self):
     """Collects files from the source."""
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=self._source_path)
+    if self._source_path_spec:
+      path_spec = self._source_path_spec
+    else:
+      # If source path spec was not defined fallback on the old method.
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_OS, location=self._source_path)
 
     source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
@@ -387,20 +410,16 @@ class Collector(queue.PathSpecQueueProducer):
     self._filter_file_path = filter_file_path
     self._pre_obj = pre_obj
 
-  def SetImageInformation(self, sector_offset=None, byte_offset=None):
+  def SetImageInformation(self, byte_offset):
     """Sets the image information.
 
        This function will enable image collection.
 
     Args:
-      sector_offset: Optional sector offset into the image file if this is
-                     a disk image. The default is None.
-      byte_offset: Optional byte offset into the image file if this is
-                   a disk image. The default is None.
+      byte_offset: Byte offset into the image file.
     """
     self._process_image = True
     self._byte_offset = byte_offset
-    self._sector_offset = sector_offset
 
   def SetVssInformation(self, vss_stores=None):
     """Sets the Volume Shadow Snapshots (VSS) information.
@@ -409,7 +428,7 @@ class Collector(queue.PathSpecQueueProducer):
 
     Args:
       vss_stores: Optional range of VSS stores to include in the collection.
-                  The default is None.
+                  Where 1 represents the first store. The default is None.
     """
     self._process_vss = True
     self._vss_stores = vss_stores
@@ -418,15 +437,17 @@ class Collector(queue.PathSpecQueueProducer):
 class GenericPreprocessCollector(object):
   """Class that implements a generic preprocess collector object."""
 
-  _BYTES_PER_SECTOR = 512
   _PATH_EXPANDER_RE = re.compile(r'^[{][a-z_]+[}]$')
 
-  def __init__(self, pre_obj, source_path):
+  def __init__(self, pre_obj, source_path, source_path_spec=None):
     """Initializes the preprocess collector object.
 
     Args:
       pre_obj: The preprocessing object (instance of PreprocessObject).
       source_path: Path of the source file or directory.
+      source_path_spec: Optional source path specification (instance of
+                        dfvfs.PathSpec) as determined by the file system
+                        scanner. The default is None.
     """
     super(GenericPreprocessCollector, self).__init__()
     self._byte_offset = None
@@ -434,8 +455,8 @@ class GenericPreprocessCollector(object):
         pre_obj, None)
     self._process_image = None
     self._process_vss = None
-    self._sector_offset = None
     self._source_path = source_path
+    self._source_path_spec = source_path_spec
     self._store_index = None
 
   def _GetExtendedPath(self, path):
@@ -456,16 +477,6 @@ class GenericPreprocessCollector(object):
       logging.error(
           u'Unable to expand path {0:s} with error: {1:s}'.format(
               path, exception))
-
-  def _GetImageByteOffset(self):
-    """Retrieves the image offset in bytes."""
-    if self._byte_offset is None:
-      if self._sector_offset is not None:
-        self._byte_offset = self._sector_offset * self._BYTES_PER_SECTOR
-      else:
-        self._byte_offset = 0
-
-    return self._byte_offset
 
   def _GetPaths(self, path_segments_expressions_list):
     """Retrieves paths based on path segments expressions.
@@ -607,16 +618,20 @@ class GenericPreprocessCollector(object):
 
   def _GetPathSpec(self, path):
     """Retrieves the path specification."""
-    if self._process_image:
+    if self._source_path_spec:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          self._source_path_spec.type_indicator, location=path,
+          parent=self._source_path_spec.parent)
+
+    # If source path spec was not defined fallback on the old method.
+    elif self._process_image:
       path_spec = path_spec_factory.Factory.NewPathSpec(
           definitions.TYPE_INDICATOR_OS, location=self._source_path)
 
-      image_offset = self._GetImageByteOffset()
-
-      if image_offset > 0:
+      if self._byte_offset > 0:
         path_spec = path_spec_factory.Factory.NewPathSpec(
-            definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
-            parent=path_spec)
+            definitions.TYPE_INDICATOR_TSK_PARTITION,
+            start_offset=self._byte_offset, parent=path_spec)
 
       if self._process_vss:
         path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -733,20 +748,16 @@ class GenericPreprocessCollector(object):
     path_spec = self._GetPathSpec(path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-  def SetImageInformation(self, sector_offset=None, byte_offset=None):
+  def SetImageInformation(self, byte_offset):
     """Sets the image information.
 
        This function will enable image collection.
 
     Args:
-      sector_offset: Optional sector offset into the image file if this is
-                     a disk image. The default is None.
-      byte_offset: Optional byte offset into the image file if this is
-                   a disk image. The default is None.
+      byte_offset: Byte offset into the image file.
     """
     self._process_image = True
     self._byte_offset = byte_offset
-    self._sector_offset = sector_offset
 
   def SetVssInformation(self, store_index=None):
     """Sets the Volume Shadow Snapshots (VSS) information.

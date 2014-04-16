@@ -15,13 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The main engine, the backbone that glues plaso together.
-
-This can currently be looked as an alpha stage.
-
-This file contains the main engine used by plaso or the main glue
-that holds everything in one place.
-"""
+"""The processing engine."""
 
 import logging
 import multiprocessing
@@ -33,7 +27,7 @@ import traceback
 
 import plaso
 from plaso import preprocessors
-from plaso import output as output_plugins   # pylint: disable-msg=unused-import
+from plaso import output as output_plugins   # pylint: disable=unused-import
 
 from plaso.collector import collector
 from plaso.lib import errors
@@ -48,15 +42,8 @@ from plaso.lib import worker
 import pytz
 
 
-def GetTimeZoneList():
-  """Generates a list of all supported time zones."""
-  yield 'local'
-  for zone in pytz.all_timezones:
-    yield zone
-
-
 class Engine(object):
-  """The main engine of plaso, the one that rules them all."""
+  """Class that defines the processing engine."""
 
   # The minimum amount of worker processes that are started.
   MINIMUM_WORKERS = 3
@@ -75,40 +62,24 @@ class Engine(object):
     Raises:
       errors.BadConfigOption: If the configuration options are wrong.
     """
+    self._byte_offset = None
     self._collector = None
+    self._debug_mode = config.debug
+    self._file_filter = config.file_filter
+    self._output = None
+    self._process_image = False
+    self._process_vss = False
+    self._run_preprocess = config.preprocess
+    self._single_thread_mode = config.single_thread
     self._storage_queue_producer = None
+    self._vss_stores = None
+
     self.worker_threads = []
     self.config = config
 
-    # Do some initial verification here.
-    if not config.image:
-      if not os.path.isfile(config.filename) and not os.path.isdir(
-          config.filename):
-        raise errors.BadConfigOption(
-            'File [{0:s}] does not exist.'.format(config.filename))
+    config.zone = pytz.timezone(config.tzone)
 
-    if os.path.isfile(config.output):
-      logging.warning(u'Appending to an already existing file.')
-
-    dirname = os.path.dirname(config.output)
-    if not dirname:
-      dirname = '.'
-
-    config.bytes_per_sector = getattr(config, 'bytes_per_sector', 512)
-
-    if not os.access(dirname, os.W_OK):
-      raise errors.BadConfigOption(
-          'Unable to write to location: {0:s}'.format(config.output))
-
-    self.config.zone = pytz.timezone(config.tzone)
-
-    if not hasattr(self.config, 'vss_stores'):
-      self.config.vss_stores = None
-
-    if self.config.image:
-      self.config.preprocess = True
-
-    if self.config.workers < 1:
+    if config.workers < 1:
       # One worker for each "available" CPU (minus other processes).
       # The number three here is derived from the fact that the engine starts
       # up:
@@ -125,9 +96,9 @@ class Engine(object):
         # Let's have a maximum amount of workers.
         cpus = self.MAXIMUM_WORKERS
 
-      self.config.workers = cpus
+      config.workers = cpus
 
-  def _GetCollector(self, config, pre_obj, collection_queue, storage_queue):
+  def _GetCollector(self, pre_obj, collection_queue, storage_queue):
     """Returns a collector object based on config."""
     # Indicate whether the collection agent should collect directory
     # stat information - this depends on whether the stat parser is
@@ -138,46 +109,45 @@ class Engine(object):
       if 'PfileStatParser' in loaded_parsers:
         include_directory_stat = True
 
-    if config.image:
-      # Note that os.path.isfile() will return false when config.filename
-      # point to a device file.
-      if os.path.isdir(config.filename):
+    if self._process_image:
+      # Note that os.path.isfile() will return false when self._source
+      # points to a device file.
+      if os.path.isdir(self._source):
         raise errors.BadConfigOption(
-            u'Source: {0:s} cannot be a directory.'.format(config.filename))
+            u'Source: {0:s} cannot be a directory.'.format(self._source))
 
-      if config.file_filter:
+      if self._file_filter:
         logging.debug(u'Starting a collection on image with filter.')
       else:
         logging.debug(u'Starting a collection on image.')
 
     else:
-      if (not os.path.isfile(config.filename) and
-          not os.path.isdir(config.filename)):
+      if (not os.path.isfile(self._source) and
+          not os.path.isdir(self._source)):
         raise errors.BadConfigOption(
             u'Source: {0:s} has to be a file or directory.'.format(
-                config.filename))
+                self._source))
 
-      if config.file_filter:
+      if self._file_filter:
         logging.debug(u'Starting a collection on directory with filter.')
-      elif config.recursive:
+      elif self.config.recursive:
         logging.debug(u'Starting a collection on directory.')
       else:
         # No need for multiple workers when parsing a single file.
-        config.workers = 1
+        self.config.workers = 1
 
     collector_object = collector.Collector(
-        collection_queue, storage_queue, unicode(config.filename))
+        collection_queue, storage_queue, self._source,
+        source_path_spec=self._source_path_spec)
 
-    if config.image:
-      collector_object.SetImageInformation(
-        sector_offset=config.image_offset,
-        byte_offset=config.image_offset_bytes)
+    if self._process_image:
+      collector_object.SetImageInformation(self._byte_offset)
 
-      if config.parse_vss:
-        collector_object.SetVssInformation(vss_stores=config.vss_stores)
+      if self._process_vss:
+        collector_object.SetVssInformation(vss_stores=self._vss_stores)
 
-    if config.file_filter:
-      collector_object.SetFilter(config.file_filter, pre_obj)
+    if self._file_filter:
+      collector_object.SetFilter(self._file_filter, pre_obj)
 
     collector_object.collect_directory_metadata = include_directory_stat
 
@@ -185,36 +155,33 @@ class Engine(object):
 
   def _PreProcess(self, pre_obj):
     """Run the preprocessors."""
-
     logging.info(u'Starting to collect preprocessing information.')
-    logging.info(u'Filename: {0:s}'.format(self.config.filename))
+    logging.info(u'Filename: {0:s}'.format(self._source))
 
-    if not self.config.image and not self.config.recursive:
+    if not self._process_image and not self.config.recursive:
       return
 
     preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, self.config.filename)
+        pre_obj, self._source, source_path_spec=self._source_path_spec)
 
-    if self.config.image:
-      # TODO: pass self.config.bytes_per_sector?
-      preprocess_collector.SetImageInformation(
-          sector_offset=self.config.image_offset,
-          byte_offset=self.config.image_offset_bytes)
+    if self._process_image:
+      preprocess_collector.SetImageInformation(self._byte_offset)
 
     if not getattr(self.config, 'os', None):
       self.config.os = preprocess_interface.GuessOS(preprocess_collector)
 
-    plugin_list = preprocessors.PreProcessList(pre_obj, preprocess_collector)
+    plugin_list = preprocessors.PreProcessList(pre_obj)
     pre_obj.guessed_os = self.config.os
 
     for weight in plugin_list.GetWeightList(self.config.os):
       for plugin in plugin_list.GetWeight(self.config.os, weight):
         try:
-          plugin.Run()
-        except (IOError, errors.PreProcessFail) as e:
-          logging.warning(
-              (u'Unable to run preprocessor: {}, reason: {} - attribute [{}] '
-               'not set').format(plugin.plugin_name, e, plugin.ATTRIBUTE))
+          plugin.Run(preprocess_collector)
+        except (IOError, errors.PreProcessFail) as exception:
+          logging.warning((
+              u'Unable to run preprocessor: {} with error: {} - attribute [{}] '
+              u'not set').format(
+                  plugin.plugin_name, exception, plugin.ATTRIBUTE))
 
     # Set the timezone.
     if hasattr(pre_obj, 'time_zone_str'):
@@ -236,7 +203,7 @@ class Engine(object):
   def Start(self):
     """Start the process, set up all processing."""
 
-    if self.config.single_thread:
+    if self._single_thread_mode:
       logging.info(u'Starting the tool in a single thread.')
       try:
         self._StartSingleThread()
@@ -246,7 +213,7 @@ class Engine(object):
         # catching.
         logging.error(u'An uncaught exception occured: {0:s}.\n{1:s}'.format(
             e, traceback.format_exc()))
-        if self.config.debug:
+        if self._debug_mode:
           pdb.post_mortem()
       return
 
@@ -283,7 +250,7 @@ class Engine(object):
     logging.debug(u'Starting collection.')
 
     self._collector = self._GetCollector(
-        self.config, pre_obj, collection_queue, storage_queue)
+        pre_obj, collection_queue, storage_queue)
     self._collector.Collect()
 
     logging.debug(u'Collection done.')
@@ -303,11 +270,11 @@ class Engine(object):
     logging.debug(u'Starting storage.')
     if self.config.output_module:
       storage_writer = storage.BypassStorageWriter(
-          storage_queue, self.config.output,
+          storage_queue, self._output,
           output_module_string=self.config.output_module, pre_obj=pre_obj)
     else:
       storage_writer = storage.StorageFileWriter(
-          storage_queue, self.config.output,
+          storage_queue, self._output,
           buffer_size=self.config.buffer_size, pre_obj=pre_obj)
 
     storage_writer.WriteEventObjects()
@@ -315,19 +282,17 @@ class Engine(object):
 
   def _StartRuntime(self):
     """Run preprocessing and other actions needed before starting threads."""
-    run_preprocess = self.config.preprocess
-
     pre_obj = None
-    if self.config.old_preprocess and os.path.isfile(self.config.output):
+    if self.config.old_preprocess and os.path.isfile(self._output):
       # Check if the storage file contains a pre processing object.
       try:
         with storage.StorageFile(
-            self.config.output, read_only=True) as store:
+            self._output, read_only=True) as store:
           storage_information = store.GetStorageInformation()
           if storage_information:
             logging.info(u'Using preprocessing information from a prior run.')
             pre_obj = storage_information[-1]
-            run_preprocess = False
+            self._run_preprocess = False
       except IOError:
         logging.warning(u'Storage file does not exist, running pre process.')
 
@@ -335,7 +300,7 @@ class Engine(object):
       pre_obj = event.PreprocessObject()
 
     # Run preprocessing if necessary.
-    if run_preprocess:
+    if self._run_preprocess:
       try:
         self._PreProcess(pre_obj)
       except errors.UnableToOpenFilesystem as e:
@@ -413,13 +378,13 @@ class Engine(object):
 
     if self.config.output_module:
       storage_writer = storage.BypassStorageWriter(
-          storage_queue, self.config.output, self.config.output_module, pre_obj)
+          storage_queue, self._output, self.config.output_module, pre_obj)
     else:
       storage_writer = storage.StorageFileWriter(
-          storage_queue, self.config.output, self.config.buffer_size, pre_obj)
+          storage_queue, self._output, self.config.buffer_size, pre_obj)
 
     self._collector = self._GetCollector(
-        self.config, pre_obj, collection_queue, storage_queue)
+        pre_obj, collection_queue, storage_queue)
 
     logging.info(u'Starting storage thread.')
     self.storage_thread = multiprocessing.Process(
@@ -476,8 +441,8 @@ class Engine(object):
 
     obj.collection_information['version'] = plaso.GetVersion()
     obj.collection_information['configured_zone'] = self.config.zone
-    obj.collection_information['file_processed'] = self.config.filename
-    obj.collection_information['output_file'] = self.config.output
+    obj.collection_information['file_processed'] = self._source
+    obj.collection_information['output_file'] = self._output
     obj.collection_information['protobuf_size'] = self.config.buffer_size
     obj.collection_information['parser_selection'] = getattr(
         self.config, 'parsers', '(no list set)')
@@ -489,23 +454,19 @@ class Engine(object):
         x.parser_name for x in putils.FindAllParsers(
             obj, self.config, filter_query)['all']]
 
-    obj.collection_information['preprocess'] = bool(
-        self.config.preprocess)
-
+    obj.collection_information['preprocess'] = self._run_preprocess
     obj.collection_information['recursive'] = bool(
         self.config.recursive)
-    obj.collection_information['debug'] = bool(
-        self.config.debug)
-    obj.collection_information['vss parsing'] = bool(
-        self.config.parse_vss)
+    obj.collection_information['debug'] = bool(self._debug_mode)
+    obj.collection_information['vss parsing'] = self._process_vss
 
     if getattr(self.config, 'filter', None):
       obj.collection_information['filter'] = self.config.filter
 
     if getattr(self.config, 'file_filter', None):
-      if os.path.isfile(self.config.file_filter):
+      if os.path.isfile(self._file_filter):
         filters = []
-        with open(self.config.file_filter, 'rb') as fh:
+        with open(self._file_filter, 'rb') as fh:
           for line in fh:
             filters.append(line.rstrip())
         obj.collection_information['file_filter'] = ', '.join(filters)
@@ -513,30 +474,104 @@ class Engine(object):
     obj.collection_information['os_detected'] = getattr(
         self.config, 'os', 'N/A')
 
-    if self.config.image:
+    if self._process_image:
       obj.collection_information['method'] = 'imaged processed'
-      sector_size = self.config.bytes_per_sector
-      if self.config.image_offset is None:
-        offset = 0
-      else:
-        offset = self.config.image_offset
-
-      calculated_offset = offset * sector_size
-      ofs = self.config.image_offset_bytes or calculated_offset
-      obj.collection_information['image_offset'] = ofs
+      obj.collection_information['image_offset'] = self._byte_offset
     else:
       obj.collection_information['method'] = 'OS collection'
 
-    if self.config.single_thread:
+    if self._single_thread_mode:
       obj.collection_information['runtime'] = 'single threaded'
     else:
       obj.collection_information['runtime'] = 'multi threaded'
       obj.collection_information['workers'] = self.config.workers
 
+  def SetImageInformation(self, byte_offset):
+    """Sets the values necessary for collection from an image.
+
+       This function will enable image collection.
+
+    Args:
+      byte_offset: Optional byte offset into the image file if this is
+                   a disk image. The default is None.
+
+    Raises:
+      BadConfigOption: if the byte offset is not defined and cannot be
+                       determined from the sector offset and bytes per sector.
+    """
+    if byte_offset is not None:
+      self._byte_offset = byte_offset
+    else:
+      # If no offset was provided default to 0.
+      self._byte_offset = 0
+
+    self._process_image = True
+    # If we're dealing with a storage media image always run pre-processing.
+    self._run_preprocess = True
+
+  def SetOutput(self, output):
+    """Checks if the output file is valid and sets it accordingly.
+
+    Args:
+      output: The output file.
+
+    Raises:
+      BadConfigOption: if the output is invalid.
+    """
+    if os.path.exists(output):
+      if not os.path.isfile(output):
+        raise errors.BadConfigOption(
+            u'Output: {0:s} exists but is not a file.'.format(output))
+      logging.warning(u'Appending to an already existing output file.')
+
+    dirname = os.path.dirname(output)
+    if not dirname:
+      dirname = '.'
+
+    # TODO: add a more thorough check to see if the output really is
+    # a plaso storage file.
+
+    if not os.access(dirname, os.W_OK):
+      raise errors.BadConfigOption(
+          u'Unable to write to output file: {0:s}'.format(output))
+
+    self._output = output
+
+  def SetSource(self, source, source_path_spec=None):
+    """Checks if the source valid and sets it accordingly.
+
+    Args:
+      source: The source device, file or directory.
+      source_path_spec: Optional source path specification (instance of
+                        dfvfs.PathSpec) as determined by the file system
+                        scanner. The default is None.
+
+    Raises:
+      BadConfigOption: if the source is invalid.
+    """
+    if not os.path.exists(source):
+      raise errors.BadConfigOption(
+          u'No such device, file or directory: {0:s}.'.format(source))
+
+    self._source = unicode(source)
+    self._source_path_spec = source_path_spec
+
+  def SetVssInformation(self, vss_stores):
+    """Sets the Volume Shadow Snapshots (VSS) information.
+
+       This function will enable VSS collection.
+
+    Args:
+      vss_stores: List of VSS store index numbers to process.
+                  Where 1 represents the first store.
+    """
+    self._process_vss = True
+    self._vss_stores = vss_stores
+
   # Note that this function is not called by the normal termination.
   def StopThreads(self):
     """Signals the tool to stop running nicely."""
-    if self.config.single_thread and self.config.debug:
+    if self._single_thread_mode and self._debug_mode:
       logging.warning(u'Running in debug mode, set up debugger.')
       pdb.post_mortem()
       return

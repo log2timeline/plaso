@@ -29,16 +29,16 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 try:
   # Support version 1.X of IPython.
-  # pylint: disable-msg=no-name-in-module
+  # pylint: disable=no-name-in-module
   from IPython.terminal.embed import InteractiveShellEmbed
 except ImportError:
   # Support version older than 1.X of IPython.
-  # pylint: disable-msg=no-name-in-module
+  # pylint: disable=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 from IPython.config.loader import Config
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso import filters
 from plaso import formatters
 from plaso import output
@@ -182,6 +182,21 @@ def Main():
   logging.basicConfig(format=format_str)
 
   l2t = engine.Engine(options)
+
+  l2t.SetSource(options.filename)
+
+  if options.image:
+    if options.image_offset_bytes is not None:
+      byte_offset = options.image_offset_bytes
+    elif options.image_offset is not None:
+      bytes_per_sector = getattr(options, 'bytes_per_sector', 512)
+      byte_offset = options.image_offset * bytes_per_sector
+    else:
+      byte_offset = 0
+
+    l2t.SetImageInformation(byte_offset)
+
+  l2t.SetOutput(options.output)
 
   namespace = {}
 

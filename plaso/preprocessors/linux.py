@@ -29,9 +29,13 @@ class LinuxHostname(preprocess_interface.PreprocessPlugin):
   WEIGHT = 1
   ATTRIBUTE = 'hostname'
 
-  def GetValue(self):
-    """Return the hostname."""
-    file_entry = self._collector.OpenFileEntry(u'/etc/hostname')
+  def GetValue(self, collector):
+    """Return the hostname.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
+    file_entry = collector.OpenFileEntry(u'/etc/hostname')
     file_object = file_entry.GetFileObject()
     file_data = file_object.read(512)
     file_object.close()
@@ -46,10 +50,14 @@ class LinuxUsernames(preprocess_interface.PreprocessPlugin):
   WEIGHT = 1
   ATTRIBUTE = 'users'
 
-  def GetValue(self):
-    """Return the user information."""
+  def GetValue(self, collector):
+    """Return the user information.
+
+    Args:
+      collector: the preprocess collector (instance of PreprocessCollector).
+    """
     # TODO: Add passwd.cache, might be good if nss cache is enabled.
-    file_entry = self._collector.OpenFileEntry('/etc/passwd')
+    file_entry = collector.OpenFileEntry('/etc/passwd')
     file_object = file_entry.GetFileObject()
 
     users = []

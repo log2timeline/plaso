@@ -37,10 +37,10 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 try:
   # Support version 1.X of IPython.
-  # pylint: disable-msg=no-name-in-module
+  # pylint: disable=no-name-in-module
   from IPython.terminal.embed import InteractiveShellEmbed
 except ImportError:
-  # pylint: disable-msg=no-name-in-module
+  # pylint: disable=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 from IPython.core import magic
@@ -54,7 +54,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.lib import preprocess_interface
-from plaso.parsers import winreg_plugins    # pylint: disable-msg=unused-import
+from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
 from plaso.parsers.winreg_plugins import interface
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
@@ -396,7 +396,7 @@ class MyMagics(magic.Magics):
 
       # Set the registry key and the prompt.
       RegCache.cur_key = registry_key
-      ip = get_ipython()    # pylint: disable-msg=undefined-variable
+      ip = get_ipython()    # pylint: disable=undefined-variable
       ip.prompt_manager.in_template = u'{}->{} [\\#] '.format(
           StripCurlyBrace(RegCache.GetHiveName()),
           StripCurlyBrace(path).replace('\\', '\\\\'))
@@ -447,7 +447,7 @@ class MyMagics(magic.Magics):
         elif value.DataIsInteger():
           value_string = u'{0:d}'.format(value.data)
         elif value.DataIsMultiString():
-          value_string = u'{0:s}'.format( u''.join(value.data))
+          value_string = u'{0:s}'.format(u''.join(value.data))
         elif value.DataIsBinaryData():
           hex_string = binascii.hexlify(value.data)
           # We'll just print the first few bytes, but we need to pad them
@@ -963,30 +963,21 @@ def GetCollectorsFromAnImage(config):
   bytes_per_sector = 512
   preprocess_collectors = []
   StartPreProcess()
+
+  vss_stores = None
   if config.vss_stores:
-    config.vss = True
-    stores = []
     try:
-      for store in config.vss_stores.split(','):
-        if '..' in store:
-          begin, end = store.split('..')
-          for nr in range(int(begin), int(end)):
-            if nr not in stores:
-              stores.append(nr)
-        else:
-          if int(store) not in stores:
-            stores.append(int(store))
-    except ValueError:
+      vss_stores = frontend_utils.ParseVssStores(config.vss_stores)
+    except errors.BadConfigOption:
       ErrorAndDie('VSS store range is wrongly formed.')
 
-    config.vss_stores = sorted(stores)
+    config.vss = True
 
   try:
     preprocess_collector = collector.GenericPreprocessCollector(
-        RegCache.pre_obj, config.image)
+        RegCache.pre_obj, config.image, source_path_spec=None)
     image_offset = config.offset * bytes_per_sector
-    preprocess_collector.SetImageInformation(
-        sector_offset=config.offset, byte_offset=image_offset)
+    preprocess_collector.SetImageInformation(image_offset)
 
   except errors.UnableToOpenFilesystem:
     ErrorAndDie(
@@ -994,21 +985,21 @@ def GetCollectorsFromAnImage(config):
   preprocess_collectors.append(('', preprocess_collector))
 
   # Run pre processing on image.
-  pre_plugin_list = preprocessors.PreProcessList(
-      RegCache.pre_obj, preprocess_collector)
+  pre_plugin_list = preprocessors.PreProcessList(RegCache.pre_obj)
   guessed_os = preprocess_interface.GuessOS(preprocess_collector)
   for weight in pre_plugin_list.GetWeightList(guessed_os):
     for plugin in pre_plugin_list.GetWeight(guessed_os, weight):
       try:
-        plugin.Run()
-      except (IOError, errors.PreProcessFail) as e:
-        logging.warning(u'Unable to run plugin: {}, reason {}'.format(
-            plugin.plugin_name, e))
+        plugin.Run(preprocess_collector)
+      except (IOError, errors.PreProcessFail) as exception:
+        logging.warning(
+            u'Unable to run plugin: {0:s} with error: {1:s}'.format(
+                plugin.plugin_name, exception))
 
   # Check for VSS.
   if config.vss:
     image_offset = config.offset * bytes_per_sector
-    if not config.vss_stores:
+    if not vss_stores:
       path_spec = path_spec_factory.Factory.NewPathSpec(
           definitions.TYPE_INDICATOR_OS, location=config.image)
 
@@ -1025,13 +1016,12 @@ def GetCollectorsFromAnImage(config):
 
       vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-      config.vss_stores = range(0, vss_file_entry.number_of_sub_file_entries)
+      vss_stores = range(0, vss_file_entry.number_of_sub_file_entries)
 
-    for store_index in config.vss_stores:
+    for store_index in vss_stores:
       vss_collector = collector.GenericPreprocessCollector(
-          RegCache.pre_obj, config.image)
-      vss_collector.SetImageInformation(
-          sector_offset=config.offset, byte_offset=image_offset)
+          RegCache.pre_obj, config.image, source_path_spec=None)
+      vss_collector.SetImageInformation(image_offset)
       vss_collector.SetVssInformation(store_index=store_index)
       preprocess_collectors.append((
           ':VSS Store {}'.format(store_index + 1), vss_collector))

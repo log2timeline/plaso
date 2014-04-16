@@ -80,7 +80,7 @@ class Classifier(object):
 
   @classmethod
   def SmartOpenFile(cls, file_entry):
-    """Return a generator for all pathspec protobufs extracted from a PFile.
+    """Return a generator for all pathspec protobufs extracted from a file.
 
     If the file is compressed then extract all members and include
     them into the processing queue.

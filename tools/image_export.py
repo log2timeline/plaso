@@ -70,15 +70,14 @@ class ImageExtractor(object):
     self._pre_obj = event.PreprocessObject()
     try:
       image_collector = collector.GenericPreprocessCollector(
-          self._pre_obj, self._image_path)
-      image_collector.SetImageInformation(byte_offset=self._image_offset)
+          self._pre_obj, self._image_path, source_path_spec=None)
+      image_collector.SetImageInformation(self._image_offset)
 
     except errors.UnableToOpenFilesystem as e:
       raise RuntimeError(
           u'Unable to proceed, not an image file? [{0:s}]'.format(e))
 
-    plugin_list = preprocessors.PreProcessList(
-        self._pre_obj, image_collector)
+    plugin_list = preprocessors.PreProcessList(self._pre_obj)
 
     logging.info(u'Guessing OS')
     guessed_os = preprocess_interface.GuessOS(image_collector)
@@ -88,7 +87,7 @@ class ImageExtractor(object):
     for weight in plugin_list.GetWeightList(guessed_os):
       for plugin in plugin_list.GetWeight(guessed_os, weight):
         try:
-          plugin.Run()
+          plugin.Run(image_collector)
         except errors.PreProcessFail as e:
           logging.warning(
               u'Unable to run preprocessor: {0:s} with error: {1:s}'.format(
@@ -153,8 +152,8 @@ class ImageExtractor(object):
             store_number + 1, number_of_vss))
 
         vss_collector = collector.GenericPreprocessCollector(
-            self._pre_obj, self._image_path)
-        vss_collector.SetImageInformation(byte_offset=self._image_offset)
+            self._pre_obj, self._image_path, source_path_spec=None)
+        vss_collector.SetImageInformation(self._image_offset)
         vss_collector.SetVssInformation(store_index=store_number)
 
         filename_prefix = 'vss_{0:d}'.format(store_number)
@@ -186,8 +185,9 @@ class ImageExtractor(object):
     output_producer = queue.EventObjectQueueProducer(output_queue)
 
     image_collector = collector.Collector(
-        input_queue, output_producer, self._image_path)
-    image_collector.SetImageInformation(byte_offset=self._image_offset)
+        input_queue, output_producer, self._image_path, source_path_spec=None)
+    image_collector.SetImageInformation(self._image_offset)
+
     if process_vss:
       # TODO: don't we need a store number here?
       image_collector.SetVssInformation()
