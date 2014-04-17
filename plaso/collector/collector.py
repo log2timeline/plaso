@@ -149,7 +149,7 @@ class Collector(queue.PathSpecQueueProducer):
         logging.warning(
             u'Unable to process file: {0:s} with error: {1:s}'.format(
                 sub_file_entry.path_spec.comparable.replace(
-                    u'\n', u';', exception)))
+                    u'\n', u';'), exception))
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles
