@@ -151,7 +151,14 @@ class Log2TimelineFrontend(object):
       raise errors.BadConfigOption(
           u'No such collection filter file: {0:s}.'.format(options.file_filter))
 
-    path_spec = self.ScanSource(options)
+    try:
+      path_spec = self.ScanSource(options)
+    except errors.FileSystemScannerError as exception:
+      raise errors.BadConfigOption((
+          u'Unable to scan for a supported filesystem. Most likely the image '
+          u'format is not supported yet by the tool. The error message '
+          u'is: "{:s}"').format(
+              exception))
     self.PrintOptions(options)
 
     if not options.image:

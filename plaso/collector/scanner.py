@@ -539,8 +539,13 @@ class FileSystemScanner(object):
     # since we could be dealing with a storage media image that contains
     # a single volume.
 
-    type_indicators = analyzer.Analyzer.GetFileSystemTypeIndicators(
-        path_spec)
+    try:
+      type_indicators = analyzer.Analyzer.GetFileSystemTypeIndicators(
+          path_spec)
+    except RuntimeError as exception:
+      raise errors.FileSystemScannerError(
+          u'Unable to process image, with error {:s}'.format(
+              exception))
 
     if len(type_indicators) > 1:
       raise errors.FileSystemScannerError((
