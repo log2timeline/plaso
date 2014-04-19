@@ -508,6 +508,7 @@ class FileSystemScanner(object):
     Raises:
       FileSystemScannerError: if the source cannot be processed.
     """
+    source_path = os.path.abspath(source_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=source_path)
 

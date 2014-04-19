@@ -495,9 +495,10 @@ class GenericPreprocessCollector(object):
     file_system = file_entry.GetFileSystem()
 
     if not self._process_image:
+      source_path = os.path.abspath(self._source_path)
+
       # When processing the file system strip off the path separator at
       # the end of the source path.
-      source_path = os.path.abspath(self._source_path)
       if source_path.endswith(os.path.sep):
         source_path = source_path[:-1]
 

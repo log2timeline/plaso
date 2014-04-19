@@ -125,6 +125,17 @@ class Log2TimelineTests(unittest.TestCase):
     self.assertEquals(options.image_offset_bytes, 0)
     self.assertEquals(options.vss_stores, [1])
 
+    options = TestConfig()
+    options.filename = self._GetTestFilePath(['text_parser'])
+
+    path_spec = front_end.ScanSource(options)
+    self.assertNotEquals(path_spec, None)
+    self.assertEquals(
+        path_spec.location, os.path.abspath(options.filename))
+    self.assertEquals(
+        path_spec.type_indicator, definitions.TYPE_INDICATOR_OS)
+    self.assertEquals(options.image_offset_bytes, None)
+
 
 if __name__ == '__main__':
   unittest.main()
