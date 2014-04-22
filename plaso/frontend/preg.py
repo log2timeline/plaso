@@ -673,6 +673,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
   return print_strings
 
 
+# TODO: clean up this function as part of dfvfs find integration.
 def FindRegistryPaths(pattern, preprocess_collector):
   """Return a list of Windows registry file paths."""
   hive_paths = []
@@ -685,7 +686,8 @@ def FindRegistryPaths(pattern, preprocess_collector):
       return hive_paths
 
     for path in paths:
-      fh_paths = list(preprocess_collector.GetFilePaths(path, file_name))
+      fh_paths = list(preprocess_collector.GetFilePaths(
+          path, file_name, path[0]))
       if not fh_paths:
         logging.debug(u'File [{0:s}] not found in path [{1:s}]....'.format(
             file_name, path))
