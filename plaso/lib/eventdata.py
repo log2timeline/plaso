@@ -395,5 +395,5 @@ class DefaultFormatter(EventFormatter):
 class TextEventFormatter(EventFormatter):
   """Text event formatter."""
 
-  DATA_TYPE = u'text'
+  DATA_TYPE = u'text:entry'
   FORMAT_STRING = u'{text}'
