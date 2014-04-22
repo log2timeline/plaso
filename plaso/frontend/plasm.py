@@ -33,7 +33,7 @@ from plaso.lib import event
 from plaso.lib import output as output_lib
 from plaso.lib import storage
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.output import pstorage
 
 
@@ -52,11 +52,11 @@ def SetupStorage(input_file_path, pre_obj=None):
   """
   try:
     return storage.StorageFile(
-        input_file_path, pre_obj=pre_obj, read_only=False)
-  except IOError as details:
-    logging.error('IO ERROR: %s', details)
+        input_file_path, read_only=False, pre_obj=pre_obj)
+  except IOError as exception:
+    logging.error(u'IO ERROR: {0:s}'.format(exception))
   else:
-    logging.error('Other Critical Failure Reading Files')
+    logging.error(u'Other Critical Failure Reading Files')
   sys.exit(1)
 
 
@@ -73,7 +73,6 @@ def EventObjectGenerator(plaso_storage, quiet=False):
   Yields:
     EventObject objects.
   """
-
   total_events = plaso_storage.GetNumberOfEvents()
   if total_events > 0:
     events_per_dot = operator.floordiv(total_events, 80)
@@ -104,7 +103,6 @@ def ParseTaggingFile(tag_input):
   Returns:
     A dictionary whose keys are tags and values are EventObjectFilter objects.
   """
-
   with open(tag_input, 'rb') as tag_input_file:
     tags = {}
     current_tag = ''
@@ -131,6 +129,7 @@ def ParseTaggingFile(tag_input):
 
 class TaggingEngine(object):
   """Applies tags to the plaso store."""
+
   def __init__(self, target_filename, tag_input, quiet=False):
     """Constructor for the Tagging Engine.
 
@@ -460,7 +459,7 @@ class ClusteringEngine(object):
               sys.stdout.write('.')
               sys.stdout.flush()
             event_object = formatter.FetchEntry()
-      sys.stdout.write ('\n')
+      sys.stdout.write('\n')
     return nodup_filename
 
   def ConstructHashVector(self, nodup_filename, vector_size):
@@ -589,7 +588,7 @@ class ClusteringEngine(object):
         if score < threshold:
           evttype_indeces[candidate] = len(evttypes)
           evttypes.append(candidate)
-      del(evttype_candidates)
+      del evttype_candidates
       # write everything out
       x = open(eventtype_filename, 'wb')
       pickle.dump(evttypes, x)
