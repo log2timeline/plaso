@@ -37,8 +37,8 @@ import sys
 import plaso
 from plaso import analysis
 from plaso import filters
-from plaso import formatters   # pylint: disable-msg=unused-import
-from plaso import output   # pylint: disable-msg=unused-import
+from plaso import formatters   # pylint: disable=unused-import
+from plaso import output   # pylint: disable=unused-import
 
 from plaso.analysis import interface as analysis_interface
 from plaso.lib import bufferlib
@@ -57,7 +57,7 @@ import pytz
 # TODO: Function: _ConsumeItem is not defined, inspect if we need to define it
 # or change the interface so that is not an abstract method.
 # TODO: Remove this after dfVFS integration.
-# pylint: disable-msg=abstract-method
+# pylint: disable=abstract-method
 class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
   """Class that implements an analysis report queue consumer for psort."""
 
@@ -144,10 +144,10 @@ def SetupStorage(input_file_path, read_only=True):
   """
   try:
     return storage.StorageFile(input_file_path, read_only=read_only)
-  except IOError as details:
-    logging.error('IO ERROR: %s', details)
+  except IOError as exception:
+    logging.error(u'IO ERROR: {0:s}'.format(exception))
   else:
-    logging.error('Other Critical Failure Reading Files')
+    logging.error(u'Other Critical Failure Reading Files')
   sys.exit(1)
 
 
@@ -326,7 +326,7 @@ def ParseStorage(my_args):
       # stored inside the storage file, so we need to open it first to
       # be able to read it in, before we make changes to it. Thus we need
       # to access this protected member of the class.
-      # pylint: disable-msg=protected-access
+      # pylint: disable=protected-access
       store._pre_obj = pre_obj
 
       # Start queues and load up plugins.
