@@ -394,18 +394,5 @@ class EventObjectTest(unittest.TestCase):
       getattr(e, 'format_string_short')
 
 
-class EventTagTest(unittest.TestCase):
-  """Tests for the event tag object."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._event_tag = event.EventTag()
-
-  def testSetattr(self):
-    """Tests the set attribute function."""
-    with self.assertRaises(AttributeError):
-      setattr(self._event_tag, 'notdefined', 'Value')
-
-
 if __name__ == '__main__':
   unittest.main()
