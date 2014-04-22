@@ -104,6 +104,9 @@ import struct
 import sys
 import zipfile
 
+from google.protobuf import message
+import yaml
+
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import limit
@@ -114,9 +117,6 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
-
-from google.protobuf import message
-import yaml
 
 
 class _EventTagIndexValue(object):
@@ -225,17 +225,17 @@ class StorageFile(object):
 
     Args:
       output_file: The name of the output file.
-      buffer_size: The estimated size of a protobuf file.
-      read_only: Indicate we are just opening up ZIP file for reading.
-      pre_obj: A preprocessing object that gets stored inside the storage
-      if defined.
+      buffer_size: Optional maximum size of a single storage (protobuf) file.
+                   The default is 0, which indicates no limit.
+      read_only: Optional boolean to indicate we are opening the storage file
+                 for reading only. The default is false.
+      pre_obj: Optional preprocessing object that gets stored inside
+               the storage file. The default is None.
 
     Raises:
       IOError: if we open up the file in read only mode and the file does
       not exist.
     """
-    compression = zipfile.ZIP_DEFLATED
-
     # TODO: set self._bound_first and remove the hasattr checks for
     # a true of false evaluation.
     self._buffer = []
@@ -243,11 +243,14 @@ class StorageFile(object):
     self._buffer_last_timestamp = 0
     self._buffer_size = 0
     self._event_tag_index = None
-    self._filenumber = 1
+    self._file_open = False
+    self._file_number = 1
+    self._first_file_number = None
     self._max_buffer_size = buffer_size or self.MAX_BUFFER_SIZE
+    self._output_file = output_file
     self._pre_obj = pre_obj
     self._proto_streams = {}
-    self._read_only = read_only
+    self._read_only = None
     self._write_counter = 0
 
     self._analysis_report_serializer = (
@@ -259,33 +262,50 @@ class StorageFile(object):
     self._pre_obj_serializer = (
         protobuf_serializer.ProtobufPreprocessObjectSerializer)
 
+    self._Open(read_only)
+
+  def _Open(self, read_only=False):
+    """Opens the storage file.
+
+    Args:
+      read_only: Optional boolean to indicate we are opening the storage file
+                 for reading only. The default is false.
+
+    Raises:
+      IOError: if we open up the file in read only mode and the file does
+      not exist.
+    """
     if read_only:
-      mode = 'r'
+      access_mode = 'r'
     else:
-      mode = 'a'
+      access_mode = 'a'
 
     try:
-      self._zipfile = zipfile.ZipFile(output_file, mode, compression)
-    except zipfile.BadZipfile as e:
-      raise IOError(u'Unable to read ZIP file with error: {0:s}'.format(e))
-    self._file_open = True
+      self._zipfile = zipfile.ZipFile(
+          self._output_file, access_mode, zipfile.ZIP_DEFLATED)
+    except zipfile.BadZipfile as exception:
+      raise IOError(u'Unable to read ZIP file with error: {0:s}'.format(
+          exception))
 
-    if not read_only:
+    self._file_open = True
+    self._read_only = read_only
+
+    if not self._read_only:
       logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
           self._max_buffer_size))
 
-      if pre_obj:
-        pre_obj.counter = collections.Counter()
-        pre_obj.plugin_counter = collections.Counter()
-        if hasattr(pre_obj, 'collection_information'):
+      if self._pre_obj:
+        self._pre_obj.counter = collections.Counter()
+        self._pre_obj.plugin_counter = collections.Counter()
+        if hasattr(self._pre_obj, 'collection_information'):
           cmd_line = ' '.join(sys.argv)
-          encoding = getattr(pre_obj, 'preferred_encoding', None)
+          encoding = getattr(self._pre_obj, 'preferred_encoding', None)
           if encoding:
             try:
               cmd_line = cmd_line.decode(encoding)
             except UnicodeDecodeError:
               pass
-          pre_obj.collection_information['cmd_line'] = cmd_line
+          self._pre_obj.collection_information['cmd_line'] = cmd_line
 
       # Start up a counter for modules in buffer.
       self._count_data_type = collections.Counter()
@@ -298,13 +318,13 @@ class StorageFile(object):
 
           try:
             file_number = int(file_number, 10)
-            if file_number >= self._filenumber:
-              self._filenumber = file_number + 1
+            if file_number >= self._file_number:
+              self._file_number = file_number + 1
           except ValueError:
             # Ignore invalid metadata stream names.
             pass
 
-      self._first_filenumber = self._filenumber
+      self._first_file_number = self._file_number
 
   def __enter__(self):
     """Make usable with "with" statement."""
@@ -357,7 +377,7 @@ class StorageFile(object):
     self._count_data_type = collections.Counter()
     self._count_parser = collections.Counter()
 
-    stream_name = 'plaso_meta.{0:06d}'.format(self._filenumber)
+    stream_name = 'plaso_meta.{0:06d}'.format(self._file_number)
     self._WriteStream(stream_name, yaml.safe_dump(yaml_dict))
 
     ofs = 0
@@ -376,16 +396,16 @@ class StorageFile(object):
       ofs += len(packed)
       proto_str.append(packed)
 
-    stream_name = 'plaso_index.{0:06d}'.format(self._filenumber)
+    stream_name = 'plaso_index.{0:06d}'.format(self._file_number)
     self._WriteStream(stream_name, ''.join(index_str))
 
-    stream_name = 'plaso_proto.{0:06d}'.format(self._filenumber)
+    stream_name = 'plaso_proto.{0:06d}'.format(self._file_number)
     self._WriteStream(stream_name, ''.join(proto_str))
 
-    stream_name = 'plaso_timestamps.{0:06d}'.format(self._filenumber)
+    stream_name = 'plaso_timestamps.{0:06d}'.format(self._file_number)
     self._WriteStream(stream_name, ''.join(timestamp_str))
 
-    self._filenumber += 1
+    self._file_number += 1
     self._buffer_size = 0
     self._buffer = []
     self._buffer_first_timestamp = sys.maxint
@@ -687,7 +707,7 @@ class StorageFile(object):
 
     # Since zipfile.ZipExtFile is not seekable we need to read upto
     # the store offset.
-    _  = tag_file_object.read(tag_index_value.store_offset)
+    _ = tag_file_object.read(tag_index_value.store_offset)
     return self._ReadEventTag(tag_file_object)
 
   def _ReadStream(self, stream_name):
@@ -731,8 +751,8 @@ class StorageFile(object):
     if stores:
       end = stores[-1] + 1
     else:
-      end = self._first_filenumber
-    pre_obj.store_range = (self._first_filenumber, end)
+      end = self._first_file_number
+    pre_obj.store_range = (self._first_file_number, end)
 
     pre_obj_data = self._pre_obj_serializer.WriteSerialized(pre_obj)
 
@@ -754,7 +774,7 @@ class StorageFile(object):
   def Close(self):
     """Closes the storage, flush the last buffer and closes the ZIP file."""
     if self._file_open:
-      if self._pre_obj:
+      if not self._read_only and self._pre_obj:
         self._WritePreprocessObject(self._pre_obj)
 
       self._FlushBuffer()
@@ -1119,7 +1139,7 @@ class StorageFile(object):
 
   def GetFileNumber(self):
     """Return the current file number of the storage."""
-    return self._filenumber
+    return self._file_number
 
   def AddEventObject(self, event_object):
     """Adds an event object to the storage.

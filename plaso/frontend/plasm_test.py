@@ -16,8 +16,9 @@
 # limitations under the License.
 """Tests for the plasm front-end."""
 
+import os
+import shutil
 import tempfile
-
 import unittest
 
 from plaso.frontend import plasm
@@ -40,32 +41,23 @@ class TestEvent(event.EventObject):
     self.stuff = stuff
 
 
-class TestArgs(object):
-  DATA_TYPE = 'test:plasm:2'
-
-  def __init__(self, storagefile, tag_input):
-    super(TestArgs, self).__init__()
-    self.storagefile = storagefile
-    self.tag_input = tag_input
-    self.quiet = True
-
-
 class PlasmTest(unittest.TestCase):
   """Tests for the plasm front-end."""
 
   def setUp(self):
     """Setup creates a Plaso Store to play with, as well as a basic filter."""
-    pfilter.TimeRangeCache.ResetTimeConstraints()
-    self.storage_file = tempfile.NamedTemporaryFile()
-    self.storage_name = self.storage_file.name
-    self.tag_input_file = tempfile.NamedTemporaryFile()
-    self.tag_input_name = self.tag_input_file.name
+    self._temp_directory = tempfile.mkdtemp()
+    self._storage_filename = os.path.join(self._temp_directory, 'plaso.db')
+    self._tag_input_filename = os.path.join(self._temp_directory, 'input1.tag')
 
-    self.tag_input_file.write('Test Tag\n')
-    self.tag_input_file.write('  filename contains \'/tmp/whoaaaa\'\n')
-    self.tag_input_file.write(
-        '  parser is \'TestEvent\' and stuff is \'dude\'\n')
-    self.tag_input_file.flush()
+    tag_input_file = open(self._tag_input_filename, 'wb')
+    tag_input_file.write('\n'.join([
+        'Test Tag',
+        '  filename contains \'/tmp/whoaaaa\'',
+        '  parser is \'TestEvent\' and stuff is \'dude\'']))
+    tag_input_file.close()
+
+    pfilter.TimeRangeCache.ResetTimeConstraints()
 
     test_queue = queue.MultiThreadedQueue()
     test_queue_producer = queue.EventObjectQueueProducer(test_queue)
@@ -77,69 +69,79 @@ class PlasmTest(unittest.TestCase):
         TestEvent(5000000, '/tmp/whoaaaaa', 'dude')])
     test_queue_producer.SignalEndOfInput()
 
-    storage_writer = storage.StorageFileWriter(test_queue, self.storage_file)
+    storage_writer = storage.StorageFileWriter(
+        test_queue, self._storage_filename)
     storage_writer.WriteEventObjects()
 
-    self.storage = storage.StorageFile(self.storage_file)
-    self.storage.SetStoreLimit()
+    self._storage_file = storage.StorageFile(self._storage_filename)
+    self._storage_file.SetStoreLimit()
 
   def tearDown(self):
-    self.storage_file.close()
-    self.tag_input_file.close()
+    shutil.rmtree(self._temp_directory, True)
 
   def testTagParsing(self):
     """Test if plasm can parse Tagging Input files."""
-    tags = plasm.ParseTaggingFile(self.tag_input_name)
+    tags = plasm.ParseTaggingFile(self._tag_input_filename)
     self.assertEquals(len(tags), 1)
     self.assertTrue('Test Tag' in tags)
     self.assertEquals(len(tags['Test Tag']), 2)
 
   def testInvalidTagParsing(self):
     """Test what happens when Tagging Input files contain invalid conditions."""
-    with tempfile.NamedTemporaryFile() as tag_input:
-      tag_input.write('Invalid Tag\n')
-      tag_input.write('  my hovercraft is full of eels\n')
-      tag_input.flush()
+    tag_input_filename = os.path.join(self._temp_directory, 'input2.tag')
 
-      tags = plasm.ParseTaggingFile(tag_input.name)
-      self.assertEquals(len(tags), 1)
-      self.assertTrue('Invalid Tag' in tags)
-      self.assertEquals(len(tags['Invalid Tag']), 0)
+    tag_input_file = open(tag_input_filename, 'wb')
+    tag_input_file.write('\n'.join([
+      'Invalid Tag',
+      '  my hovercraft is full of eels']))
+    tag_input_file.close()
+
+    tags = plasm.ParseTaggingFile(tag_input_filename)
+    self.assertEquals(len(tags), 1)
+    self.assertTrue('Invalid Tag' in tags)
+    self.assertEquals(len(tags['Invalid Tag']), 0)
 
   def testMixedValidityTagParsing(self):
     """Tagging Input file contains a mix of valid and invalid conditions."""
-    with tempfile.NamedTemporaryFile() as tag_input:
-      tag_input.write('Semivalid Tag\n')
-      tag_input.write('  filename contains \'/tmp/whoaaaa\'\n')
-      tag_input.write('  Yandelavasa grldenwi stravenka\n')
-      tag_input.flush()
+    tag_input_filename = os.path.join(self._temp_directory, 'input3.tag')
 
-      tags = plasm.ParseTaggingFile(tag_input.name)
-      self.assertEquals(len(tags), 1)
-      self.assertTrue('Semivalid Tag' in tags)
-      self.assertEquals(len(tags['Semivalid Tag']), 1)
+    tag_input_file = open(tag_input_filename, 'wb')
+    tag_input_file.write('\n'.join([
+      'Semivalid Tag',
+      '  filename contains \'/tmp/whoaaaa\'',
+      '  Yandelavasa grldenwi stravenka']))
+    tag_input_file.close()
+
+    tags = plasm.ParseTaggingFile(tag_input_filename)
+    self.assertEquals(len(tags), 1)
+    self.assertTrue('Semivalid Tag' in tags)
+    self.assertEquals(len(tags['Semivalid Tag']), 1)
 
   def testIteratingOverPlasoStore(self):
     """Tests the plaso storage iterator"""
     counter = 0
-    for _ in plasm.EventObjectGenerator(self.storage, quiet=True):
+    for _ in plasm.EventObjectGenerator(self._storage_file, quiet=True):
       counter += 1
     self.assertEquals(counter, 5)
-    self.storage = storage.StorageFile(self.storage_file)
+
+    self._storage_file.Close()
+
     pfilter.TimeRangeCache.ResetTimeConstraints()
-    self.storage.SetStoreLimit()
+    self._storage_file = storage.StorageFile(self._storage_filename)
+    self._storage_file.SetStoreLimit()
+
     counter = 0
-    for _ in plasm.EventObjectGenerator(self.storage, quiet=False):
+    for _ in plasm.EventObjectGenerator(self._storage_file, quiet=False):
       counter += 1
     self.assertEquals(counter, 5)
 
   def testTaggingEngine(self):
     """Tests the Tagging engine's functionality."""
-    self.assertFalse(self.storage.HasTagging())
+    self.assertFalse(self._storage_file.HasTagging())
     tagging_engine = plasm.TaggingEngine(
-        self.storage_name, self.tag_input_name, quiet=True)
+        self._storage_filename, self._tag_input_filename, quiet=True)
     tagging_engine.Run()
-    test = storage.StorageFile(self.storage_name)
+    test = storage.StorageFile(self._storage_filename)
     self.assertTrue(test.HasTagging())
     tagging = test.GetTagging()
     count = 0
@@ -150,19 +152,19 @@ class PlasmTest(unittest.TestCase):
 
   def testGroupingEngineUntagged(self):
     """Grouping engine should do nothing if dealing with untagged storage."""
-    grouping_engine = plasm.GroupingEngine(self.storage_name, quiet=True)
+    grouping_engine = plasm.GroupingEngine(self._storage_filename, quiet=True)
     grouping_engine.Run()
-    self.assertFalse(self.storage.HasGrouping())
+    self.assertFalse(self._storage_file.HasGrouping())
 
   def testGroupingEngine(self):
     """Tests the Grouping engine's functionality."""
     pfilter.TimeRangeCache.ResetTimeConstraints()
     tagging_engine = plasm.TaggingEngine(
-        self.storage_name, self.tag_input_name, quiet=True)
-    grouping_engine = plasm.GroupingEngine(self.storage_name, quiet=True)
+        self._storage_filename, self._tag_input_filename, quiet=True)
+    grouping_engine = plasm.GroupingEngine(self._storage_filename, quiet=True)
     tagging_engine.Run()
     grouping_engine.Run()
-    test = storage.StorageFile(self.storage_name)
+    test = storage.StorageFile(self._storage_filename)
     test.SetStoreLimit()
     self.assertTrue(test.HasGrouping())
     groups = test.GetGrouping()
