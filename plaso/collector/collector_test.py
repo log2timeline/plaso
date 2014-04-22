@@ -161,14 +161,24 @@ class CollectorTest(CollectorTestCase):
     self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 4)
 
     paths = test_collector_queue_consumer.GetFilePaths()
+
     current_directory = os.getcwd()
-    self.assertTrue(u'{}/test_data/testdir/filter_1.txt'.format(
-        current_directory) in paths)
-    self.assertFalse(u'{}/test_data/testdir/filter2.txt'.format(
-        current_directory) in paths)
-    self.assertTrue(u'{}/test_data/testdir/filter_3.txt'.format(
-        current_directory) in paths)
-    self.assertTrue(u'{}/AUTHORS'.format(current_directory) in paths)
+
+    expected_path = os.path.join(
+        current_directory, 'test_data', 'testdir', 'filter_1.txt')
+    self.assertTrue(expected_path in paths)
+
+    expected_path = os.path.join(
+        current_directory, 'test_data', 'testdir', 'filter_2.txt')
+    self.assertFalse(expected_path in paths)
+
+    expected_path = os.path.join(
+        current_directory, 'test_data', 'testdir', 'filter_3.txt')
+    self.assertTrue(expected_path in paths)
+
+    expected_path = os.path.join(
+        current_directory, 'AUTHORS')
+    self.assertTrue(expected_path in paths)
 
   def testImageCollection(self):
     """Test collection on a storage media image file.
