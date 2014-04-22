@@ -194,7 +194,8 @@ class StorageFileTest(unittest.TestCase):
         if event_object.data_type == 'windows:registry:key_value':
           self.assertEquals(event_object.timestamp_desc, 'Last Written')
         else:
-          self.assertEquals(event_object.timestamp_desc, 'Entry Written')
+          self.assertEquals(event_object.timestamp_desc,
+                            eventdata.EventTimestamp.WRITTEN_TIME)
 
       for tag in read_store.GetTagging():
         event_object = read_store.GetTaggedEvent(tag)
