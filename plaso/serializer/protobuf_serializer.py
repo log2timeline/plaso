@@ -656,10 +656,12 @@ class ProtobufEventTagSerializer(interface.EventTagSerializer):
     """
     proto = plaso_storage_pb2.EventTagging()
 
+    # TODO: Once we move EventTag to slots we need to query __slots__
+    # instead of __dict__
     for attribute_name in event_tag.__dict__:
       attribute_value = getattr(event_tag, attribute_name, None)
 
-      if attribute_name == 'tags':
+      if attribute_name == 'tags' and type(attribute_value) in (tuple, list):
         for tag_string in attribute_value:
           proto_tag_add = proto.tags.add()
           proto_tag_add.value = tag_string

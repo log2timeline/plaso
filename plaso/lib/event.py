@@ -160,6 +160,7 @@ class EventContainer(object):
 
   def __setattr__(self, attr, value):
     """Sets the value to either the default or the attribute store."""
+    # TODO: Remove the overwrite of __setattr__.
     try:
       object.__getattribute__(self, attr)
       object.__setattr__(self, attr, value)
@@ -179,6 +180,7 @@ class EventContainer(object):
       AttributeError: If the object does not have the attribute
                       in either store.
     """
+    # TODO: Remove the overwrite of __getattr__.
     try:
       return object.__getattribute__(self, attr)
     except AttributeError:
@@ -377,6 +379,7 @@ class EventObject(object):
 
   def __setattr__(self, attr, value):
     """Sets the value to either the default or the attribute store."""
+    # TODO: Remove the overwrite of __setattr__.
     try:
       object.__getattribute__(self, attr)
       object.__setattr__(self, attr, value)
@@ -385,6 +388,7 @@ class EventObject(object):
 
   def __getattr__(self, attr):
     """Determine if attribute is set within the event or in a container."""
+    # TODO: Remove the overwrite of __getattr__.
     try:
       return object.__getattribute__(self, attr)
     except AttributeError:
@@ -577,60 +581,6 @@ class EventObject(object):
     return part_1 + part_2
 
 
-# TODO: remove after dfVFS integration when pvfs is removed.
-class EventPathSpec(object):
-  """A native Python object for the pathspec definition."""
-
-  _ATTRIBUTE_NAMES = frozenset([
-      'type', 'file_path', 'container_path', 'image_offset', 'image_inode',
-      'nested_pathspec', 'file_offset', 'file_size', 'transmit_options',
-      'ntfs_type', 'ntfs_id', 'vss_store_number', 'path_prepend'])
-
-  def __setattr__(self, attr, value):
-    """Overwrite the set attribute function to limit it to right attributes."""
-    if attr not in self._ATTRIBUTE_NAMES:
-      raise AttributeError(u'Not allowed attribute: {}'.format(attr))
-    object.__setattr__(self, attr, value)
-
-  def __str__(self):
-    """Return a string representation of the pathspec."""
-    return self.comparable
-
-  @property
-  def comparable(self):
-    parts = []
-    nested_pathspec = None
-    for attribute_name in self._ATTRIBUTE_NAMES:
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value:
-        if attribute_name == 'nested_pathspec':
-          nested_pathspec = attribute_value.comparable
-        else:
-          parts.append(u'{0:s}: {1!s}'.format(attribute_name, attribute_value))
-
-    comparable_string = u', '.join(parts)
-
-    if nested_pathspec:
-      comparable_string = u'{0:s}\nnested_pathspec:\n{1:s}'.format(
-          comparable_string, nested_pathspec)
-    else:
-      comparable_string = u'{0:s}\n'.format(comparable_string)
-
-    return comparable_string
-
-  def AddNestedContainer(self, nested_pathspec):
-    """Adds a nested path specification to the end of the chain.
-
-    Args:
-      nested_pathspec: the nested path specification that needs to be appended
-                       (instance of EventPathSpec).
-    """
-    if hasattr(self, 'nested_pathspec'):
-      self.AddNestedPathspec(self.nested_pathspec, nested_pathspec)
-    else:
-      setattr(self, 'nested_pathspec', nested_pathspec)
-
-
 class EventTag(object):
   """A native Python object for the EventTagging protobuf.
 
@@ -648,16 +598,7 @@ class EventTag(object):
   store_index will be used).
   """
 
-  def __setattr__(self, attr, value):
-    """Overwrite the set attribute function to limit it to right attributes."""
-    if attr in ('store_number', 'store_index', 'comment', 'color', 'tags',
-                'event_uuid'):
-      if attr == 'tags' and not isinstance(value, (list, tuple)):
-        raise AttributeError(u'Tags needs to be a list.')
-      object.__setattr__(self, attr, value)
-    else:
-      raise AttributeError(u'Not allowed attribute: {}'.format(attr))
-
+  # TODO: Enable __slots__ once we tested the first round of changes.
   @property
   def string_key(self):
     """Return a string index key for this tag."""
@@ -668,10 +609,10 @@ class EventTag(object):
     if uuid_string:
       return uuid_string
 
-    return '{}:{}'.format(self.store_number, self.store_index)
+    return u'{}:{}'.format(self.store_number, self.store_index)
 
-  def __str__(self):
-    """Define a string representation of the event."""
+  def GetString(self):
+    """Retrieves a string representation of the event."""
     ret = []
     ret.append(u'-' * 50)
     if getattr(self, 'store_number', 0):
@@ -811,8 +752,8 @@ class WinRegistryEvent(EventObject):
     # TODO: why is regalert handled in this way? See if this can be
     # changed in a better solution.
     self.regvalue = value_dict
-    for value in value_dict.values():
-      if type(value) in (str, unicode) and value[0:4] == 'REGA':
+    for value in value_dict.itervalues():
+      if isinstance(value, basestring) and value.startswith('REGALERT'):
         self.regalert = True
 
     if offset or type(offset) in [int, long]:
@@ -824,8 +765,9 @@ class WinRegistryEvent(EventObject):
 
 class TextEvent(EventObject):
   """Convenience class for a text log file-based event."""
+
   # TODO: move this class to parsers/text.py
-  DATA_TYPE = 'text'
+  DATA_TYPE = 'text:entry'
 
   def __init__(self, timestamp, attributes):
     """Initializes a text event.
@@ -837,9 +779,10 @@ class TextEvent(EventObject):
     """
     super(TextEvent, self).__init__()
     self.timestamp = timestamp
-    # TODO: use eventdata.EventTimestamp after class has moved.
-    self.timestamp_desc = 'Entry Written'
-    for name, value in attributes.items():
+
+    self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
+
+    for name, value in attributes.iteritems():
       # TODO: Revisit this constraints and see if we can implement
       # it using a more sane solution.
       if isinstance(value, (str, unicode)) and not value:
