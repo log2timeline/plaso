@@ -131,8 +131,8 @@ class MacPlistPreprocess(PreprocessPlugin):
       collector: the preprocess collector (instance of PreprocessCollector).
     """
     try:
-      file_path, _, file_name = self.PLIST_PATH.rpartition('/')
-      paths = collector.GetFilePaths(file_path, file_name)
+      file_path, _, file_name = self.PLIST_PATH.rpartition(u'/')
+      paths = collector.GetFilePaths(file_path, file_name, u'/')
     except errors.PathNotFound as e:
       raise errors.PreProcessFail(u'Unable to find path: %s' % e)
 
@@ -283,7 +283,8 @@ class WinRegistryPreprocess(PreprocessPlugin):
               self.REG_PATH, self.REG_FILE))
 
     sys_dir = sys_dirs[0]
-    file_names = list(collector.GetFilePaths(sys_dir, self.REG_FILE))
+    file_names = list(collector.GetFilePaths(
+        sys_dir, self.REG_FILE, sys_dir[0]))
     if not file_names:
       raise errors.PreProcessFail(
           u'Unable to find file name: {0:s}/{1:s}'.format(
