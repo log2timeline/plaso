@@ -527,6 +527,12 @@ class GenericPreprocessCollector(object):
               file_system.TYPE_INDICATOR, **kwargs)
           file_entry = path_spec_resolver.Resolver.OpenFileEntry(sub_path_spec)
 
+        if not file_entry:
+          logging.error((
+              u'Unable to open sub file entry with path specification: '
+              u'{0:s}').format(sub_path_spec.comparable))
+          continue
+
         # Since there are more path segment expressions and the file entry
         # is not a directory this cannot be the path we're looking for.
         if not file_entry.IsDirectory():
@@ -558,17 +564,13 @@ class GenericPreprocessCollector(object):
         break
 
     for path in paths_found:
-      if self._process_image:
-        yield path
+      if not path:
+        # Make sure to represent the root as a path.
+        path = file_system.PATH_SEPARATOR
 
-      else:
-        # TODO: dfVFS refactor, is this still needed?
-        # When processing the file system strip off the path separator at
-        # start of the resulting path. If path is an empty string the result
-        # of path[1:] will be an empty string.
-        yield path[1:]
+      yield path
 
-  def _GetPathSegmentExpressionsList(self, path_expression):
+  def _GetPathSegmentExpressionsList(self, path_expression, path_separator):
     """Retrieves a list of paths  segment expressions on a path expression.
 
        A path segment expression is either a regular expression or a string
@@ -580,12 +582,13 @@ class GenericPreprocessCollector(object):
                        or "{windir}" or regular expressions such as e.g.
                        "[0-9]+" to match a path segments that only consists of
                        numeric values.
+      path_separator: The path separator.
 
     Returns:
       A list of path segments expressions.
     """
     path_segments_expressions_list = []
-    for path_segment in path_expression.split(u'/'):
+    for path_segment in path_expression.split(path_separator):
       # Ignore empty path segments.
       if not path_segment:
         continue
@@ -624,8 +627,8 @@ class GenericPreprocessCollector(object):
           self._source_path_spec.type_indicator, location=path,
           parent=self._source_path_spec.parent)
 
-    # If source path spec was not defined fallback on the old method.
     elif self._process_image:
+      # If source path spec was not defined fallback on the old method.
       path_spec = path_spec_factory.Factory.NewPathSpec(
           definitions.TYPE_INDICATOR_OS, location=self._source_path)
 
@@ -643,7 +646,9 @@ class GenericPreprocessCollector(object):
           definitions.TYPE_INDICATOR_TSK, location=path, parent=path_spec)
 
     else:
-      path = os.path.join(self._source_path, path)
+      # Note we cannot use os.path.join() here since it breaks on Windows
+      # when path starts with a path separator.
+      path = u'{0:s}{1:s}{2:s}'.format(self._source_path, os.path.sep, path)
 
       path_spec = path_spec_factory.Factory.NewPathSpec(
           definitions.TYPE_INDICATOR_OS, location=path)
@@ -658,7 +663,7 @@ class GenericPreprocessCollector(object):
     return path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=self._source_path)
 
-  def GetFilePaths(self, path_expression, filename_expression):
+  def GetFilePaths(self, path_expression, filename_expression, path_separator):
     """Retrieves paths based on a path and filename expression.
 
     Args:
@@ -668,15 +673,17 @@ class GenericPreprocessCollector(object):
                        "[0-9]+" to match a path segments that only consists of
                        numeric values.
       filename_expression: The filename expression.
+      path_separator: The path separator.
 
     Returns:
       A list of paths.
     """
     path_segments_expressions_list = self._GetPathSegmentExpressionsList(
-        path_expression)
+        path_expression, path_separator)
 
     path_segments_expressions_list.extend(
-        self._GetPathSegmentExpressionsList(filename_expression))
+        self._GetPathSegmentExpressionsList(
+            filename_expression, path_separator))
 
     return self._GetPaths(path_segments_expressions_list)
 
@@ -699,7 +706,7 @@ class GenericPreprocessCollector(object):
         # ideas). Until then have a quick "try" attempt, remove that once
         # proper stats are implemented.
         try:
-          for file_path in self.GetFilePaths(path, filter_file):
+          for file_path in self.GetFilePaths(path, filter_file, path[0]):
             file_entry = self.OpenFileEntry(file_path)
             if file_entry:
               yield file_entry.path_spec
@@ -740,7 +747,7 @@ class GenericPreprocessCollector(object):
       errors.PathNotFound: If unable to compile any regular expression.
     """
     path_segments_expressions_list = self._GetPathSegmentExpressionsList(
-        path_expression)
+        path_expression, u'/')
 
     return self._GetPaths(path_segments_expressions_list)
 
