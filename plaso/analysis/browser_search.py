@@ -46,7 +46,7 @@ def ScrubLine(line):
   try:
     return unicode(urllib.unquote(str(line)), 'utf-8')
   except UnicodeDecodeError:
-    logging.warning(u'Unable to decode line: %s', line)
+    logging.warning(u'Unable to decode line: {0:s}'.format(line))
 
   return line
 

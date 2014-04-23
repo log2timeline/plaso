@@ -115,7 +115,8 @@ def _FindClasses(class_object, *args):
     try:
       results.append(class_object.classes[cls](*args))
     except Exception:
-      logging.error('_FindClasses: exception while appending: %s', cls)
+      logging.error(
+          u'_FindClasses: exception while appending: {0:s}'.format(cls))
       raise
 
   return results

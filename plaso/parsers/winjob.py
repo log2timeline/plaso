@@ -181,10 +181,10 @@ class WinJobParser(parser.BaseParser):
     file_object = file_entry.GetFileObject()
     try:
       header = self.JOB_FIXED_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as e:
+    except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Not a Windows Task Job file, unable to parse. '
-          u'Reason given: {}'.format(e))
+          u'Unable to parser Windows Task Job file with error: {0:s}'.format(
+              exception))
 
     if not header.product_version in self.PRODUCT_VERSIONS:
       raise errors.UnableToParseFile(u'Not a valid Scheduled Task file')
@@ -195,10 +195,10 @@ class WinJobParser(parser.BaseParser):
     # Obtain the relevant values from the file.
     try:
       data = self.JOB_VARIABLE_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as e:
+    except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Not a Windows Task Job file, unable to parse. '
-          u'Reason given: {}'.format(e))
+          u'Unable to parser Windows Task Job file with error: {0:s}'.format(
+              exception))
 
     trigger_type = self.TRIGGER_TYPES.get(data.trigger_type, 'Unknown')
 

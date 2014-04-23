@@ -25,8 +25,9 @@ import sys
 
 
 def FormatHeader(header, char='*'):
-  """Format and return a header for output."""
-  return ('\n{:%s^80}' % char).format(u' %s ' % header)
+  """Formats the header as a line of 80 chars with the header text centered."""
+  format_string = '\n{{0:{0:s}^80}}'.format(char)
+  return format_string.format(u' {0:s} '.format(header))
 
 
 def FindTestFiles():

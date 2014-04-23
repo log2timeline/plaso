@@ -26,7 +26,7 @@ from plaso.lib import queue
 
 # We are accessing quite a lot of protected members in this test file.
 # Suppressing that message test file wide.
-# pylint: disable-msg=protected-access
+# pylint: disable=protected-access
 
 
 class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):

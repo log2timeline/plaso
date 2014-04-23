@@ -26,7 +26,7 @@ import logging
 from binplist import binplist
 
 # Need to import plist to ensure plugins are registered.
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.parsers import plist_plugins
 
 from plaso.lib import errors
@@ -152,7 +152,8 @@ class PlistParser(parser.BaseParser):
         for event_object in plist_plugin.Process(plist_name, top_level_object):
           event_object.plugin = plist_plugin.plugin_name
           yield event_object
-      except errors.WrongPlistPlugin as e:
-        logging.debug(u'[PLIST] Wrong Plugin:{} for:{}'.format(e[0], e[1]))
+      except errors.WrongPlistPlugin as exception:
+        logging.debug(u'[PLIST] Wrong plugin: {0:s} for: {1:s}'.format(
+            exception[0], exception[1]))
 
     file_object.close()

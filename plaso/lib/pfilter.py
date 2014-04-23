@@ -90,8 +90,9 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
 
     try:
       ret, _ = eventdata.EventFormatterManager.GetMessageStrings(obj)
-    except KeyError as e:
-      logging.warning(u'Unable to correctly assemble event: %s', e)
+    except KeyError as exception:
+      logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
+          exception))
 
     return ret
 
@@ -100,8 +101,9 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     try:
       get_sources = eventdata.EventFormatterManager.GetSourceStrings
       source_short, source_long = get_sources(obj)
-    except KeyError as e:
-      logging.warning(u'Unable to correctly assemble event: %s', e)
+    except KeyError as exception:
+      logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
+          exception))
 
     return source_short, source_long
 
@@ -157,8 +159,8 @@ class PlasoExpression(objectfilter.BasicExpression):
     operator = filter_implementation.OPS.get(op_str, None)
 
     if not operator:
-      raise objectfilter.ParseError(
-          'Unknown operator %s provided.' % self.operator)
+      raise objectfilter.ParseError(u'Unknown operator {0:s} provided.'.format(
+          self.operator))
 
     # Plaso specific implementation - if we are comparing a timestamp
     # to a value, we use our specific implementation that compares
@@ -242,6 +244,8 @@ class DateCompareObject(object):
       represents the time to compare against. Time should be stored
       as microseconds since UTC in Epoch format.
 
+    Raises:
+      ValueError: if the date string is invalid.
     """
     self.text = utils.GetUnicodeString(data)
     if type(data) in (int, long):
@@ -252,16 +256,15 @@ class DateCompareObject(object):
       try:
         self.data = timelib.Timestamp.FromTimeString(
             utils.GetUnicodeString(data))
-      except ValueError as e:
-        raise ValueError(
-            u'Date string is wrongly formatted (%s) - %s',
-            data, e)
+      except ValueError as exception:
+        raise ValueError(u'Wrongly formatted date string: {0:s} - {1:s}'.format(
+            data, exception))
     elif type(data) == datetime.datetime:
       self.data = timelib.Timestamp.FromPythonDatetime(data)
     elif isinstance(DateCompareObject, data):
       self.data = data.data
     else:
-      raise ValueError('Type not supported [%s].' % type(data))
+      raise ValueError(u'Unsupported type: {0:s}.'.format(type(data)))
 
   def __cmp__(self, x):
     """A simple comparison operation."""
@@ -439,10 +442,10 @@ def GetMatcher(query, quiet=False):
   matcher = None
   try:
     parser = BaseParser(query).Parse()
-    matcher = parser.Compile(
-        PlasoAttributeFilterImplementation)
-  except objectfilter.ParseError as e:
+    matcher = parser.Compile(PlasoAttributeFilterImplementation)
+  except objectfilter.ParseError as exception:
     if not quiet:
-      logging.error('Filter <%s> malformed: %s', query, e)
+      logging.error(u'Filter <{0:s}> malformed: {1:s}'.format(
+          query, exception))
 
   return matcher

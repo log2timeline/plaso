@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#
 # -*- coding: utf-8 -*-
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
@@ -15,11 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a unit test for the EventFilter."""
+
 import unittest
 
-from plaso.lib import event
 from plaso.lib import event_test
 from plaso.lib import eventdata
+# pylint: disable=unused-import
 from plaso.formatters import winreg
 
 
@@ -57,7 +59,7 @@ class EventFormatterUnitTest(unittest.TestCase):
     except KeyError:
       print event_object.attributes
       print event_object.__dict__
-    return '%s,%s,%s,%s' % (
+    return u'{0:d},{1:s},{2:s},{3:s}'.format(
         event_object.timestamp, source_short, source_long, msg)
 
   def testInitialization(self):
@@ -72,20 +74,20 @@ class EventFormatterUnitTest(unittest.TestCase):
 
     self.assertIn((
         u'1334961526929596,REG,UNKNOWN key,[MY AutoRun key] Run: '
-        'c:/Temp/evil.exe'), events)
+        u'c:/Temp/evil.exe'), events)
 
     self.assertIn(
         (u'1334966206929596,REG,UNKNOWN key,[//HKCU/Secret/EvilEmpire/'
-         'Malicious_key] Value: REGALERT: send all the exes to the other '
-         'world'), events)
+         u'Malicious_key] Value: REGALERT: send all the exes to the other '
+         u'world'), events)
     self.assertIn((u'1334940286000000,REG,UNKNOWN key,[//HKCU/Windows'
-                   '/Normal] Value: run all the benign stuff'), events)
-    self.assertIn(('1335781787929596,FILE,Weird Log File,This log line reads '
-                   'ohh so much.'), events)
-    self.assertIn(('1335781787929596,FILE,Weird Log File,Nothing of interest'
-                   ' here, move on.'), events)
-    self.assertIn(('1335791207939596,FILE,Weird Log File,Mr. Evil just logged'
-                   ' into the machine and got root.'), events)
+                   u'/Normal] Value: run all the benign stuff'), events)
+    self.assertIn((u'1335781787929596,FILE,Weird Log File,This log line reads '
+                   u'ohh so much.'), events)
+    self.assertIn((u'1335781787929596,FILE,Weird Log File,Nothing of interest'
+                   u' here, move on.'), events)
+    self.assertIn((u'1335791207939596,FILE,Weird Log File,Mr. Evil just logged'
+                   u' into the machine and got root.'), events)
 
   def testTextBasedEvent(self):
     """Test a text based event."""
@@ -97,12 +99,12 @@ class EventFormatterUnitTest(unittest.TestCase):
             event_object)
 
         self.assertEquals(msg, (
-            'This is a line by someone not reading the log line properly. And '
-            'since this log line exceeds the accepted 80 chars it will be '
-            'shortened.'))
+            u'This is a line by someone not reading the log line properly. And '
+            u'since this log line exceeds the accepted 80 chars it will be '
+            u'shortened.'))
         self.assertEquals(msg_short, (
-            'This is a line by someone not reading the log line properly. '
-            'And since this l...'))
+            u'This is a line by someone not reading the log line properly. '
+            u'And since this l...'))
 
 
 class ConditionalTestEvent1(event_test.TestEvent1):
@@ -112,11 +114,12 @@ class ConditionalTestEvent1(event_test.TestEvent1):
 class ConditionalTestEvent1Formatter(eventdata.ConditionalEventFormatter):
   """Test event 1 conditional (event) formatter."""
   DATA_TYPE = 'test:conditional_event1'
-  FORMAT_STRING_PIECES = [u'Description: {description}',
-                          u'Comment',
-                          u'Value: 0x{numeric:02x}',
-                          u'Optional: {optional}',
-                          u'Text: {text}']
+  FORMAT_STRING_PIECES = [
+      u'Description: {description}',
+      u'Comment',
+      u'Value: 0x{numeric:02x}',
+      u'Optional: {optional}',
+      u'Text: {text}']
 
   SOURCE_SHORT = 'LOG'
   SOURCE_LONG = 'Some Text File.'
@@ -151,9 +154,9 @@ class ConditionalEventFormatterUnitTest(unittest.TestCase):
     event_formatter = ConditionalTestEvent1Formatter()
     msg, _ = event_formatter.GetMessages(self.event_object)
 
-    expected_msg = (u'Description: this is beyond words Comment Value: 0x0c '
-                    u'Text: but we\'re still trying to say something about '
-                    u'the event')
+    expected_msg = (
+        u'Description: this is beyond words Comment Value: 0x0c '
+        u'Text: but we\'re still trying to say something about the event')
     self.assertEquals(msg, expected_msg)
 
 

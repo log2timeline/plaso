@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.parsers.winreg_plugins import outlook
 from plaso.parsers.winreg_plugins import test_lib

@@ -21,7 +21,7 @@ import unittest
 
 from plaso.analysis import browser_search
 from plaso.analysis import test_lib
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import chrome as chrome_formatter
 from plaso.lib import event
 from plaso.lib import queue

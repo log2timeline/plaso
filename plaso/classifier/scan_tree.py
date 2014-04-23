@@ -171,15 +171,15 @@ class ScanTree(object):
       self.root_node = self._BuildScanTreeNode(
           pattern_table, ignore_list, is_bound)
 
-      logging.debug(
-          u'Scan tree:\n%s', self.root_node.ToDebugString())
+      logging.debug(u'Scan tree:\n{0:s}'.format(
+          self.root_node.ToDebugString()))
 
       # At the end the skip table is determined to provide for the
       # Boyer–Moore–Horspool skip value.
       self.skip_table = pattern_table.GetSkipTable()
 
-      logging.debug(
-          u'Skip table:\n%s', self.skip_table.ToDebugString())
+      logging.debug(u'Skip table:\n{0:s}'.format(
+          self.skip_table.ToDebugString()))
 
       self.largest_length = pattern_table.largest_pattern_length
 
@@ -297,14 +297,14 @@ class ScanTree(object):
         if byte_value_weight not in self._COMMON_BYTE_VALUES:
           value_weights.AddWeight(pattern_offset, 1)
 
-    logging.debug(
-        u'Pattern table:\n%s', pattern_table.ToDebugString())
-    logging.debug(
-        u'Similarity weights:\n%s', similarity_weights.ToDebugString())
-    logging.debug(
-        u'Occurrence weights:\n%s', occurrence_weights.ToDebugString())
-    logging.debug(
-        u'Value weights:\n%s', value_weights.ToDebugString())
+    logging.debug(u'Pattern table:\n{0:s}'.format(
+        pattern_table.ToDebugString()))
+    logging.debug(u'Similarity weights:\n{0:s}'.format(
+        similarity_weights.ToDebugString()))
+    logging.debug(u'Occurrence weights:\n{0:s}'.format(
+        occurrence_weights.ToDebugString()))
+    logging.debug(u'Value weights:\n{0:s}'.format(
+        value_weights.ToDebugString()))
 
     pattern_offset = self._GetMostSignificantPatternOffset(
         pattern_list, similarity_weights, occurrence_weights, value_weights)
@@ -324,7 +324,7 @@ class ScanTree(object):
     for byte_value in byte_values:
       byte_value_patterns = byte_values[byte_value]
 
-      logging.debug(u'%s', byte_value_patterns.ToDebugString())
+      logging.debug(u'{0:s}'.format(byte_value_patterns.ToDebugString()))
 
       number_of_byte_value_patterns = len(byte_value_patterns.patterns)
 
@@ -349,26 +349,25 @@ class ScanTree(object):
             pattern_table, ignore_list, is_bound)
 
         logging.debug(
-            u'Adding scan node for byte value: 0x%02x\n%s',
-            ord(byte_value), scan_sub_node.ToDebugString())
+            u'Adding scan node for byte value: 0x{0:02x}\n{1:s}'.format(
+                ord(byte_value), scan_sub_node.ToDebugString()))
 
         scan_tree_node.AddByteValue(ord(byte_value), scan_sub_node)
 
       for identifier in byte_value_patterns.patterns:
-        logging.debug(
-            u'Removing pattern: %s from:\n%s', identifier,
-            self._PatternsToDebugString(pattern_list))
+        logging.debug(u'Removing pattern: {0:s} from:\n{1:s}'.format(
+            identifier, self._PatternsToDebugString(pattern_list)))
 
         pattern_list.remove(byte_value_patterns.patterns[identifier])
 
-    logging.debug(
-        u'Remaining patterns:\n%s', self._PatternsToDebugString(pattern_list))
+    logging.debug(u'Remaining patterns:\n{0:s}'.format(
+        self._PatternsToDebugString(pattern_list)))
 
     number_of_patterns = len(pattern_list)
 
     if number_of_patterns == 1:
-      logging.debug(
-          u'Setting pattern: %s for default value', pattern_list[0].identifier)
+      logging.debug(u'Setting pattern: {0:s} for default value'.format(
+          pattern_list[0].identifier))
 
       scan_tree_node.SetDefaultValue(pattern_list[0])
 
@@ -378,9 +377,8 @@ class ScanTree(object):
       scan_sub_node = self._BuildScanTreeNode(
           pattern_table, ignore_list, is_bound)
 
-      logging.debug(
-          u'Setting scan node for default value:\n%s',
-          scan_sub_node.ToDebugString())
+      logging.debug(u'Setting scan node for default value:\n{0:s}'.format(
+          scan_sub_node.ToDebugString()))
 
       scan_tree_node.SetDefaultValue(scan_sub_node)
 
@@ -465,7 +463,7 @@ class ScanTree(object):
             occurrence_offset)
 
         debug_string = (
-            u'Occurrence offset: %{0:d} value weight: %{1:d}').format(
+            u'Occurrence offset: {0:d} value weight: {1:d}').format(
                 occurrence_offset, value_weight)
 
         if not pattern_offset or largest_weight < value_weight:
@@ -495,7 +493,7 @@ class ScanTree(object):
     pattern_offset = None
 
     largest_weight = similarity_weights.GetLargestWeight()
-    logging.debug(u'Largest similarity weight: %d', largest_weight)
+    logging.debug(u'Largest similarity weight: {0:d}'.format(largest_weight))
 
     if largest_weight > 0:
       similarity_weight_offsets = similarity_weights.GetOffsetsForWeight(
@@ -520,7 +518,7 @@ class ScanTree(object):
             similarity_offset)
 
         debug_string = (
-            u'Similarity offset: %{0:d} occurrence weight: %{1:d}').format(
+            u'Similarity offset: {0:d} occurrence weight: {1:d}').format(
                 similarity_offset, occurrence_weight)
 
         if largest_weight > 0 and largest_weight == occurrence_weight:

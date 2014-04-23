@@ -1098,10 +1098,10 @@ class StorageFile(object):
                   number))
           break
         yield proto
-      except errors.WrongProtobufEntry as e:
+      except errors.WrongProtobufEntry as exception:
         logging.warning((
             u'Problem while parsing a protobuf entry from: '
-            u'plaso_proto.{0:06d} <{1:s}>').format(number, e))
+            u'plaso_proto.{0:06d} with error: {1:s}').format(number, exception))
 
   def GetProtoNumbers(self):
     """Return all available protobuf numbers."""

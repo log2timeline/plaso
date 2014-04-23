@@ -28,14 +28,14 @@ class DummyEvent(object):
   """Simple class that defines a dummy event."""
 
   def __init__(self, timestamp, entry):
-    self.date = '03/01/2012'
+    self.date = u'03/01/2012'
     try:
       self.timestamp = int(timestamp)
     except ValueError:
       self.timestamp = 0
     self.entry = entry
   def EqualityString(self):
-    return ';'.join(map(str, [self.timestamp, self.entry]))
+    return u';'.join(map(str, [self.timestamp, self.entry]))
 
 
 class TestOutput(output.LogOutputFormatter):
@@ -46,26 +46,25 @@ class TestOutput(output.LogOutputFormatter):
     super(TestOutput, self).__init__(store=None, filehandle=filehandle)
 
   def StartEvent(self):
-    self.filehandle.write('<Event>\n')
+    self.filehandle.write(u'<Event>\n')
 
   def EventBody(self, event_object):
-    self.filehandle.write(
-        '\t<Date>%s</Date>\n\t<Time>%d</Time>\n\t<Entry>%s</Entry>\n' % (
-            event_object.date,
-            event_object.timestamp,
-            event_object.entry))
+    self.filehandle.write((
+        u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
+        u'\t<Entry>{2:s}</Entry>\n').format(
+            event_object.date, event_object.timestamp, event_object.entry))
 
   def EndEvent(self):
-    self.filehandle.write('</Event>\n')
+    self.filehandle.write(u'</Event>\n')
 
   def FetchEntry(self, **_):
     pass
 
   def Start(self):
-    self.filehandle.write('<EventFile>\n')
+    self.filehandle.write(u'<EventFile>\n')
 
   def End(self):
-    self.filehandle.write('</EventFile>\n')
+    self.filehandle.write(u'</EventFile>\n')
 
 
 class PlasoOutputUnitTest(unittest.TestCase):
@@ -73,10 +72,10 @@ class PlasoOutputUnitTest(unittest.TestCase):
 
   def testOutput(self):
     """Test a test implementation of the output formatter."""
-    events = [DummyEvent(123456, 'My Event Is Now!'),
-              DummyEvent(123458, 'There is no tomorrow.'),
-              DummyEvent(123462, 'Tomorrow is now.'),
-              DummyEvent(123489, 'This is just some stuff to fill the line.')]
+    events = [DummyEvent(123456, u'My Event Is Now!'),
+              DummyEvent(123458, u'There is no tomorrow.'),
+              DummyEvent(123462, u'Tomorrow is now.'),
+              DummyEvent(123489, u'This is just some stuff to fill the line.')]
 
     lines = []
     with tempfile.NamedTemporaryFile() as fh:
@@ -91,19 +90,19 @@ class PlasoOutputUnitTest(unittest.TestCase):
         lines.append(line)
 
     self.assertEquals(len(lines), 22)
-    self.assertEquals(lines[0], '<EventFile>\n')
-    self.assertEquals(lines[1], '<Event>\n')
-    self.assertEquals(lines[2], '\t<Date>03/01/2012</Date>\n')
-    self.assertEquals(lines[3], '\t<Time>123456</Time>\n')
-    self.assertEquals(lines[4], '\t<Entry>My Event Is Now!</Entry>\n')
-    self.assertEquals(lines[5], '</Event>\n')
-    self.assertEquals(lines[6], '<Event>\n')
-    self.assertEquals(lines[7], '\t<Date>03/01/2012</Date>\n')
-    self.assertEquals(lines[8], '\t<Time>123458</Time>\n')
-    self.assertEquals(lines[9], '\t<Entry>There is no tomorrow.</Entry>\n')
-    self.assertEquals(lines[10], '</Event>\n')
-    self.assertEquals(lines[11], '<Event>\n')
-    self.assertEquals(lines[-1], '</EventFile>\n')
+    self.assertEquals(lines[0], u'<EventFile>\n')
+    self.assertEquals(lines[1], u'<Event>\n')
+    self.assertEquals(lines[2], u'\t<Date>03/01/2012</Date>\n')
+    self.assertEquals(lines[3], u'\t<Time>123456</Time>\n')
+    self.assertEquals(lines[4], u'\t<Entry>My Event Is Now!</Entry>\n')
+    self.assertEquals(lines[5], u'</Event>\n')
+    self.assertEquals(lines[6], u'<Event>\n')
+    self.assertEquals(lines[7], u'\t<Date>03/01/2012</Date>\n')
+    self.assertEquals(lines[8], u'\t<Time>123458</Time>\n')
+    self.assertEquals(lines[9], u'\t<Entry>There is no tomorrow.</Entry>\n')
+    self.assertEquals(lines[10], u'</Event>\n')
+    self.assertEquals(lines[11], u'<Event>\n')
+    self.assertEquals(lines[-1], u'</EventFile>\n')
 
   def testOutputList(self):
     """Test listing up all available registed modules."""
@@ -112,7 +111,7 @@ class PlasoOutputUnitTest(unittest.TestCase):
       if 'TestOutput' in name:
         module_seen = True
         self.assertEquals(description, (
-            'This is a test output module that provides a simple XML.'))
+            u'This is a test output module that provides a simple XML.'))
 
     self.assertTrue(module_seen)
 
@@ -127,29 +126,29 @@ class EventBufferTest(unittest.TestCase):
       def CheckBufferLength(event_buffer, expected):
         if not event_buffer.check_dedups:
           expected = 0
-        # pylint: disable-msg=protected-access
+        # pylint: disable=protected-access
         self.assertEquals(len(event_buffer._buffer_dict), expected)
 
       formatter = TestOutput(fh)
       event_buffer = output.EventBuffer(formatter, False)
 
-      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      event_buffer.Append(DummyEvent(123456, u'Now is now'))
       CheckBufferLength(event_buffer, 1)
 
       # Add three events.
-      event_buffer.Append(DummyEvent(123456, 'OMG I AM DIFFERENT'))
-      event_buffer.Append(DummyEvent(123456, 'Now is now'))
-      event_buffer.Append(DummyEvent(123456, 'Now is now'))
+      event_buffer.Append(DummyEvent(123456, u'OMG I AM DIFFERENT'))
+      event_buffer.Append(DummyEvent(123456, u'Now is now'))
+      event_buffer.Append(DummyEvent(123456, u'Now is now'))
       CheckBufferLength(event_buffer, 2)
 
       event_buffer.Flush()
       CheckBufferLength(event_buffer, 0)
 
-      event_buffer.Append(DummyEvent(123456, 'Now is now'))
-      event_buffer.Append(DummyEvent(123456, 'Now is now'))
-      event_buffer.Append(DummyEvent(123456, 'Different again :)'))
+      event_buffer.Append(DummyEvent(123456, u'Now is now'))
+      event_buffer.Append(DummyEvent(123456, u'Now is now'))
+      event_buffer.Append(DummyEvent(123456, u'Different again :)'))
       CheckBufferLength(event_buffer, 2)
-      event_buffer.Append(DummyEvent(123457, 'Now is different'))
+      event_buffer.Append(DummyEvent(123457, u'Now is different'))
       CheckBufferLength(event_buffer, 1)
 
 
