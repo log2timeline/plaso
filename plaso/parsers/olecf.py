@@ -26,7 +26,7 @@ from plaso.lib import plugin
 from plaso.parsers.olecf_plugins import interface
 
 # Register all OLECF plugins.
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.parsers import olecf_plugins
 
 import pyolecf

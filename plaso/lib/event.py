@@ -190,8 +190,9 @@ class EventContainer(object):
     try:
       return self.GetValue(attr)
     except AttributeError:
-      raise AttributeError('%s\' object has no attribute \'%s\'.' % (
-          self.__class__.__name__, attr))
+      raise AttributeError(
+          u'{0:s}\' object has no attribute \'{1:s}\'.'.format(
+              self.__class__.__name__, attr))
 
   def __len__(self):
     """Retrieves the number of items in the containter and its sub items."""
@@ -231,8 +232,9 @@ class EventContainer(object):
     if self.parent_container:
       return self.parent_container.GetValue(attr)
 
-    raise AttributeError('\'%s\' object has no attribute \'%s\'.' % (
-        self.__class__.__name__, attr))
+    raise AttributeError(
+        u'\'{0:s}\' object has no attribute \'{1:s}\'.'.format(
+            self.__class__.__name__, attr))
 
   def GetAttributes(self):
     """Return a set of all defined attributes.
@@ -398,18 +400,19 @@ class EventObject(object):
     try:
       if attr in self.attributes:
         return self.attributes.__getitem__(attr)
-    except TypeError as e:
-      raise AttributeError('[Event] %s', e)
+    except TypeError as exception:
+      raise AttributeError(u'[Event] {0:s}'.format(exception))
 
     # Check the parent.
     if self.parent_container:
       try:
         return self.parent_container.GetValue(attr)
       except AttributeError:
-        raise AttributeError('%s\' object has no attribute \'%s\'.' % (
-            self.__class__.__name__, attr))
+        raise AttributeError(
+            u'{0:s}\' object has no attribute \'{1:s}\'.'.format(
+                self.__class__.__name__, attr))
 
-    raise AttributeError('Attribute [%s] not defined' % attr)
+    raise AttributeError(u'Attribute [{0:s}] not defined'.format(attr))
 
   def EqualityString(self):
     """Return a string describing the EventObject in terms of object equality.
@@ -536,7 +539,7 @@ class EventObject(object):
     out_write = []
 
     out_write.append(u'+-' * 40)
-    out_write.append(u'[Timestamp]:\n  %s' %(
+    out_write.append(u'[Timestamp]:\n  {0:s}'.format(
         timelib.Timestamp.CopyToIsoFormat(self.timestamp, pytz.utc)))
     out_write.append(u'\n[Message Strings]:')
 

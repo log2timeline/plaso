@@ -135,8 +135,8 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     timestamp = self._GetTimestampFromHeader(parsed_structure.hdr_timestamp)
     if not timestamp:
       logging.debug(
-          u'Not a SkyDrive Error log file, invalid timestamp {}'.format(
-          parsed_structure.timestamp))
+          u'Not a SkyDrive Error log file, invalid timestamp {0:d}'.format(
+              parsed_structure.timestamp))
       return False
     return True
 
@@ -147,14 +147,15 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     elif key == 'header':
       return self._ParseHeader(structure)
     else:
-      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def _ParseLine(self, structure):
     """Parse a logline and store appropriate attributes."""
     timestamp = self._GetTimestampFromLine(structure.timestamp)
     if not timestamp:
-      logging.debug(
-          u'SkyDriveLogError invalid timestamp {}'.format(structure.timestamp))
+      logging.debug(u'SkyDriveLogError invalid timestamp {0:d}'.format(
+          structure.timestamp))
       return
     # Replace newlines with spaces in structure.detail to preserve output.
     return SkyDriveLogErrorEvent(
@@ -176,12 +177,12 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     timestamp = self._GetTimestampFromHeader(structure.hdr_timestamp)
     if not timestamp:
       logging.debug(
-          u'SkyDriveLogError invalid timestamp {}'.format(
+          u'SkyDriveLogError invalid timestamp {0:d}'.format(
               structure.hdr_timestamp))
       return
-    text = u'{} {} {}'.format(
+    text = u'{0:s} {1:s} {2:s}'.format(
         structure.log_start, structure.ver_str, structure.ver_num)
-    detail = u'{} {}'.format(structure.lt_str, structure.details)
+    detail = u'{0:s} {1:s}'.format(structure.lt_str, structure.details)
     return SkyDriveLogErrorEvent(
         timestamp, None, None, text, detail)
 

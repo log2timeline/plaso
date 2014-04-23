@@ -73,9 +73,9 @@ class ImageExtractor(object):
           self._pre_obj, self._image_path, source_path_spec=None)
       image_collector.SetImageInformation(self._image_offset)
 
-    except errors.UnableToOpenFilesystem as e:
+    except errors.UnableToOpenFilesystem as exception:
       raise RuntimeError(
-          u'Unable to proceed, not an image file? [{0:s}]'.format(e))
+          u'Unable to proceed, not an image file? [{0:s}]'.format(exception))
 
     plugin_list = preprocessors.PreProcessList(self._pre_obj)
 
@@ -88,10 +88,10 @@ class ImageExtractor(object):
       for plugin in plugin_list.GetWeight(guessed_os, weight):
         try:
           plugin.Run(image_collector)
-        except errors.PreProcessFail as e:
+        except errors.PreProcessFail as exception:
           logging.warning(
               u'Unable to run preprocessor: {0:s} with error: {1:s}'.format(
-                  plugin.__class__.__name__, e))
+                  plugin.__class__.__name__, exception))
 
     logging.info(u'Preprocess done, saving files from image.')
 

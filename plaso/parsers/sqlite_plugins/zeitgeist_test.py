@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import zeitgeist as zeitgeist_formatter
 from plaso.lib import event
 from plaso.parsers.sqlite_plugins import test_lib

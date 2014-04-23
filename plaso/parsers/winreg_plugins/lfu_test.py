@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -56,7 +56,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     values.append(winreg_test_lib.TestRegValue(
         'HeapDeCommitFreeBlockThreshold', '0'.encode('utf_16_le'), 1, 183))
     values.append(winreg_test_lib.TestRegValue(
-        'HeapDeCommitTotalFreeThreshold', '0'.encode('utf_16_le') , 1, 203))
+        'HeapDeCommitTotalFreeThreshold', '0'.encode('utf_16_le'), 1, 203))
     values.append(winreg_test_lib.TestRegValue(
         'HeapSegmentCommit', '0'.encode('utf_16_le'), 1, 213))
     values.append(winreg_test_lib.TestRegValue(

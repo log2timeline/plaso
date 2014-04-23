@@ -54,13 +54,13 @@ class WinPyregfKey(interface.WinRegKey):
       self._path = self.PATH_SEPARATOR.join(
           [parent_path, self._pyregf_key.name])
 
-  # pylint: disable-msg=method-hidden
+  # pylint: disable=method-hidden
   @property
   def path(self):
     """The path of the key."""
     return self._path
 
-  # pylint: disable-msg=function-redefined,arguments-differ,method-hidden
+  # pylint: disable=function-redefined,arguments-differ,method-hidden
   @path.setter
   def path(self, value):
     """Set the value of the path explicitly."""

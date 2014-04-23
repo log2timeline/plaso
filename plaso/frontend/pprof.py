@@ -36,11 +36,11 @@ from google.protobuf import text_format
 
 try:
   # Support version 1.X of IPython.
-  # pylint: disable-msg=no-name-in-module
+  # pylint: disable=no-name-in-module
   from IPython.terminal.embed import InteractiveShellEmbed
 except ImportError:
   # Support version older than 1.X of IPython.
-  # pylint: disable-msg=no-name-in-module
+  # pylint: disable=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
 import pyevt
@@ -60,7 +60,7 @@ from plaso.lib import worker
 # TODO: Remove this after the dfVFS integration.
 # TODO: Make sure we don't need to imlement the method _ConsumeItem, or
 # to have that not as an abstract method.
-# pylint: disable-msg=abstract-method
+# pylint: disable=abstract-method
 class PprofEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
   """Class that implements an event object queue consumer for pprof."""
 
@@ -164,7 +164,7 @@ def Main():
 
   PrintHeader(options)
   # Stats attribute used for console sesssions.
-  # pylint: disable-msg=unused-variable
+  # pylint: disable=unused-variable
   if options.storage:
     stats = ProcessStorage(options)
   else:
@@ -289,7 +289,7 @@ def ProcessFile(options):
 
   print utils.FormatHeader('Parsers Loaded')
   # Accessing protected member.
-  # pylint: disable-msg=protected-access
+  # pylint: disable=protected-access
   plugins = []
   for parser in sorted(my_worker._parsers['all']):
     print utils.FormatOutputString('', parser.parser_name)

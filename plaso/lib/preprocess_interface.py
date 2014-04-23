@@ -31,7 +31,6 @@ from binplist import binplist
 from xml.etree import ElementTree
 
 
-
 class PreprocessPlugin(object):
   """Class that defines the preprocess plugin object interface.
 
@@ -89,9 +88,8 @@ class PreprocessPlugin(object):
       collector: the preprocess collector (instance of PreprocessCollector).
     """
     setattr(self._obj_store, self.ATTRIBUTE, self.GetValue(collector))
-    logging.info(
-        u'[PreProcess] Set attribute: %s to %s', self.ATTRIBUTE,
-        getattr(self._obj_store, self.ATTRIBUTE, 'N/A'))
+    logging.info(u'[PreProcess] Set attribute: {0:s} to {1:s}'.format(
+        self.ATTRIBUTE, getattr(self._obj_store, self.ATTRIBUTE, u'N/A')))
 
   @abc.abstractmethod
   def GetValue(self, collector):
@@ -133,11 +131,13 @@ class MacPlistPreprocess(PreprocessPlugin):
     try:
       file_path, _, file_name = self.PLIST_PATH.rpartition(u'/')
       paths = collector.GetFilePaths(file_path, file_name, u'/')
-    except errors.PathNotFound as e:
-      raise errors.PreProcessFail(u'Unable to find path: %s' % e)
+    except errors.PathNotFound as exception:
+      raise errors.PreProcessFail(u'Unable to find path: {0:s}'.format(
+          exception))
 
     if not paths:
-      raise errors.PreProcessFail(u'Unable to find path: %s' % self.PLIST_PATH)
+      raise errors.PreProcessFail(u'Unable to find path: {0:s}'.format(
+          self.PLIST_PATH))
 
     try:
       path = paths.next()
@@ -149,7 +149,8 @@ class MacPlistPreprocess(PreprocessPlugin):
       file_object = file_entry.GetFileObject()
     except IOError as exception:
       raise errors.PreProcessFail(
-          u'Unable to open file {}: {}'.format(path, exception))
+          u'Unable to open file: {0:s} with error: {1:s}'.format(
+              path, exception))
 
     return self.ParseFile(file_entry, file_object)
 
@@ -182,7 +183,7 @@ class MacPlistPreprocess(PreprocessPlugin):
 
     if not match:
       raise errors.PreProcessFail(
-          u'No plist keys found, trying to locate: {}'.format(','.join(
+          u'No plist keys found, trying to locate: {0:s}'.format(','.join(
               self.PLIST_KEYS)))
 
     return self.ParseKey(match, key_name)
@@ -191,7 +192,7 @@ class MacPlistPreprocess(PreprocessPlugin):
     """Fetch the first discovered key from PLIST_KEYS and return value."""
     value = key.get(key_name, None)
     if not value:
-      raise errors.PreProcessFail('Value not found.')
+      raise errors.PreProcessFail(u'Value not found.')
 
     return value
 
@@ -221,8 +222,8 @@ class MacXMLPlistPreprocess(MacPlistPreprocess):
 
     if not match:
       raise errors.PreProcessFail(
-          u'Keys not found inside plist file [{}].'.format(
-              ','.join(self.PLIST_KEYS)))
+          u'Keys not found inside plist file: {0:s}.'.format(
+              u','.join(self.PLIST_KEYS)))
 
     return self.ParseKey(match, key_name)
 
@@ -364,8 +365,9 @@ class PreprocessGetPath(PreprocessPlugin):
     """
     try:
       paths = list(collector.FindPaths(self.PATH))
-    except errors.PathNotFound as e:
-      raise errors.PreProcessFail(u'Unable to find path: %s' % e)
+    except errors.PathNotFound as exception:
+      raise errors.PreProcessFail(u'Unable to find path: {0:s}'.format(
+          exception))
     if paths:
       return paths[0]
 
@@ -389,19 +391,19 @@ def GuessOS(col_obj):
   # This causes the tool to crash on Windows if preprocessor is unable to
   # guess the OS, like when accidentally run against a directory.
   try:
-    if list(col_obj.FindPaths('/(Windows|WINNT)/System32')):
+    if list(col_obj.FindPaths(u'/(Windows|WINNT)/System32')):
       return 'Windows'
   except (OSError, errors.PathNotFound):
     pass
 
   try:
-    if list(col_obj.FindPaths('/System/Library')):
+    if list(col_obj.FindPaths(u'/System/Library')):
       return 'MacOSX'
   except (OSError, errors.PathNotFound):
     pass
 
   try:
-    if list(col_obj.FindPaths('/etc')):
+    if list(col_obj.FindPaths(u'/etc')):
       return 'Linux'
   except (OSError, errors.PathNotFound):
     pass

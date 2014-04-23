@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Returns a StorageFile protobuf as a string."""
+
 from plaso.lib import output
 
 
@@ -30,6 +32,5 @@ class Raw(output.FileProtoLogOutputFormatter):
     Returns:
       String representation of an EventObject protobuf.
     """
-
-    out_write = u'%s' % proto
+    out_write = u'{0!s}'.format(proto)
     self.filehandle.WriteLine(out_write)

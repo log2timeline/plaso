@@ -20,7 +20,7 @@
 import pytz
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import mac_appfirewall as mac_appfirewall_formatter
 from plaso.lib import event
 from plaso.parsers import mac_appfirewall

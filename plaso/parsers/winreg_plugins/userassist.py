@@ -63,7 +63,7 @@ class UserAssistPlugin(interface.KeyPlugin):
       u'http://blog.didierstevens.com/programs/userassist/',
       u'https://code.google.com/p/winreg-kb/wiki/UserAssistKeys',
       u'http://intotheboxes.files.wordpress.com/2010/04'
-      u'/intotheboxes_2010_q1.pdf' ]
+      u'/intotheboxes_2010_q1.pdf']
 
   # UserAssist format version used in Windows 2000, XP, 2003, Vista.
   USERASSIST_V3_STRUCT = construct.Struct(
@@ -116,10 +116,11 @@ class UserAssistPlugin(interface.KeyPlugin):
       for value in count_subkey.GetValues():
         try:
           value_name = value.name.decode('rot-13')
-        except UnicodeEncodeError as e:
-          logging.debug(
-              (u'Unable to decode UserAssist string in whole (piecewise '
-               'decoding instead): {0:s} - [{1!s}]').format(value.name, e))
+        except UnicodeEncodeError as exception:
+          logging.debug((
+              u'Unable to decode UserAssist string: {0:s} with error: {1:s}.\n'
+              u'Attempting piecewise decoding.').format(
+                  value.name, exception))
 
           characters = []
           for char in value.name:

@@ -87,9 +87,9 @@ class WinRecycleBinParser(parser.BaseParser):
     file_object = file_entry.GetFileObject()
     try:
       magic_header = self.MAGIC_STRUCT.parse_stream(file_object)
-    except (construct.FieldError, IOError) as e:
+    except (construct.FieldError, IOError) as exception:
       raise errors.UnableToParseFile(
-          u'Not an $Ixxx file, unable to parse. Reason given: {}'.format(e))
+          u'Unable to parse $Ixxx file with error: {0:s}'.format(exception))
 
     if magic_header is not 1:
       raise errors.UnableToParseFile(
@@ -144,9 +144,9 @@ class WinRecycleInfo2Parser(parser.BaseParser):
     file_object = file_entry.GetFileObject()
     try:
       magic_header = self.INT32_LE.parse_stream(file_object)
-    except (construct.FieldError, IOError) as e:
+    except (construct.FieldError, IOError) as exception:
       raise errors.UnableToParseFile(
-          u'Not an INFO2 file, unable to parse. Reason given: {}'.format(e))
+          u'Unable to parse INFO2 file with error: {0:s}'.format(exception))
 
     if magic_header is not 5:
       raise errors.UnableToParseFile(

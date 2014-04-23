@@ -27,7 +27,7 @@ import os
 import sys
 import urllib
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso import filters
 from plaso import formatters
 
@@ -70,7 +70,7 @@ def ScrubLine(line):
   try:
     return unicode(urllib.unquote(str(line)), 'utf-8')
   except UnicodeDecodeError:
-    logging.warning(u'Unable to decode line: %s', line)
+    logging.warning(u'Unable to decode line: {0:s}'.format(line))
 
   return line
 
@@ -230,7 +230,7 @@ def Main():
       results_with_count.append((
           result_count[u'{}:{}'.format(engine_name, result)], result))
 
-    header = u' == ENGINE: %s ==\n' % engine_name
+    header = u' == ENGINE: {0:s} ==\n'.format(engine_name)
     output_filehandle.WriteLine(header)
     for count, result in sorted(results_with_count, reverse=True):
       line = u'{} {}\n'.format(count, result)

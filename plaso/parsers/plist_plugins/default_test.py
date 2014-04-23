@@ -20,7 +20,7 @@
 import datetime
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
 from plaso.parsers.plist_plugins import default
 from plaso.parsers.plist_plugins import test_lib

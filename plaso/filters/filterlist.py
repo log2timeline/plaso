@@ -31,8 +31,9 @@ def IncludeKeyword(loader, node):
     with open(filename, 'rb') as fh:
       try:
         data = yaml.safe_load(fh)
-      except yaml.ParserError as e:
-        logging.error(u'Unable to load rule file: {}'.format(e))
+      except yaml.ParserError as exception:
+        logging.error(u'Unable to load rule file with error: {0:s}'.format(
+            exception))
         return None
   return data
 
@@ -54,9 +55,9 @@ class ObjectFilterList(filter_interface.FilterObject):
     with open(filter_string, 'rb') as fh:
       try:
         results = yaml.safe_load(fh)
-      except (yaml.scanner.ScannerError, IOError) as e:
+      except (yaml.scanner.ScannerError, IOError) as exception:
         raise errors.WrongPlugin(
-            u'Malformed YAML file: {}.'.format(e))
+            u'Unable to parse YAML file with error: {0:s}.'.format(exception))
 
     self.filters = []
     if type(results) is dict:
