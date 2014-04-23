@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import logging
 import os
 import re
@@ -28,6 +30,7 @@ from plaso.output import helper
 from plaso import formatters
 import sqlite3
 
+
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
@@ -36,8 +39,9 @@ class Sql4n6(output.LogOutputFormatter):
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
-  META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
-                 'color', 'type', 'record_number']
+  META_FIELDS = [
+      'sourcetype', 'source', 'user', 'host', 'MACB', 'color', 'type',
+      'record_number']
 
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
@@ -65,13 +69,13 @@ class Sql4n6(output.LogOutputFormatter):
   def Start(self):
     """Connect to the database and create the table before inserting."""
     if self.filehandle == sys.stdout:
-      raise IOError('Can\'t connect to stdout as database, '
-                    'please specify a file.')
+      raise IOError(
+          u'Unable to connect to stdout as database, please specify a file.')
 
     if (not self.append) and os.path.isfile(self.filehandle):
-      raise IOError(
-          (u'Unable to use an already existing file for output '
-           '[%s]' % self.filehandle))
+      raise IOError((
+          u'Unable to use an already existing file for output '
+          u'[{0:s}]').format(self.filehandle))
 
     self.conn = sqlite3.connect(self.dbname)
     self.conn.text_factory = str
@@ -97,7 +101,7 @@ class Sql4n6(output.LogOutputFormatter):
         self.curs.execute(
             'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT)'.format(field))
         if self.set_status:
-          self.set_status('Created table: l2t_%s' % field)
+          self.set_status('Created table: l2t_{0:s}'.format(field))
 
       self.curs.execute('CREATE TABLE l2t_tags (tag TEXT)')
       if self.set_status:
@@ -123,11 +127,11 @@ class Sql4n6(output.LogOutputFormatter):
     # Build up indices for the fields specified in the args.
     # It will commit the inserts automatically before creating index.
     if not self.append:
-      for fn in self.fields:
-        sql = 'CREATE INDEX {0}_idx ON log2timeline ({0})'.format(fn)
+      for field_name in self.fields:
+        sql = 'CREATE INDEX {0}_idx ON log2timeline ({0})'.format(field_name)
         self.curs.execute(sql)
         if self.set_status:
-          self.set_status('Created index: %s' % fn)
+          self.set_status('Created index: {0:d}'.format(field_name))
 
     # Get meta info and save into their tables.
     if self.set_status:
@@ -135,11 +139,11 @@ class Sql4n6(output.LogOutputFormatter):
 
     for field in self.META_FIELDS:
       vals = self._GetDistinctValues(field)
-      self.curs.execute('DELETE FROM l2t_%ss' % field)
+      self.curs.execute('DELETE FROM l2t_{0:s}s'.format(field))
       for name, freq in vals.items():
-        self.curs.execute(
-            'INSERT INTO l2t_%ss (%ss, frequency) VALUES("%s", %s) ' % (
-                field, field, name, freq))
+        self.curs.execute((
+            'INSERT INTO l2t_{0:s}s ({1:s}s, frequency) '
+            'VALUES("{2:s}", {3:s}) ').format(field, field, name, freq))
     self.curs.execute('DELETE FROM l2t_tags')
     for tag in self._ListTags():
       self.curs.execute('INSERT INTO l2t_tags (tag) VALUES (?)', [tag])
@@ -218,7 +222,7 @@ class Sql4n6(output.LogOutputFormatter):
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
     if not date_use:
-      logging.error(u'Unable to process date for entry: %s', msg)
+      logging.error(u'Unable to process date for entry: {0:s}'.format(msg))
       return
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
@@ -226,8 +230,9 @@ class Sql4n6(output.LogOutputFormatter):
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append('%s: %s ' % (key, getattr(event_object, key, None)))
-    extra = ' '.join(extra)
+      extra.append(u'{0:s}: {1:s} '.format(
+          key, getattr(event_object, key, None)))
+    extra = u' '.join(extra)
 
     inode = getattr(event_object, 'inode', '-')
     if inode == '-':
@@ -235,7 +240,7 @@ class Sql4n6(output.LogOutputFormatter):
           hasattr(event_object.pathspec, 'image_inode')):
         inode = event_object.pathspec.image_inode
 
-    date_use_string = '%04d-%02d-%02d %02d:%02d:%02d' % (
+    date_use_string = u'{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
         date_use.year, date_use.month, date_use.day, date_use.hour,
         date_use.minute, date_use.second)
 
@@ -292,7 +297,7 @@ class Sql4n6(output.LogOutputFormatter):
     if self.count % 10000 == 0:
       self.conn.commit()
       if self.set_status:
-        self.set_status('Inserting event: %s' % self.count)
+        self.set_status('Inserting event: {0:d}'.format(self.count))
 
 
 def GetVSSNumber(event_object):

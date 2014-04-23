@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import logging
 import re
 import sys
@@ -135,8 +137,8 @@ class Mysql4n6(output.LogOutputFormatter):
         self.curs.execute('SET GLOBAL innodb_large_prefix=ON')
         self.curs.execute('SET GLOBAL innodb_file_format=barracuda')
         self.curs.execute('SET GLOBAL innodb_file_per_table=ON')
-        self.curs.execute('CREATE DATABASE %s' % self.dbname)
-        self.curs.execute('USE %s' % self.dbname)
+        self.curs.execute('CREATE DATABASE {0:s}'.format(self.dbname))
+        self.curs.execute('USE {0:s}'.format(self.dbname))
         # Create tables.
         self.curs.execute(
             ('CREATE TABLE log2timeline ('
@@ -162,7 +164,7 @@ class Mysql4n6(output.LogOutputFormatter):
               'CREATE TABLE l2t_{0}s ({0}s TEXT, frequency INT) '
               'ENGINE=InnoDB ROW_FORMAT=COMPRESSED'.format(field))
           if self.set_status:
-            self.set_status('Created table: l2t_%s' % field)
+            self.set_status('Created table: l2t_{0:s}'.format(field))
 
         self.curs.execute('CREATE TABLE l2t_tags (tag TEXT) '
                           'ENGINE=InnoDB ROW_FORMAT=COMPRESSED')
@@ -188,8 +190,8 @@ class Mysql4n6(output.LogOutputFormatter):
         if self.set_status:
           self.set_status('Created table: l2t_disk')
     except MySQLdb.Error as exception:
-      raise IOError('Can\'t insert to database, '
-                    '[%s]', exception)
+      raise IOError('Unable to insert into database with error: {0:s}'.format(
+          exception))
 
     self.count = 0
 
@@ -198,11 +200,11 @@ class Mysql4n6(output.LogOutputFormatter):
     # Build up indices for the fields specified in the args.
     # It will commit the inserts automatically before creating index.
     if not self.append:
-      for fn in self.fields:
-        sql = 'CREATE INDEX {0}_idx ON log2timeline ({0})'.format(fn)
+      for field_name in self.fields:
+        sql = 'CREATE INDEX {0}_idx ON log2timeline ({0:s})'.format(field_name)
         self.curs.execute(sql)
         if self.set_status:
-          self.set_status('Created index: %s' % fn)
+          self.set_status('Created index: {0:s}'.format(field_name))
 
     # Get meta info and save into their tables.
     if self.set_status:
@@ -210,14 +212,15 @@ class Mysql4n6(output.LogOutputFormatter):
 
     for field in self.META_FIELDS:
       vals = self._GetDistinctValues(field)
-      self.curs.execute('DELETE FROM l2t_%ss' % field)
+      self.curs.execute('DELETE FROM l2t_{0:s}s'.format(field))
       for name, freq in vals.items():
-        self.curs.execute(
-            'INSERT INTO l2t_%ss (%ss, frequency) VALUES("%s", %s) ' % (
-                field, field, name, freq))
+        self.curs.execute((
+            'INSERT INTO l2t_{0:s}s ({1:s}s, frequency) '
+            'VALUES("{2:s}", {3:s}) ').format(field, field, name, freq))
     self.curs.execute('DELETE FROM l2t_tags')
     for tag in self._ListTags():
-      self.curs.execute("INSERT INTO l2t_tags (tag) VALUES ('%s')" % tag)
+      self.curs.execute(
+          'INSERT INTO l2t_tags (tag) VALUES ("{0:s}")'.format(tag))
 
     if self.set_status:
       self.set_status('Database created.')
@@ -286,7 +289,7 @@ class Mysql4n6(output.LogOutputFormatter):
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
     if not date_use:
-      logging.error(u'Unable to process date for entry: %s', msg)
+      logging.error(u'Unable to process date for entry: {0:s}'.format(msg))
       return
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
@@ -294,7 +297,8 @@ class Mysql4n6(output.LogOutputFormatter):
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append('%s: %s ' % (key, getattr(event_object, key, None)))
+      extra.append('{0:s}: {1:s} '.format(
+          key, getattr(event_object, key, None)))
     extra = ' '.join(extra)
 
     inode = getattr(event_object, 'inode', '-')
@@ -356,7 +360,8 @@ class Mysql4n6(output.LogOutputFormatter):
           '%s, %s, %s, %s)', row)
     except MySQLdb.Error as exception:
       logging.warning(
-        u'Error appending to Database [%s].', exception)
+          u'Unable to insert into database with error: {0:s}.'.format(
+              exception))
 
     self.count += 1
 
@@ -365,7 +370,7 @@ class Mysql4n6(output.LogOutputFormatter):
     if self.count % 10000 == 0:
       self.conn.commit()
       if self.set_status:
-        self.set_status('Inserting event: %s' % self.count)
+        self.set_status('Inserting event: {0:d}'.format(self.count))
 
   def GetVSSNumber(self, event_object):
     """Return the vss_store_number of the event."""

@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import ls_quarantine as ls_quarantine_formatter
 from plaso.lib import event
 from plaso.parsers.sqlite_plugins import ls_quarantine

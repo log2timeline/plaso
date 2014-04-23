@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import winfirewall as winfirewall_formatter
 from plaso.lib import event
 from plaso.parsers import test_lib

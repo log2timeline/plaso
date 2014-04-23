@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a parser for the Mac OS X MacKeeper cache database."""
+
 import json
 
 from plaso.lib import event
@@ -85,7 +87,7 @@ def ExtractJQuery(jquery_raw):
     data_part, _, _ = first_part.partition(']')
   elif jquery_raw.startswith('//'):
     _, _, first_part = jquery_raw.partition('{')
-    data_part = u'{%s' % first_part
+    data_part = u'{{{0:s}'.format(first_part)
   elif '({' in jquery_raw:
     _, _, first_part = jquery_raw.partition('(')
     data_part, _, _ = first_part.rpartition(')')
@@ -174,7 +176,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       description = 'Account Activity'
       _, _, activity = key_url.partition('#')
       if activity:
-        data['text'] = u'Action started: %s' % activity
+        data['text'] = u'Action started: {0:s}'.format(activity)
       else:
         data['text'] = u'Unknown activity.'
     elif key_url.startswith('http://support.') and 'chat' in key_url:

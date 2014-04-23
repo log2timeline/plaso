@@ -88,7 +88,8 @@ class RegistryPluginHeader(eventdata.EventFormatter):
       if len(attribute) > fmt_length:
         fmt_length = len(attribute)
 
-    fmt = u'{:>%ds} : {}' % fmt_length
+    # TODO: add an explanation what this code is doing.
+    fmt = u'{{:>{0:d}s}} : {{}}'.format(fmt_length)
     ret_strings.append(utils.FormatHeader('Attributes', '-'))
     ret_strings.append(fmt.format(
       'Date',
@@ -117,7 +118,8 @@ class RegistryFormatter(eventdata.EventFormatter):
       if len(attribute) > fmt_length:
         fmt_length = len(attribute)
 
-    fmt = u'{:>%ds} : {}' % fmt_length
+    # TODO: add an explanation what this code is doing.
+    fmt = u'{{:>{0:d}s}} : {{}}'.format(fmt_length)
     for attribute, value in event_object.regvalue.items():
       ret_strings.append(fmt.format(attribute, value))
 
@@ -573,10 +575,10 @@ def ParseHive(hive_path, hive_collectors, keys, use_plugins, verbose):
 
       try:
         key_str_use = key_str.format(**key_dict)
-      except KeyError as e:
+      except KeyError as exception:
         logging.warning((
             u'Unable to format key string {0:s} with error: '
-            u'{1:s}').format(key_str, e))
+            u'{1:s}').format(key_str, exception))
 
       key = RegCache.hive.GetKeyByPath(key_str_use)
       key_texts.append(u'{:>15} : {}'.format(u'Key Name', key_str_use))
@@ -694,10 +696,12 @@ def FindRegistryPaths(pattern, preprocess_collector):
         continue
       for fh_path in fh_paths:
         hive_paths.append(fh_path)
-  except errors.PreProcessFail as e:
-    logging.debug('Path: {0:s} not found, error: {1:s}'.format(pattern, e))
-  except errors.PathNotFound as e:
-    logging.debug('Path: {0:s} not found, error: {1:s}'.format(pattern, e))
+  except errors.PreProcessFail as exception:
+    logging.debug('Path: {0:s} not found, error: {1:s}'.format(
+        pattern, exception))
+  except errors.PathNotFound as exception:
+    logging.debug('Path: {0:s} not found, error: {1:s}'.format(
+        pattern, exception))
 
   return hive_paths
 

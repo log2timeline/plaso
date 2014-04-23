@@ -95,7 +95,7 @@ def IsText(bytes_in, encoding=None):
       pass
     except LookupError:
       logging.error(
-          u'Character encoding not recognized: %s', encoding)
+          u'String encoding not recognized: {0:s}'.format(encoding))
 
   return False
 
@@ -161,7 +161,7 @@ class PathReplacer(lexer.Lexer):
 
   def ReplaceVariable(self, match, **_):
     """Replace a string that should not be a variable."""
-    self._path.append(u'{%s}' % match.group(1))
+    self._path.append(u'{{{0:s}}}'.format(match.group(1)))
 
   def ReplaceString(self, match, **_):
     """Replace a variable with a given attribute."""
@@ -175,8 +175,9 @@ class PathReplacer(lexer.Lexer):
 
 
 def FormatHeader(header, char='*'):
-  """Format and return a header for output."""
-  return ('\n{:%s^80}' % char).format(u' %s ' % header)
+  """Formats the header as a line of 80 chars with the header text centered."""
+  format_string = '\n{{0:{0:s}^80}}'.format(char)
+  return format_string.format(u' {0:s} '.format(header))
 
 
 def FormatOutputString(name, description, col_length=25):
@@ -184,8 +185,9 @@ def FormatOutputString(name, description, col_length=25):
   max_width = 80
   line_length = max_width - col_length - 3
 
-  fmt = u'{:>%ds} : {}' % col_length
-  fmt_second = u'{:<%d}{}' % (col_length + 3)
+  # TODO: add an explanation what this code is doing.
+  fmt = u'{{:>{0:d}s}} : {{}}'.format(col_length)
+  fmt_second = u'{{:<{0:d}}}{{}}'.format(col_length + 3)
 
   description = unicode(description)
   if len(description) < line_length:

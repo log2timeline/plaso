@@ -136,7 +136,7 @@ class Elastic(output.LogOutputFormatter):
     if self.store:
       pre_obj = self._preprocesses.get(event_object.store_number)
       if pre_obj:
-        check_user =  pre_obj.GetUsernameById(username)
+        check_user = pre_obj.GetUsernameById(username)
 
         if check_user != '-':
           username = check_user
@@ -200,14 +200,13 @@ class Elastic(output.LogOutputFormatter):
             'mappings': mapping})
       except pyelasticsearch.IndexAlreadyExistsError:
         raise RuntimeError(u'Unable to created the index')
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError as exception:
       logging.error(
-          u'Unable to proceed, cannot connect to ElasticSearch '
-          u'backend, please verify ElasticSearch connection. Error '
-          u'message given: %s', e)
+          u'Unable to proceed, cannot connect to ElasticSearch backend '
+          u'with error: {0:s}.\nPlease verify connection.'.format(exception))
       raise RuntimeError(u'Unable to connect to ElasticSearch backend.')
 
-    # pylint: disable-msg=unexpected-keyword-arg
+    # pylint: disable=unexpected-keyword-arg
     self._elastic_db.health(wait_for_status='yellow')
 
     sys.stdout.write('Inserting data')
@@ -218,5 +217,6 @@ class Elastic(output.LogOutputFormatter):
     self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
     self._data = []
     sys.stdout.write('. [DONE]\n')
-    sys.stdout.write('ElasticSearch index name: %s\n' % self._index_name)
+    sys.stdout.write('ElasticSearch index name: {0:s}\n'.format(
+        self._index_name))
     sys.stdout.flush()

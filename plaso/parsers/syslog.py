@@ -99,18 +99,20 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
       time = getattr(stat, 'ctime', 0)
 
     if not time:
-      logging.error(
-          ('Unable to determine correct year of syslog file, using current '
-           'year'))
-      return timelib.GetCurrentYear()
+      current_year = timelib.GetCurrentYear()
+      logging.error((
+          u'Unable to determine year of syslog file.\nDefautling to: '
+          u'{0:d}').format(current_year))
+      return current_year
 
     try:
       timestamp = datetime.datetime.fromtimestamp(time, zone)
-    except ValueError as e:
+    except ValueError as exception:
+      current_year = timelib.GetCurrentYear()
       logging.error(
-          ('Unable to determine correct year of syslog file, using current '
-           'one, error msg: %s', e))
-      return timelib.GetCurrentYear()
+          u'Unable to determine year of syslog file with error: {0:s}\n'
+          u'Defaulting to: {1:d}'.format(exception, current_year))
+      return current_year
 
     return timestamp.year
 

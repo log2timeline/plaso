@@ -19,6 +19,7 @@
 
 Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
 """
+
 import logging
 import re
 
@@ -89,7 +90,7 @@ class L2tcsv(output.FileLogOutputFormatter):
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
-      extras.append(u'%s: %s ' % (key, getattr(event_object, key)))
+      extras.append(u'{0:s}: {1:s} '.format(key, getattr(event_object, key)))
     extra = ' '.join(extras)
 
     inode = getattr(event_object, 'inode', '-')
@@ -112,8 +113,10 @@ class L2tcsv(output.FileLogOutputFormatter):
         if check_user != '-':
           username = check_user
 
-    row = ('%02d/%02d/%04d' %(date_use.month, date_use.day, date_use.year),
-           '%02d:%02d:%02d' %(date_use.hour, date_use.minute, date_use.second),
+    row = ('{0:02d}/{1:02d}/{2:04d}'.format(
+               date_use.month, date_use.day, date_use.year),
+           '{0:02d}:{1:02d}:{2:02d}'.format(
+               date_use.hour, date_use.minute, date_use.second),
            self.zone,
            helper.GetLegacy(event_object),
            source_short,
@@ -130,6 +133,6 @@ class L2tcsv(output.FileLogOutputFormatter):
            getattr(event_object, 'parser', u'-'),
            extra.replace('\n', u'-').replace('\r', u''))
 
-    out_write = u'{0}\n'.format(
+    out_write = u'{0:s}\n'.format(
         u','.join(unicode(x).replace(',', u' ') for x in row))
     self.filehandle.WriteLine(out_write)

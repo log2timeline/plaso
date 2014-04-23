@@ -78,11 +78,11 @@ class JavaIDXParser(parser.BaseParser):
       construct.UBInt64('last_modified_date'),
       construct.UBInt64('expiration_date'),
       construct.PascalString(
-          'version_string', length_field = construct.UBInt16('length')),
+          'version_string', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'url', length_field = construct.UBInt16('length')),
+          'url', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'namespace', length_field = construct.UBInt16('length')),
+          'namespace', length_field=construct.UBInt16('length')),
       construct.UBInt32('FieldCount'))
 
   IDX_605_SECTION_ONE_STRUCT = construct.Struct(
@@ -100,20 +100,20 @@ class JavaIDXParser(parser.BaseParser):
   IDX_605_SECTION_TWO_STRUCT = construct.Struct(
       'IDX_605_Section2',
       construct.PascalString(
-          'version', length_field = construct.UBInt16('length')),
+          'version', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'url', length_field = construct.UBInt16('length')),
+          'url', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'namespec', length_field = construct.UBInt16('length')),
+          'namespec', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'ip_address', length_field = construct.UBInt16('length')),
+          'ip_address', length_field=construct.UBInt16('length')),
       construct.UBInt32('FieldCount'))
 
   # Java uses Pascal-style strings, but with a 2-byte length field.
   JAVA_READUTF_STRING = construct.Struct(
       'Java.ReadUTF',
       construct.PascalString(
-          'string', length_field = construct.UBInt16('length')))
+          'string', length_field=construct.UBInt16('length')))
 
   def Parse(self, file_entry):
     """Extract data from a Java cache IDX file.
@@ -133,10 +133,9 @@ class JavaIDXParser(parser.BaseParser):
     file_object = file_entry.GetFileObject()
     try:
       magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as e:
+    except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Not a Java IDX file, unable to parse. ',
-          u'Reason given: {}'.format(e))
+          u'Unable to parse Java IDX file with error: {0:s}.'.format(exception))
 
     # Fields magic.busy and magic.incomplete are normally 0x00. They
     # are set to 0x01 if the file is currently being downloaded. Logic

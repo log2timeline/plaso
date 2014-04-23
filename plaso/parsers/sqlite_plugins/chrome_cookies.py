@@ -21,7 +21,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.parsers import cookie_plugins
 from plaso.parsers.cookie_plugins import interface as cookie_interface
 from plaso.parsers.sqlite_plugins import interface

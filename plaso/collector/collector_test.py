@@ -151,10 +151,10 @@ class CollectorTest(CollectorTestCase):
 
     try:
       os.remove(filter_name)
-    except (OSError, IOError) as e:
+    except (OSError, IOError) as exception:
       logging.warning((
-          u'Unable to remove temporary file: {0:s} due to: {1:s}').format(
-              filter_name, e))
+          u'Unable to remove temporary file: {0:s} with error: {1:s}').format(
+              filter_name, exception))
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS
     # and test_data/System.evtx.
@@ -247,10 +247,10 @@ class CollectorTest(CollectorTestCase):
 
     try:
       os.remove(filter_name)
-    except (OSError, IOError) as e:
+    except (OSError, IOError) as exception:
       logging.warning((
-          u'Unable to remove temporary file: {0:s} due to: {1:s}').format(
-              filter_name, e))
+          u'Unable to remove temporary file: {0:s} with error: {1:s}').format(
+              filter_name, exception))
 
     self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 2)
 
@@ -295,10 +295,10 @@ class CollectionFilterTest(unittest.TestCase):
 
     try:
       os.remove(filter_name)
-    except (OSError, IOError) as e:
+    except (OSError, IOError) as exception:
       logging.warning(
-          u'Unable to remove temporary file: {0:s} due to: {1:s}'.format(
-              filter_name, e))
+          u'Unable to remove temporary file: {0:s} with error: {1:s}'.format(
+              filter_name, exception))
 
     # This filter will contain all the filter lines, even those that will fail
     # during finding pathspecs, yet there is one that will fail, so we should

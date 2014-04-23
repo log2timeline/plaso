@@ -29,7 +29,7 @@ import os
 from plaso.lib import errors
 from plaso.lib import parser
 from plaso.lib import plugin
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.parsers import bencode_plugins
 from plaso.parsers.bencode_plugins import interface
 
@@ -88,9 +88,10 @@ class BencodeParser(parser.BaseParser):
 
     try:
       top_level_object = bencode.bdecode(file_object.read())
-    except (IOError, bencode.BTFailure) as e:
+    except (IOError, bencode.BTFailure) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse invalid Bencoded file with error: {0:s}'.format(e))
+          u'Unable to parse invalid Bencoded file with error: {0:s}'.format(
+              exception))
 
     if not top_level_object:
       raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
@@ -122,8 +123,8 @@ class BencodeParser(parser.BaseParser):
           event_object.plugin = bencode_plugin.plugin_name
           yield event_object
 
-      except errors.WrongBencodePlugin as e:
-        # TODO: Change the raise so that e[0] is replaced by e.g. e.
-        logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(self.NAME, e[0]))
+      except errors.WrongBencodePlugin as exception:
+        logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
+            self.NAME, exception))
 
     file_object.close()

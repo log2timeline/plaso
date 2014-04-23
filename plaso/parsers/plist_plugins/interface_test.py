@@ -23,7 +23,7 @@ import unittest
 from plaso.events import plist_event
 from plaso.lib import errors
 from plaso.lib import plugin
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 

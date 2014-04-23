@@ -236,7 +236,7 @@ def ParseStorage(my_args):
     filter_use = filters.GetFilter(my_args.filter)
     if not filter_use:
       logging.error(
-          u'No filter found for the filter expression: {}'.format(
+          u'No filter found for the filter expression: {0:s}'.format(
               my_args.filter))
       sys.exit(1)
 
@@ -262,9 +262,9 @@ def ParseStorage(my_args):
     if my_args.filter:
       if 'date' in my_args.filter or 'timestamp' in my_args.filter:
         logging.warning(
-            'You are trying to use both a "slice" and a date filter, the '
-            'end results might not be what you want it to be... a small delay '
-            'is introduced to allow you to read this message')
+            u'You are trying to use both a "slice" and a date filter, the '
+            u'end results might not be what you want it to be... a small delay '
+            u'is introduced to allow you to read this message')
         time.sleep(5)
 
   if my_args.analysis_plugins:
@@ -280,14 +280,15 @@ def ParseStorage(my_args):
       formatter_cls = output_lib.GetOutputFormatter(my_args.output_format)
       if not formatter_cls:
         logging.error((
-            u'Wrong output module choosen, module <{}> does not exist. Please '
-            'use {} -o list to see all available modules.').format(
+            u'Wrong output module choosen, module: {0:s} does not exist. '
+            u'Please use {1:s} -o list to see all available modules.').format(
                 my_args.output_format, sys.argv[0]))
         sys.exit(1)
       formatter = formatter_cls(
               store, my_args.write, my_args, filter_use)
-    except IOError as e:
-      logging.error(u'Error occured during output processing: %s', e)
+    except IOError as exception:
+      logging.error(u'Error occured during output processing: {0:s}'.format(
+          exception))
 
     if not formatter:
       logging.error(u'Unable to proceed, output buffer not available.')
@@ -347,11 +348,11 @@ def ParseStorage(my_args):
       # Now we need to start all the plugins.
       for analysis_plugin in analysis_plugins:
         analysis_processes.append(multiprocessing.Process(
-            name='Analysis {}'.format(analysis_plugin.plugin_name),
+            name='Analysis {0:s}'.format(analysis_plugin.plugin_name),
             target=analysis_plugin.RunPlugin))
         analysis_processes[-1].start()
         logging.info(
-            u'Plugin: [{}] started.'.format(analysis_plugin.plugin_name))
+            u'Plugin: [{0:s}] started.'.format(analysis_plugin.plugin_name))
     else:
       analysis_producers = []
 
@@ -376,11 +377,11 @@ def ParseStorage(my_args):
       # Wait for all analysis plugins to complete.
       for number, analysis_process in enumerate(analysis_processes):
         logging.debug(
-            u'Waiting for analysis plugin: {} to complete.'.format(number))
+            u'Waiting for analysis plugin: {0:s} to complete.'.format(number))
         if analysis_process.is_alive():
           analysis_process.join(10)
         else:
-          logging.warning(u'Plugin {} already stopped.'.format(number))
+          logging.warning(u'Plugin {0:s} already stopped.'.format(number))
           analysis_process.terminate()
       logging.debug(u'All analysis plugins are now stopped.')
 
@@ -482,7 +483,7 @@ def ProcessArguments(arguments):
 
   tool_group.add_argument(
       '-v', '--version', dest='version', action='version',
-      version='log2timeline - psort version %s' % plaso.GetVersion(),
+      version='log2timeline - psort version {0:s}'.format(plaso.GetVersion()),
       help='Show the current version of psort.')
 
   tool_group.add_argument(
@@ -526,8 +527,8 @@ def ProcessArguments(arguments):
       difference = plugin_list.difference(analysis_plugins)
       if difference:
         parser.print_help()
-        print ' '
-        print u'Trying to load plugins that do not exist: {}'.format(
+        print u''
+        print u'Trying to load plugins that do not exist: {0:s}'.format(
             u' '.join(difference))
         sys.exit(1)
 
@@ -558,12 +559,12 @@ def ProcessArguments(arguments):
       date_str = str(zone_obj.localize(datetime.datetime.utcnow()))
       if '+' in date_str:
         _, _, diff = date_str.rpartition('+')
-        diff_string = '+{}'.format(diff)
+        diff_string = u'+{0:s}'.format(diff)
       else:
         _, _, diff = date_str.rpartition('-')
-        diff_string = '-{}'.format(diff)
+        diff_string = u'-{0:s}'.format(diff)
       print utils.FormatOutputString(zone, diff_string, max_length)
-    print '-' * 80
+    print u'-' * 80
     sys.exit(0)
 
   if my_args.analysis_plugins == 'list':
@@ -585,32 +586,32 @@ def ProcessArguments(arguments):
       else:
         type_string = 'Unknown type'
 
-      text = u'{} [{}]'.format(description, type_string)
+      text = u'{0:s} [{1:s}]'.format(description, type_string)
       print utils.FormatOutputString(name, text, format_length)
-    print '-' * 80
+    print u'-' * 80
     sys.exit(0)
 
   if my_args.output_format == 'list':
     print utils.FormatHeader('Output Modules')
     for name, description in output_lib.ListOutputFormatters():
       print utils.FormatOutputString(name, description, 10)
-    print '-' * 80
+    print u'-' * 80
     sys.exit(0)
 
   if not my_args.storagefile:
     parser.print_help()
-    print ''
+    print u''
     parser.print_usage()
-    print ''
+    print u''
     logging.error('STORAGEFILE required! or -h for HELP')
     sys.exit(0)
 
   if not os.path.isfile(my_args.storagefile):
     parser.print_help()
-    print ''
+    print u''
     parser.print_usage()
-    print ''
-    logging.error(u'Storage file {} does not exist.'.format(
+    print u''
+    logging.error(u'Storage file {0:s} does not exist.'.format(
         my_args.storagefile))
     sys.exit(0)
 
@@ -641,10 +642,10 @@ def Main(my_args):
       logging.info(utils.FormatHeader('Counter'))
       for element, count in counter.most_common():
         logging.info(utils.FormatOutputString(element, count))
-  except IOError as e:
+  except IOError as exception:
     # Piping results to "|head" for instance causes an IOError.
-    if 'Broken pipe' not in str(e):
-      logging.error('Processing stopped early: %s.', e)
+    if 'Broken pipe' not in str(exception):
+      logging.error('Processing stopped early: {0:s}.'.format(exception))
   except KeyboardInterrupt:
     pass
   # Catching a very generic error in case we would like to debug

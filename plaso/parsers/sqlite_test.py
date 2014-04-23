@@ -41,7 +41,7 @@ class SQLiteParserTest(unittest.TestCase):
 
   def testPluginList(self):
     """Test the plugin list returns the right values."""
-    # pylint: disable-msg=protected-access
+    # pylint: disable=protected-access
     self._parser = sqlite.SQLiteParser(self._pre_obj, self._config)
 
     all_plugins = self._parser._plugins

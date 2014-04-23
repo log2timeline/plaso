@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Contains a formatter for a dynamic output module for plaso."""
+
 import logging
 import re
 
@@ -75,7 +77,8 @@ class Dynamic(output.FileLogOutputFormatter):
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
-          'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
+          u'Unable to find no event formatter for: {0:s}.'.format(
+              event_object.DATA_TYPE))
 
     _, source = event_formatter.GetSources(event_object)
     return source
@@ -85,7 +88,8 @@ class Dynamic(output.FileLogOutputFormatter):
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
-          'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
+          u'Unable to find no event formatter for: {0:s}.'.format(
+              event_object.DATA_TYPE))
 
     source, _ = event_formatter.GetSources(event_object)
     return source
@@ -98,7 +102,8 @@ class Dynamic(output.FileLogOutputFormatter):
     """Return a date string from a timestamp value."""
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
-    return '%04d-%02d-%02d' % (date_use.year, date_use.month, date_use.day)
+    return u'{0:04d}-{1:02d}-{2:02d}'.format(
+        date_use.year, date_use.month, date_use.day)
 
   def ParseDateTime(self, event_object):
     """Return a datetime object from a timestamp, in an ISO format."""
@@ -108,7 +113,8 @@ class Dynamic(output.FileLogOutputFormatter):
     """Return a timestamp string from an integer timestamp value."""
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
-    return '%02d:%02d:%02d' % (date_use.hour, date_use.minute, date_use.second)
+    return u'{0:02d}:{1:02d}:{2:02d}'.format(
+        date_use.hour, date_use.minute, date_use.second)
 
   def ParseHostname(self, event_object):
     """Return a hostname."""
@@ -125,7 +131,7 @@ class Dynamic(output.FileLogOutputFormatter):
     username = getattr(event_object, 'username', '-')
     if self.store:
       pre_obj = self._preprocesses.get(event_object.store_number)
-      check_user =  pre_obj.GetUsernameById(username)
+      check_user = pre_obj.GetUsernameById(username)
 
       if check_user != '-':
         username = check_user
@@ -148,7 +154,8 @@ class Dynamic(output.FileLogOutputFormatter):
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
-          'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
+          u'Unable to find no event formatter for: {0:s}.'.format(
+              event_object.DATA_TYPE))
 
     msg, _ = event_formatter.GetMessages(event_object)
     return msg
@@ -165,7 +172,8 @@ class Dynamic(output.FileLogOutputFormatter):
     event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
-          'Unable to find no event formatter for: %s.' % event_object.DATA_TYPE)
+          u'Unable to find no event formatter for: {0:s}.'.format(
+              event_object.DATA_TYPE))
 
     _, msg_short = event_formatter.GetMessages(event_object)
     return msg_short
@@ -210,14 +218,15 @@ class Dynamic(output.FileLogOutputFormatter):
           for store_number in range(info.store_range[0], info.store_range[1]):
             self._preprocesses[store_number] = info
 
-    self.filehandle.WriteLine('{}\n'.format(self.separator.join(self.fields)))
+    self.filehandle.WriteLine('{0:s}\n'.format(
+        self.separator.join(self.fields)))
 
   def WriteEvent(self, event_object):
     """Write a single event."""
     try:
       self.EventBody(event_object)
     except errors.NoFormatterFound:
-      logging.error('Unable to output line, no formatter found.')
+      logging.error(u'Unable to output line, no formatter found.')
       logging.error(event_object)
 
   def EventBody(self, event_object):
@@ -232,10 +241,10 @@ class Dynamic(output.FileLogOutputFormatter):
       if call_back:
         row.append(call_back(event_object))
       else:
-        row.append(getattr(event_object, field, '-'))
+        row.append(getattr(event_object, field, u'-'))
 
-    out_write = u'{0}\n'.format(
+    out_write = u'{0:s}\n'.format(
         self.separator.join(unicode(x).replace(
-            self.separator, ' ') for x in row))
+            self.separator, u' ') for x in row))
     self.filehandle.WriteLine(out_write)
 

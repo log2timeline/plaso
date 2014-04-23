@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import mac_document_versions as mac_doc_rev_formatter
 from plaso.lib import event
 from plaso.lib import eventdata

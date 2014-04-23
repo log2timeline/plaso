@@ -74,14 +74,11 @@ def ParseDNS(dns_packet_data):
       dns_data.append('DNS error code ')
       dns_data.append(str(dns.rcode))
 
-  except dpkt.UnpackError as error:
-    dns_data.append('DNS Unpack Eror: ')
-    dns_data.append(str(error))
-    dns_data.append('. First 20 of data ')
-    dns_data.append(repr(dns_packet_data[:20]))
-  except IndexError as error:
-    dns_data.append('DNS Index Error: ')
-    dns_data.append(str(error))
+  except dpkt.UnpackError as exception:
+    dns_data.append('DNS Unpack Eror: {0:s}. First 20 of data {1:s}'.format(
+        exception, repr(dns_packet_data[:20])))
+  except IndexError as exception:
+    dns_data.append('DNS Index Error: {0:s}'.format(exception))
 
   return u' '.join(dns_data)
 
@@ -350,26 +347,25 @@ class Stream(object):
         packet_details.append(http.version)
         return 'HTTP Response', u' '.join(packet_details)
 
-      except dpkt.UnpackError as error:
-        packet_details.append('HTTP Response Unpack Error: ')
-        packet_details.append(str(error))
-        packet_details.append('. First 20 of data ')
-        packet_details.append(repr(self.stream_data[:20]))
-        return 'HTTP Response', u' '.join(packet_details)
+      except dpkt.UnpackError as exception:
+        packet_details = (
+            u'HTTP Response Unpack Error: {0:s}. '
+            u'First 20 of data {1:s}').format(
+                exception, repr(self.stream_data[:20]))
+        return 'HTTP Response', packet_details
 
-      except IndexError as error:
-        packet_details.append('HTTP Response Index Error: ')
-        packet_details.append(str(error))
-        packet_details.append('. First 20 of data ')
-        packet_details.append(repr(self.stream_data[:20]))
-        return 'HTTP Response', u' '.join(packet_details)
+      except IndexError as exception:
+        packet_details = (
+            u'HTTP Response Index Error: {0:s}. First 20 of data {1:s}').format(
+                exception, repr(self.stream_data[:20]))
+        return 'HTTP Response', packet_details
 
-      except ValueError as error:
-        packet_details.append('HTTP Response parsing error: ')
-        packet_details.append(str(error))
-        packet_details.append('. First 20 of data ')
-        packet_details.append(repr(self.stream_data[:20]))
-        return 'HTTP Response', u' '.join(packet_details)
+      except ValueError as exception:
+        packet_details = (
+            u'HTTP Response parsing error: {0:s}. '
+            u'First 20 of data {1:s}').format(
+                exception, repr(self.stream_data[:20]))
+        return 'HTTP Response', packet_details
 
     elif self.stream_data[:3] == 'GET' or self.stream_data[:4] == 'POST':
       try:
@@ -384,19 +380,18 @@ class Stream(object):
         packet_details.append(repr(http.headers))
         return 'HTTP Request', u' '.join(packet_details)
 
-      except dpkt.UnpackError as error:
-        packet_details.append('HTTP Request unpack error: ')
-        packet_details.append(str(error))
-        packet_details.append('. First 20 of data: ')
-        packet_details.append(repr(self.stream_data[:20]))
-        return 'HTTP Request', u' '.join(packet_details)
+      except dpkt.UnpackError as exception:
+        packet_details = (
+            u'HTTP Request unpack error: {0:s}. First 20 of data {1:s}').format(
+                exception, repr(self.stream_data[:20]))
+        return 'HTTP Request', packet_details
 
-      except ValueError as error:
-        packet_details.append('HTTP Request parsing error: ')
-        packet_details.append(str(error))
-        packet_details.append('. First 20 of data: ')
-        packet_details.append(repr(self.stream_data[:20]))
-        return 'HTTP Request', u' '.join(packet_details)
+      except ValueError as exception:
+        packet_details = (
+            u'HTTP Request parsing error: {0:s}. '
+            u'First 20 of data {1:s}').format(
+                exception, repr(self.stream_data[:20]))
+        return 'HTTP Request', packet_details
 
     elif self.protocol == 'UDP' and (
         self.source_port == 53 or self.dest_port == 53):
@@ -426,12 +421,12 @@ class Stream(object):
         packet_details.append('SSL data. Length: ')
         packet_details.append(str(ssl.len))
         return 'SSL', u' '.join(packet_details)
-      except dpkt.UnpackError as error:
-        packet_details.append('SSL unpack error: ')
-        packet_details.append(str(error))
-        packet_details.append('. First 20 of data: ')
-        packet_details.append(repr(self.stream_data[:20]))
-        return 'SSL', u' '.join(packet_details)
+      except dpkt.UnpackError as exception:
+        packet_details = (
+            u'SSL unpack error: {0:s}. First 20 of data {1:s}').format(
+                exception, repr(self.stream_data[:20]))
+        return 'SSL', packet_details
+
     elif '\x03\x00' in self.stream_data[1:3]:
        # Some form of ssl3 data.
       try:
@@ -439,12 +434,12 @@ class Stream(object):
         packet_details.append('SSL data. Length: ')
         packet_details.append(str(ssl.len))
         return 'SSL', u' '.join(packet_details)
-      except dpkt.UnpackError as error:
-        packet_details.append('SSL unpack error: ')
-        packet_details.append(str(error))
-        packet_details.append('. First 20 of data: ')
-        packet_details.append(repr(self.stream_data[:20]))
-        return 'SSL', u' '.join(packet_details)
+
+      except dpkt.UnpackError as exception:
+        packet_details = (
+            u'SSL unpack error: {0:s}. First 20 of data {1:s}').format(
+                exception, repr(self.stream_data[:20]))
+        return 'SSL', packet_details
 
     return 'other', self.protocol_data
 
@@ -542,11 +537,11 @@ class PcapParser(parser.BaseParser):
       pcap_reader = dpkt.pcap.Reader(file_object)
     except ValueError as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.parser_name, file_entry.name, exception))
     except dpkt.NeedData as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.parser_name, file_entry.name, exception))
 
     packet_id = 0
@@ -608,8 +603,8 @@ class PcapParser(parser.BaseParser):
                                            'ICMP')
     other_streams = self.OtherStream(other_list, trunc_list)
 
-    sorted_list = sorted(connections.values(),
-            key = operator.attrgetter('start_time'))
+    sorted_list = sorted(
+        connections.values(), key=operator.attrgetter('start_time'))
 
     for entry in sorted_list:
       if not entry.protocol == 'ICMP':

@@ -72,8 +72,9 @@ class WinRegistryKeyPathExpander(object):
 
     try:
       expanded_key_path = key_path.format(**key_dict)
-    except KeyError as e:
-      raise KeyError(u'Unable to expand path: {0:s}'.format(e))
+    except KeyError as exception:
+      raise KeyError(u'Unable to expand path with error: {0:s}'.format(
+          exception))
 
     if not expanded_key_path:
       raise KeyError(u'Unable to expand path, no value returned.')
