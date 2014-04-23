@@ -50,43 +50,45 @@ class ObjectFilterTest(test_helper.FilterTestHelper):
 
     try:
       os.remove(name)
-    except (OSError, IOError) as e:
+    except (OSError, IOError) as exception:
       logging.warning(
-          u'Unable to remove temporary file: %s due to: %s', name, e)
+          u'Unable to remove temporary file: {0:s} with error: {1:s}'.format(
+              name, exception))
 
   def testFilterApprove(self):
-    one_rule = """
-Again_Dude:
-  description: Heavy artillery caught on fire
-  case_nr: 62345
-  analysts: [anonymous]
-  urls: [cnn.com,microsoft.com]
-  filter: message contains "dude where is my car"
-    """
+    one_rule = u'\n'.join([
+        u'Again_Dude:',
+        u'  description: Heavy artillery caught on fire',
+        u'  case_nr: 62345',
+        u'  analysts: [anonymous]',
+        u'  urls: [cnn.com,microsoft.com]',
+        u'  filter: message contains "dude where is my car"'])
+
     self.CreateFileAndTest(one_rule)
 
-    collection = """
-Rule_Dude:
-    description: This is the very case I talk about, a lot
-    case_nr: 1235
-    analysts: [dude, jack, horn]
-    urls: [mbl.is,visir.is]
-    filter: date > "2012-01-01 10:54:13" and parser not contains "evtx"
+    collection = u'\n'.join([
+        u'Rule_Dude:',
+        u'    description: This is the very case I talk about, a lot',
+        u'    case_nr: 1235',
+        u'    analysts: [dude, jack, horn]',
+        u'    urls: [mbl.is,visir.is]',
+        (u'    filter: date > "2012-01-01 10:54:13" and parser not contains '
+         u'"evtx"'),
+        u'',
+        u'Again_Dude:',
+        u'  description: Heavy artillery caught on fire',
+        u'  case_nr: 62345',
+        u'  analysts: [smith, perry, john]',
+        u'  urls: [cnn.com,microsoft.com]',
+        u'  filter: message contains "dude where is my car"',
+        u'',
+        u'Third_Rule_Of_Thumb:',
+        u'    description: Another ticket for another day.',
+        u'    case_nr: 234',
+        u'    analysts: [joe]',
+        u'    urls: [mbl.is,symantec.com/whereevillies,virustotal.com/myhash]',
+        u'    filter: evil_bit is 1'])
 
-Again_Dude:
-  description: Heavy artillery caught on fire
-  case_nr: 62345
-  analysts: [smith, perry, john]
-  urls: [cnn.com,microsoft.com]
-  filter: message contains "dude where is my car"
-
-Third_Rule_Of_Thumb:
-    description: Another ticket for another day.
-    case_nr: 234
-    analysts: [joe]
-    urls: [mbl.is,symantec.com/whereevillies,virustotal.com/myhash]
-    filter: evil_bit is 1
-    """
     self.CreateFileAndTest(collection)
 
 

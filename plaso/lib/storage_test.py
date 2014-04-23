@@ -26,7 +26,7 @@ from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import queue
 from plaso.lib import storage
-from plaso.formatters import winreg   # pylint: disable-msg=unused-import
+from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
 
 

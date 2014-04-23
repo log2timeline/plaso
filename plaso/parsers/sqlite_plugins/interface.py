@@ -167,8 +167,8 @@ class SQLitePlugin(plugin.BasePlugin):
                   event_object.offset = 0
               yield event_object
           row = sql_results.fetchone()
-      except sqlite3.DatabaseError as e:
-        logging.debug('SQLite error occured: %s', e)
+      except sqlite3.DatabaseError as exception:
+        logging.debug(u'SQLite error occured: {0:s}'.format(exception))
 
   def Default(self, unused_row, unused_cache):
     """Default callback method for SQLite events, does nothing."""
@@ -258,9 +258,10 @@ class SQLiteDatabase(object):
     try:
       self._database.row_factory = sqlite3.Row
       self._cursor = self._database.cursor()
-    except sqlite3.DatabaseError as e:
-      logging.debug(u'SQLite error occured: {0:s} in file {1:s}'.format(
-          e, self._file_entry.name))
+    except sqlite3.DatabaseError as exception:
+      logging.debug(
+          u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
+          self._file_entry.name, exception))
       raise
 
     # Verify the table by reading in all table names and compare it to
@@ -268,9 +269,10 @@ class SQLiteDatabase(object):
     try:
       sql_results = self._cursor.execute(
           'SELECT name FROM sqlite_master WHERE type="table"')
-    except sqlite3.DatabaseError as e:
-      logging.debug(u'SQLite error occured: <{0:s}> in file {1:s}'.format(
-          e, self._file_entry.name))
+    except sqlite3.DatabaseError as exception:
+      logging.debug(
+          u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
+          self._file_entry.name, exception))
       raise
 
     self._tables = []
@@ -288,11 +290,11 @@ class SQLiteDatabase(object):
 
     try:
       os.remove(self._temp_file_name)
-    except (OSError, IOError) as e:
-      logging.warning(
-          u'Unable to remove temporary file: {0:s} [derived from {1:s} '
-          u'due to: {2:s}'.format(
-              self._temp_file_name, self._file_entry.name, e))
+    except (OSError, IOError) as exception:
+      logging.warning((
+          u'Unable to remove temporary copy: {0:s} of SQLite database: {1:s} '
+          u'with error: {2:s}').format(
+              self._temp_file_name, self._file_entry.name, exception))
 
     self._tables = []
     self._database = None

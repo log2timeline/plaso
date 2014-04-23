@@ -76,7 +76,8 @@ class LogOutputFormatter(object):
     try:
       self.zone = pytz.timezone(zone)
     except pytz.UnknownTimeZoneError:
-      logging.warning(u'Unkown timezone: %s, default fallback to UTC', zone)
+      logging.warning(u'Unkown timezone: {0:s} defaulting to: UTC'.format(
+          zone))
       self.zone = pytz.utc
 
     self.filehandle = filehandle
@@ -171,7 +172,7 @@ class LogOutputFormatter(object):
 # Need to suppress this since these classes do not implement the
 # abstract method EventBody, classes that inherit from one of these
 # classes need to implement that function.
-# pylint: disable-msg=abstract-method
+# pylint: disable=abstract-method
 class FileLogOutputFormatter(LogOutputFormatter):
   """A simple file based output formatter."""
 

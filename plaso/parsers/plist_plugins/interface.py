@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -213,7 +214,7 @@ def RecurseKey(recur_item, root='', depth=15):
     A tuple of the root, key, and value from a plist.
   """
   if depth < 1:
-    logging.debug(u'Recursion limit hit for key: %s', root)
+    logging.debug(u'Recursion limit hit for key: {0:s}'.format(root))
     return
 
   if type(recur_item) in (list, tuple):

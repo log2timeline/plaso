@@ -26,7 +26,7 @@ from plaso.lib import plugin
 from plaso.parsers.sqlite_plugins import interface
 
 # Register all sqlite plugins.
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.parsers import sqlite_plugins
 
 import sqlite3

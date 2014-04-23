@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file simply creates the AUTHOR file based on parser content."""
+
 import os
-import logging
 import fnmatch
 
 
-def ProcessFile(path):
+def ProcessFile(file_path):
   """Process a single file to match for an author tag."""
   # TODO: Change to do a "proper" import of modules and
   # check the __author__ attribute of it.
@@ -28,7 +29,7 @@ def ProcessFile(path):
   # instead of a single attribute (current files as of writing do
   # not have that behavior, but that might change in the future).
   ret = ''
-  with open(path, 'rb') as fh:
+  with open(file_path, 'rb') as fh:
     for line in fh:
       if '__author__' in line:
         _, _, ret = line[:-1].partition(' = ')
@@ -77,4 +78,4 @@ Keith Wall (kwallster@gmail.com)
     out_file.write('\n'.join(authors))
     out_file.write('\n')
 
-  print 'Added %d authors from files.' % len(authors)
+  print 'Added {0:d} authors from files.'.format(len(authors))

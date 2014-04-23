@@ -136,11 +136,13 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
 
     try:
       response = urllib2.urlopen(self.WEB_STORE_URL.format(xid=extension_id))
-    except urllib2.HTTPError as e:
-      logging.warning(u'Unable to get results. Error: {}'.format(e))
+    except urllib2.HTTPError as exception:
+      logging.warning(u'Unable to retrieve results with error: {0:s}'.format(
+          exception))
       return
-    except urllib2.URLError as e:
-      logging.warning(u'Not a valid Extension ID: {}'.format(e))
+    except urllib2.URLError as exception:
+      logging.warning(u'Not a valid Extension ID with error: {0:s}'.format(
+          exception))
       return
 
     first_line = response.readline()

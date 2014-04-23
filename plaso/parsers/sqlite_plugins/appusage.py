@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -92,6 +93,6 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
     """
     yield MacOSXApplicationUsageEvent(
         timelib.Timestamp.FromPosixTime(row['last_time']),
-        u'Application %s' % row['event'], u'%s' % row['app_path'],
+        u'Application {0:s}'.format(row['event']), row['app_path'],
         row['app_version'], row['bundle_id'], row['number_times'])
 

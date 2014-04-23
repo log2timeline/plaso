@@ -52,7 +52,7 @@ def SetupStorage(input_file_path, pre_obj=None):
   """
   try:
     return storage.StorageFile(
-        input_file_path, read_only=False, pre_obj=pre_obj)
+        input_file_path, pre_obj=pre_obj, read_only=False)
   except IOError as exception:
     logging.error(u'IO ERROR: {0:s}'.format(exception))
   else:
@@ -85,7 +85,7 @@ def EventObjectGenerator(plaso_storage, quiet=False):
     if not quiet:
       counter += 1
       if counter % events_per_dot == 0:
-        sys.stdout.write('.')
+        sys.stdout.write(u'.')
         sys.stdout.flush()
     yield event_object
     event_object = plaso_storage.GetSortedEntry()
@@ -105,11 +105,11 @@ def ParseTaggingFile(tag_input):
   """
   with open(tag_input, 'rb') as tag_input_file:
     tags = {}
-    current_tag = ''
+    current_tag = u''
     for line in tag_input_file:
       line_rstrip = line.rstrip()
       line_strip = line_rstrip.lstrip()
-      if not line_strip or line_strip.startswith("#"):
+      if not line_strip or line_strip.startswith(u'#'):
         continue
       if not line_rstrip[0].isspace():
         current_tag = line_rstrip
@@ -122,7 +122,7 @@ def ParseTaggingFile(tag_input):
           if compiled_filter not in tags[current_tag]:
             tags[current_tag].append(compiled_filter)
         else:
-          logging.warning(u'Tag "{}" contains invalid filter: {}'.format(
+          logging.warning(u'Tag "{0:s}" contains invalid filter: {1:s}'.format(
               current_tag, line_strip))
   return tags
 
@@ -149,12 +149,12 @@ class TaggingEngine(object):
     pre_obj = event.PreprocessObject()
     pre_obj.collection_information = {}
     pre_obj.collection_information['file_processed'] = self.target_filename
-    pre_obj.collection_information['method'] = 'Applying tags.'
+    pre_obj.collection_information['method'] = u'Applying tags.'
     pre_obj.collection_information['tag_file'] = self.tag_input
-    pre_obj.collection_information['tagging_engine'] = 'plasm'
+    pre_obj.collection_information['tagging_engine'] = u'plasm'
 
     if not self.quiet:
-      sys.stdout.write('Applying tags...\n')
+      sys.stdout.write(u'Applying tags...\n')
     with SetupStorage(self.target_filename, pre_obj) as store:
       tags = ParseTaggingFile(self.tag_input)
       num_tags = 0
@@ -171,14 +171,14 @@ class TaggingEngine(object):
           event_tag = event.EventTag()
           event_tag.store_number = getattr(event_object, 'store_number')
           event_tag.store_index = getattr(event_object, 'store_index')
-          event_tag.comment = 'Tag applied by PLASM tagging engine'
+          event_tag.comment = u'Tag applied by PLASM tagging engine'
           event_tag.tags = matched_tags
           event_tags.append(event_tag)
           num_tags += 1
       store.StoreTagging(event_tags)
 
     if not self.quiet:
-      sys.stdout.write('DONE (applied {} tags)\n'.format(num_tags))
+      sys.stdout.write(u'DONE (applied {} tags)\n'.format(num_tags))
 
 
 class GroupingEngine(object):
@@ -227,7 +227,7 @@ class GroupingEngine(object):
     groups = []
     for tag in tags:
       if not quiet:
-        sys.stdout.write(u'  proccessing tag "{}"...\n'.format(tag))
+        sys.stdout.write(u'  proccessing tag "{0:s}"...\n'.format(tag))
       locations = tags[tag]
       last_time = 0
       groups_in_tag = 0
@@ -241,7 +241,7 @@ class GroupingEngine(object):
         if timestamp - last_time > time_interval:
           groups_in_tag += 1
           groups.append(type('obj', (object,), {
-              'name': u'{}:{}'.format(tag, groups_in_tag),
+              'name': u'{0:s}:{1:d}'.format(tag, groups_in_tag),
               'category': tag,
               'events': [location]}))
         else:
@@ -255,16 +255,16 @@ class GroupingEngine(object):
     grouping information to the Plaso Store file."""
 
     if not self.quiet:
-      sys.stdout.write('Grouping tagged events...\n')
+      sys.stdout.write(u'Grouping tagged events...\n')
     with SetupStorage(self.target_filename) as store:
       if not store.HasTagging():
-        logging.error('Plaso storage file does not contain tagged events')
+        logging.error(u'Plaso storage file does not contain tagged events')
         return
       tags = GroupingEngine.ReadTags(store)
       groups = GroupingEngine.GroupEvents(store, tags, self.quiet)
       store.StoreGrouping(groups)
     if not self.quiet:
-      sys.stdout.write('DONE\n')
+      sys.stdout.write(u'DONE\n')
 
 
 class ClusteringEngine(object):
@@ -275,9 +275,10 @@ class ClusteringEngine(object):
   what data.
   """
 
-  IGNORE_BASE = frozenset(['hostname', 'timestamp_desc', 'plugin',
-      'parser', 'user_sid', 'registry_type', 'computer_name', 'offset',
-      'allocated', 'file_size', 'record_number'])
+  IGNORE_BASE = frozenset([
+      'hostname', 'timestamp_desc', 'plugin', 'parser', 'user_sid',
+      'registry_type', 'computer_name', 'offset', 'allocated', 'file_size',
+      'record_number'])
 
   def __init__(self, target_filename, threshold, closeness):
     """Constructor for the Clustering Engine.
@@ -329,7 +330,7 @@ class ClusteringEngine(object):
       first: first string.
       second: second string.
     """
-    return ':||:'.join([unicode(first), unicode(second)])
+    return u':||:'.join([unicode(first), unicode(second)])
 
   @staticmethod
   def PreHash(field_name, attribute):
@@ -434,13 +435,13 @@ class ClusteringEngine(object):
     Args:
       dump_filename: the filename of the Plaso Storage to be deduped.
     """
-    sys.stdout.write('Removing duplicates...\n')
+    sys.stdout.write(u'Removing duplicates...\n')
     sys.stdout.flush()
     # Whether these incremental files should remain a feature or not is still
     # being decided. They're just here for now to make development faster.
     nodup_filename = '.{}_dedup'.format(self.plaso_hash)
     if os.path.isfile(nodup_filename):
-      sys.stdout.write('Using previously calculated results.\n')
+      sys.stdout.write(u'Using previously calculated results.\n')
     else:
       with SetupStorage(dump_filename) as store:
         total_events = store.GetNumberOfEvents()
@@ -456,10 +457,10 @@ class ClusteringEngine(object):
             output_buffer.Append(event_object)
             counter += 1
             if counter % events_per_dot == 0:
-              sys.stdout.write('.')
+              sys.stdout.write(u'.')
               sys.stdout.flush()
             event_object = formatter.FetchEntry()
-      sys.stdout.write('\n')
+      sys.stdout.write(u'\n')
     return nodup_filename
 
   def ConstructHashVector(self, nodup_filename, vector_size):
@@ -476,12 +477,12 @@ class ClusteringEngine(object):
       nodup_filename: the filename of a de-duplicated plaso storage file.
       vector_size: size of this vector.
     """
-    sys.stdout.write('Constructing word vector...\n')
+    sys.stdout.write(u'Constructing word vector...\n')
     sys.stdout.flush()
-    vector_filename = '.{}_vector_{}'.format(
+    vector_filename = '.{0:s}_vector_{1:s}'.format(
         self.plaso_hash, vector_size)
     if os.path.isfile(vector_filename):
-      sys.stdout.write('Using previously calculated results.\n')
+      sys.stdout.write(u'Using previously calculated results.\n')
       x = open(vector_filename, 'rb')
       vector = pickle.load(x)
       x.close()
@@ -495,7 +496,7 @@ class ClusteringEngine(object):
       x = open(vector_filename, 'wb')
       pickle.dump(vector, x)
       x.close()
-      sys.stdout.write('\n')
+      sys.stdout.write(u'\n')
     return vector
 
   def FindFrequentWords(self, nodup_filename, threshold, vector=None):
@@ -514,12 +515,12 @@ class ClusteringEngine(object):
     if not vector:
       vector = []
 
-    sys.stdout.write('Constructing 1-dense clusters... \n')
+    sys.stdout.write(u'Constructing 1-dense clusters... \n')
     sys.stdout.flush()
-    frequent_filename = '.{}_freq_{}'.format(self.plaso_hash,
+    frequent_filename = '.{0:s}_freq_{1:s}'.format(self.plaso_hash,
         str(threshold))
     if os.path.isfile(frequent_filename):
-      sys.stdout.write('Using previously calculated results.\n')
+      sys.stdout.write(u'Using previously calculated results.\n')
       x = open(frequent_filename, 'rb')
       frequent_words = pickle.load(x)
       x.close()
@@ -541,7 +542,7 @@ class ClusteringEngine(object):
       x = open(frequent_filename, 'wb')
       pickle.dump(frequent_words, x)
       x.close()
-      sys.stdout.write('\n')
+      sys.stdout.write(u'\n')
     return frequent_words
 
   def BuildEventTypes(self, nodup_filename, threshold, frequent_words):
@@ -559,12 +560,12 @@ class ClusteringEngine(object):
       threshold: the support threshold value.
       frequent_words: the set of attributes not to ignore.
     """
-    sys.stdout.write('Calculating event type candidates...\n')
+    sys.stdout.write(u'Calculating event type candidates...\n')
     sys.stdout.flush()
-    eventtype_filename = ".{}_evtt_{}".format(self.plaso_hash,
+    eventtype_filename = ".{0:s}_evtt_{1:s}".format(self.plaso_hash,
         str(threshold))
     if os.path.isfile(eventtype_filename):
-      sys.stdout.write('Using previously calculated results.\n')
+      sys.stdout.write(u'Using previously calculated results.\n')
       x = open(eventtype_filename, 'rb')
       evttypes = pickle.load(x)
       evttype_indeces = pickle.load(x)
@@ -578,9 +579,9 @@ class ClusteringEngine(object):
           evttype_candidates[candidate] += 1
         else:
           evttype_candidates[candidate] = 1
-      sys.stdout.write('\n')
+      sys.stdout.write(u'\n')
       # clean up memory a little
-      sys.stdout.write('Pruning event type candidates...')
+      sys.stdout.write(u'Pruning event type candidates...')
       sys.stdout.flush()
       evttypes = []
       evttype_indeces = {}
@@ -589,12 +590,13 @@ class ClusteringEngine(object):
           evttype_indeces[candidate] = len(evttypes)
           evttypes.append(candidate)
       del evttype_candidates
+
       # write everything out
       x = open(eventtype_filename, 'wb')
       pickle.dump(evttypes, x)
       pickle.dump(evttype_indeces, x)
       x.close()
-      sys.stdout.write('\n')
+      sys.stdout.write(u'\n')
     return (evttypes, evttype_indeces)
 
   def Run(self):
@@ -705,9 +707,9 @@ def Main():
 
   if not os.path.isfile(getattr(arguments, 'storage_file', '')):
     argument_parser.print_help()
-    print ''
+    print u''
     argument_parser.print_usage()
-    print ''
+    print u''
     logging.error(u'No storage file supplied.')
     sys.exit(1)
 
@@ -725,9 +727,9 @@ def Main():
   elif arguments.subcommand == 'tag':
     if not getattr(arguments, 'tag_filename', ''):
       argument_parser.print_help()
-      print ''
+      print u''
       argument_parser.print_usage()
-      print ''
+      print u''
       logging.error(u'No tag file supplied.')
       sys.exit(1)
 

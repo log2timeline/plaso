@@ -207,12 +207,12 @@ class Engine(object):
       logging.info(u'Starting the tool in a single thread.')
       try:
         self._StartSingleThread()
-      except Exception as e:
+      except Exception as exception:
         # The tool should generally not be run in single threaded mode
         # for other reasons than to debug. Hence the general error
         # catching.
         logging.error(u'An uncaught exception occured: {0:s}.\n{1:s}'.format(
-            e, traceback.format_exc()))
+            exception, traceback.format_exc()))
         if self._debug_mode:
           pdb.post_mortem()
       return
@@ -303,11 +303,13 @@ class Engine(object):
     if self._run_preprocess:
       try:
         self._PreProcess(pre_obj)
-      except errors.UnableToOpenFilesystem as e:
-        logging.error(u'Unable to open the filesystem: {0:s}'.format(e))
+      except errors.UnableToOpenFilesystem as exception:
+        logging.error(u'Unable to open the filesystem with error: {0:s}'.format(
+            exception))
         return
-      except IOError as e:
-        logging.error(u'Unable to preprocess, with error: {0:s}'.format(e))
+      except IOError as exception:
+        logging.error(u'Unable to pre process with error: {0:s}'.format(
+            exception))
         return
 
     if not getattr(pre_obj, 'zone', None):

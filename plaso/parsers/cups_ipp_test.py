@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import cups_ipp as cups_ipp_formatter
 from plaso.lib import event
 from plaso.lib import eventdata

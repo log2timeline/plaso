@@ -22,7 +22,7 @@ import unittest
 from plaso.lib import output
 from plaso.lib import pfilter
 from plaso.lib import storage
-from plaso.output import pstorage   # pylint: disable-msg=unused-import
+from plaso.output import pstorage   # pylint: disable=unused-import
 
 
 class PstorageTest(unittest.TestCase):

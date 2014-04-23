@@ -26,7 +26,7 @@ from plaso.serializer import interface
 class _EventTypeJsonEncoder(json.JSONEncoder):
   """A class that implements an event type object JSON encoder."""
 
-  # pylint: disable-msg=method-hidden
+  # pylint: disable=method-hidden
   def default(self, object_instance):
     """Returns a serialized version of an event type object.
 

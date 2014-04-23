@@ -54,7 +54,8 @@ class PfilterFakeParser(parser.BaseParser):
     """Extract data from a fake plist file for testing.
 
     Args:
-      unused_file_entry: A file entry object that is not used by the fake parser.
+      unused_file_entry: A file entry object that is not used by
+                         the fake parser.
 
     Yields:
       An event container (EventContainer) that contains the parsed
@@ -72,7 +73,7 @@ class PfilterFakeParser(parser.BaseParser):
     event_object.hostname = 'Agrabah'
     event_object.parser = 'Weirdo'
     event_object.inode = '1245'
-    event_object.display_name = u'unknown:%s' % event_object.filename
+    event_object.display_name = u'unknown:{0:s}'.format(event_object.filename)
     event_object.data_type = self.DATA_TYPE
 
     yield event_object
@@ -141,9 +142,9 @@ class PFilterTest(unittest.TestCase):
     event_object.hostname = 'Agrabah'
     event_object.parser = 'Weirdo'
     event_object.inode = '1245'
-    event_object.mydict = {'value': 134, 'another': 'value',
-                  'A Key (with stuff)': 'Here'}
-    event_object.display_name = u'unknown:%s' % event_object.filename
+    event_object.mydict = {
+        'value': 134, 'another': 'value', 'A Key (with stuff)': 'Here'}
+    event_object.display_name = u'unknown:{0:s}'.format(event_object.filename)
 
     container.Append(event_object)
 
@@ -167,8 +168,8 @@ class PFilterTest(unittest.TestCase):
     self.RunPlasoTest(event_object, query, True)
 
     # 2015-11-18T01:15:43
-    query = ('date < \'2015-11-18T01:15:44.341\' and '
-             'date > \'2015-11-18 01:15:42\'')
+    query = (
+        'date < \'2015-11-18T01:15:44.341\' and date > \'2015-11-18 01:15:42\'')
     self.RunPlasoTest(event_object, query, True)
 
     query = 'date > \'2015-11-19\''
@@ -178,9 +179,10 @@ class PFilterTest(unittest.TestCase):
     query = 'filename not contains \'sometext\''
     self.RunPlasoTest(event_object, query, True)
 
-    query = ('timestamp_desc CONTAINS \'written\' AND date > \'2015-11-18\' '
-             'AND date < \'2015-11-25 12:56:21\' AND (source_short contains '
-             '\'LOG\' or source_short CONTAINS \'REG\')')
+    query = (
+        'timestamp_desc CONTAINS \'written\' AND date > \'2015-11-18\' AND '
+        'date < \'2015-11-25 12:56:21\' AND (source_short contains \'LOG\' or '
+        'source_short CONTAINS \'REG\')')
     self.RunPlasoTest(event_object, query, True)
 
     query = 'parser is not \'Made\''

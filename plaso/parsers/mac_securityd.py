@@ -141,7 +141,8 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     if key == 'repeated' or key == 'logline':
       return self._ParseLogLine(structure, key)
     else:
-      logging.warning(u'Unable to parse record, unknown structure: %s' % key)
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def _ParseLogLine(self, structure, key):
     """Parse a logline and store appropriate attributes.
@@ -228,16 +229,19 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       time = getattr(stat, 'ctime', 0)
 
     if not time:
-      logging.error(
-          ('Unable to determine correct year of log file, using current '
-           'year'))
-      return timelib.GetCurrentYear()
+      current_year = timelib.GetCurrentYear()
+      logging.error((
+          u'Unable to determine year of log file.\nDefaulting to: '
+          u'{0:d}').format(current_year))
+      return current_year
 
     try:
       timestamp = datetime.datetime.fromtimestamp(time, zone)
-    except ValueError as exception:
-      logging.error(
-          ('Unable to determine correct year of log file, using current '
-           'one, error msg: %s', exception))
-      return timelib.GetCurrentYear()
+    except ValueError:
+      current_year = timelib.GetCurrentYear()
+      logging.error((
+          u'Unable to determine year of log file.\nDefaulting to: '
+          u'{0:d}').format(current_year))
+      return current_year
+
     return timestamp.year

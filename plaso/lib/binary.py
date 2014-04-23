@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -134,12 +135,13 @@ def ReadUtf16(string_buffer):
 
   try:
     return use_buffer.decode('utf-16').replace('\x00', '')
-  except SyntaxError as e:
-    logging.error(u'Unable to decode string: {} [{}].'.format(
-        HexifyBuffer(string_buffer), e))
-  except (UnicodeDecodeError, UnicodeEncodeError) as e:
-    logging.error(u'Unable to properly decode string: {} [{}]'.format(
-        HexifyBuffer(string_buffer), e))
+  except SyntaxError as exception:
+    logging.error(u'Unable to decode string: {0:s} with error: {1:s}.'.format(
+        HexifyBuffer(string_buffer), exception))
+  except (UnicodeDecodeError, UnicodeEncodeError) as exception:
+    logging.error(
+        u'Unable to properly decode string: {0:s} with error: {1:s}'.format(
+            HexifyBuffer(string_buffer), exception))
 
   return u''
 

@@ -66,8 +66,8 @@ class OutputWriter(object):
     try:
       file_entry = path_spec_resolver.Resolver.OpenFileEntry(
           event_object.pathspec)
-    except IOError as e:
-      return u'Unable to open file with error: {0:s}'.format(e)
+    except IOError as exception:
+      return u'Unable to open file with error: {0:s}'.format(exception)
 
     offset = getattr(event_object, 'offset', 0)
     if offset - before > 0:
@@ -128,7 +128,7 @@ class OutputWriter(object):
     output_strings.append('{0:07x}: '.format(orig_ofs + entry_nr * 16))
 
     for bit in range(0, 8):
-      output_strings.append('%s ' % line[bit * 4:bit * 4 + 4])
+      output_strings.append('{0:s} '.format(line[bit * 4:bit * 4 + 4]))
 
     for bit in range(0, 16):
       try:

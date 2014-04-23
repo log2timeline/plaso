@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import java_idx as java_idx_formatter
 from plaso.lib import event
 from plaso.lib import eventdata

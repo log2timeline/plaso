@@ -41,7 +41,7 @@ import pytz
 
 # Pylint complains about some functions not being implemented that shouldn't
 # be since they need to be implemented by children.
-# pylint: disable-msg=abstract-method
+# pylint: disable=abstract-method
 
 
 class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
@@ -342,9 +342,10 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
           self.attributes['iday'], int(times[0]), int(times[1]),
           int(sec), int(us), time_zone)
 
-    except ValueError as e:
+    except ValueError as exception:
       raise errors.TimestampNotCorrectlyFormed(
-          u'Unable to parse: {0:s} [er: {1:s}]'.format(self.PrintLine(), e))
+          u'Unable to parse: {0:s} with error: {1:s}'.format(
+              self.PrintLine(), exception))
 
     return self.CreateEvent(
         timestamp, getattr(self, 'entry_offset', 0), self.attributes)

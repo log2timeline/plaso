@@ -59,7 +59,7 @@ class MetaclassRegistry(abc.ABCMeta):
     # The following should not be registered as they are abstract. Classes
     # are abstract if the have the __abstract attribute (note this is not
     # inheritable so each abstract class must be explicitely marked).
-    abstract_attribute = '_%s__abstract' % name
+    abstract_attribute = '_{0:s}__abstract'.format(name)
     if getattr(cls, abstract_attribute, None):
       return
 

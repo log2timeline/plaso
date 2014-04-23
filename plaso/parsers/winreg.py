@@ -22,7 +22,7 @@ import os
 
 from plaso.lib import errors
 from plaso.lib import parser
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.parsers import winreg_plugins
 from plaso.parsers.winreg_plugins import interface
 from plaso.winreg import cache
@@ -110,10 +110,10 @@ class WinRegistryParser(parser.BaseParser):
     # Determine type, find all parsers
     try:
       winreg_file = registry.OpenFile(file_entry, codepage=self._codepage)
-    except IOError as e:
+    except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, e))
+              self.parser_name, file_entry.name, exception))
 
     # Detect the Windows Registry file type.
     registry_type = 'UNKNOWN'

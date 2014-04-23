@@ -19,7 +19,7 @@
 
 import unittest
 
-# pylint: disable-msg=unused-import
+# pylint: disable=unused-import
 from plaso.formatters import pcap as pcap_formatter
 from plaso.lib import event
 from plaso.parsers import pcap

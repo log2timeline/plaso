@@ -38,8 +38,9 @@ def GetInformation(params):
   """Return generator for all potential storage information in a container."""
   try:
     store = storage.StorageFile(params.storage_file, read_only=True)
-  except IOError as e:
-    logging.error(u'Unable to open storage file with error: {0:s}'.format(e))
+  except IOError as exception:
+    logging.error(u'Unable to open storage file with error: {0:s}'.format(
+        exception))
     return
 
   infos = store.GetStorageInformation()
@@ -164,9 +165,9 @@ collected, what information was gained from the image, etc.
     sys.exit(1)
 
   if not os.path.isfile(options.storage_file):
-    logging.error(
-        u'File [%s] needs to exist, and be a proper plaso storage file.',
-        options.storage_file)
+    logging.error((
+        u'No such file: {0:s}.\nThe storage file needs to exist and '
+        u'be a proper plaso storage file.').format(options.storage_file))
     sys.exit(1)
 
   # Get preferred encoding values.
