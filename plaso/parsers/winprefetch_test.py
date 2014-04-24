@@ -109,6 +109,61 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+  def testParse23MultiVolume(self):
+    """Tests the Parse function on a mulit volume version 23 Prefetch file."""
+    test_file = self._GetTestFilePath(['WUAUCLT.EXE-830BCC14.pf'])
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_container = self._GetEventContainer(event_generator)
+
+    self.assertEquals(len(event_container.events), 6)
+    self.assertEquals(event_container.version, 23)
+
+    # The last run time.
+    event_object = event_container.events[5]
+
+    # TODO: update after date time test function code clean up.
+    # Thu Mar 15 21:17:39.807996 UTC 2012
+    self.assertEquals(event_object.timestamp, 1331846259807996)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
+
+    # The creation time.
+    event_object = event_container.events[0]
+
+    # TODO: update after date time test function code clean up.
+    # Wed Nov 10 17:37:26.484375 UTC 2010
+    self.assertEquals(event_object.timestamp, 1289410646484375)
+    self.assertEquals(
+        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+
+    self.assertEquals(event_object.executable, u'WUAUCLT.EXE')
+    self.assertEquals(event_object.prefetch_hash, 0x830bcc14)
+    self.assertEquals(
+        event_object.path, u'\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE')
+    self.assertEquals(event_object.run_count, 25)
+    self.assertEquals(
+        event_object.volume_device_paths[0], u'\\DEVICE\\HARDDISKVOLUME1')
+    self.assertEquals(event_object.volume_serial_numbers[0], 0xac036525)
+
+    expected_msg = (
+        u'Prefetch [WUAUCLT.EXE] was executed - run count 25 path: '
+        u'\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE '
+        u'hash: 0x830BCC14 '
+        u'volume: 1 [serial number: 0xAC036525, '
+        u'device path: \\DEVICE\\HARDDISKVOLUME1], '
+        u'volume: 2 [serial number: 0xAC036525, '
+        u'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY2], '
+        u'volume: 3 [serial number: 0xAC036525, '
+        u'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY4], '
+        u'volume: 4 [serial number: 0xAC036525, '
+        u'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY7], '
+        u'volume: 5 [serial number: 0xAC036525, '
+        u'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY8]')
+
+    expected_msg_short = u'WUAUCLT.EXE was run 25 time(s)'
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
     test_file = self._GetTestFilePath(['TASKHOST.EXE-3AE259FC.pf'])

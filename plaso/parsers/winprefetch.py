@@ -139,6 +139,7 @@ class WinPrefetchParser(parser.BaseParser):
       construct.ULInt32('serial_number'),
       construct.Padding(8),
       construct.ULInt32('directory_strings_offset'),
+      construct.ULInt32('number_of_directory_strings'),
       construct.Padding(4))
 
   # Note that at the moment for the purpose of this parser
@@ -151,6 +152,7 @@ class WinPrefetchParser(parser.BaseParser):
       construct.ULInt32('serial_number'),
       construct.Padding(8),
       construct.ULInt32('directory_strings_offset'),
+      construct.ULInt32('number_of_directory_strings'),
       construct.Padding(68))
 
   def _ParseFileHeader(self, file_object):
@@ -286,10 +288,13 @@ class WinPrefetchParser(parser.BaseParser):
 
       if device_path_offset >= 36 and device_path_size > 0:
         device_path_offset += volumes_information_offset
-        file_object.seek(device_path_offset, os.SEEK_SET)
+        current_offset = file_object.tell()
 
+        file_object.seek(device_path_offset, os.SEEK_SET)
         device_path = binary.ReadUtf16Stream(
             file_object, byte_size=device_path_size)
+
+        file_object.seek(current_offset, os.SEEK_SET)
 
     return device_path
 
@@ -334,7 +339,8 @@ class WinPrefetchParser(parser.BaseParser):
             container.data_type))
 
       for mapped_file in mapped_files:
-        if mapped_file.endswith(executable):
+        if (mapped_file.startswith(volume_device_path) and
+            mapped_file.endswith(executable)):
           _, _, container.path = mapped_file.partition(volume_device_path)
 
     timestamp = file_information.get('last_run_time', 0)
