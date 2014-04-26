@@ -50,64 +50,86 @@ class Log2TimelineTests(unittest.TestCase):
     # and not a list.
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
-  def testScanSource(self):
-    """Tests the ScanSource function ."""
-    front_end = log2timeline.Log2TimelineFrontend()
+  def _TestScanSourceDirectory(self, test_file):
+    """Tests the ScanSource function on a directory.
 
+    Args:
+      test_file: the path of the test file.
+    """
     options = TestConfig()
-    options.filename = self._GetTestFilePath(['tsk_volume_system.raw'])
+    options.filename = test_file
+
+    path_spec = self._test_front_end.ScanSource(options)
+    self.assertNotEquals(path_spec, None)
+    self.assertEquals(
+        path_spec.location, os.path.abspath(options.filename))
+    self.assertEquals(
+        path_spec.type_indicator, definitions.TYPE_INDICATOR_OS)
+    self.assertEquals(options.image_offset_bytes, None)
+
+  def _TestScanSourceImage(self, test_file):
+    """Tests the ScanSource function on the test image.
+
+    Args:
+      test_file: the path of the test file.
+    """
+    options = TestConfig()
+    options.filename = test_file
+
+    path_spec = self._test_front_end.ScanSource(options)
+    self.assertNotEquals(path_spec, None)
+    self.assertEquals(
+        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+    self.assertEquals(options.image_offset_bytes, 0)
+
+  def _TestScanSourcePartitionedImage(self, test_file):
+    """Tests the ScanSource function on the partitioned test image.
+
+    Args:
+      test_file: the path of the test file.
+    """
+    options = TestConfig()
+    options.filename = test_file
     options.image_offset_bytes = 0x0002c000
 
-    path_spec = front_end.ScanSource(options)
+    path_spec = self._test_front_end.ScanSource(options)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 180224)
 
     options = TestConfig()
-    options.filename = self._GetTestFilePath(['tsk_volume_system.raw'])
+    options.filename = test_file
     options.image_offset = 352
     options.bytes_per_sector = 512
 
-    path_spec = front_end.ScanSource(options)
+    path_spec = self._test_front_end.ScanSource(options)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 180224)
 
     options = TestConfig()
-    options.filename = self._GetTestFilePath(['tsk_volume_system.raw'])
+    options.filename = test_file
     options.partition_number = 1
 
-    path_spec = front_end.ScanSource(options)
+    path_spec = self._test_front_end.ScanSource(options)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 180224)
 
+  def _TestScanSourceVssImage(self, test_file):
+    """Tests the ScanSource function on the VSS test image.
+
+    Args:
+      test_file: the path of the test file.
+    """
     options = TestConfig()
-    options.filename = self._GetTestFilePath(['image.E01'])
-
-    path_spec = front_end.ScanSource(options)
-    self.assertNotEquals(path_spec, None)
-    self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(options.image_offset_bytes, 0)
-
-    options = TestConfig()
-    options.filename = self._GetTestFilePath(['image.qcow2'])
-
-    path_spec = front_end.ScanSource(options)
-    self.assertNotEquals(path_spec, None)
-    self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(options.image_offset_bytes, 0)
-
-    options = TestConfig()
-    options.filename = self._GetTestFilePath(['vsstest.qcow2'])
+    options.filename = test_file
     options.vss_stores = '1,2'
 
-    path_spec = front_end.ScanSource(options)
+    path_spec = self._test_front_end.ScanSource(options)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
@@ -115,26 +137,39 @@ class Log2TimelineTests(unittest.TestCase):
     self.assertEquals(options.vss_stores, [1, 2])
 
     options = TestConfig()
-    options.filename = self._GetTestFilePath(['vsstest.qcow2'])
+    options.filename = test_file
     options.vss_stores = '1'
 
-    path_spec = front_end.ScanSource(options)
+    path_spec = self._test_front_end.ScanSource(options)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 0)
     self.assertEquals(options.vss_stores, [1])
 
-    options = TestConfig()
-    options.filename = self._GetTestFilePath(['text_parser'])
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    self._test_front_end = log2timeline.Log2TimelineFrontend()
 
-    path_spec = front_end.ScanSource(options)
-    self.assertNotEquals(path_spec, None)
-    self.assertEquals(
-        path_spec.location, os.path.abspath(options.filename))
-    self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_OS)
-    self.assertEquals(options.image_offset_bytes, None)
+  def testScanSource(self):
+    """Tests the ScanSource function."""
+    test_file = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._TestScanSourcePartitionedImage(test_file)
+
+    test_file = self._GetTestFilePath(['image-split.E01'])
+    self._TestScanSourcePartitionedImage(test_file)
+
+    test_file = self._GetTestFilePath(['image.E01'])
+    self._TestScanSourceImage(test_file)
+
+    test_file = self._GetTestFilePath(['image.qcow2'])
+    self._TestScanSourceImage(test_file)
+
+    test_file = self._GetTestFilePath(['vsstest.qcow2'])
+    self._TestScanSourceVssImage(test_file)
+
+    test_file = self._GetTestFilePath(['text_parser'])
+    self._TestScanSourceDirectory(test_file)
 
 
 if __name__ == '__main__':
