@@ -74,10 +74,26 @@ class FileSystemScannerTest(unittest.TestCase):
     # and not a list.
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
-  def testScan(self):
-    """Tests file systems scanning."""
-    test_file = self._GetTestFilePath(['tsk_volume_system.raw'])
+  def _TestScanImage(self, test_file):
+    """Tests file systems scanning on the test image.
 
+    Args:
+      test_file: the path of the test file.
+    """
+    test_scanner = TestFileSystemScanner()
+
+    path_spec = test_scanner.Scan(test_file)
+    self.assertNotEquals(path_spec, None)
+    self.assertEquals(
+        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+    self.assertEquals(test_scanner.partition_offset, 0)
+
+  def _TestScanPartionedImage(self, test_file):
+    """Tests file systems scanning on the partitioned test image.
+
+    Args:
+      test_file: the path of the test file.
+    """
     test_scanner = TestFileSystemScanner()
     with self.assertRaises(UserInputException):
       _ = test_scanner.Scan(test_file)
@@ -110,25 +126,12 @@ class FileSystemScannerTest(unittest.TestCase):
     with self.assertRaises(UserInputException):
       _ = test_scanner.Scan(test_file)
 
-    test_file = self._GetTestFilePath(['image.E01'])
-    test_scanner = TestFileSystemScanner()
+  def _TestScanVssImage(self, test_file):
+    """Tests file systems scanning on the VSS test image.
 
-    path_spec = test_scanner.Scan(test_file)
-    self.assertNotEquals(path_spec, None)
-    self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(test_scanner.partition_offset, 0)
-
-    test_file = self._GetTestFilePath(['image.qcow2'])
-    test_scanner = TestFileSystemScanner()
-
-    path_spec = test_scanner.Scan(test_file)
-    self.assertNotEquals(path_spec, None)
-    self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(test_scanner.partition_offset, 0)
-
-    test_file = self._GetTestFilePath(['vsstest.qcow2'])
+    Args:
+      test_file: the path of the test file.
+    """
     test_scanner = TestFileSystemScanner()
 
     path_spec = test_scanner.Scan(test_file)
@@ -137,6 +140,23 @@ class FileSystemScannerTest(unittest.TestCase):
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(test_scanner.partition_offset, 0)
     self.assertEquals(test_scanner.vss_stores, [1, 2])
+
+  def testScan(self):
+    """Tests file systems scanning."""
+    test_file = self._GetTestFilePath(['tsk_volume_system.raw'])
+    self._TestScanPartionedImage(test_file)
+
+    test_file = self._GetTestFilePath(['image.E01'])
+    self._TestScanImage(test_file)
+
+    test_file = self._GetTestFilePath(['image.qcow2'])
+    self._TestScanImage(test_file)
+
+    test_file = self._GetTestFilePath(['vsstest.qcow2'])
+    self._TestScanVssImage(test_file)
+
+    test_file = self._GetTestFilePath(['image-split.E01'])
+    self._TestScanPartionedImage(test_file)
 
 
 if __name__ == '__main__':
