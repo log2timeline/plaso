@@ -171,6 +171,12 @@ class Log2TimelineTests(unittest.TestCase):
     test_file = self._GetTestFilePath(['text_parser'])
     self._TestScanSourceDirectory(test_file)
 
+    test_file = self._GetTestFilePath(['image.vhd'])
+    self._TestScanSourceImage(test_file)
+
+    test_file = self._GetTestFilePath(['image.vmdk'])
+    self._TestScanSourceImage(test_file)
+
 
 if __name__ == '__main__':
   unittest.main()
