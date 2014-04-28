@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import asl as asl_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import asl
 from plaso.parsers import test_lib
 
@@ -44,8 +45,9 @@ class AslParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    # date -u -d"Wed, 13 Nov 2013 17:52:34.705481" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1385372735705481)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-25 09:45:35.705481')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.record_position, 442)
     self.assertEqual(event_object.message_id, 101406)

@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import winjob as winjob_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import test_lib
 from plaso.parsers import winjob
 
@@ -66,11 +67,9 @@ class WinJobTest(test_lib.ParserTestCase):
         u'no Google software using it.')
     self.assertEqual(event_object.comment, comment_expected)
 
-    # 2013-08-24T12:42:00.112+00:00
-    # expr `date -u -d"2013-08-24T12:42:00+00:00" +"%s"` \* 1000000 + 112000
-    last_modified_date_expected = 1377348120112000
-    self.assertEqual(event_object.timestamp,
-        last_modified_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-08-24 12:42:00.112')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Parse second event. Same metadata; different timestamp event.
     event_object = event_container.events[1]
@@ -83,9 +82,9 @@ class WinJobTest(test_lib.ParserTestCase):
     description_expected = u'Scheduled To Start'
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    # 2013-07-12T15:42:00+00:00
-    download_date_expected = 1373643720000000
-    self.assertEqual(event_object.timestamp, download_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-12 15:42:00')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Application: C:\\Program Files (x86)\\Google\\Update\\'

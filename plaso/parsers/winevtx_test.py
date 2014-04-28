@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import winevtx as winevtx_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import test_lib
 from plaso.parsers import winevtx
 
@@ -80,8 +81,8 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    # date -u -d"Mar 14, 2012 04:17:38.276340200" +"%s.%N"
-    expected_timestamp = (1331698658 * 1000000) + (276340200 / 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-03-14 04:17:38.276340')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)

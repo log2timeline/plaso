@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,56 +16,192 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a unit test for the timelib in Plaso."""
+
+import calendar
 import datetime
 import unittest
 
 from plaso.lib import timelib
+
 import pytz
+
+
+def CopyStringToTimestamp(time_string):
+  """Copies a string containing a date and time value to string.
+
+  Test function that does not rely on dateutil parser.
+
+  Args:
+    time_string: A string containing a date and time value formatted as:
+                 YYYY-MM-DD hh:mm:ss.######[+-]##:##
+                 Where # are numeric digits ranging from 0 to 9 and the seconds
+                 fraction can be either 3 or 6 digits. Both the seconds fraction
+                 and timezone offset are optional. The default timezone is UTC.
+
+  Returns:
+    An integer containing the timestamp.
+
+  Raises:
+    ValueError: if the time string is invalid or not supported.
+  """
+  time_string_length = len(time_string)
+
+  # The time string should at least contain 'YYYY-MM-DD hh:mm:ss'.
+  if (time_string_length < 19 or time_string[4] != '-' or
+      time_string[7] != '-' or time_string[10] != ' ' or
+      time_string[13] != ':' or time_string[16] != ':'):
+    raise ValueError(u'Invalid time string.')
+
+  try:
+    year = int(time_string[0:4], 10)
+  except ValueError:
+    raise ValueError(u'Unable to parse year.')
+
+  try:
+    month = int(time_string[5:7], 10)
+  except ValueError:
+    raise ValueError(u'Unable to parse month.')
+
+  if month not in range(1, 13):
+    raise ValueError(u'Month value out of bounds.')
+
+  try:
+    day_of_month = int(time_string[8:10], 10)
+  except ValueError:
+    raise ValueError(u'Unable to parse day of month.')
+
+  if day_of_month not in range(1, 32):
+    raise ValueError(u'Day of month value out of bounds.')
+
+  try:
+    hours = int(time_string[11:13], 10)
+  except ValueError:
+    raise ValueError(u'Unable to parse hours.')
+
+  if hours not in range(0, 24):
+    raise ValueError(u'Hours value out of bounds.')
+
+  try:
+    minutes = int(time_string[14:16], 10)
+  except ValueError:
+    raise ValueError(u'Unable to parse minutes.')
+
+  if minutes not in range(0, 60):
+    raise ValueError(u'Minutes value out of bounds.')
+
+  try:
+    seconds = int(time_string[17:19], 10)
+  except ValueError:
+    raise ValueError(u'Unable to parse day of seconds.')
+
+  if seconds not in range(0, 60):
+    raise ValueError(u'Seconds value out of bounds.')
+
+  micro_seconds = 0
+  timezone_offset = 0
+
+  if time_string_length > 19:
+    if time_string[19] != '.':
+      timezone_index = 19
+    else:
+      for timezone_index in range(19, time_string_length):
+        if time_string[timezone_index] in ['+', '-']:
+          break
+
+        # The calculation that follow rely on the timezone index to point
+        # beyond the string in case no timezone offset was defined.
+        if timezone_index == time_string_length - 1:
+          timezone_index += 1
+
+    if timezone_index > 19:
+      fraction_of_seconds_length = timezone_index - 20
+      if fraction_of_seconds_length not in [3, 6]:
+        raise ValueError(u'Invalid time string.')
+
+      try:
+        micro_seconds = int(time_string[20:timezone_index], 10)
+      except ValueError:
+        raise ValueError(u'Unable to parse fraction of seconds.')
+
+      if fraction_of_seconds_length == 3:
+        micro_seconds *= 1000
+
+    if timezone_index < time_string_length:
+      if (time_string_length - timezone_index != 6 or
+          time_string[timezone_index + 3] != ':'):
+        raise ValueError(u'Invalid time string.')
+
+      try:
+        timezone_offset = int(time_string[
+            timezone_index + 1:timezone_index + 3])
+      except ValueError:
+        raise ValueError(u'Unable to parse timezone hours offset.')
+
+      if timezone_offset not in range(0, 24):
+        raise ValueError(u'Timezone hours offset value out of bounds.')
+
+      # Note that when the sign of the timezone offset is negative
+      # the difference needs to be added. We do so by flipping the sign.
+      if time_string[timezone_index] == '-':
+        timezone_offset *= 60
+      else:
+        timezone_offset *= -60
+
+      try:
+        timezone_offset += int(time_string[
+            timezone_index + 4:timezone_index + 6])
+      except ValueError:
+        raise ValueError(u'Unable to parse timezone minutes offset.')
+
+      timezone_offset *= 60
+
+  timestamp = int(calendar.timegm((
+      year, month, day_of_month, hours, minutes, seconds)))
+
+  return ((timestamp + timezone_offset) * 1000000) + micro_seconds
 
 
 class TimeLibUnitTest(unittest.TestCase):
   """A unit test for the timelib."""
 
   def testCocoaTime(self):
-    """Test the processing of timestamps created by Cocoa."""
-    # date -u -d "Mon Jul  8 21:30:45 UTC 2013" +"%s.%N" = 1373319045.000000000
-    self.assertEquals(timelib.Timestamp.FromCocoaTime(395011845),
-                      1373319045000000)
-    # date -u -d "Fri Jul 12 20:19:02 UTC 2013" +"%s.%N" = 1373660342.000000000
-    self.assertEquals(timelib.Timestamp.FromCocoaTime(395353142),
-                      1373660342000000)
+    """Tests the Cocoa timestamp conversion."""
+    self.assertEquals(
+        timelib.Timestamp.FromCocoaTime(395011845),
+        CopyStringToTimestamp('2013-07-08 21:30:45'))
 
-    # date -u -d "Mon Jul  8 16:27:49 UTC 2013" +"%s.%N" = 1373300869.000000000
-    self.assertEquals(timelib.Timestamp.FromCocoaTime(394993669),
-                      1373300869000000)
+    self.assertEquals(
+        timelib.Timestamp.FromCocoaTime(395353142),
+        CopyStringToTimestamp('2013-07-12 20:19:02'))
+
+    self.assertEquals(
+        timelib.Timestamp.FromCocoaTime(394993669),
+        CopyStringToTimestamp('2013-07-08 16:27:49'))
 
   def testHFSTimes(self):
-    # date -d "Thu Aug  1 15:25:28 EDT 2013" +"%s.%N" = 1375385128.000000000
-    # EDT is UTC-4, so 1375385128 - (4*60*60) = 1375370728
-    # 1375370728 + 2082844800 = 3458244328
-    self.assertEquals(timelib.Timestamp.FromHfsTime(
-        3458215528, pytz.timezone('EST5EDT'), True), 1375385128000000)
+    """Tests the HFS timestamp conversion."""
+    self.assertEquals(
+        timelib.Timestamp.FromHfsTime(
+            3458215528, timezone=pytz.timezone('EST5EDT'), is_dst=True),
+        CopyStringToTimestamp('2013-08-01 15:25:28-04:00'))
 
-    # date -d "Thu Aug  1 15:25:28 UTC 2013" +"%s.%N" = 1375370728.000000000
-    # 1375370728 + 2082844800 = 3458215528
-    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(
-        3458215528), 1375370728000000)
+    self.assertEquals(
+        timelib.Timestamp.FromHfsPlusTime(3458215528),
+        CopyStringToTimestamp('2013-08-01 15:25:28'))
 
-    # date -d "Feb  29 15:25:28 UTC 2012" +"%s.%N" = 1330529128.000000000
-    # 1330529128 + 2082844800 = 3413373928
-    self.assertEquals(timelib.Timestamp.FromHfsPlusTime(
-        3413373928), 1330529128000000)
-
+    self.assertEquals(
+        timelib.Timestamp.FromHfsPlusTime(3413373928),
+        CopyStringToTimestamp('2012-02-29 15:25:28'))
 
   def testTimestampIsLeapYear(self):
-    """Test the is leap year check."""
+    """Tests the is leap year check."""
     self.assertEquals(timelib.Timestamp.IsLeapYear(2012), True)
     self.assertEquals(timelib.Timestamp.IsLeapYear(2013), False)
     self.assertEquals(timelib.Timestamp.IsLeapYear(2000), True)
     self.assertEquals(timelib.Timestamp.IsLeapYear(1900), False)
 
   def testTimestampDaysInMonth(self):
-    """Test the days in month function."""
+    """Tests the days in month function."""
     self.assertEquals(timelib.Timestamp.DaysInMonth(0, 2013), 31)
     self.assertEquals(timelib.Timestamp.DaysInMonth(1, 2013), 28)
     self.assertEquals(timelib.Timestamp.DaysInMonth(1, 2012), 29)
@@ -78,6 +215,12 @@ class TimeLibUnitTest(unittest.TestCase):
     self.assertEquals(timelib.Timestamp.DaysInMonth(9, 2013), 31)
     self.assertEquals(timelib.Timestamp.DaysInMonth(10, 2013), 30)
     self.assertEquals(timelib.Timestamp.DaysInMonth(11, 2013), 31)
+
+    with self.assertRaises(ValueError):
+      timelib.Timestamp.DaysInMonth(-1, 2013)
+
+    with self.assertRaises(ValueError):
+      timelib.Timestamp.DaysInMonth(12, 2013)
 
   def testTimestampDaysInYear(self):
     """Test the days in year function."""
@@ -94,51 +237,40 @@ class TimeLibUnitTest(unittest.TestCase):
 
   def testTimestampFromFatDateTime(self):
     """Test the FAT date time conversion."""
-    # Aug 12, 2010 21:06:32
-    fat_date_time = 0xa8d03d0c
-    # date -u -d"Aug 12, 2010 21:06:32" +"%s"
-    timestamp = 1281647192 * 1000000
     self.assertEquals(
-        timelib.Timestamp.FromFatDateTime(fat_date_time), timestamp)
+        timelib.Timestamp.FromFatDateTime(0xa8d03d0c),
+        CopyStringToTimestamp('2010-08-12 21:06:32'))
 
     # Invalid number of seconds.
     fat_date_time = (0xa8d03d0c & ~(0x1f << 16)) | ((30 & 0x1f) << 16)
-    self.assertEquals(
-        timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
+    self.assertEquals(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid number of minutes.
     fat_date_time = (0xa8d03d0c & ~(0x3f << 21)) | ((60 & 0x3f) << 21)
-    self.assertEquals(
-        timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
+    self.assertEquals(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid number of hours.
     fat_date_time = (0xa8d03d0c & ~(0x1f << 27)) | ((24 & 0x1f) << 27)
-    self.assertEquals(
-        timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
+    self.assertEquals(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid day of month.
     fat_date_time = (0xa8d03d0c & ~(0x1f)) | (32 & 0x1f)
-    self.assertEquals(
-        timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
+    self.assertEquals(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid month.
     fat_date_time = (0xa8d03d0c & ~(0x0f << 5)) | ((13 & 0x0f) << 5)
-    self.assertEquals(
-        timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
+    self.assertEquals(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
   def testTimestampFromWebKitTime(self):
     """Test the WebKit time conversion."""
-    # Aug 12, 2010 21:06:31.546875000
-    # date -u -d"Aug 12, 2010 21:06:31.546875000" +"%s.%N"
-    webkit_time = 0x2dec3d061a9bfb
-    timestamp = (1281647191 * 1000000) + int(546875000 / 1000)
-    self.assertEquals(timelib.Timestamp.FromWebKitTime(webkit_time), timestamp)
+    self.assertEquals(
+        timelib.Timestamp.FromWebKitTime(0x2dec3d061a9bfb),
+        CopyStringToTimestamp('2010-08-12 21:06:31.546875'))
 
-    # Jan 2, 1601 00:00:00.000000000
-    # date -u -d"Jan 2, 1601 00:00:00.000000000" +"%s.%N"
     webkit_time = 86400 * 1000000
-    timestamp = (-11644387200 * 1000000)
-    self.assertEquals(timelib.Timestamp.FromWebKitTime(webkit_time), timestamp)
+    self.assertEquals(
+        timelib.Timestamp.FromWebKitTime(webkit_time),
+        CopyStringToTimestamp('1601-01-02 00:00:00'))
 
     # WebKit time that exceeds lower bound.
     webkit_time = -((1 << 63L) - 1)
@@ -146,43 +278,34 @@ class TimeLibUnitTest(unittest.TestCase):
 
   def testTimestampFromFiletime(self):
     """Test the FILETIME conversion."""
-    # Aug 12, 2010 21:06:31.546875000
-    # date -u -d"Aug 12, 2010 21:06:31.546875000" +"%s.%N"
-    filetime = 0x01cb3a623d0a17ce
-    timestamp = (1281647191 * 1000000) + int(546875000 / 1000)
-    self.assertEquals(timelib.Timestamp.FromFiletime(filetime), timestamp)
+    self.assertEquals(
+        timelib.Timestamp.FromFiletime(0x01cb3a623d0a17ce),
+        CopyStringToTimestamp('2010-08-12 21:06:31.546875'))
 
-    # Jan 2, 1601 00:00:00.000000000
-    # date -u -d"Jan 2, 1601 00:00:00.000000000" +"%s.%N"
     filetime = 86400 * 10000000
-    timestamp = (-11644387200 * 1000000)
-    self.assertEquals(timelib.Timestamp.FromFiletime(filetime), timestamp)
+    self.assertEquals(
+        timelib.Timestamp.FromFiletime(filetime),
+        CopyStringToTimestamp('1601-01-02 00:00:00'))
 
     # FILETIME that exceeds lower bound.
     filetime = -1
     self.assertEquals(timelib.Timestamp.FromFiletime(filetime), 0)
 
-  def testTimestampFromPosixTIme(self):
+  def testTimestampFromPosixTime(self):
     """Test the POSIX time conversion."""
-    # Aug 12, 2010 21:06:31.546875000
-    # date -u -d"Aug 12, 2010 21:06:31" +"%s"
-    posix_time = 1281647191
-    timestamp = 1281647191 * 1000000
-    self.assertEquals(timelib.Timestamp.FromPosixTime(posix_time), timestamp)
+    self.assertEquals(
+        timelib.Timestamp.FromPosixTime(1281647191),
+        CopyStringToTimestamp('2010-08-12 21:06:31'))
 
-    # Feb 12, 1966 12:14:42
-    # date -u -d"Feb 12, 1966 12:14:42" +"%s"
-    posix_time = -122557518
-    timestamp = -122557518 * 1000000
-    self.assertEquals(timelib.Timestamp.FromPosixTime(posix_time), timestamp)
+    self.assertEquals(
+        timelib.Timestamp.FromPosixTime(-122557518),
+        timelib.Timestamp.FromTimeString('1966-02-12 1966 12:14:42 UTC'))
 
     # POSIX time that exceeds upper bound.
-    posix_time = 9223372036855
-    self.assertEquals(timelib.Timestamp.FromPosixTime(posix_time), 0)
+    self.assertEquals(timelib.Timestamp.FromPosixTime(9223372036855), 0)
 
     # POSIX time that exceeds lower bound.
-    posix_time = -9223372036855
-    self.assertEquals(timelib.Timestamp.FromPosixTime(posix_time), 0)
+    self.assertEquals(timelib.Timestamp.FromPosixTime(-9223372036855), 0)
 
   def testMonthDict(self):
     """Test the month dict, both inside and outside of scope."""
@@ -197,62 +320,45 @@ class TimeLibUnitTest(unittest.TestCase):
     """Test the localtime to UTC conversion."""
     timezone = pytz.timezone('CET')
 
-    # date -u -d"Jan 1, 2013 01:00:00" +"%s.%N"
-    local_timestamp = 1357002000 * 1000000
-    # date -u -d"Jan 1, 2013 00:00:00" +"%s.%N"
-    expected_timestamp = 1356998400 * 1000000
+    local_timestamp = CopyStringToTimestamp('2013-01-01 01:00:00')
     self.assertEquals(
         timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone),
-        expected_timestamp)
+        CopyStringToTimestamp('2013-01-01 00:00:00'))
 
-    # date -u -d"Jul 1, 2013 02:00:00" +"%s.%N"
-    local_timestamp = 1372644000 * 1000000
-    # date -u -d"Jul 1, 2013 00:00:00" +"%s.%N"
-    expected_timestamp = 1372636800 * 1000000
+    local_timestamp = CopyStringToTimestamp('2013-07-01 02:00:00')
     self.assertEquals(
         timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone),
-        expected_timestamp)
+        CopyStringToTimestamp('2013-07-01 00:00:00'))
 
     # In the local timezone this is a non-existent timestamp.
-    # date -u -d"Mar 31, 2013 02:00:00" +"%s.%N"
-    local_timestamp = 1364695200 * 1000000
-
+    local_timestamp = CopyStringToTimestamp('2013-03-31 02:00:00')
     with self.assertRaises(pytz.NonExistentTimeError):
       timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
 
-    # date -u -d"Mar 31, 2013 00:00:00" +"%s.%N"
-    expected_timestamp = 1364688000 * 1000000
     self.assertEquals(
         timelib.Timestamp.LocaltimeToUTC(
             local_timestamp, timezone, is_dst=True),
-        expected_timestamp)
+        CopyStringToTimestamp('2013-03-31 00:00:00'))
 
-    # date -u -d"Mar 31, 2013 01:00:00" +"%s.%N"
-    expected_timestamp = 1364691600 * 1000000
     self.assertEquals(
         timelib.Timestamp.LocaltimeToUTC(
             local_timestamp, timezone, is_dst=False),
-        expected_timestamp)
+        CopyStringToTimestamp('2013-03-31 01:00:00'))
 
     # In the local timezone this is an ambiguous timestamp.
-    # date -u -d"Oct 27, 2013 02:30:00" +"%s.%N"
-    local_timestamp = 1382841000 * 1000000
+    local_timestamp = CopyStringToTimestamp('2013-10-27 02:30:00')
 
     with self.assertRaises(pytz.AmbiguousTimeError):
       timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone, is_dst=None)
 
-    # date -u -d"Oct 27, 2013 00:30:00" +"%s.%N"
-    expected_timestamp = 1382833800 * 1000000
     self.assertEquals(
         timelib.Timestamp.LocaltimeToUTC(
             local_timestamp, timezone, is_dst=True),
-        expected_timestamp)
+        CopyStringToTimestamp('2013-10-27 00:30:00'))
 
-    # date -u -d"Oct 27, 2013 01:30:00" +"%s.%N"
-    expected_timestamp = 1382837400 * 1000000
     self.assertEquals(
         timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone),
-        expected_timestamp)
+        CopyStringToTimestamp('2013-10-27 01:30:00'))
 
     # Use the UTC timezone.
     self.assertEquals(
@@ -262,57 +368,59 @@ class TimeLibUnitTest(unittest.TestCase):
     # Use a timezone in the Western Hemisphere.
     timezone = pytz.timezone('EST')
 
-    # date -u -d"Jan 1, 2013 00:00:00" +"%s.%N"
-    local_timestamp = 1356998400 * 1000000
-    # date -u -d"Jan 1, 2013 05:00:00" +"%s.%N"
-    expected_timestamp = 1357016400 * 1000000
+    local_timestamp = CopyStringToTimestamp('2013-01-01 00:00:00')
     self.assertEquals(
         timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone),
-        expected_timestamp)
+        CopyStringToTimestamp('2013-01-01 05:00:00'))
 
   def testCopyToDatetime(self):
     """Test the copy to datetime object."""
     timezone = pytz.timezone('CET')
 
-    # date -u -d"2013-03-14 20:20:08.850041+00:00" +"%s.%N"
-    timestamp = (1363292408 * 1000000) + (850041000 / 1000)
-
+    timestamp = CopyStringToTimestamp('2013-03-14 20:20:08.850041')
     self.assertEquals(
         timelib.Timestamp.CopyToDatetime(timestamp, timezone),
         datetime.datetime(2013, 3, 14, 21, 20, 8, 850041, tzinfo=timezone))
 
   def testCopyToPosix(self):
     """Test converting microseconds to seconds."""
-    # expr `date -u -d"Oct 1, 2013 12:00:00" +"%s"` \* 1000000
-    timestamp = 1380628800000000 #
-    expected_timestamp = 1380628800000000 // 1000000
+    timestamp = CopyStringToTimestamp('2013-10-01 12:00:00')
     self.assertEquals(
-        timelib.Timestamp.CopyToPosix(timestamp), expected_timestamp)
+        timelib.Timestamp.CopyToPosix(timestamp),
+        timestamp // 1000000)
 
   def testTimestampFromTimeString(self):
     """The the FromTimeString function."""
     # Test daylight savings.
-    # expr `date -u -d"Oct 1, 2013 12:00:00" +"%s"` \* 1000000
-    expected_timestamp = 1380628800000000
+    expected_timestamp = CopyStringToTimestamp('2013-10-01 12:00:00')
 
     # Check certain variance of this timestamp.
-    self._CompareTimeString(
-        '2013-10-01 14:00:00', 'Europe/Rome', expected_timestamp)
-    self._CompareTimeString(
-        '2013-10-01 12:00:00', 'UTC', expected_timestamp)
-    self._CompareTimeString(
-        '2013-10-01 05:00:00', 'PST8PDT', expected_timestamp)
+    timestamp = timelib.Timestamp.FromTimeString(
+        '2013-10-01 14:00:00', pytz.timezone('Europe/Rome'))
+    self.assertEquals(timestamp, expected_timestamp)
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        '2013-10-01 12:00:00', pytz.timezone('UTC'))
+    self.assertEquals(timestamp, expected_timestamp)
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        '2013-10-01 05:00:00', pytz.timezone('PST8PDT'))
+    self.assertEquals(timestamp, expected_timestamp)
 
     # Now to test outside of the daylight savings.
-    # expr `date -u -d"Feb 1, 2014 12:00:00" +"%s"` \* 1000000
-    expected_timestamp = 1391256000000000
+    expected_timestamp = CopyStringToTimestamp('2014-02-01 12:00:00')
 
-    self._CompareTimeString(
-        '2014-02-01 13:00:00', 'Europe/Rome', expected_timestamp)
-    self._CompareTimeString(
-        '2014-02-01 12:00:00', 'UTC', expected_timestamp)
-    self._CompareTimeString(
-        '2014-02-01 04:00:00', 'PST8PDT', expected_timestamp)
+    timestamp = timelib.Timestamp.FromTimeString(
+        '2014-02-01 13:00:00', pytz.timezone('Europe/Rome'))
+    self.assertEquals(timestamp, expected_timestamp)
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        '2014-02-01 12:00:00', pytz.timezone('UTC'))
+    self.assertEquals(timestamp, expected_timestamp)
+
+    timestamp = timelib.Timestamp.FromTimeString(
+        '2014-02-01 04:00:00', pytz.timezone('PST8PDT'))
+    self.assertEquals(timestamp, expected_timestamp)
 
     # Define two timestamps, one being GMT and the other UTC.
     time_string_utc = 'Wed 05 May 2010 03:52:31 UTC'
@@ -328,13 +436,6 @@ class TimeLibUnitTest(unittest.TestCase):
       self.assertEquals(timestamp_utc, timelib.Timestamp.FromTimeString(
           time_string_gmt, gmt_as_timezone=False))
 
-  def _CompareTimeString(self, time_string, zone_string, expected):
-    """Compare a string generated timestamp to an expected value."""
-    test = timelib.Timestamp.FromTimeString(time_string, pytz.timezone(
-        zone_string))
-
-    self.assertEquals(expected, test)
-
   def testRoundTimestamp(self):
     """Test the RoundToSeconds function."""
     # Should be rounded up.
@@ -342,101 +443,82 @@ class TimeLibUnitTest(unittest.TestCase):
     # Should be rounded down.
     test_two = 1384381247271976
 
-    self.assertEquals(timelib.Timestamp.RoundToSeconds(test_one),
-                      442813352000000)
-    self.assertEquals(timelib.Timestamp.RoundToSeconds(test_two),
-                      1384381247000000)
+    self.assertEquals(
+        timelib.Timestamp.RoundToSeconds(test_one), 442813352000000)
+    self.assertEquals(
+        timelib.Timestamp.RoundToSeconds(test_two), 1384381247000000)
 
   def testTimestampFromTimeParts(self):
     """Test the FromTimeParts function."""
+    timestamp = timelib.Timestamp.FromTimeParts(
+        2013, 6, 25, 22, 19, 46, 0, timezone=pytz.timezone('PST8PDT'))
+    self.assertEquals(
+        timestamp, CopyStringToTimestamp('2013-06-25 22:19:46-07:00'))
 
-    # Tue Jun 25 22:19:46 PDT 2013.
-    timestamp_pdt = timelib.Timestamp.FromTimeParts(
-        2013, 6, 25, 22, 19, 46, 0, pytz.timezone('PST8PDT'))
-    # Wed Jun 26 05:19:46 UTC 2013.
-    timestamp_utc = timelib.Timestamp.FromTimeParts(
-        2013, 6, 26, 5, 19, 46)
-    # Wed Jun 26 05:19:46 UTC 2013 (with microsecond precision).
-    timestamp_utc_micro = timelib.Timestamp.FromTimeParts(
+    timestamp = timelib.Timestamp.FromTimeParts(2013, 6, 26, 5, 19, 46)
+    self.assertEquals(
+        timestamp, CopyStringToTimestamp('2013-06-26 05:19:46'))
+
+    timestamp = timelib.Timestamp.FromTimeParts(
         2013, 6, 26, 5, 19, 46, 542)
+    self.assertEquals(
+        timestamp, CopyStringToTimestamp('2013-06-26 05:19:46.000542'))
 
-    self.assertEquals(timestamp_pdt, 1372223986 * int(1e6))
-    self.assertEquals(timestamp_utc, 1372223986 * int(1e6))
-    self.assertEquals(timestamp_utc_micro, 1372223986 * int(1e6) + 542)
+  def _TestStringToDatetime(
+      self, expected_timestamp, time_string, timezone=pytz.utc, dayfirst=False):
+    """Tests the StringToDatetime function.
+
+    Args:
+      expected_timestamp: The expected timesamp.
+      time_string: String that contains a date and time value.
+      timezone: The timezone (pytz.timezone) object.
+      dayfirst: Change precedence of day vs. month.
+
+    Returns:
+      A result object.
+    """
+    date_time = timelib.StringToDatetime(
+        time_string, timezone=timezone, dayfirst=dayfirst)
+    timestamp = int(calendar.timegm((date_time.utctimetuple())))
+    self.assertEquals(timestamp, expected_timestamp)
 
   def testStringToDatetime(self):
     """Test the StringToDatetime function."""
-    zone = pytz.timezone('EST5EDT')
-    timestring = '12-15-1984 05:13:00'
-    # Sat Dec 15 10:13:00 UTC 1984.
-    # Sat Dec 15 05:13:00 EST 1984.
-    expected = 471953580
-    self.CompareTimestamps(expected, timestring, zone)
+    self._TestStringToDatetime(
+        471953580, '12-15-1984 05:13:00', timezone=pytz.timezone('EST5EDT'))
 
     # Swap day and month.
-    zone = pytz.timezone('EST5EDT')
-    # This is Oct 12th 1984, since we have DD-MM-YYYY.
-    timestring = '12-10-1984 05:13:00'
-    # Here there is no daylight savings.
-    # date -u -d "Oct 12, 1984 05:13:00-04:00" +"%s"
-    # date -u -d "Oct 12, 1984 09:13:00+00:00" +"%s"
-    expected = 466420380
-    self.CompareTimestamps(expected, timestring, zone, True)
+    self._TestStringToDatetime(
+        466420380, '12-10-1984 05:13:00', timezone=pytz.timezone('EST5EDT'),
+        dayfirst=True)
 
-    timestring = '12-15-1984 10:13:00Z'
-    expected = 471953580
-    self.CompareTimestamps(expected, timestring, zone)
+    self._TestStringToDatetime(471953580, '12-15-1984 10:13:00Z')
 
-    timestring = '15/12/1984 10:13:00Z'
-    expected = 471953580
-    self.CompareTimestamps(expected, timestring, zone)
+    # Setting the timezone for string that already contains a timezone
+    # indicator should not affect the conversion.
+    self._TestStringToDatetime(
+        471953580, '12-15-1984 10:13:00Z', timezone=pytz.timezone('EST5EDT'))
 
-    timestring = '15-12-84 10:13:00Z'
-    expected = 471953580
-    self.CompareTimestamps(expected, timestring, zone)
+    self._TestStringToDatetime(471953580, '15/12/1984 10:13:00Z')
 
-    timestring = '15-12-84 10:13:00-04'
-    expected = 471967980
-    self.CompareTimestamps(expected, timestring, zone)
+    self._TestStringToDatetime(471953580, '15-12-84 10:13:00Z')
 
-    timestring = 'thisisnotadatetime'
-    expected = 0
-    self.CompareTimestamps(expected, timestring, zone)
+    self._TestStringToDatetime(
+        471967980, '15-12-84 10:13:00-04', timezone=pytz.timezone('EST5EDT'))
 
-    zone = pytz.timezone('America/Chicago')
-    # Sat Dec 15 10:13:00 UTC 1984
-    # Sat Dec 15 04:13:00 CST 1984
-    timestring = '12-15-1984 04:13:00'
-    expected = 471953580
-    self.CompareTimestamps(expected, timestring, zone)
+    self._TestStringToDatetime(
+        0, 'thisisnotadatetime', timezone=pytz.timezone('EST5EDT'))
 
-    # date -u -d "Jul 15, 1984 04:13:00" +"%s"
-    # date -u -d "Jul 12, 1984 23:13:00-05:00" +"%s"
-    timestring = '07-14-1984 23:13:00'
-    expected = 458712780
-    self.CompareTimestamps(expected, timestring, zone)
+    self._TestStringToDatetime(
+        471953580, '12-15-1984 04:13:00',
+        timezone=pytz.timezone('America/Chicago'))
 
-    zone = pytz.timezone('US/Pacific')
-    timestring = '12-15-1984 05:13:00'
-    expected = 471964380
-    self.CompareTimestamps(expected, timestring, zone)
+    self._TestStringToDatetime(
+        458712780, '07-14-1984 23:13:00',
+        timezone=pytz.timezone('America/Chicago'))
 
-  def CompareTimestamps(self, expected, timestring,
-                        timezone=pytz.utc, dayfirst=False):
-    """Compare epoch values derived from StringToDatetime.
-
-    Args:
-      expected: Excpected integer value of timestring.
-      timestring: A string formatted as a timestamp.
-      timezone: The timezone (pytz.timezone) object.
-      dayfirst: Change precedence of day vs. month.
-    Returns:
-      A result object.
-
-    """
-    dt = timelib.StringToDatetime(timestring, timezone, dayfirst)
-    calculated = timelib.Timetuple2Timestamp(dt.utctimetuple())
-    self.assertEquals(calculated, expected)
+    self._TestStringToDatetime(
+        471964380, '12-15-1984 05:13:00', timezone=pytz.timezone('US/Pacific'))
 
 
 if __name__ == '__main__':

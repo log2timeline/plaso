@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import bsm as bsm_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import bsm
 from plaso.parsers import test_lib
 
@@ -113,8 +114,9 @@ class BsmParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    # date -u -d"Mon, 04 Nov 2013 18:36:20" +"%s000381"
-    self.assertEqual(event_object.timestamp, 1383590180000381)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-04 18:36:20.000381')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(event_object.event_type, u'audit crash recovery (45029)')
 
     expected_extra_tokens = (
@@ -127,8 +129,10 @@ class BsmParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.return_value, expected_return_value)
 
     event_object = event_objects[15]
-    # date -u -d"Mon, 04 Nov 2013 18:36:26" +"%s000171"
-    self.assertEqual(event_object.timestamp, 1383590186000171)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-04 18:36:26.000171')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(event_object.event_type, u'user authentication (45023)')
 
     expected_extra_tokens = (
@@ -144,8 +148,11 @@ class BsmParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.return_value, expected_return_value)
 
     event_object = event_objects[31]
-    # date -u -d"Mon, 04 Nov 2013 18:36:26" +"%s000530"
-    self.assertEqual(event_object.timestamp, 1383590186000530)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-04 18:36:26.000530')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.event_type, u'SecSrvr AuthEngine (45025)')
     expected_extra_tokens = (
         u'[BSM_TOKEN_SUBJECT32: aid(4294967295), euid(0), egid(0), uid(0), '
@@ -161,8 +168,10 @@ class BsmParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[50]
 
-    # date -u -d"Mon, 04 Nov 2013 18:37:36" +"%s000399"
-    self.assertEqual(event_object.timestamp, 1383590256000399)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-04 18:37:36.000399')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.event_type, u'session end (44903)')
 
     expected_extra_tokens = (

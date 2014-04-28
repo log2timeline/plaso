@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import utmp as utmp_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import test_lib
 from plaso.parsers import utmp
 
@@ -45,9 +46,13 @@ class UtmpParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.status, u'BOOT_TIME')
     event_object = event_objects[1]
     self.assertEqual(event_object.status, u'RUN_LVL')
+
     event_object = event_objects[2]
-    # date -u -d"Fri, 13 Dec 2013 14:45:09" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1386945909000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-12-13 14:45:09')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.user, u'LOGIN')
     self.assertEqual(event_object.computer_name, u'localhost')
     self.assertEqual(event_object.terminal, u'tty4')
@@ -67,9 +72,13 @@ class UtmpParserTest(test_lib.ParserTestCase):
     expected_msg_short = (
         u'User: LOGIN')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
     event_object = event_objects[12]
-    # date -u -d"Wed, 18 Dec 2013 22:46:56.305504" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1387406816305504)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-12-18 22:46:56.305504')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.user, u'moxilo')
     self.assertEqual(event_object.computer_name, u'localhost')
     self.assertEqual(event_object.terminal, u'pts/4')
@@ -96,9 +105,13 @@ class UtmpParserTest(test_lib.ParserTestCase):
     events = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(events)
     self.assertEqual(len(event_objects), 4)
+
     event_object = event_objects[0]
-    # date -u -d"Thu, 01 Dec 2011 17:36:38.432935" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1322760998432935)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-12-01 17:36:38.432935')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.user, u'userA')
     self.assertEqual(event_object.computer_name, u'10.10.122.1')
     self.assertEqual(event_object.terminal, u'pts/32')

@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import skype as skype_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import test_lib
@@ -94,9 +95,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(
         event_objects[17], expected_msg, expected_msg[0:77] + '...')
 
-    # date -u -d"Jul 01, 2013 22:14:22" +"%s.%N"
-    timestamp = 1372716862 * 1000000
-    self.assertEquals(sms_event_object.timestamp, timestamp)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-01 22:14:22')
+    self.assertEquals(sms_event_object.timestamp, expected_timestamp)
     text_sms = (u'If you want I can copy '
                 u'some documents for you, '
                 u'if you can pay it... ;)')
@@ -104,9 +105,10 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     number = u'+34123456789'
     self.assertEquals(sms_event_object.number, number)
 
-    # date -u -d"Oct 24, 2013 21:49:35" +"%s.%N"
-    timestamp = 1382651375 * 1000000
-    self.assertEquals(event_file.timestamp, timestamp)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-10-24 21:49:35')
+    self.assertEquals(event_file.timestamp, expected_timestamp)
+
     action_type = u'GETSOLICITUDE'
     self.assertEquals(event_file.action_type, action_type)
     source = u'gen.beringer <Gen Beringer>'
@@ -119,9 +121,10 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_file.transferred_filepath, filepath)
     self.assertEquals(event_file.transferred_filesize, 69986)
 
-    # date -u -d"Jul 30, 2013 21:27:11" +"%s.%N"
-    timestamp = 1375219631 * 1000000
-    self.assertEquals(chat_event_object.timestamp, timestamp)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-30 21:27:11')
+    self.assertEquals(chat_event_object.timestamp, expected_timestamp)
+
     title = u'European Competitor | need to know if you got it..'
     self.assertEquals(chat_event_object.title, title)
     expected_msg = u'need to know if you got it this time.'
@@ -130,9 +133,10 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(chat_event_object.from_account, from_account)
     self.assertEquals(chat_event_object.to_account, u'european.bbq.competitor')
 
-    # date -u -d"Oct 27, 2013 15:29:19" +"%s.%N"
-    timestamp = 1382887759 * 1000000
-    self.assertEquals(chat_room_event_object.timestamp, timestamp)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-10-27 15:29:19')
+    self.assertEquals(chat_room_event_object.timestamp, expected_timestamp)
+
     title = u'European Competitor, Echo123'
     self.assertEquals(chat_room_event_object.title, title)
     expected_msg = u'He is our new employee'
@@ -142,9 +146,10 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     to_account = u'gen.beringer, echo123'
     self.assertEquals(chat_room_event_object.to_account, to_account)
 
-    # date -u -d"Jul 01, 2013 22:12:17" +"%s.%N"
-    timestamp = 1372716737 * 1000000
-    self.assertEquals(call_event_object.timestamp, timestamp)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-01 22:12:17')
+    self.assertEquals(call_event_object.timestamp, expected_timestamp)
+
     self.assertEquals(call_event_object.dst_call, u'european.bbq.competitor')
     self.assertEquals(call_event_object.src_call, u'gen.beringer')
     self.assertEquals(call_event_object.user_start_call, False)

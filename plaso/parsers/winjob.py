@@ -209,8 +209,8 @@ class WinJobParser(parser.BaseParser):
         header.ran_hour,
         header.ran_minute,
         header.ran_second,
-        header.ran_millisecond * 1000,  # Convert to microsecond.
-        self._pre_obj.zone)  # Use detected local time zone.
+        microseconds=(header.ran_millisecond * 1000),
+        timezone=self._pre_obj.zone)
 
     scheduled_date = timelib.Timestamp.FromTimeParts(
         data.sched_start_year,
@@ -219,8 +219,7 @@ class WinJobParser(parser.BaseParser):
         data.sched_start_hour,
         data.sched_start_minute,
         0,  # Seconds are not stored.
-        0,  # Milliseconds are not stored.
-        self._pre_obj.zone)  # Use detected local time zone.
+        timezone=self._pre_obj.zone)
 
     # Place the obtained values into the event container.
     container = WinJobEventContainer(
@@ -251,8 +250,7 @@ class WinJobParser(parser.BaseParser):
           0,  # Hours are not stored.
           0,  # Minutes are not stored.
           0,  # Seconds are not stored.
-          0,  # Milliseconds are not stored.
-          self._pre_obj.zone)  # Use detected local time zone.
+          timezone=self._pre_obj.zone)
 
       container.Append(event.TimestampEvent(
           scheduled_end_date,

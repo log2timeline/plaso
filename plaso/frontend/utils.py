@@ -26,8 +26,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.lib import errors
 from plaso.lib import timelib
 
-import pytz
-
 
 # TODO: add tests for the functions in this class.
 class OutputWriter(object):
@@ -38,7 +36,7 @@ class OutputWriter(object):
   @classmethod
   def GetDateTimeString(cls, timestamp):
     """Returns a human readable date and time string in the ISO 8601 format."""
-    return timelib.Timestamp.CopyToIsoFormat(timestamp, pytz.UTC)
+    return timelib.Timestamp.CopyToIsoFormat(timestamp)
 
   @classmethod
   def GetEventDataHexDump(cls, event_object, before=0, length=20):

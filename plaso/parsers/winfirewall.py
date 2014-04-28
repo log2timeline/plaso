@@ -135,7 +135,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       zone = pytz.utc
 
     timestamp = timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second, 0, zone)
+        year, month, day, hour, minute, second, timezone=zone)
 
     if not timestamp:
       return

@@ -56,7 +56,7 @@ class AnalysisReport(object):
 
     time_compiled = getattr(self, 'time_compiled', 0)
     if time_compiled:
-      time_compiled = timelib.Timestamp.CopyToIsoFormat(time_compiled, pytz.utc)
+      time_compiled = timelib.Timestamp.CopyToIsoFormat(time_compiled)
       string_list.append(u'Generated on: {0:s}'.format(time_compiled))
 
     filter_string = getattr(self, 'filter_string', '')
@@ -540,7 +540,7 @@ class EventObject(object):
 
     out_write.append(u'+-' * 40)
     out_write.append(u'[Timestamp]:\n  {0:s}'.format(
-        timelib.Timestamp.CopyToIsoFormat(self.timestamp, pytz.utc)))
+        timelib.Timestamp.CopyToIsoFormat(self.timestamp)))
     out_write.append(u'\n[Message Strings]:')
 
     event_formatter = eventdata.EventFormatterManager.GetFormatter(self)

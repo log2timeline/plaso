@@ -26,6 +26,7 @@ from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import queue
 from plaso.lib import storage
+from plaso.lib import timelib_test
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
 
@@ -275,8 +276,8 @@ class StoreStorageTest(unittest.TestCase):
     # TODO: Use input data with a defined year.  syslog parser chooses a
     # year based on system clock; forcing updates to test file if regenerated.
     self.test_file = os.path.join('test_data', 'psort_test.out')
-    self.first = 1342799054000000  # 2012-07-20T15:44:14+00:00
-    self.last = 1479431743000000 # 2016-11-18T01:15:43+00:00
+    self.first = timelib_test.CopyStringToTimestamp('2012-07-20 15:44:14')
+    self.last = timelib_test.CopyStringToTimestamp('2016-11-18 01:15:43')
 
   def testStorageSort(self):
     """This test ensures that items read and output are in the expected order.

@@ -205,7 +205,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     microsecond = structure.get('ms', 0) * 1000
 
     return timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second, microsecond)
+        year, month, day, hour, minute, second, microseconds=microsecond)
 
   def _GetTimestampFromLine(self, structure):
     """Gets a timestamp from string from the structure
@@ -231,4 +231,4 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     year += 2000
 
     return timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second, microsecond)
+        year, month, day, hour, minute, second, microseconds=microsecond)

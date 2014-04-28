@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import macuser
 from plaso.parsers.plist_plugins import test_lib
@@ -46,8 +47,11 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
     self.assertEquals(len(event_objects), 1)
 
     event_object = event_objects[0]
-    # date -u -d"Sat, 28 Dec 2013 04:35:47"
-    self.assertEqual(event_object.timestamp, 1388205347000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-12-28 04:35:47')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.key, u'passwordLastSetTime')
     self.assertEqual(event_object.root, u'/')
     expected_desc = (

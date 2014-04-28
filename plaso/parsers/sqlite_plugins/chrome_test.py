@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import chrome as chrome_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
@@ -53,8 +54,9 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.PAGE_VISITED)
 
-    # date -u -d"2011-04-07 12:03:11.000000" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1302177791 * 1000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-04-07 12:03:11')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = u'http://start.ubuntu.com/10.04/Google/'
     self.assertEquals(event_object.url, expected_url)
@@ -76,8 +78,9 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.FILE_DOWNLOADED)
 
-    # date -u -d"2011-05-23 08:35:30.000000" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1306139730 * 1000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-05-23 08:35:30')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'http://fatloss4idiotsx.com/download/funcats/'
