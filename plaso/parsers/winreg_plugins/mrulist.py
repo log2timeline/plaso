@@ -31,13 +31,13 @@ class MRUListPlugin(interface.ValuePlugin):
   URLS = [u'http://forensicartifacts.com/tag/mru/']
 
   def GetEntries(self, key, **unused_kwargs):
-    """Extract EventObjects from a MRU list.
+    """Extracts event objects from a MRU list.
 
     Args:
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
-      A single event object that contains a MRU list.
+      An event object (instance of EventObject) that contains a MRU list.
     """
     mru_list_value = key.GetValue('MRUList')
 
