@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import recycler as recycler_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import recycler
 from plaso.parsers import test_lib
 
@@ -48,7 +49,9 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.orig_filename, (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip'))
 
-    self.assertEquals(event_object.timestamp, 1331585398633000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-03-12 20:49:58.633')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.file_size, 724919)
 
     expected_msg = (
@@ -79,8 +82,9 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    # Date: 2004-08-25T16:18:25.237000+00:00
-    self.assertEquals(event_object.timestamp, 1093450705237000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2004-08-25 16:18:25.237')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.DELETED_TIME)
 

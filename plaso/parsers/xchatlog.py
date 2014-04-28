@@ -236,5 +236,5 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
 
     day = parse_result.get('day', 0)
     timestamp = timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second, 0, self.local_zone)
+        year, month, day, hour, minute, second, timezone=self.local_zone)
     return timestamp

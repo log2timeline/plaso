@@ -20,9 +20,11 @@
 import collections
 import unittest
 
-from plaso.formatters import firefox
+# pylint: disable=unused-import
+from plaso.formatters import firefox as firefox_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import firefox
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
@@ -58,9 +60,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.PAGE_VISITED)
 
-    # date -u -d"2011-07-01 11:16:21.371935" +"%s.%N"
-    self.assertEquals(event_object.timestamp,
-                      (1309518981 * 1000000) + (371935000 / 1000))
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-07-01 11:16:21.371935')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = u'http://news.google.com/'
     self.assertEquals(event_object.url, expected_url)
@@ -208,8 +210,10 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(counter['firefox:places:bookmark_annotation'], 8)
 
     random_event = event_objects[10]
-    # 2013-10-30T21:57:11.281942+00:00.
-    self.assertEquals(random_event.timestamp, 1383170231281942)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-10-30 21:57:11.281942')
+    self.assertEquals(random_event.timestamp, expected_timestamp)
 
     expected_short = u'URL: http://code.google.com/p/plaso'
     expected_msg = (

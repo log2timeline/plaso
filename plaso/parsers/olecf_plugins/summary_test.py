@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import olecf as olecf_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.olecf_plugins import summary
 from plaso.parsers.olecf_plugins import test_lib
 
@@ -62,8 +63,10 @@ class TestSummaryInfoPlugin(test_lib.OleCfPluginTestCase):
     event_object = event_container.events[0]
 
     self.assertEquals(event_object.timestamp_desc, u'Document Creation Time')
-    # Date: 2012-12-10T18:38:00.000000+00:00.
-    self.assertEquals(event_object.timestamp, 1355164680000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-12-10 18:38:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Title: Table of Context '

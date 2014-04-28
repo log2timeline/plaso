@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import xchatlog as xchatlog_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import xchatlog
 from plaso.parsers import test_lib
 
@@ -46,12 +47,17 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
 
     self.assertEquals(len(event_objects), 9)
 
-    # expr `date -u -d "2011-12-31 21:11:55+01:00" +"%s%N"` \/ 1000
-    self.assertEquals(event_objects[0].timestamp, 1325362315000000)
-    # expr `date -u -d "2011-12-31 23:00:00+01:00" +"%s%N"` \/ 1000
-    self.assertEquals(event_objects[7].timestamp, 1325368800000000)
-    # expr `date -u -d  "2011-12-31 23:59:00+01:00" +"%s%N"` \/ 1000
-    self.assertEquals(event_objects[8].timestamp, 1325372340000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-12-31 21:11:55+01:00')
+    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-12-31 23:00:00+01:00')
+    self.assertEquals(event_objects[7].timestamp, expected_timestamp)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-12-31 23:59:00+01:00')
+    self.assertEquals(event_objects[8].timestamp, expected_timestamp)
 
     expected_string = u'XChat start logging'
     self._TestGetMessageStrings(

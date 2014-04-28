@@ -48,8 +48,6 @@ from dfvfs.volume import vshadow_volume_system
 from plaso.lib import errors
 from plaso.lib import timelib
 
-import pytz
-
 
 class ScannerInputReader(object):
   """Class that implements the input reader interface for the scanner."""
@@ -350,7 +348,7 @@ class FileSystemScanner(object):
           vss_creation_time = timelib.Timestamp.FromFiletime(
               vss_creation_time.value)
           vss_creation_time = timelib.Timestamp.CopyToIsoFormat(
-              vss_creation_time, pytz.utc)
+              vss_creation_time)
           self._output_writer.Write(u'{0:s}\t\t{1:s}\t{2:s}\n'.format(
               volume.identifier, vss_identifier.value, vss_creation_time))
 

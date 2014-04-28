@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import ls_quarantine as ls_quarantine_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import ls_quarantine
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -45,8 +46,11 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
 
     # Examine a VLC event.
     event_object = event_objects[3]
-    # date -u -d"Jul 08, 2013 21:12:03" +"%s%N" (divided by 1000).
-    self.assertEquals(event_object.timestamp, 1373317923000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-08 21:12:03')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+
     self.assertEquals(event_object.agent, u'Google Chrome')
     vlc_url = (
         u'http://download.cnet.com/VLC-Media-Player/3001-2139_4-10210434.html'
@@ -58,14 +62,16 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     # Examine a MacKeeper event.
     event_object = event_objects[9]
 
-    # date -u -d"Jul 12, 2013 19:28:58" +"%s%N"
-    self.assertEquals(event_object.timestamp, 1373657338000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-12 19:28:58')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # Examine a SpeedTest event.
     event_object = event_objects[10]
 
-    # date -u -d"Jul 12, 2013 19:30:16" +"%s%N"
-    self.assertEquals(event_object.timestamp, 1373657416000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-12 19:30:16')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     speedtest_message = (
         u'[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'

@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import java_idx as java_idx_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import java_idx
 from plaso.parsers import test_lib
 
@@ -71,9 +72,9 @@ class IDXTest(test_lib.ParserTestCase):
     description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    # expr `date -u -d"2010-05-05T03:52:31+00:00" +"%s"` \* 1000000
-    download_date_expected = 1273031551 * 1000000
-    self.assertEqual(event_object.timestamp, download_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2010-05-05 03:52:31')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""

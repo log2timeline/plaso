@@ -23,6 +23,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import mac_appfirewall as mac_appfirewall_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import mac_appfirewall
 from plaso.parsers import test_lib
 
@@ -47,8 +48,10 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    # date -u -d"Sat, 2 Nov 2013 04:07:35.222" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1383365255000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-02 04:07:35')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.agent, u'socketfilterfw[112]')
     self.assertEqual(event_object.computer_name, u'DarkTemplar-2.local')
     self.assertEqual(event_object.status, u'Error')
@@ -69,8 +72,10 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[9]
 
-    # date -u -d"Sun, 3 Nov 2013 13:25:15.222" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1383485115000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-03 13:25:15')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.agent, u'socketfilterfw[87]')
     self.assertEqual(event_object.computer_name, u'DarkTemplar-2.local')
     self.assertEqual(event_object.status, u'Info')
@@ -102,12 +107,14 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     # Year changes.
     event_object = event_objects[45]
-    # date -u -d"Tue, 31 Dec 2013 23:59:23" +"%s"
-    self.assertEqual(event_object.timestamp, 1388534363000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-12-31 23:59:23')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[46]
-    # date -u -d"Wed, 1 Jan 2014 01:13:23" +"%s"
-    self.assertEqual(event_object.timestamp, 1388538803000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2014-01-01 01:13:23')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

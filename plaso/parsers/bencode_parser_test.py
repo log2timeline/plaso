@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import bencode_parser as bencode_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import bencode_parser
 from plaso.parsers import test_lib
 
@@ -54,9 +55,9 @@ class BencodeTest(test_lib.ParserTestCase):
     description_expected = eventdata.EventTimestamp.ADDED_TIME
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    # 2013-10-17T21:57:16+00:00
-    added_on_date_expected = 1383924680000000
-    self.assertEqual(event_object.timestamp, added_on_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-08 15:31:20')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Test on second event of first torrent.
     event_object = event_objects[1]
@@ -66,9 +67,9 @@ class BencodeTest(test_lib.ParserTestCase):
     description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    # 2013-10-18T00:10:22+00:00
-    completed_date_expected = 1383935064000000
-    self.assertEqual(event_object.timestamp, completed_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-08 18:24:24')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
   def testUTorrentPlugin(self):
     """Parse a uTorrent resume.dat file and make a few tests."""
@@ -93,9 +94,9 @@ class BencodeTest(test_lib.ParserTestCase):
     description_expected = eventdata.EventTimestamp.ADDED_TIME
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    # 2013-08-03T14:52:12+00:00
-    added_on_date_expected = 1375541532000000
-    self.assertEqual(event_object.timestamp, added_on_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-08-03 14:52:12')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Second test on when the torrent file was completely downloaded.
     event_object = event_objects[2]
@@ -107,9 +108,9 @@ class BencodeTest(test_lib.ParserTestCase):
     description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    # 2013-08-03T18:11:35+00:00
-    completed_date_expected = 1375553495000000
-    self.assertEqual(event_object.timestamp, completed_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-08-03 18:11:35')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Third test on when the torrent was first modified.
     event_object = event_objects[0]
@@ -121,9 +122,9 @@ class BencodeTest(test_lib.ParserTestCase):
     description_expected = eventdata.EventTimestamp.MODIFICATION_TIME
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    # 2013-08-03T18:11:34+00:00
-    completed_date_expected = 1375553494000000
-    self.assertEqual(event_object.timestamp, completed_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-08-03 18:11:34')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Fourth test on when the torrent was again modified.
     event_object = event_objects[1]
@@ -135,9 +136,9 @@ class BencodeTest(test_lib.ParserTestCase):
     description_expected = eventdata.EventTimestamp.MODIFICATION_TIME
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    # 2013-08-03T16:27:59+00:00
-    completed_date_expected = 1375547279000000
-    self.assertEqual(event_object.timestamp, completed_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-08-03 16:27:59')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

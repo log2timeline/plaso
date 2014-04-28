@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import android_sms as android_sms_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -50,8 +51,9 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
-    # date -u -d"2013-10-29 16:56:28.038000" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1383065788038 * 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-10-29 16:56:28.038000')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_address = u'1 555-521-5554'
     self.assertEquals(event_object.address, expected_address)

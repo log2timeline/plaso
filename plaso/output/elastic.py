@@ -22,14 +22,12 @@ import requests
 import sys
 import uuid
 
+import pyelasticsearch
+
 from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
-
 from plaso.output import helper
-
-import pyelasticsearch
-import pytz
 
 
 class Elastic(output.LogOutputFormatter):
@@ -115,7 +113,7 @@ class Elastic(output.LogOutputFormatter):
     # We want to remove millisecond precision (causes some issues in
     # conversion).
     ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
-        timelib.Timestamp.RoundToSeconds(event_object.timestamp), pytz.utc)
+        timelib.Timestamp.RoundToSeconds(event_object.timestamp))
     msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
     ret_dict['message'] = msg
 

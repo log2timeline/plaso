@@ -24,6 +24,7 @@ from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfilter
+from plaso.lib import timelib_test
 
 import pytz
 
@@ -62,8 +63,8 @@ class PfilterFakeParser(parser.BaseParser):
       attributes.
     """
     event_object = event.EventObject()
-    # 2015-11-18T01:15:43
-    event_object.timestamp = 1447809343000000
+    event_object.timestamp = timelib_test.CopyStringToTimestamp(
+        '2015-11-18 01:15:43')
     event_object.timestamp_desc = 'Last Written'
     event_object.text_short = 'This description is different than the long one.'
     event_object.text = (
@@ -131,8 +132,8 @@ class PFilterTest(unittest.TestCase):
     container.data_type = 'Weirdo:Made up Source:Last Written'
 
     event_object = event.EventObject()
-    # 2015-11-18T01:15:43
-    event_object.timestamp = 1447809343000000
+    event_object.timestamp = timelib_test.CopyStringToTimestamp(
+        '2015-11-18 01:15:43')
     event_object.timestamp_desc = 'Last Written'
     event_object.text_short = 'This description is different than the long one.'
     event_object.text = (

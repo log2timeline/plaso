@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import oxml as oxml_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import oxml
 from plaso.parsers import test_lib
 
@@ -45,8 +46,9 @@ class OXMLTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    # Date: 2012-11-07T23:29:00.000000+00:00.
-    self.assertEquals(event_object.timestamp, 1352330940000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-11-07 23:29:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 

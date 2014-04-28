@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import utmpx as utmpx_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import test_lib
 from plaso.parsers import utmpx
 
@@ -43,8 +44,10 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 6)
 
     event_object = event_objects[0]
-    # date -u -d"Wed, 13 Nov 2013 17:52:34" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1384365154000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-13 17:52:34')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     expected_msg_short = u'User: N/A'
     expected_msg = (
         u'User: N/A Status: BOOT_TIME '
@@ -52,8 +55,11 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     event_object = event_objects[1]
-    # date -u -d"Wed, 13 Nov 2013 17:52:41" +"%s736713"
-    self.assertEqual(event_object.timestamp, 1384365161736713)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-13 17:52:41.736713')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.user, u'moxilo')
     self.assertEqual(event_object.terminal, u'console', )
     self.assertEqual(event_object.status, u'USER_PROCESS')
@@ -68,8 +74,11 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     event_object = event_objects[4]
-    # date -u -d"Thu, 14 Nov 2013 04:32:56" +"%s641464"
-    self.assertEqual(event_object.timestamp, 1384403576641464)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-14 04:32:56.641464')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.user, u'moxilo')
     self.assertEqual(event_object.terminal, u'ttys002')
     self.assertEqual(event_object.status, u'DEAD_PROCESS')
