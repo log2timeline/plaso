@@ -26,7 +26,7 @@ from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
 
 
-class TestMRUListRegistry(test_lib.RegistryPluginTestCase):
+class MRUListRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the MRUList Windows Registry plugin."""
 
   def setUp(self):
