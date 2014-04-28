@@ -28,6 +28,7 @@ from plaso.lib import output
 from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
+from plaso.lib import timelib_test
 
 
 class TestEvent1(event.EventObject):
@@ -112,8 +113,8 @@ class PsortTest(unittest.TestCase):
     """Setup sets parameters that will be reused throughout this test."""
     # TODO: have sample output generated from the test.
     self.test_file = os.path.join('test_data', 'psort_test.out')
-    self.first = 1343166324000000 # 2012-07-24T21:45:24+00:00
-    self.last = 1479431743000000  # 2016-11-18T01:15:43+00:00
+    self.first = timelib_test.CopyStringToTimestamp('2012-07-24 21:45:24')
+    self.last = timelib_test.CopyStringToTimestamp('2016-11-18 01:15:43')
 
   def testSetupStorage(self):
     storage_cls = psort.SetupStorage(self.test_file)

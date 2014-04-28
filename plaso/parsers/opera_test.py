@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import opera as opera_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import opera
 from plaso.parsers import test_lib
 
@@ -44,9 +45,9 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    # Timestamp is: 2013-11-11T23:45:27Z.
-    # date -u -d "2013-11-11T23:45:27Z" +"%s"
-    self.assertEquals(event_object.timestamp, 1384213527000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-11 23:45:27')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.entry_selection, 'Filled from autocomplete.')
 
     expected_string = u'plaso.kiddaland.net (Filled from autocomplete.)'
@@ -55,9 +56,9 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[3]
 
-    # Timestamp is: 2013-11-11T22:46:07Z.
-    # date -u -d "2013-11-11T22:46:07Z" +"%s"
-    self.assertEquals(event_object.timestamp, 1384209967000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-11 22:46:07')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.entry_selection, 'Manually typed.')
 
     expected_string = u'theonion.com (Manually typed.)'
@@ -83,9 +84,9 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[4]
 
-    # date -u -d @1384209946
-    # Mon Nov 11 22:45:46 UTC 2013
-    self.assertEquals(event_object.timestamp, 1384209946 * 1000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-11 22:45:46')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://www.mbl.is/frettir/erlent/2013/11/11/'
@@ -99,15 +100,15 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[10]
 
-    # date -u -d @1384209955
-    # Mon Nov 11 22:45:55 UTC 2013
-    self.assertEquals(event_object.timestamp, 1384209955 * 1000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-11 22:45:55')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[16]
 
-    # date -u -d @1384209976
-    # Mon Nov 11 22:46:16 UTC 2013
-    self.assertEquals(event_object.timestamp, 1384209976 * 1000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-11 22:46:16')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_title = (
         u'10 Celebrities You Never Knew Were Abducted And Murdered '

@@ -38,20 +38,20 @@ class SymantecParser(text_parser.TextCSVParser):
   # Define the columns that make up the structure of a Symantec log file.
   # http://www.symantec.com/docs/TECH100099
   COLUMNS = [
-      'time','event','cat','logger','computer','user',
-      'virus','file','action1','action2','action0','virustype',
-      'flags','description','scanid','new_ext','groupid',
-      'event_data','vbin_id','virus_id','quarfwd_status',
-      'access','snd_status','compressed','depth','still_infected',
-      'definfo','defseqnumber','cleaninfo','deleteinfo',
-      'backup_id','parent','guid','clientgroup','address',
-      'domainname','ntdomain','macaddr','version:',
-      'remote_machine','remote_machine_ip','action1_status',
-      'action2_status','license_feature_name','license_feature_ver',
-      'license_serial_num','license_fulfillment_id','license_start_dt',
-      'license_expiration_dt','license_lifecycle','license_seats_total',
-      'license_seats','err_code','license_seats_delta','status',
-      'domain_guid','log_session_guid','vbin_session_id',
+      'time', 'event', 'cat', 'logger', 'computer', 'user',
+      'virus', 'file', 'action1', 'action2', 'action0', 'virustype',
+      'flags', 'description', 'scanid', 'new_ext', 'groupid',
+      'event_data', 'vbin_id', 'virus_id', 'quarfwd_status',
+      'access', 'snd_status', 'compressed', 'depth', 'still_infected',
+      'definfo', 'defseqnumber', 'cleaninfo', 'deleteinfo',
+      'backup_id', 'parent', 'guid', 'clientgroup', 'address',
+      'domainname', 'ntdomain', 'macaddr', 'version:',
+      'remote_machine', 'remote_machine_ip', 'action1_status',
+      'action2_status', 'license_feature_name', 'license_feature_ver',
+      'license_serial_num', 'license_fulfillment_id', 'license_start_dt',
+      'license_expiration_dt', 'license_lifecycle', 'license_seats_total',
+      'license_seats', 'err_code', 'license_seats_delta', 'status',
+      'domain_guid', 'log_session_guid', 'vbin_session_id',
       'login_domain', 'extra']
 
   def VerifyRow(self, row):
@@ -112,7 +112,8 @@ class SymantecParser(text_parser.TextCSVParser):
             timestamp_raw[::2], timestamp_raw[1::2]))
 
     timestamp = timelib.Timestamp.FromTimeParts(
-        year + 1970, month + 1, day, hour, minute, sec, 0, self._pre_obj.zone)
+        year + 1970, month + 1, day, hour, minute, sec,
+        timezone=self._pre_obj.zone)
 
     return timestamp
 

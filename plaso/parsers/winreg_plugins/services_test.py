@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import services
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -120,8 +121,9 @@ class TestServicesRegistry(test_lib.RegistryPluginTestCase):
 
     event_object = bits_event_objects[0]
 
-    # 2012-04-06T20:43:27.639075.
-    self.assertEquals(event_object.timestamp, 1333745007639075)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-04-06 20:43:27.639075')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'Type', u'Service - Share Process (0x20)')
     self._TestRegvalue(event_object, u'Start', u'Manual (3)')
@@ -131,8 +133,9 @@ class TestServicesRegistry(test_lib.RegistryPluginTestCase):
 
     event_object = mc_task_manager_event_objects[0]
 
-    # 2011-09-16T20:49:16.877415.
-    self.assertEquals(event_object.timestamp, 1316206156877415)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-09-16 20:49:16.877415')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'DisplayName', u'McAfee Task Manager')
     self._TestRegvalue(event_object, u'Type', u'Service - Own Process (0x10)')

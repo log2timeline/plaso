@@ -107,7 +107,8 @@ class Dynamic(output.FileLogOutputFormatter):
 
   def ParseDateTime(self, event_object):
     """Return a datetime object from a timestamp, in an ISO format."""
-    return timelib.Timestamp.CopyToIsoFormat(event_object.timestamp, self.zone)
+    return timelib.Timestamp.CopyToIsoFormat(
+        event_object.timestamp, timezone=self.zone)
 
   def ParseTime(self, event_object):
     """Return a timestamp string from an integer timestamp value."""

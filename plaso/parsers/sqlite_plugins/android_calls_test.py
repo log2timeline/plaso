@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import android_calls as android_calls_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -48,8 +49,9 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
     self.assertEquals(event_object.timestamp_desc, u'Call Started')
 
-    # date -u -d"2012-11-16T00:30:15.655000+00:00" +"%s.%N".
-    self.assertEquals(event_object.timestamp, 1383772636690 * 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-06 21:17:16.690000')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_number = u'5404561685'
     self.assertEquals(event_object.number, expected_number)
@@ -72,15 +74,18 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     # Check the timestamp_desc of the last event.
     self.assertEquals(event_object_4.timestamp_desc, u'Call Ended')
 
-    # Event 3: date -u -d"2013-11-07T00:03:36.690000+00:00" +"%s.%N".
-    # Event 4: date -u -d"2013-11-07T00:14:15.690000+00:00" +"%s.%N".
-    self.assertEquals(event_object_3.timestamp, 1383782616690 * 1000)
-    self.assertEquals(event_object_4.timestamp, 1383783255690 * 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-07 00:03:36.690000')
+    self.assertEquals(event_object_3.timestamp, expected_timestamp)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-07 00:14:15.690000')
+    self.assertEquals(event_object_4.timestamp, expected_timestamp)
 
     # Ensure the difference in btw. events 3 and 4 equals the duration.
-    self.assertEquals(
-            (event_object_4.timestamp - event_object_3.timestamp) / 1000000,
-            event_object_4.duration)
+    expected_duration = (
+        (event_object_4.timestamp - event_object_3.timestamp) / 1000000)
+    self.assertEquals(event_object_4.duration, expected_duration)
 
 
 if __name__ == '__main__':

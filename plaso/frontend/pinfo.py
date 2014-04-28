@@ -31,8 +31,6 @@ import sys
 from plaso.lib import timelib
 from plaso.lib import storage
 
-import pytz
-
 
 def GetInformation(params):
   """Return generator for all potential storage information in a container."""
@@ -66,7 +64,7 @@ def DisplayInformation(info, params, store, last_entry=False):
   if hasattr(info, 'collection_information'):
     filename = info.collection_information.get('file_processed', 'N/A')
     time_of_run = info.collection_information.get('time_of_run', 0)
-    time_of_run = timelib.Timestamp.CopyToIsoFormat(time_of_run, pytz.utc)
+    time_of_run = timelib.Timestamp.CopyToIsoFormat(time_of_run)
 
     header = (
         u'{0:s}\n'

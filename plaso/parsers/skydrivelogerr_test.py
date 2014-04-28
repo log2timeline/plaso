@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import skydrivelogerr as skydrivelogerr_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import skydrivelogerr as skydrivelogerr_parser
 from plaso.parsers import test_lib
 
@@ -46,12 +47,17 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
 
     self.assertEquals(len(event_objects), 19)
 
-    # expr `date -u -d "2013-07-25 16:03:23.291" +"%s%N"` \/ 1000
-    self.assertEquals(event_objects[0].timestamp, 1374768203291000)
-    # expr `date -u -d "13-07-25 16:03:24.649" +"%s%N"` \/ 1000
-    self.assertEquals(event_objects[1].timestamp, 1374768204649000)
-    # expr `date -u -d "13-08-01 21:27:44.124" +"%s%N"` \/ 1000
-    self.assertEquals(event_objects[18].timestamp, 1375392464124000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-25 16:03:23.291')
+    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-25 16:03:24.649')
+    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-08-01 21:27:44.124')
+    self.assertEquals(event_objects[18].timestamp, expected_timestamp)
 
     expected_string = (u'Logging started. Version= 17.0.2011.0627 '
         '(StartLocalTime: 2013-07-25-180323.291 PID=0x8f4 TID=0x718 '

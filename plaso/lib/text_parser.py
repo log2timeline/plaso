@@ -340,7 +340,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
       timestamp = timelib.Timestamp.FromTimeParts(
           int(self.attributes['iyear']), self.attributes['imonth'],
           self.attributes['iday'], int(times[0]), int(times[1]),
-          int(sec), int(us), time_zone)
+          int(sec), microseconds=int(us), timezone=time_zone)
 
     except ValueError as exception:
       raise errors.TimestampNotCorrectlyFormed(

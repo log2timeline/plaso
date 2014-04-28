@@ -74,13 +74,14 @@ class UserAssistPlugin(interface.KeyPlugin):
 
   # UserAssist format version used in Windows 2008, 7, 8.
   USERASSIST_V5_STRUCT = construct.Struct(
-    'userassist_entry',
-    construct.Padding(4),
-    construct.ULInt32('count'),
-    construct.ULInt32('app_focus_count'),
-    construct.ULInt32('focus_duration'),
-    construct.Padding(44),
-    construct.ULInt64('timestamp'))
+      'userassist_entry',
+      construct.Padding(4),
+      construct.ULInt32('count'),
+      construct.ULInt32('app_focus_count'),
+      construct.ULInt32('focus_duration'),
+      construct.Padding(44),
+      construct.ULInt64('timestamp'),
+      construct.Padding(4))
 
   def GetEntries(self, key, **unused_kwargs):
     """Parses a UserAssist Registry key.

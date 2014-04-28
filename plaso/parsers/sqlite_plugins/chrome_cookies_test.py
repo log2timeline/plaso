@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import chrome_cookies as chrome_cookies_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -60,8 +61,9 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertFalse(event_object.httponly)
     self.assertEquals(event_object.url, u'http://www.linkedin.com/')
 
-    # date -u -d"2011-08-25T21:50:27.292367+00:00" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1314309027292367)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-08-25 21:50:27.292367')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://www.linkedin.com/ (leo_auth_token) Flags: [HTTP only] = False '
@@ -74,8 +76,9 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
-    # date -u -d"2012-04-01T13:54:34.949210+00:00" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1333288474949210)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-04-01 13:54:34.949210')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEquals(event_object.url, u'http://rubiconproject.com/')
     self.assertEquals(event_object.path, u'/')
@@ -95,13 +98,17 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
         u'/2012/03/21/romney-tries-to-clean-up-etch-a-sketch-mess/')
     self.assertEquals(event_object.host, u'politicalticker.blogs.cnn.com')
 
-    # date -u -d"2012-03-22T01:47:21.012022+00:00" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1332380841012022)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-03-22 01:47:21.012022')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # Examine a cookie that has an autologin entry.
     event_object = event_objects[1495]
-    # date -u -d"2012-04-01T13:52:56.189444+00:00" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1333288376189444)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-04-01 13:52:56.189444')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+
     self.assertEquals(event_object.host, u'marvel.com')
     self.assertEquals(event_object.cookie_name, u'autologin[timeout]')
     self.assertEquals(
@@ -132,8 +139,10 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.cookie_name, u'__utma')
     self.assertEquals(event_object.visitor_id, u'1827102436')
     self.assertEquals(event_object.sessions, 2)
-    # date -u -d"2012-03-22T01:55:29+00:00" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1332381329000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-03-22 01:55:29')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://assets.tumblr.com/ (__utma) Flags: [HTTP only] = False '
@@ -149,8 +158,10 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.cookie_name, u'__utmb')
     self.assertEquals(event_object.domain_hash, u'154523900')
     self.assertEquals(event_object.pages_viewed, 1)
-    # date -u -d"2012-03-22T01:48:30+00:00" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1332380910000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-03-22 01:48:30')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://upressonline.com/ (__utmb) Flags: [HTTP only] = False '

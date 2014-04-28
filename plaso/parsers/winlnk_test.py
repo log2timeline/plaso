@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import winlnk as winlnk_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import test_lib
 from plaso.parsers import winlnk
 
@@ -69,21 +70,21 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.icon_location, expected_string)
     self.assertEquals(event_object.env_var_location, expected_string)
 
-    # date -u -d"Jul 13, 2009 23:29:02.849131000" +"%s.%N"
-    expected_timestamp = (1247527742 * 1000000) + int(849131000 / 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2009-07-13 23:29:02.849131')
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
-    # date -u -d"Jul 13, 2009 23:29:02.849131000" +"%s.%N"
-    expected_timestamp = (1247527742 * 1000000) + int(849131000 / 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2009-07-13 23:29:02.849131')
     event_object = event_container.events[1]
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
-    # date -u -d"Jul 14, 2009 01:39:18.220000000" +"%s.%N"
-    expected_timestamp = (1247535558 * 1000000) + int(220000000 / 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2009-07-14 01:39:18.220000')
     event_object = event_container.events[2]
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
