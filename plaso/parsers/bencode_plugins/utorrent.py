@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -22,19 +23,21 @@ from plaso.lib import eventdata
 from plaso.parsers.bencode_plugins import interface
 
 
-class UTorrentEventContainer(event.EventContainer):
+class UTorrentEvent(event.PosixTimeEvent):
   """Convenience class for a uTorrent active torrents history entries."""
+
   DATA_TYPE = 'p2p:bittorrent:utorrent'
 
-  def __init__(self, path, caption, seedtime):
-    """Initialize the event container.
+  def __init__(
+      self, timestamp, timestamp_description, path, caption, seedtime):
+    """Initialize the event.
 
     Args:
       path: Torrent download location
       caption: Official name of package
       seedtime: Number of seconds client seeded torrent
     """
-    super(UTorrentEventContainer, self).__init__()
+    super(UTorrentEvent, self).__init__(timestamp, timestamp_description)
     self.path = path
     self.caption = caption
     self.seedtime = seedtime // 60 # Convert seconds to minutes.
@@ -74,8 +77,7 @@ class UTorrentPlugin(interface.BencodePlugin):
       data: Bencode data in dictionary form.
 
     Yields:
-      An EventContainer (UTorrentEventContainer) with extracted
-      EventObjects that contain the extracted attributes.
+      An EventObject (UTorrentEvent) that contains the extracted attributes.
     """
 
     # Walk through one of the torrent keys to ensure it's from a valid file.
@@ -93,32 +95,25 @@ class UTorrentPlugin(interface.BencodePlugin):
       if not u'.torrent' in torrent:
         continue
 
-      # Place the obtained values into the event container.
-      container = UTorrentEventContainer(
-          value.get('path'),
-          value.get('caption'),
-          value.get('seedtime'))
+      path = value.get('path', None)
+      caption = value.get('caption', None)
+      seedtime = value.get('seedtime', None)
 
       # Create timeline events based on extracted values.
       for eventkey, eventvalue in value.iteritems():
         if eventkey == 'added_on':
-          container.Append(event.PosixTimeEvent(
-              eventvalue,
-              eventdata.EventTimestamp.ADDED_TIME,
-              container.DATA_TYPE))
+          yield UTorrentEvent(
+              eventvalue, eventdata.EventTimestamp.ADDED_TIME,
+              path, caption, seedtime)
         elif eventkey == 'completed_on':
-          container.Append(event.PosixTimeEvent(
-              eventvalue,
-              eventdata.EventTimestamp.FILE_DOWNLOADED,
-              container.DATA_TYPE))
+          yield UTorrentEvent(
+              eventvalue, eventdata.EventTimestamp.FILE_DOWNLOADED,
+              path, caption, seedtime)
         elif eventkey == 'modtimes':
           for modtime in eventvalue:
             # Some values are stored as 0, skip those.
             if not modtime:
               continue
-            container.Append(event.PosixTimeEvent(
-                modtime,
-                eventdata.EventTimestamp.MODIFICATION_TIME,
-                container.DATA_TYPE))
-
-      yield container
+            yield UTorrentEvent(
+                modtime, eventdata.EventTimestamp.MODIFICATION_TIME,
+                path, caption, seedtime)

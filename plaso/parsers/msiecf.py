@@ -32,19 +32,23 @@ if pymsiecf.get_version() < '20130317':
   raise ImportWarning('MsiecfParser requires at least pymsiecf 20130317.')
 
 
-class MsiecfUrlEventContainer(event.EventContainer):
-  """Convenience class for an MSIECF URL event container."""
+class MsiecfUrlEvent(event.TimestampEvent):
+  """Convenience class for an MSIECF URL event."""
 
-  def __init__(self, msiecf_item, recovered=False):
-    """Initializes the event container.
+  DATA_TYPE = 'msiecf:url'
+
+  def __init__(
+      self, timestamp, timestamp_description, msiecf_item, recovered=False):
+    """Initializes the event.
 
     Args:
+      timestamp: The timestamp value.
+      timestamp_desc: The usage string describing the timestamp.
       msiecf_item: The MSIECF item (pymsiecf.url).
       recovered: Boolean value to indicate the item was recovered, False
                  by default.
     """
-    super(MsiecfUrlEventContainer, self).__init__()
-    self.data_type = 'msiecf:url'
+    super(MsiecfUrlEvent, self).__init__(timestamp, timestamp_description)
 
     self.recovered = recovered
     self.offset = msiecf_item.offset
@@ -71,8 +75,7 @@ class MsiecfParser(parser.BaseParser):
   def _ParseUrl(self, pre_obj, msiecf_item, recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) URL item.
 
-       Every item is stored in an event container with 4 sub event objects
-       one for each timestamp.
+       Every item is stored as an event object, one for each timestamp.
 
     Args:
       pre_obj: An instance of the preprocessor object.
@@ -80,17 +83,16 @@ class MsiecfParser(parser.BaseParser):
       recovered: Boolean value to indicate the item was recovered, False
                  by default.
 
-    Returns:
-      An event container (MsiecfUrlEventContainer) that contains
-      the parsed data.
+    Yields:
+      An event object (an instance of MsiecfUrlEvent) that contains the parsed
+      data.
     """
-    event_container = MsiecfUrlEventContainer(msiecf_item, recovered)
-
     # The secondary timestamp can be stored in either UTC or local time
     # this is dependent on what the index.dat file is used for.
     # Either the file path of the location string can be used to distinguish
     # between the different type of files.
-    primary_timestamp = msiecf_item.get_primary_time_as_integer()
+    primary_timestamp = timelib.Timestamp.FromFiletime(
+        msiecf_item.get_primary_time_as_integer())
     primary_timestamp_desc = 'Primary Time'
 
     # Need to convert the FILETIME to the internal timestamp here to
@@ -126,13 +128,13 @@ class MsiecfParser(parser.BaseParser):
         secondary_timestamp = timelib.Timestamp.LocaltimeToUTC(
             secondary_timestamp, pre_obj.zone)
 
-    event_container.Append(event.FiletimeEvent(
-        primary_timestamp, primary_timestamp_desc, event_container.data_type))
+    yield MsiecfUrlEvent(
+        primary_timestamp, primary_timestamp_desc, msiecf_item, recovered)
 
     if secondary_timestamp > 0:
-      event_container.Append(event.TimestampEvent(
-          secondary_timestamp, secondary_timestamp_desc,
-          event_container.data_type))
+      yield MsiecfUrlEvent(
+          secondary_timestamp, secondary_timestamp_desc, msiecf_item,
+          recovered)
 
     expiration_timestamp = msiecf_item.get_expiration_time_as_integer()
     if expiration_timestamp > 0:
@@ -141,21 +143,19 @@ class MsiecfParser(parser.BaseParser):
       # Since the as_integer function returns the raw integer value we need to
       # apply the right conversion here.
       if self.version == u'4.7':
-        event_container.Append(event.FiletimeEvent(
-            expiration_timestamp, eventdata.EventTimestamp.EXPIRATION_TIME,
-            event_container.data_type))
+        yield MsiecfUrlEvent(
+            timelib.Timestamp.FromFiletime(expiration_timestamp),
+            eventdata.EventTimestamp.EXPIRATION_TIME, msiecf_item, recovered)
       else:
-        event_container.Append(event.FatDateTimeEvent(
-            expiration_timestamp, eventdata.EventTimestamp.EXPIRATION_TIME,
-            event_container.data_type))
+        yield MsiecfUrlEvent(
+            timelib.Timestamp.FromFatDateTime(expiration_timestamp),
+            eventdata.EventTimestamp.EXPIRATION_TIME, msiecf_item, recovered)
 
     last_checked_timestamp = msiecf_item.get_last_checked_time_as_integer()
     if last_checked_timestamp > 0:
-      event_container.Append(event.FatDateTimeEvent(
-          last_checked_timestamp, eventdata.EventTimestamp.LAST_CHECKED_TIME,
-          event_container.data_type))
-
-    return event_container
+      yield MsiecfUrlEvent(
+          timelib.Timestamp.FromFatDateTime(last_checked_timestamp),
+          eventdata.EventTimestamp.LAST_CHECKED_TIME, msiecf_item, recovered)
 
   def Parse(self, file_entry):
     """Extract data from a MSIE Cache File (MSIECF).
@@ -187,7 +187,8 @@ class MsiecfParser(parser.BaseParser):
       try:
         msiecf_item = msiecf_file.get_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
-          yield self._ParseUrl(self._pre_obj, msiecf_item)
+          for event_object in self._ParseUrl(self._pre_obj, msiecf_item):
+            yield event_object
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
       except IOError as exception:
@@ -199,7 +200,9 @@ class MsiecfParser(parser.BaseParser):
       try:
         msiecf_item = msiecf_file.get_recovered_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
-          yield self._ParseUrl(self._pre_obj, msiecf_item, recovered=True)
+          for event_object in self._ParseUrl(
+              self._pre_obj, msiecf_item, recovered=True):
+            yield event_object
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
       except IOError as exception:
