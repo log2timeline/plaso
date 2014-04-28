@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import msiecf as msiecf_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import msiecf
 from plaso.parsers import test_lib
 
@@ -68,31 +69,32 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.url, expected_location)
     self.assertEquals(event_object.cache_directory_index, -2)
 
-    # date -u -d"Jun 23, 2011 18:02:10.066000000" +"%s.%N"
-    expected_timestamp = (1308852130 * 1000000) + (66000000 / 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-06-23 18:02:10.066')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_objects[9]
 
-    expected_timestamp = (1308852130 * 1000000) + (66000000 / 1000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-06-23 18:02:10.066')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_objects[10]
 
-    # date -u -d"Jun 29, 2011 17:55:02" +"%s.%N"
-    expected_timestamp = 1309370102 * 1000000
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-06-29 17:55:02')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
 
     event_object = event_objects[11]
 
-    # date -u -d"Jun 23, 2011 18:02:12" +"%s.%N"
-    expected_timestamp = 1308852132 * 1000000
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-06-23 18:02:12')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_CHECKED_TIME)

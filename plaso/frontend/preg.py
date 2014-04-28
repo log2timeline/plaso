@@ -60,8 +60,6 @@ from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
 
-import pytz
-
 
 class RegistryPluginHeader(eventdata.EventFormatter):
   """A formatting class that prints some registry plugin header information."""
@@ -93,7 +91,7 @@ class RegistryPluginHeader(eventdata.EventFormatter):
     ret_strings.append(utils.FormatHeader('Attributes', '-'))
     ret_strings.append(fmt.format(
       'Date',
-      timelib.Timestamp.CopyToIsoFormat(event_object.timestamp, pytz.utc)))
+      timelib.Timestamp.CopyToIsoFormat(event_object.timestamp)))
 
     for attribute, value in event_object.GetValues().items():
       if attribute in self.SKIP_ATTRIBUTES:

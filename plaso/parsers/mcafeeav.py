@@ -102,8 +102,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # TODO: Figure out how McAfee sets Day First and use that here.
     # The in-file time format is '07/30/2013\t10:22:48 AM'.
     timestamp = timelib.Timestamp.FromTimeString(
-        u'{} {}'.format(date, time),
-        zone=self._pre_obj.zone)
+        u'{0:s} {1:s}'.format(date, time), timezone=self._pre_obj.zone)
     return timestamp
 
   def ParseRow(self, row):

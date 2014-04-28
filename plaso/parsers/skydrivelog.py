@@ -179,9 +179,9 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
       month, day, year = timestamp_pypr[0]
       hour, minute, second = timestamp_pypr[1]
       millisecond = timestamp_pypr[2]
-      microsecond = millisecond * 1000
-      timestamp = timelib.Timestamp.FromTimeParts(year, month, day, hour,
-        minute, second, microsecond)
+      timestamp = timelib.Timestamp.FromTimeParts(
+          year, month, day, hour, minute, second,
+          microseconds=(millisecond * 1000))
     except ValueError:
       timestamp = 0
     return timestamp

@@ -23,7 +23,7 @@ import unittest
 from plaso.formatters import olecf as olecf_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
-
+from plaso.lib import timelib_test
 from plaso.parsers.olecf_plugins import interface
 from plaso.parsers.olecf_plugins import default
 from plaso.parsers.olecf_plugins import test_lib
@@ -54,8 +54,10 @@ class TestOleCfDefaultPlugin(test_lib.OleCfPluginTestCase):
 
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
-    # May 16, 2013 02:29:49.795000000 UTC.
-    self.assertEquals(event_object.timestamp, 1368671389795000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-05-16 02:29:49.795')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_string = (
         u'Name: Root Entry')
@@ -69,8 +71,9 @@ class TestOleCfDefaultPlugin(test_lib.OleCfPluginTestCase):
     expected_string = u'Name: MsoDataStore'
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
-    # date -u -d "2013-05-16T02:29:49" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1368671389704000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-05-16 02:29:49.704')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

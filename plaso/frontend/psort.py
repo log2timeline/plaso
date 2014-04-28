@@ -250,7 +250,7 @@ def ParseStorage(my_args):
     else:
       zone = pytz.timezone(my_args.timezone)
 
-    timestamp = timelib.Timestamp.FromTimeString(my_args.slice, zone)
+    timestamp = timelib.Timestamp.FromTimeString(my_args.slice, timezone=zone)
 
     # Convert number of minutes to microseconds.
     range_operator = my_args.slice_size * int(1e6) * 60

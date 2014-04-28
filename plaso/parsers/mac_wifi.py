@@ -166,10 +166,10 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     try:
       time_part, millisecond = time
-      microsec = millisecond * 1000
       hour, minute, second = time_part
       timestamp = timelib.Timestamp.FromTimeParts(
-          year, month, day, hour, minute, second, microsec)
+          year, month, day, hour, minute, second,
+          microseconds=(millisecond * 1000))
     except ValueError:
       timestamp = 0
     return timestamp

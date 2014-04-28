@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import mac_document_versions as mac_doc_rev_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import mac_document_versions
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -48,8 +49,9 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
 
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    # date -u -d"Tue, 21 Jan 2014 02:03:00.000000" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1390269780000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2014-01-21 02:03:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEquals(event_object.name, u'Spain is beautiful.rtf')
     self.assertEquals(event_object.path, u'/Users/moxilo/Documents')
@@ -61,10 +63,10 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.version_path, expected_version_path)
 
     expected_msg = (
-        u'Version of [{}] ({}) stored in {} by {}'.format(
+        u'Version of [{0:s}] ({1:s}) stored in {2:s} by {3:s}'.format(
             event_object.name, event_object.path,
             event_object.version_path, event_object.user_sid))
-    expected_short = u'Stored a document version of [{}]'.format(
+    expected_short = u'Stored a document version of [{0:s}]'.format(
         event_object.name)
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 

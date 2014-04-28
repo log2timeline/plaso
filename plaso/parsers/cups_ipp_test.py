@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import cups_ipp as cups_ipp_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import cups_ipp
 from plaso.parsers import test_lib
 
@@ -45,8 +46,10 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 3)
     event_object = event_objects[0]
 
-    # date -u -d"Sun, 03 Nov 2013 18:07:21"
-    self.assertEqual(event_object.timestamp, 1383502041000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-03 18:07:21')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.CREATION_TIME)
@@ -72,16 +75,22 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         u'Job Name: Assignament 1')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    # date -u -d"Sun, 03 Nov 2013 18:07:21"
     event_object = event_objects[1]
-    self.assertEqual(event_object.timestamp, 1383502041000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-03 18:07:21')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.START_TIME)
 
-    # date -u -d"Sun, 03 Nov 2013 18:07:32"
     event_object = event_objects[2]
-    self.assertEqual(event_object.timestamp, 1383502052000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-11-03 18:07:32')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.END_TIME)

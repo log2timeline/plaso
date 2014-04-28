@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import mac_keychain as mac_keychain_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import test_lib
 from plaso.parsers import mac_keychain
 
@@ -44,8 +45,11 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 5)
 
     event_object = event_objects[0]
-    # date -u -d"Sun, 26 Jan 2014 14:51:48" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1390747908000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2014-01-26 14:51:48')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.CREATION_TIME)
@@ -62,12 +66,17 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.MODIFICATION_TIME)
-    # date -u -d"Sun, 26 Jan 2014 14:52:29" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1390747949000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2014-01-26 14:52:29')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[2]
-    # date -u -d"Sun, 26 Jan 2014 14:53:29" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1390748009000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2014-01-26 14:53:29')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.entry_name, u'Secret Note')
     self.assertEqual(event_object.text_description, u'secure note')
     self.assertEqual(len(event_object.ssgp_hash), 1696)
@@ -76,8 +85,11 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     event_object = event_objects[3]
-    # date -u -d"Sun, 26 Jan 2014 14:54:33" +"%s.%N"
-    self.assertEqual(event_object.timestamp, 1390748073000000)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2014-01-26 14:54:33')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+
     self.assertEqual(event_object.entry_name, u'plaso.kiddaland.net')
     self.assertEqual(event_object.account_name, u'MrMoreno')
     expected_ssgp = (u'83ccacf55a8cb656d340ec405e9d8b308f'

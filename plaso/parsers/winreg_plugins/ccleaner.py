@@ -51,7 +51,7 @@ class CCleanerPlugin(interface.KeyPlugin):
         update_key = key.GetValue('UpdateKey')
         reg_evt = event.WinRegistryEvent(
             key.path, text_dict,
-            timelib.Timestamp.FromTimeString(update_key.data,zone))
+            timelib.Timestamp.FromTimeString(update_key.data, timezone=zone))
       elif value.name == '0':
         reg_evt = event.WinRegistryEvent(
             key.path, text_dict, key.timestamp)

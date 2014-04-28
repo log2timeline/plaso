@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import gdrive as gdrive_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
@@ -73,8 +74,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, file_path)
 
-    # date -u -d "2014-01-28T00:11:25+00:00" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1390867885000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2014-01-28 00:11:25')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     event_object = cloud_entries[16]
 
@@ -95,8 +97,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
-    # date -u -d "2014-01-28T00:12:27+00:00" +"%s.%N"
-    self.assertEquals(event_object.timestamp, 1390867947000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2014-01-28 00:12:27')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':
