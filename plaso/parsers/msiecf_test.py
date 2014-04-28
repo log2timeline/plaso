@@ -39,17 +39,15 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['index.dat'])
     event_generator = self._ParseFile(self._parser, test_file)
-    event_containers = self._GetEventContainers(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # MSIE Cache File information:
     # 	File size:			32768 bytes
     # 	Number of items:		7
     # 	Number of recovered items:	11
+    # 7 + 11 records, each with 4 records.
 
-    self.assertEquals(len(event_containers), 7 + 11)
-
-    event_container = event_containers[2]
-    self.assertEquals(len(event_container.events), 4)
+    self.assertEquals(len(event_objects), (7 + 11) * 4)
 
     # Record type             : URL
     # Offset range            : 21376 - 21632 (256)
@@ -61,15 +59,14 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     # Last checked time       : Jun 23, 2011 18:02:12
     # Cache directory index   : -2 (0xfe)
 
+    event_object = event_objects[8]
     expected_location = (
         u'Visited: testing@http://www.trafficfusionx.com/download/tfscrn2'
         u'/funnycats.exe')
 
-    self.assertEquals(event_container.offset, 21376)
-    self.assertEquals(event_container.url, expected_location)
-    self.assertEquals(event_container.cache_directory_index, -2)
-
-    event_object = event_container.events[0]
+    self.assertEquals(event_object.offset, 21376)
+    self.assertEquals(event_object.url, expected_location)
+    self.assertEquals(event_object.cache_directory_index, -2)
 
     # date -u -d"Jun 23, 2011 18:02:10.066000000" +"%s.%N"
     expected_timestamp = (1308852130 * 1000000) + (66000000 / 1000)
@@ -77,14 +74,14 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
-    event_object = event_container.events[1]
+    event_object = event_objects[9]
 
     expected_timestamp = (1308852130 * 1000000) + (66000000 / 1000)
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
-    event_object = event_container.events[2]
+    event_object = event_objects[10]
 
     # date -u -d"Jun 29, 2011 17:55:02" +"%s.%N"
     expected_timestamp = 1309370102 * 1000000
@@ -92,7 +89,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
 
-    event_object = event_container.events[3]
+    event_object = event_objects[11]
 
     # date -u -d"Jun 23, 2011 18:02:12" +"%s.%N"
     expected_timestamp = 1308852132 * 1000000

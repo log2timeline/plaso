@@ -31,19 +31,23 @@ from plaso.lib import parser
 from plaso.lib import timelib
 
 
-class JavaIDXEventContainer(event.EventContainer):
-  """Convenience class for a Java IDX cache file download container."""
+class JavaIDXEvent(event.TimestampEvent):
+  """Convenience class for a Java IDX cache file download event."""
+
   DATA_TYPE = 'java:download:idx'
 
-  def __init__(self, idx_version, url, ip_address):
+  def __init__(
+      self, timestamp, timestamp_description, idx_version, url, ip_address):
     """Initializes the event object.
 
     Args:
+      timestamp: The timestamp value.
+      timestamp_description: The description of the usage of the time value.
       idx_version: Version of IDX file.
       url: URL of the downloaded file.
       ip_address: IP address of the host in the URL.
     """
-    super(JavaIDXEventContainer, self).__init__()
+    super(JavaIDXEvent, self).__init__(timestamp, timestamp_description)
     self.idx_version = idx_version
     self.url = url
     self.ip_address = ip_address
@@ -127,8 +131,7 @@ class JavaIDXParser(parser.BaseParser):
       file_entry: A file entry object.
 
     Yields:
-      An EventContainer (JavaIDXEventContainer) with extracted EventObjects
-      that contain the extracted attributes.
+      An EventObject (JavaIDXEvent) that contains the extracted attributes.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -197,21 +200,22 @@ class JavaIDXParser(parser.BaseParser):
       raise errors.UnableToParseFile(
           u'Unexpected Error: URL or IP address not found in file.')
 
-    container = JavaIDXEventContainer(magic.idx_version, url, ip_address)
-
-    container.Append(event.JavaTimeEvent(
-        last_modified_date, 'File Hosted Date', container.DATA_TYPE))
+    last_modified_timestamp = timelib.Timestamp.FromJavaTime(
+        last_modified_date)
+    # TODO: Move the timestamp description fields into eventdata.
+    yield JavaIDXEvent(
+        last_modified_timestamp, 'File Hosted Date', magic.idx_version, url,
+        ip_address)
 
     if section_one:
       expiration_date = section_one.get('expiration_date', None)
       if expiration_date:
-        container.Append(event.JavaTimeEvent(
-            expiration_date, 'File Expiration Date', container.DATA_TYPE))
+        expiration_timestamp = timelib.Timestamp.FromJavaTime(expiration_date)
+        yield JavaIDXEvent(
+            expiration_timestamp, 'File Expiration Date', magic.idx_version,
+            url, ip_address)
 
     if download_date:
-      container.Append(event.TimestampEvent(
+      yield JavaIDXEvent(
           download_date, eventdata.EventTimestamp.FILE_DOWNLOADED,
-          container.DATA_TYPE))
-
-    file_object.close()
-    yield container
+          magic.idx_version, url, ip_address)
