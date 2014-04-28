@@ -158,6 +158,12 @@ class FileSystemScannerTest(unittest.TestCase):
     test_file = self._GetTestFilePath(['image-split.E01'])
     self._TestScanPartionedImage(test_file)
 
+    test_file = self._GetTestFilePath(['image.vhd'])
+    self._TestScanImage(test_file)
+
+    test_file = self._GetTestFilePath(['image.vmdk'])
+    self._TestScanImage(test_file)
+
 
 if __name__ == '__main__':
   unittest.main()
