@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a parser for CCleaner for Plaso."""
+"""Parser for the CCleaner Registry key."""
 
 from plaso.lib import event
 from plaso.lib import timelib
@@ -37,7 +37,14 @@ class CCleanerPlugin(interface.KeyPlugin):
   DESCRIPTION = 'CCleaner Registry key'
 
   def GetEntries(self, key, **unused_kwargs):
-    """Collect values under CCleaner and return event for each one."""
+    """Extracts event objects from a CCleaner Registry key.
+
+    Args:
+      key: A Windows Registry key (instance of WinRegKey).
+
+    Yields:
+      An event object (instance of EventObject) that contains a MRU list.
+    """
     for value in key.GetValues():
       if not value.name:
         continue

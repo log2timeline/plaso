@@ -57,7 +57,9 @@ class UserAssistPlugin(interface.KeyPlugin):
       (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
        u'\\UserAssist\\{{5E6AB780-7743-11CF-A12B-00AA004AE837}}'),
       (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
-       u'\\UserAssist\\{{0D6D4F41-2994-4BA0-8FEF-620E43CD2812}}')]
+       u'\\UserAssist\\{{0D6D4F41-2994-4BA0-8FEF-620E43CD2812}}'),
+      (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
+       u'\\UserAssist\\{{BCB48336-4DDD-48FF-BB0B-D3190DACB3E2}}')]
 
   URL = [
       u'http://blog.didierstevens.com/programs/userassist/',
@@ -90,7 +92,8 @@ class UserAssistPlugin(interface.KeyPlugin):
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
-      An event object for every entry in the UserAssist key.
+      An event object (instance of EventObject) that contains an user assist
+      entry.
     """
     version_value = key.GetValue('Version')
     count_subkey = key.GetSubkey('Count')

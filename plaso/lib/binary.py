@@ -83,7 +83,13 @@ def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
 
     byte_stream_index += 2
 
-  return byte_stream[0:byte_stream_index].decode('utf-16-le')
+  try:
+    return byte_stream[0:byte_stream_index].decode('utf-16-le')
+  except (UnicodeDecodeError, UnicodeEncodeError) as exception:
+    logging.error(u'Unable to decode string: {0:s} with error: {1:s}'.format(
+        HexifyBuffer(byte_stream[0:byte_stream_index]), exception))
+
+  return byte_stream[0:byte_stream_index].decode('utf-16-le', errors='ignore')
 
 
 def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
@@ -124,14 +130,14 @@ def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
 
 
 def ReadUtf16(string_buffer):
-  """Returns a decoded UTF-16 string from a string_buffer."""
+  """Returns a decoded UTF-16 string from a string buffer."""
   if type(string_buffer) in (list, tuple):
     use_buffer = u''.join(string_buffer)
   else:
     use_buffer = string_buffer
 
   if not type(use_buffer) in (str, unicode):
-    return ''
+    return u''
 
   try:
     return use_buffer.decode('utf-16').replace('\x00', '')
@@ -139,11 +145,10 @@ def ReadUtf16(string_buffer):
     logging.error(u'Unable to decode string: {0:s} with error: {1:s}.'.format(
         HexifyBuffer(string_buffer), exception))
   except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-    logging.error(
-        u'Unable to properly decode string: {0:s} with error: {1:s}'.format(
-            HexifyBuffer(string_buffer), exception))
+    logging.error(u'Unable to decode string: {0:s} with error: {1:s}'.format(
+        HexifyBuffer(string_buffer), exception))
 
-  return u''
+  return use_buffer.decode('utf-16', errors='ignore').replace('\x00', '')
 
 
 def HexifyBuffer(string_buffer):
@@ -152,4 +157,4 @@ def HexifyBuffer(string_buffer):
   for char in string_buffer:
     chars.append(binascii.hexlify(char))
 
-  return u'\\x{}'.format(u'\\x'.join(chars))
+  return u'\\x{0:s}'.format(u'\\x'.join(chars))

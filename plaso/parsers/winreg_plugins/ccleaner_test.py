@@ -29,7 +29,7 @@ from plaso.winreg import winregistry
 __author__ = 'Marc Seguin (segumarc@gmail.com)'
 
 
-class RegistryCCleanerTest(test_lib.RegistryPluginTestCase):
+class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the CCleaner Windows Registry plugin."""
 
   def setUp(self):
