@@ -46,21 +46,21 @@ class HachoirEvent(event.TimestampEvent):
 
   DATA_TYPE = 'metadata:hachoir'
 
-  def __init__(self, dt_timestamp, usage):
+  def __init__(self, dt_timestamp, usage, attributes):
     """An EventObject created from a Hachoir entry.
 
     Args:
       dt_timestamp: A python datetime.datetime object.
       usage: The description of the usage of the time value.
+      attributes: A dict containing metadata for the event.
     """
     timestamp = timelib.Timestamp.FromPythonDatetime(dt_timestamp)
     super(HachoirEvent, self).__init__(timestamp, usage, self.DATA_TYPE)
+    self.metadata = attributes
 
 
 class HachoirParser(parser.BaseParser):
   """Parse meta data from files."""
-
-  DATA_TYPE = 'metadata:hachoir'
 
   NAME = 'hachoir'
 
@@ -71,7 +71,7 @@ class HachoirParser(parser.BaseParser):
       file_entry: A file entry object.
 
     Yields:
-      An event container (EventContainer) that contains the parsed
+      An event object (instance of EventObject) that contains the parsed
       attributes.
     """
     file_object = file_entry.GetFileObject()
@@ -119,13 +119,13 @@ class HachoirParser(parser.BaseParser):
           u'[{0:s}] unable to parse file {1:s}: No metadata'.format(
               self.parser_name, file_entry.name))
 
-    event_container = event.EventContainer()
-    event_container.offset = 0
-    event_container.data_type = self.DATA_TYPE
-
     attributes = {}
+    extracted_events = []
     for meta in metatext:
-      if meta[0] != '-' or len(meta) < 3:
+      if not meta.startswith('-'):
+        continue
+
+      if len(meta) < 3:
         continue
 
       key, _, value = meta[2:].partition(': ')
@@ -135,13 +135,12 @@ class HachoirParser(parser.BaseParser):
         date_object = timelib.StringToDatetime(
             value2, timezone=self._pre_obj.zone)
         if isinstance(date_object, datetime.datetime):
-          event_container.Append(HachoirEvent(
-              date_object, key2))
+          extracted_events.append((date_object, key2))
 
       try:
         date = metadata.get(key)
         if isinstance(date, datetime.datetime):
-          event_container.Append(HachoirEvent(date, key))
+          extracted_events.append((date, key))
       except ValueError:
         pass
 
@@ -154,12 +153,10 @@ class HachoirParser(parser.BaseParser):
       else:
         attributes[key] = value
 
-    length = len(event_container)
-    if not length:
+    if not extracted_events:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, 'None'))
+              self.parser_name, file_entry.name, 'No events discovered'))
 
-    event_container.metadata = attributes
-    file_object.close()
-    yield event_container
+    for date, key in extracted_events:
+      yield HachoirEvent(date, key, attributes)

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -21,18 +22,21 @@ from plaso.lib import eventdata
 from plaso.parsers.bencode_plugins import interface
 
 
-class TransmissionEventContainer(event.EventContainer):
-  """Convenience class for a Transmission BitTorrent activity container."""
+class TransmissionEvent(event.PosixTimeEvent):
+  """Convenience class for a Transmission BitTorrent activity event."""
+
   DATA_TYPE = 'p2p:bittorrent:transmission'
 
-  def __init__(self, destination, seedtime):
+  def __init__(self, timestamp, timestamp_description, destination, seedtime):
     """Initializes the event container.
 
     Args:
+      timestamp: The POSIX timestamp of the event.
+      timestamp_desc: A short description of the meaning of the timestamp.
       destination: Downloaded file name within .torrent file
       seedtime: Number of seconds client seeded torrent
     """
-    super(TransmissionEventContainer, self).__init__()
+    super(TransmissionEvent, self).__init__(timestamp, timestamp_description)
     self.destination = destination
     self.seedtime = seedtime // 60  # Convert seconds to minutes.
 
@@ -42,8 +46,9 @@ class TransmissionPlugin(interface.BencodePlugin):
 
   NAME = 'bencode_transmission'
 
-  BENCODE_KEYS = frozenset(['activity-date', 'done-date', 'added-date',
-                            'destination', 'seeding-time-seconds'])
+  BENCODE_KEYS = frozenset(
+      ['activity-date', 'done-date', 'added-date', 'destination',
+       'seeding-time-seconds'])
 
   def GetEntries(self, data, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
@@ -59,29 +64,26 @@ class TransmissionPlugin(interface.BencodePlugin):
       data: Bencode data in dictionary form.
 
     Yields:
-      An EventContainer (TransmissionEventContainer) with extracted
-      EventObjects that contain the extracted attributes.
+      An EventObject (TransmissionEvent) that contains the extracted
+      attributes.
     """
 
     # Place the obtained values into the event container.
-    container = TransmissionEventContainer(
-        data['destination'],
-        data['seeding-time-seconds'])
+    destination = data.get('destination', None)
+    seeding_time = data.get('seeding-time-seconds', None)
 
     # Create timeline events based on extracted values.
-    container.Append(event.PosixTimeEvent(
-        data['added-date'],
-        eventdata.EventTimestamp.ADDED_TIME,
-        container.DATA_TYPE))
+    if data.get('added-date', 0):
+      yield TransmissionEvent(
+          data.get('added-date'), eventdata.EventTimestamp.ADDED_TIME,
+          destination, seeding_time)
 
-    container.Append(event.PosixTimeEvent(
-        data['done-date'],
-        eventdata.EventTimestamp.FILE_DOWNLOADED,
-        container.DATA_TYPE))
+    if data.get('done-date', 0):
+      yield TransmissionEvent(
+          data.get('done-date'), eventdata.EventTimestamp.FILE_DOWNLOADED,
+          destination, seeding_time)
 
-    container.Append(event.PosixTimeEvent(
-        data['activity-date'],
-        eventdata.EventTimestamp.ACCESS_TIME,
-        container.DATA_TYPE))
-
-    yield container
+    if data.get('activity-date', None):
+      yield TransmissionEvent(
+          data.get('activity-date'), eventdata.EventTimestamp.ACCESS_TIME,
+          destination, seeding_time)

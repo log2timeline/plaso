@@ -41,21 +41,34 @@ class MactimeUnitTest(test_lib.ParserTestCase):
     event_generator = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(event_generator)
 
-    # The file contains 10 lines x 4 timestamps per line this will result in
-    # 40 event objects.
-    self.assertEquals(len(event_objects), 40)
+    # The file contains 10 lines x 4 timestamps per line, which should be
+    # 40 events in total. However several of these events have an empty
+    # timestamp value and are omitted.
+    # Total number of valid entries per line:
+    #   1: 3
+    #   2: 3
+    #   3: 3
+    #   4: 3
+    #   5: 0
+    #   6: 0
+    #   7: 3
+    #   8: 0
+    #   9: 0
+    #  10: 3
+    #  Total: 6 * 3 = 18
+    self.assertEquals(len(event_objects), 18)
 
     # Test this entry:
     # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961583|
     # 1337961584|1337961585|0
-    event_object = event_objects[10]
+    event_object = event_objects[6]
 
-    self.assertEquals(event_object.timestamp, 0)
+    self.assertEquals(event_object.timestamp, 1337961583000000)
     self.assertEquals(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEquals(event_object.inode, 16)
 
-    event_object = event_objects[8]
+    event_object = event_objects[6]
 
     self.assertEquals(event_object.timestamp, 1337961583000000)
     self.assertEquals(
@@ -64,18 +77,18 @@ class MactimeUnitTest(test_lib.ParserTestCase):
     expected_string = u'/a_directory/another_file'
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
-    event_object = event_objects[11]
+    event_object = event_objects[8]
 
     self.assertEquals(event_object.timestamp, 1337961584000000)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    event_object = event_objects[9]
+    event_object = event_objects[7]
 
     self.assertEquals(event_object.timestamp, 1337961585000000)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CHANGE_TIME)
-    self.assertEquals(event_object.name, u'/a_directory/another_file')
+    self.assertEquals(event_object.filename, u'/a_directory/another_file')
     self.assertEquals(event_object.mode_as_string, u'r/rrw-------')
 
 

@@ -62,7 +62,7 @@ class OleCfParser(parser.BaseParser):
       file_entry: A file entry object.
 
     Yields:
-      An event container (EventContainer) that contains the parsed
+      Event objects (EventObject) that contains the parsed
       attributes.
     """
     file_object = file_entry.GetFileObject()

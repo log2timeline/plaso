@@ -455,17 +455,21 @@ class Stream(object):
       self.stream_data = ''.join(clean_data)
 
 
-class PcapEventContainer(event.EventContainer):
-  """Convenience class for a PCAP record event container."""
-  def __init__(self, this_stream):
-    """Initializes the event container.
+class PcapEvent(event.PosixTimeEvent):
+  """Convenience class for a PCAP record event."""
+
+  DATA_TYPE = 'metadata:pcap'
+
+  def __init__(self, timestamp, usage, this_stream):
+    """Initializes the event.
 
     Args:
+      timestamp: The POSIX value of the timestamp.
+      usage: A usage description value.
       this_stream: The pcap stream.
     """
-    super(PcapEventContainer, self).__init__()
+    super(PcapEvent, self).__init__(timestamp, usage)
 
-    self.data_type = 'metadata:pcap'
     self.source_ip = this_stream.source_ip
     self.dest_ip = this_stream.dest_ip
     self.source_port = this_stream.source_port
@@ -482,36 +486,7 @@ class PcapEventContainer(event.EventContainer):
 class PcapParser(parser.BaseParser):
   """Parses PCAP files."""
 
-  DATA_TYPE = 'metadata:pcap'
-
   NAME = 'pcap'
-
-  def _ParseStream(self, stream_record):
-    """Extract data from a pcap stream record.
-
-    Every record is stored in an event container with 2 sub event objects
-    one for each timestamp.
-
-    Args:
-      stream_record: Pcap stream.
-
-    Returns:
-      An event container (PcapEventContainer) that contains the parsed
-      data.
-    """
-    event_container = PcapEventContainer(stream_record)
-
-    event_container.Append(event.PosixTimeEvent(
-        min(stream_record.time_stamps),
-        eventdata.EventTimestamp.START_TIME,
-        event_container.data_type))
-
-    event_container.Append(event.PosixTimeEvent(
-        max(stream_record.time_stamps),
-        eventdata.EventTimestamp.END_TIME,
-        event_container.data_type))
-
-    return event_container
 
   def Parse(self, file_entry):
     """Extract data from a pcap file.
@@ -609,10 +584,20 @@ class PcapParser(parser.BaseParser):
     for entry in sorted_list:
       if not entry.protocol == 'ICMP':
         entry.Clean()
-      yield self._ParseStream(entry)
+      yield PcapEvent(
+          min(entry.time_stamps), eventdata.EventTimestamp.START_TIME, entry)
+
+      yield PcapEvent(
+          max(entry.time_stamps), eventdata.EventTimestamp.END_TIME, entry)
 
     for other_stream in other_streams:
-      yield self._ParseStream(other_stream)
+      yield PcapEvent(
+          min(other_stream.time_stamps), eventdata.EventTimestamp.START_TIME,
+          other_stream)
+
+      yield PcapEvent(
+          max(other_stream.time_stamps), eventdata.EventTimestamp.END_TIME,
+          other_stream)
     file_object.close()
 
   def OtherStream(self, other_list, trunc_list):
