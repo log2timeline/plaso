@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for the Sleuthkit (TSK) bodyfile or mactime format."""
+
 from plaso.lib import eventdata
 
 
@@ -23,7 +25,7 @@ class MactimeFormatter(eventdata.EventFormatter):
   DATA_TYPE = 'fs:mactime:line'
 
   # The format string.
-  FORMAT_STRING = u'{name}'
+  FORMAT_STRING = u'{filename}'
 
   SOURCE_LONG = 'Mactime Bodyfile'
   SOURCE_SHORT = 'FILE'

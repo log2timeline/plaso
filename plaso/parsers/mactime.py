@@ -21,7 +21,6 @@ The format specifications can be read here:
   http://wiki.sleuthkit.org/index.php?title=Body_file
 """
 
-import logging
 import re
 
 from plaso.lib import event
@@ -32,14 +31,24 @@ from plaso.lib import text_parser
 class MactimeEvent(event.PosixTimeEvent):
   """Convenience class for a mactime-based event."""
 
-  def __init__(self, posix_time, usage):
+  DATA_TYPE = 'fs:mactime:line'
+
+  def __init__(self, posix_time, usage, data):
     """Initializes a mactime-based event object.
 
     Args:
       posix_time: The POSIX time value.
       usage: The description of the usage of the time value.
+      data: A dict object containing extracted data from the body file.
     """
-    super(MactimeEvent, self).__init__(posix_time, usage, 'fs:mactime:line')
+    super(MactimeEvent, self).__init__(posix_time, usage)
+    self.user_sid = unicode(data.get('uid', u''))
+    self.user_gid = data.get('gid', None)
+    self.md5 = data.get('md5', None)
+    self.filename = data.get('name', 'N/A')
+    self.inode = data.get('inode', 0)
+    self.mode_as_string = data.get('mode_as_string', None)
+    self.size = data.get('size', None)
 
 
 class MactimeParser(text_parser.TextCSVParser):
@@ -67,55 +76,29 @@ class MactimeParser(text_parser.TextCSVParser):
       return False
 
     try:
-      if str(int(row['size'])) != row['size']:
+      # Verify that the "size" field is an integer, thus cast it to int
+      # and then back to string so it can be compared, if the value is
+      # not a string representation of an integer, eg: '12a' then this
+      # conversion will fail and we return a False value.
+      if str(int(row.get('size', '0'), 10)) != row.get('size', None):
         return False
     except ValueError:
       return False
 
+    # TODO: Add additional verification.
     return True
 
   def ParseRow(self, row):
-    """Parse a single row and yields an extracted EventContainer from it."""
-    container = event.EventContainer()
+    """Parse a single row and yield extracted EventObjects from it."""
+    for key, value in row.iteritems():
+      try:
+        row[key] = int(value, 10)
+      except ValueError:
+        pass
 
-    for key, value in row.items():
-      if key == 'md5' and value == '0':
+    for key, timestamp_description in self._TIMESTAMP_DESC_MAP.iteritems():
+      value = row.get(key, None)
+      if not value:
         continue
-      if key in self._TIMESTAMP_DESC_MAP.keys():
-        continue
-
-      if key == 'inode':
-        try:
-          container.inode = int(value, 10)
-        except ValueError:
-          pass
-      else:
-        setattr(container, key, value)
-
-      # TODO: Refactor into a helper so this can be used by other
-      # modules as well.
-      if key == 'uid':
-        setattr(container, 'username', value)
-        if hasattr(self._pre_obj, 'users'):
-          for user in self._pre_obj.users:
-            if user.get('sid', '') == value:
-              container.username = user.get('name', 'N/A')
-            if user.get('uid', '') == value:
-              container.username = user.get('name', 'N/A')
-
-    for key in self._TIMESTAMP_DESC_MAP.keys():
-      value = row.get(key, '0')
-      if value:
-        try:
-          int_value = int(value, 10)
-        except ValueError as exception:
-          logging.error(
-              u'Unable to convert value to an integer, with error: {}'.format(
-                  exception))
-          continue
-        container.Append(MactimeEvent(
-            int_value, self._TIMESTAMP_DESC_MAP[key]))
-
-    if len(container) > 0:
-      yield container
-
+      yield MactimeEvent(
+          value, timestamp_description, row)

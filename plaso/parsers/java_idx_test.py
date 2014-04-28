@@ -39,11 +39,11 @@ class IDXTest(test_lib.ParserTestCase):
     """Tests the Parse function on a version 602 IDX file."""
     test_file = self._GetTestFilePath(['java_602.idx'])
     event_generator = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_container.events), 2)
+    self.assertEquals(len(event_objects), 2)
 
-    event_object = event_container.events[0]
+    event_object = event_objects[0]
 
     idx_version_expected = 602
     self.assertEqual(event_object.idx_version, idx_version_expected)
@@ -62,7 +62,7 @@ class IDXTest(test_lib.ParserTestCase):
         last_modified_date_expected)
 
     # Parse second event. Same metadata; different timestamp event.
-    event_object = event_container.events[1]
+    event_object = event_objects[1]
 
     self.assertEqual(event_object.idx_version, idx_version_expected)
     self.assertEqual(event_object.ip_address, ip_address_expected)
@@ -79,11 +79,11 @@ class IDXTest(test_lib.ParserTestCase):
     """Tests the Parse function on a version 605 IDX file."""
     test_file = self._GetTestFilePath(['java.idx'])
     event_generator = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_container.events), 2)
+    self.assertEquals(len(event_objects), 2)
 
-    event_object = event_container.events[0]
+    event_object = event_objects[0]
 
     idx_version_expected = 605
     self.assertEqual(event_object.idx_version, idx_version_expected)
@@ -104,7 +104,7 @@ class IDXTest(test_lib.ParserTestCase):
         last_modified_date_expected)
 
     # Parse second event. Same metadata; different timestamp event.
-    event_object = event_container.events[1]
+    event_object = event_objects[1]
 
     self.assertEqual(event_object.idx_version, idx_version_expected)
     self.assertEqual(event_object.ip_address, ip_address_expected)

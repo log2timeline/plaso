@@ -39,18 +39,18 @@ class OXMLTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['Document.docx'])
     event_generator = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_container.events), 2)
+    self.assertEquals(len(event_objects), 2)
 
-    event_object = event_container.events[0]
+    event_object = event_objects[0]
 
     # Date: 2012-11-07T23:29:00.000000+00:00.
     self.assertEquals(event_object.timestamp, 1352330940000000)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
-    event_object = event_container.events[1]
+    event_object = event_objects[1]
 
     self.assertEquals(event_object.num_chars, u'13')
     self.assertEquals(event_object.total_time, u'1385')

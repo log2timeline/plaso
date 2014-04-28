@@ -38,15 +38,18 @@ class OpenXMLParserEvent(event.TimestampEvent):
 
   DATA_TYPE = 'metadata:openxml'
 
-  def __init__(self, dt_timestamp, usage):
+  def __init__(self, timestamp_string, usage, metadata):
     """Initializes the event object.
 
     Args:
-      dt_timestamp: A python datetime.datetime object.
+      timestamp_string: An ISO 8601 representation of a timestamp.
       usage: The description of the usage of the time value.
+      metadata: A dict object containing extracted metadata.
     """
-    timestamp = timelib.Timestamp.FromTimeString(dt_timestamp)
+    timestamp = timelib.Timestamp.FromTimeString(timestamp_string)
     super(OpenXMLParserEvent, self).__init__(timestamp, usage, self.DATA_TYPE)
+    for key, value in metadata.iteritems():
+      setattr(self, key, value)
 
 
 class OpenXMLParser(parser.BaseParser):
@@ -87,7 +90,7 @@ class OpenXMLParser(parser.BaseParser):
       file_entry: A file entry object.
 
     Yields:
-      An event container (EventContainer) that contains the parsed
+      An event object (EventObject) that contains the parsed
       attributes.
     """
     file_object = file_entry.GetFileObject()
@@ -111,6 +114,7 @@ class OpenXMLParser(parser.BaseParser):
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.parser_name, file_entry.name, 'OXML element(s) missing.'))
     metadata = {}
+    timestamps = {}
 
     rels_xml = zip_container.read('_rels/.rels')
     rels_root = ElementTree.fromstring(rels_xml)
@@ -131,35 +135,26 @@ class OpenXMLParser(parser.BaseParser):
             _, _, tag = element.tag.partition('}')
             # Not including the 'lpstr' attribute because it is
             # very verbose.
-            if tag != 'lpstr':
-              metadata[tag] = element.text
+            if tag == 'lpstr':
+              continue
 
-    event_container = event.EventContainer()
-    event_container.offset = 0
-    event_container.data_type = self.DATA_TYPE
+            if tag in ('created', 'modified', 'lastPrinted'):
+              timestamps[tag] = element.text
+            else:
+              tag_name = self._METAKEY_TRANSLATE.get(tag, self._FixString(tag))
+              metadata[tag_name] = element.text
 
-    for key, value in metadata.items():
-      if key in ('created', 'modified', 'lastPrinted'):
-        continue
-      attribute_name = self._METAKEY_TRANSLATE.get(key, self._FixString(key))
-      setattr(event_container, attribute_name, value)
+    if timestamps.get('created', None):
+      yield OpenXMLParserEvent(
+          timestamps.get('created'), eventdata.EventTimestamp.CREATION_TIME,
+          metadata)
 
-    if metadata.get('created', None):
-      event_container.Append(OpenXMLParserEvent(
-          metadata['created'], eventdata.EventTimestamp.CREATION_TIME))
+    if timestamps.get('modified', None):
+      yield OpenXMLParserEvent(
+          timestamps.get('modified'),
+          eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
 
-    if metadata.get('modified', None):
-      event_container.Append(OpenXMLParserEvent(
-          metadata['modified'], eventdata.EventTimestamp.MODIFICATION_TIME))
-
-    if metadata.get('lastPrinted', None):
-      event_container.Append(OpenXMLParserEvent(
-          metadata['lastPrinted'], eventdata.EventTimestamp.LAST_PRINTED))
-
-    if not event_container:
-      raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, 'timestamps missing.'))
-
-    file_object.close()
-    yield event_container
+    if timestamps.get('lastPrinted', None):
+      yield OpenXMLParserEvent(
+          timestamps.get('lastPrinted'), eventdata.EventTimestamp.LAST_PRINTED,
+          metadata)

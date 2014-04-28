@@ -431,11 +431,9 @@ class TextCSVParser(parser.BaseParser):
 
     text_file_object = text_file.TextFile(file_object)
 
-    self.entry_offset = 0
     # If we specifically define a number of lines we should skip do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
-      line = text_file_object.readline()
-      self.entry_offset += len(line)
+      _ = text_file_object.readline()
 
     reader = csv.DictReader(
         text_file_object, fieldnames=self.COLUMNS,
@@ -470,26 +468,18 @@ class TextCSVParser(parser.BaseParser):
           u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
           u'failed.').format(self.parser_name, path_spec_printable))
 
-    for event_object in self._ParseRow(row):
+    for event_object in self.ParseRow(row):
       if event_object:
+        event_object.offset = text_file_object.tell()
         yield event_object
 
     for row in reader:
-      for event_object in self._ParseRow(row):
+      for event_object in self.ParseRow(row):
         if event_object:
+          event_object.offset = text_file_object.tell()
           yield event_object
 
     file_object.close()
-
-  def _ParseRow(self, row):
-    """Parse a line and extract an EventObject from it if possible."""
-    for event_object in self.ParseRow(row):
-      if not event_object:
-        continue
-      event_object.offset = self.entry_offset
-      yield event_object
-
-    self.entry_offset += len(self.VALUE_SEPARATOR.join(row.values())) + 1
 
 
 def PyParseRangeCheck(lower_bound, upper_bound):
