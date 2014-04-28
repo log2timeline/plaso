@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains tests for Services registry parsing in Plaso."""
+"""This file contains tests for Services Windows Registry plugin."""
 
 import unittest
 
@@ -29,8 +29,8 @@ from plaso.winreg import test_lib as winreg_test_lib
 from plaso.winreg import winregistry
 
 
-class TestServicesRegistry(test_lib.RegistryPluginTestCase):
-  """The unit test for Services registry parsing."""
+class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
+  """The unit test for Services Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
