@@ -157,29 +157,36 @@ class AslParser(parser.BaseParser):
 
   # If the field is a String, we use this structure to decode each
   # integer byte in the corresponding character (ASCII Char).
-  OCTET_STRING = construct.ExprAdapter(
+  ASL_OCTET_STRING = construct.ExprAdapter(
       construct.Octet('string'),
-      encoder = lambda obj, ctx: ord(obj),
-      decoder = lambda obj, ctx: chr(obj))
+      encoder=lambda obj, ctx: ord(obj),
+      decoder=lambda obj, ctx: chr(obj))
 
   # Field string structure. If the first bit is 1, it means that it
   # is a String (1000) = 8, then the next nibble has the number of
   # characters. The last 7 bytes are the number of bytes.
-  STRING = construct.BitStruct(
-      'string', construct.Flag('type'), construct.Bits('filler', 3),
-      construct.If(lambda ctx: ctx.type, construct.Nibble('string_length')),
-      construct.If(lambda ctx: ctx.type, construct.Array(7, OCTET_STRING)))
+  ASL_STRING = construct.BitStruct(
+      'string',
+      construct.Flag('type'),
+      construct.Bits('filler', 3),
+      construct.If(
+          lambda ctx: ctx.type,
+          construct.Nibble('string_length')),
+      construct.If(
+          lambda ctx: ctx.type,
+          construct.Array(7, ASL_OCTET_STRING)))
 
   # 8-byte pointer to a byte position in the file.
-  POINTER = construct.UBInt64('pointer')
+  ASL_POINTER = construct.UBInt64('pointer')
 
   # Dynamic data structure pointed by a pointer that contains a String:
   # [2 bytes padding][4 bytes lenght of String][String].
   ASL_RECORD_DYN_VALUE = construct.Struct(
-      'asl_record_text_header',
+      'asl_record_dyn_value',
       construct.Padding(2),
       construct.PascalString(
-          'value', length_field = construct.UBInt32('length')))
+          'value',
+          length_field=construct.UBInt32('length')))
 
   def __init__(self, pre_obj, config):
     """Initializes the parser.
@@ -206,8 +213,7 @@ class AslParser(parser.BaseParser):
       header = self.ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Not an ASL Header, unable to parse.',
-          u'Reason given: {}'.format(exception))
+          u'Unable to parse ASL Header with error: {0:s}.'.format(exception))
 
     if header.magic != self.ASL_MAGIC:
       raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
@@ -254,8 +260,8 @@ class AslParser(parser.BaseParser):
     try:
       record_header = self.ASL_RECORD_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      logging.warning(u'Unable to parse ASL event, '
-                      u'reason given: {}'.format(exception))
+      logging.warning(
+          u'Unable to parse ASL event with error: {0:s}'.format(exception))
       return None, None
 
     # Variable tam_fields = is the real length of the dynamic fields.
@@ -297,12 +303,12 @@ class AslParser(parser.BaseParser):
       try:
         raw_field = file_object.read(8)
       except (IOError, construct.FieldError) as exception:
-        logging.warning(u'Unable to parse ASL event, '
-                        u'reason given: {}'.format(exception))
+        logging.warning(
+            u'Unable to parse ASL event with error: {0:d}'.format(exception))
         return None, None
       try:
         # Try to read as a String.
-        field = self.STRING.parse(raw_field)
+        field = self.ASL_STRING.parse(raw_field)
         values.append(''.join(field.string[0:field.string_length]))
         # Go to parse the next extra field.
         tam_fields -= 8
@@ -311,10 +317,10 @@ class AslParser(parser.BaseParser):
         pass
       # If it is not a string, it must be a pointer.
       try:
-        field = self.POINTER.parse(raw_field)
+        field = self.ASL_POINTER.parse(raw_field)
       except ValueError as exception:
-        logging.warning(u'Unable to parse ASL event, '
-                        u'reason given: {}'.format(exception))
+        logging.warning(
+            u'Unable to parse ASL event with error: {0:s}'.format(exception))
         return None, None
       if field != 0:
         # The next IF ELSE is only for performance issues, avoiding seek.
@@ -327,8 +333,9 @@ class AslParser(parser.BaseParser):
             values.append((self.ASL_RECORD_DYN_VALUE.parse(
                 dynamic_part[pos:])).value.partition('\x00')[0])
           except (IOError, construct.FieldError) as exception:
-            logging.warning(u'Unable to parse ASL event, '
-                            u'reason given: {}'.format(exception))
+            logging.warning(
+                u'Unable to parse ASL event with error: {0:s}'.format(
+                    exception))
             return None, None
         else:
           # Only if it is a pointer that points to the
@@ -341,9 +348,10 @@ class AslParser(parser.BaseParser):
               values.append((self.ASL_RECORD_DYN_VALUE.parse_stream(
                   file_object)).value.partition('\x00')[0])
             except (IOError, construct.FieldError):
-              logging.warning(u'The pointer at {0}(0x{0:x}) points to an'
-                              u'invalid information.'.format(
-                                  main_position - self.POINTER.sizeof()))
+              logging.warning((
+                  u'The pointer at {0:d} (0x{0:x}) points to invalid '
+                  u'information.').format(
+                      main_position - self.ASL_POINTER.sizeof()))
             # Come back to the position in the entry.
             _ = file_object.read(main_position - file_object.tell())
           else:
@@ -396,4 +404,3 @@ class AslParser(parser.BaseParser):
     return AslEvent(timestamp, record_position, message_id,
         level, record_header, read_uid, read_gid, computer_name,
         sender, facility, message, extra_information), record_header.next_offset
-

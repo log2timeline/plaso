@@ -157,7 +157,8 @@ class CupsIppParser(parser.BaseParser):
   INTEGER_8 = construct.UBInt8('integer')
   INTEGER_32 = construct.UBInt32('integer')
   TEXT = construct.PascalString(
-      'text', length_field = construct.UBInt8('length'))
+      'text',
+      length_field=construct.UBInt8('length'))
   BOOLEAN = construct.Struct(
       'boolean_value',
       construct.Padding(1),
@@ -201,8 +202,8 @@ class CupsIppParser(parser.BaseParser):
       header = self.CUPS_IPP_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Not a CUPS IPP Header, unable to parse.',
-          u'Reason given: {}'.format(exception))
+          u'Unable to parse CUPS IPP Header with error: {0:s}'.format(
+              exception))
 
     if (header.major_version != self.IPP_MAJOR_VERSION or
         header.minor_version != self.IPP_MINOR_VERSION):

@@ -135,9 +135,8 @@ class UtmpParser(parser.BaseParser):
     try:
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      raise errors.UnableToParseFile((
-          u'Not an UTMP Header, unable to parse. '
-          u'Reason given: {}').format(exception))
+      raise errors.UnableToParseFile(
+          u'Unable to parse UTMP Header with error: {0:s}'.format(exception))
     if structure.type not in self.STATUS_TYPE:
       raise errors.UnableToParseFile((
           u'Not an UTMP file, unknown type '
@@ -239,7 +238,7 @@ class UtmpParser(parser.BaseParser):
         computer_name, terminal, status, ip_address, entry)
 
   def _GetTextFromNullTerminatedString(
-      self, null_terminated_string, default_string = u'N/A'):
+      self, null_terminated_string, default_string=u'N/A'):
     """Get a UTF-8 text from a raw null terminated string.
 
     Args:
