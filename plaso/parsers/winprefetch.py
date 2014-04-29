@@ -168,8 +168,7 @@ class WinPrefetchParser(parser.BaseParser):
       file_header = self.FILE_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse file header. '
-          u'Reason given: {}'.format(exception))
+          u'Unable to parse file header with error: {0:s}'.format(exception))
 
     if not file_header:
       raise errors.UnableToParseFile('Unable to read file header')
@@ -200,8 +199,8 @@ class WinPrefetchParser(parser.BaseParser):
         file_information = None
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse file information v{0:d}. '
-          u'Reason given: {1}'.format(format_version, exception))
+          u'Unable to parse file information v{0:d} with error: {1:s}'.format(
+              format_version, exception))
 
     if not file_information:
       raise errors.UnableToParseFile('Unable to read file information')

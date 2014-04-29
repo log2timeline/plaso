@@ -225,7 +225,7 @@ if __name__ == '__main__':
   if not CheckPythonModule('six', '__version__', '1.1.0'):
     check_result = False
 
-  if not CheckPythonModule('construct', '__version__', '2.5.1'):
+  if not CheckPythonModule('construct', '__version__', '2.5.2'):
     check_result = False
 
   if not CheckPythonModule('dpkt', '__version__', '1.8'):
