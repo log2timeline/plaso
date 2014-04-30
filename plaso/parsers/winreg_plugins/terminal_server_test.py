@@ -21,6 +21,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import terminal_server
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -42,13 +43,16 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
         'UsernameHint', 'DOMAIN\\username'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
 
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-28 09:23:49.002031')
+
     server_key_path = (
         u'\\Software\\Microsoft\\Terminal Server Client\\Servers\\myserver.com')
     server_key = winreg_test_lib.TestRegKey(
-        server_key_path, 1346145829002031, values, offset=1456)
+        server_key_path, expected_timestamp, values, offset=1456)
 
     winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346145829002031, None, offset=865, subkeys=[server_key])
+        key_path, expected_timestamp, None, offset=865, subkeys=[server_key])
 
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
@@ -57,7 +61,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.timestamp, 1346145829002031)
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = u'[{0:s}] UsernameHint: DOMAIN\\username'.format(key_path)
     expected_msg_short = (
@@ -85,8 +89,10 @@ class DefaulTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
         'MRU1', 'computer.domain.com'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, 612))
 
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346145829002031, values, 1456)
+        key_path, expected_timestamp, values, 1456)
 
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
@@ -95,8 +101,7 @@ class DefaulTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Tue Aug 28 09:23:49.002031 UTC 2012
-    self.assertEquals(event_object.timestamp, 1346145829002031)
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = u'[{0:s}] MRU0: 192.168.16.60'.format(key_path)
     expected_msg_short = u'[{0:s}] MRU0: 192.168.16.60'.format(key_path)

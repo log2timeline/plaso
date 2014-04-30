@@ -407,6 +407,8 @@ class FileSystemScanner(object):
       type_indicators = analyzer.Analyzer.GetVolumeSystemTypeIndicators(
           source_path_spec)
 
+      logging.debug(u'Found volume system type indicators: {0!s}'.format(
+          type_indicators))
       if not type_indicators:
         # No supported volume system found, we are at the upper level.
         return source_path_spec
@@ -520,6 +522,8 @@ class FileSystemScanner(object):
     type_indicators = analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
         path_spec)
 
+    logging.debug(u'Found storage media image type indicators: {0!s}'.format(
+        type_indicators))
     if len(type_indicators) > 1:
       raise errors.FileSystemScannerError((
           u'Unsupported source: {0:s} found more than one storage media '
@@ -546,6 +550,8 @@ class FileSystemScanner(object):
           u'Unable to process image, with error {:s}'.format(
               exception))
 
+    logging.debug(u'Found file system type indicators: {0!s}'.format(
+        type_indicators))
     if len(type_indicators) > 1:
       raise errors.FileSystemScannerError((
           u'Unsupported source: {0:s} found more than one file system '

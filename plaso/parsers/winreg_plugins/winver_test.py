@@ -21,6 +21,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import winver
 from plaso.winreg import test_lib as winreg_test_lib
@@ -57,8 +58,9 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Fri Aug 31 20:09:55.000000 UTC 2012
-    self.assertEquals(event_object.timestamp, 1346443795000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-31 20:09:55')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # Note that the double spaces here are intentional.
     expected_msg = (
