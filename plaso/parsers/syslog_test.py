@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import syslog as syslog_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import syslog
 from plaso.parsers import test_lib
 
@@ -62,11 +63,14 @@ class SyslogUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[11], expected_msg, expected_msg_short)
 
-    # Mon Feb 29 01:15:43 UTC 2012.
-    self.assertEquals(event_objects[6].timestamp, 1330478143000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-02-29 01:15:43')
+    self.assertEquals(event_objects[6].timestamp, expected_timestamp)
 
-    # Sat Mar 23 23:01:18 UTC 2013 - testing year increment.
-    self.assertEquals(event_objects[8].timestamp, 1364079678000000)
+    # Testing year increment.
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-03-23 23:01:18')
+    self.assertEquals(event_objects[8].timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

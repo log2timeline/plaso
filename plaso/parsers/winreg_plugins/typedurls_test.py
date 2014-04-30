@@ -21,6 +21,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
+from plaso.lib import timelib_test
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import typedurls
@@ -48,8 +49,9 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Mon Mar 12 21:23:53.307749 UTC 2012
-    self.assertEquals(event_object.timestamp, 1331587433307749)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-03-12 21:23:53.307749')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'url1'
     expected_value = u'http://cnn.com/'
@@ -80,8 +82,9 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Wed Nov 10 07:58:15.811625 UTC 2010
-    self.assertEquals(event_object.timestamp, 1289375895811625)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2010-11-10 07:58:15.811625')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'url1'
     expected_value = u'\\\\controller'
