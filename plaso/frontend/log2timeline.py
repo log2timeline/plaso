@@ -252,7 +252,7 @@ class Log2TimelineFrontend(object):
       file_system_scanner.SetPartitionOffset(
           options.image_offset * bytes_per_sector)
 
-    if hasattr(options, 'partition_number'):
+    if getattr(options, 'partition_number', None) is not None:
       file_system_scanner.SetPartitionNumber(options.partition_number)
 
     if hasattr(options, 'vss_stores'):
@@ -431,7 +431,7 @@ def Main():
 
   function_group.add_argument(
       '--partition', dest='partition_number', action='store', type=int,
-      default=0, help=(
+      default=None, help=(
           'Choose a partition number from a disk image. This partition '
           'number should correspond to the number displayed from the parameter'
           ' --partition_map.'))

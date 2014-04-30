@@ -21,6 +21,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import officemru
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -47,8 +48,9 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Tue Mar 13 18:27:15.083000 UTC 2012
-    self.assertEquals(event_object.timestamp, 1331663235083000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-03-13 18:27:15.083')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'Item 1'
     expected_value = (
