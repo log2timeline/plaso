@@ -519,7 +519,7 @@ class GenericPreprocessCollector(object):
           # We need to pass only used arguments to the path specification
           # factory otherwise it will raise.
           kwargs = {}
-          if self._process_image:
+          if self._process_image and path_spec.parent:
             kwargs['parent'] = path_spec.parent
           kwargs['location'] = full_path
 
@@ -623,9 +623,15 @@ class GenericPreprocessCollector(object):
   def _GetPathSpec(self, path):
     """Retrieves the path specification."""
     if self._source_path_spec:
+      # We need to pass only used arguments to the path specification
+      # factory otherwise it will raise.
+      kwargs = {}
+      if self._process_image and self._source_path_spec.parent:
+        kwargs['parent'] = self._source_path_spec.parent
+      kwargs['location'] = path
+
       path_spec = path_spec_factory.Factory.NewPathSpec(
-          self._source_path_spec.type_indicator, location=path,
-          parent=self._source_path_spec.parent)
+          self._source_path_spec.type_indicator, **kwargs)
 
     elif self._process_image:
       # If source path spec was not defined fallback on the old method.

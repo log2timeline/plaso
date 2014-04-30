@@ -21,6 +21,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import winrar
 from plaso.winreg import test_lib as winreg_test_lib
@@ -45,8 +46,11 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
         '1', 'C:\\Downloads\\plaso-static.rar'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=612))
 
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-28 09:23:49.002031')
+
     winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346145829002031, values, offset=1456)
+        key_path, expected_timestamp, values, offset=1456)
 
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
@@ -55,8 +59,7 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Tue Aug 28 09:23:49.002031 UTC 2012
-    self.assertEquals(event_object.timestamp, 1346145829002031)
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_string = (
         u'[{0:s}] 0: C:\\Downloads\\The Sleeping Dragon CD1.iso').format(

@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import userassist
 
@@ -47,8 +48,9 @@ class WindowsXPUserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Tue Aug 4 15:11:22.811067 UTC 2009
-    self.assertEquals(event_object.timestamp, 1249398682811067)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2009-08-04 15:11:22.811067')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
     expected_value = u'[Count: 14]'
@@ -75,8 +77,9 @@ class WindowsXPUserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Wed Nov 10 07:49:37.078067 UTC 2010
-    self.assertEquals(event_object.timestamp, 1289375377078067)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2010-11-10 07:49:37.078067')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'Microsoft.Windows.GettingStarted'
     expected_value = (

@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import safari
 from plaso.parsers.plist_plugins import test_lib
@@ -48,8 +49,9 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
 
     event_object = event_objects[8]
 
-    # Mon Jul  8 17:31:00 UTC 2013.
-    self.assertEquals(event_objects[10].timestamp, 1373304660000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-08 17:31:00')
+    self.assertEquals(event_objects[10].timestamp, expected_timestamp)
     expected_url = u'http://netverslun.sci-mx.is/aminosyrur'
     self.assertEquals(event_object.url, expected_url)
 

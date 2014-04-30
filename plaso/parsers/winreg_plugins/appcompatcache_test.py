@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import event
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -48,8 +49,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[330]
 
-    # TODO: fix after clean up CL is submitted.
-    self.assertEquals(event_object.timestamp, 1333504720776749)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-04-04 01:58:40.776749')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -62,8 +64,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[9]
 
-    # TODO: fix after clean up CL is submitted.
-    self.assertEquals(event_object.timestamp, 1333503997932964)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-04-04 01:46:37.932964')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '

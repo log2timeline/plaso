@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import msie_zones
 from plaso.parsers.winreg_plugins import test_lib
@@ -46,8 +47,9 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
-    # Sun Aug 28 21:32:44.937675 UTC 2011
-    self.assertEquals(event_object.timestamp, 1314567164937675)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-08-28 21:32:44.937675')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'[1200] Run ActiveX controls and plug-ins'
     expected_value = u'0 (Allow)'
@@ -168,8 +170,9 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
-    # Sun Aug 28 21:32:44.937675 UTC 2011
-    self.assertEquals(event_object.timestamp, 1314567164937675)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-08-28 21:32:44.937675')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'[1200] Run ActiveX controls and plug-ins'
     expected_value = u'3 (Not Allowed)'
@@ -295,8 +298,9 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
-    # Fri Sep 16 21:12:40.145514 UTC 2011
-    self.assertEquals(event_object.timestamp, 1316207560145514)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-09-16 21:12:40.145514')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'[1200] Run ActiveX controls and plug-ins'
     expected_value = u'0 (Allow)'
@@ -336,8 +340,9 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
-    # Fri Sep 16 21:12:40.145514 UTC 2011
-    self.assertEquals(event_object.timestamp, 1316207560145514)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-09-16 21:12:40.145514')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'[1200] Run ActiveX controls and plug-ins'
     expected_value = u'3 (Not Allowed)'
