@@ -23,6 +23,9 @@ import shutil
 import tempfile
 import unittest
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+
 from plaso.collector import collector
 from plaso.lib import event
 from plaso.lib import queue
@@ -115,10 +118,13 @@ class CollectorTest(CollectorTestCase):
       for a_file in test_files:
         shutil.copy(a_file, dirname)
 
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
+
       test_collection_queue = queue.SingleThreadedQueue()
       test_store = queue.SingleThreadedQueue()
       test_collector = collector.Collector(
-          test_collection_queue, test_store, dirname, source_path_spec=None)
+          test_collection_queue, test_store, dirname, path_spec)
       test_collector.Collect()
 
       test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -129,6 +135,10 @@ class CollectorTest(CollectorTestCase):
 
   def testFileSystemWithFilterCollection(self):
     """Test collection on the file system with a filter."""
+    dirname = u'.'
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
+
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       filter_name = temp_file.name
@@ -141,7 +151,7 @@ class CollectorTest(CollectorTestCase):
     test_collection_queue = queue.SingleThreadedQueue()
     test_store = queue.SingleThreadedQueue()
     test_collector = collector.Collector(
-        test_collection_queue, test_store, './', source_path_spec=None)
+        test_collection_queue, test_store, dirname, path_spec)
     test_collector.SetFilter(filter_name, pre_obj)
     test_collector.Collect()
 
@@ -202,14 +212,19 @@ class CollectorTest(CollectorTestCase):
     """
     test_file = self._GetTestFilePath(['syslog_image.dd'])
 
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=volume_path_spec)
+
     test_collection_queue = queue.SingleThreadedQueue()
     test_storage_queue = queue.SingleThreadedQueue()
     test_storage_queue_producer = queue.EventObjectQueueProducer(
         test_storage_queue)
     test_collector = collector.Collector(
         test_collection_queue, test_storage_queue_producer, test_file,
-        source_path_spec=None)
-    test_collector.SetImageInformation(0)
+        path_spec)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -221,6 +236,12 @@ class CollectorTest(CollectorTestCase):
   def testImageWithFilterCollection(self):
     """Test collection on a storage media image file with a filter."""
     test_file = self._GetTestFilePath(['image.dd'])
+
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=volume_path_spec)
 
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -236,8 +257,7 @@ class CollectorTest(CollectorTestCase):
         test_storage_queue)
     test_collector = collector.Collector(
         test_collection_queue, test_storage_queue_producer, test_file,
-        source_path_spec=None)
-    test_collector.SetImageInformation(0)
+        path_spec)
     test_collector.SetFilter(filter_name, pre_obj)
     test_collector.Collect()
 

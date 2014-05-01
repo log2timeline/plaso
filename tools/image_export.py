@@ -23,7 +23,7 @@ import logging
 import os
 import sys
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -130,17 +130,17 @@ class ImageExtractor(object):
     if process_vss:
       logging.info(u'Extracting files from VSS.')
       os_path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_OS, location=self._image_path)
+          dfvfs_definitions.TYPE_INDICATOR_OS, location=self._image_path)
 
       if self._image_offset > 0:
         volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_TSK_PARTITION,
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
           start_offset=self._image_offset, parent=os_path_spec)
       else:
         volume_path_spec = os_path_spec
 
       vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
+          dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
           parent=volume_path_spec)
 
       vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(vss_path_spec)
@@ -184,9 +184,22 @@ class ImageExtractor(object):
     output_queue = queue.SingleThreadedQueue()
     output_producer = queue.EventObjectQueueProducer(output_queue)
 
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+         dfvfs_definitions.TYPE_INDICATOR_OS, location=self._source_path)
+
+    if self._image_offset > 0:
+      volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
+          start_offset=self._byte_offset, parent=os_path_spec)
+    else:
+      volume_path_spec = os_path_spec
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=volume_path_spec)
+
     image_collector = collector.Collector(
-        input_queue, output_producer, self._image_path, source_path_spec=None)
-    image_collector.SetImageInformation(self._image_offset)
+        input_queue, output_producer, self._image_path, path_spec)
 
     if process_vss:
       # TODO: don't we need a store number here?
