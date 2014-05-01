@@ -21,9 +21,8 @@ from plaso.lib import eventdata
 
 class WinJobFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Java Cache IDX download item."""
+
   DATA_TYPE = 'windows:tasks:job'
-  SOURCE_LONG = 'Windows Scheduled Task Job'
-  SOURCE_SHORT = 'Windows Job'
 
   FORMAT_STRING_PIECES = [
       u'Application: {application}',
@@ -31,3 +30,6 @@ class WinJobFormatter(eventdata.ConditionalEventFormatter):
       u'Scheduled by: {username}',
       u'Working Directory: {working_dir}',
       u'Run Iteration: {trigger}']
+
+  SOURCE_LONG = 'Windows Scheduled Task Job'
+  SOURCE_SHORT = 'JOB'

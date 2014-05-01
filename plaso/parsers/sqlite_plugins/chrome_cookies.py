@@ -19,7 +19,6 @@
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import timelib
 
 # pylint: disable=unused-import
 from plaso.parsers import cookie_plugins
@@ -27,30 +26,18 @@ from plaso.parsers.cookie_plugins import interface as cookie_interface
 from plaso.parsers.sqlite_plugins import interface
 
 
-class ChromeCookieEvent(event.TimestampEvent):
+class ChromeCookieEvent(event.WebKitTimeEvent):
   """Convenience class for a Chrome Cookie event."""
 
   DATA_TYPE = 'chrome:cookie:entry'
 
-  def __init__(self, webkit_timestamp, timestamp_desc):
-    """Initialize the event.
+  def __init__(self, timestamp, usage, hostname, cookie_name, value,
+               path, secure, httponly, persistent):
+    """Initializes the event.
 
     Args:
-      webkit_timestamp: Timestamp in the WebKit format.
-      timestamp_desc: A timestamp description.
-    """
-    timestamp = timelib.Timestamp.FromWebKitTime(webkit_timestamp)
-    super(ChromeCookieEvent, self).__init__(timestamp, timestamp_desc)
-
-
-class ChromeCookieContainer(event.EventContainer):
-  """Convenience class for a Chrome Cookie event container."""
-
-  def __init__(self, hostname, cookie_name, value, path, secure, httponly,
-               persistent):
-    """Initializes the container.
-
-    Args:
+      timestamp: The timestamp value in WebKit format..
+      usage: Timestamp description string.
       hostname: The hostname of host that set the cookie value.
       cookie_name: The name field of the cookie.
       value: The value of the cookie.
@@ -61,7 +48,7 @@ class ChromeCookieContainer(event.EventContainer):
       side script.
       persistent: A flag indicating cookies persistent value.
     """
-    super(ChromeCookieContainer, self).__init__()
+    super(ChromeCookieEvent, self).__init__(timestamp, usage)
     if hostname.startswith('.'):
       hostname = hostname[1:]
 
@@ -122,21 +109,24 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
 
     Yields:
-      An event container (ChromeCookieContainer) containing the event data.
+      An event object (instance of ChromeCookieContainer) containing the event
+      data.
     """
-    container = ChromeCookieContainer(
+    yield ChromeCookieEvent(
+        row['creation_utc'], eventdata.EventTimestamp.CREATION_TIME,
         row['host_key'], row['name'], row['value'], row['path'], row['secure'],
         row['httponly'], row['persistent'])
 
-    container.Append(ChromeCookieEvent(
-        row['creation_utc'], eventdata.EventTimestamp.CREATION_TIME))
-
-    container.Append(ChromeCookieEvent(
-        row['last_access_utc'], eventdata.EventTimestamp.ACCESS_TIME))
+    yield ChromeCookieEvent(
+        row['last_access_utc'], eventdata.EventTimestamp.ACCESS_TIME,
+        row['host_key'], row['name'], row['value'], row['path'], row['secure'],
+        row['httponly'], row['persistent'])
 
     if row['has_expires']:
-      container.Append(ChromeCookieEvent(
-          row['expires_utc'], 'Cookie Expires'))
+      yield ChromeCookieEvent(
+          row['expires_utc'], 'Cookie Expires',
+          row['host_key'], row['name'], row['value'], row['path'],
+          row['secure'], row['httponly'], row['persistent'])
 
     # Go through all cookie plugins to see if there are is any specific parsing
     # needed.
@@ -144,8 +134,18 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       try:
         for event_object in cookie_plugin.Process(
             cookie_name=row['name'], cookie_data=row['value']):
-          container.Append(event_object)
+          # TODO: Reduce repeated code and combine with ChromeCookieEvent.
+          # This might need to take place after EventObject redesign
+          # to make sure it can be done (side effect of removing conatiners).
+          event_object.httponly = True if row['httponly'] else False
+          event_object.persistent = True if row['persistent'] else False
+          event_object.cookie_name = row['name']
+          hostname = row['host_key']
+          if hostname.startswith('.'):
+            hostname = hostname[1:]
+          event_object.host = hostname
+          event_object.url = u'http{:s}://{:s}{:s}'.format(
+              u's' if row['secure'] else u'', hostname, row['path'])
+          yield event_object
       except errors.WrongPlugin:
         pass
-
-    yield container

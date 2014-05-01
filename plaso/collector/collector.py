@@ -46,9 +46,8 @@ def _SendContainerToStorage(file_entry, storage_queue_producer):
                             EventObjectQueueProducer).
   """
   stat_object = file_entry.GetStat()
-  event_generator = filestat.GetEventContainerFromStat(stat_object)
 
-  for event_object in event_generator:
+  for event_object in filestat.StatEvents.GetEventsFromStat(stat_object):
     # TODO: dfVFS refactor: move display name to output since the path
     # specification contains the full information.
     event_object.display_name = u'{:s}:{:s}'.format(
@@ -56,7 +55,7 @@ def _SendContainerToStorage(file_entry, storage_queue_producer):
 
     event_object.filename = file_entry.name
     event_object.pathspec = file_entry.path_spec
-    event_object.parser = u'PfileStatParser'
+    event_object.parser = u'FileStatParser'
     event_object.inode = utils.GetInodeValue(stat_object.ino)
 
     storage_queue_producer.ProduceEventObject(event_object)
@@ -245,7 +244,12 @@ class Collector(queue.PathSpecQueueProducer):
 
       number_of_vss = vss_file_entry.number_of_sub_file_entries
 
-      for store_index in range(0, number_of_vss):
+      if self._vss_stores:
+        vss_store_range = [store_nr - 1 for store_nr in self._vss_stores]
+      else:
+        vss_store_range = range(0, number_of_vss)
+
+      for store_index in vss_store_range:
         logging.info(u'Collecting from VSS volume: {0:d} out of: {1:d}'.format(
             store_index + 1, number_of_vss))
         self._ProcessVss(volume_path_spec, store_index)

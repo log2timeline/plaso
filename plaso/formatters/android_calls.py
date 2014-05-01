@@ -31,4 +31,4 @@ class AndroidCallFormatter(eventdata.ConditionalEventFormatter):
   FORMAT_STRING_SHORT_PIECES = [u'{call_type} Call']
 
   SOURCE_LONG = 'Android Call History'
-  SOURCE_SHORT = 'Call History'
+  SOURCE_SHORT = 'LOG'

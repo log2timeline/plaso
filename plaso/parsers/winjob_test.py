@@ -40,11 +40,11 @@ class WinJobTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['wintask.job'])
     event_generator = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_container.events), 2)
+    self.assertEquals(len(event_objects), 2)
 
-    event_object = event_container.events[0]
+    event_object = event_objects[0]
 
     application_expected = (
         u'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe')
@@ -72,7 +72,7 @@ class WinJobTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Parse second event. Same metadata; different timestamp event.
-    event_object = event_container.events[1]
+    event_object = event_objects[1]
 
     self.assertEqual(event_object.application, application_expected)
     self.assertEqual(event_object.username, username_expected)

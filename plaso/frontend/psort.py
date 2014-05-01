@@ -377,11 +377,11 @@ def ParseStorage(my_args):
       # Wait for all analysis plugins to complete.
       for number, analysis_process in enumerate(analysis_processes):
         logging.debug(
-            u'Waiting for analysis plugin: {0:s} to complete.'.format(number))
+            u'Waiting for analysis plugin: {0:d} to complete.'.format(number))
         if analysis_process.is_alive():
           analysis_process.join(10)
         else:
-          logging.warning(u'Plugin {0:s} already stopped.'.format(number))
+          logging.warning(u'Plugin {0:d} already stopped.'.format(number))
           analysis_process.terminate()
       logging.debug(u'All analysis plugins are now stopped.')
 

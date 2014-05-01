@@ -35,7 +35,7 @@ class FileStatTest(test_lib.ParserTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    self._parser = filestat.PfileStatParser(pre_obj)
+    self._parser = filestat.FileStatParser(pre_obj)
 
   def testTSKFile(self):
     """Read a file within an image file and make few tests."""
@@ -47,10 +47,10 @@ class FileStatTest(test_lib.ParserTestCase):
         parent=os_path_spec)
 
     event_generator = self._ParseFileByPathSpec(self._parser, tsk_path_spec)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The TSK file entry has 3 event objects.
-    self.assertEquals(len(event_container.events), 3)
+    self.assertEquals(len(event_objects), 3)
 
   def testZipFile(self):
     """Test a ZIP file."""
@@ -62,10 +62,10 @@ class FileStatTest(test_lib.ParserTestCase):
         parent=os_path_spec)
 
     event_generator = self._ParseFileByPathSpec(self._parser, zip_path_spec)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The ZIP file has 1 event object.
-    self.assertEquals(len(event_container.events), 1)
+    self.assertEquals(len(event_objects), 1)
 
   def testGzipFile(self):
     """Test a GZIP file."""
@@ -76,10 +76,10 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
 
     event_generator = self._ParseFileByPathSpec(self._parser, gzip_path_spec)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The gzip file has 1 event object.
-    self.assertEquals(len(event_container.events), 1)
+    self.assertEquals(len(event_objects), 1)
 
   def testTarFile(self):
     """Test a TAR file."""
@@ -91,10 +91,10 @@ class FileStatTest(test_lib.ParserTestCase):
         parent=os_path_spec)
 
     event_generator = self._ParseFileByPathSpec(self._parser, tar_path_spec)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The tar file has 1 event object.
-    self.assertEquals(len(event_container.events), 1)
+    self.assertEquals(len(event_objects), 1)
 
   def testNestedFile(self):
     """Test a nested file."""
@@ -108,10 +108,10 @@ class FileStatTest(test_lib.ParserTestCase):
         parent=gzip_path_spec)
 
     event_generator = self._ParseFileByPathSpec(self._parser, tar_path_spec)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The tar file has 1 event object.
-    self.assertEquals(len(event_container.events), 1)
+    self.assertEquals(len(event_objects), 1)
 
     test_file = self._GetTestFilePath(['syslog.tgz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -120,10 +120,10 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
 
     event_generator = self._ParseFileByPathSpec(self._parser, gzip_path_spec)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The gzip file has 1 event object.
-    self.assertEquals(len(event_container.events), 1)
+    self.assertEquals(len(event_objects), 1)
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
@@ -138,10 +138,10 @@ class FileStatTest(test_lib.ParserTestCase):
         parent=tsk_path_spec)
 
     event_generator = self._ParseFileByPathSpec(self._parser, zip_path_spec)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # The ZIP file has 1 event objects.
-    self.assertEquals(len(event_container.events), 1)
+    self.assertEquals(len(event_objects), 1)
 
 
 if __name__ == '__main__':
