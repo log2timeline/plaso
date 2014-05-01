@@ -27,19 +27,23 @@ from plaso.lib import parser
 import pyevt
 
 
-class WinEvtRecordEventContainer(event.EventContainer):
-  """Convenience class for a Windows EventLog (EVT) record event container."""
+class WinEvtRecordEvent(event.PosixTimeEvent):
+  """Convenience class for a Windows EventLog (EVT) record event."""
 
-  def __init__(self, evt_record, recovered=False):
-    """Initializes the event container.
+  DATA_TYPE = 'windows:evt:record'
+
+  def __init__(
+      self, timestamp, timestamp_description, evt_record, recovered=False):
+    """Initializes the event.
 
     Args:
+      timestamp: The POSIX timestamp value.
+      timestamp_description: A description string for the timestamp value.
       evt_record: The EVT record (pyevt.record).
       recovered: Boolean value to indicate the record was recovered, False
                  by default.
     """
-    super(WinEvtRecordEventContainer, self).__init__()
-    self.data_type = 'windows:evt:record'
+    super(WinEvtRecordEvent, self).__init__(timestamp, timestamp_description)
 
     self.recovered = recovered
     self.offset = evt_record.offset
@@ -85,20 +89,15 @@ class WinEvtParser(parser.BaseParser):
   def _ParseRecord(self, evt_record, recovered=False):
     """Extract data from a Windows EventLog (EVT) record.
 
-       Every record is stored in an event container with 2 sub event objects
-       one for each timestamp.
-
     Args:
       evt_record: An event record (pyevt.record).
       recovered: Boolean value to indicate the record was recovered, False
                  by default.
 
-    Returns:
-      An event container (WinEvtRecordEventContainer) that contains the parsed
+    Yields:
+      An event object (instance of WinEvtRecordEvent) that contains the parsed
       data.
     """
-    event_container = WinEvtRecordEventContainer(evt_record, recovered)
-
     try:
       creation_time = evt_record.get_creation_time_as_integer()
     except OverflowError as exception:
@@ -107,9 +106,10 @@ class WinEvtParser(parser.BaseParser):
               exception))
       creation_time = 0
 
-    event_container.Append(event.PosixTimeEvent(
-        creation_time, eventdata.EventTimestamp.CREATION_TIME,
-        event_container.data_type))
+    if creation_time:
+      yield WinEvtRecordEvent(
+          creation_time, eventdata.EventTimestamp.CREATION_TIME,
+          evt_record, recovered)
 
     try:
       written_time = evt_record.get_written_time_as_integer()
@@ -119,24 +119,20 @@ class WinEvtParser(parser.BaseParser):
               exception))
       written_time = 0
 
-    event_container.Append(event.PosixTimeEvent(
-        written_time, eventdata.EventTimestamp.WRITTEN_TIME,
-        event_container.data_type))
-
-    return event_container
+    if written_time:
+      yield WinEvtRecordEvent(
+          written_time, eventdata.EventTimestamp.WRITTEN_TIME,
+          evt_record, recovered)
 
   def Parse(self, file_entry):
     """Extract data from a Windows EventLog (EVT) file.
-
-       A separate event container is returned for every record to limit
-       memory consumption.
 
     Args:
       file_entry: A file entry object.
 
     Yields:
-      An event container (WinEvtRecordEventContainer) that contains
-      the parsed data.
+      An event object (instance of WinEvtRecordEvent) that contains the parsed
+      data.
     """
     file_object = file_entry.GetFileObject()
     evt_file = pyevt.file()
@@ -152,7 +148,8 @@ class WinEvtParser(parser.BaseParser):
     for record_index in range(0, evt_file.number_of_records):
       try:
         evt_record = evt_file.get_record(record_index)
-        yield self._ParseRecord(evt_record)
+        for event_object in self._ParseRecord(evt_record):
+          yield event_object
       except IOError as exception:
         logging.warning((
             u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
@@ -162,7 +159,8 @@ class WinEvtParser(parser.BaseParser):
     for record_index in range(0, evt_file.number_of_recovered_records):
       try:
         evt_record = evt_file.get_recovered_record(record_index)
-        yield self._ParseRecord(evt_record, recovered=True)
+        for event_object in self._ParseRecord(evt_record, recovered=True):
+          yield event_object
       except IOError as exception:
         logging.info((
             u'[{0:s}] unable to parse recovered event record: {1:d} in file: '

@@ -90,7 +90,10 @@ class L2tcsv(output.FileLogOutputFormatter):
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
-      extras.append(u'{0:s}: {1:s} '.format(key, getattr(event_object, key)))
+      # Force a string conversion since some of the extra attributes
+      # can be numbers or bools.
+      value = getattr(event_object, key)
+      extras.append(u'{0:s}: {1!s} '.format(key, value))
     extra = ' '.join(extras)
 
     inode = getattr(event_object, 'inode', '-')

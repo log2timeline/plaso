@@ -40,7 +40,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['SysEvent.Evt'])
     event_generator = self._ParseFile(self._parser, test_file)
-    event_containers = self._GetEventContainers(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # Windows Event Log (EVT) information:
     #	Version                     : 1.1
@@ -48,11 +48,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #	Number of recovered records : 437
     #	Log type                    : System
 
-    self.assertEquals(len(event_containers), 6063 + 437)
-
-    event_container = event_containers[0]
-
-    self.assertEquals(len(event_container.events), 2)
+    self.assertEquals(len(event_objects), (6063 + 437) * 2)
 
     # Event number      : 1392
     # Creation time     : Jul 27, 2011 06:41:47 UTC
@@ -67,23 +63,23 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     # String: 2         : "The system detected a possible attempt to compromise
     #                     security. Please ensure that you can contact the
     #                     server that authenticated you.\r\n (0xc0000388)"
-
-    self.assertEquals(event_container.record_number, 1392)
-    self.assertEquals(event_container.event_type, 2)
-    self.assertEquals(event_container.computer_name, u'WKS-WINXP32BIT')
-    self.assertEquals(event_container.source_name, u'LSASRV')
-    self.assertEquals(event_container.event_category, 3)
-    self.assertEquals(event_container.event_identifier, 0x8000a001)
-    self.assertEquals(event_container.strings[0], u'cifs/CONTROLLER')
+    event_object = event_objects[1]
+    self.assertEquals(event_object.record_number, 1392)
+    self.assertEquals(event_object.event_type, 2)
+    self.assertEquals(event_object.computer_name, u'WKS-WINXP32BIT')
+    self.assertEquals(event_object.source_name, u'LSASRV')
+    self.assertEquals(event_object.event_category, 3)
+    self.assertEquals(event_object.event_identifier, 0x8000a001)
+    self.assertEquals(event_object.strings[0], u'cifs/CONTROLLER')
 
     expected_string = (
         u'"The system detected a possible attempt to compromise security. '
         u'Please ensure that you can contact the server that authenticated you.'
         u'\r\n (0xc0000388)"')
 
-    self.assertEquals(event_container.strings[1], expected_string)
+    self.assertEquals(event_object.strings[1], expected_string)
 
-    event_object = event_container.events[0]
+    event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-07-27 06:41:47')
@@ -91,7 +87,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
-    event_object = event_container.events[1]
+    event_object = event_objects[1]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-07-27 06:41:47')

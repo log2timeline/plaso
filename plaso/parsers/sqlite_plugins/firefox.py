@@ -29,20 +29,24 @@ if sqlite3.sqlite_version_info < (3, 7, 8):
       'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
 
 
-class FirefoxPlacesBookmarkAnnotation(event.EventContainer):
-  """Convenience class for a Firefox bookmark annotation event container."""
+class FirefoxPlacesBookmarkAnnotation(event.TimestampEvent):
+  """Convenience class for a Firefox bookmark annotation event."""
 
-  def __init__(self, row_id, title, url, content):
+  DATA_TYPE = 'firefox:places:bookmark_annotation'
+
+  def __init__(self, timestamp, usage, row_id, title, url, content):
     """Initializes the event object.
 
     Args:
+      timestamp: The timestamp value.
+      usage: Timestamp description string.
       row_id: The identifier of the corresponding row.
       title: The title of the bookmark folder.
       url: The bookmarked URL.
       content: The content of the annotation.
     """
-    super(FirefoxPlacesBookmarkAnnotation, self).__init__()
-    self.data_type = 'firefox:places:bookmark_annotation'
+    super(FirefoxPlacesBookmarkAnnotation, self).__init__(
+        timestamp, usage)
 
     self.offset = row_id
     self.title = title
@@ -50,25 +54,31 @@ class FirefoxPlacesBookmarkAnnotation(event.EventContainer):
     self.content = content
 
 
-class FirefoxPlacesBookmarkFolder(event.EventContainer):
-  """Convenience class for a Firefox bookmark folder event container."""
+class FirefoxPlacesBookmarkFolder(event.TimestampEvent):
+  """Convenience class for a Firefox bookmark folder event."""
 
-  def __init__(self, row_id, title):
+  DATA_TYPE = 'firefox:places:bookmark_folder'
+
+  def __init__(self, timestamp, usage, row_id, title):
     """Initializes the event object.
 
     Args:
+      timestamp: The timestamp value.
+      usage: Timestamp description string.
       row_id: The identifier of the corresponding row.
       title: The title of the bookmark folder.
     """
-    super(FirefoxPlacesBookmarkFolder, self).__init__()
-    self.data_type = 'firefox:places:bookmark_folder'
+    super(FirefoxPlacesBookmarkFolder, self).__init__(
+        timestamp, usage)
 
     self.offset = row_id
     self.title = title
 
 
-class FirefoxPlacesBookmark(event.EventContainer):
-  """Convenience class for a Firefox bookmark event container."""
+class FirefoxPlacesBookmark(event.TimestampEvent):
+  """Convenience class for a Firefox bookmark event."""
+
+  DATA_TYPE = 'firefox:places:bookmark'
 
   # TODO: move to formatter.
   _TYPES = {
@@ -79,11 +89,13 @@ class FirefoxPlacesBookmark(event.EventContainer):
   _TYPES.setdefault('N/A')
 
   # pylint: disable=redefined-builtin
-  def __init__(self, row_id, type, title, url, places_title, hostname,
-               visit_count):
+  def __init__(self, timestamp, usage, row_id, type, title, url, places_title,
+               hostname, visit_count):
     """Initializes the event object.
 
     Args:
+      timestamp: The timestamp value.
+      usage: Timestamp description string.
       row_id: The identifier of the corresponding row.
       type: Integer value containing the bookmark type.
       title: The title of the bookmark folder.
@@ -92,8 +104,7 @@ class FirefoxPlacesBookmark(event.EventContainer):
       hostname: The hostname.
       visit_count: The visit count.
     """
-    super(FirefoxPlacesBookmark, self).__init__()
-    self.data_type = 'firefox:places:bookmark'
+    super(FirefoxPlacesBookmark, self).__init__(timestamp, usage)
 
     self.offset = row_id
     self.type = self._TYPES[type]
@@ -106,6 +117,7 @@ class FirefoxPlacesBookmark(event.EventContainer):
 
 class FirefoxPlacesPageVisitedEvent(event.EventObject):
   """Convenience class for a Firefox page visited event."""
+
   DATA_TYPE = 'firefox:places:page_visited'
 
   def __init__(self, timestamp, row_id, url, title, hostname, visit_count,
@@ -138,14 +150,18 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
       self.extra = extra
 
 
-class FirefoxDownload(event.EventContainer):
-  """Convenience class for a Firefox download event container."""
+class FirefoxDownload(event.TimestampEvent):
+  """Convenience class for a Firefox download event."""
 
-  def __init__(self, row_id, name, url, referrer, full_path, temporary_location,
-               received_bytes, total_bytes, mime_type):
+  DATA_TYPE = 'firefox:downloads:download'
+
+  def __init__(self, timestamp, usage, row_id, name, url, referrer, full_path,
+               temporary_location, received_bytes, total_bytes, mime_type):
     """Initializes the event object.
 
     Args:
+      timestamp: The timestamp value.
+      usage: Timestamp description string.
       row_id: The identifier of the corresponding row.
       name: The name of the download.
       url: The source URL of the download.
@@ -156,8 +172,7 @@ class FirefoxDownload(event.EventContainer):
       total_bytes: The total number of bytes of the download.
       mime_type: The mime type of the download.
     """
-    super(FirefoxDownload, self).__init__()
-    self.data_type = 'firefox:downloads:download'
+    super(FirefoxDownload, self).__init__(timestamp, usage)
 
     self.offset = row_id
     self.name = name
@@ -223,21 +238,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
 
     Yields:
-      An event container (FirefoxPlacesBookmarkAnnotation) containing the event
-      data.
+      An event object (instance of FirefoxPlacesBookmarkAnnotation) containing
+      the event data.
     """
-    container = FirefoxPlacesBookmarkAnnotation(
+    yield FirefoxPlacesBookmarkAnnotation(
+        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
         row['id'], row['title'], row['url'], row['content'])
 
-    container.Append(event.TimestampEvent(
-        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-        container.data_type))
-
-    container.Append(event.TimestampEvent(
+    yield FirefoxPlacesBookmarkAnnotation(
         row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-        container.data_type))
-
-    yield container
+        row['id'], row['title'], row['url'], row['content'])
 
   def ParseBookmarkFolderRow(self, row, **unused_kwargs):
     """Parses a bookmark folder row.
@@ -246,26 +256,21 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
 
     Yields:
-      An event container (FirefoxPlacesBookmarkFolder) containing the event
-      data.
+      An event object (instance of FirefoxPlacesBookmarkFolder) containing the
+      event data.
     """
     if not row['title']:
       title = 'N/A'
     else:
       title = row['title']
 
-    container = FirefoxPlacesBookmarkFolder(
+    yield FirefoxPlacesBookmarkFolder(
+        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
         row['id'], title)
 
-    container.Append(event.TimestampEvent(
-        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-        container.data_type))
-
-    container.Append(event.TimestampEvent(
+    yield FirefoxPlacesBookmarkFolder(
         row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-        container.data_type))
-
-    yield container
+        row['id'], title)
 
   def ParseBookmarkRow(self, row, **unused_kwargs):
     """Parses a bookmark row.
@@ -274,22 +279,20 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
 
     Yields:
-      An event container (FirefoxPlacesBookmark) containing the event data.
+      An event object (instance of FirefoxPlacesBookmark) containing the event
+      data.
     """
-    container = FirefoxPlacesBookmark(
+    yield FirefoxPlacesBookmark(
+        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
         row['id'], row['type'], row['bookmark_title'], row['url'],
         row['places_title'], getattr(row, 'rev_host', 'N/A'),
         row['visit_count'])
 
-    container.Append(event.TimestampEvent(
-        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-        container.data_type))
-
-    container.Append(event.TimestampEvent(
+    yield FirefoxPlacesBookmark(
         row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-        container.data_type))
-
-    yield container
+        row['id'], row['type'], row['bookmark_title'], row['url'],
+        row['places_title'], getattr(row, 'rev_host', 'N/A'),
+        row['visit_count'])
 
   def ParsePageVisitedRow(self, row, cache, database, **unused_kwargs):
     """Parses a page visited row.
@@ -393,18 +396,14 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
 
     Yields:
-      An event container (FirefoxDownload) containing the event data.
+      An event object (instance of FirefoxDownload) containing the event data.
     """
-    container = FirefoxDownload(
+    yield FirefoxDownload(
+        row['startTime'], eventdata.EventTimestamp.START_TIME,
         row['id'], row['name'], row['source'], row['referrer'], row['target'],
         row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
 
-    container.Append(event.TimestampEvent(
-        row['startTime'], eventdata.EventTimestamp.START_TIME,
-        container.data_type))
-
-    container.Append(event.TimestampEvent(
+    yield FirefoxDownload(
         row['endTime'], eventdata.EventTimestamp.END_TIME,
-        container.data_type))
-
-    yield container
+        row['id'], row['name'], row['source'], row['referrer'], row['target'],
+        row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
