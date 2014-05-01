@@ -20,6 +20,7 @@
 from plaso.parsers import asl
 from plaso.parsers import bencode_parser
 from plaso.parsers import bsm
+from plaso.parsers import chrome_cache
 from plaso.parsers import cups_ipp
 from plaso.parsers import filestat
 from plaso.parsers import hachoir
