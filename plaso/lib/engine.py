@@ -141,8 +141,10 @@ class Engine(object):
       else:
         logging.debug(u'Starting a collection on image.')
 
+    self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
     collector_object = collector.Collector(
-        collection_queue, storage_queue, self._source, self._source_path_spec)
+        collection_queue, self._storage_queue_producer, self._source,
+        self._source_path_spec)
 
     if self._process_image and self._process_vss:
       collector_object.SetVssInformation(vss_stores=self._vss_stores)

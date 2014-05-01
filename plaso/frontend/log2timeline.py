@@ -347,7 +347,8 @@ def Main():
           'parsed then this parameter needs to be set manually.'))
 
   performance_group.add_argument(
-      '--buffer_size', '--bs', dest='buffer_size', action='store', default=0,
+      '--buffer_size', '--buffer-size', '--bs', dest='buffer_size',
+      action='store', default=0,
       help='The buffer size for the output (defaults to 196MiB).')
 
   performance_group.add_argument(
@@ -370,27 +371,29 @@ def Main():
             'eed to be included in the analysis.'))
 
   deep_group.add_argument(
-      '--vss_stores', dest='vss_stores', action='store', type=str, default=None,
-      help=('A range of stores can be defined as: 3..5. Multiple stores can '
-            'be defined as: 1,3,5 (a list of comma separated values). Ranges '
-            'and lists can also be combined as: 1,3..5. The first store is 1.'))
+      '--vss_stores', '--vss-stores', dest='vss_stores', action='store',
+      type=str, default=None, help=(
+          'A range of stores can be defined as: 3..5. Multiple stores can '
+          'be defined as: 1,3,5 (a list of comma separated values). Ranges '
+          'and lists can also be combined as: 1,3..5. The first store is 1.'))
 
   performance_group.add_argument(
-      '--single_thread', dest='single_thread', action='store_true',
-      default=False,
+      '--single_thread', '--single-thread', dest='single_thread',
+      action='store_true', default=False,
       help='Indicate that the tool should run in a single thread.')
 
   function_group.add_argument(
-      '-f', '--file_filter', dest='file_filter', action='store', type=unicode,
-      default=None, help=('List of files to include for targeted collection of'
-                          ' files to parse, one line per file path, setup is '
-                          '/path|file - where each element can contain either'
-                          ' a variable set in the preprocessing stage or a '
-                          'regular expression'))
+      '-f', '--file_filter', '--file-filter', dest='file_filter',
+      action='store', type=unicode, default=None, help=(
+          'List of files to include for targeted collection of files to parse, '
+          'one line per file path, setup is /path|file - where each element '
+          'can contain either a variable set in the preprocessing stage or a '
+          'regular expression'))
 
   deep_group.add_argument(
       '--scan_archives', dest='open_files', action='store_true', default=False,
       help=argparse.SUPPRESS)
+
   # This option is "hidden" for the time being, still left in there for testing
   # purposes, but hidden from the tool usage and help messages.
   #    help=('Indicate that the tool should try to open files to extract embedd'
@@ -422,8 +425,9 @@ def Main():
       help='Print out information about supported plugins and parsers.')
 
   info_group.add_argument(
-      '--partition_map', action='store_true', dest='partition_map',
-      default=False, help='Print out a partition map of a disk image.')
+      '--partition_map', '--partition-map', action='store_true',
+      dest='partition_map', default=False, help=(
+          'Print out a partition map of a disk image.'))
 
   function_group.add_argument(
       '--sector_size', dest='bytes_per_sector', action='store', type=int,
@@ -437,8 +441,8 @@ def Main():
           ' --partition_map.'))
 
   function_group.add_argument(
-      '--use_old_preprocess', dest='old_preprocess', action='store_true',
-      default=False, help=(
+      '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
+      action='store_true', default=False, help=(
           'Only used in conjunction when appending to a previous storage '
           'file. When this option is used then a new pre processing object '
           'is not calculated and instead the last one that got added to '
