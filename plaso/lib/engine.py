@@ -25,10 +25,13 @@ import signal
 import sys
 import traceback
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 import plaso
 from plaso import preprocessors
 from plaso import output as output_plugins   # pylint: disable=unused-import
-
 from plaso.collector import collector
 from plaso.lib import errors
 from plaso.lib import event
@@ -71,6 +74,9 @@ class Engine(object):
     self._process_vss = False
     self._run_preprocess = config.preprocess
     self._single_thread_mode = config.single_thread
+    self._source = None
+    self._source_file_entry = None
+    self._source_path_spec = None
     self._storage_queue_producer = None
     self._vss_stores = None
 
@@ -104,47 +110,42 @@ class Engine(object):
     # stat information - this depends on whether the stat parser is
     # loaded or not.
     include_directory_stat = False
+
     if hasattr(pre_obj, 'collection_information'):
       loaded_parsers = pre_obj.collection_information.get('parsers', [])
       if 'filestat' in loaded_parsers:
         include_directory_stat = True
 
-    if self._process_image:
-      # Note that os.path.isfile() will return false when self._source
-      # points to a device file.
-      if os.path.isdir(self._source):
-        raise errors.BadConfigOption(
-            u'Source: {0:s} cannot be a directory.'.format(self._source))
+    if self._source_path_spec.type_indicator in [
+        dfvfs_definitions.TYPE_INDICATOR_OS,
+        dfvfs_definitions.TYPE_INDICATOR_FAKE]:
 
+      if self._source_file_entry.IsDirectory():
+        if self._file_filter:
+          logging.debug(u'Starting a collection on directory with filter.')
+        elif self.config.recursive:
+          logging.debug(u'Starting a collection on directory.')
+
+      elif self._source_file_entry.IsFile():
+        logging.debug(u'Starting a collection on a single file.')
+        # No need for multiple workers when parsing a single file.
+        self.config.workers = 1
+
+      else:
+        raise errors.BadConfigOption(
+            u'Source: {0:s} has to be a file or directory.'.format(
+                self._source))
+    else:
       if self._file_filter:
         logging.debug(u'Starting a collection on image with filter.')
       else:
         logging.debug(u'Starting a collection on image.')
 
-    else:
-      if (not os.path.isfile(self._source) and
-          not os.path.isdir(self._source)):
-        raise errors.BadConfigOption(
-            u'Source: {0:s} has to be a file or directory.'.format(
-                self._source))
-
-      if self._file_filter:
-        logging.debug(u'Starting a collection on directory with filter.')
-      elif self.config.recursive:
-        logging.debug(u'Starting a collection on directory.')
-      else:
-        # No need for multiple workers when parsing a single file.
-        self.config.workers = 1
-
     collector_object = collector.Collector(
-        collection_queue, storage_queue, self._source,
-        source_path_spec=self._source_path_spec)
+        collection_queue, storage_queue, self._source, self._source_path_spec)
 
-    if self._process_image:
-      collector_object.SetImageInformation(self._byte_offset)
-
-      if self._process_vss:
-        collector_object.SetVssInformation(vss_stores=self._vss_stores)
+    if self._process_image and self._process_vss:
+      collector_object.SetVssInformation(vss_stores=self._vss_stores)
 
     if self._file_filter:
       collector_object.SetFilter(self._file_filter, pre_obj)
@@ -551,12 +552,33 @@ class Engine(object):
     Raises:
       BadConfigOption: if the source is invalid.
     """
-    if not os.path.exists(source):
+    try:
+      source = unicode(source)
+    except UnicodeDecodeError as exception:
+      raise errors.BadConfigOption(
+          u'Unable to convert source to Unicode with error: {0:s}.'.format(
+              exception))
+
+    if not source_path_spec:
+      source_path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_OS, location=source)
+
+    source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        source_path_spec)
+
+    if not source_file_entry:
       raise errors.BadConfigOption(
           u'No such device, file or directory: {0:s}.'.format(source))
 
-    self._source = unicode(source)
+    if (not source_file_entry.IsDirectory() and
+        not source_file_entry.IsFile() and
+        not source_file_entry.IsDevice()):
+      raise errors.CollectorError(
+          u'Source path: {0:s} not a device, file or directory.'.format(source))
+
+    self._source = source
     self._source_path_spec = source_path_spec
+    self._source_file_entry = source_file_entry
 
   def SetVssInformation(self, vss_stores):
     """Sets the Volume Shadow Snapshots (VSS) information.
