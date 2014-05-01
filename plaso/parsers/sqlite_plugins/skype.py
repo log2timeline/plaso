@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a basic Skype SQLite parser."""
+
 import logging
 
 from plaso.lib import event
@@ -25,10 +27,18 @@ __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
 class SkypeChatEvent(event.PosixTimeEvent):
   """Convenience class for a Skype event."""
+
   DATA_TYPE = 'skype:event:chat'
 
   def __init__(self, row, to_account):
-    """Build a Skype Event from a single row."""
+    """Build a Skype Event from a single row.
+
+    Args:
+      row: A row object (instance of sqlite3.Row) that contains the
+           extracted data from a single row in the database.
+      to_account: A string containing the accounts (excluding the
+                  author) of the conversation.
+    """
     super(SkypeChatEvent, self).__init__(
         row['timestamp'], 'Chat from Skype', self.DATA_TYPE)
 
@@ -39,13 +49,27 @@ class SkypeChatEvent(event.PosixTimeEvent):
     self.to_account = to_account
 
 
-class SkypeAccountContainer(event.EventContainer):
-  """Convenience container for account information."""
+class SkypeAccountEvent(event.PosixTimeEvent):
+  """Convenience class for account information."""
+
   DATA_TYPE = 'skype:event:account'
 
-  def __init__(self, full_name, display_name, email, country):
-    """Initialize the container."""
-    super(SkypeAccountContainer, self).__init__()
+  def __init__(
+      self, timestamp, usage, full_name, display_name, email, country):
+    """Initialize the event.
+
+    Args:
+      timestamp: The POSIX timestamp value.
+      usage: A string containing the description string of the timestamp.
+      full_name: A string containing the full name of the Skype account holder.
+      display_name: A string containing the chosen display name of the account
+                    holder.
+      email: A string containing the registered email address of the account
+             holder.
+      country: A string containing the chosen home country of the account
+               holder.
+    """
+    super(SkypeAccountEvent, self).__init__(timestamp, usage)
 
     self.username = u'{} <{}>'.format(full_name, display_name)
     self.display_name = display_name
@@ -56,6 +80,7 @@ class SkypeAccountContainer(event.EventContainer):
 
 class SkypeSMSEvent(event.PosixTimeEvent):
   """Convenience EventObject for SMS."""
+
   DATA_TYPE = 'skype:event:sms'
 
   def __init__(self, row, dst_number):
@@ -77,6 +102,7 @@ class SkypeSMSEvent(event.PosixTimeEvent):
 
 class SkypeCallEvent(event.PosixTimeEvent):
   """Convenience EventObject for the calls."""
+
   DATA_TYPE = 'skype:event:call'
 
   def __init__(self, timestamp, call_type, user_start_call,
@@ -105,6 +131,7 @@ class SkypeCallEvent(event.PosixTimeEvent):
 
 class SkypeTransferFileEvent(event.PosixTimeEvent):
   """Evaluate the action of send a file."""
+
   DATA_TYPE = 'skype:event:transferfile'
 
   def __init__(self, row, timestamp, action_type, source, destination):
@@ -178,35 +205,41 @@ class SkypePlugin(interface.SQLitePlugin):
 
   def ParseAccountInformation(self, row, **unused_kwargs):
     """Parses the Accounts database."""
-    container = SkypeAccountContainer(
-        row['fullname'], row['given_displayname'], row['emails'],
-        row['country'])
-
     if row['profile_timestamp']:
-      container.Append(event.PosixTimeEvent(
-          row['profile_timestamp'], 'Profile Changed'))
+      yield SkypeAccountEvent(
+          row['profile_timestamp'], 'Profile Changed',
+          row['fullname'], row['given_displayname'], row['emails'],
+          row['country'])
 
     if row['authreq_timestamp']:
-      container.Append(event.PosixTimeEvent(
-          row['authreq_timestamp'], 'Authenticate Request'))
+      yield SkypeAccountEvent(
+          row['authreq_timestamp'], 'Authenticate Request',
+          row['fullname'], row['given_displayname'], row['emails'],
+          row['country'])
 
     if row['lastonline_timestamp']:
-      container.Append(event.PosixTimeEvent(
-          row['lastonline_timestamp'], 'Last Online'))
+      yield SkypeAccountEvent(
+          row['lastonline_timestamp'], 'Last Online',
+          row['fullname'], row['given_displayname'], row['emails'],
+          row['country'])
 
     if row['mood_timestamp']:
-      container.Append(event.PosixTimeEvent(
-          row['mood_timestamp'], 'Mood Event'))
+      yield SkypeAccountEvent(
+          row['mood_timestamp'], 'Mood Event',
+          row['fullname'], row['given_displayname'], row['emails'],
+          row['country'])
 
     if row['sent_authrequest_time']:
-      container.Append(event.PosixTimeEvent(
-          row['sent_authrequest_time'], 'Auth Request Sent'))
+      yield SkypeAccountEvent(
+          row['sent_authrequest_time'], 'Auth Request Sent',
+          row['fullname'], row['given_displayname'], row['emails'],
+          row['country'])
 
     if row['lastused_timestamp']:
-      container.Append(event.PosixTimeEvent(
-          row['lastused_timestamp'], 'Last Used'))
-
-    yield container
+      yield SkypeAccountEvent(
+          row['lastused_timestamp'], 'Last Used',
+          row['fullname'], row['given_displayname'], row['emails'],
+          row['country'])
 
   def ParseChat(self, row, **unused_kwargs):
     """Parses a chat message row.

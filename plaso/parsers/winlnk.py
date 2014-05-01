@@ -29,16 +29,18 @@ if pylnk.get_version() < '20130304':
   raise ImportWarning('WinLnkParser requires at least pylnk 20130304.')
 
 
-class WinLnkLinkEventContainer(event.EventContainer):
-  """Convenience class for a Windows Shortcut (LNK) link event container."""
+class WinLnkLinkEvent(event.FiletimeEvent):
+  """Convenience class for a Windows Shortcut (LNK) link event."""
 
-  def __init__(self, lnk_file):
-    """Initializes the event container.
+  def __init__(self, timestamp, timestamp_description, lnk_file):
+    """Initializes the event.
 
     Args:
+      timestamp: The FILETIME value for the timestamp.
+      timestamp_description: The usage string for the timestamp value.
       lnk_file: The LNK file (pylnk.file).
     """
-    super(WinLnkLinkEventContainer, self).__init__()
+    super(WinLnkLinkEvent, self).__init__(timestamp, timestamp_description)
 
     self.data_type = 'windows:lnk:link'
 
@@ -81,7 +83,7 @@ class WinLnkParser(parser.BaseParser):
       file_entry: A file entry object.
 
     Yields:
-      An event container (EventContainer) that contains the parsed
+      An event object (instance of WinLnkLinkEvent) that contains the parsed
       attributes.
     """
     file_object = file_entry.GetFileObject()
@@ -95,25 +97,20 @@ class WinLnkParser(parser.BaseParser):
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
           self.parser_name, file_entry.name, exception))
 
-    container = WinLnkLinkEventContainer(lnk_file)
 
-    container.Append(event.FiletimeEvent(
+    yield WinLnkLinkEvent(
         lnk_file.get_file_access_time_as_integer(),
-        eventdata.EventTimestamp.ACCESS_TIME,
-        container.data_type))
+        eventdata.EventTimestamp.ACCESS_TIME, lnk_file)
 
-    container.Append(event.FiletimeEvent(
+    yield WinLnkLinkEvent(
         lnk_file.get_file_creation_time_as_integer(),
-        eventdata.EventTimestamp.CREATION_TIME,
-        container.data_type))
+        eventdata.EventTimestamp.CREATION_TIME, lnk_file)
 
-    container.Append(event.FiletimeEvent(
+    yield WinLnkLinkEvent(
         lnk_file.get_file_modification_time_as_integer(),
-        eventdata.EventTimestamp.MODIFICATION_TIME,
-        container.data_type))
+        eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file)
 
     # TODO: add support for the distributed link tracker.
     # TODO: add support for the shell item.
 
     file_object.close()
-    yield container

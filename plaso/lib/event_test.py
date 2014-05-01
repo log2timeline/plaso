@@ -337,43 +337,43 @@ class EventObjectTest(unittest.TestCase):
     self.assertNotEquals(event_c.EqualityString(), event_d.EqualityString())
     self.assertNotEquals(event_d.EqualityString(), event_f.EqualityString())
 
-  def testEqualityPfileStatParserMissingInode(self):
-    """Test that PfileStatParser files with missing inodes are distinct"""
+  def testEqualityFileStatParserMissingInode(self):
+    """Test that FileStatParser files with missing inodes are distinct"""
     event_a = event.EventObject()
     event_b = event.EventObject()
 
     event_a.timestamp = 123
     event_a.timestamp_desc = 'LAST WRITTEN'
     event_a.data_type = 'mock:nothing'
-    event_a.parser = 'PfileStatParser'
+    event_a.parser = 'filestat'
     event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
 
     event_b.timestamp = 123
     event_b.timestamp_desc = 'LAST WRITTEN'
     event_b.data_type = 'mock:nothing'
-    event_b.parser = 'PfileStatParser'
+    event_b.parser = 'filestat'
     event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
 
     self.assertNotEquals(event_a, event_b)
 
-  def testEqualityStringPfileStatParserMissingInode(self):
-    """Test that PfileStatParser files with missing inodes are distinct"""
+  def testEqualityStringFileStatParserMissingInode(self):
+    """Test that FileStatParser files with missing inodes are distinct"""
     event_a = event.EventObject()
     event_b = event.EventObject()
 
     event_a.timestamp = 123
     event_a.timestamp_desc = 'LAST WRITTEN'
     event_a.data_type = 'mock:nothing'
-    event_a.parser = 'PfileStatParser'
+    event_a.parser = 'filestat'
     event_a.filename = 'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
 
     event_b.timestamp = 123
     event_b.timestamp_desc = 'LAST WRITTEN'
     event_b.data_type = 'mock:nothing'
-    event_b.parser = 'PfileStatParser'
+    event_b.parser = 'filestat'
     event_b.filename = 'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
 

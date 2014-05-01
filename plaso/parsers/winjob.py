@@ -30,15 +30,19 @@ from plaso.lib import timelib
 __author__ = 'Brian Baskin (brian@thebaskins.com)'
 
 
-class WinJobEventContainer(event.EventContainer):
-  """Convenience class for a Windows Scheduled Task container."""
+class WinJobEvent(event.TimestampEvent):
+  """Convenience class for a Windows Scheduled Task event."""
+
   DATA_TYPE = 'windows:tasks:job'
 
-  def __init__(self, application, parameter, working_dir, username,
-      trigger, comment):
+  def __init__(
+      self, timestamp, timestamp_description, application, parameter,
+      working_dir, username, trigger, comment):
     """Initializes the event object.
 
     Args:
+      timestamp: The timestamp value.
+      timestamp_description: The usage string for the timestamp value.
       application: Path to job executable.
       parameter: Application command line parameters.
       working_dir: Working path for task.
@@ -46,7 +50,7 @@ class WinJobEventContainer(event.EventContainer):
       trigger: Trigger event that runs the task, e.g. DAILY.
       comment: Optional description about the job.
     """
-    super(WinJobEventContainer, self).__init__()
+    super(WinJobEvent, self).__init__(timestamp, timestamp_description)
     self.application = binary.ReadUtf16(application)
     self.parameter = binary.ReadUtf16(parameter)
     self.working_dir = binary.ReadUtf16(working_dir)
@@ -175,8 +179,8 @@ class WinJobParser(parser.BaseParser):
       file_entry: A file entry object.
 
     Yields:
-      An EventContainer (WinJobEventContainer) with extracted EventObjects
-      that contain the extracted attributes.
+      An EventObject (instance of WinJobEvent) that contains the extracted
+      attributes.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -221,25 +225,16 @@ class WinJobParser(parser.BaseParser):
         0,  # Seconds are not stored.
         timezone=self._pre_obj.zone)
 
-    # Place the obtained values into the event container.
-    container = WinJobEventContainer(
-        data.app_name,
-        data.parameter,
-        data.working_dir,
-        data.username,
-        trigger_type,
+    # Create two timeline events, one for created date and the other for last
+    # run.
+    yield WinJobEvent(
+        last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, data.app_name,
+        data.parameter, data.working_dir, data.username, trigger_type,
         data.comment)
 
-    # Create the two timeline events for created date and last run date.
-    container.Append(event.TimestampEvent(
-        last_run_date,
-        eventdata.EventTimestamp.LAST_RUNTIME,
-        container.DATA_TYPE))
-
-    container.Append(event.TimestampEvent(
-        scheduled_date,
-        'Scheduled To Start',
-        container.DATA_TYPE))
+    yield WinJobEvent(
+        scheduled_date, 'Scheduled To Start', data.app_name, data.parameter,
+        data.working_dir, data.username, trigger_type, data.comment)
 
     # A scheduled end date is optional.
     if data.sched_end_year:
@@ -252,10 +247,8 @@ class WinJobParser(parser.BaseParser):
           0,  # Seconds are not stored.
           timezone=self._pre_obj.zone)
 
-      container.Append(event.TimestampEvent(
-          scheduled_end_date,
-          'Scheduled To End',
-          container.DATA_TYPE))
+      yield WinJobEvent(
+          scheduled_end_date, 'Scheduled To End', data.app_name, data.parameter,
+          data.working_dir, data.username, trigger_type, data.comment)
 
     file_object.close()
-    yield container

@@ -155,15 +155,24 @@ def GetParsersFromPlugins(filter_strings, exclude_strings=None):
   for parser_include in filter_strings:
     plugin_cls = plugin.BasePlugin.classes.get(parser_include)
 
-    if plugin_cls:
-      # Skip if the plugin is in the exclude list.
-      if exclude_strings and parser_include in exclude_strings:
-        continue
-      parent = getattr(plugin_cls, 'parent_class')
+    if not plugin_cls:
+      continue
 
-      # Only include if parser is not in the original filter string and not
-      # in the return list.
-      if parent and parent not in filter_strings and parent not in parser_list:
-        parser_list.append(parent)
+    # Skip if the plugin is in the exclude list.
+    if exclude_strings and parser_include in exclude_strings:
+      continue
+    parent = getattr(plugin_cls, 'parent_class')
+    parent_name = getattr(parent, 'NAME', u'')
+
+    if not parent_name:
+      logging.warning(u'Class {:s} does not have a parent.'.format(
+          plugin_cls.NAME))
+      continue
+
+    # Only include if parser is not in the original filter string and not
+    # in the return list.
+    if (parent_name and parent_name not in filter_strings and
+        parent_name not in parser_list):
+      parser_list.append(parent_name)
 
   return parser_list

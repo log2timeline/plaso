@@ -23,90 +23,90 @@ from plaso.lib import timelib
 
 
 # TODO: move this function to lib or equiv since it is used from the collector
-# as well. Change this into a class after the dfVFS refactor.
-def GetEventContainerFromStat(stat_object):
-  """Return an EventContainer object from a file stat object.
+# as well.
+class StatEvents(object):
+  """Class that extracts event objects from a stat object."""
 
-  This method takes a stat object and creates an EventContainer
-  that contains all extracted timestamps from the stat object.
-
-  The constraints are that the stat object implements an iterator
-  that returns back values all timestamp based values have the
-  attribute name 'time' in them. All timestamps also need to be
-  stored as a Posix timestamps.
-
-  Args:
-    stat_object: A stat object (instance of dfvfs.VFSStat).
-
-  Returns:
-    An EventContainer that contains an EventObject for each extracted
-    timestamp contained in the stat object or None if the stat object
-    does not contain time values.
-  """
-  # TODO: change this with file entry attributes.
-  time_attributes = frozenset([
+  TIME_ATTRIBUTES = frozenset([
       'atime', 'bkup_time', 'ctime', 'crtime', 'dtime', 'mtime'])
 
-  time_values = []
-  for attribute_name in time_attributes:
-    if hasattr(stat_object, attribute_name):
-      time_values.append(attribute_name)
+  @classmethod
+  def GetEventsFromStat(cls, stat_object):
+    """Yield event objects from a file stat object.
 
-  if not time_values:
-    return
+    This method takes a stat object and yields an EventObject,
+    instance of FileStatEvent, that contains all extracted
+    timestamps from the stat object.
 
-  is_allocated = getattr(stat_object, 'allocated', True)
+    The constraints are that the stat object implements an iterator
+    that returns back values all timestamp based values have the
+    attribute name 'time' in them. All timestamps also need to be
+    stored as a Posix timestamps.
 
-  event_container = PfileStatEventContainer(
-      is_allocated, getattr(stat_object, 'size', None))
+    Args:
+      stat_object: A stat object (instance of dfvfs.VFSStat).
 
-  for time_value in time_values:
-    timestamp = getattr(stat_object, time_value, None)
-    if timestamp is None:
-      continue
+    Yields:
+      An event object for each extracted timestamp contained in the stat
+      object.
+    """
+    time_values = []
+    for attribute_name in cls.TIME_ATTRIBUTES:
+      if hasattr(stat_object, attribute_name):
+        time_values.append(attribute_name)
 
-    nano_time_value = '{0:s}_nano'.format(time_value)
-    nano_time_value = getattr(stat_object, nano_time_value, None)
+    if not time_values:
+      return
 
-    timestamp = timelib.Timestamp.FromPosixTime(timestamp)
-    if nano_time_value is not None:
-      timestamp += nano_time_value
+    is_allocated = getattr(stat_object, 'allocated', True)
 
-    # TODO: this also ignores any timestamp that equals 0.
-    # Is this the desired behavior?
-    if not timestamp:
-      continue
+    for time_value in time_values:
+      timestamp = getattr(stat_object, time_value, None)
+      if timestamp is None:
+        continue
 
-    event_object = event.EventObject()
-    event_object.timestamp = timestamp
-    event_object.timestamp_desc = time_value
-    event_object.fs_type = getattr(stat_object, 'fs_type', u'N/A')
+      nano_time_value = u'{0:s}_nano'.format(time_value)
+      nano_time_value = getattr(stat_object, nano_time_value, None)
 
-    event_container.Append(event_object)
+      timestamp = timelib.Timestamp.FromPosixTime(timestamp)
+      if nano_time_value is not None:
+        timestamp += nano_time_value
 
-  return event_container
+      # TODO: this also ignores any timestamp that equals 0.
+      # Is this the desired behavior?
+      if not timestamp:
+        continue
+
+      yield FileStatEvent(
+          timestamp, time_value, is_allocated,
+          getattr(stat_object, 'size', None),
+          getattr(stat_object, 'fs_type', u'N/A'))
 
 
-class PfileStatEventContainer(event.EventContainer):
+class FileStatEvent(event.TimestampEvent):
   """File system stat event container."""
 
-  def __init__(self, allocated, size):
+  DATA_TYPE = 'fs:stat'
+
+  def __init__(self, timestamp, usage, allocated, size, fs_type):
     """Initializes the event container.
 
     Args:
+      timestamp: The timestamp value.
+      usage: The usage string describing the timestamp.
       allocated: Boolean value to indicate the file entry is allocated.
       size: The file size in bytes.
+      fs_type: The filesystem this timestamp is extracted from.
     """
-    super(PfileStatEventContainer, self).__init__()
-
-    self.data_type = 'fs:stat'
+    super(FileStatEvent, self).__init__(timestamp, usage)
 
     self.offset = 0
     self.size = size
     self.allocated = allocated
+    self.fs_type = fs_type
 
 
-class PfileStatParser(parser.BaseParser):
+class FileStatParser(parser.BaseParser):
   """Class that defines a file system stat object parser."""
 
   NAME = 'filestat'
@@ -124,6 +124,4 @@ class PfileStatParser(parser.BaseParser):
     stat_object = file_entry.GetStat()
 
     if stat_object:
-      event_container = GetEventContainerFromStat(stat_object)
-      if event_container:
-        yield event_container
+      return StatEvents.GetEventsFromStat(stat_object)

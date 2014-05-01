@@ -36,6 +36,8 @@ class L2tTestEvent(event.EventObject):
     self.hostname = u'ubuntu'
     self.filename = u'log/syslog.1'
     self.display_name = u'log/syslog.1'
+    self.some_additional_foo = True
+    self.my_number = 123
     self.text = (
         u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
         u'closed for user root)')
@@ -76,7 +78,8 @@ class L2tCsvTest(unittest.TestCase):
         u'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         u'closed for user root),Reporter <CRON> PID: 8442 '
         u'(pam_unix(cron:session): '
-        u'session closed for user root),2,log/syslog.1,-,-,-,\n')
+        u'session closed for user root),2,log/syslog.1,-,-,-,my_number: 123  '
+        u'some_additional_foo: True \n')
     self.assertEquals(self.output.getvalue(), correct)
 
   def testEventBodyNoExtraCommas(self):
