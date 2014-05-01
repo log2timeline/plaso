@@ -40,7 +40,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['example.lnk'])
     event_generator = self._ParseFile(self._parser, test_file)
-    event_container = self._GetEventContainer(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
     # Link information:
     # 	Creation time			: Jul 13, 2009 23:29:02.849131000 UTC
@@ -52,10 +52,10 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # 	Icon location			: %windir%\system32\migwiz\migwiz.exe
     # 	Environment variables location	: %windir%\system32\migwiz\migwiz.exe
 
-    self.assertEqual(len(event_container.events), 3)
+    self.assertEqual(len(event_objects), 3)
 
     # The Last Accessed timestamp.
-    event_object = event_container.events[0]
+    event_object = event_objects[0]
 
     expected_string = u'@%windir%\\system32\\migwiz\\wet.dll,-590'
     self.assertEquals(event_object.description, expected_string)
@@ -78,14 +78,14 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-13 23:29:02.849131')
-    event_object = event_container.events[1]
+    event_object = event_objects[1]
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-14 01:39:18.220000')
-    event_object = event_container.events[2]
+    event_object = event_objects[2]
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.assertEquals(event_object.timestamp, expected_timestamp)

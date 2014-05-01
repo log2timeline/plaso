@@ -24,7 +24,7 @@ class uTorrentFormatter(eventdata.ConditionalEventFormatter):
 
   DATA_TYPE = 'p2p:bittorrent:utorrent'
   SOURCE_LONG = 'uTorrent Active Torrents'
-  SOURCE_SHORT = 'uTorrent'
+  SOURCE_SHORT = 'TORRENT'
 
   FORMAT_STRING_SEPARATOR = u'; '
 
@@ -37,7 +37,7 @@ class TransmissionFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Transmission active torrents."""
   DATA_TYPE = 'p2p:bittorrent:transmission'
   SOURCE_LONG = 'Transmission Active Torrents'
-  SOURCE_SHORT = 'Transmission'
+  SOURCE_SHORT = 'TORRENT'
 
   FORMAT_STRING_SEPARATOR = u'; '
 

@@ -132,6 +132,8 @@ message EventObject {
     RECBIN = 12; // Recycle bin or deleted items.
     REG = 13; // Registry information.
     WEBHIST = 14; // Browser history.
+    TORRENT = 15; // Torrent files.
+    JOB = 16; // Scheduled tasks or jobs.
   }
 
   // The category or short description of the source.

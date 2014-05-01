@@ -491,15 +491,11 @@ class PcapParser(parser.BaseParser):
   def Parse(self, file_entry):
     """Extract data from a pcap file.
 
-    A separate event container is returned for every record to limit
-    memory consumption.
-
     Args:
       file_entry: A file entry object.
 
     Yields:
-      An event container (PcapEventContainer) that contains
-      the parsed data.
+      An event object (instance of PcapEvent) that contains the parsed data.
     """
     file_object = file_entry.GetFileObject()
 

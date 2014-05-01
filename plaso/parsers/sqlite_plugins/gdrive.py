@@ -28,8 +28,10 @@ from plaso.parsers.sqlite_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class GoogleDriveSnapshotCloudEntryEventContainer(event.EventContainer):
-  """Convenience class for a Google Drive snapshot cloud entry container."""
+class GoogleDriveSnapshotCloudEntryEvent(event.PosixTimeEvent):
+  """Convenience class for a Google Drive snapshot cloud entry."""
+
+  DATA_TYPE = 'gdrive:snapshot:cloud_entry'
 
   # TODO: this could be moved to the formatter.
   # The following definition for values can be found on Patrick Olson's blog:
@@ -46,23 +48,26 @@ class GoogleDriveSnapshotCloudEntryEventContainer(event.EventContainer):
   }
   _DOC_TYPES.setdefault('UNKNOWN')
 
-  def __init__(self, url, path, size, doc_type):
-    """Initializes the event container.
+  def __init__(self, timestamp, usage, url, path, size, doc_type, shared):
+    """Initializes the event.
 
     Args:
+      timestamp: The POSIX timestamp value.
+      usage: The usage string of the timestamp.
       url: The URL of the file as in the cloud.
       path: The path of the file.
       size: The size of the file.
       doc_type: Integer value containing the document type.
+      shared: A string indicating whether or not this is a shared document.
     """
-    super(GoogleDriveSnapshotCloudEntryEventContainer, self).__init__()
-
-    self.data_type = 'gdrive:snapshot:cloud_entry'
+    super(GoogleDriveSnapshotCloudEntryEvent, self).__init__(
+        timestamp, usage)
 
     self.url = url
     self.path = path
     self.size = size
     self.document_type = self._DOC_TYPES.get(doc_type, 'UNKNOWN')
+    self.shared = shared
 
 
 class GoogleDriveSnapshotLocalEntryEvent(event.EventObject):
@@ -205,31 +210,25 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       cache: The local cache object.
 
     Yields:
-      An event container (GoogleDriveSnapshotCloudEntryEventContainer)
+      An event object (instance of GoogleDriveSnapshotCloudEntryEvent)
       containing the event data.
     """
     cloud_path = self.GetCloudPath(row['parent_resource_id'], cache, database)
     cloud_filename = u'{}{}'.format(cloud_path, row['filename'])
 
-    container = GoogleDriveSnapshotCloudEntryEventContainer(
-        row['url'], cloud_filename, row['size'],
-        row['doc_type'])
-
     if row['shared']:
-      container.shared = 'Shared'
+      shared = 'Shared'
     else:
-      container.shared = 'Private'
+      shared = 'Private'
 
-    container.Append(event.PosixTimeEvent(
+    yield GoogleDriveSnapshotCloudEntryEvent(
         row['modified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-        container.data_type))
+        row['url'], cloud_filename, row['size'], row['doc_type'], shared)
 
     if row['created']:
-      container.Append(event.PosixTimeEvent(
+      yield GoogleDriveSnapshotCloudEntryEvent(
           row['created'], eventdata.EventTimestamp.CREATION_TIME,
-          container.data_type))
-
-    yield container
+          row['url'], cloud_filename, row['size'], row['doc_type'], shared)
 
   def ParseLocalEntryRow(self, row, cache, database, **unused_kwargs):
     """Parses a local entry row.

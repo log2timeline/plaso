@@ -106,7 +106,7 @@ class Engine(object):
     include_directory_stat = False
     if hasattr(pre_obj, 'collection_information'):
       loaded_parsers = pre_obj.collection_information.get('parsers', [])
-      if 'PfileStatParser' in loaded_parsers:
+      if 'filestat' in loaded_parsers:
         include_directory_stat = True
 
     if self._process_image:

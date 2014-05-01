@@ -440,7 +440,7 @@ class EventObject(object):
         attributes.append(value)
     identity = basic + [x for pair in zip(fields, attributes) for x in pair]
 
-    if 'PfileStatParser' in getattr(self, 'parser', ''):
+    if 'filestat' in getattr(self, 'parser', ''):
       inode = getattr(self, 'inode', 'a')
       if inode == 'a':
         inode = '_' + str(uuid.uuid4())
@@ -503,7 +503,7 @@ class EventObject(object):
 
     # If we are dealing with the stat parser the inode number is the one
     # attribute that really matters, unlike others.
-    if 'PfileStatParser' in getattr(self, 'parser', ''):
+    if 'filestat' in getattr(self, 'parser', ''):
       return utils.GetUnicodeString(getattr(
           self, 'inode', 'a')) == utils.GetUnicodeString(getattr(
               event_object, 'inode', 'b'))

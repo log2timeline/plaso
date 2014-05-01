@@ -160,15 +160,12 @@ class MsiecfParser(parser.BaseParser):
   def Parse(self, file_entry):
     """Extract data from a MSIE Cache File (MSIECF).
 
-       A separate event container is returned for every item to limit
-       memory consumption.
-
     Args:
       file_entry: A file entry object.
 
     Yields:
-      An event container (MsiecfUrlEventContainer) that contains
-      the parsed data.
+      An event object (instance of MsiecfUrlEvent) that contains the parsed
+      data.
     """
     file_object = file_entry.GetFileObject()
     msiecf_file = pymsiecf.file()

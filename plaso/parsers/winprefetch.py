@@ -18,6 +18,7 @@
 """Parser for Windows Prefetch files."""
 
 import os
+
 import construct
 
 from plaso.lib import binary
@@ -27,20 +28,29 @@ from plaso.lib import eventdata
 from plaso.lib import parser
 
 
-class WinPrefetchExecutionEventContainer(event.EventContainer):
+class WinPrefetchExecutionEvent(event.FiletimeEvent):
   """Class that defines a Windows Prefetch execution event."""
 
-  def __init__(self, file_header, file_information, mapped_files):
-    """Initializes the event container.
+  DATA_TYPE = 'windows:prefetch:execution'
+
+  def __init__(
+      self, timestamp, timestamp_description, file_header, file_information,
+      mapped_files, path, volume_serial_numbers, volume_device_paths):
+    """Initializes the event.
 
     Args:
+      timestamp: The FILETIME timestamp value.
+      timestamp_description: The usage string for the timestamp value.
       file_header: The file header construct object.
       file_information: The file information construct object.
       mapped_files: The list of mapped filenames.
+      path: A path to the executable.
+      volume_serial_numbers: A list of volume serial number strings.
+      volume_device_paths: A list of volume device path strings.
     """
-    super(WinPrefetchExecutionEventContainer, self).__init__()
+    super(WinPrefetchExecutionEvent, self).__init__(
+        timestamp, timestamp_description)
 
-    self.data_type = 'windows:prefetch:execution'
     self.offset = 0
 
     self.version = file_header.get('version', None)
@@ -50,20 +60,11 @@ class WinPrefetchExecutionEventContainer(event.EventContainer):
 
     self.run_count = file_information.get('run_count', None)
     self.mapped_files = mapped_files
+    self.path = path
 
     self.number_of_volumes = file_information.get('number_of_volumes', 0)
-    self.volume_serial_numbers = []
-    self.volume_device_paths = []
-
-  def AppendVolume(self, volume_serial_number, volume_device_path):
-    """Appends a volume.
-
-    Args:
-      volume_serial_number: The volume serial number string.
-      volume_device_path: The volume device path string.
-    """
-    self.volume_serial_numbers.append(volume_serial_number)
-    self.volume_device_paths.append(volume_device_path)
+    self.volume_serial_numbers = volume_serial_numbers
+    self.volume_device_paths = volume_device_paths
 
 
 class WinPrefetchParser(parser.BaseParser):
@@ -317,11 +318,13 @@ class WinPrefetchParser(parser.BaseParser):
     file_information = self._ParseFileInformation(file_object, format_version)
     mapped_files = self._ParseFilenames(file_object, file_information)
 
-    container = WinPrefetchExecutionEventContainer(
-        file_header, file_information, mapped_files)
-
     executable = binary.Ut16StreamCopyToString(
         file_header.get('executable', u''))
+
+    volume_serial_numbers = []
+    volume_device_paths = []
+    prefetch_events = []
+    path = u''
 
     for volume_information in self._ParseVolumesInformationSection(
         file_object, format_version, file_information):
@@ -329,23 +332,31 @@ class WinPrefetchParser(parser.BaseParser):
       volume_device_path = self._ParseVolumeDevicePath(
           file_object, file_information, volume_information)
 
-      container.AppendVolume(volume_serial_number, volume_device_path)
+      volume_serial_numbers.append(volume_serial_number)
+      volume_device_paths.append(volume_device_path)
 
       timestamp = volume_information.get('creation_time', 0)
       if timestamp:
-        container.Append(event.FiletimeEvent(
-            timestamp, eventdata.EventTimestamp.CREATION_TIME,
-            container.data_type))
+        prefetch_events.append((
+            timestamp, eventdata.EventTimestamp.CREATION_TIME))
 
       for mapped_file in mapped_files:
         if (mapped_file.startswith(volume_device_path) and
             mapped_file.endswith(executable)):
-          _, _, container.path = mapped_file.partition(volume_device_path)
+          _, _, path = mapped_file.partition(volume_device_path)
+
+    for prefetch_timestamp, prefetch_description in prefetch_events:
+      yield WinPrefetchExecutionEvent(
+          prefetch_timestamp, prefetch_description, file_header,
+          file_information, mapped_files, path, volume_serial_numbers,
+          volume_device_paths)
 
     timestamp = file_information.get('last_run_time', 0)
-    container.Append(event.FiletimeEvent(
-        timestamp, eventdata.EventTimestamp.LAST_RUNTIME,
-        container.data_type))
+    if timestamp:
+      yield WinPrefetchExecutionEvent(
+          timestamp, eventdata.EventTimestamp.LAST_RUNTIME, file_header,
+          file_information, mapped_files, path, volume_serial_numbers,
+          volume_device_paths)
 
     # Check for the 7 older last run time values available in v26.
     if format_version == 26:
@@ -355,10 +366,10 @@ class WinPrefetchParser(parser.BaseParser):
 
         timestamp = file_information.get(last_run_time_identifier, 0)
         if timestamp:
-          container.Append(event.FiletimeEvent(
+          yield WinPrefetchExecutionEvent(
               timestamp,
               u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME),
-              container.data_type))
+              file_header, file_information, mapped_files, path,
+              volume_serial_numbers, volume_device_paths)
 
     file_object.close()
-    yield container

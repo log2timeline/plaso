@@ -264,6 +264,25 @@ class StorageFile(object):
 
     self._Open(read_only)
 
+  def GetLastPreprocessObject(self):
+    """Return the last pre-processing object from the storage file if possible.
+
+    Returns:
+      The last stored pre-processing object (instance of
+      event.PreprocessObject). If not found nor stored it return None.
+    """
+    if self._pre_obj:
+      return self._pre_obj
+
+    list_of_pre_objs = self.GetStorageInformation()
+    if not list_of_pre_objs:
+      return
+
+    # We want the last saved pre-processing object.
+    pre_obj = list_of_pre_objs[-1]
+    if pre_obj:
+      return pre_obj
+
   def _Open(self, read_only=False):
     """Opens the storage file.
 
