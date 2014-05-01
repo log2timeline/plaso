@@ -83,11 +83,16 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     if filter_query:
       self._filter = pfilter.GetMatcher(filter_query)
 
-  # TODO: implement PathBundle support, if needed.
   def _ConsumePathSpec(self, path_spec):
     """Consumes a path specification callback for ConsumePathSpecs."""
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(
         path_spec, resolver_context=self._resolver_context)
+
+    if file_entry is None:
+      logging.warning(u'Unable to open file entry: {0:s}'.format(
+          path_spec.comparable))
+      return
+
     try:
       self.ParseFile(file_entry)
     except IOError as exception:
