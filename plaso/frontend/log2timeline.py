@@ -167,7 +167,7 @@ class Log2TimelineFrontend(object):
       options.recursive = False
 
     self._engine = engine.Engine(options)
-    self._engine.SetSource(options.filename, path_spec)
+    self._engine.SetSource(options.filename, source_path_spec=path_spec)
 
     if options.image_offset_bytes is not None:
       self._engine.SetImageInformation(options.image_offset_bytes)
