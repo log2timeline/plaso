@@ -728,6 +728,22 @@ class PosixTimeEvent(TimestampEvent):
         timelib.Timestamp.FromPosixTime(posix_time), usage, data_type)
 
 
+class WebKitTimeEvent(TimestampEvent):
+  """Convenience class for a WebKit time-based event."""
+
+  def __init__(self, webkit_time, usage, data_type=None):
+    """Initializes a WebKit time-based event object.
+
+    Args:
+      webkit_time: The WebKit time value.
+      usage: The description of the usage of the time value.
+      data_type: The event data type. If not set data_type is derived
+                 from DATA_TYPE.
+    """
+    super(WebKitTimeEvent, self).__init__(
+        timelib.Timestamp.FromWebKitTime(webkit_time), usage, data_type)
+
+
 class WinRegistryEvent(EventObject):
   """Convenience class for a Windows Registry-based event."""
   DATA_TYPE = 'windows:registry:key_value'
