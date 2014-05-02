@@ -24,13 +24,22 @@ from plaso.parsers import plist
 from plaso.parsers import test_lib
 
 
+class TestConfig(object):
+  """A simple dummy configuration object."""
+
+  def __init__(self):
+    super(TestConfig, self).__init__()
+    self.parsers = 'plist_bluetooth, plist_default'
+
+
 class PlistParserTest(test_lib.ParserTestCase):
   """Tests the plist parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj, None)
+    config = TestConfig()
+    self._parser = plist.PlistParser(pre_obj, config)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -38,9 +47,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     event_generator = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(event_generator)
 
-    # TODO: getting flaky results here!
-    # using ./utils/run_tests.sh (12) or ./run_tests.py (13).
-    # self.assertEquals(len(event_objects), 12)
+    self.assertEquals(len(event_objects), 12)
 
     timestamps, roots, keys = zip(
         *[(evt.timestamp, evt.root, evt.key) for evt in event_objects])

@@ -92,6 +92,17 @@ def GetEventData(event_proto, before=0):
   return frontend_utils.OutputWriter.GetEventDataHexDump(event_proto, before)
 
 
+def OpenOSFile(path):
+  """Opens a file entry from the OS."""
+  if not os.path.isfile(path):
+    logging.error(u'File: {0:s} does not exist.'.format(path))
+    return
+
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_OS, location=path)
+  return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+
 def OpenVssFile(path, image_path, store_number, image_offset):
   """Opens a file entry inside a VSS inside an image file."""
   path_spec = path_spec_factory.Factory.NewPathSpec(
