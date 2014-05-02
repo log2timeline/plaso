@@ -20,7 +20,6 @@
 import construct
 
 from plaso.events import plist_event
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import interface
 
 
@@ -72,6 +71,5 @@ class TimeMachinePlugin(interface.PlistPlugin):
         alias = u'Unknown alias'
       # For each Backup.
       for timestamp in destination['SnapshotDates']:
-        time = timelib.Timestamp.FromPythonDatetime(timestamp)
         description = u'TimeMachine Backup in {} ({})'.format(alias, hd_uuid)
-        yield plist_event.PlistEvent(root, key, time, description)
+        yield plist_event.PlistEvent(root, key, timestamp, description)

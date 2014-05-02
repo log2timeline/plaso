@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Devices</key>
+  <dict>
+    <key>0000A11300000000</key>
+    <dict>
+      <key>Connected</key>
+      <date>1995-11-22T18:25:07Z</date>
+      <key>Device Class</key>
+      <string>iPad</string>
+      <key>Family ID</key>
+      <integer>10006</integer>
+      <key>Firmware Version</key>
+      <integer>256</integer>
+      <key>Firmware Version String</key>
+      <string>5.0.1</string>
+      <key>ID</key>
+      <string>0000A11300000000</string>
+      <key>Region Info</key>
+      <string>C/A</string>
+      <key>Serial Number</key>
+      <string>A009A113Q00</string>
+      <key>Updater Family ID</key>
+      <integer>10006</integer>
+      <key>Use Count</key>
+      <integer>5</integer>
+    </dict>
+    <key>0DEADBEEF00F0A20</key>
+    <dict>
+      <key>Connected</key>
+      <date>2014-04-30T17:50:22Z</date>
+      <key>Device Class</key>
+      <string>iPhone</string>
+      <key>Family ID</key>
+      <integer>10035</integer>
+      <key>Firmware Version</key>
+      <integer>256</integer>
+      <key>Firmware Version String</key>
+      <string>7.0.3</string>
+      <key>ID</key>
+      <string>0DEADBEEF00F0A20</string>
+      <key>IMEI</key>
+      <string>005550123044440</string>
+      <key>Region Info</key>
+      <string>LL/A</string>
+      <key>Serial Number</key>
+      <string>ADALTHING012</string>
+      <key>Updater Family ID</key>
+      <integer>10035</integer>
+      <key>Use Count</key>
+      <integer>18</integer>
+    </dict>
+    <key>00000000012E4737</key>
+    <dict>
+      <key>Connected</key>
+      <date>2011-10-03T08:14:21Z</date>
+      <key>Device Class</key>
+      <string>iPad</string>
+      <key>Family ID</key>
+      <integer>10023</integer>
+      <key>Firmware Version</key>
+      <integer>256</integer>
+      <key>Firmware Version String</key>
+      <string>7.0</string>
+      <key>ID</key>
+      <string>00000000012E4737</string>
+      <key>IMEI</key>
+      <string>01133557799BBDD</string>
+      <key>Region Info</key>
+      <string>LL/A</string>
+      <key>Serial Number</key>
+      <string>RJUPNASALIR12</string>
+      <key>Updater Family ID</key>
+      <integer>10023</integer>
+      <key>Use Count</key>
+      <integer>7</integer>
+    </dict>
+    <key>4C6F6F6E65000000</key>
+    <dict>
+      <key>Connected</key>
+      <date>2013-10-09T19:27:54Z</date>
+      <key>Device Class</key>
+      <string>iPhone</string>
+      <key>Family ID</key>
+      <integer>10016</integer>
+      <key>Firmware Version</key>
+      <integer>256</integer>
+      <key>Firmware Version String</key>
+      <string>7.0</string>
+      <key>ID</key>
+      <string>4C6F6F6E65000000</string>
+      <key>IMEI</key>
+      <string>012345678901234</string>
+      <key>Region Info</key>
+      <string>LL/A</string>
+      <key>Serial Number</key>
+      <string>526F676572</string>
+      <key>Updater Family ID</key>
+      <integer>10016</integer>
+      <key>Use Count</key>
+      <integer>1</integer>
+    </dict>
+  </dict>
+  <key>com.apple.PreferenceSync.ExcludeAllSyncKeys</key>
+  <data>
+  abcdefgh
+  </data>
+</dict>
+</plist>

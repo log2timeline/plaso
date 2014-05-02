@@ -18,7 +18,6 @@
 """This file contains the Spotlight searched terms plugin in Plaso."""
 
 from plaso.events import plist_event
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import interface
 
 
@@ -49,9 +48,7 @@ class SpotlightPlugin(interface.PlistPlugin):
       EventObject objects extracted from the plist.
     """
     for search_text, data in match['UserShortcuts'].iteritems():
-      time = timelib.Timestamp.FromPythonDatetime(data['LAST_USED'])
       desc = u'Spotlight term searched "{}" associate to {} ({})'.format(
           search_text, data['DISPLAY_NAME'], data['PATH'])
       yield plist_event.PlistEvent(
-        u'/UserShortcuts', search_text, time, desc)
-
+        u'/UserShortcuts', search_text, data['LAST_USED'], desc)

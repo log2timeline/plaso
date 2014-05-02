@@ -19,7 +19,6 @@
 
 from plaso.events import plist_event
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import interface
 
 
@@ -74,19 +73,16 @@ class AppleAccountPlugin(interface.PlistPlugin):
           account.get('LastName', '<LastName>'))
       key = name_account
       description = u'Configured Apple account {}'.format(general_description)
-      time = timelib.Timestamp.FromPythonDatetime(
-          account['CreationDate'])
-      yield plist_event.PlistEvent(root, key, time, description)
+      yield plist_event.PlistEvent(
+          root, key, account['CreationDate'], description)
 
       if 'LastSuccessfulConnect' in account:
         description = u'Connected Apple account {}'.format(general_description)
-        time = timelib.Timestamp.FromPythonDatetime(
-            account['LastSuccessfulConnect'])
-        yield plist_event.PlistEvent(root, key, time, description)
+        yield plist_event.PlistEvent(
+            root, key, account['LastSuccessfulConnect'], description)
 
       if 'ValidationDate' in account:
         description = u'Last validation Apple account {}'.format(
             general_description)
-        time = timelib.Timestamp.FromPythonDatetime(
-            account['ValidationDate'])
-        yield plist_event.PlistEvent(root, key, time, description)
+        yield plist_event.PlistEvent(
+            root, key, account['ValidationDate'], description)

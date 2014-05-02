@@ -18,7 +18,6 @@
 """This file contains the airport plist plugin in Plaso."""
 
 from plaso.events import plist_event
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import interface
 
 
@@ -43,12 +42,10 @@ class AirportPlugin(interface.PlistPlugin):
       EventObject objects extracted from the plist.
     """
     for wifi in match['RememberedNetworks']:
-      time = timelib.Timestamp.FromPythonDatetime(
-          wifi['LastConnected'])
       description = (
           u'[WiFi] Connected to network: <{}> '
           u'using security {}').format(
               wifi['SSIDString'], wifi['SecurityType'])
       yield plist_event.PlistEvent(
-          u'/RememberedNetworks', u'item', time, description)
+          u'/RememberedNetworks', u'item', wifi['LastConnected'], description)
 
