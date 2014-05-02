@@ -744,6 +744,22 @@ class WebKitTimeEvent(TimestampEvent):
         timelib.Timestamp.FromWebKitTime(webkit_time), usage, data_type)
 
 
+class PythonDatetimeEvent(TimestampEvent):
+  """Convenience class for a Python DateTime time-based event."""
+
+  def __init__(self, datetime_time, usage, data_type=None):
+    """Initializes a Python datetime time-based event object.
+
+    Args:
+      datetime_time: The datetime object (instance of datetime.datetime).
+      usage: The description of the usage of the time value.
+      data_type: The event data type. If not set data_type is derived
+                 from DATA_TYPE.
+    """
+    super(PythonDatetimeEvent, self).__init__(
+        timelib.Timestamp.FromPythonDatetime(datetime_time), usage, data_type)
+
+
 class WinRegistryEvent(EventObject):
   """Convenience class for a Windows Registry-based event."""
   DATA_TYPE = 'windows:registry:key_value'

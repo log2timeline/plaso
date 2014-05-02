@@ -18,7 +18,6 @@
 """This file contains a default plist plugin in Plaso."""
 
 from plaso.events import plist_event
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import interface
 
 
@@ -54,19 +53,16 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
     version = match.get('LastAttemptSystemVersion', u'N/A')
     pending = match['LastUpdatesAvailable']
 
-    time = timelib.Timestamp.FromPythonDatetime(
-        match['LastFullSuccessfulDate'])
     description = u'Last Mac OS X {} full update.'.format(version)
-    yield plist_event.PlistEvent(root, key, time, description)
+    yield plist_event.PlistEvent(
+        root, key, match['LastFullSuccessfulDate'], description)
 
     if pending:
       software = []
       for update in match['RecommendedUpdates']:
         software.append(u'{}({})'.format(
             update['Identifier'], update['Product Key']))
-      time = timelib.Timestamp.FromPythonDatetime(
-          match['LastSuccessfulDate'])
       description = u'Last Mac OS {} partially udpate, pending {}: {}.'.format(
           version, pending, u','.join(software))
-      yield plist_event.PlistEvent(root, key, time, description)
-
+      yield plist_event.PlistEvent(
+          root, key, match['LastSuccessfulDate'], description)

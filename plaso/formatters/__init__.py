@@ -31,6 +31,7 @@ from plaso.formatters import filestat
 from plaso.formatters import firefox
 from plaso.formatters import gdrive
 from plaso.formatters import hachoir
+from plaso.formatters import ipod
 from plaso.formatters import java_idx
 from plaso.formatters import ls_quarantine
 from plaso.formatters import mac_appfirewall

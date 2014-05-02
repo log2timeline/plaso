@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -20,7 +21,6 @@ import datetime
 import logging
 
 from plaso.events import plist_event
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import interface
 
 
@@ -62,8 +62,6 @@ class DefaultPlugin(interface.PlistPlugin):
     """
     for root, key, value in interface.RecurseKey(top_level):
       if isinstance(value, datetime.datetime):
-        time = timelib.Timestamp.FromPythonDatetime(value)
-        yield plist_event.PlistEvent(root, key, time)
+        yield plist_event.PlistEvent(root, key, value)
       # TODO(make): Binplist keeps a list of offsets but not mapped to a key.
       # adjust code when there is a way to map keys to offsets.
-
