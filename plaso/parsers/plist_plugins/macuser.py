@@ -115,7 +115,7 @@ class MacUserPlugin(interface.PlistPlugin):
             password_hash = u'N/A'
           description = u'Last time {} ({}) changed the password: {}'.format(
               account, uid, password_hash)
-          yield plist_event.PlistEvent(
+          yield plist_event.PlistTimeEvent(
               root, u'passwordLastSetTime', timestamp, description)
 
       if policy_dict.get('lastLoginTimestamp', 0):
@@ -124,7 +124,7 @@ class MacUserPlugin(interface.PlistPlugin):
         description = u'Last login from {} ({})'.format(
             account, uid)
         if timestamp > cocoa_zero:
-          yield plist_event.PlistEvent(
+          yield plist_event.PlistTimeEvent(
               root, u'lastLoginTimestamp', timestamp, description)
 
       if policy_dict.get('failedLoginTimestamp', 0):
@@ -133,6 +133,5 @@ class MacUserPlugin(interface.PlistPlugin):
         description = u'Last failed login from {} ({}) ({} times)'.format(
             account, uid, policy_dict['failedLoginCount'])
         if timestamp > cocoa_zero:
-          yield plist_event.PlistEvent(
+          yield plist_event.PlistTimeEvent(
               root, u'failedLoginTimestamp', timestamp, description)
-

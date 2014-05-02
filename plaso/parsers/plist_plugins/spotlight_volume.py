@@ -18,7 +18,6 @@
 """This file contains the Spotlight Volume Configuration plist in Plaso."""
 
 from plaso.events import plist_event
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import interface
 
 
@@ -43,10 +42,7 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
       EventObject objects extracted from the plist.
     """
     for volume_name, volume in match['Stores'].iteritems():
-      time = timelib.Timestamp.FromPythonDatetime(
-          volume['CreationDate'])
       description = u'Spotlight Volume {} ({}) activated.'.format(
           volume_name, volume['PartialPath'])
       yield plist_event.PlistEvent(
-          u'/Stores', '', time, description)
-
+          u'/Stores', '', volume['CreationDate'], description)

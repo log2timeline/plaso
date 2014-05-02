@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2012 The Plaso Project Authors.
+# Copyright 2014 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Formatter for the iPod device events."""
 
-__version__ = '1.1.0-dev'
-
-VERSION_DEV = True
-VERSION_DATE = '20140502'
+from plaso.lib import eventdata
 
 
-def GetVersion():
-  """Returns a version information for plaso."""
-  if not VERSION_DEV:
-    return __version__
+class IPodDeviceFormatter(eventdata.ConditionalEventFormatter):
+  """Formatter for iPod device events."""
 
-  return u'{}_{}'.format(__version__, VERSION_DATE)
+  DATA_TYPE = 'ipod:device:entry'
+
+  FORMAT_STRING_PIECES = [
+      u'Device ID: {device_id}',
+      u'Type: {device_class}',
+      u'[{family_id}]',
+      u'Connected {use_count} times',
+      u'Serial nr: {serial_number}',
+      u'IMEI [{imei}]']
+
+  SOURCE_LONG = 'iPod Connections'
+  SOURCE_SHORT = 'LOG'
