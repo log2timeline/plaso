@@ -23,13 +23,13 @@ import os
 import re
 import sre_constants
 
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import queue
 from plaso.lib import utils
 from plaso.parsers import filestat
@@ -192,11 +192,14 @@ class Collector(queue.PathSpecQueueProducer):
 
   def _ProcessFileSystemWithFilter(self):
     """Processes the source path based on the collection filter."""
-    preprocessor_collector = GenericPreprocessCollector(
-        self._pre_obj, self._source_path, self._source_path_spec)
-    filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
+    find_specs = BuildFindSpecsFromFile(self._filter_file_path)
 
-    for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(
+        self._source_path_spec)
+    searcher = file_system_searcher.FileSystemSearcher(
+        file_system, self._source_path_spec)
+
+    for path_spec in searcher.Find(find_specs=find_specs):
       self.ProducePathSpec(path_spec)
 
   def _ProcessImage(self, volume_path_spec):
@@ -266,13 +269,13 @@ class Collector(queue.PathSpecQueueProducer):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
 
-    # TODO: Change the preprocessor collector into a find function.
-    preprocessor_collector = GenericPreprocessCollector(
-        self._pre_obj, self._source_path, path_spec)
+    find_specs = BuildFindSpecsFromFile(self._filter_file_path)
 
-    filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
+    searcher = file_system_searcher.FileSystemSearcher(
+        file_system, volume_path_spec)
 
-    for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
+    for path_spec in searcher.Find(find_specs=find_specs):
       self.ProducePathSpec(path_spec)
 
     if self._process_vss:
@@ -303,14 +306,18 @@ class Collector(queue.PathSpecQueueProducer):
             u'Collecting from VSS volume: {0:d} out of: {1:d}'.format(
                 store_index + 1, number_of_vss))
 
-        # TODO: Change the preprocessor collector into a find function.
-        vss_preprocessor_collector = GenericPreprocessCollector(
-            self._pre_obj, self._source_path, path_spec)
-        vss_preprocessor_collector.SetVssInformation(store_index=store_index)
-        filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
+        vss_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
+            parent=volume_path_spec)
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+            parent=vss_path_spec)
 
-        for path_spec in vss_preprocessor_collector.GetPathSpecs(
-            filter_object):
+        file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system, vss_path_spec)
+
+        for path_spec in searcher.Find(find_specs=find_specs):
           self.ProducePathSpec(path_spec)
 
     logging.debug(u'Targeted Image Collector - Done.')
@@ -686,7 +693,7 @@ class GenericPreprocessCollector(object):
           continue
 
   # TODO: in dfVFS create a separate FindExpression of FindSpec object to
-  # define path expresssions.
+  # define path expressions.
   def FindPaths(self, path_expression):
     """Finds paths based on a path expression.
 
@@ -718,15 +725,23 @@ class GenericPreprocessCollector(object):
         path_spec, resolver_context=self._resolver_context)
 
 
-def BuildCollectionFilterFromFile(filter_file_path):
-  """Returns a collection filter from a filter file."""
-  filter_strings = []
+def BuildFindSpecsFromFile(filter_file_path):
+  """Returns a list of find specification from a filter file."""
+  find_specs = []
 
   with open(filter_file_path, 'rb') as file_object:
     for line in file_object:
       line = line.strip()
       if line.startswith(u'#'):
         continue
-      filter_strings.append(line)
 
-  return event.CollectionFilter(filter_strings)
+      _, _, file_path = line.rstrip().rpartition(u'/')
+      if not file_path:
+        logging.warning(
+            u'Unable to parse the filter string: {0:s}'.format(line))
+        continue
+
+      find_specs.append(file_system_searcher.FindSpec(
+          location_regex=line, case_sensitive=False))
+
+  return find_specs
