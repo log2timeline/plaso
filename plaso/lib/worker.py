@@ -108,19 +108,6 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
             u'Unable to parse file: {0:s} with error: {1:s}'.format(
                 file_entry.path_spec.comparable, exception))
 
-  def Run(self):
-    """Start the worker, monitor the queue and parse files."""
-    self.pid = os.getpid()
-    logging.info(
-        u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
-        self._identifier, self.pid))
-
-    self.ConsumePathSpecs()
-
-    logging.info(
-        'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
-        self._identifier, os.getpid()))
-
   def _ParseEvent(self, event_object, file_entry, parser_name, stat_obj):
     """Adjust value of an extracted EventObject before storing it."""
     # TODO: Make some more adjustments to the event object.
@@ -233,3 +220,18 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
     logging.debug(u'Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
+
+  def Run(self):
+    """Start the worker, monitor the queue and parse files."""
+    self.pid = os.getpid()
+    logging.info(
+        u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
+        self._identifier, self.pid))
+
+    self.ConsumePathSpecs()
+
+    logging.info(
+        'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
+        self._identifier, os.getpid()))
+
+    self._resolver_context.Empty()

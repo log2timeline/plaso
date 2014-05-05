@@ -57,7 +57,7 @@ def GetToolsFrom(path):
   """Get tools from a given directory."""
   data = []
 
-  skip_files = ['presets.py', 'utils.py', '__init__.py']
+  skip_files = ['__init__.py', 'frontend.py', 'presets.py', 'utils.py']
 
   for _, _, filenames in os.walk(path):
     for filename in filenames:

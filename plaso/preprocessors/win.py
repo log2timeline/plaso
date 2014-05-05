@@ -23,11 +23,11 @@ from plaso.lib import preprocess_interface
 from plaso.winreg import utils
 
 
-class WinGetSystemPath(preprocess_interface.PreprocessGetPath):
-  """Get the system path."""
+class WinGetSystemRootPath(preprocess_interface.PreprocessGetPath):
+  """Get the system root path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'systemroot'
-  PATH = '(Windows|WinNT)/System32'
+  PATH = '(Windows|WinNT|WINNT35|WTSRV)/System32'
 
 
 class WinGetWinDirPath(preprocess_interface.PreprocessGetPath):
@@ -41,7 +41,7 @@ class WinGetRegistryPath(preprocess_interface.PreprocessGetPath):
   """Get the system registry path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'sysregistry'
-  PATH = '(Windows|WinNT)/System32/config'
+  PATH = '(Windows|WinNT|WINNT35|WTSRV)/System32/config'
 
 
 class WinVersion(preprocess_interface.WinRegistryPreprocess):
@@ -170,8 +170,8 @@ class WinRegTimeZone(preprocess_interface.WinRegistryPreprocess):
   REG_FILE = 'SYSTEM'
 
   # transform gathered from these sources:
-  # Prebuilt from HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows N\
-  #    T\CurrentVersion\Time Zones\
+  # Prebuilt from:
+  # HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\
   ZONE_LIST = {
       'IndiaStandardTime': 'Asia/Kolkata',
       'EasternStandardTime': 'EST5EDT',

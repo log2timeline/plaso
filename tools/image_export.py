@@ -68,14 +68,23 @@ class ImageExtractor(object):
       return
 
     self._pre_obj = event.PreprocessObject()
-    try:
-      image_collector = collector.GenericPreprocessCollector(
-          self._pre_obj, self._image_path, source_path_spec=None)
-      image_collector.SetImageInformation(self._image_offset)
 
-    except errors.UnableToOpenFilesystem as exception:
-      raise RuntimeError(
-          u'Unable to proceed, not an image file? [{0:s}]'.format(exception))
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=self._image_path)
+
+    if self._image_offset > 0:
+      volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
+        start_offset=self._image_offset, parent=os_path_spec)
+    else:
+      volume_path_spec = os_path_spec
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=volume_path_spec)
+
+    image_collector = collector.GenericPreprocessCollector(
+        self._pre_obj, self._image_path, path_spec)
 
     plugin_list = preprocessors.PreProcessList(self._pre_obj)
 
@@ -147,16 +156,21 @@ class ImageExtractor(object):
 
       number_of_vss = vss_file_entry.number_of_sub_file_entries
 
-      for store_number in range(0, number_of_vss):
+      for store_index in range(0, number_of_vss):
         logging.info(u'Extracting files from VSS {0:d} out of {1:d}'.format(
-            store_number + 1, number_of_vss))
+            store_index + 1, number_of_vss))
+
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
+            parent=volume_path_spec)
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+            parent=path_spec)
 
         vss_collector = collector.GenericPreprocessCollector(
-            self._pre_obj, self._image_path, source_path_spec=None)
-        vss_collector.SetImageInformation(self._image_offset)
-        vss_collector.SetVssInformation(store_index=store_number)
+            self._pre_obj, self._image_path, path_spec)
 
-        filename_prefix = 'vss_{0:d}'.format(store_number)
+        filename_prefix = 'vss_{0:d}'.format(store_index)
         filter_object = collector.BuildCollectionFilterFromFile(
             filter_file_path)
 
@@ -165,15 +179,12 @@ class ImageExtractor(object):
               path_spec, destination_path, filename_prefix=filename_prefix)
 
   def ExtractWithExtensions(
-       self, extensions, destination_path, process_vss=False,
-       remove_duplicates=False):
+       self, extensions, destination_path, remove_duplicates=False):
     """Extracts files using extensions.
 
     Args:
       extensions: a list of extensions.
       destination_path: the path where the extracted files should be stored.
-      process_vss: optional boolean value to indicate if VSS should be detected
-                   and processed. The default is false.
       remove_duplicates: optional boolean value to indicate if duplicates should
                          be detected and removed. The default is false.
     """
@@ -200,10 +211,6 @@ class ImageExtractor(object):
 
     image_collector = collector.Collector(
         input_queue, output_producer, self._image_path, path_spec)
-
-    if process_vss:
-      # TODO: don't we need a store number here?
-      image_collector.SetVssInformation()
 
     image_collector.Collect()
 
@@ -415,16 +422,14 @@ def Main():
   # The option of running both options.
   if options.filter:
     image_extractor.ExtractWithFilter(
-        options.filter, options.path,
-        process_vss=options.vss,
+        options.filter, options.path, process_vss=options.vss,
         remove_duplicates=options.remove_duplicates)
 
   if options.extension_string:
     extensions = [x.strip() for x in options.extension_string.split(',')]
 
     image_extractor.ExtractWithExtensions(
-        extensions, options.path, process_vss=options.vss,
-        remove_duplicates=options.remove_duplicates)
+        extensions, options.path, remove_duplicates=options.remove_duplicates)
     logging.info(u'Files based on extension extracted.')
 
 

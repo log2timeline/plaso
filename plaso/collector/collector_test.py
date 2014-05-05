@@ -25,6 +25,7 @@ import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import context
 
 from plaso.collector import collector
 from plaso.lib import event
@@ -123,8 +124,10 @@ class CollectorTest(CollectorTestCase):
 
       test_collection_queue = queue.SingleThreadedQueue()
       test_store = queue.SingleThreadedQueue()
+      resolver_context = context.Context()
       test_collector = collector.Collector(
-          test_collection_queue, test_store, dirname, path_spec)
+          test_collection_queue, test_store, dirname, path_spec,
+          resolver_context)
       test_collector.Collect()
 
       test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -150,8 +153,10 @@ class CollectorTest(CollectorTestCase):
     pre_obj = event.PreprocessObject()
     test_collection_queue = queue.SingleThreadedQueue()
     test_store = queue.SingleThreadedQueue()
+    resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_collection_queue, test_store, dirname, path_spec)
+        test_collection_queue, test_store, dirname, path_spec,
+        resolver_context)
     test_collector.SetFilter(filter_name, pre_obj)
     test_collector.Collect()
 
@@ -222,9 +227,10 @@ class CollectorTest(CollectorTestCase):
     test_storage_queue = queue.SingleThreadedQueue()
     test_storage_queue_producer = queue.EventObjectQueueProducer(
         test_storage_queue)
+    resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, test_storage_queue_producer, test_file,
-        path_spec)
+        path_spec, resolver_context)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -255,9 +261,10 @@ class CollectorTest(CollectorTestCase):
     test_storage_queue = queue.SingleThreadedQueue()
     test_storage_queue_producer = queue.EventObjectQueueProducer(
         test_storage_queue)
+    resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, test_storage_queue_producer, test_file,
-        path_spec)
+        path_spec, resolver_context)
     test_collector.SetFilter(filter_name, pre_obj)
     test_collector.Collect()
 
@@ -326,9 +333,13 @@ class CollectionFilterTest(unittest.TestCase):
     list_of_filters = test_filter.BuildFilters()
     self.assertEquals(len(list_of_filters), 5)
 
+    dirname = u'./'
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
+
     pre_obj = event.PreprocessObject()
     test_preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, u'./', source_path_spec=None)
+        pre_obj, dirname, path_spec)
     path_spec_generator = test_preprocess_collector.GetPathSpecs(test_filter)
     path_specs = list(path_spec_generator)
     # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
