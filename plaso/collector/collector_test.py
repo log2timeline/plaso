@@ -23,9 +23,11 @@ import shutil
 import tempfile
 import unittest
 
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
+from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.collector import collector
 from plaso.lib import event
@@ -298,11 +300,11 @@ class CollectorTest(CollectorTestCase):
     self.assertEquals(paths[1], u'/passwords.txt')
 
 
-class CollectionFilterTest(unittest.TestCase):
-  """Test CollectionFilter check."""
+class BuildFindSpecsFromFileTest(unittest.TestCase):
+  """Tests for the BuildFindSpecsFromFile function."""
 
-  def testFilter(self):
-    """Run the tests."""
+  def testBuildFindSpecsFromFile(self):
+    """Tests the BuildFindSpecsFromFile function."""
     filter_name = ''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       filter_name = temp_file.name
@@ -318,7 +320,7 @@ class CollectionFilterTest(unittest.TestCase):
       # This should not fail during initial loading, but fail later on.
       temp_file.write('bad re (no close on that parenthesis/file\n')
 
-    test_filter = collector.BuildCollectionFilterFromFile(filter_name)
+    find_specs = collector.BuildFindSpecsFromFile(filter_name)
 
     try:
       os.remove(filter_name)
@@ -330,23 +332,23 @@ class CollectionFilterTest(unittest.TestCase):
     # This filter will contain all the filter lines, even those that will fail
     # during finding pathspecs, yet there is one that will fail, so we should
     # have five hits.
-    list_of_filters = test_filter.BuildFilters()
-    self.assertEquals(len(list_of_filters), 5)
+    self.assertEquals(len(find_specs), 5)
 
-    dirname = u'./'
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=u'./')
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
+    searcher = file_system_searcher.FileSystemSearcher(
+        file_system, path_spec)
 
-    pre_obj = event.PreprocessObject()
-    test_preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, dirname, path_spec)
-    path_spec_generator = test_preprocess_collector.GetPathSpecs(test_filter)
+    path_spec_generator = searcher.Find(find_specs=find_specs)
+    self.assertNotEquals(path_spec_generator, None)
+
     path_specs = list(path_spec_generator)
     # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
     self.assertEquals(len(path_specs), 4)
 
     with self.assertRaises(IOError):
-      _ = collector.BuildCollectionFilterFromFile('thisfiledoesnotexist')
+      _ = collector.BuildFindSpecsFromFile('thisfiledoesnotexist')
 
 
 if __name__ == '__main__':

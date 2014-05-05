@@ -23,6 +23,7 @@ import logging
 import os
 import sys
 
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -58,17 +59,12 @@ class ImageExtractor(object):
     self._image_path = image_path
     self._image_offset = sector_offset * 512
 
-  def _Preprocess(self):
-    """Preprocesses the image.
+  def _GetVolumePathSpec(self):
+    """Retrieves the volume path specification.
 
     Returns:
-      The image collector object.
+      The path specification (instance of dfvfs.PathSpec).
     """
-    if self._pre_obj is not None:
-      return
-
-    self._pre_obj = event.PreprocessObject()
-
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=self._image_path)
 
@@ -79,6 +75,16 @@ class ImageExtractor(object):
     else:
       volume_path_spec = os_path_spec
 
+    return volume_path_spec
+
+  def _Preprocess(self):
+    """Preprocesses the image."""
+    if self._pre_obj is not None:
+      return
+
+    self._pre_obj = event.PreprocessObject()
+
+    volume_path_spec = self._GetVolumePathSpec()
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
@@ -104,8 +110,6 @@ class ImageExtractor(object):
 
     logging.info(u'Preprocess done, saving files from image.')
 
-    return image_collector
-
   def ExtractWithFilter(
       self, filter_file_path, destination_path, process_vss=False,
       remove_duplicates=False):
@@ -124,30 +128,30 @@ class ImageExtractor(object):
                          be detected and removed. The default is false.
     """
     if self._pre_obj is None:
-      image_collector = self._Preprocess()
+      self._Preprocess()
 
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
 
     # Save the regular files.
     FileSaver.calc_md5 = remove_duplicates
-    filter_object = collector.BuildCollectionFilterFromFile(filter_file_path)
 
-    for path_spec in image_collector.GetPathSpecs(filter_object):
+    find_specs = collector.BuildFindSpecsFromFile(filter_file_path)
+
+    volume_path_spec = self._GetVolumePathSpec()
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=volume_path_spec)
+
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
+    searcher = file_system_searcher.FileSystemSearcher(
+        file_system, volume_path_spec)
+
+    for path_spec in searcher.Find(find_specs=find_specs):
       FileSaver.WriteFile(path_spec, destination_path)
 
     if process_vss:
       logging.info(u'Extracting files from VSS.')
-      os_path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_OS, location=self._image_path)
-
-      if self._image_offset > 0:
-        volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-          start_offset=self._image_offset, parent=os_path_spec)
-      else:
-        volume_path_spec = os_path_spec
-
       vss_path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
           parent=volume_path_spec)
@@ -160,21 +164,20 @@ class ImageExtractor(object):
         logging.info(u'Extracting files from VSS {0:d} out of {1:d}'.format(
             store_index + 1, number_of_vss))
 
-        path_spec = path_spec_factory.Factory.NewPathSpec(
+        vss_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
             parent=volume_path_spec)
         path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-            parent=path_spec)
-
-        vss_collector = collector.GenericPreprocessCollector(
-            self._pre_obj, self._image_path, path_spec)
+            parent=vss_path_spec)
 
         filename_prefix = 'vss_{0:d}'.format(store_index)
-        filter_object = collector.BuildCollectionFilterFromFile(
-            filter_file_path)
 
-        for path_spec in vss_collector.GetPathSpecs(filter_object):
+        file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system, vss_path_spec)
+
+        for path_spec in searcher.Find(find_specs=find_specs):
           FileSaver.WriteFile(
               path_spec, destination_path, filename_prefix=filename_prefix)
 
