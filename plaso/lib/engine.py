@@ -27,6 +27,7 @@ import traceback
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 import plaso
@@ -72,6 +73,7 @@ class Engine(object):
     self._output = None
     self._process_image = False
     self._process_vss = False
+    self._resolver_context = context.Context()
     self._run_preprocess = config.preprocess
     self._single_thread_mode = config.single_thread
     self._source = None
@@ -104,8 +106,16 @@ class Engine(object):
 
       config.workers = cpus
 
-  def _GetCollector(self, pre_obj, collection_queue, storage_queue):
-    """Returns a collector object based on config."""
+  def _GetCollector(
+      self, pre_obj, collection_queue, storage_queue, resolver_context):
+    """Returns a collector object based on config.
+
+    Args:
+      pre_obj: The preprocessor object (instance of PreprocessObject).
+      collection_queue: the collection queue object (instance of Queue).
+      collection_queue: the storage queue object (instance of Queue).
+      resolver_context: The resolver context (instance of dfvfs.Context).
+    """
     # Indicate whether the collection agent should collect directory
     # stat information - this depends on whether the stat parser is
     # loaded or not.
@@ -144,7 +154,7 @@ class Engine(object):
     self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
     collector_object = collector.Collector(
         collection_queue, self._storage_queue_producer, self._source,
-        self._source_path_spec)
+        self._source_path_spec, resolver_context)
 
     if self._process_image and self._process_vss:
       collector_object.SetVssInformation(vss_stores=self._vss_stores)
@@ -165,10 +175,7 @@ class Engine(object):
       return
 
     preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, self._source, source_path_spec=self._source_path_spec)
-
-    if self._process_image:
-      preprocess_collector.SetImageInformation(self._byte_offset)
+        pre_obj, self._source, self._source_path_spec)
 
     if not getattr(self.config, 'os', None):
       self.config.os = preprocess_interface.GuessOS(preprocess_collector)
@@ -253,7 +260,7 @@ class Engine(object):
     logging.debug(u'Starting collection.')
 
     self._collector = self._GetCollector(
-        pre_obj, collection_queue, storage_queue)
+        pre_obj, collection_queue, storage_queue, self._resolver_context)
     self._collector.Collect()
 
     logging.debug(u'Collection done.')
@@ -282,6 +289,8 @@ class Engine(object):
 
     storage_writer.WriteEventObjects()
     logging.debug(u'Storage done.')
+
+    self._resolver_context.Empty()
 
   def _StartRuntime(self):
     """Run preprocessing and other actions needed before starting threads."""
@@ -389,7 +398,7 @@ class Engine(object):
           storage_queue, self._output, self.config.buffer_size, pre_obj)
 
     self._collector = self._GetCollector(
-        pre_obj, collection_queue, storage_queue)
+        pre_obj, collection_queue, storage_queue, self._resolver_context)
 
     logging.info(u'Starting storage thread.')
     self.storage_thread = multiprocessing.Process(
@@ -542,12 +551,12 @@ class Engine(object):
 
     self._output = output
 
-  def SetSource(self, source, source_path_spec=None):
+  def SetSource(self, source, source_path_spec):
     """Checks if the source valid and sets it accordingly.
 
     Args:
       source: The source device, file or directory.
-      source_path_spec: Optional source path specification (instance of
+      source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
                         scanner. The default is None.
 
@@ -566,7 +575,7 @@ class Engine(object):
           dfvfs_definitions.TYPE_INDICATOR_OS, location=source)
 
     source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        source_path_spec)
+        source_path_spec, resolver_context=self._resolver_context)
 
     if not source_file_entry:
       raise errors.BadConfigOption(

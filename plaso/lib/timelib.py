@@ -118,7 +118,7 @@ class Timestamp(object):
       return datetime_object.astimezone(timezone)
     except OverflowError as exception:
       logging.error(
-          u'Unable to copy {0:s} to a datetime object, error: {1:s}'.format(
+          u'Unable to copy {0:s} to a datetime object with error: {1:s}'.format(
               timestamp, exception))
 
     return datetime_object
@@ -577,7 +577,7 @@ def StringToDatetime(
 
   except (TypeError, ValueError) as exception:
     logging.error(
-        u'Unable to copy {0:s} to a datetime object, error: {1:s}'.format(
+        u'Unable to copy {0:s} to a datetime object with error: {1:s}'.format(
             time_string, exception))
     return datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc)
 

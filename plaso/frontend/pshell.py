@@ -192,9 +192,10 @@ def Main():
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   logging.basicConfig(format=format_str)
 
-  l2t = engine.Engine(options)
+  l2t_engine = engine.Engine(options)
 
-  l2t.SetSource(options.filename)
+  # TODO: add support for scanning for the source path spec.
+  l2t_engine.SetSource(options.filename, None)
 
   if options.image:
     if options.image_offset_bytes is not None:
@@ -205,16 +206,16 @@ def Main():
     else:
       byte_offset = 0
 
-    l2t.SetImageInformation(byte_offset)
+    l2t_engine.SetImageInformation(byte_offset)
 
-  l2t.SetOutput(options.output)
+  l2t_engine.SetOutput(options.output)
 
   namespace = {}
 
   pre_obj = event.PreprocessObject()
 
   namespace.update(globals())
-  namespace.update({'l2t': l2t, 'pre_obj': pre_obj, 'options': options})
+  namespace.update({'l2t': l2t_engine, 'pre_obj': pre_obj, 'options': options})
 
   # Include few random phrases that get thrown in once the user exists the
   # shell.
