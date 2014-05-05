@@ -27,10 +27,12 @@ import time
 import textwrap
 
 import pytsk3
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 
 import plaso
 from plaso.collector import collector
-from plaso.collector import scanner
+from plaso.frontend import frontend
 from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
@@ -58,7 +60,7 @@ class LoggingFilter(logging.Filter):
     return True
 
 
-class Log2TimelineFrontend(object):
+class Log2TimelineFrontend(frontend.Frontend):
   """Class that implements the log2timeline front-end."""
 
   _BYTES_IN_A_MIB = 1024 * 1024
@@ -67,8 +69,6 @@ class Log2TimelineFrontend(object):
     """Initializes the front-end object."""
     super(Log2TimelineFrontend, self).__init__()
     self._engine = None
-    self._input_reader = scanner.StdinScannerInputReader()
-    self._output_writer = scanner.StdoutScannerOutputWriter()
 
   def CleanUpAfterAbort(self):
     """Cleans up after an abort."""
@@ -152,22 +152,21 @@ class Log2TimelineFrontend(object):
           u'No such collection filter file: {0:s}.'.format(options.file_filter))
 
     try:
-      path_spec = self.ScanSource(options)
+      path_spec = self.ScanSource(options, 'source')
     except errors.FileSystemScannerError as exception:
       raise errors.BadConfigOption((
-          u'Unable to scan for a supported filesystem. Most likely the image '
-          u'format is not supported yet by the tool. The error message '
-          u'is: "{:s}"').format(
-              exception))
+          u'Unable to scan for a supported filesystem with error: {0:s}.\n'
+          u'Most likely the image format is not supported by the '
+          u'tool.').format(exception))
     self.PrintOptions(options)
 
     if not options.image:
-      options.recursive = os.path.isdir(options.filename)
+      options.recursive = os.path.isdir(options.source)
     else:
       options.recursive = False
 
     self._engine = engine.Engine(options)
-    self._engine.SetSource(options.filename, source_path_spec=path_spec)
+    self._engine.SetSource(options.source, path_spec)
 
     if options.image_offset_bytes is not None:
       self._engine.SetImageInformation(options.image_offset_bytes)
@@ -192,32 +191,6 @@ class Log2TimelineFrontend(object):
           entry['address'], entry['offset'], entry['length'],
           entry['description'])
 
-  def PrintOptions(self, options):
-    """Prints the options.
-
-    Args:
-      options: the command line arguments.
-    """
-    self._output_writer.Write('\n')
-    self._output_writer.Write(
-        'Source\t\t\t: {0:s}\n'.format(options.filename))
-    self._output_writer.Write(
-        'Is storage media image\t: {0!s}\n'.format(options.image))
-
-    if options.image:
-      self._output_writer.Write(
-          'Partition offset\t: 0x{0:08x}\n'.format(options.image_offset_bytes))
-
-      if options.vss_stores:
-        self._output_writer.Write(
-            'VSS stores\t\t: {0!s}\n'.format(options.vss_stores))
-
-    if options.file_filter:
-      self._output_writer.Write(
-          'Filter file\t\t: {0:s}\n'.format(options.file_filter))
-
-    self._output_writer.Write('\n')
-
   def ProcessSource(self):
     """Processes the source.
 
@@ -230,46 +203,13 @@ class Log2TimelineFrontend(object):
           u'Missing engine object make sure to set up the engine first.')
     self._engine.Start()
 
-  def ScanSource(self, options):
-    """Scans the source for volume and file systems.
-
-    Args:
-      options: the command line arguments.
-
-    Returns:
-      The base path specification (instance of dfvfs.PathSpec).
-    """
-    if not hasattr(options, 'filename'):
-      return
-
-    file_system_scanner = scanner.FileSystemScanner(
-        input_reader=self._input_reader, output_writer=self._output_writer)
-
-    if hasattr(options, 'image_offset_bytes'):
-      file_system_scanner.SetPartitionOffset(options.image_offset_bytes)
-    elif hasattr(options, 'image_offset'):
-      bytes_per_sector = getattr(options, 'bytes_per_sector', 512)
-      file_system_scanner.SetPartitionOffset(
-          options.image_offset * bytes_per_sector)
-
-    if getattr(options, 'partition_number', None) is not None:
-      file_system_scanner.SetPartitionNumber(options.partition_number)
-
-    if hasattr(options, 'vss_stores'):
-      file_system_scanner.SetVssStores(options.vss_stores)
-
-    path_spec = file_system_scanner.Scan(options.filename)
-
-    options.image = file_system_scanner.is_storage_media_image
-    options.image_offset_bytes = file_system_scanner.partition_offset
-    options.vss_stores = file_system_scanner.vss_stores
-
-    return path_spec
-
 
 def Main():
   """Start the tool."""
   multiprocessing.freeze_support()
+
+  front_end = Log2TimelineFrontend()
+
   epilog = (
       """
       Example usage:
@@ -364,18 +304,7 @@ def Main():
           'this option is assumed. Use this when parsing an image with an '
           'offset of zero.'))
 
-  deep_group.add_argument(
-      '--vss', dest='parse_vss', action='store_true', default=False,
-      help=('Collect data from VSS. Off by default, this should be used on Wi'
-            'ndows systems that have active VSS (Volume Shadow Copies) that n'
-            'eed to be included in the analysis.'))
-
-  deep_group.add_argument(
-      '--vss_stores', '--vss-stores', dest='vss_stores', action='store',
-      type=str, default=None, help=(
-          'A range of stores can be defined as: 3..5. Multiple stores can '
-          'be defined as: 1,3,5 (a list of comma separated values). Ranges '
-          'and lists can also be combined as: 1,3..5. The first store is 1.'))
+  front_end.AddVssProcessingOptions(deep_group)
 
   performance_group.add_argument(
       '--single_thread', '--single-thread', dest='single_thread',
@@ -400,17 +329,14 @@ def Main():
   #          'ed files within them, for instance to extract files from compress'
   #          'ed containers, etc. Be AWARE THAT THIS IS EXTREMELY SLOW.'))
 
-  function_group.add_argument(
-      '-o', '--offset', dest='image_offset', action='store', default=None,
-      type=int, help=(
-          'The sector offset to the image in sector sizes (default to 512 '
-          'bytes, possible to overwrite with --sector_size). '
-          'If this option is used, then it is assumed we have an image '
-          'file to parse, and using -i is not necessary.'))
+  front_end.AddImageOptions(function_group)
 
   function_group.add_argument(
-      '--ob', '--offset_bytes', dest='image_offset_bytes', action='store',
-      default=None, type=int, help='The bytes offset to the image')
+      '--partition', dest='partition_number', action='store', type=int,
+      default=None, help=(
+          'Choose a partition number from a disk image. This partition '
+          'number should correspond to the number displayed from the parameter'
+          ' --partition_map.'))
 
   # Build the version information.
   version_string = u'log2timeline - plaso back-end {}'.format(
@@ -428,17 +354,6 @@ def Main():
       '--partition_map', '--partition-map', action='store_true',
       dest='partition_map', default=False, help=(
           'Print out a partition map of a disk image.'))
-
-  function_group.add_argument(
-      '--sector_size', dest='bytes_per_sector', action='store', type=int,
-      default=512, help='The sector size, by default set to 512.')
-
-  function_group.add_argument(
-      '--partition', dest='partition_number', action='store', type=int,
-      default=None, help=(
-          'Choose a partition number from a disk image. This partition '
-          'number should correspond to the number displayed from the parameter'
-          ' --partition_map.'))
 
   function_group.add_argument(
       '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
@@ -469,7 +384,7 @@ def Main():
           'appended to.'))
 
   arg_parser.add_argument(
-      'filename', action='store', metavar='SOURCE',
+      'source', action='store', metavar='SOURCE',
       nargs='?', type=unicode, help=(
           'The path to the source device, file or directory. If the source is '
           'a supported storage media device or image file, archive file or '
@@ -499,8 +414,6 @@ def Main():
   sys.argv = u_argv
   options = arg_parser.parse_args()
   options.preferred_encoding = preferred_encoding
-
-  front_end = Log2TimelineFrontend()
 
   if options.tzone == 'list':
     print '=' * 40
@@ -547,8 +460,8 @@ def Main():
     return False
 
   if options.partition_map:
-    if options.filename:
-      source = options.filename
+    if options.source:
+      source = options.source
     else:
       source = options.output
 
@@ -559,12 +472,12 @@ def Main():
       return False
     return True
 
-  if not options.filename:
+  if not options.source:
     arg_parser.print_help()
     print ''
     arg_parser.print_usage()
     print ''
-    logging.error(u'No input file supplied.')
+    logging.error(u'No input source supplied.')
     return False
 
   if options.filter and not pfilter.GetMatcher(options.filter):
@@ -584,8 +497,10 @@ def Main():
   # Check to see if we are trying to parse a mount point.
   if options.recursive:
     pre_obj = event.PreprocessObject()
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=options.source)
     preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, options.filename, source_path_spec=None)
+        pre_obj, options.source, path_spec)
 
     guessed_os = preprocess_interface.GuessOS(preprocess_collector)
     if guessed_os != 'None':

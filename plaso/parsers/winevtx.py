@@ -43,7 +43,7 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
       timestamp = evtx_record.get_written_time_as_integer()
     except OverflowError as exception:
       logging.warning(
-          u'Unable to read the timestamp from record, error: {0:s}'.format(
+          u'Unable to read the timestamp from record with error: {0:s}'.format(
               exception))
       timestamp = 0
 
