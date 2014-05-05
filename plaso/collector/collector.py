@@ -66,7 +66,7 @@ class Collector(queue.PathSpecQueueProducer):
 
   def __init__(
       self, process_queue, storage_queue_producer, source_path,
-      source_path_spec):
+      source_path_spec, resolver_context):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -81,12 +81,14 @@ class Collector(queue.PathSpecQueueProducer):
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
                         scanner. The default is None.
+      resolver_context: The resolver context (instance of dfvfs.Context).
     """
     super(Collector, self).__init__(process_queue)
     self._filter_file_path = None
     self._hashlist = None
     self._pre_obj = None
     self._process_vss = None
+    self._resolver_context = resolver_context
     self._storage_queue_producer = storage_queue_producer
     # TODO: remove the need to pass source_path
     self._source_path = os.path.abspath(source_path)
@@ -191,8 +193,7 @@ class Collector(queue.PathSpecQueueProducer):
   def _ProcessFileSystemWithFilter(self):
     """Processes the source path based on the collection filter."""
     preprocessor_collector = GenericPreprocessCollector(
-        self._pre_obj, self._source_path,
-        source_path_spec=self._source_path_spec)
+        self._pre_obj, self._source_path, self._source_path_spec)
     filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
     for path_spec in preprocessor_collector.GetPathSpecs(filter_object):
@@ -216,7 +217,8 @@ class Collector(queue.PathSpecQueueProducer):
         parent=volume_path_spec)
 
     try:
-      root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+      root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=self._resolver_context)
     except IOError as exception:
       logging.error((
           u'Unable to read file system in storage media image with error: '
@@ -237,7 +239,8 @@ class Collector(queue.PathSpecQueueProducer):
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
           parent=volume_path_spec)
 
-      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(vss_path_spec)
+      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          vss_path_spec, resolver_context=self._resolver_context)
 
       number_of_vss = vss_file_entry.number_of_sub_file_entries
       if self._vss_stores:
@@ -265,7 +268,7 @@ class Collector(queue.PathSpecQueueProducer):
 
     # TODO: Change the preprocessor collector into a find function.
     preprocessor_collector = GenericPreprocessCollector(
-        self._pre_obj, self._source_path, source_path_spec=path_spec)
+        self._pre_obj, self._source_path, path_spec)
 
     filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
@@ -279,7 +282,8 @@ class Collector(queue.PathSpecQueueProducer):
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
           parent=volume_path_spec)
 
-      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(vss_path_spec)
+      vss_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          vss_path_spec, resolver_context=self._resolver_context)
 
       number_of_vss = vss_file_entry.number_of_sub_file_entries
 
@@ -301,7 +305,7 @@ class Collector(queue.PathSpecQueueProducer):
 
         # TODO: Change the preprocessor collector into a find function.
         vss_preprocessor_collector = GenericPreprocessCollector(
-            self._pre_obj, self._source_path, source_path_spec=path_spec)
+            self._pre_obj, self._source_path, path_spec)
         vss_preprocessor_collector.SetVssInformation(store_index=store_index)
         filter_object = BuildCollectionFilterFromFile(self._filter_file_path)
 
@@ -327,7 +331,8 @@ class Collector(queue.PathSpecQueueProducer):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/', parent=path_spec)
 
-    root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    root_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        path_spec, resolver_context=self._resolver_context)
 
     try:
       self._ProcessDirectory(root_file_entry)
@@ -343,7 +348,7 @@ class Collector(queue.PathSpecQueueProducer):
   def Collect(self):
     """Collects files from the source."""
     source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        self._source_path_spec)
+        self._source_path_spec, resolver_context=self._resolver_context)
 
     if not source_file_entry:
       logging.warning(u'No files to collect.')
@@ -385,7 +390,7 @@ class Collector(queue.PathSpecQueueProducer):
 
     Args:
       filter_file_path: The path of the filter file.
-      pre_obj: The preprocessor object.
+      pre_obj: The preprocessor object (instance of PreprocessObject).
     """
     self._filter_file_path = filter_file_path
     self._pre_obj = pre_obj
@@ -408,25 +413,24 @@ class GenericPreprocessCollector(object):
 
   _PATH_EXPANDER_RE = re.compile(r'^[{][a-z_]+[}]$')
 
-  def __init__(self, pre_obj, source_path, source_path_spec=None):
+  def __init__(
+      self, pre_obj, source_path, source_path_spec, resolver_context=None):
     """Initializes the preprocess collector object.
 
     Args:
       pre_obj: The preprocessing object (instance of PreprocessObject).
       source_path: Path of the source file or directory.
-      source_path_spec: Optional source path specification (instance of
+      source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
                         scanner. The default is None.
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
     """
     super(GenericPreprocessCollector, self).__init__()
-    self._byte_offset = None
     self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
         pre_obj, None)
-    self._process_image = None
-    self._process_vss = None
+    self._resolver_context = resolver_context
     self._source_path = source_path
     self._source_path_spec = source_path_spec
-    self._store_index = None
 
   def _GetExtendedPath(self, path):
     """Return an extened path without the generic path elements.
@@ -459,22 +463,15 @@ class GenericPreprocessCollector(object):
     Yields:
       The paths found.
     """
-    path_spec = self._source_path_spec
-
-    if (not path_spec or
-        path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS):
-      process_image = self._process_image
-    else:
-      process_image = True
-
-    if process_image:
-      path_spec = self._GetPathSpec(u'/')
-
-    else:
+    type_indicator = self._source_path_spec.type_indicator
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
       path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=self._source_path)
+    else:
+      path_spec = self._GetPathSpec(u'/')
 
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        path_spec, resolver_context=self._resolver_context)
     file_system = file_entry.GetFileSystem()
 
     if path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
@@ -509,7 +506,8 @@ class GenericPreprocessCollector(object):
 
           sub_path_spec = path_spec_factory.Factory.NewPathSpec(
               file_system.TYPE_INDICATOR, **kwargs)
-          file_entry = path_spec_resolver.Resolver.OpenFileEntry(sub_path_spec)
+          file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+              sub_path_spec, resolver_context=self._resolver_context)
 
         if not file_entry:
           logging.error((
@@ -606,50 +604,20 @@ class GenericPreprocessCollector(object):
 
   def _GetPathSpec(self, path):
     """Retrieves the path specification."""
-    if self._source_path_spec:
-      type_indicator = self._source_path_spec.type_indicator
-      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
-        # Note we cannot use os.path.join() here since it breaks on Windows
-        # when path starts with a path separator.
-        path = u'{0:s}{1:s}{2:s}'.format(self._source_path, os.path.sep, path)
-
-      # We need to pass only used arguments to the path specification
-      # factory otherwise it will raise.
-      kwargs = {}
-      if self._source_path_spec.parent:
-        kwargs['parent'] = self._source_path_spec.parent
-      kwargs['location'] = path
-
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          type_indicator, **kwargs)
-
-    elif self._process_image:
-      # If source path spec was not defined fallback on the old method.
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_OS, location=self._source_path)
-
-      if self._byte_offset > 0:
-        path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-            start_offset=self._byte_offset, parent=path_spec)
-
-      if self._process_vss:
-        path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_VSHADOW,
-            store_index=self._store_index, parent=path_spec)
-
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK, location=path, parent=path_spec)
-
-    else:
+    type_indicator = self._source_path_spec.type_indicator
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
       # Note we cannot use os.path.join() here since it breaks on Windows
       # when path starts with a path separator.
       path = u'{0:s}{1:s}{2:s}'.format(self._source_path, os.path.sep, path)
 
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+    # We need to pass only used arguments to the path specification
+    # factory otherwise it will raise.
+    kwargs = {}
+    if self._source_path_spec.parent:
+      kwargs['parent'] = self._source_path_spec.parent
+    kwargs['location'] = path
 
-    return path_spec
+    return path_spec_factory.Factory.NewPathSpec(type_indicator, **kwargs)
 
   def GetFilePaths(self, path_expression, filename_expression, path_separator):
     """Retrieves paths based on a path and filename expression.
@@ -698,7 +666,8 @@ class GenericPreprocessCollector(object):
           for file_path in self.GetFilePaths(path, filter_file, path[0]):
             path_spec = self._GetPathSpec(file_path)
 
-            file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+            file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+                path_spec, resolver_context=self._resolver_context)
             if file_entry:
               yield file_entry.path_spec
 
@@ -745,29 +714,8 @@ class GenericPreprocessCollector(object):
   def OpenFileEntry(self, path):
     """Opens a file entry object from the path."""
     path_spec = self._GetPathSpec(path)
-    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
-  def SetImageInformation(self, byte_offset):
-    """Sets the image information.
-
-       This function will enable image collection.
-
-    Args:
-      byte_offset: Byte offset into the image file.
-    """
-    self._process_image = True
-    self._byte_offset = byte_offset
-
-  def SetVssInformation(self, store_index=None):
-    """Sets the Volume Shadow Snapshots (VSS) information.
-
-       This function will enable VSS collection.
-
-    Args:
-      store_index: Optional VSS store index number. The default is None.
-    """
-    self._process_vss = True
-    self._store_index = store_index
+    return path_spec_resolver.Resolver.OpenFileEntry(
+        path_spec, resolver_context=self._resolver_context)
 
 
 def BuildCollectionFilterFromFile(filter_file_path):
