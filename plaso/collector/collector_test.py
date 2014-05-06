@@ -329,13 +329,11 @@ class BuildFindSpecsFromFileTest(unittest.TestCase):
           u'Unable to remove temporary file: {0:s} with error: {1:s}'.format(
               filter_name, exception))
 
-    # This filter will contain all the filter lines, even those that will fail
-    # during finding pathspecs, yet there is one that will fail, so we should
-    # have five hits.
-    self.assertEquals(len(find_specs), 5)
+    self.assertEquals(len(find_specs), 4)
 
+    dirname = u'.'
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=u'./')
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
     file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
     searcher = file_system_searcher.FileSystemSearcher(
         file_system, path_spec)
