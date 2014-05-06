@@ -735,13 +735,24 @@ def BuildFindSpecsFromFile(filter_file_path):
       if line.startswith(u'#'):
         continue
 
+      if not line.startswith(u'/'):
+        logging.warning((
+            u'The filter string must be defined as an abolute path: '
+            u'{0:s}').format(line))
+        continue
+
       _, _, file_path = line.rstrip().rpartition(u'/')
       if not file_path:
         logging.warning(
             u'Unable to parse the filter string: {0:s}'.format(line))
         continue
 
+      # Convert the filter paths into a list of path segments and strip
+      # the root path segment.
+      path_segments = line.split(u'/')
+      path_segments.pop(0)
+
       find_specs.append(file_system_searcher.FindSpec(
-          location_regex=line, case_sensitive=False))
+          location_regex=path_segments, case_sensitive=False))
 
   return find_specs
