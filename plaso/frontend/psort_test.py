@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,12 +15,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for plaso.frontend.psort."""
+"""Tests for psort front-end."""
 
 import os
 import StringIO
+import shutil
 import tempfile
-
 import unittest
 
 from plaso.frontend import psort
@@ -29,6 +30,24 @@ from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.lib import timelib_test
+
+
+class TempDirectory(object):
+  """A self cleaning temporary directory."""
+
+  def __init__(self):
+    """Initializes the temporary directory."""
+    super(TempDirectory, self).__init__()
+    self.name = u''
+
+  def __enter__(self):
+    """Make this work with the 'with' statement."""
+    self.name = tempfile.mkdtemp()
+    return self.name
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make this work with the 'with' statement."""
+    shutil.rmtree(self.name, True)
 
 
 class TestEvent1(event.EventObject):
@@ -150,14 +169,15 @@ class PsortTest(unittest.TestCase):
 
     output_fd = StringIO.StringIO()
 
-    with tempfile.NamedTemporaryFile() as temp_file:
+    with TempDirectory() as dirname:
+      temp_file = os.path.join(dirname, 'plaso.db')
       store = storage.StorageFile(temp_file)
       pfilter.TimeRangeCache.ResetTimeConstraints()
       store.SetStoreLimit()
       store.AddEventObjects(events)
       store.Close()
 
-      with psort.SetupStorage(temp_file.name) as store:
+      with psort.SetupStorage(temp_file) as store:
         store.store_range = [1]
         formatter = TestFormatter(store, output_fd)
         event_buffer = TestEventBuffer(store, formatter)
