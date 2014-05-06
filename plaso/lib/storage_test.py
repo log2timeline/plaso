@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -18,6 +19,7 @@
 
 import os
 import tempfile
+import shutil
 import unittest
 import zipfile
 
@@ -63,6 +65,24 @@ class GroupMock(object):
         dummy.category = cat
 
       yield dummy
+
+
+class TempDirectory(object):
+  """A self cleaning temporary directory."""
+
+  def __init__(self):
+    """Initializes the temporary directory."""
+    super(TempDirectory, self).__init__()
+    self.name = u''
+
+  def __enter__(self):
+    """Make this work with the 'with' statement."""
+    self.name = tempfile.mkdtemp()
+    return self.name
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make this work with the 'with' statement."""
+    shutil.rmtree(self.name, True)
 
 
 class StorageFileTest(unittest.TestCase):
@@ -140,7 +160,8 @@ class StorageFileTest(unittest.TestCase):
 
     serializer = protobuf_serializer.ProtobufEventObjectSerializer
 
-    with tempfile.NamedTemporaryFile() as temp_file:
+    with TempDirectory() as dirname:
+      temp_file = os.path.join(dirname, 'plaso.db')
       store = storage.StorageFile(temp_file)
       store.AddEventObjects(self._event_objects)
 
