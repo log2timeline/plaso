@@ -18,10 +18,10 @@
 """This file contains an import statement for each plugin."""
 
 from plaso.lib import event
-from plaso.lib import preprocess_interface
+from plaso.preprocessors import interface
 from plaso.preprocessors import linux
-from plaso.preprocessors import mac
-from plaso.preprocessors import win
+from plaso.preprocessors import macosx
+from plaso.preprocessors import windows
 
 
 class PreProcessList(object):
@@ -36,7 +36,7 @@ class PreProcessList(object):
                stores future collections) (instance of PreprocessObject).
       different types of sources (OS, TKS, etc.)
     """
-    self._list = preprocess_interface.PreprocessPlugin.classes
+    self._list = interface.PreprocessPlugin.classes
     self._pre = pre_obj
 
   def GetWeight(self, os, weight):
@@ -65,4 +65,3 @@ class PreProcessList(object):
         ret_list.append(cls_obj(self._pre, self._col))
 
     return ret_list
-

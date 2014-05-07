@@ -31,6 +31,7 @@ import os
 import sys
 import textwrap
 
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -46,7 +47,6 @@ except ImportError:
 from IPython.core import magic
 
 from plaso import preprocessors
-from plaso.collector import collector
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -54,9 +54,9 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.lib import utils
-from plaso.lib import preprocess_interface
 from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
-from plaso.parsers.winreg_plugins import interface
+from plaso.parsers.winreg_plugins import interface as winreg_interface
+from plaso.preprocessors import interface as preprocess_interface
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
@@ -227,8 +227,66 @@ class PregFrontend(frontend.Frontend):
       raise errors.BadConfigOption(
           u'Registry file: {0:s} does not exist.'.format(options.regfile))
 
-  def _GetCollectorsFromImage(self, volume_path_spec, options):
-    """Retrieves the preprocessing collectors for processing an image.
+  # TODO: clean up this function as part of dfvfs find integration.
+  # TODO: a duplicate of this function exists in class: WinRegistryPreprocess
+  # method: GetValue; merge them.
+  def _FindRegistryPaths(self, searcher, pattern):
+    """Return a list of Windows registry file paths.
+
+    Args:
+      searcher: The file system searcher object (instance of
+                dfvfs.FileSystemSearcher).
+      pattern: The pattern to find.
+    """
+    # TODO: optimize this in one find.
+    hive_paths = []
+    file_path, _, file_name = pattern.rpartition(u'/')
+
+    # The path is split in segments to make it path segement separator
+    # independent (and thus platform independent).
+    path_segments = file_path.split(u'/')
+
+    find_spec = file_system_searcher.FindSpec(
+        location_regex=path_segments, case_sensitive=False)
+    path_specs = list(searcher.Find(find_specs=[find_spec]))
+
+    if not path_specs:
+      logging.debug(u'Directory: {0:s} not found'.format(file_path))
+      return hive_paths
+
+    for path_spec in path_specs:
+      directory_location = getattr(path_spec, 'location', None)
+      if not directory_location:
+        raise errors.PreProcessFail(
+            u'Missing directory location for: {0:s}'.format(file_path))
+
+      # The path is split in segments to make it path segement separator
+      # independent (and thus platform independent).
+      path_segments = searcher.SplitPath(directory_location)
+      path_segments.append(file_name)
+
+      find_spec = file_system_searcher.FindSpec(
+          location_regex=path_segments, case_sensitive=False)
+      fh_path_specs = list(searcher.Find(find_specs=[find_spec]))
+
+      if not fh_path_specs:
+        logging.debug(u'File: {0:s} not found in directory: {1:s}'.format(
+            file_name, directory_location))
+        continue
+
+      for fh_path_spec in fh_path_specs:
+        file_location = getattr(fh_path_spec, 'location', None)
+        if not file_location:
+          raise errors.PreProcessFail(
+              u'Missing file location for: {0:s} in directory: {1:s}'.format(
+                  file_location, directory_location))
+
+        hive_paths.append(file_location)
+
+    return hive_paths
+
+  def _GetSearchesForImage(self, volume_path_spec, options):
+    """Retrieves the file systems searchers for searching the image.
 
     Args:
       volume_path_spec: The path specification of the volume containing
@@ -236,35 +294,38 @@ class PregFrontend(frontend.Frontend):
       options: the command line arguments.
 
     Returns:
-      A list of tuples containing the a string identifying the collector
-      and a preprocess collector object (instance of
-      GenericPreprocessCollector).
+      A list of tuples containing the a string identifying the file system
+      searcher and a file system searcher object (instance of
+      dfvfs.FileSystemSearcher).
     """
-    preprocess_collectors = []
+    searchers = []
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
 
-    preprocess_collector = collector.GenericPreprocessCollector(
-        RegCache.pre_obj, options.image, path_spec)
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
+    searcher = file_system_searcher.FileSystemSearcher(
+        file_system, volume_path_spec)
 
-    preprocess_collectors.append((u'', preprocess_collector))
+    searchers.append((u'', searcher))
 
     for store_index in options.vss_stores:
-      path_spec = path_spec_factory.Factory.NewPathSpec(
+      vss_path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
           parent=volume_path_spec)
       path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-          parent=path_spec)
+          parent=vss_path_spec)
 
-      vss_collector = collector.GenericPreprocessCollector(
-          RegCache.pre_obj, options.image, path_spec)
-      preprocess_collectors.append((
-          u':VSS Store {0:d}'.format(store_index + 1), vss_collector))
+      file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
+      searcher = file_system_searcher.FileSystemSearcher(
+          file_system, vss_path_spec)
 
-    return preprocess_collectors
+      searchers.append((
+          u':VSS Store {0:d}'.format(store_index + 1), searcher))
+
+    return searchers
 
   def GetHivesAndCollectors(self, options):
     """Returns a list of discovered registry hives and collectors.
@@ -285,19 +346,18 @@ class PregFrontend(frontend.Frontend):
             u'Most likely the image format is not supported by the '
             u'tool.').format(exception))
 
-      preprocess_collectors = self._GetCollectorsFromImage(
-          path_spec.parent, options)
-      _, preprocess_collector = preprocess_collectors[0]
+      searchers = self._GetSearchersForImage(path_spec.parent, options)
+      _, searcher = searchers[0]
 
       # Run pre processing on image.
       StartPreProcess()
 
       pre_plugin_list = preprocessors.PreProcessList(RegCache.pre_obj)
-      guessed_os = preprocess_interface.GuessOS(preprocess_collector)
+      guessed_os = preprocess_interface.GuessOS(searcher)
       for weight in pre_plugin_list.GetWeightList(guessed_os):
         for plugin in pre_plugin_list.GetWeight(guessed_os, weight):
           try:
-            plugin.Run(preprocess_collector)
+            plugin.Run(searcher)
           except (IOError, errors.PreProcessFail) as exception:
             logging.warning(
                 u'Unable to run plugin: {0:s} with error: {1:s}'.format(
@@ -311,12 +371,12 @@ class PregFrontend(frontend.Frontend):
 
       hives = []
       for path in paths:
-        hives.extend(FindRegistryPaths(path, preprocess_collector))
+        hives.extend(self._FindRegistryPaths(searcher, path))
     else:
       hives = [options.regfile]
-      preprocess_collectors = [(u'', None)]
+      searchers = [(u'', None)]
 
-    return hives, preprocess_collectors
+    return hives, searchers
 
   def RunModeRegistryKey(self, options):
     """Run against a specific registry key.
@@ -417,7 +477,7 @@ def PluginCompleter(unused_self, event_object):
   if not '-h' in event_object.line:
     ret_list.append('-h')
 
-  plugin_obj = interface.GetRegistryPlugins()
+  plugin_obj = winreg_interface.GetRegistryPlugins()
 
   for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
     plugin_obj = plugin_cls(
@@ -464,7 +524,7 @@ class MyMagics(magic.Magics):
       else:
         plugin_name = items[0]
 
-    plugin_obj = interface.GetRegistryPlugins()
+    plugin_obj = winreg_interface.GetRegistryPlugins()
     plugin_found = False
     for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
       plugin = plugin_cls(
@@ -838,7 +898,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
   registry_type = RegCache.hive_type
 
   plugins = {}
-  regplugins = interface.GetRegistryPlugins()
+  regplugins = winreg_interface.GetRegistryPlugins()
   # Compile a list of plugins we are about to use.
   for weight in regplugins.GetWeights():
     plugin_list = regplugins.GetWeightPlugins(weight, registry_type)
@@ -874,37 +934,6 @@ def ParseKey(key, verbose=False, use_plugins=None):
   print_strings.append(u'')
 
   return print_strings
-
-
-# TODO: clean up this function as part of dfvfs find integration.
-def FindRegistryPaths(pattern, preprocess_collector):
-  """Return a list of Windows registry file paths."""
-  hive_paths = []
-  try:
-    file_path, _, file_name = pattern.rpartition('/')
-    paths = list(preprocess_collector.FindPaths(file_path))
-
-    if not paths:
-      logging.debug(u'No paths found for pattern [{0:s}]'.format(file_path))
-      return hive_paths
-
-    for path in paths:
-      fh_paths = list(preprocess_collector.GetFilePaths(
-          path, file_name, path[0]))
-      if not fh_paths:
-        logging.debug(u'File [{0:s}] not found in path [{1:s}]....'.format(
-            file_name, path))
-        continue
-      for fh_path in fh_paths:
-        hive_paths.append(fh_path)
-  except errors.PreProcessFail as exception:
-    logging.debug('Path: {0:s} not found, error: {1:s}'.format(
-        pattern, exception))
-  except errors.PathNotFound as exception:
-    logging.debug('Path: {0:s} not found, error: {1:s}'.format(
-        pattern, exception))
-
-  return hive_paths
 
 
 def StartPreProcess():
@@ -1222,7 +1251,7 @@ in a textual format.
   # Parse the command line arguments.
   options = arg_parser.parse_args()
 
-  options.plugins = interface.GetRegistryPlugins()
+  options.plugins = winreg_interface.GetRegistryPlugins()
 
   # TODO: Move some of this logic to a separate function calls to make
   # GUI writing on top of this front-end simpler.

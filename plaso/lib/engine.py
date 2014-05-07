@@ -25,6 +25,7 @@ import signal
 import sys
 import traceback
 
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
@@ -36,12 +37,12 @@ from plaso import output as output_plugins   # pylint: disable=unused-import
 from plaso.collector import collector
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import preprocess_interface
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.lib import worker
+from plaso.preprocessors import interface as preprocess_interface
 
 import pytz
 
@@ -167,18 +168,20 @@ class Engine(object):
     return collector_object
 
   def _PreProcess(self, pre_obj):
-    """Run the preprocessors."""
+    """Run the preprocessors.
+
+    Args:
+      pre_obj: The preprocessing object (instance of PreprocessObject).
+    """
     logging.info(u'Starting to collect preprocessing information.')
     logging.info(u'Filename: {0:s}'.format(self._source))
 
     if not self._process_image and not self.config.recursive:
       return
 
-    preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, self._source, self._source_path_spec)
-
+    searcher = self.GetSourceFileSystemSearcher()
     if not getattr(self.config, 'os', None):
-      self.config.os = preprocess_interface.GuessOS(preprocess_collector)
+      self.config.os = preprocess_interface.GuessOS(searcher)
 
     plugin_list = preprocessors.PreProcessList(pre_obj)
     pre_obj.guessed_os = self.config.os
@@ -186,11 +189,11 @@ class Engine(object):
     for weight in plugin_list.GetWeightList(self.config.os):
       for plugin in plugin_list.GetWeight(self.config.os, weight):
         try:
-          plugin.Run(preprocess_collector)
+          plugin.Run(searcher)
         except (IOError, errors.PreProcessFail) as exception:
           logging.warning((
-              u'Unable to run preprocessor: {} with error: {} - attribute [{}] '
-              u'not set').format(
+              u'Unable to run preprocessor: {0:s} with error: {1:s} - '
+              u'attribute: {2:s} not set').format(
                   plugin.plugin_name, exception, plugin.ATTRIBUTE))
 
     # Set the timezone.
@@ -367,7 +370,7 @@ class Engine(object):
 
       if parser_filter_string:
         self.config.parsers = parser_filter_string
-        logging.info(u'Parser filter expression changed to: {}'.format(
+        logging.info(u'Parser filter expression changed to: {0:s}'.format(
             self.config.parsers))
 
     # Save some information about the run time into the preprocessing object.
@@ -499,6 +502,23 @@ class Engine(object):
     else:
       obj.collection_information['runtime'] = 'multi threaded'
       obj.collection_information['workers'] = self.config.workers
+
+  def GetSourceFileSystemSearcher(self):
+    """Retrieves the file system searcher of the source.
+
+    Returns:
+      The file system searcher object (instance of dfvfs.FileSystemSearcher).
+    """
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(
+        self._source_path_spec)
+
+    type_indicator = self._source_path_spec.type_indicator
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
+      mount_point = self._source_path_spec
+    else:
+      mount_point = self._source_path_spec.parent
+
+    return file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
   def SetImageInformation(self, byte_offset):
     """Sets the values necessary for collection from an image.
@@ -641,8 +661,9 @@ class Engine(object):
           try:
             os.kill(pid, signal.SIGKILL)
           except OSError as exception:
-            logging.error(u'Unable to kill process {}: {}'.format(
-                pid, exception))
+            logging.error(
+                u'Unable to kill process {0:d} with error: {1:s}'.format(
+                    pid, exception))
 
         logging.warning(u'Worker: {0:d} CLOSED'.format(pid))
 

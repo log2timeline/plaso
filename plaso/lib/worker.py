@@ -122,9 +122,10 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # If we are parsing a mount point we don't want to include the full
     # path to file's location here, we are only interested in the relative
     # path to the mount point.
-    type_indicator = getattr(file_entry.path_spec, 'type_indicator', '')
+
     # TODO: Solve this differently, quite possibly inside dfVFS using mount
     # path spec.
+    type_indicator = file_entry.path_spec.type_indicator
     if type_indicator == definitions.TYPE_INDICATOR_OS and getattr(
         self.config, 'os', None):
       mount_path = getattr(self.config, 'filename', '')
@@ -136,7 +137,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
     # TODO: dfVFS refactor: move display name to output since the path
     # specification contains the full information.
-    event_object.display_name = u'{:s}:{:s}'.format(
+    event_object.display_name = u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, file_path)
 
     event_object.filename = file_path
