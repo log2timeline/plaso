@@ -19,122 +19,11 @@
 
 import logging
 
-from plaso.lib import preprocess_interface
+from plaso.preprocessors import interface
 from plaso.winreg import utils
 
 
-class WinGetSystemRootPath(preprocess_interface.PreprocessGetPath):
-  """Get the system root path."""
-  SUPPORTED_OS = ['Windows']
-  ATTRIBUTE = 'systemroot'
-  PATH = '(Windows|WinNT|WINNT35|WTSRV)/System32'
-
-
-class WinGetWinDirPath(preprocess_interface.PreprocessGetPath):
-  """Get the system path."""
-  SUPPORTED_OS = ['Windows']
-  ATTRIBUTE = 'windir'
-  PATH = '(Windows|WinNT|WINNT35|WTSRV)'
-
-
-class WinGetRegistryPath(preprocess_interface.PreprocessGetPath):
-  """Get the system registry path."""
-  SUPPORTED_OS = ['Windows']
-  ATTRIBUTE = 'sysregistry'
-  PATH = '(Windows|WinNT|WINNT35|WTSRV)/System32/config'
-
-
-class WinVersion(preprocess_interface.WinRegistryPreprocess):
-  """Fetch information about the current Windows version."""
-
-  ATTRIBUTE = 'osversion'
-
-  REGFILE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion'
-
-  def ParseKey(self, key):
-    """Extract the version information from the key."""
-    value = key.GetValue('ProductName')
-    if value:
-      return u'{}'.format(value.data)
-
-
-class WinProgramFiles(preprocess_interface.WinRegistryPreprocess):
-  """Fetch about the location for the Program Files directory."""
-
-  ATTRIBUTE = 'programfiles'
-
-  REGFILE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion'
-
-  def ParseKey(self, key):
-    """Extract the version information from the key."""
-    value = key.GetValue('ProgramFilesDir')
-    if value:
-      # Remove the first drive letter, eg: "C:\Program Files".
-      return u'{}'.format(value.data.partition('\\')[2])
-
-
-class WinProgramFilesX86(preprocess_interface.WinRegistryPreprocess):
-  """Fetch about the location for the Program Files directory."""
-
-  ATTRIBUTE = 'programfilesx86'
-
-  REGFILE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion'
-
-  def ParseKey(self, key):
-    """Extract the version information from the key."""
-    value = key.GetValue(u'ProgramFilesDir (x86)')
-    if value:
-      # Remove the first drive letter, eg: "C:\Program Files".
-      return u'{}'.format(value.data.partition('\\')[2])
-
-
-class WinUsers(preprocess_interface.WinRegistryPreprocess):
-  """Fetch information about user profiles."""
-
-  ATTRIBUTE = 'users'
-
-  REG_FILE = 'SOFTWARE'
-  REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList'
-
-  def ParseKey(self, key):
-    """Extract current control set information."""
-    users = []
-
-    for sid in key.GetSubkeys():
-      user = {}
-      user['sid'] = sid.name
-      value = sid.GetValue('ProfileImagePath')
-      if value:
-        user['path'] = value.data
-        user['name'] = utils.WinRegBasename(user['path'])
-
-      users.append(user)
-
-    return users
-
-
-class WinHostName(preprocess_interface.WinRegistryPreprocess):
-  """A preprocessing class that fetches the hostname information."""
-
-  ATTRIBUTE = 'hostname'
-
-  # Depend upon the current control set to be found.
-  WEIGHT = 3
-
-  REG_KEY = '{current_control_set}\\Control\\ComputerName\\ComputerName'
-  REG_FILE = 'SYSTEM'
-
-  def ParseKey(self, key):
-    """Extract the hostname from the registry."""
-    value = key.GetValue('ComputerName')
-    if value and type(value.data) == unicode:
-      return value.data
-
-
-class WinRegCodePage(preprocess_interface.WinRegistryPreprocess):
+class WindowsCodepage(interface.WindowsRegistryPreprocess):
   """A preprocessing class that fetches codepage information."""
 
   # Defines the preprocess attribute to be set.
@@ -152,12 +41,78 @@ class WinRegCodePage(preprocess_interface.WinRegistryPreprocess):
     if value and type(value.data) == unicode:
       return u'cp{0:s}'.format(value.data)
 
-    logging.warning('Unable to determine ASCII string codepage, '
-                    'defaulting to cp1252.')
-    return 'cp1252'
+    logging.warning(
+        u'Unable to determine ASCII string codepage, defaulting to cp1252.')
+
+    return u'cp1252'
 
 
-class WinRegTimeZone(preprocess_interface.WinRegistryPreprocess):
+class WindowsHostname(interface.WindowsRegistryPreprocess):
+  """A preprocessing class that fetches the hostname information."""
+
+  ATTRIBUTE = 'hostname'
+
+  # Depend upon the current control set to be found.
+  WEIGHT = 3
+
+  REG_KEY = '{current_control_set}\\Control\\ComputerName\\ComputerName'
+  REG_FILE = 'SYSTEM'
+
+  def ParseKey(self, key):
+    """Extract the hostname from the registry."""
+    value = key.GetValue('ComputerName')
+    if value and type(value.data) == unicode:
+      return value.data
+
+
+class WindowsProgramFilesPath(interface.WindowsRegistryPreprocess):
+  """Fetch about the location for the Program Files directory."""
+
+  ATTRIBUTE = 'programfiles'
+
+  REGFILE = 'SOFTWARE'
+  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion'
+
+  def ParseKey(self, key):
+    """Extract the version information from the key."""
+    value = key.GetValue('ProgramFilesDir')
+    if value:
+      # Remove the first drive letter, eg: "C:\Program Files".
+      return u'{0:s}'.format(value.data.partition('\\')[2])
+
+
+class WindowsProgramFilesX86Path(interface.WindowsRegistryPreprocess):
+  """Fetch about the location for the Program Files directory."""
+
+  ATTRIBUTE = 'programfilesx86'
+
+  REGFILE = 'SOFTWARE'
+  REG_KEY = '\\Microsoft\\Windows\\CurrentVersion'
+
+  def ParseKey(self, key):
+    """Extract the version information from the key."""
+    value = key.GetValue(u'ProgramFilesDir (x86)')
+    if value:
+      # Remove the first drive letter, eg: "C:\Program Files".
+      return u'{0:s}'.format(value.data.partition('\\')[2])
+
+
+class WindowsSystemRegistryPath(interface.PreprocessGetPath):
+  """Get the system registry path."""
+  SUPPORTED_OS = ['Windows']
+  ATTRIBUTE = 'sysregistry'
+  PATH = '(Windows|WinNT|WINNT35|WTSRV)/System32/config'
+
+
+class WindowsSystemRootPath(interface.PreprocessGetPath):
+  """Get the system root path."""
+  SUPPORTED_OS = ['Windows']
+  ATTRIBUTE = 'systemroot'
+  # TODO: %SystemRoot% should correspond to C:\Windows not C:\Windows\System32.
+  PATH = '(Windows|WinNT|WINNT35|WTSRV)/System32'
+
+
+class WindowsTimeZone(interface.WindowsRegistryPreprocess):
   """A preprocessing class that fetches timezone information."""
 
   # Defines the preprocess attribute to be set.
@@ -379,3 +334,51 @@ class WinRegTimeZone(preprocess_interface.WinRegistryPreprocess):
     if value and type(value.data) == unicode:
       # Do a mapping to a value defined as in the Olson database.
       return self.ZONE_LIST.get(value.data.replace(' ', ''), value.data)
+
+
+class WindowsUsers(interface.WindowsRegistryPreprocess):
+  """Fetch information about user profiles."""
+
+  ATTRIBUTE = 'users'
+
+  REG_FILE = 'SOFTWARE'
+  REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList'
+
+  def ParseKey(self, key):
+    """Extract current control set information."""
+    users = []
+
+    for sid in key.GetSubkeys():
+      # TODO: as part of artifacts, create a proper object for this.
+      user = {}
+      user['sid'] = sid.name
+      value = sid.GetValue('ProfileImagePath')
+      if value:
+        user['path'] = value.data
+        user['name'] = utils.WinRegBasename(user['path'])
+
+      users.append(user)
+
+    return users
+
+
+class WindowsVersion(interface.WindowsRegistryPreprocess):
+  """Fetch information about the current Windows version."""
+
+  ATTRIBUTE = 'osversion'
+
+  REGFILE = 'SOFTWARE'
+  REG_KEY = '\\Microsoft\\Windows NT\\CurrentVersion'
+
+  def ParseKey(self, key):
+    """Extract the version information from the key."""
+    value = key.GetValue('ProductName')
+    if value:
+      return u'{0:s}'.format(value.data)
+
+
+class WindowsWinDirPath(interface.PreprocessGetPath):
+  """Get the system path."""
+  SUPPORTED_OS = ['Windows']
+  ATTRIBUTE = 'windir'
+  PATH = '(Windows|WinNT|WINNT35|WTSRV)'

@@ -33,8 +33,8 @@ from plaso.collector import collector
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import preprocess_interface
 from plaso.lib import queue
+from plaso.preprocessors import interface as preprocess_interface
 
 
 class ImageExtractor(object):
@@ -77,32 +77,30 @@ class ImageExtractor(object):
 
     return volume_path_spec
 
-  def _Preprocess(self):
-    """Preprocesses the image."""
+  def _Preprocess(self, searcher):
+    """Preprocesses the image.
+
+    Args:
+      searcher: The file system searcher object (instance of
+                dfvfs.FileSystemSearcher).
+    """
     if self._pre_obj is not None:
       return
 
     self._pre_obj = event.PreprocessObject()
 
-    volume_path_spec = self._GetVolumePathSpec()
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-        parent=volume_path_spec)
-
-    image_collector = collector.GenericPreprocessCollector(
-        self._pre_obj, self._image_path, path_spec)
-
     plugin_list = preprocessors.PreProcessList(self._pre_obj)
 
     logging.info(u'Guessing OS')
-    guessed_os = preprocess_interface.GuessOS(image_collector)
+
+    guessed_os = preprocess_interface.GuessOS(searcher)
     logging.info(u'OS: {0:s}'.format(guessed_os))
 
     logging.info(u'Running preprocess.')
     for weight in plugin_list.GetWeightList(guessed_os):
       for plugin in plugin_list.GetWeight(guessed_os, weight):
         try:
-          plugin.Run(image_collector)
+          plugin.Run(searcher)
         except errors.PreProcessFail as exception:
           logging.warning(
               u'Unable to run preprocessor: {0:s} with error: {1:s}'.format(
@@ -127,17 +125,6 @@ class ImageExtractor(object):
       remove_duplicates: Optional boolean value to indicate if duplicates should
                          be detected and removed. The default is false.
     """
-    if self._pre_obj is None:
-      self._Preprocess()
-
-    if not os.path.isdir(destination_path):
-      os.makedirs(destination_path)
-
-    # Save the regular files.
-    FileSaver.calc_md5 = remove_duplicates
-
-    find_specs = collector.BuildFindSpecsFromFile(filter_file_path)
-
     volume_path_spec = self._GetVolumePathSpec()
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
@@ -146,6 +133,17 @@ class ImageExtractor(object):
     file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
     searcher = file_system_searcher.FileSystemSearcher(
         file_system, volume_path_spec)
+
+    if self._pre_obj is None:
+      self._Preprocess(searcher)
+
+    if not os.path.isdir(destination_path):
+      os.makedirs(destination_path)
+
+    find_specs = collector.BuildFindSpecsFromFile(filter_file_path)
+
+    # Save the regular files.
+    FileSaver.calc_md5 = remove_duplicates
 
     for path_spec in searcher.Find(find_specs=find_specs):
       FileSaver.WriteFile(path_spec, destination_path)
