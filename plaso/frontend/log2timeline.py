@@ -27,18 +27,14 @@ import time
 import textwrap
 
 import pytsk3
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as path_spec_factory
 
 import plaso
-from plaso.collector import collector
 from plaso.frontend import frontend
 from plaso.lib import engine
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import info
 from plaso.lib import pfilter
-from plaso.lib import preprocess_interface
+from plaso.preprocessors import interface as preprocess_interface
 
 import pytz
 
@@ -73,6 +69,14 @@ class Log2TimelineFrontend(frontend.Frontend):
   def CleanUpAfterAbort(self):
     """Cleans up after an abort."""
     self._engine.StopThreads()
+
+  def GetSourceFileSystemSearcher(self):
+    """Retrieves the file system searcher of the source.
+
+    Returns:
+      The file system searcher object (instance of dfvfs.FileSystemSearcher).
+    """
+    return self._engine.GetSourceFileSystemSearcher()
 
   # TODO: move or rewrite this after dfVFS image support integration.
   def GetPartitionMap(self, image_path):
@@ -496,13 +500,9 @@ def Main():
 
   # Check to see if we are trying to parse a mount point.
   if options.recursive:
-    pre_obj = event.PreprocessObject()
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=options.source)
-    preprocess_collector = collector.GenericPreprocessCollector(
-        pre_obj, options.source, path_spec)
+    searcher = front_end.GetSourceFileSystemSearcher()
 
-    guessed_os = preprocess_interface.GuessOS(preprocess_collector)
+    guessed_os = preprocess_interface.GuessOS(searcher)
     if guessed_os != 'None':
       options.preprocess = True
       logging.info((
