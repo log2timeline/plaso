@@ -30,7 +30,6 @@ from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.collector import collector
-from plaso.lib import event
 from plaso.lib import queue
 
 
@@ -152,14 +151,13 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/AUTHORS\n')
       temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
 
-    pre_obj = event.PreprocessObject()
     test_collection_queue = queue.SingleThreadedQueue()
     test_store = queue.SingleThreadedQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, test_store, dirname, path_spec,
         resolver_context)
-    test_collector.SetFilter(filter_name, pre_obj)
+    test_collector.SetFilter(filter_name)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -258,7 +256,6 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/a_directory/another.+\n')
       temp_file.write('/passwords.txt\n')
 
-    pre_obj = event.PreprocessObject()
     test_collection_queue = queue.SingleThreadedQueue()
     test_storage_queue = queue.SingleThreadedQueue()
     test_storage_queue_producer = queue.EventObjectQueueProducer(
@@ -267,7 +264,7 @@ class CollectorTest(CollectorTestCase):
     test_collector = collector.Collector(
         test_collection_queue, test_storage_queue_producer, test_file,
         path_spec, resolver_context)
-    test_collector.SetFilter(filter_name, pre_obj)
+    test_collector.SetFilter(filter_name)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
