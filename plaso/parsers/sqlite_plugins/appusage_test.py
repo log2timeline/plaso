@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2013 The Plaso Project Authors.
+# Copyright 2014 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,47 +15,55 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the Zeitgeist activity database plugin."""
+"""Tests for the Mac OS X application usage database plugin."""
 
 import unittest
 
 # pylint: disable=unused-import
-from plaso.formatters import zeitgeist as zeitgeist_formatter
+from plaso.formatters import appusage as appusage_formatter
 from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import test_lib
-from plaso.parsers.sqlite_plugins import zeitgeist
+from plaso.parsers.sqlite_plugins import appusage
 
 
-class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the Zeitgeist activity database plugin."""
+class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
+  """Tests for the Mac OS X application usage activity database plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    self._plugin = zeitgeist.ZeitgeistPlugin(pre_obj)
+    self._plugin = appusage.ApplicationUsagePlugin(pre_obj)
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['activity.sqlite'])
+    test_file = self._GetTestFilePath(['application_usage.sqlite'])
     event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
     event_objects = self._GetEventObjects(event_generator)
 
-    # The sqlite database contains 44 events.
-    self.assertEquals(len(event_objects), 44)
+    # The sqlite database contains 5 events.
+    self.assertEquals(len(event_objects), 5)
 
     # Check the first event.
     event_object = event_objects[0]
 
-    expected_subject_uri = u'application://rhythmbox.desktop'
-    self.assertEquals(event_object.subject_uri, expected_subject_uri)
-
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-10-22 08:53:19.477')
+        '2014-05-07 18:52:02')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
-    expected_msg = u'application://rhythmbox.desktop'
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg)
+    self.assertEquals(event_object.application, u'/Applications/Safari.app')
+    self.assertEquals(event_object.app_version, u'9537.75.14')
+    self.assertEquals(event_object.bundle_id, u'com.apple.Safari')
+    self.assertEquals(event_object.count, 1)
+
+    expected_msg = (
+        u'/Applications/Safari.app v.9537.75.14 '
+        u'(bundle: com.apple.Safari). '
+        u'Launched: 1 time(s)')
+
+    expected_msg_short = u'/Applications/Safari.app (1 time(s))'
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':
