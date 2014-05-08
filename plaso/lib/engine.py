@@ -161,7 +161,7 @@ class Engine(object):
       collector_object.SetVssInformation(vss_stores=self._vss_stores)
 
     if self._file_filter:
-      collector_object.SetFilter(self._file_filter, pre_obj)
+      collector_object.SetFilter(self._file_filter)
 
     collector_object.collect_directory_metadata = include_directory_stat
 
