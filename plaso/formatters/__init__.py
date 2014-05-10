@@ -29,6 +29,7 @@ from plaso.formatters import chrome_cookies
 from plaso.formatters import cups_ipp
 from plaso.formatters import filestat
 from plaso.formatters import firefox
+from plaso.formatters import firefox_cache
 from plaso.formatters import gdrive
 from plaso.formatters import hachoir
 from plaso.formatters import ipod
