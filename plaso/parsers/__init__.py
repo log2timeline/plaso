@@ -23,6 +23,7 @@ from plaso.parsers import bsm
 from plaso.parsers import chrome_cache
 from plaso.parsers import cups_ipp
 from plaso.parsers import filestat
+from plaso.parsers import firefox_cache
 from plaso.parsers import hachoir
 from plaso.parsers import java_idx
 from plaso.parsers import mac_appfirewall
