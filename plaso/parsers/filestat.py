@@ -84,12 +84,12 @@ class StatEvents(object):
 
 
 class FileStatEvent(event.TimestampEvent):
-  """File system stat event container."""
+  """File system stat event."""
 
   DATA_TYPE = 'fs:stat'
 
   def __init__(self, timestamp, usage, allocated, size, fs_type):
-    """Initializes the event container.
+    """Initializes the event.
 
     Args:
       timestamp: The timestamp value.
@@ -118,7 +118,7 @@ class FileStatParser(parser.BaseParser):
       file_entry: A file entry object.
 
     Yields:
-      An event container (EventContainer) that contains the parsed
+      An event object (instance of FileStatEvent) that contains the parsed
       attributes.
     """
     stat_object = file_entry.GetStat()

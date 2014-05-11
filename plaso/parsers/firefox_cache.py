@@ -58,6 +58,8 @@ class FirefoxCacheEvent(event.PosixTimeEvent):
 class FirefoxCacheParser(parser.BaseParser):
   """Extract cached records from Firefox."""
 
+  NAME = 'firefox_cache'
+
   # Number of bytes allocated to a cache record metadata.
   RECORD_HEADER_SIZE = 36
 

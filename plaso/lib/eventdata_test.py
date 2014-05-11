@@ -48,17 +48,16 @@ class EventFormatterUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self.container = event_test.TestEventContainer()
+    self.event_objects = event_test.GetEventObjects()
 
   def GetCSVLine(self, event_object):
     """Takes an EventObject and prints out a simple CSV line from it."""
+    get_sources = eventdata.EventFormatterManager.GetSourceStrings
     try:
       msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
-      get_sources = eventdata.EventFormatterManager.GetSourceStrings
       source_short, source_long = get_sources(event_object)
     except KeyError:
-      print event_object.attributes
-      print event_object.__dict__
+      print event_object.GetAttributes()
     return u'{0:d},{1:s},{2:s},{3:s}'.format(
         event_object.timestamp, source_short, source_long, msg)
 
@@ -69,7 +68,7 @@ class EventFormatterUnitTest(unittest.TestCase):
   def testAttributes(self):
     """Test if we can read the event attributes correctly."""
     events = {}
-    for event_object in self.container:
+    for event_object in self.event_objects:
       events[self.GetCSVLine(event_object)] = True
 
     self.assertIn((
@@ -91,7 +90,7 @@ class EventFormatterUnitTest(unittest.TestCase):
 
   def testTextBasedEvent(self):
     """Test a text based event."""
-    for event_object in self.container:
+    for event_object in self.event_objects:
       source_short, _ = eventdata.EventFormatterManager.GetSourceStrings(
           event_object)
       if source_short == 'LOG':

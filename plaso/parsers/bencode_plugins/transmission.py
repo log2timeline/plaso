@@ -28,7 +28,7 @@ class TransmissionEvent(event.PosixTimeEvent):
   DATA_TYPE = 'p2p:bittorrent:transmission'
 
   def __init__(self, timestamp, timestamp_description, destination, seedtime):
-    """Initializes the event container.
+    """Initializes the event.
 
     Args:
       timestamp: The POSIX timestamp of the event.
@@ -68,7 +68,7 @@ class TransmissionPlugin(interface.BencodePlugin):
       attributes.
     """
 
-    # Place the obtained values into the event container.
+    # Place the obtained values into the event.
     destination = data.get('destination', None)
     seeding_time = data.get('seeding-time-seconds', None)
 

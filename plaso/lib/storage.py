@@ -1180,16 +1180,17 @@ class StorageFile(object):
         event_object.timestamp > 0):
       self._buffer_first_timestamp = event_object.timestamp
 
+    attributes = event_object.GetValues()
     # Add values to counters.
     if self._pre_obj:
       self._pre_obj.counter['total'] += 1
-      self._pre_obj.counter[event_object.attributes.get('parser', 'N/A')] += 1
-      if 'plugin' in event_object.GetAttributes():
-        self._pre_obj.plugin_counter[getattr(event_object, 'plugin')] += 1
+      self._pre_obj.counter[attributes.get('parser', 'N/A')] += 1
+      if 'plugin' in attributes:
+        self._pre_obj.plugin_counter[attributes.get('plugin', 'N/A')] += 1
 
     # Add to temporary counter.
     self._count_data_type[event_object.data_type] += 1
-    parser = event_object.attributes.get('parser', 'unknown_parser')
+    parser = attributes.get('parser', 'unknown_parser')
     self._count_parser[parser] += 1
 
     event_object_data = self._event_object_serializer.WriteSerialized(

@@ -18,14 +18,37 @@
 """Plugin to parse the OLECF summary/document summary information items."""
 
 from plaso.lib import event
+from plaso.lib import eventdata
 
 from plaso.parsers.olecf_plugins import interface
 
 
-# TODO: Move some of the functions here to a higher level (to the interface)
+class OleCfSummaryInfoEvent(event.FiletimeEvent):
+  """Convenience class for an OLECF Summary info event."""
+
+  DATA_TYPE = 'olecf:summary_info'
+
+  def __init__(self, timestamp, usage, attributes):
+    """Initializes the event.
+
+    Args:
+      timestamp: The FILETIME timestamp value.
+      usage: The usage string, describing the timestamp value.
+      attributes: A dict object containing all extracted attributes.
+    """
+    super(OleCfSummaryInfoEvent, self).__init__(
+        timestamp, usage)
+
+    self.name = u'Summary Information'
+
+    for attribute_name, attribute_value in attributes.iteritems():
+      setattr(self, attribute_name, attribute_value)
+
+
+# TODO: Move this class to a higher level (to the interface)
 # so the these functions can be shared by other plugins.
-class OleCfSummaryInfoEventContainer(event.EventContainer):
-  """Convenience class for an OLECF Summary info event container."""
+class OleCfSummaryInfo(object):
+  """An OLECF Summary Info object."""
 
   _CLASS_IDENTIFIER = 'f29f85e0-4ff9-1068-ab91-08002b27b3d9'
 
@@ -55,23 +78,23 @@ class OleCfSummaryInfoEventContainer(event.EventContainer):
   PIDSI_LASTSAVE_DTM = 0x000d
   PIDSI_THUMBNAIL = 0x0011
 
-  def __init__(self, olecf_item):
-    """Initializes the event container.
+  def __init__(self, olecf_item, root_creation_time, root_modification_time):
+    """Initialize the OLECF summary object.
 
     Args:
-      olecf_item: The OLECF item (pyolecf.property_set_stream).
+      olecf_item: The OLECF item (instance of pyolecf.property_set_stream).
+      root_creation_time: The creation time of the root OLECF item.
+      root_modification_time: The modification time of the root OLECF item.
     """
-    super(OleCfSummaryInfoEventContainer, self).__init__()
-
-    self.data_type = 'olecf:summary_info'
-    self.name = u'Summary Information'
-
-    # TODO: make this more elegant/generic also in light of OLECF
-    # sub parsers (plugins).
+    super(OleCfSummaryInfo, self).__init__()
+    self._root_creation_time = root_creation_time
+    self._root_modification_time = root_modification_time
+    self._events = []
+    self.attributes = {}
     self._InitFromPropertySet(olecf_item.set)
 
   def _InitFromPropertySet(self, property_set):
-    """Initializes the event container from a property set.
+    """Initializes the object from a property set.
 
     Args:
       property_set: The OLECF property set (pyolecf.property_set).
@@ -79,20 +102,13 @@ class OleCfSummaryInfoEventContainer(event.EventContainer):
     # Combine the values of multiple property sections
     # but do not override properties that are already set.
     for property_section in property_set.sections:
-      self._InitFromPropertySection(property_section)
-
-  def _InitFromPropertySection(self, property_section):
-    """Initializes the event container from a property section.
-
-    Args:
-      property_section: The OLECF property section (pyolecf.property_section).
-    """
-    if property_section.class_identifier == self._CLASS_IDENTIFIER:
+      if property_section.class_identifier != self._CLASS_IDENTIFIER:
+        continue
       for property_value in property_section.properties:
         self._InitFromPropertyValue(property_value)
 
   def _InitFromPropertyValue(self, property_value):
-    """Initializes the event container from a property value.
+    """Initializes the object from a property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value).
@@ -111,7 +127,7 @@ class OleCfSummaryInfoEventContainer(event.EventContainer):
       self._InitFromPropertyValueTypeFiletime(property_value)
 
   def _InitFromPropertyValueTypeInt16(self, property_value):
-    """Initializes the event container from a 16-bit int type property value.
+    """Initializes the object from a 16-bit int type property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value
@@ -124,7 +140,7 @@ class OleCfSummaryInfoEventContainer(event.EventContainer):
       pass
 
   def _InitFromPropertyValueTypeInt32(self, property_value):
-    """Initializes the event container from a 32-bit int type property value.
+    """Initializes the object from a 32-bit int type property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value
@@ -133,11 +149,11 @@ class OleCfSummaryInfoEventContainer(event.EventContainer):
     property_name = self._PROPERTY_NAMES_INT32.get(
         property_value.identifier, None)
 
-    if property_name and not hasattr(self.attributes, property_name):
+    if property_name and not property_name in self.attributes:
       self.attributes[property_name] = property_value.data_as_integer
 
   def _InitFromPropertyValueTypeString(self, property_value):
-    """Initializes the event container from a string type property value.
+    """Initializes the object from a string type property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value
@@ -146,39 +162,51 @@ class OleCfSummaryInfoEventContainer(event.EventContainer):
     property_name = self._PROPERTY_NAMES_STRING.get(
         property_value.identifier, None)
 
-    if property_name and not hasattr(self.attributes, property_name):
+    if property_name and not property_name in self.attributes:
       self.attributes[property_name] = property_value.data_as_string
 
   def _InitFromPropertyValueTypeFiletime(self, property_value):
-    """Initializes the event container from a filetime type property value.
+    """Initializes the object from a filetime type property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value
                       of type VT_FILETIME).
     """
     if property_value.identifier == self.PIDSI_LASTPRINTED:
-      self.Append(event.FiletimeEvent(
-          property_value.data_as_integer,
-          'Document Last Printed Time',
-          self.data_type))
+      self._events.append(
+          (property_value.data_as_integer, 'Document Last Printed Time'))
     elif property_value.identifier == self.PIDSI_CREATE_DTM:
-      self.Append(event.FiletimeEvent(
-          property_value.data_as_integer,
-          'Document Creation Time',
-          self.data_type))
+      self._events.append(
+          (property_value.data_as_integer, 'Document Creation Time'))
     elif property_value.identifier == self.PIDSI_LASTSAVE_DTM:
-      self.Append(event.FiletimeEvent(
-          property_value.data_as_integer,
-          'Document Last Save Time',
-          self.data_type))
+      self._events.append(
+          (property_value.data_as_integer, 'Document Last Save Time'))
     elif property_value.identifier == self.PIDSI_EDITTIME:
       # property_name = 'total_edit_time'
       # TODO: handle duration.
       pass
 
+  def GetEventObjects(self):
+    """Yields extracted event objects."""
+    for timestamp, timestamp_description in self._events:
+      yield OleCfSummaryInfoEvent(
+          timestamp, timestamp_description, self.attributes)
 
-class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
-  """Convenience class for an OLECF Document Summary info event container."""
+    if self._root_creation_time:
+      yield OleCfSummaryInfoEvent(
+          self._root_creation_time, eventdata.EventTimestamp.CREATION_TIME,
+          self.attributes)
+
+    if self._root_modification_time:
+      yield OleCfSummaryInfoEvent(
+          self._root_modification_time,
+          eventdata.EventTimestamp.MODIFICATION_TIME, self.attributes)
+
+
+class OleCfDocumentSummaryInfoEvent(event.FiletimeEvent):
+  """Convenience class for an OLECF Document Summary info event."""
+
+  DATA_TYPE = 'olecf:document_summary_info'
 
   _CLASS_IDENTIFIER = 'd5cdd502-2e9c-101b-9397-08002b2cf9ae'
 
@@ -216,21 +244,23 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
   PIDDSI_LINKSDIRTY = 0x0010
   PIDDSI_VERSION = 0x0017
 
-  def __init__(self, olecf_item):
-    """Initializes the event container.
+  def __init__(self, timestamp, usage, olecf_item):
+    """Initializes the event.
 
     Args:
+      timestamp: The FILETIME timestamp value.
+      usage: The usage string, describing the timestamp value.
       olecf_item: The OLECF item (pyolecf.property_set_stream).
     """
-    super(OleCfDocumentSummaryInfoEventContainer, self).__init__()
+    super(OleCfDocumentSummaryInfoEvent, self).__init__(
+        timestamp, usage)
 
-    self.data_type = 'olecf:document_summary_info'
     self.name = u'Document Summary Information'
 
     self._InitFromPropertySet(olecf_item.set)
 
   def _InitFromPropertySet(self, property_set):
-    """Initializes the event container from a property set.
+    """Initializes the event from a property set.
 
     Args:
       property_set: The OLECF property set (pyolecf.property_set).
@@ -238,20 +268,13 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
     # Combine the values of multiple property sections
     # but do not override properties that are already set.
     for property_section in property_set.sections:
-      self._InitFromPropertySection(property_section)
-
-  def _InitFromPropertySection(self, property_section):
-    """Initializes the event container from a property section.
-
-    Args:
-      property_section: The OLECF property section (pyolecf.property_section).
-    """
-    if property_section.class_identifier == self._CLASS_IDENTIFIER:
+      if property_section.class_identifier != self._CLASS_IDENTIFIER:
+        continue
       for property_value in property_section.properties:
         self._InitFromPropertyValue(property_value)
 
   def _InitFromPropertyValue(self, property_value):
-    """Initializes the event container from a property value.
+    """Initializes the event from a property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value).
@@ -270,7 +293,7 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
       self._InitFromPropertyValueTypeString(property_value)
 
   def _InitFromPropertyValueTypeInt16(self, property_value):
-    """Initializes the event container from a 16-bit int type property value.
+    """Initializes the event from a 16-bit int type property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value
@@ -283,7 +306,7 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
       pass
 
   def _InitFromPropertyValueTypeInt32(self, property_value):
-    """Initializes the event container from a 32-bit int type property value.
+    """Initializes the event from a 32-bit int type property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value
@@ -297,14 +320,14 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
     # and the lower 16-bit the minor number.
     if property_value.identifier == self.PIDDSI_VERSION:
       application_version = property_value.data_as_integer
-      self.attributes[property_name] = '{0:d}.{1:d}'.format(
-          application_version >> 16, application_version & 0xffff)
+      setattr(self, property_name, u'{0:d}.{1:d}'.format(
+          application_version >> 16, application_version & 0xffff))
 
-    elif property_name and not hasattr(self.attributes, property_name):
-      self.attributes[property_name] = property_value.data_as_integer
+    elif property_name and not hasattr(self, property_name):
+      setattr(self, property_name, property_value.data_as_integer)
 
   def _InitFromPropertyValueTypeBool(self, property_value):
-    """Initializes the event container from a boolean type property value.
+    """Initializes the event from a boolean type property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value
@@ -313,11 +336,11 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
     property_name = self._PROPERTY_NAMES_BOOL.get(
         property_value.identifier, None)
 
-    if property_name and not hasattr(self.attributes, property_name):
-      self.attributes[property_name] = property_value.data_as_boolean
+    if property_name and not hasattr(self, property_name):
+      setattr(self, property_name, property_value.data_as_boolean)
 
   def _InitFromPropertyValueTypeString(self, property_value):
-    """Initializes the event container from a string type property value.
+    """Initializes the event from a string type property value.
 
     Args:
       property_value: The OLECF property value (pyolecf.property_value
@@ -326,8 +349,8 @@ class OleCfDocumentSummaryInfoEventContainer(event.EventContainer):
     property_name = self._PROPERTY_NAMES_STRING.get(
         property_value.identifier, None)
 
-    if property_name and not hasattr(self.attributes, property_name):
-      self.attributes[property_name] = property_value.data_as_string
+    if property_name and not hasattr(self, property_name):
+      setattr(self, property_name, property_value.data_as_string)
 
 
 class DocumentSummaryPlugin(interface.OlecfPlugin):
@@ -338,12 +361,25 @@ class DocumentSummaryPlugin(interface.OlecfPlugin):
   REQUIRED_ITEMS = frozenset(['\005DocumentSummaryInformation'])
 
   def GetEntries(self, root_item, items, **unused_kwargs):
-    """Generate event containers based on the document summary item."""
-    for item in items:
-      event_container = OleCfDocumentSummaryInfoEventContainer(item)
-      self.FillContainer(event_container, root_item)
+    """Generate event based on the document summary item.
 
-      yield event_container
+    Args:
+      root_item: The root item of the OLECF file.
+      item_names: A list of all items discovered in the root.
+
+    Yields:
+      Event objects (instance of OleCfDocumentSummaryInfoEvent).
+    """
+    creation_time, modification_time = self.GetTimestamps(root_item)
+
+    for item in items:
+      if creation_time:
+        yield OleCfDocumentSummaryInfoEvent(
+            creation_time, eventdata.EventTimestamp.CREATION_TIME, item)
+      if modification_time:
+        yield OleCfDocumentSummaryInfoEvent(
+            modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+            item)
 
 
 class SummaryInfoPlugin(interface.OlecfPlugin):
@@ -354,9 +390,19 @@ class SummaryInfoPlugin(interface.OlecfPlugin):
   REQUIRED_ITEMS = frozenset(['\005SummaryInformation'])
 
   def GetEntries(self, root_item, items, **unused_kwargs):
-    """Generate event containers based on the summary information item."""
-    for item in items:
-      event_container = OleCfSummaryInfoEventContainer(item)
-      self.FillContainer(event_container, root_item)
+    """Generate event based on the summary information item.
 
-      yield event_container
+    Args:
+      root_item: The root item of the OLECF file.
+      item_names: A list of all items discovered in the root.
+
+    Yields:
+      Event objects (instance of OleCfSummaryInfoEvent).
+    """
+    root_creation_time, root_modification_time = self.GetTimestamps(root_item)
+
+    for item in items:
+      summary_information_object = OleCfSummaryInfo(
+          item, root_creation_time, root_modification_time)
+      for event_object in summary_information_object.GetEventObjects():
+        yield event_object

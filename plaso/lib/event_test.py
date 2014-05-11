@@ -15,19 +15,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a unit test for the EventObject and EventContainer.
+"""This file contains a unit test for the EventObject.
 
-This is an implementation of an unit test for EventObject and EventContainer
-storage mechanism for plaso.
+This is an implementation of an unit test for EventObject storage mechanism for
+plaso.
 
-The test consists of creating three EventContainers, and 6 EventObjects.
-
-There is one base container. It contains the two other containers, and
-they store the EventObjects.
-
-The tests involve:
- + Read attributes, both set in the container level and event object.
- + Read in all the first/last timestamps of containers.
+The test consists of creating six EventObjects.
 
 Error handling. The following tests are performed for error handling:
  + Access attributes that are not set.
@@ -35,7 +28,6 @@ Error handling. The following tests are performed for error handling:
 
 import unittest
 
-from plaso.lib import errors
 from plaso.lib import event
 
 
@@ -48,166 +40,83 @@ class TestEvent1(event.EventObject):
     super(TestEvent1, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = 'Some time in the future'
-    self.attributes.update(attributes)
+    for attribute, value in attributes.iteritems():
+      setattr(self, attribute, value)
 
 
 class FailEvent(event.EventObject):
   """An test event object without the minimal required initialization."""
 
 
-class TestEventContainer(event.EventContainer):
-  """A test event container."""
+def GetEventObjects():
+  """Returns a list of test event objects."""
+  event_objects = []
+  hostname = 'MYHOSTNAME'
+  data_type = 'test:event1'
 
-  def __init__(self):
-    """Initializes the test event container."""
-    super(TestEventContainer, self).__init__()
+  event_a = event.EventObject()
+  event_a.username = 'joesmith'
+  event_a.filename = 'c:/Users/joesmith/NTUSER.DAT'
+  event_a.hostname = hostname
+  event_a.timestamp = 0
+  event_a.data_type = data_type
 
-    self.hostname = 'MYHOSTNAME'
+  event_b = event.WinRegistryEvent(
+      u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'},
+      timestamp=1334961526929596)
+  event_b.hostname = hostname
+  event_objects.append(event_b)
 
-    # A sub event container that contains 3 event objects.
-    container = event.EventContainer()
-    container.username = 'joesmith'
-    container.filename = 'c:/Users/joesmith/NTUSER.DAT'
+  event_c = event.WinRegistryEvent(
+      u'//HKCU/Secret/EvilEmpire/Malicious_key',
+      {u'Value': u'REGALERT: send all the exes to the other world'},
+      timestamp=1334966206929596)
+  event_c.hostname = hostname
+  event_objects.append(event_c)
 
-    event_object = event.WinRegistryEvent(
-        u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'},
-        timestamp=1334961526929596)
-    container.Append(event_object)
+  event_d = event.WinRegistryEvent(
+      u'//HKCU/Windows/Normal', {u'Value': u'run all the benign stuff'},
+      timestamp=1334940286000000)
+  event_d.hostname = hostname
+  event_objects.append(event_d)
 
-    event_object = event.WinRegistryEvent(
-        u'//HKCU/Secret/EvilEmpire/Malicious_key',
-        {u'Value': u'REGALERT: send all the exes to the other world'},
-        timestamp=1334966206929596)
-    container.Append(event_object)
+  event_objects.append(event_a)
 
-    event_object = event.WinRegistryEvent(
-        u'//HKCU/Windows/Normal', {u'Value': u'run all the benign stuff'},
-        timestamp=1334940286000000)
-    container.Append(event_object)
+  filename = 'c:/Temp/evil.exe'
+  event_e = TestEvent1(1335781787929596, {
+      'text': 'This log line reads ohh so much.'})
+  event_e.filename = filename
+  event_e.hostname = hostname
 
-    self.Append(container)
+  event_objects.append(event_e)
 
-    # A sub event container that contains 4 event objects.
-    container = event.EventContainer()
-    container.filename = 'c:/Temp/evil.exe'
+  event_f = TestEvent1(1335781787929596, {
+      'text': 'Nothing of interest here, move on.'})
+  event_f.filename = filename
+  event_f.hostname = hostname
 
-    container.Append(TestEvent1(1335781787929596, {
-        'text': 'This log line reads ohh so much.'}))
+  event_objects.append(event_f)
 
-    container.Append(TestEvent1(1335781787929596, {
-        'text': 'Nothing of interest here, move on.'}))
+  event_g = TestEvent1(1335791207939596, {
+      'text': 'Mr. Evil just logged into the machine and got root.'})
+  event_g.filename = filename
+  event_g.hostname = hostname
 
-    container.Append(TestEvent1(1335791207939596, {
-        'text': 'Mr. Evil just logged into the machine and got root.'}))
+  event_objects.append(event_g)
 
-    text_dict = {'body': (
-        'This is a line by someone not reading the log line properly. And '
-        'since this log line exceeds the accepted 80 chars it will be '
-        'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
-    event_object = event.TextEvent(1338934459000000, text_dict)
-    event_object.text = event_object.body
-    container.Append(event_object)
+  text_dict = {'body': (
+      u'This is a line by someone not reading the log line properly. And '
+      u'since this log line exceeds the accepted 80 chars it will be '
+      u'shortened.'), 'hostname': u'nomachine', 'username': u'johndoe'}
 
-    self.Append(container)
+  event_h = event.TextEvent(1338934459000000, text_dict)
+  event_h.text = event_h.body
+  event_h.hostname = hostname
+  event_h.filename = filename
 
+  event_objects.append(event_h)
 
-class EventContainerTest(unittest.TestCase):
-  """Tests for the event container object."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._container = TestEventContainer()
-
-  def testAllCount(self):
-    """Test if we have all the events inside the container."""
-    self.assertEquals(len(self._container), 7)
-
-  def testContainerTimestamps(self):
-    """Test first/last timestamps of containers."""
-    self.assertEquals(
-        self._container.first_timestamp, 1334940286000000)
-    self.assertEquals(
-        self._container.last_timestamp, 1338934459000000)
-
-    # The container should have two sub containers:
-    #   One with three events.
-    #   One with four events.
-    self.assertEquals(len(self._container), 7)
-    self.assertEquals(len(self._container.containers), 2)
-    # The parent container set one attribute, the hostname.
-    self.assertEquals(len(self._container.attributes), 1)
-    self.assertTrue('hostname' in self._container.attributes)
-    self.assertEquals(len(self._container.containers[0].attributes), 2)
-
-    first_array = []
-    last_array = []
-    for c in self._container.containers:
-      first_array.append(c.first_timestamp)
-      last_array.append(c.last_timestamp)
-
-    first = set(first_array)
-    last = set(last_array)
-
-    self.assertIn(1334966206929596, last)
-    self.assertIn(1334940286000000, first)
-    self.assertIn(1335781787929596, first)
-    self.assertIn(1338934459000000, last)
-    self.assertIn(1334940286000000, first)
-    self.assertIn(1334966206929596, last)
-    self.assertIn(1335781787929596, first)
-    self.assertIn(1338934459000000, last)
-    self.assertIn(1334940286000000, first)
-    self.assertIn(1334966206929596, last)
-    self.assertIn(1335781787929596, first)
-    self.assertIn(1338934459000000, last)
-
-  def testDoesNotExist(self):
-    """Calls to a non-existing attribute should result in an exception."""
-    events = list(self._container)
-
-    with self.assertRaises(AttributeError):
-      getattr(events[0], 'doesnotexist')
-
-  def testExistsInEventObject(self):
-    """Calls to an attribute that is stored within the EventObject itself."""
-    events = list(self._container.GetSortedEvents())
-
-    self.assertEquals(events[0].keyname, '//HKCU/Windows/Normal')
-
-  def testExistsRegalert(self):
-    """Calls to the attribute that stores the regalert."""
-    events = list(self._container.GetSortedEvents())
-
-    self.assertEquals(events[2].regalert, True)
-
-  def testExistsInParentObject(self):
-    """Call to an attribute that is contained within the parent object."""
-    events = list(self._container.GetSortedEvents())
-
-    self.assertEquals(events[0].filename, 'c:/Users/joesmith/NTUSER.DAT')
-
-  def testFailAddContainerEvent(self):
-    """Add an EventContainer that is isn't an EventContainer."""
-    with self.assertRaises(errors.NotAnEventContainerOrObject):
-      self._container.Append('asd')
-
-    with self.assertRaises(errors.NotAnEventContainerOrObject):
-      self._container.Append(FailEvent())
-
-  def testGetAttributes(self):
-    """Test the GetAttributes function."""
-    # TODO: clean up this code construction, retrieving the last event object
-    # in the container can be done in a cleaner way.
-    for event_object in self._container:
-      last_event_object = event_object
-
-    attr = last_event_object.GetAttributes()
-
-    self.assertEquals(len(attr), 9)
-
-    self.assertEquals(sorted(attr), [
-        'body', 'data_type', 'filename', 'hostname', 'text', 'timestamp',
-        'timestamp_desc', 'username', 'uuid'])
+  return event_objects
 
 
 class EventObjectTest(unittest.TestCase):
@@ -380,7 +289,7 @@ class EventObjectTest(unittest.TestCase):
     self.assertNotEquals(event_a.EqualityString(), event_b.EqualityString())
 
   def testNotInEventAndNoParent(self):
-    """Call to an attribute that does not exist and no parent container ."""
+    """Call to an attribute that does not exist."""
     event_object = TestEvent1(0, {})
 
     with self.assertRaises(AttributeError):

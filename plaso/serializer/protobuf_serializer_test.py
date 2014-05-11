@@ -43,25 +43,6 @@ class ProtobufAnalysisReportSerializerTest(unittest.TestCase):
     pass
 
 
-class ProtobufEventContainerSerializerTest(unittest.TestCase):
-  """Tests for the protobuf event container serializer object."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    # TODO: add an event container test.
-    pass
-
-  def testReadSerialized(self):
-    """Test the read serialized functionality."""
-    # TODO: add an event container test.
-    pass
-
-  def testWriteSerialized(self):
-    """Test the write serialized functionality."""
-    # TODO: add an event container test.
-    pass
-
-
 class ProtobufEventObjectSerializerTest(unittest.TestCase):
   """Tests for the protobuf event object serializer object."""
 
