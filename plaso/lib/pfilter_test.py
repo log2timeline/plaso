@@ -59,7 +59,7 @@ class PfilterFakeParser(parser.BaseParser):
                          the fake parser.
 
     Yields:
-      An event container (EventContainer) that contains the parsed
+      An event object (instance of EventObject) that contains the parsed
       attributes.
     """
     event_object = event.EventObject()
@@ -122,16 +122,13 @@ class PFilterTest(unittest.TestCase):
     """Test plaso EventObjects, both Python and Protobuf version.
 
     These are more plaso specific tests than the more generic
-    objectfilter ones. It will create an EventContainer that stores
-    some attributes and then an EventObject that is stored inside
-    that container. These objects will then be serialzed into an
+    objectfilter ones. It will create an EventObject that stores
+    some attributes. These objects will then be serialzed into an
     EventObject protobuf and all tests run against both the native
     Python object as well as the protobuf.
     """
-    container = event.EventContainer()
-    container.data_type = 'Weirdo:Made up Source:Last Written'
-
     event_object = event.EventObject()
+    event_object.data_type = 'Weirdo:Made up Source:Last Written'
     event_object.timestamp = timelib_test.CopyStringToTimestamp(
         '2015-11-18 01:15:43')
     event_object.timestamp_desc = 'Last Written'
@@ -146,8 +143,6 @@ class PFilterTest(unittest.TestCase):
     event_object.mydict = {
         'value': 134, 'another': 'value', 'A Key (with stuff)': 'Here'}
     event_object.display_name = u'unknown:{0:s}'.format(event_object.filename)
-
-    container.Append(event_object)
 
     # Series of tests.
     query = 'filename contains \'GoodFella\''
@@ -210,7 +205,6 @@ class PFilterTest(unittest.TestCase):
     query = 'mydict.notthere is 123'
     self.RunPlasoTest(event_object, query, False)
 
-    # Test atttributes stored in the container.
     query = 'source_long not contains \'Fake\''
     self.RunPlasoTest(event_object, query, False)
 

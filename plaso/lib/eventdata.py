@@ -211,7 +211,7 @@ class EventFormatter(object):
       msgs = []
       msgs.append(u'Format error: [{0:s}] for: <{1:s}>'.format(
           exception, self.format_string))
-      for attr, value in event_object.attributes.items():
+      for attr, value in event_object.GetValues().iteritems():
         msgs.append(u'{0}: {1}'.format(attr, value))
 
       msg = u' '.join(msgs)
