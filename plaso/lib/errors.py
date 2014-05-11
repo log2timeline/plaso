@@ -33,10 +33,6 @@ class FileSystemScannerError(Error):
   """Class that defines file system scanner errors."""
 
 
-class NotAnEventContainerOrObject(Error):
-  """Expect an EventContainer/EventObject yet don't get it it's faulty."""
-
-
 class NotAText(Error):
   """Raised when trying to read a text on a non-text sample."""
 

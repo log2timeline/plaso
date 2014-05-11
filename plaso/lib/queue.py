@@ -32,12 +32,8 @@ import multiprocessing
 
 from dfvfs.path import path_spec as dfvfs_path_spec
 
-from google.protobuf import message
-
 from plaso.lib import event
 from plaso.lib import errors
-from plaso.serializer import json_serializer
-from plaso.serializer import protobuf_serializer
 
 
 class QueueEndOfInput(object):
@@ -226,15 +222,6 @@ class EventObjectQueueConsumer(QueueConsumer):
      The consumer subscribes to updates on the queue.
   """
 
-  def __init__(self, queue_object):
-    """Initializes the queue consumer.
-
-    Args:
-      queue_object: the queue object (instance of Queue).
-    """
-    super(EventObjectQueueConsumer, self).__init__(queue_object)
-    self._serializer = protobuf_serializer.ProtobufEventObjectSerializer
-
   @abc.abstractmethod
   def _ConsumeEventObject(self, event_object):
     """Consumes an event object callback for ConsumeEventObjects."""
@@ -257,13 +244,6 @@ class EventObjectQueueConsumer(QueueConsumer):
         self._queue.PushItem(item)
         break
 
-      # TODO: the event object cannot be correctly serialized by the queue
-      # hence a manual serialization is done as a work around but the root
-      # cause should be fixed.
-      item = self._serializer.ReadSerialized(item)
-      if not isinstance(item, event.EventObject):
-        raise RuntimeError(u'Unsupported item type on queue.')
-
       self._ConsumeEventObject(item)
 
 
@@ -273,41 +253,15 @@ class EventObjectQueueProducer(QueueProducer):
      The producer generates updates on the queue.
   """
 
-  def __init__(self, queue_object):
-    """Initializes the queue producer.
-
-    Args:
-      queue_object: the queue object (instance of Queue).
-    """
-    super(EventObjectQueueProducer, self).__init__(queue_object)
-    self._serializer = protobuf_serializer.ProtobufEventObjectSerializer
-
-  # TODO: implement this function and have the AsEventObjects function
-  # flatten the container into objects.
-  # def ProduceEventContainer(self, event_container):
-  #   """Produces an event container onto the queue.
-  #
-  #   The event container is split up in event objects.
-  #
-  #   Args:
-  #     event_container: the event container (instance of EventContainer).
-  #   """
-  #   for event_object in event_container.AsEventObjects():
-  #     self.ProduceEventObject(event_object)
-
   def ProduceEventObject(self, event_object):
     """Produces an event object onto the queue.
 
     Args:
       event_object: the event object (instance of EventObject).
     """
-    # TODO: the event object cannot be correctly serialized by the queue
-    # hence a manual serialization is done as a work around but the root
-    # cause should be fixed.
     try:
-      event_object = self._serializer.WriteSerialized(event_object)
       self._queue.PushItem(event_object)
-    except (ValueError, message.EncodeError) as exception:
+    except ValueError as exception:
       logging.error(
           u'Unable to produce a serialized event object, with error:{}'.format(
               exception))
@@ -327,11 +281,6 @@ class AnalysisPluginProducer(EventObjectQueueProducer):
 
   def __init__(self, queue_object):
     super(AnalysisPluginProducer, self).__init__(queue_object)
-    # TODO: This producer should become unnecesary or obsolete once full
-    # pickle support is built into the EventObject, until then
-    # we keep it to indicate we want JSON serialization for
-    # analysis plugins due to speed considerations.
-    self._serializer = json_serializer.JsonEventObjectSerializer
 
 
 class ItemQueueConsumer(QueueConsumer):

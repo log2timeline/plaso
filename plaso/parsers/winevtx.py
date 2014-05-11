@@ -32,7 +32,7 @@ class WinEvtxRecordEvent(event.FiletimeEvent):
   DATA_TYPE = 'windows:evtx:record'
 
   def __init__(self, evtx_record, recovered=False):
-    """Initializes the event container.
+    """Initializes the event.
 
     Args:
       evtx_record: The EVTX record (pyevtx.record).

@@ -109,7 +109,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
 
     Yields:
-      An event object (instance of ChromeCookieContainer) containing the event
+      An event object (instance of ChromeCookieEvent) containing the event
       data.
     """
     yield ChromeCookieEvent(

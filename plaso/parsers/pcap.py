@@ -502,7 +502,7 @@ class PcapParser(parser.BaseParser):
     # TODO: this is a hack for a limitation in dpkt that expects the file
     # object to have a name. This needs to be fixed properly by creating
     # a plaso specific dpkt Reader object that takes a file entry as input.
-    file_object.name = file_entry.name
+    #file_object.name = file_entry.name
 
     try:
       pcap_reader = dpkt.pcap.Reader(file_object)

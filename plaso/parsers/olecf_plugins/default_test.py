@@ -41,16 +41,14 @@ class TestOleCfDefaultPlugin(test_lib.OleCfPluginTestCase):
     """Tests the Process function."""
     test_file = self._GetTestFilePath(['Document.doc'])
     event_generator = self._ParseOleCfFileWithPlugin(test_file, self._plugin)
-    event_containers = self._GetEventContainers(event_generator)
-    self.assertEquals(len(event_containers), 3)
+    event_objects = self._GetEventObjects(event_generator)
+
+    self.assertEquals(len(event_objects), 5)
 
     # Check the Root Entry event.
-    event_container = event_containers[0]
+    event_object = event_objects[0]
 
-    self.assertEquals(len(event_container.events), 1)
-    self.assertEquals(event_container.name, u'Root Entry')
-
-    event_object = event_container.events[0]
+    self.assertEquals(event_object.name, u'Root Entry')
 
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
@@ -65,8 +63,7 @@ class TestOleCfDefaultPlugin(test_lib.OleCfPluginTestCase):
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
     # Check one other entry.
-    event_container = event_containers[1]
-    event_object = event_container.events[0]
+    event_object = event_objects[1]
 
     expected_string = u'Name: MsoDataStore'
     self._TestGetMessageStrings(event_object, expected_string, expected_string)

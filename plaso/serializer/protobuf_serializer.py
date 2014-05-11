@@ -130,7 +130,7 @@ class ProtobufEventAttributeSerializer(object):
       cls, proto_attribute, attribute_name, attribute_value):
     """Writes an event attribute to serialized form.
 
-    The attribute of an event object or event container can store almost any
+    The attribute of an event object can store almost any
     arbitrary data, so the corresponding protobuf storage must deal with the
     various data types. This method identifies the data type and assigns it
     properly to the attribute protobuf.
@@ -326,110 +326,6 @@ class ProtobufAnalysisReportSerializer(interface.AnalysisReportSerializer):
     return proto.SerializeToString()
 
 
-class ProtobufEventContainerSerializer(interface.EventContainerSerializer):
-  """Class that implements the protobuf event container serializer."""
-
-  @classmethod
-  def ReadSerializedObject(cls, proto):
-    """Reads an event container from serialized form.
-
-    Args:
-      proto: a protobuf object containing the serialized form (instance of
-             plaso_storage_pb2.EventContainer).
-
-    Returns:
-      An event container (instance of EventContainer).
-    """
-    event_container = event.EventContainer()
-    event_container.last_timestamp = proto.last_time
-    event_container.first_timestamp = proto.first_time
-
-    # The plaso_storage_pb2.EventContainer protobuf contains a field named
-    # attributes which technically not a Dict but behaves similar.
-    dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
-        proto)
-    event_container.attributes.update(dict_object)
-
-    for container_proto in proto.containers:
-      container_object = ProtobufEventContainerSerializer.ReadSerializedObject(
-         container_proto)
-      event_container.containers.append(container_object)
-
-    for event_proto in proto.events:
-      event_object = ProtobufEventObjectSerializer.ReadSerializedObject(
-         event_proto)
-      event_container.events.append(event_object)
-
-    return event_container
-
-  @classmethod
-  def ReadSerialized(cls, proto_string):
-    """Reads an event container from serialized form.
-
-    Args:
-      proto_string: a protobuf string containing the serialized form.
-
-    Returns:
-      An event container (instance of EventContainer).
-    """
-    proto = plaso_storage_pb2.EventContainer()
-    proto.ParseFromString(proto_string)
-
-    return cls.ReadSerializedObject(proto)
-
-  @classmethod
-  def WriteSerializedObject(cls, event_container):
-    """Writes an event container to serialized form.
-
-    Args:
-      event_container: an event container (instance of EventContainer).
-
-    Returns:
-      A protobuf object containing the serialized form (instance of
-      plaso_storage_pb2.EventContainer).
-    """
-    proto = plaso_storage_pb2.EventContainer()
-
-    proto.first_time = event_container.first_timestamp
-    proto.last_time = event_container.last_timestamp
-
-    for sub_container in event_container.containers:
-      sub_container_proto = cls.WriteSerializedObject(sub_container)
-      container_add = proto.containers.add()
-      container_add.MergeFrom(sub_container_proto)
-
-    for event_object in event_container.events:
-      # TODO: check if the next TODO still applies.
-      # TODO: Problem here is that when the EventObject
-      # is serialized it will "inherit" all the attributes
-      # from the container, thus repeat them. Fix that.
-      event_object_proto = ProtobufEventObjectSerializer.WriteSerializedObject(
-          event_object)
-      event_object_proto_add = proto.events.add()
-      event_object_proto_add.MergeFrom(event_object_proto)
-
-    for attribute_name, attribute_value in event_container.attributes.items():
-      if isinstance(attribute_value, (bool, int, long)) or attribute_value:
-        proto_attribute = proto.attributes.add()
-        ProtobufEventAttributeSerializer.WriteSerializedObject(
-            proto_attribute, attribute_name, attribute_value)
-
-    return proto
-
-  @classmethod
-  def WriteSerialized(cls, event_container):
-    """Writes an event container to serialized form.
-
-    Args:
-      event_container: an event container (instance of EventContainer).
-
-    Returns:
-      A protobuf string containing the serialized form.
-    """
-    proto = cls.WriteSerializedObject(event_container)
-    return proto.SerializeToString()
-
-
 class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
   """Class that implements the protobuf event object serializer."""
 
@@ -493,12 +389,13 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
 
         setattr(event_object, proto_attribute.name, value)
 
-    # The plaso_storage_pb2.EventContainer protobuf contains a field named
+    # The plaso_storage_pb2.EventObject protobuf contains a field named
     # attributes which technically not a Dict but behaves similar.
     dict_object = ProtobufEventAttributeSerializer.ReadSerializedDictObject(
         proto)
 
-    event_object.attributes.update(dict_object)
+    for attribute, value in dict_object.iteritems():
+      setattr(event_object, attribute, value)
 
     return event_object
 
