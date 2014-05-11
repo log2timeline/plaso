@@ -120,18 +120,16 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
       return ret
 
     # Check if this is a message request and we have a regular EventObject.
-    if attr_name == 'message' and not hasattr(obj.attributes, 'MergeForm'):
+    if attr_name == 'message' :
       return self._GetMessage(obj)
 
     # Check if this is a source_short request.
-    if attr_name in ('source', 'source_short') and not hasattr(
-        obj.attributes, 'MergeForm'):
+    if attr_name in ('source', 'source_short'):
       source_short, _ = self._GetSources(obj)
       return source_short
 
     # Check if this is a source_long request.
-    if attr_name in ('source_long', 'sourcetype') and not hasattr(
-        obj.attributes, 'MergeForm'):
+    if attr_name in ('source_long', 'sourcetype'):
       _, source_long = self._GetSources(obj)
       return source_long
 

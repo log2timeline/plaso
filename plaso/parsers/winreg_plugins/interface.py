@@ -194,7 +194,7 @@ class PluginList(object):
     return plugins_dict.get(plugin_type, []) + plugins_dict.get('any', [])
 
   def AddPlugin(self, plugin_type, plugin_class):
-    """Add a Windows Registry plugin to the container.
+    """Add a Windows Registry plugin to the plugin list.
 
     Args:
       plugin_type: String containing the Windows Registry type,

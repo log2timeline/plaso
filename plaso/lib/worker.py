@@ -28,7 +28,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso import parsers   # pylint: disable=unused-import
 from plaso.lib import classifier
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import queue
@@ -183,13 +182,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
           if not event_object:
             continue
 
-          if isinstance(event_object, event.EventObject):
-            self._ParseEvent(
-                event_object, file_entry, parsing_object.parser_name, stat_obj)
-          elif isinstance(event_object, event.EventContainer):
-            for sub_event in event_object:
-              self._ParseEvent(
-                  sub_event, file_entry, parsing_object.parser_name, stat_obj)
+          self._ParseEvent(
+              event_object, file_entry, parsing_object.parser_name, stat_obj)
 
       except errors.UnableToParseFile as exception:
         logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(

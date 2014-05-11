@@ -21,7 +21,7 @@ syntax = "proto2";
 
 package plaso_storage;
 
-// Each EventObject/EventContainer can contain any attribute
+// Each EventObject can contain any attribute
 // as long as it can be expressed in any of the supported
 // formats (eg, string, int, array, dict).
 // This can be looked as a hash or a dict object, with a key
@@ -308,31 +308,6 @@ message EventGroup {
   };
 
   repeated EventDescription events = 7;
-};
-
-// The EventContainer is a simple container that serves as a storage
-// to other EventContainers and EventObjects.
-// The EventContainer can store common attributes that are shared
-// with each EventObjects stored within it.
-message EventContainer {
-  // The timestamp of the earliest EventObject that is stored within
-  // the container. It can be used to filter out entire containers
-  // or for first version of the sorting.
-  // The timestamp is stored as a 64 bit Unix Epoch time in UTC.
-  required int64 first_time = 1;
-
-  // The time of the last EventObject stored within the container.
-  // The timestamp is stored as a 64 bit Unix Epoch time in UTC.
-  required int64 last_time = 2;
-
-  // A list of the EventContainers stored within this container.
-  repeated EventContainer containers = 4;
-
-  // A list of the EventObjects that are stored within this container.
-  repeated EventObject events = 6;
-
-  // A list of the attributes that are stored within this container.
-  repeated Attribute attributes = 8;
 };
 
 // The PreProcess protobuf is a simple message that stores information

@@ -18,22 +18,25 @@
 """The default plugin for parsing OLE Compound Files (OLECF)."""
 
 from plaso.lib import event
+from plaso.lib import eventdata
 
 from plaso.parsers.olecf_plugins import interface
 
 
-class OleCfItemEventContainer(event.EventContainer):
-  """Convenience class for an OLECF item event container."""
+class OleCfItemEvent(event.FiletimeEvent):
+  """Convenience class for an OLECF item event."""
 
-  def __init__(self, olecf_item):
-    """Initializes the event container.
+  DATA_TYPE = 'olecf:item'
+
+  def __init__(self, timestamp, usage, olecf_item):
+    """Initializes the event.
 
     Args:
+      timetamp: The FILETIME timestamp value.
+      usage: A string describing the timestamp value.
       olecf_item: The OLECF item (pyolecf.item).
     """
-    super(OleCfItemEventContainer, self).__init__()
-
-    self.data_type = 'olecf:item'
+    super(OleCfItemEvent, self).__init__(timestamp, usage)
 
     # TODO: need a better way to express the original location of the
     # original data.
@@ -79,18 +82,29 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     return self.GetEntries(root_item=root_item)
 
   def _ParseItem(self, olecf_item):
-    event_container = OleCfItemEventContainer(olecf_item)
-    self.FillContainer(event_container, olecf_item)
+    creation_time, modification_time = self.GetTimestamps(olecf_item)
 
-    if len(event_container):
-      yield event_container
+    if creation_time:
+      yield OleCfItemEvent(
+          creation_time, eventdata.EventTimestamp.CREATION_TIME, olecf_item)
+
+    if modification_time:
+      yield OleCfItemEvent(
+          modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+          olecf_item)
 
     for sub_item in olecf_item.sub_items:
-      for sub_container in self._ParseItem(sub_item):
-        if len(event_container):
-          yield sub_container
+      for sub_event_object in self._ParseItem(sub_item):
+        yield sub_event_object
 
   def GetEntries(self, root_item, **unused_kwargs):
-    """Yields an event container for every ."""
-    for event_container in self._ParseItem(root_item):
-      yield event_container
+    """Yields an event object for every entry."""
+    record_yielded = False
+    for event_object in self._ParseItem(root_item):
+      yield event_object
+      record_yielded = True
+
+    # If no record has been created, let's add one in.
+    if not record_yielded:
+      yield OleCfItemEvent(
+          0, eventdata.EventTimestamp.CREATION_TIME, root_item)

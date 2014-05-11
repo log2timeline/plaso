@@ -118,7 +118,7 @@ class Timestamp(object):
       return datetime_object.astimezone(timezone)
     except OverflowError as exception:
       logging.error(
-          u'Unable to copy {0:s} to a datetime object with error: {1:s}'.format(
+          u'Unable to copy {0:d} to a datetime object with error: {1:s}'.format(
               timestamp, exception))
 
     return datetime_object

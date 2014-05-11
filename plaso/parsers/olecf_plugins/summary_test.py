@@ -42,28 +42,24 @@ class TestSummaryInfoPlugin(test_lib.OleCfPluginTestCase):
     """Tests the Process function on a SummaryInfo stream."""
     event_generator = self._ParseOleCfFileWithPlugin(
         self._test_file, self._summary_plugin)
-    event_containers = self._GetEventContainers(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
-    # There should only be one summary info stream.
-    self.assertEquals(len(event_containers), 1)
+    # There is one summary info stream with three event objects.
+    self.assertEquals(len(event_objects), 3)
 
-    event_container = event_containers[0]
-    self.assertEquals(len(event_container.events), 3)
-    self.assertEquals(event_container.name, u'Summary Information')
+    event_object = event_objects[0]
+    self.assertEquals(event_object.name, u'Summary Information')
 
-    self.assertEquals(event_container.title, u'Table of Context')
-    self.assertEquals(event_container.author, u'DAVID NIDES')
-    self.assertEquals(event_container.template, u'Normal.dotm')
-    self.assertEquals(event_container.last_saved_by, u'Nides')
-    self.assertEquals(event_container.revision_number, u'4')
-    self.assertEquals(event_container.number_of_characters, 18)
-    self.assertEquals(event_container.application, u'Microsoft Office Word')
-    self.assertEquals(event_container.security, 0)
-
-    event_object = event_container.events[0]
+    self.assertEquals(event_object.title, u'Table of Context')
+    self.assertEquals(event_object.author, u'DAVID NIDES')
+    self.assertEquals(event_object.template, u'Normal.dotm')
+    self.assertEquals(event_object.last_saved_by, u'Nides')
+    self.assertEquals(event_object.revision_number, u'4')
+    self.assertEquals(event_object.number_of_characters, 18)
+    self.assertEquals(event_object.application, u'Microsoft Office Word')
+    self.assertEquals(event_object.security, 0)
 
     self.assertEquals(event_object.timestamp_desc, u'Document Creation Time')
-
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-12-10 18:38:00')
     self.assertEquals(event_object.timestamp, expected_timestamp)
@@ -94,26 +90,22 @@ class TestSummaryInfoPlugin(test_lib.OleCfPluginTestCase):
     """Tests the Process function on a SummaryInfo stream."""
     event_generator = self._ParseOleCfFileWithPlugin(
         self._test_file, self._document_summary_plugin)
-    event_containers = self._GetEventContainers(event_generator)
+    event_objects = self._GetEventObjects(event_generator)
 
-    # There should only be one summary info stream.
-    self.assertEquals(len(event_containers), 1)
+    # There should only be one summary info stream with one event.
+    self.assertEquals(len(event_objects), 1)
 
-    event_container = event_containers[0]
+    event_object = event_objects[0]
+    self.assertEquals(event_object.name, u'Document Summary Information')
 
-    self.assertEquals(len(event_container.events), 1)
-    self.assertEquals(event_container.name, u'Document Summary Information')
-
-    self.assertEquals(event_container.number_of_lines, 1)
-    self.assertEquals(event_container.number_of_paragraphs, 1)
-    self.assertEquals(event_container.company, u'KPMG')
-    self.assertFalse(event_container.shared_document)
-    self.assertEquals(event_container.application_version, u'14.0')
+    self.assertEquals(event_object.number_of_lines, 1)
+    self.assertEquals(event_object.number_of_paragraphs, 1)
+    self.assertEquals(event_object.company, u'KPMG')
+    self.assertFalse(event_object.shared_document)
+    self.assertEquals(event_object.application_version, u'14.0')
 
     # TODO: add support for:
-    # self.assertEquals(event_container.is_shared, False)
-
-    event_object = event_container.events[0]
+    # self.assertEquals(event_object.is_shared, False)
 
     expected_msg = (
         u'Number of lines: 1 '

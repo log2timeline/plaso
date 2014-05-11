@@ -71,36 +71,6 @@ class JsonAnalysisReportSerializer(interface.AnalysisReportSerializer):
     pass
 
 
-class JsonEventContainerSerializer(interface.EventContainerSerializer):
-  """Class that implements a json event container serializer."""
-
-  @classmethod
-  def ReadSerialized(cls, json_string):
-    """Reads an event container from serialized form.
-
-    Args:
-      json_string: a JSON string containing the serialized form.
-
-    Returns:
-      An event container (instance of EventContainer).
-    """
-    # TODO: implement.
-    pass
-
-  @classmethod
-  def WriteSerialized(cls, event_container):
-    """Writes an event container to serialized form.
-
-    Args:
-      event_container: an event container (instance of EventContainer).
-
-    Returns:
-      A JSON string containing the serialized form.
-    """
-    # TODO: implement.
-    pass
-
-
 class JsonEventObjectSerializer(interface.EventObjectSerializer):
   """Class that implements the json event object serializer."""
 

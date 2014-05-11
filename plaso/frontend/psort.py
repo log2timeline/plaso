@@ -259,6 +259,10 @@ def ParseStorage(my_args):
     pfilter.TimeRangeCache.SetUpperTimestamp(timestamp + range_operator)
 
     # Check if the filter has a date filter built in and warn if so.
+    # TODO: There is an issue with this approach. If one wants to use a date
+    # slice and a filter only to select fields, not to double filter the results
+    # a warning is displayed. This needs to be fixed so that it does not do
+    # that.
     if my_args.filter:
       if 'date' in my_args.filter or 'timestamp' in my_args.filter:
         logging.warning(

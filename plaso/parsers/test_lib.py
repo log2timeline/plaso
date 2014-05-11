@@ -37,51 +37,10 @@ class ParserTestCase(unittest.TestCase):
   # conventions.
   maxDiff = None
 
-  def _GetEventContainer(self, event_generator):
-    """Retrieves the event container from the event generator.
-
-    This function expects that there is only 1 event container returned by the
-    event generator.
-
-    Args:
-      event_generator: the event generator as returned by the parser.
-
-    Returns:
-      An event container (instances of EventContainer).
-    """
-    events = list(event_generator)
-    self.assertEquals(len(events), 1)
-
-    event_container = events[0]
-    self.assertIsInstance(event_container, event.EventContainer)
-
-    return event_container
-
-  def _GetEventContainers(self, event_generator):
-    """Retrieves the event containers from the event generator.
-
-    This function does not allow for nested event event containers.
-
-    Args:
-      event_generator: the event generator as returned by the parser.
-
-    Returns:
-      A list of event containers (instances of EventContainer).
-    """
-    event_containers = []
-
-    for event_container in event_generator:
-      self.assertIsInstance(event_container, event.EventContainer)
-      self.assertNotEquals(event_container.containers, None)
-      event_containers.append(event_container)
-
-    return event_containers
-
   def _GetEventObjects(self, event_generator):
     """Retrieves the event objects from the event_generator.
 
-    This function will extract event objects from event containers. It
-    does not allow for nested event event containers.
+    This function will extract event objects from a generator.
 
     Args:
       event_generator: the event generator as returned by the parser.
@@ -92,15 +51,8 @@ class ParserTestCase(unittest.TestCase):
     event_objects = []
 
     for event_object in event_generator:
-      if isinstance(event_object, event.EventContainer):
-        self.assertNotEquals(event_object.containers, None)
-
-        event_objects.extend(event_object.events)
-      else:
-        event_objects.append(event_object)
-
-    for event_object in event_objects:
       self.assertIsInstance(event_object, event.EventObject)
+      event_objects.append(event_object)
 
     return event_objects
 

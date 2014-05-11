@@ -21,8 +21,6 @@ import abc
 import logging
 
 from plaso.lib import errors
-from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import plugin
 
 
@@ -82,15 +80,17 @@ class OlecfPlugin(plugin.BasePlugin):
   def GetEntries(self, root_item=None, items=None, **kwargs):
     """Extract and return EventObjects from the data structure."""
 
-  def FillContainer(self, event_container, olecf_item):
-    """Takes an EventContainer and appends standard timestamps to it.
+  def GetTimestamps(self, olecf_item):
+    """Takes an OLECF object and returns extracted timestamps.
 
     Args:
-      event_container: An event container (instance of EventContainer).
       olecf_item: A OLE CF item object (instance of pyolecf.item).
+
+    Returns:
+      A tuple of two timestamps: created and modified.
     """
-    if event_container is None:
-      return
+    if not olecf_item:
+      return None, None
 
     try:
       creation_time = olecf_item.get_creation_time_as_integer()
@@ -110,26 +110,14 @@ class OlecfPlugin(plugin.BasePlugin):
 
     # If no useful events, return early.
     if not creation_time and not modification_time:
-      return
+      return None, None
 
-    # If the event container does not contain any events
-    # make sure to add at least one. Office template documents sometimes
-    # contain a creation time of -1 (0xffffffffffffffff).
-    if (creation_time not in [0, 0xffffffffffffffffL] or
-        (modification_time == 0 and event_container.number_of_events == 0)):
-      if creation_time == 0xffffffffffffffffL:
-        creation_time = 0
+    # Office template documents sometimes contain a creation time
+    # of -1 (0xffffffffffffffff).
+    if creation_time == 0xffffffffffffffffL:
+      creation_time = 0
 
-      event_container.Append(event.FiletimeEvent(
-          creation_time,
-          eventdata.EventTimestamp.CREATION_TIME,
-          event_container.data_type))
-
-    if modification_time != 0:
-      event_container.Append(event.FiletimeEvent(
-          modification_time,
-          eventdata.EventTimestamp.MODIFICATION_TIME,
-          event_container.data_type))
+    return creation_time, modification_time
 
 
 class OleDefinitions(object):
