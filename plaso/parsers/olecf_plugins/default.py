@@ -49,7 +49,7 @@ class OleCfItemEvent(event.FiletimeEvent):
 
 
 class DefaultOleCFPlugin(interface.OlecfPlugin):
-  """The default OLE CF file behavior."""
+  """Class to define the default OLE CF file plugin."""
 
   NAME = 'olecf_default'
 
