@@ -46,7 +46,10 @@ from plaso import parsers
 from plaso import preprocessors
 
 from plaso.collector import collector
+from plaso.collector import scanner
 
+from plaso.frontend import frontend
+# TODO: why does preg and psort get imported here?
 from plaso.frontend import preg
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
@@ -75,6 +78,19 @@ from plaso.proto import plaso_storage_pb2
 
 from plaso.winreg import interface as win_registry_interface
 from plaso.winreg import winregistry
+
+
+class PshellFrontend(frontend.ExtractionFrontend):
+  """Class that implements the pshell front-end."""
+
+  _BYTES_IN_A_MIB = 1024 * 1024
+
+  def __init__(self):
+    """Initializes the front-end object."""
+    input_reader = engine.StdinEngineInputReader()
+    output_writer = engine.StdoutEngineOutputWriter()
+
+    super(PshellFrontend, self).__init__(input_reader, output_writer)
 
 
 def FindAllOutputs():
@@ -176,7 +192,6 @@ def Main():
   options.image = False
   options.image_offset = None
   options.image_offset_bytes = None
-  options.local = True
   options.old_preprocess = False
   options.open_files = False
   options.output = os.path.join(temp_location, 'wheredidmytimelinego.dump')
@@ -192,30 +207,29 @@ def Main():
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
   logging.basicConfig(format=format_str)
 
-  l2t_engine = engine.Engine(options)
+  front_end = PshellFrontend()
 
-  # TODO: add support for scanning for the source path spec.
-  l2t_engine.SetSource(options.filename, None)
+  try:
+    front_end.ParseOptions(options, 'filename')
+    front_end.SetStorageFile(options.output)
+  except errors.BadConfigOption as exception:
+    logging.error('{0:s}'.format(exception))
 
-  if options.image:
-    if options.image_offset_bytes is not None:
-      byte_offset = options.image_offset_bytes
-    elif options.image_offset is not None:
+  # TODO: move to frontend object.
+  if options.image and options.image_offset_bytes is None:
+    if options.image_offset is not None:
       bytes_per_sector = getattr(options, 'bytes_per_sector', 512)
-      byte_offset = options.image_offset * bytes_per_sector
+      options.image_offset_bytes = options.image_offset * bytes_per_sector
     else:
-      byte_offset = 0
-
-    l2t_engine.SetImageInformation(byte_offset)
-
-  l2t_engine.SetOutput(options.output)
+      options.image_offset_bytes = 0
 
   namespace = {}
 
   pre_obj = event.PreprocessObject()
 
   namespace.update(globals())
-  namespace.update({'l2t': l2t_engine, 'pre_obj': pre_obj, 'options': options})
+  namespace.update({
+      'frontend': front_end, 'pre_obj': pre_obj, 'options': options})
 
   # Include few random phrases that get thrown in once the user exists the
   # shell.
@@ -275,10 +289,10 @@ def Main():
       '--------------------------------------------------------------\n'
       'This is the place where everything is allowed, as long as it is '
       'written in Python.\n\n'
-      'Objects available:\n\toptions - set of options to the engine.\n'
-      '\tl2t - A copy of the log2timeline engine.\n'
+      'Objects available:\n\toptions - set of options to the frontend.\n'
+      '\tfrontend - A copy of the pshell frontend.\n'
       '\n'
-      'All libraries have been imported and can be used, see help(engine) '
+      'All libraries have been imported and can be used, see help(frontend) '
       'or help(parser).\n'
       '\n'
       'Base methods:\n'

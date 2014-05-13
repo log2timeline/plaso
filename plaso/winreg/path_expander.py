@@ -42,7 +42,7 @@ class WinRegistryKeyPathExpander(object):
 
        An attribute is defined as anything within a curly bracket, eg.
        "\\System\\{my_attribute}\\Path\\Keyname". If the attribute my_attribute
-       is defined in either the pre processing object or the Registry objects
+       is defined in either the preprocessing object or the Registry objects
        cache it's value will be replaced with the attribute name, e.g.
        "\\System\\MyValue\\Path\\Keyname".
 
@@ -59,7 +59,7 @@ class WinRegistryKeyPathExpander(object):
 
     Raises:
       KeyError: If an attribute name is in the key path yet not set in
-                either the Registry objects cache nor in the pre processing
+                either the Registry objects cache nor in the preprocessing
                 object a KeyError will be raised.
     """
     expanded_key_path = u''

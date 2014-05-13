@@ -21,15 +21,12 @@ import logging
 import os
 import pdb
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso import parsers   # pylint: disable=unused-import
 from plaso.lib import classifier
 from plaso.lib import errors
-from plaso.lib import pfilter
-from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import utils
 
@@ -46,7 +43,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
   """
 
   def __init__(
-      self, identifier, process_queue, storage_queue_producer, config, pre_obj):
+      self, identifier, process_queue, storage_queue_producer, pre_obj,
+      parsers):
     """Initializes the event extraction worker object.
 
     Args:
@@ -54,33 +52,30 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       process_queue: the process queue (instance of Queue).
       storage_queue_producer: the storage queue producer (instance of
                               EventObjectQueueProducer).
-      config: A config object that contains all the tool's configuration.
       pre_obj: A preprocess object containing information collected from
                image (instance of PreprocessObject).
+      parsers: A list of parser objects to use for processing.
     """
     super(EventExtractionWorker, self).__init__(process_queue)
+    self._debug_mode = False
+    self._filter_object = None
+    self._identifier = identifier
+    self._mount_path = None
+    self._open_files = False
+    self._parsers = parsers
+    self._pre_obj = pre_obj
+
     # We need a resolver context per process to prevent multi processing
     # issues with file objects stored in images.
     self._resolver_context = context.Context()
-    self._identifier = identifier
-    self._parsers = putils.FindAllParsers(
-        pre_obj, config, getattr(config, 'parsers', ''))
-    self._pre_obj = pre_obj
+    self._single_process_mode = False
     self._storage_queue_producer = storage_queue_producer
+    self._text_prepend = None
+
     if pre_obj:
       self._user_mapping = pre_obj.GetUserMappings()
     else:
       self._user_mapping = {}
-
-    self.config = config
-
-    self._debug_mode = config.debug
-    self._single_thread_mode = config.single_thread
-
-    self._filter = None
-    filter_query = getattr(config, 'filter', None)
-    if filter_query:
-      self._filter = pfilter.GetMatcher(filter_query)
 
   def _ConsumePathSpec(self, path_spec):
     """Consumes a path specification callback for ConsumePathSpecs."""
@@ -98,7 +93,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       logging.warning(u'Unable to parse file: {0:s} with error: {1:s}'.format(
           path_spec.comparable, exception))
 
-    if self.config.open_files:
+    if self._open_files:
       try:
         for sub_file_entry in classifier.Classifier.SmartOpenFiles(file_entry):
           self.ParseFile(sub_file_entry)
@@ -113,9 +108,9 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # Need to apply time skew, and other information extracted from
     # the configuration of the tool.
 
-    # TODO: dfVFS refactor: deperecate text_prepend in favor of an event tag.
-    if self.config.text_prepend:
-      event_object.text_prepend = self.config.text_prepend
+    # TODO: deperecate text_prepend in favor of an event tag.
+    if self._text_prepend:
+      event_object.text_prepend = self._text_prepend
 
     file_path = getattr(file_entry.path_spec, 'location', file_entry.name)
     # If we are parsing a mount point we don't want to include the full
@@ -125,14 +120,10 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # TODO: Solve this differently, quite possibly inside dfVFS using mount
     # path spec.
     type_indicator = file_entry.path_spec.type_indicator
-    if type_indicator == definitions.TYPE_INDICATOR_OS and getattr(
-        self.config, 'os', None):
-      mount_path = getattr(self.config, 'filename', '')
-      if mount_path:
-        # Let's keep the end separator so paths begin with '/' or '\'.
-        if mount_path.endswith(os.sep):
-          mount_path = mount_path[:-1]
-        _, _, file_path = file_path.partition(mount_path)
+    if (type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS and
+        self._mount_path):
+      if self._mount_path:
+        _, _, file_path = file_path.partition(self._mount_path)
 
     # TODO: dfVFS refactor: move display name to output since the path
     # specification contains the full information.
@@ -154,7 +145,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       if username:
         event_object.username = username
 
-    if not self._filter or self._filter.Matches(event_object):
+    if not self._filter_object or self._filter_object.Matches(event_object):
       self._storage_queue_producer.ProduceEventObject(event_object)
 
   def ParseFile(self, file_entry):
@@ -208,9 +199,9 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
                 file_entry.path_spec.comparable))
         logging.exception(exception)
 
-        # Check for debug mode and single-threaded, then we would like
+        # Check for debug mode and single process mode, then we would like
         # to debug this problem.
-        if self._single_thread_mode and self._debug_mode:
+        if self._single_process_mode and self._debug_mode:
           pdb.post_mortem()
 
     logging.debug(u'Done parsing: {0:s}'.format(
@@ -230,3 +221,61 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         self._identifier, os.getpid()))
 
     self._resolver_context.Empty()
+
+  def SetDebugMode(self, debug_mode):
+    """Sets the debug mode.
+
+    Args:
+      debug_mode: boolean value to indicate if the debug mode should
+                  be enabled.
+    """
+    self._debug_mode = debug_mode
+
+  def SetFilterObject(self, filter_object):
+    """Sets the filter object.
+
+    Args:
+      filter_object: the filter object (instance of objectfilter.Filter).
+    """
+    self._filter_object = filter_object
+
+  def SetMountPath(self, mount_path):
+    """Sets the mount path.
+
+    Args:
+      mount_path: string containing the mount path.
+    """
+    # Remove a trailing path separator from the mount path so the relative
+    # paths will start with a path separator.
+    if mount_path and mount_path.endswith(os.sep):
+      mount_path = mount_path[:-1]
+
+    self._mount_path = mount_path
+
+  # TODO: rename this mode.
+  def SetOpenFiles(self, open_files):
+    """Sets the open files mode.
+
+    Args:
+      file_files: boolean value to indicate if the worker should scan for
+                  sun file entries inside files.
+    """
+    self._open_files = open_files
+
+  def SetSingleProcessMode(self, single_process_mode):
+    """Sets the single process mode.
+
+    Args:
+      single_process_mode: boolean value to indicate if the single process mode
+                          should be enabled.
+    """
+    self._single_process_mode = single_process_mode
+
+  def SetTextPrepend(self, text_prepend):
+    """Sets the text prepend.
+
+    Args:
+      text_prepend: string that contains the text to prepend to every
+                    event object.
+    """
+    self._text_prepend = text_prepend
