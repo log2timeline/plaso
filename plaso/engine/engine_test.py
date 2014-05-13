@@ -25,11 +25,11 @@ from dfvfs.helpers import file_system_searcher
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
-from plaso.collector import collector
-from plaso.lib import engine
+from plaso.engine import collector
+from plaso.engine import engine
+from plaso.engine import worker
 from plaso.lib import event
 from plaso.lib import queue
-from plaso.lib import worker
 
 
 class EngineTest(unittest.TestCase):
