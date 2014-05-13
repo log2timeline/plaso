@@ -49,6 +49,7 @@ from IPython.core import magic
 from plaso import preprocessors
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
+from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -205,7 +206,10 @@ class PregFrontend(frontend.Frontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    super(PregFrontend, self).__init__()
+    input_reader = engine.StdinEngineInputReader()
+    output_writer = engine.StdoutEngineOutputWriter()
+
+    super(PregFrontend, self).__init__(input_reader, output_writer)
 
   def ParseOptions(self, options):
     """Parses the options.
@@ -349,7 +353,7 @@ class PregFrontend(frontend.Frontend):
       searchers = self._GetSearchersForImage(path_spec.parent, options)
       _, searcher = searchers[0]
 
-      # Run pre processing on image.
+      # Run preprocessing on image.
       StartPreProcess()
 
       pre_plugin_list = preprocessors.PreProcessList(RegCache.pre_obj)

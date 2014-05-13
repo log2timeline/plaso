@@ -76,6 +76,10 @@ def FindAllParsers(pre_obj=None, config=None, parser_filter_string=''):
 
   results = {}
   results['all'] = []
+  # The pre_obj adds the value of the parser knowing time zone information,
+  # and other values that the preprocssing object collects.
+  # TODO: remove pre_obj and config pass specific values e.g. parser_expression.
+  # Also see if some of these values can be passed after initialization.
   for parser_obj in _FindClasses(parser.BaseParser, pre_obj, config):
     add = False
     if not (filter_exclude or filter_include):

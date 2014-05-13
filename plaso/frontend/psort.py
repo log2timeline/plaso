@@ -300,7 +300,7 @@ def ParseStorage(my_args):
 
     if my_args.analysis_plugins:
       logging.info('Starting analysis plugins.')
-      # Within all pre processing objects, try to get the last one that has
+      # Within all preprocessing objects, try to get the last one that has
       # time zone information stored in it, the highest chance of it containing
       # the information we are seeking (defaulting to the last one).
       pre_objs = store.GetStorageInformation()
@@ -327,7 +327,7 @@ def ParseStorage(my_args):
 
       # Assign the preprocessing object to the storage.
       # This is normally done in the construction of the storage object,
-      # however we cannot do that here since the pre processing object is
+      # however we cannot do that here since the preprocessing object is
       # stored inside the storage file, so we need to open it first to
       # be able to read it in, before we make changes to it. Thus we need
       # to access this protected member of the class.

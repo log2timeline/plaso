@@ -23,6 +23,7 @@ import unittest
 from dfvfs.lib import definitions
 
 from plaso.collector import scanner
+from plaso.lib import engine
 
 
 class UserInputException(Exception):
@@ -80,7 +81,8 @@ class FileSystemScannerTest(unittest.TestCase):
     Args:
       test_file: the path of the test file.
     """
-    test_scanner = TestFileSystemScanner()
+    test_scanner = TestFileSystemScanner(
+        self._input_reader, self._output_writer)
 
     path_spec = test_scanner.Scan(test_file)
     self.assertNotEquals(path_spec, None)
@@ -94,11 +96,13 @@ class FileSystemScannerTest(unittest.TestCase):
     Args:
       test_file: the path of the test file.
     """
-    test_scanner = TestFileSystemScanner()
+    test_scanner = TestFileSystemScanner(
+        self._input_reader, self._output_writer)
     with self.assertRaises(UserInputException):
       _ = test_scanner.Scan(test_file)
 
-    test_scanner = TestFileSystemScanner()
+    test_scanner = TestFileSystemScanner(
+        self._input_reader, self._output_writer)
     test_scanner.SetPartitionOffset(0x0002c000)
 
     path_spec = test_scanner.Scan(test_file)
@@ -107,12 +111,14 @@ class FileSystemScannerTest(unittest.TestCase):
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(test_scanner.partition_offset, 180224)
 
-    test_scanner = TestFileSystemScanner()
+    test_scanner = TestFileSystemScanner(
+        self._input_reader, self._output_writer)
     test_scanner.SetPartitionOffset(0x00030000)
     with self.assertRaises(UserInputException):
       _ = test_scanner.Scan(test_file)
 
-    test_scanner = TestFileSystemScanner()
+    test_scanner = TestFileSystemScanner(
+        self._input_reader, self._output_writer)
     test_scanner.SetPartitionNumber(1)
 
     path_spec = test_scanner.Scan(test_file)
@@ -121,7 +127,8 @@ class FileSystemScannerTest(unittest.TestCase):
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(test_scanner.partition_offset, 180224)
 
-    test_scanner = TestFileSystemScanner()
+    test_scanner = TestFileSystemScanner(
+        self._input_reader, self._output_writer)
     test_scanner.SetPartitionNumber(7)
     with self.assertRaises(UserInputException):
       _ = test_scanner.Scan(test_file)
@@ -132,7 +139,8 @@ class FileSystemScannerTest(unittest.TestCase):
     Args:
       test_file: the path of the test file.
     """
-    test_scanner = TestFileSystemScanner()
+    test_scanner = TestFileSystemScanner(
+        self._input_reader, self._output_writer)
 
     path_spec = test_scanner.Scan(test_file)
     self.assertNotEquals(path_spec, None)
@@ -140,6 +148,11 @@ class FileSystemScannerTest(unittest.TestCase):
         path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(test_scanner.partition_offset, 0)
     self.assertEquals(test_scanner.vss_stores, [1, 2])
+
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    self._input_reader = engine.StdinEngineInputReader()
+    self._output_writer = engine.StdoutEngineOutputWriter()
 
   def testScan(self):
     """Tests file systems scanning."""

@@ -101,7 +101,7 @@ class WindowsSystemRegistryPath(interface.PreprocessGetPath):
   """Get the system registry path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'sysregistry'
-  PATH = '(Windows|WinNT|WINNT35|WTSRV)/System32/config'
+  PATH = '/(Windows|WinNT|WINNT35|WTSRV)/System32/config'
 
 
 class WindowsSystemRootPath(interface.PreprocessGetPath):
@@ -109,7 +109,7 @@ class WindowsSystemRootPath(interface.PreprocessGetPath):
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'systemroot'
   # TODO: %SystemRoot% should correspond to C:\Windows not C:\Windows\System32.
-  PATH = '(Windows|WinNT|WINNT35|WTSRV)/System32'
+  PATH = '/(Windows|WinNT|WINNT35|WTSRV)/System32'
 
 
 class WindowsTimeZone(interface.WindowsRegistryPreprocess):
@@ -381,4 +381,4 @@ class WindowsWinDirPath(interface.PreprocessGetPath):
   """Get the system path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'windir'
-  PATH = '(Windows|WinNT|WINNT35|WTSRV)'
+  PATH = '/(Windows|WinNT|WINNT35|WTSRV)'
