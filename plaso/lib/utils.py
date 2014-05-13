@@ -260,6 +260,9 @@ def GetParserListsFromString(parser_string):
   """
   include = []
   exclude = []
+
+  preset_categories = presets.categories.keys()
+
   for filter_string in parser_string.split(','):
     filter_string = filter_string.strip()
     if not filter_string:
@@ -271,9 +274,9 @@ def GetParserListsFromString(parser_string):
       filter_strings_use = include
 
     filter_string_lower = filter_string.lower()
-    if filter_string_lower in presets.categories:
-      for preset_parser in presets.categories.get(filter_string_lower):
-        filter_strings_use.append(preset_parser.lower())
+    if filter_string_lower in preset_categories:
+      filter_strings_use.extend(
+          presets.GetParsersFromCategory(filter_string_lower))
     else:
       filter_strings_use.append(filter_string_lower)
 
