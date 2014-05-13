@@ -69,7 +69,7 @@ class BasePlugin(object):
 
     Args:
       pre_obj: The preprocessing object that contains information gathered
-               during the pre processing stage. This object contains useful
+               during the preprocessing stage. This object contains useful
                information that can be utilized by the plugin.
     """
     self._knowledge_base = pre_obj
@@ -145,7 +145,7 @@ def GetRegisteredPlugins(
 
   Args:
     parent_class: The top level class of the specific plugin to query.
-    pre_obj: The pre processing object or the knowledge base.
+    pre_obj: The preprocessing object or the knowledge base.
     parser_filter_string: Optional comma separated list of parsers and plugins
                           to include. The default is an empty string.
 

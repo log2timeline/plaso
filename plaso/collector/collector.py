@@ -63,7 +63,7 @@ class Collector(queue.PathSpecQueueProducer):
 
   def __init__(
       self, process_queue, storage_queue_producer, source_path,
-      source_path_spec, resolver_context):
+      source_path_spec, resolver_context=None):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -78,13 +78,13 @@ class Collector(queue.PathSpecQueueProducer):
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
                         scanner. The default is None.
-      resolver_context: The resolver context (instance of dfvfs.Context).
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None.
     """
     super(Collector, self).__init__(process_queue)
-    self._filter_file_path = None
+    self._filter_find_specs = None
     self._fs_collector = FileSystemCollector(
-        process_queue, storage_queue_producer, resolver_context)
-    self._process_vss = None
+        process_queue, storage_queue_producer)
     self._resolver_context = resolver_context
     # TODO: remove the need to pass source_path
     self._source_path = os.path.abspath(source_path)
@@ -99,18 +99,18 @@ class Collector(queue.PathSpecQueueProducer):
     """Exits a with statement."""
     return
 
-  def _ProcessImage(self, volume_path_spec, filter_file_path=None):
+  def _ProcessImage(self, volume_path_spec, find_specs=None):
     """Processes a volume within a storage media image.
 
     Args:
       volume_path_spec: The path specification of the volume containing
                         the file system.
-      filter_file_path: Optional path of the filter file. The default is None.
+      find_specs: Optional list of find specifications (instances of
+                  dfvfs.FindSpec). The default is None.
     """
-    if filter_file_path:
-      logging.debug(
-          u'Collecting from image file: {0:s} with filter: {1:s}'.format(
-              self._source_path, filter_file_path))
+    if find_specs:
+      logging.debug(u'Collecting from image file: {0:s} with filter'.format(
+          self._source_path))
     else:
       logging.debug(u'Collecting from image file: {0:s}'.format(
           self._source_path))
@@ -129,31 +129,32 @@ class Collector(queue.PathSpecQueueProducer):
 
     try:
       self._fs_collector.Collect(
-          file_system, path_spec, filter_file_path=filter_file_path)
+          file_system, path_spec, find_specs=find_specs)
     except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
       logging.warning(u'{0:s}'.format(exception))
 
-      if filter_file_path:
+      if find_specs:
         logging.debug(u'Collection from image with filter FAILED.')
       else:
         logging.debug(u'Collection from image FAILED.')
       return
 
-    if self._process_vss:
-      self._ProcessVSS(volume_path_spec, filter_file_path=filter_file_path)
+    if self._vss_stores:
+      self._ProcessVSS(volume_path_spec, find_specs=find_specs)
 
-    if filter_file_path:
+    if find_specs:
       logging.debug(u'Collection from image with filter COMPLETED.')
     else:
       logging.debug(u'Collection from image COMPLETED.')
 
-  def _ProcessVSS(self, volume_path_spec, filter_file_path=None):
+  def _ProcessVSS(self, volume_path_spec, find_specs=None):
     """Processes a VSS volume within a storage media image.
 
     Args:
       volume_path_spec: The path specification of the volume containing
                         the file system.
-      filter_file_path: Optional path of the filter file. The default is None.
+      find_specs: Optional list of find specifications (instances of
+                  dfvfs.FindSpec). The default is None.
     """
     logging.info(u'Processing VSS.')
 
@@ -166,18 +167,15 @@ class Collector(queue.PathSpecQueueProducer):
 
     number_of_vss = vss_file_entry.number_of_sub_file_entries
 
-    if self._vss_stores:
-      # In plaso 1 represents the first store index in dfvfs and pyvshadow 0
-      # represents the first store index so 1 is subtracted.
-      vss_store_range = [store_nr - 1 for store_nr in self._vss_stores]
-    else:
-      vss_store_range = range(0, number_of_vss)
+    # In plaso 1 represents the first store index in dfvfs and pyvshadow 0
+    # represents the first store index so 1 is subtracted.
+    vss_store_range = [store_nr - 1 for store_nr in self._vss_stores]
 
     for store_index in vss_store_range:
-      if filter_file_path:
+      if find_specs:
         logging.info((
-            u'Collecting from VSS volume: {0:d} out of: {1:d} with filter: '
-            u'{2:s}').format(store_index + 1, number_of_vss, filter_file_path))
+            u'Collecting from VSS volume: {0:d} out of: {1:d} '
+            u'with filter').format(store_index + 1, number_of_vss))
       else:
         logging.info(u'Collecting from VSS volume: {0:d} out of: {1:d}'.format(
             store_index + 1, number_of_vss))
@@ -194,11 +192,11 @@ class Collector(queue.PathSpecQueueProducer):
 
       try:
         self._fs_collector.Collect(
-            file_system, path_spec, filter_file_path=filter_file_path)
+            file_system, path_spec, find_specs=find_specs)
       except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
         logging.warning(u'{0:s}'.format(exception))
 
-        if filter_file_path:
+        if find_specs:
           logging.debug(
               u'Collection from VSS store: {0:d} with filter FAILED.'.format(
                   store_index + 1))
@@ -207,7 +205,7 @@ class Collector(queue.PathSpecQueueProducer):
               store_index + 1))
         return
 
-      if filter_file_path:
+      if find_specs:
         logging.debug(
             u'Collection from VSS store: {0:d} with filter COMPLETED.'.format(
                 store_index + 1))
@@ -244,43 +242,42 @@ class Collector(queue.PathSpecQueueProducer):
         try:
           self._fs_collector.Collect(
               file_system, self._source_path_spec,
-              filter_file_path=self._filter_file_path)
+              find_specs=self._filter_find_specs)
         except (dfvfs_errors.AccessError,
                 dfvfs_errors.BackEndError) as exception:
           logging.warning(u'{0:s}'.format(exception))
 
     else:
       self._ProcessImage(
-          self._source_path_spec.parent,
-          filter_file_path=self._filter_file_path)
+          self._source_path_spec.parent, find_specs=self._filter_find_specs)
 
     self.SignalEndOfInput()
 
-  def SetFilter(self, filter_file_path):
-    """Sets the collection filter.
+  def SetFilter(self, filter_find_specs):
+    """Sets the collection filter find specifications.
 
     Args:
-      filter_file_path: The path of the filter file.
+      filter_find_specs: List of filter find specifications (instances of
+                         dfvfs.FindSpec).
     """
-    self._filter_file_path = filter_file_path
+    self._filter_find_specs = filter_find_specs
 
-  def SetVssInformation(self, vss_stores=None):
+  def SetVssInformation(self, vss_stores):
     """Sets the Volume Shadow Snapshots (VSS) information.
 
        This function will enable VSS collection.
 
     Args:
-      vss_stores: Optional range of VSS stores to include in the collection.
-                  Where 1 represents the first store. The default is None.
+      vss_stores: The range of VSS stores to include in the collection,
+                  where 1 represents the first store.
     """
-    self._process_vss = True
     self._vss_stores = vss_stores
 
 
 class FileSystemCollector(queue.PathSpecQueueProducer):
   """Class that implements a file system collector object."""
 
-  def __init__(self, process_queue, storage_queue_producer, resolver_context):
+  def __init__(self, process_queue, storage_queue_producer):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -291,12 +288,10 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
       process_queue: The files processing queue (instance of Queue).
       storage_queue_producer: the storage queue producer (instance of
                               EventObjectQueueProducer).
-      resolver_context: The resolver context (instance of dfvfs.Context).
     """
     super(FileSystemCollector, self).__init__(process_queue)
     self._duplicate_file_check = False
     self._hashlist = {}
-    self._resolver_context = resolver_context
     self._storage_queue_producer = storage_queue_producer
     self.collect_directory_metadata = True
 
@@ -394,16 +389,16 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
       except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
         logging.warning(u'{0:s}'.format(exception))
 
-  def Collect(self, file_system, path_spec, filter_file_path=None):
+  def Collect(self, file_system, path_spec, find_specs=None):
     """Collects files from the file system.
 
     Args:
       file_system: The file system (instance of dfvfs.FileSystem).
       path_spec: The path specification (instance of dfvfs.PathSpec).
-      filter_file_path: Optional path of the filter file. The default is None.
+      find_specs: Optional list of find specifications (instances of
+                  dfvfs.FindSpec). The default is None.
     """
-    if filter_file_path:
-      find_specs = BuildFindSpecsFromFile(filter_file_path)
+    if find_specs:
       searcher = file_system_searcher.FileSystemSearcher(file_system, path_spec)
 
       for path_spec in searcher.Find(find_specs=find_specs):
@@ -413,36 +408,3 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
       file_entry = file_system.GetFileEntryByPathSpec(path_spec)
 
       self._ProcessDirectory(file_entry)
-
-
-def BuildFindSpecsFromFile(filter_file_path):
-  """Returns a list of find specification from a filter file."""
-  find_specs = []
-
-  with open(filter_file_path, 'rb') as file_object:
-    for line in file_object:
-      line = line.strip()
-      if line.startswith(u'#'):
-        continue
-
-      if not line.startswith(u'/'):
-        logging.warning((
-            u'The filter string must be defined as an abolute path: '
-            u'{0:s}').format(line))
-        continue
-
-      _, _, file_path = line.rstrip().rpartition(u'/')
-      if not file_path:
-        logging.warning(
-            u'Unable to parse the filter string: {0:s}'.format(line))
-        continue
-
-      # Convert the filter paths into a list of path segments and strip
-      # the root path segment.
-      path_segments = line.split(u'/')
-      path_segments.pop(0)
-
-      find_specs.append(file_system_searcher.FindSpec(
-          location_regex=path_segments, case_sensitive=False))
-
-  return find_specs

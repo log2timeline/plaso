@@ -21,7 +21,6 @@ import argparse
 import locale
 import logging
 import multiprocessing
-import os
 import sys
 import time
 import textwrap
@@ -56,27 +55,17 @@ class LoggingFilter(logging.Filter):
     return True
 
 
-class Log2TimelineFrontend(frontend.Frontend):
+class Log2TimelineFrontend(frontend.ExtractionFrontend):
   """Class that implements the log2timeline front-end."""
 
   _BYTES_IN_A_MIB = 1024 * 1024
 
   def __init__(self):
     """Initializes the front-end object."""
-    super(Log2TimelineFrontend, self).__init__()
-    self._engine = None
+    input_reader = engine.StdinEngineInputReader()
+    output_writer = engine.StdoutEngineOutputWriter()
 
-  def CleanUpAfterAbort(self):
-    """Cleans up after an abort."""
-    self._engine.StopThreads()
-
-  def GetSourceFileSystemSearcher(self):
-    """Retrieves the file system searcher of the source.
-
-    Returns:
-      The file system searcher object (instance of dfvfs.FileSystemSearcher).
-    """
-    return self._engine.GetSourceFileSystemSearcher()
+    super(Log2TimelineFrontend, self).__init__(input_reader, output_writer)
 
   # TODO: move or rewrite this after dfVFS image support integration.
   def GetPartitionMap(self, image_path):
@@ -124,62 +113,6 @@ class Log2TimelineFrontend(frontend.Frontend):
     for zone in pytz.all_timezones:
       yield zone
 
-  def ParseOptions(self, options):
-    """Parses the options and initializes the processing engine.
-
-    Args:
-      options: the command line arguments.
-
-    Raises:
-      BadConfigOption: if the option are invalid.
-    """
-    if not options:
-      raise errors.BadConfigOption(u'Missing options.')
-
-    if options.buffer_size:
-      # TODO: turn this into a generic function that supports
-      # more size suffixes both MB and MiB and also that does not
-      # allow m as a valid indicator for MiB since m represents
-      # milli not Mega.
-      try:
-        if options.buffer_size[-1].lower() == 'm':
-          options.buffer_size = int(options.buffer_size[:-1], 10)
-          options.buffer_size *= self._BYTES_IN_A_MIB
-        else:
-          options.buffer_size = int(options.buffer_size, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid buffer size: {0:s}.'.format(options.buffer_size))
-
-    if options.file_filter and not os.path.isfile(options.file_filter):
-      raise errors.BadConfigOption(
-          u'No such collection filter file: {0:s}.'.format(options.file_filter))
-
-    try:
-      path_spec = self.ScanSource(options, 'source')
-    except errors.FileSystemScannerError as exception:
-      raise errors.BadConfigOption((
-          u'Unable to scan for a supported filesystem with error: {0:s}.\n'
-          u'Most likely the image format is not supported by the '
-          u'tool.').format(exception))
-    self.PrintOptions(options)
-
-    if not options.image:
-      options.recursive = os.path.isdir(options.source)
-    else:
-      options.recursive = False
-
-    self._engine = engine.Engine(options)
-    self._engine.SetSource(options.source, path_spec)
-
-    if options.image_offset_bytes is not None:
-      self._engine.SetImageInformation(options.image_offset_bytes)
-
-      if options.vss_stores:
-        self._engine.SetVssInformation(options.vss_stores)
-
-    self._engine.SetOutput(options.output)
-
   def PrintParitionMap(self, source):
     """Prints the partition map.
 
@@ -194,18 +127,6 @@ class Log2TimelineFrontend(frontend.Frontend):
       print u'{:02d}:    {:010d} {:010d} {}'.format(
           entry['address'], entry['offset'], entry['length'],
           entry['description'])
-
-  def ProcessSource(self):
-    """Processes the source.
-
-    Raises:
-      RuntimeError: if the engine was not created.
-    """
-    # TODO: change this after cleaning up the engine code.
-    if not self._engine:
-      raise RuntimeError(
-          u'Missing engine object make sure to set up the engine first.')
-    self._engine.Start()
 
 
 def Main():
@@ -249,8 +170,8 @@ def Main():
       '-z', '--zone', dest='tzone', action='store', type=str, default='UTC',
       help=(
           'Define the timezone of the IMAGE (not the output). This is usually '
-          'discovered automatically by pre processing but might need to be '
-          'specifically set if pre processing does not properly detect or to '
+          'discovered automatically by preprocessing but might need to be '
+          'specifically set if preprocessing does not properly detect or to '
           'overwrite the detected time zone.'))
 
   function_group.add_argument(
@@ -363,7 +284,7 @@ def Main():
       '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
       action='store_true', default=False, help=(
           'Only used in conjunction when appending to a previous storage '
-          'file. When this option is used then a new pre processing object '
+          'file. When this option is used then a new preprocessing object '
           'is not calculated and instead the last one that got added to '
           'the storage file is used. This can be handy when parsing an image '
           'that contains more than a single partition.'))
@@ -432,9 +353,6 @@ def Main():
     print info.GetPluginInformation()
     return True
 
-  # This front-end only deals with local setup of the tool.
-  options.local = True
-
   format_str = (
       u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
       u'<%(module)s> %(message)s')
@@ -491,7 +409,8 @@ def Main():
     return False
 
   try:
-    front_end.ParseOptions(options)
+    front_end.ParseOptions(options, 'source')
+    front_end.SetStorageFile(options.output)
   except errors.BadConfigOption as exception:
     arg_parser.print_help()
     print ''
@@ -499,7 +418,7 @@ def Main():
     return False
 
   # Check to see if we are trying to parse a mount point.
-  if options.recursive:
+  if getattr(options, 'recursive', False):
     searcher = front_end.GetSourceFileSystemSearcher()
 
     guessed_os = preprocess_interface.GuessOS(searcher)
@@ -517,7 +436,7 @@ def Main():
       time.sleep(5)
 
   try:
-    front_end.ProcessSource()
+    front_end.ProcessSource(options)
     logging.info(u'Processing completed.')
   except KeyboardInterrupt:
     logging.warning(u'Aborted by user.')

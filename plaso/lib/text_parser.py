@@ -71,7 +71,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     """Constructor for the SlowLexicalTextParser.
 
     Args:
-      pre_obj: A pre process object that may contain information gathered
+      pre_obj: A preprocess object that may contain information gathered
                from a preprocessing process (instance of PreprocessObject).
       config: A configuration object.
       local_zone: A boolean value that determines if the entries
