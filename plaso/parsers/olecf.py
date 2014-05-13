@@ -19,6 +19,8 @@
 
 import logging
 
+import pyolecf
+
 from plaso.lib import errors
 from plaso.lib import parser
 from plaso.lib import plugin
@@ -28,8 +30,6 @@ from plaso.parsers.olecf_plugins import interface
 # Register all OLECF plugins.
 # pylint: disable=unused-import
 from plaso.parsers import olecf_plugins
-
-import pyolecf
 
 
 if pyolecf.get_version() < '20131012':
@@ -97,8 +97,8 @@ class OleCfParser(parser.BaseParser):
           yield event_object
       except errors.WrongPlugin:
         logging.debug(
-            u'Plugin: {:s} cannot parse the OLECF file: {:s}'.format(
-                olecf_plugin.plugin_name, file_entry.name))
+            u'[{0:s}] plugin: {1:s} cannot parse the OLECF file: {2:s}'.format(
+                self.parser_name, olecf_plugin.plugin_name, file_entry.name))
 
     # Check if we still haven't parsed the file, and if so we will use
     # the default OLECF plugin.

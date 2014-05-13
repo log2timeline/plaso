@@ -95,3 +95,4 @@ Copyright SANS Institute - Digital Forensics and Incident Response.
 * SysEvent.Evt
 * System.evtx
 * Ntuser.dat (multiple instances)
+* Windows.edb

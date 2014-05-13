@@ -20,41 +20,33 @@
 categories = {
     'winxp': [
         'bencode', 'filestat', 'google_drive', 'java_idx', 'lnk',
-        'mcafee_protection', 'msiecf', 'olecf', 'openxml', 'prefetch',
+        'mcafee_protection', 'olecf', 'openxml', 'prefetch',
         'recycle_bin_info2', 'skydrive_log_error', 'skydrive_log', 'skype',
         'symantec_scanlog', 'webhist', 'winevt', 'winfirewall', 'winjob',
         'winreg'],
     'winxp_slow': [
         'hachoir', 'winxp'],
     'win7': [
-        'bencode', 'chrome_cache', 'chrome_cookies', 'chrome_history',
-        'filestat', 'firefox_cache', 'firefox_downloads', 'firefox_history',
-        'google_drive', 'java_idx', 'lnk', 'mcafee_protection', 'msiecf',
-        'olecf', 'openxml', 'opera_global', 'opera_typed_history', 'prefetch',
-        'recycle_bin', 'safari_history', 'skydrive_log', 'skydrive_log_error',
-        'skype', 'symantec_scanlog', 'winevtx', 'winfirewall', 'winjob',
-        'winreg'],
+        'bencode', 'filestat', 'google_drive', 'java_idx', 'lnk',
+        'mcafee_protection', 'olecf', 'openxml', 'prefetch', 'recycle_bin',
+        'skydrive_log', 'skydrive_log_error', 'skype', 'symantec_scanlog',
+        'webhist', 'winevtx', 'winfirewall', 'winjob', 'winreg'],
     'win7_slow': [
         'hachoir', 'win7'],
     'webhist': [
         'chrome_cache', 'chrome_cookies', 'chrome_history', 'firefox_cache',
-        'firefox_downloads', 'firefox_history', 'java_idx', 'opera_global',
-        'opera_typed_history', 'msiecf', 'safari_history'],
+        'firefox_downloads', 'firefox_history', 'java_idx', 'msie_webcache',
+        'msiecf', 'opera_global', 'opera_typed_history', 'safari_history'],
     'linux': [
-        'bencode', 'chrome_cache', 'chrome_cookies', 'chrome_history',
-        'filestat', 'firefox_cache', 'firefox_downloads', 'firefox_history',
-        'google_drive', 'java_idx', 'olecf', 'openxml', 'opera_global',
-        'opera_typed_history', 'selinux', 'skype', 'syslog', 'utmp',
-        'xchatlog', 'xchatscrollback', 'zeitgeist'],
+        'bencode', 'filestat', 'google_drive', 'java_idx', 'olecf', 'openxml',
+        'selinux', 'skype', 'syslog', 'utmp', 'webhist', 'xchatlog',
+        'xchatscrollback', 'zeitgeist'],
     'macosx': [
-        'appusage', 'asl_log', 'bencode', 'bsm_log', 'chrome_cache',
-        'chrome_cookies', 'chrome_history', 'cups_ipp', 'filestat',
-        'firefox_cache', 'firefox_downloads',
-        'firefox_history', 'google_drive', 'java_idx', 'ls_quarantine',
-        'mac_appfirewall_log', 'mac_document_versions', 'mac_keychain',
-        'mac_securityd', 'mackeeper_cache', 'macwifi', 'olecf', 'openxml',
-        'opera_global', 'opera_typed_history', 'plist', 'skype', 'syslog',
-        'utmpx'],
+        'appusage', 'asl_log', 'bencode', 'bsm_log', 'cups_ipp', 'filestat',
+        'google_drive', 'java_idx', 'ls_quarantine', 'mac_appfirewall_log',
+        'mac_document_versions', 'mac_keychain', 'mac_securityd',
+        'mackeeper_cache', 'macwifi', 'olecf', 'openxml', 'plist', 'skype',
+        'syslog', 'utmpx', 'webhist'],
     'android': [
         'android_calls', 'android_sms'],
 }
