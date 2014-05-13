@@ -20,36 +20,17 @@
 import os
 import unittest
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.lib import engine
+from plaso.engine import engine
 from plaso.frontend import frontend
+from plaso.frontend import test_lib
+from plaso.lib import errors
+from plaso.lib import storage
 
-class TestConfig(object):
-  """Class that defines the test config object."""
 
-
-class FrontendTests(unittest.TestCase):
-  """Tests for the front-end object."""
-
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
+class ExtractionFrontendTests(test_lib.FrontendTestCase):
+  """Tests for the extraction front-end object."""
 
   def _TestScanSourceDirectory(self, test_file):
     """Tests the ScanSource function on a directory.
@@ -57,14 +38,16 @@ class FrontendTests(unittest.TestCase):
     Args:
       test_file: the path of the test file.
     """
-    options = TestConfig()
+    test_front_end = frontend.ExtractionFrontend(
+        self._input_reader, self._output_writer)
 
-    path_spec = self._test_front_end.ScanSource(options, test_file)
+    options = test_lib.Options()
+
+    path_spec = test_front_end.ScanSource(options, test_file)
     self.assertNotEquals(path_spec, None)
+    self.assertEquals(path_spec.location, os.path.abspath(test_file))
     self.assertEquals(
-        path_spec.location, os.path.abspath(test_file))
-    self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_OS)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_OS)
     self.assertEquals(options.image_offset_bytes, None)
 
   def _TestScanSourceImage(self, test_file):
@@ -73,12 +56,15 @@ class FrontendTests(unittest.TestCase):
     Args:
       test_file: the path of the test file.
     """
-    options = TestConfig()
+    test_front_end = frontend.ExtractionFrontend(
+        self._input_reader, self._output_writer)
 
-    path_spec = self._test_front_end.ScanSource(options, test_file)
+    options = test_lib.Options()
+
+    path_spec = test_front_end.ScanSource(options, test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 0)
 
   def _TestScanSourcePartitionedImage(self, test_file):
@@ -87,32 +73,35 @@ class FrontendTests(unittest.TestCase):
     Args:
       test_file: the path of the test file.
     """
-    options = TestConfig()
+    test_front_end = frontend.ExtractionFrontend(
+        self._input_reader, self._output_writer)
+
+    options = test_lib.Options()
     options.image_offset_bytes = 0x0002c000
 
-    path_spec = self._test_front_end.ScanSource(options, test_file)
+    path_spec = test_front_end.ScanSource(options, test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 180224)
 
-    options = TestConfig()
+    options = test_lib.Options()
     options.image_offset = 352
     options.bytes_per_sector = 512
 
-    path_spec = self._test_front_end.ScanSource(options, test_file)
+    path_spec = test_front_end.ScanSource(options, test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 180224)
 
-    options = TestConfig()
+    options = test_lib.Options()
     options.partition_number = 1
 
-    path_spec = self._test_front_end.ScanSource(options, test_file)
+    path_spec = test_front_end.ScanSource(options, test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 180224)
 
   def _TestScanSourceVssImage(self, test_file):
@@ -121,31 +110,47 @@ class FrontendTests(unittest.TestCase):
     Args:
       test_file: the path of the test file.
     """
-    options = TestConfig()
+    test_front_end = frontend.ExtractionFrontend(
+        self._input_reader, self._output_writer)
+
+    options = test_lib.Options()
     options.vss_stores = '1,2'
 
-    path_spec = self._test_front_end.ScanSource(options, test_file)
+    path_spec = test_front_end.ScanSource(options, test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 0)
     self.assertEquals(options.vss_stores, [1, 2])
 
-    options = TestConfig()
+    options = test_lib.Options()
     options.vss_stores = '1'
 
-    path_spec = self._test_front_end.ScanSource(options, test_file)
+    path_spec = test_front_end.ScanSource(options, test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(options.image_offset_bytes, 0)
     self.assertEquals(options.vss_stores, [1])
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    input_reader = engine.StdinEngineInputReader()
-    output_writer = engine.StdoutEngineOutputWriter()
-    self._test_front_end = frontend.Frontend(input_reader, output_writer)
+    """Setup sets parameters that will be reused throughout this test."""
+    self._input_reader = engine.StdinEngineInputReader()
+    self._output_writer = engine.StdoutEngineOutputWriter()
+
+  def testParseOptions(self):
+    """Tests the parse options function."""
+    test_front_end = frontend.ExtractionFrontend(
+        self._input_reader, self._output_writer)
+
+    options = test_lib.Options()
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_front_end.ParseOptions(options, 'source')
+
+    options.source = os.path.join(self._TEST_DATA_PATH, 'image.dd')
+
+    test_front_end.ParseOptions(options, 'source')
 
   def testScanSource(self):
     """Tests the ScanSource function."""
@@ -172,6 +177,50 @@ class FrontendTests(unittest.TestCase):
 
     test_file = self._GetTestFilePath(['image.vmdk'])
     self._TestScanSourceImage(test_file)
+
+
+class AnalysisFrontendTests(test_lib.FrontendTestCase):
+  """Tests for the analysis front-end object."""
+
+  def setUp(self):
+    """Setup sets parameters that will be reused throughout this test."""
+    self._input_reader = engine.StdinEngineInputReader()
+    self._output_writer = engine.StdoutEngineOutputWriter()
+
+  def testOpenStorageFile(self):
+    """Tests the open storage file function."""
+    test_front_end = frontend.AnalysisFrontend(
+        self._input_reader, self._output_writer)
+
+    options = test_lib.Options()
+    options.storage_file = os.path.join(self._TEST_DATA_PATH, 'psort_test.out')
+
+    test_front_end.ParseOptions(options)
+    storage_file = test_front_end.OpenStorageFile()
+
+    self.assertIsInstance(storage_file, storage.StorageFile)
+
+    storage_file.Close()
+
+  def testParseOptions(self):
+    """Tests the parse options function."""
+    test_front_end = frontend.AnalysisFrontend(
+        self._input_reader, self._output_writer)
+
+    options = test_lib.Options()
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_front_end.ParseOptions(options)
+
+    options.storage_file = os.path.join(
+        self._TEST_DATA_PATH, 'no_such_file.out')
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_front_end.ParseOptions(options)
+
+    options.storage_file = os.path.join(self._TEST_DATA_PATH, 'psort_test.out')
+
+    test_front_end.ParseOptions(options)
 
 
 if __name__ == '__main__':

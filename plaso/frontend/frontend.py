@@ -17,6 +17,7 @@
 # limitations under the License.
 """The common front-end functionality."""
 
+import locale
 import logging
 import multiprocessing
 import os
@@ -29,9 +30,9 @@ from dfvfs.resolver import context
 
 import plaso
 from plaso import parsers   # pylint: disable=unused-import
-from plaso.collector import scanner
-from plaso.collector import utils as engine_utils
-from plaso.lib import engine
+from plaso.engine import engine
+from plaso.engine import scanner
+from plaso.engine import utils as engine_utils
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfilter
@@ -45,6 +46,9 @@ import pytz
 
 class Frontend(object):
   """Class that implements a front-end."""
+
+  # The maximum length of the line in number of charcters.
+  _LINE_LENGTH = 80
 
   def __init__(self, input_reader, output_writer):
     """Initializes the front-end object.
@@ -60,6 +64,9 @@ class Frontend(object):
     super(Frontend, self).__init__()
     self._input_reader = input_reader
     self._output_writer = output_writer
+
+    # TODO: add preferred_encoding support ot output writer.
+    self.preferred_encoding = locale.getpreferredencoding().lower()
 
   def AddImageOptions(self, argument_group):
     """Adds the storage media image options to the argument group.
@@ -102,6 +109,62 @@ class Frontend(object):
             u'separated values). Ranges and lists can also be combined as: '
             u'\'1,3..5\'. The first store is 1.'))
 
+  def PrintColumnValue(self, name, description, column_length=25):
+    """Prints a value with a name and description aligned to the column length.
+
+    Args:
+      name: The name.
+      description: The description.
+      column_length: Optional column length. The default is 25.
+    """
+    line_length = self._LINE_LENGTH - column_length - 3
+
+    # The format string of the first line of the column value.
+    primary_format_string = u'{{0:>{0:d}s}} : {{1:s}}\n'.format(column_length)
+
+    # The format string of successive lines of the column value.
+    secondary_format_string = u'{{0:<{0:d}s}}{{1:s}}\n'.format(
+        column_length + 3)
+
+    if len(description) < line_length:
+      self._output_writer.Write(primary_format_string.format(name, description))
+      return
+
+    # Split the description in words.
+    words = description.split()
+
+    current = 0
+
+    lines = []
+    word_buffer = []
+    for word in words:
+      current += len(word) + 1
+      if current >= line_length:
+        current = len(word)
+        lines.append(u' '.join(word_buffer))
+        word_buffer = [word]
+      else:
+        word_buffer.append(word)
+    lines.append(u' '.join(word_buffer))
+
+    # Print the column value on multiple lines.
+    self._output_writer.Write(primary_format_string.format(name, lines[0]))
+    for line in lines[1:]:
+      self._output_writer.Write(secondary_format_string.format(u'', line))
+
+  def PrintHeader(self, text, character='*'):
+    """Prints the header as a line with centered text.
+
+    Args:
+      text: The header text.
+      character: Optional header line character. The default is '*'.
+    """
+    self._output_writer.Write(u'\n')
+
+    format_string = u'{{0:{0:s}^{1:d}}}\n'.format(character, self._LINE_LENGTH)
+    header_string = format_string.format(u' {0:s} '.format(text))
+    self._output_writer.Write(header_string)
+
   def PrintOptions(self, options, source_path):
     """Prints the options.
 
@@ -112,59 +175,29 @@ class Frontend(object):
     self._output_writer.Write(u'\n')
     self._output_writer.Write(
         u'Source path\t\t: {0:s}\n'.format(source_path))
+
+    is_image = getattr(options, 'image', False)
     self._output_writer.Write(
-        u'Is storage media image\t: {0!s}\n'.format(options.image))
+        u'Is storage media image\t: {0!s}\n'.format(is_image))
 
-    if options.image:
+    if is_image:
+      image_offset_bytes = getattr(options, 'image_offset_bytes', 0)
       self._output_writer.Write(
-          u'Partition offset\t: 0x{0:08x}\n'.format(options.image_offset_bytes))
+          u'Partition offset\t: 0x{0:08x}\n'.format(image_offset_bytes))
 
-      if options.vss_stores:
-        self._output_writer.Write(
-            u'VSS stores\t\t: {0!s}\n'.format(options.vss_stores))
+      vss_stores = getattr(options, 'vss_stores', None)
+      if vss_stores:
+        self._output_writer.Write(u'VSS stores\t\t: {0!s}\n'.format(vss_stores))
 
-    if options.file_filter:
-      self._output_writer.Write(
-          u'Filter file\t\t: {0:s}\n'.format(options.file_filter))
+    filter_file = getattr(options, 'file_filter', None)
+    if filter_file:
+      self._output_writer.Write(u'Filter file\t\t: {0:s}\n'.format(filter_file))
 
     self._output_writer.Write(u'\n')
 
-  def ScanSource(self, options, source_path):
-    """Scans the source path for volume and file systems.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      source_path: the source path.
-
-    Returns:
-      The base path specification (instance of dfvfs.PathSpec).
-    """
-    if not source_path:
-      return
-
-    file_system_scanner = scanner.FileSystemScanner(
-        self._input_reader, self._output_writer)
-
-    if hasattr(options, 'image_offset_bytes'):
-      file_system_scanner.SetPartitionOffset(options.image_offset_bytes)
-    elif hasattr(options, 'image_offset'):
-      bytes_per_sector = getattr(options, 'bytes_per_sector', 512)
-      file_system_scanner.SetPartitionOffset(
-          options.image_offset * bytes_per_sector)
-
-    if getattr(options, 'partition_number', None) is not None:
-      file_system_scanner.SetPartitionNumber(options.partition_number)
-
-    if hasattr(options, 'vss_stores'):
-      file_system_scanner.SetVssStores(options.vss_stores)
-
-    path_spec = file_system_scanner.Scan(source_path)
-
-    options.image = file_system_scanner.is_storage_media_image
-    options.image_offset_bytes = file_system_scanner.partition_offset
-    options.vss_stores = file_system_scanner.vss_stores
-
-    return path_spec
+  def PrintSeparatorLine(self):
+    """Prints a separator line."""
+    self._output_writer.Write(u'{0:s}\n'.format(u'-' * self._LINE_LENGTH))
 
 
 class ExtractionFrontend(Frontend):
@@ -191,6 +224,9 @@ class ExtractionFrontend(Frontend):
     self._collector = None
     self._debug_mode = False
     self._engine = None
+    self._filter_expression = None
+    self._filter_object = None
+    self._number_of_worker_processes = 0
     self._parsers = None
     self._resolver_context = context.Context()
     self._single_process_mode = False
@@ -198,9 +234,10 @@ class ExtractionFrontend(Frontend):
     self._source_path_spec = None
     self._storage_file_path = None
     self._storage_thread = None
+    self._timezone = pytz.utc
 
-    # TODO: turn into a thread pool.
-    self._worker_threads = []
+    # TODO: turn into a process pool.
+    self._worker_processes = []
 
   def _CheckStorageFile(self, storage_file_path):
     """Checks if the storage file path is valid.
@@ -269,14 +306,15 @@ class ExtractionFrontend(Frontend):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
+    filter_file = getattr(options, 'file_filter', None)
     if self._engine.SourceIsStorageMediaImage():
-      if options.file_filter:
+      if filter_file:
         logging.debug(u'Starting a collection on image with filter.')
       else:
         logging.debug(u'Starting a collection on image.')
 
     elif self._engine.SourceIsDirectory():
-      if options.file_filter:
+      if filter_file:
         logging.debug(u'Starting a collection on directory with filter.')
       elif options.recursive:
         logging.debug(u'Starting a collection on directory.')
@@ -299,29 +337,29 @@ class ExtractionFrontend(Frontend):
     collection_information = {}
 
     collection_information['version'] = plaso.GetVersion()
-    collection_information['configured_zone'] = options.zone
+    collection_information['configured_zone'] = self._timezone
     collection_information['file_processed'] = self._source_path
-    collection_information['output_file'] = options.output
-    collection_information['protobuf_size'] = options.buffer_size
+    collection_information['output_file'] = self._storage_file_path
+    collection_information['protobuf_size'] = self._buffer_size
     collection_information['parser_selection'] = getattr(
         options, 'parsers', '(no list set)')
-    collection_information['preferred_encoding'] = getattr(
-        options, 'preferred_encoding', None)
+    collection_information['preferred_encoding'] = self.preferred_encoding
     collection_information['time_of_run'] = timelib.Timestamp.GetNow()
 
     collection_information['parsers'] = self._parser_names
     collection_information['preprocess'] = options.preprocess
     collection_information['recursive'] = bool(options.recursive)
-    collection_information['debug'] = bool(options.debug)
+    collection_information['debug'] = self._debug_mode
     collection_information['vss parsing'] = bool(options.vss_stores)
 
-    if getattr(options, 'filter', None):
-      collection_information['filter'] = options.filter
+    if self._filter_expression:
+      collection_information['filter'] = self._filter_expression
 
-    if getattr(options, 'file_filter', None):
-      if os.path.isfile(options.file_filter):
+    filter_file = getattr(options, 'file_filter', None)
+    if filter_file:
+      if os.path.isfile(filter_file):
         filters = []
-        with open(options.file_filter, 'rb') as fh:
+        with open(filter_file, 'rb') as fh:
           for line in fh:
             filters.append(line.rstrip())
         collection_information['file_filter'] = ', '.join(filters)
@@ -338,7 +376,7 @@ class ExtractionFrontend(Frontend):
       collection_information['runtime'] = 'single threaded'
     else:
       collection_information['runtime'] = 'multi threaded'
-      collection_information['workers'] = options.workers
+      collection_information['workers'] = self._number_of_worker_processes
 
     pre_obj.collection_information = collection_information
 
@@ -358,10 +396,11 @@ class ExtractionFrontend(Frontend):
     # this behavior, need to add a parameter to the frontend that takes
     # care of overwriting this behavior.
 
+    # TODO: refactor putting the filter into the options object.
+    # See if it can be passed in another way.
     if not getattr(options, 'filter', None):
       options.filter = u''
 
-    # TODO: why this check?
     if not options.filter:
       options.filter = u''
 
@@ -411,18 +450,18 @@ class ExtractionFrontend(Frontend):
         if hasattr(options, 'zone'):
           logging.warning((
               u'Unable to automatically configure timezone, falling back '
-              u'to the user supplied one: {0:s}').format(options.zone))
-          pre_obj.zone = options.zone
+              u'to the user supplied one: {0:s}').format(self._timezone))
+          pre_obj.zone = self._timezone
         else:
           logging.warning(u'TimeZone was not properly set, defaulting to UTC')
           pre_obj.zone = pytz.utc
     else:
       # TODO: shouldn't the user to be able to always override the timezone
       # detection? Or do we need an input sanitation function.
-      pre_obj.zone = options.zone
+      pre_obj.zone = self._timezone
 
     if not getattr(pre_obj, 'zone', None):
-      pre_obj.zone = options.zone
+      pre_obj.zone = self._timezone
 
   def _ProcessSourceMultiProcessMode(self, options):
     """Processes the source in a multiple process.
@@ -435,7 +474,8 @@ class ExtractionFrontend(Frontend):
     # TODO: replace by an option.
     start_collection_thread = True
 
-    if options.workers < 1:
+    self._number_of_worker_processes = getattr(options, 'workers', 0)
+    if self._number_of_worker_processes < 1:
       # One worker for each "available" CPU (minus other processes).
       # The number three here is derived from the fact that the engine starts
       # up:
@@ -452,7 +492,7 @@ class ExtractionFrontend(Frontend):
         # Let's have a maximum amount of workers.
         cpus = self.MAXIMUM_WORKERS
 
-      options.workers = cpus
+      self._number_of_worker_processes = cpus
 
     logging.info(u'Starting extraction in multi process mode.')
 
@@ -475,13 +515,14 @@ class ExtractionFrontend(Frontend):
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
 
-    if options.output_module:
+    output_module = getattr(options, 'output_module', None)
+    if output_module:
       storage_writer = storage.BypassStorageWriter(
-          storage_queue, self._storage_file_path, options.output_module,
-          pre_obj)
+          storage_queue, self._storage_file_path,
+          output_module_string=output_module, pre_obj=pre_obj)
     else:
       storage_writer = storage.StorageFileWriter(
-          storage_queue, self._storage_file_path, options.buffer_size, pre_obj)
+          storage_queue, self._storage_file_path, self._buffer_size, pre_obj)
 
     logging.debug(u'Preprocessing done.')
 
@@ -490,9 +531,9 @@ class ExtractionFrontend(Frontend):
     else:
       include_directory_stat = False
 
-    file_filter = getattr(options, 'file_filter', None)
-    if file_filter:
-      filter_find_specs = engine_utils.BuildFindSpecsFromFile(file_filter)
+    filter_file = getattr(options, 'file_filter', None)
+    if filter_file:
+      filter_find_specs = engine_utils.BuildFindSpecsFromFile(filter_file)
     else:
       filter_find_specs = None
 
@@ -512,16 +553,16 @@ class ExtractionFrontend(Frontend):
           name='Collection', target=self._collector.Collect)
       self._collection_thread.start()
 
-    logging.info(u'Starting workers to extract events.')
-    for worker_nr in range(options.workers):
+    logging.info(u'Starting worker processes to extract events.')
+    for worker_nr in range(self._number_of_worker_processes):
       extraction_worker = self._CreateExtractionWorker(
           worker_nr, options, pre_obj)
 
-      logging.debug(u'Starting worker: {0:d}'.format(worker_nr))
-      self._worker_threads.append(multiprocessing.Process(
+      logging.debug(u'Starting worker: {0:d} process'.format(worker_nr))
+      self._worker_processes.append(multiprocessing.Process(
           name='Worker_{0:d}'.format(worker_nr), target=extraction_worker.Run))
 
-      self._worker_threads[-1].start()
+      self._worker_processes[-1].start()
 
     logging.info(u'Collecting and processing files.')
     if self._collection_thread:
@@ -531,7 +572,7 @@ class ExtractionFrontend(Frontend):
 
     logging.info(u'Collection is done, waiting for processing to complete.')
     # TODO: Test to see if a process pool can be a better choice.
-    for thread_nr, thread in enumerate(self._worker_threads):
+    for thread_nr, thread in enumerate(self._worker_processes):
       if thread.is_alive():
         thread.join()
 
@@ -613,9 +654,9 @@ class ExtractionFrontend(Frontend):
     else:
       include_directory_stat = False
 
-    file_filter = getattr(options, 'file_filter', None)
-    if file_filter:
-      filter_find_specs = engine_utils.BuildFindSpecsFromFile(file_filter)
+    filter_file = getattr(options, 'file_filter', None)
+    if filter_file:
+      filter_find_specs = engine_utils.BuildFindSpecsFromFile(filter_file)
     else:
       filter_find_specs = None
 
@@ -636,14 +677,15 @@ class ExtractionFrontend(Frontend):
 
     self._engine.SignalEndOfInputStorageQueue()
 
-    if options.output_module:
+    output_module = getattr(options, 'output_module', None)
+    if output_module:
       storage_writer = storage.BypassStorageWriter(
           storage_queue, self._storage_file_path,
-          output_module_string=options.output_module, pre_obj=pre_obj)
+          output_module_string=output_module, pre_obj=pre_obj)
     else:
       storage_writer = storage.StorageFileWriter(
           storage_queue, self._storage_file_path,
-          buffer_size=options.buffer_size, pre_obj=pre_obj)
+          buffer_size=self._buffer_size, pre_obj=pre_obj)
 
     logging.debug(u'Starting storage.')
     storage_writer.WriteEventObjects()
@@ -672,7 +714,7 @@ class ExtractionFrontend(Frontend):
 
     try:
       logging.warning(u'Waiting for workers to complete.')
-      for number, worker_thread in enumerate(self._worker_threads):
+      for number, worker_thread in enumerate(self._worker_processes):
         pid = worker_thread.pid
         logging.warning(u'Waiting for worker: {0:d} [PID {1:d}]'.format(
             number, pid))
@@ -708,9 +750,10 @@ class ExtractionFrontend(Frontend):
 
     except KeyboardInterrupt:
       logging.warning(u'Terminating all processes.')
-      for t in self._worker_threads:
-        t.terminate()
-      logging.warning(u'Workers terminated.')
+      for process in self._worker_processes:
+        process.terminate()
+
+      logging.warning(u'Worker processes terminated.')
       if hasattr(self, 'storage_thread'):
         self._storage_thread.terminate()
         logging.warning(u'Storage terminated.')
@@ -728,36 +771,17 @@ class ExtractionFrontend(Frontend):
     return self._engine.GetSourceFileSystemSearcher()
 
   def ParseOptions(self, options, source_option):
-    """Parses the options and initializes the processing engine.
+    """Parses the options and initializes the front-end.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
       source_option: the name of the source option.
 
     Raises:
-      BadConfigOption: if the option are invalid.
+      BadConfigOption: if the options are invalid.
     """
     if not options:
       raise errors.BadConfigOption(u'Missing options.')
-
-    if options.buffer_size:
-      # TODO: turn this into a generic function that supports
-      # more size suffixes both MB and MiB and also that does not
-      # allow m as a valid indicator for MiB since m represents
-      # milli not Mega.
-      try:
-        if options.buffer_size[-1].lower() == 'm':
-          options.buffer_size = int(options.buffer_size[:-1], 10)
-          options.buffer_size *= self._BYTES_IN_A_MIB
-        else:
-          options.buffer_size = int(options.buffer_size, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid buffer size: {0:s}.'.format(options.buffer_size))
-
-    if options.file_filter and not os.path.isfile(options.file_filter):
-      raise errors.BadConfigOption(
-          u'No such collection filter file: {0:s}.'.format(options.file_filter))
 
     self._source_path = getattr(options, source_option, None)
     if not self._source_path:
@@ -770,10 +794,40 @@ class ExtractionFrontend(Frontend):
           u'Unable to convert source path to Unicode with error: {0:s}.'.format(
               exception))
 
-    self._debug_mode = options.debug
-    options.zone = pytz.timezone(options.tzone)
+    self._buffer_size = getattr(options, 'buffer_size', 0)
+    if self._buffer_size:
+      # TODO: turn this into a generic function that supports more size
+      # suffixes both MB and MiB and also that does not allow m as a valid
+      # indicator for MiB since m represents milli not Mega.
+      try:
+        if self._buffer_size[-1].lower() == 'm':
+          self._buffer_size = int(self._buffer_size[:-1], 10)
+          self._buffer_size *= self._BYTES_IN_A_MIB
+        else:
+          self._buffer_size = int(self._buffer_size, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid buffer size: {0:s}.'.format(self._buffer_size))
 
-    if options.single_thread:
+    self._filter_expression = getattr(options, 'filter', None)
+    if self._filter_expression:
+      self._filter_object = pfilter.GetMatcher(self._filter_expression)
+      if not self._filter_object:
+        raise errors.BadConfigOption(
+            u'Invalid filter expression: {0:s}'.format(self._filter_expression))
+
+    filter_file = getattr(options, 'file_filter', None)
+    if filter_file and not os.path.isfile(filter_file):
+      raise errors.BadConfigOption(
+          u'No such collection filter file: {0:s}.'.format(filter_file))
+
+    self._debug_mode = getattr(options, 'debug', False)
+
+    timezone_string = getattr(options, 'timezone', None)
+    if timezone_string:
+      self._timezone = pytz.timezone(timezone_string)
+
+    if getattr(options, 'single_thread', False):
       self._single_process_mode = True
     else:
       self._single_process_mode = False
@@ -789,7 +843,8 @@ class ExtractionFrontend(Frontend):
     """
     pre_obj = None
 
-    if options.old_preprocess and os.path.isfile(self._storage_file_path):
+    old_preprocess = getattr(options, 'old_preprocess', False)
+    if old_preprocess and os.path.isfile(self._storage_file_path):
       # Check if the storage file contains a preprocessing object.
       try:
         with storage.StorageFile(
@@ -860,6 +915,48 @@ class ExtractionFrontend(Frontend):
     else:
       self._ProcessSourceMultiProcessMode(options)
 
+  def ScanSource(self, options, source_path):
+    """Scans the source path for volume and file systems.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+      source_path: the source path.
+
+    Returns:
+      The base path specification (instance of dfvfs.PathSpec).
+    """
+    if not source_path:
+      return
+
+    file_system_scanner = scanner.FileSystemScanner(
+        self._input_reader, self._output_writer)
+
+    if hasattr(options, 'image_offset_bytes'):
+      image_offset_bytes = getattr(options, 'image_offset_bytes')
+      file_system_scanner.SetPartitionOffset(image_offset_bytes)
+
+    elif hasattr(options, 'image_offset'):
+      image_offset = getattr(options, 'image_offset')
+      bytes_per_sector = getattr(options, 'bytes_per_sector', 512)
+      file_system_scanner.SetPartitionOffset(
+          image_offset * bytes_per_sector)
+
+    partition_number = getattr(options, 'partition_number', None)
+    if partition_number is not None:
+      file_system_scanner.SetPartitionNumber(partition_number)
+
+    vss_stores = getattr(options, 'vss_stores', None)
+    if vss_stores:
+      file_system_scanner.SetVssStores(vss_stores)
+
+    path_spec = file_system_scanner.Scan(source_path)
+
+    options.image = file_system_scanner.is_storage_media_image
+    options.image_offset_bytes = file_system_scanner.partition_offset
+    options.vss_stores = file_system_scanner.vss_stores
+
+    return path_spec
+
   def SetStorageFile(self, storage_file_path):
     """Sets the storage file path.
 
@@ -867,3 +964,66 @@ class ExtractionFrontend(Frontend):
       storage_file_path: The path of the storage file.
     """
     self._storage_file_path = storage_file_path
+
+
+class AnalysisFrontend(Frontend):
+  """Class that implements an analysis front-end."""
+
+  def __init__(self, input_reader, output_writer):
+    """Initializes the front-end object.
+
+    Args:
+      input_reader: the input reader (instance of EngineInputReader).
+                    The default is None which indicates to use the stdin
+                    input reader.
+      output_writer: the output writer (instance of EngineOutputWriter).
+                     The default is None which indicates to use the stdout
+                     output writer.
+    """
+    super(AnalysisFrontend, self).__init__(input_reader, output_writer)
+
+    self._storage_file_path = None
+
+  def AddStorageFileOptions(self, argument_group):
+    """Adds the storage file options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup) or argument parser (instance of
+                      argparse.ArgumentParser).
+    """
+    argument_group.add_argument(
+        'storage_file', metavar='STORAGE_FILE', action='store', nargs='?',
+        type=unicode, default=None, help='The path of the storage file.')
+
+  def OpenStorageFile(self, read_only=True):
+    """Opens the storage file.
+
+    Args:
+      read_only: Optional boolean value to indicate the storage file should
+                 be opened in read-only mode. The default is True.
+
+    Returns:
+      The storage file object (instance of StorageFile).
+    """
+    return storage.StorageFile(self._storage_file_path, read_only=read_only)
+
+  def ParseOptions(self, options):
+    """Parses the options and initializes the front-end.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    if not options:
+      raise errors.BadConfigOption(u'Missing options.')
+
+    self._storage_file_path = getattr(options, 'storage_file', None)
+    if not self._storage_file_path:
+      raise errors.BadConfigOption(u'Missing storage file.')
+
+    if not os.path.isfile(self._storage_file_path):
+      raise errors.BadConfigOption(
+          u'No such storage file {0:s}.'.format(self._storage_file_path))

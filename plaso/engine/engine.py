@@ -26,10 +26,10 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso import preprocessors
-from plaso.collector import collector
+from plaso.engine import collector
+from plaso.engine import worker
 from plaso.lib import errors
 from plaso.lib import queue
-from plaso.lib import worker
 from plaso.preprocessors import interface as preprocess_interface
 
 

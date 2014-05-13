@@ -22,6 +22,7 @@ import tempfile
 import unittest
 
 from plaso.frontend import plasm
+from plaso.frontend import test_lib
 from plaso.lib import event
 from plaso.lib import pfilter
 from plaso.lib import queue
@@ -41,11 +42,11 @@ class TestEvent(event.EventObject):
     self.stuff = stuff
 
 
-class PlasmTest(unittest.TestCase):
+class PlasmTest(test_lib.FrontendTestCase):
   """Tests for the plasm front-end."""
 
   def setUp(self):
-    """Setup creates a Plaso Store to play with, as well as a basic filter."""
+    """Sets up the objects used throughout the test."""
     self._temp_directory = tempfile.mkdtemp()
     self._storage_filename = os.path.join(self._temp_directory, 'plaso.db')
     self._tag_input_filename = os.path.join(self._temp_directory, 'input1.tag')
@@ -77,6 +78,7 @@ class PlasmTest(unittest.TestCase):
     self._storage_file.SetStoreLimit()
 
   def tearDown(self):
+    """Cleans up the objects used throughout the test."""
     shutil.rmtree(self._temp_directory, True)
 
   def testTagParsing(self):
@@ -152,27 +154,42 @@ class PlasmTest(unittest.TestCase):
 
   def testGroupingEngineUntagged(self):
     """Grouping engine should do nothing if dealing with untagged storage."""
-    grouping_engine = plasm.GroupingEngine(self._storage_filename, quiet=True)
-    grouping_engine.Run()
-    self.assertFalse(self._storage_file.HasGrouping())
+    storage_file = storage.StorageFile(self._storage_filename, read_only=False)
+    grouping_engine = plasm.GroupingEngine()
+    grouping_engine.Run(storage_file, quiet=True)
+    storage_file.Close()
+
+    storage_file = storage.StorageFile(self._storage_filename, read_only=True)
+
+    self.assertFalse(storage_file.HasGrouping())
+
+    storage_file.Close()
 
   def testGroupingEngine(self):
     """Tests the Grouping engine's functionality."""
     pfilter.TimeRangeCache.ResetTimeConstraints()
     tagging_engine = plasm.TaggingEngine(
         self._storage_filename, self._tag_input_filename, quiet=True)
-    grouping_engine = plasm.GroupingEngine(self._storage_filename, quiet=True)
     tagging_engine.Run()
-    grouping_engine.Run()
-    test = storage.StorageFile(self._storage_filename)
-    test.SetStoreLimit()
-    self.assertTrue(test.HasGrouping())
-    groups = test.GetGrouping()
+
+    storage_file = storage.StorageFile(self._storage_filename, read_only=False)
+    grouping_engine = plasm.GroupingEngine()
+    grouping_engine.Run(storage_file, quiet=True)
+    storage_file.Close()
+
+    storage_file = storage.StorageFile(self._storage_filename, read_only=True)
+
+    storage_file.SetStoreLimit()
+    self.assertTrue(storage_file.HasGrouping())
+    groups = storage_file.GetGrouping()
     count = 0
     for group_event in groups:
       count += 1
       self.assertEquals(group_event.category, 'Test Tag')
     self.assertEquals(count, 2)
+
+    storage_file.Close()
+
 
 if __name__ == '__main__':
   unittest.main()

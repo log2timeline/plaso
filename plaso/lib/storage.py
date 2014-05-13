@@ -916,7 +916,12 @@ class StorageFile(object):
     return proto
 
   def GetStorageInformation(self):
-    """Return gathered preprocessing information from a storage file."""
+    """Retrieves storage (preprocessing) information stored in the storage file.
+
+    Returns:
+      A list of preprocessing objects (instances of PreprocessingObject)
+      that contain the storage information.
+    """
     information = []
 
     file_object = self._OpenStream('information.dump', 'r')

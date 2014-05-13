@@ -29,8 +29,8 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.collector import collector
-from plaso.collector import utils as engine_utils
+from plaso.engine import collector
+from plaso.engine import utils as engine_utils
 from plaso.lib import queue
 
 
