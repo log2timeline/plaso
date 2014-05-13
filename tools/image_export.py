@@ -29,7 +29,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso import preprocessors
-from plaso.collector import collector
+from plaso.engine import collector
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import event
