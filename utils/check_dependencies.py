@@ -193,7 +193,7 @@ def CheckPytsk():
 
   print u'[OK]\t\tSleuthKit version: {0:s}'.format(module_version)
 
-  minimum_version = '20140217'
+  minimum_version = '20140506'
   if not hasattr(module_object, 'get_version'):
     print u'[FAILURE]\t{0:s} is too old, {1:s} or later required.'.format(
         module_name, minimum_version)
@@ -243,7 +243,7 @@ if __name__ == '__main__':
   if not CheckPythonModule('google.protobuf', '', ''):
     check_result = False
 
-  if not CheckPythonModule('dfvfs', '__version__', '20140504'):
+  if not CheckPythonModule('dfvfs', '__version__', '20140508'):
     check_result = False
 
   if not CheckPythonModule('sqlite3', 'sqlite_version', '3.7.8'):
@@ -256,6 +256,7 @@ if __name__ == '__main__':
     check_result = False
 
   libyal_check_result = CheckLibyal([
+      ('pyesedb', 20140301),
       ('pyevt', None),
       ('pyevtx', None),
       ('pyewf', 20131210),
