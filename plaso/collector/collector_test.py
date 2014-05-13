@@ -30,6 +30,7 @@ from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.collector import collector
+from plaso.collector import utils as engine_utils
 from plaso.lib import queue
 
 
@@ -128,7 +129,7 @@ class CollectorTest(CollectorTestCase):
       resolver_context = context.Context()
       test_collector = collector.Collector(
           test_collection_queue, test_store, dirname, path_spec,
-          resolver_context)
+          resolver_context=resolver_context)
       test_collector.Collect()
 
       test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -156,8 +157,11 @@ class CollectorTest(CollectorTestCase):
     resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, test_store, dirname, path_spec,
-        resolver_context)
-    test_collector.SetFilter(filter_name)
+        resolver_context=resolver_context)
+
+    find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
+    test_collector.SetFilter(find_specs)
+
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -230,7 +234,7 @@ class CollectorTest(CollectorTestCase):
     resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, test_storage_queue_producer, test_file,
-        path_spec, resolver_context)
+        path_spec, resolver_context=resolver_context)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -263,8 +267,11 @@ class CollectorTest(CollectorTestCase):
     resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, test_storage_queue_producer, test_file,
-        path_spec, resolver_context)
-    test_collector.SetFilter(filter_name)
+        path_spec, resolver_context=resolver_context)
+
+    find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
+    test_collector.SetFilter(find_specs)
+
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
@@ -317,7 +324,7 @@ class BuildFindSpecsFromFileTest(unittest.TestCase):
       # This should not fail during initial loading, but fail later on.
       temp_file.write('bad re (no close on that parenthesis/file\n')
 
-    find_specs = collector.BuildFindSpecsFromFile(filter_name)
+    find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
 
     try:
       os.remove(filter_name)
@@ -343,7 +350,7 @@ class BuildFindSpecsFromFileTest(unittest.TestCase):
     self.assertEquals(len(path_specs), 4)
 
     with self.assertRaises(IOError):
-      _ = collector.BuildFindSpecsFromFile('thisfiledoesnotexist')
+      _ = engine_utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
 
 
 if __name__ == '__main__':

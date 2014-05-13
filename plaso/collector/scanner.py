@@ -34,13 +34,11 @@ it will use the input reader and output writer to ask for external
 input, e.g. directly from the user.
 """
 
-import abc
 import logging
 import os
-import sys
 
 from dfvfs.analyzer import analyzer
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
@@ -49,82 +47,23 @@ from plaso.lib import errors
 from plaso.lib import timelib
 
 
-class ScannerInputReader(object):
-  """Class that implements the input reader interface for the scanner."""
-
-  @abc.abstractmethod
-  def Read(self):
-    """Reads a string from the input.
-
-    Returns:
-      A string containing the input.
-    """
-
-
-class ScannerOutputWriter(object):
-  """Class that implements the output writer interface for the scanner."""
-
-  @abc.abstractmethod
-  def Write(self, string):
-    """Wtites a string to the output.
-
-    Args:
-      string: A string containing the output.
-    """
-
-
-class StdinScannerInputReader(object):
-  """Class that implements a stdin input reader."""
-
-  def Read(self):
-    """Reads a string from the input.
-
-    Returns:
-      A string containing the input.
-    """
-    return sys.stdin.readline()
-
-
-class StdoutScannerOutputWriter(object):
-  """Class that implements a stdout output writer."""
-
-  def Write(self, string):
-    """Wtites a string to the output.
-
-    Args:
-      string: A string containing the output.
-    """
-    sys.stdout.write(string)
-
-
 class FileSystemScanner(object):
   """Class that implements a file system scanner."""
 
-  def __init__(self, input_reader=None, output_writer=None):
+  # TODO: move input reader and output writer out of scanner.
+  def __init__(self, input_reader, output_writer):
     """Initializes the file system scanner.
 
     Args:
-      input_reader: the input reader (instance of ScannerInputReader).
-                    The default is None which indicates to use the stdin
-                    input reader.
-      output_writer: the output writer (instance of ScannerOutputWriter).
-                     The default is None which indicates to use the stdout
-                     output writer.
+      input_reader: the input reader (instance of EngineInputReader).
+      output_writer: the output writer (instance of EngineOutputWriter).
     """
     super(FileSystemScanner, self).__init__()
+    self._input_reader = input_reader
+    self._output_writer = output_writer
     self._partition_number = None
     self._partition_offset = None
     self._vss_stores = None
-
-    if input_reader:
-      self._input_reader = input_reader
-    else:
-      self._input_reader = StdinScannerInputReader()
-
-    if output_writer:
-      self._output_writer = output_writer
-    else:
-      self._output_writer = StdoutScannerOutputWriter()
 
     self.is_storage_media_image = None
     self.partition_offset = None
@@ -149,7 +88,7 @@ class FileSystemScanner(object):
                     retrieved.
     """
     volume_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/',
         parent=source_path_spec)
 
     volume_system = tsk_volume_system.TSKVolumeSystem()
@@ -168,7 +107,7 @@ class FileSystemScanner(object):
         volume_extent = volume.extents[0]
         self.partition_offset = volume_extent.offset
         return path_spec_factory.Factory.NewPathSpec(
-            definitions.TYPE_INDICATOR_TSK_PARTITION,
+            dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
             start_offset=volume_extent.offset, parent=source_path_spec)
 
       logging.warning(
@@ -180,7 +119,7 @@ class FileSystemScanner(object):
         if volume_extent.offset == self._partition_offset:
           self.partition_offset = volume_extent.offset
           return path_spec_factory.Factory.NewPathSpec(
-              definitions.TYPE_INDICATOR_TSK_PARTITION,
+              dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
               start_offset=volume_extent.offset, parent=source_path_spec)
 
       logging.warning(
@@ -198,7 +137,7 @@ class FileSystemScanner(object):
       volume_extent = volume.extents[0]
       self.partition_offset = volume_extent.offset
       return path_spec_factory.Factory.NewPathSpec(
-          definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
           parent=source_path_spec)
 
     try:
@@ -218,7 +157,7 @@ class FileSystemScanner(object):
     volume_extent = volume.extents[0]
     self.partition_offset = volume_extent.offset
     return path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_TSK_PARTITION, location=location,
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=location,
         parent=source_path_spec)
 
   def _GetNextLevelVShadowVolumeSystemPathSpec(self, source_path_spec):
@@ -237,11 +176,12 @@ class FileSystemScanner(object):
       FileSystemScannerError: if the format of or within the source
                               is not supported.
     """
-    if source_path_spec.type_indicator == definitions.TYPE_INDICATOR_VSHADOW:
+    if source_path_spec.type_indicator in [
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
       raise errors.FileSystemScannerError(u'Unable to scan for VSS inside VSS.')
 
     volume_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
         parent=source_path_spec)
 
     volume_system = vshadow_volume_system.VShadowVolumeSystem()
@@ -417,11 +357,11 @@ class FileSystemScanner(object):
         raise errors.FileSystemScannerError(
             u'Unsupported source found more than one volume system types.')
 
-      if type_indicators[0] == definitions.TYPE_INDICATOR_TSK_PARTITION:
+      if type_indicators[0] == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
         path_spec = self._GetNextLevelTSKPartionVolumeSystemPathSpec(
             source_path_spec)
 
-      elif type_indicators[0] == definitions.TYPE_INDICATOR_VSHADOW:
+      elif type_indicators[0] == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
         path_spec = self._GetNextLevelVShadowVolumeSystemPathSpec(
           source_path_spec)
         break
@@ -510,7 +450,7 @@ class FileSystemScanner(object):
     """
     source_path = os.path.abspath(source_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=source_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
     # Note that os.path.isfile() will return false when source_path points
     # to a device file.
@@ -561,7 +501,7 @@ class FileSystemScanner(object):
       self.is_storage_media_image = False
       return source_path_spec
 
-    if type_indicators[0] != definitions.TYPE_INDICATOR_TSK:
+    if type_indicators[0] != dfvfs_definitions.TYPE_INDICATOR_TSK:
       raise errors.FileSystemScannerError(
           u'Unsupported file system type: {0:s}.'.format(type_indicators[0]))
 
@@ -569,7 +509,7 @@ class FileSystemScanner(object):
     if self.partition_offset is None:
       self.partition_offset = 0
     return path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_TSK, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=path_spec)
 
   def SetPartitionNumber(self, partition_number):

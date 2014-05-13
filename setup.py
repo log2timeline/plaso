@@ -47,31 +47,26 @@ import plaso
 def GetTools():
   """List up all scripts that should be runable from the command line."""
   tools = []
-  tools.extend(GetToolsFrom(os.path.join('plaso', 'frontend')))
-  tools.extend(GetToolsFrom('tools'))
+
+  tool_filenames = frozenset([
+      u'log2timeline.py',
+      u'pinfo.py',
+      u'plasm.py',
+      u'pprof.py',
+      u'pshell.py',
+      u'psort.py'])
+
+  for filename in tool_filenames:
+    tools.append(os.path.join(u'plaso', u'frontend', filename))
+
+  tool_filenames = frozenset([
+      u'image_export.py',
+      u'plaso_extract_search_history.py'])
+
+  for filename in tool_filenames:
+    tools.append(os.path.join(u'tools', filename))
 
   return tools
-
-
-def GetToolsFrom(path):
-  """Get tools from a given directory."""
-  data = []
-
-  skip_files = ['__init__.py', 'frontend.py', 'presets.py', 'utils.py']
-
-  for _, _, filenames in os.walk(path):
-    for filename in filenames:
-      if '_test' in filename:
-        continue
-      if filename in skip_files:
-        continue
-      if '.py' not in filename:
-        continue
-
-      if os.path.isfile(os.path.join(path, filename)):
-        data.append(os.path.join(path, filename))
-
-  return data
 
 
 class TestCommand(Command):

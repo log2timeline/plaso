@@ -17,500 +17,152 @@
 # limitations under the License.
 """The processing engine."""
 
+import abc
 import logging
-import multiprocessing
-import os
-import pdb
-import signal
 import sys
-import traceback
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as path_spec_factory
-from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-import plaso
 from plaso import preprocessors
-from plaso import output as output_plugins   # pylint: disable=unused-import
 from plaso.collector import collector
 from plaso.lib import errors
-from plaso.lib import event
-from plaso.lib import putils
 from plaso.lib import queue
-from plaso.lib import storage
-from plaso.lib import timelib
 from plaso.lib import worker
 from plaso.preprocessors import interface as preprocess_interface
 
-import pytz
+
+class EngineInputReader(object):
+  """Class that implements the input reader interface for the engine."""
+
+  @abc.abstractmethod
+  def Read(self):
+    """Reads a string from the input.
+
+    Returns:
+      A string containing the input.
+    """
+
+
+class EngineOutputWriter(object):
+  """Class that implements the output writer interface for the engine."""
+
+  @abc.abstractmethod
+  def Write(self, string):
+    """Wtites a string to the output.
+
+    Args:
+      string: A string containing the output.
+    """
+
+
+class StdinEngineInputReader(object):
+  """Class that implements a stdin input reader."""
+
+  def Read(self):
+    """Reads a string from the input.
+
+    Returns:
+      A string containing the input.
+    """
+    return sys.stdin.readline()
+
+
+class StdoutEngineOutputWriter(object):
+  """Class that implements a stdout output writer."""
+
+  def Write(self, string):
+    """Wtites a string to the output.
+
+    Args:
+      string: A string containing the output.
+    """
+    sys.stdout.write(string)
 
 
 class Engine(object):
   """Class that defines the processing engine."""
 
-  # The minimum amount of worker processes that are started.
-  MINIMUM_WORKERS = 3
-  # The maximum amount of worker processes started.
-  MAXIMUM_WORKERS = 15
-
-  def __init__(self, config):
-    """Initialize the Plaso engine.
-
-    Initializes some variables used in the tool as well
-    as going over the configuration and veryfing each one.
+  def __init__(
+      self, collection_queue, storage_queue, resolver_context=None):
+    """Initialize the engine object.
 
     Args:
-      config: A configuration object, either an optparse or an argparse one.
+      collection_queue: the collection queue object (instance of Queue).
+      storage_queue: the storage queue object (instance of Queue).
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None.
+    """
+    self._collection_queue = collection_queue
+    self._resolver_context = resolver_context
+    self._source = None
+    self._source_path_spec = None
+    self._source_file_entry = None
+    self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+
+  def CreateCollector(
+      self, include_directory_stat, vss_stores, filter_find_specs):
+    """Creates a collector.
+
+    Args:
+      include_directory_stat: Boolean value to indicate whether directory
+                              stat information should be collected.
+      vss_stores: The range of VSS stores to include in the collection,
+                  where 1 represents the first store. Set to None if no
+                  VSS stores should be processed.
+      filter_find_specs: List of filter find specifications (instances of
+                         dfvfs.FindSpec).
 
     Raises:
-      errors.BadConfigOption: If the configuration options are wrong.
+      RuntimeError: if source path specification is not set.
     """
-    self._byte_offset = None
-    self._collector = None
-    self._debug_mode = config.debug
-    self._file_filter = config.file_filter
-    self._output = None
-    self._process_image = False
-    self._process_vss = False
-    self._resolver_context = context.Context()
-    self._run_preprocess = config.preprocess
-    self._single_thread_mode = config.single_thread
-    self._source = None
-    self._source_file_entry = None
-    self._source_path_spec = None
-    self._storage_queue_producer = None
-    self._vss_stores = None
+    if not self._source_path_spec:
+      raise RuntimeError(u'Missing source.')
 
-    self.worker_threads = []
-    self.config = config
-
-    config.zone = pytz.timezone(config.tzone)
-
-    if config.workers < 1:
-      # One worker for each "available" CPU (minus other processes).
-      # The number three here is derived from the fact that the engine starts
-      # up:
-      #   + A collector process.
-      #   + A storage process.
-      # If we want to utilize all CPU's on the system we therefore need to start
-      # up workers that amounts to the total number of CPU's - 3 (these two plus
-      # the main process). Thus the number three.
-      cpus = multiprocessing.cpu_count() - 3
-
-      if cpus <= self.MINIMUM_WORKERS:
-        cpus = self.MINIMUM_WORKERS
-      elif cpus >= self.MAXIMUM_WORKERS:
-        # Let's have a maximum amount of workers.
-        cpus = self.MAXIMUM_WORKERS
-
-      config.workers = cpus
-
-  def _GetCollector(
-      self, pre_obj, collection_queue, storage_queue, resolver_context):
-    """Returns a collector object based on config.
-
-    Args:
-      pre_obj: The preprocessor object (instance of PreprocessObject).
-      collection_queue: the collection queue object (instance of Queue).
-      collection_queue: the storage queue object (instance of Queue).
-      resolver_context: The resolver context (instance of dfvfs.Context).
-    """
-    # Indicate whether the collection agent should collect directory
-    # stat information - this depends on whether the stat parser is
-    # loaded or not.
-    include_directory_stat = False
-
-    if hasattr(pre_obj, 'collection_information'):
-      loaded_parsers = pre_obj.collection_information.get('parsers', [])
-      if 'filestat' in loaded_parsers:
-        include_directory_stat = True
-
-    if self._source_path_spec.type_indicator in [
-        dfvfs_definitions.TYPE_INDICATOR_OS,
-        dfvfs_definitions.TYPE_INDICATOR_FAKE]:
-
-      if self._source_file_entry.IsDirectory():
-        if self._file_filter:
-          logging.debug(u'Starting a collection on directory with filter.')
-        elif self.config.recursive:
-          logging.debug(u'Starting a collection on directory.')
-
-      elif self._source_file_entry.IsFile():
-        logging.debug(u'Starting a collection on a single file.')
-        # No need for multiple workers when parsing a single file.
-        self.config.workers = 1
-
-      else:
-        raise errors.BadConfigOption(
-            u'Source: {0:s} has to be a file or directory.'.format(
-                self._source))
-    else:
-      if self._file_filter:
-        logging.debug(u'Starting a collection on image with filter.')
-      else:
-        logging.debug(u'Starting a collection on image.')
-
-    self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
     collector_object = collector.Collector(
-        collection_queue, self._storage_queue_producer, self._source,
-        self._source_path_spec, resolver_context)
-
-    if self._process_image and self._process_vss:
-      collector_object.SetVssInformation(vss_stores=self._vss_stores)
-
-    if self._file_filter:
-      collector_object.SetFilter(self._file_filter)
+        self._collection_queue, self._storage_queue_producer, self._source,
+        self._source_path_spec, resolver_context=self._resolver_context)
 
     collector_object.collect_directory_metadata = include_directory_stat
 
+    if vss_stores:
+      collector_object.SetVssInformation(vss_stores)
+
+    if filter_find_specs:
+      collector_object.SetFilter(filter_find_specs)
+
     return collector_object
 
-  def _PreProcess(self, pre_obj):
-    """Run the preprocessors.
+  def CreateExtractionWorker(self, worker_number, pre_obj, parsers):
+    """Creates an extraction worker object.
 
     Args:
+      worker_number: number that identifies the worker.
       pre_obj: The preprocessing object (instance of PreprocessObject).
+      parsers: A list of parser objects to use for processing.
+
+    Returns:
+      An extraction worker (instance of worker.ExtractionWorker).
     """
-    logging.info(u'Starting to collect preprocessing information.')
-    logging.info(u'Filename: {0:s}'.format(self._source))
-
-    if not self._process_image and not self.config.recursive:
-      return
-
-    searcher = self.GetSourceFileSystemSearcher()
-    if not getattr(self.config, 'os', None):
-      self.config.os = preprocess_interface.GuessOS(searcher)
-
-    plugin_list = preprocessors.PreProcessList(pre_obj)
-    pre_obj.guessed_os = self.config.os
-
-    for weight in plugin_list.GetWeightList(self.config.os):
-      for plugin in plugin_list.GetWeight(self.config.os, weight):
-        try:
-          plugin.Run(searcher)
-        except (IOError, errors.PreProcessFail) as exception:
-          logging.warning((
-              u'Unable to run preprocessor: {0:s} with error: {1:s} - '
-              u'attribute: {2:s} not set').format(
-                  plugin.plugin_name, exception, plugin.ATTRIBUTE))
-
-    # Set the timezone.
-    if hasattr(pre_obj, 'time_zone_str'):
-      logging.info(u'Setting timezone to: {0:s}'.format(pre_obj.time_zone_str))
-      try:
-        pre_obj.zone = pytz.timezone(pre_obj.time_zone_str)
-      except pytz.UnknownTimeZoneError:
-        if hasattr(self.config, 'zone'):
-          logging.warning(
-              (u'Unable to automatically configure timezone, falling back '
-               'to the user supplied one [{0:s}]').format(
-                  self.config.zone.zone))
-          pre_obj.zone = self.config.zone
-        else:
-          logging.warning(u'TimeZone was not properly set, defaults to UTC')
-    else:
-      pre_obj.zone = self.config.zone
-
-  def Start(self):
-    """Start the process, set up all processing."""
-
-    if self._single_thread_mode:
-      logging.info(u'Starting the tool in a single thread.')
-      try:
-        self._StartSingleThread()
-      except Exception as exception:
-        # The tool should generally not be run in single threaded mode
-        # for other reasons than to debug. Hence the general error
-        # catching.
-        logging.error(u'An uncaught exception occured: {0:s}.\n{1:s}'.format(
-            exception, traceback.format_exc()))
-        if self._debug_mode:
-          pdb.post_mortem()
-      return
-
-    if self.config.local:
-      logging.debug(u'Starting a local instance.')
-      self._StartLocal()
-      return
-
-    logging.error(u'This version only supports local instance.')
-    # TODO: Implement a more distributed version that is
-    # scalable. That way each part of the tool can be run in a separate
-    # machine.
-
-  def _StartSingleThread(self):
-    """Start everything up in a single thread.
-
-    This should not normally be used, since running the tool in a single
-    thread buffers up everything into memory until the storage is called.
-
-    Just to make it clear, this starts up the collection, completes that
-    before calling the worker that extracts all EventObjects and stores
-    them in memory. when that is all done, the storage function is called
-    to drain the buffer. Hence the tool's excessive use of memory in this
-    mode and the reason why it is not suggested to be used except for
-    debugging reasons (and mostly to get into the debugger).
-
-    This is therefore mostly useful during debugging sessions for some
-    limited parsing.
-    """
-    pre_obj = self._StartRuntime()
-    collection_queue = queue.SingleThreadedQueue()
-    storage_queue = queue.SingleThreadedQueue()
-
-    logging.debug(u'Starting collection.')
-
-    self._collector = self._GetCollector(
-        pre_obj, collection_queue, storage_queue, self._resolver_context)
-    self._collector.Collect()
-
-    logging.debug(u'Collection done.')
-
-    self.worker_threads = []
-
-    logging.debug(u'Starting worker.')
-    self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
-    my_worker = worker.EventExtractionWorker(
-        0, collection_queue, self._storage_queue_producer, self.config, pre_obj)
-    my_worker.Run()
-
-    logging.debug(u'Worker process done.')
-
-    self._storage_queue_producer.SignalEndOfInput()
-
-    logging.debug(u'Starting storage.')
-    if self.config.output_module:
-      storage_writer = storage.BypassStorageWriter(
-          storage_queue, self._output,
-          output_module_string=self.config.output_module, pre_obj=pre_obj)
-    else:
-      storage_writer = storage.StorageFileWriter(
-          storage_queue, self._output,
-          buffer_size=self.config.buffer_size, pre_obj=pre_obj)
-
-    storage_writer.WriteEventObjects()
-    logging.debug(u'Storage done.')
-
-    self._resolver_context.Empty()
-
-  def _StartRuntime(self):
-    """Run preprocessing and other actions needed before starting threads."""
-    pre_obj = None
-    if self.config.old_preprocess and os.path.isfile(self._output):
-      # Check if the storage file contains a pre processing object.
-      try:
-        with storage.StorageFile(
-            self._output, read_only=True) as store:
-          storage_information = store.GetStorageInformation()
-          if storage_information:
-            logging.info(u'Using preprocessing information from a prior run.')
-            pre_obj = storage_information[-1]
-            self._run_preprocess = False
-      except IOError:
-        logging.warning(u'Storage file does not exist, running pre process.')
-
-    if not pre_obj:
-      pre_obj = event.PreprocessObject()
-
-    # Run preprocessing if necessary.
-    if self._run_preprocess:
-      try:
-        self._PreProcess(pre_obj)
-      except errors.UnableToOpenFilesystem as exception:
-        logging.error(u'Unable to open the filesystem with error: {0:s}'.format(
-            exception))
-        return
-      except IOError as exception:
-        logging.error(u'Unable to pre process with error: {0:s}'.format(
-            exception))
-        return
-
-    if not getattr(pre_obj, 'zone', None):
-      pre_obj.zone = self.config.zone
-
-    # TODO: Make this more sane. Currently we are only checking against
-    # one possible version of Windows, and then making the assumption if
-    # that is not correct we default to Windows 7. Same thing with other
-    # OS's, no assumption or checks are really made there.
-    # Also this is done by default, and no way for the user to turn off
-    # this behavior, need to add a parameter to the frontend that takes
-    # care of overwriting this behavior.
-    if not getattr(self.config, 'filter', None):
-      self.config.filter = u''
-
-    if not self.config.filter:
-      self.config.filter = u''
-
-    parser_filter_string = u''
-
-    # If no parser filter is set, let's use our best guess of the OS
-    # to build that list.
-    if not getattr(self.config, 'parsers', ''):
-      if hasattr(pre_obj, 'osversion'):
-        os_version = pre_obj.osversion.lower()
-        # TODO: Improve this detection, this should be more 'intelligent', since
-        # there are quite a lot of versions out there that would benefit from
-        # loading up the set of 'winxp' parsers.
-        if 'windows xp' in os_version:
-          parser_filter_string = 'winxp'
-        elif 'windows server 2000' in os_version:
-          parser_filter_string = 'winxp'
-        elif 'windows server 2003' in os_version:
-          parser_filter_string = 'winxp'
-        else:
-          parser_filter_string = 'win7'
-
-      if getattr(pre_obj, 'guessed_os', None):
-        if pre_obj.guessed_os == 'MacOSX':
-          parser_filter_string = u'macosx'
-        elif pre_obj.guessed_os == 'Linux':
-          parser_filter_string = 'linux'
-
-      if parser_filter_string:
-        self.config.parsers = parser_filter_string
-        logging.info(u'Parser filter expression changed to: {0:s}'.format(
-            self.config.parsers))
-
-    # Save some information about the run time into the preprocessing object.
-    self._StoreCollectionInformation(pre_obj)
-
-    return pre_obj
-
-  def _StartLocal(self):
-    """Start the process, set up all threads and start them up.
-
-    The local implementation uses the muliprocessing library to
-    start up new threads or processes.
-
-    Raises:
-      errors.BadConfigOption: If the file being parsed does not exist.
-    """
-    pre_obj = self._StartRuntime()
-    collection_queue = queue.MultiThreadedQueue()
-    storage_queue = queue.MultiThreadedQueue()
-
-    start_collection_thread = True
-
-    if self.config.output_module:
-      storage_writer = storage.BypassStorageWriter(
-          storage_queue, self._output, self.config.output_module, pre_obj)
-    else:
-      storage_writer = storage.StorageFileWriter(
-          storage_queue, self._output, self.config.buffer_size, pre_obj)
-
-    self._collector = self._GetCollector(
-        pre_obj, collection_queue, storage_queue, self._resolver_context)
-
-    logging.info(u'Starting storage thread.')
-    self.storage_thread = multiprocessing.Process(
-        name='StorageThread', target=storage_writer.WriteEventObjects)
-    self.storage_thread.start()
-
-    if start_collection_thread:
-      logging.info(u'Starting collection thread.')
-      self.collection_thread = multiprocessing.Process(
-          name='Collection', target=self._collector.Collect)
-      self.collection_thread.start()
-
-    logging.info(u'Starting workers to extract events.')
-    self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
-    for worker_nr in range(self.config.workers):
-      logging.debug(u'Starting worker: {0:d}'.format(worker_nr))
-      my_worker = worker.EventExtractionWorker(
-          worker_nr, collection_queue, self._storage_queue_producer,
-          self.config, pre_obj)
-      self.worker_threads.append(multiprocessing.Process(
-          name='Worker_{0:d}'.format(worker_nr),
-          target=my_worker.Run))
-      self.worker_threads[-1].start()
-
-    logging.info(u'Collecting and processing files.')
-    if start_collection_thread:
-      self.collection_thread.join()
-    else:
-      self._collector.Collect()
-
-    logging.info(u'Collection is done, waiting for processing to complete.')
-    # TODO: Test to see if a process pool can be a better choice.
-    for thread_nr, thread in enumerate(self.worker_threads):
-      if thread.is_alive():
-        thread.join()
-
-      # Note that we explicitly must test against exitcode 0 here since
-      # thread.exitcode will be None if there is no exitcode.
-      elif thread.exitcode != 0:
-        logging.warning((
-            u'Worker process: {0:d} already exited with code: {1:d}.').format(
-                thread_nr, thread.exitcode))
-        thread.terminate()
-
-    logging.info(u'Processing is done, waiting for storage to complete.')
-
-    self._storage_queue_producer.SignalEndOfInput()
-    self.storage_thread.join()
-    logging.info(u'Storage is done.')
-
-  def _StoreCollectionInformation(self, obj):
-    """Store information about collection into an object."""
-    obj.collection_information = {}
-
-    obj.collection_information['version'] = plaso.GetVersion()
-    obj.collection_information['configured_zone'] = self.config.zone
-    obj.collection_information['file_processed'] = self._source
-    obj.collection_information['output_file'] = self._output
-    obj.collection_information['protobuf_size'] = self.config.buffer_size
-    obj.collection_information['parser_selection'] = getattr(
-        self.config, 'parsers', '(no list set)')
-    obj.collection_information['preferred_encoding'] = getattr(
-        self.config, 'preferred_encoding', None)
-    obj.collection_information['time_of_run'] = timelib.Timestamp.GetNow()
-    filter_query = getattr(self.config, 'parsers', None)
-    obj.collection_information['parsers'] = [
-        x.parser_name for x in putils.FindAllParsers(
-            obj, self.config, filter_query)['all']]
-
-    obj.collection_information['preprocess'] = self._run_preprocess
-    obj.collection_information['recursive'] = bool(
-        self.config.recursive)
-    obj.collection_information['debug'] = bool(self._debug_mode)
-    obj.collection_information['vss parsing'] = self._process_vss
-
-    if getattr(self.config, 'filter', None):
-      obj.collection_information['filter'] = self.config.filter
-
-    if getattr(self.config, 'file_filter', None):
-      if os.path.isfile(self._file_filter):
-        filters = []
-        with open(self._file_filter, 'rb') as fh:
-          for line in fh:
-            filters.append(line.rstrip())
-        obj.collection_information['file_filter'] = ', '.join(filters)
-
-    obj.collection_information['os_detected'] = getattr(
-        self.config, 'os', 'N/A')
-
-    if self._process_image:
-      obj.collection_information['method'] = 'imaged processed'
-      obj.collection_information['image_offset'] = self._byte_offset
-    else:
-      obj.collection_information['method'] = 'OS collection'
-
-    if self._single_thread_mode:
-      obj.collection_information['runtime'] = 'single threaded'
-    else:
-      obj.collection_information['runtime'] = 'multi threaded'
-      obj.collection_information['workers'] = self.config.workers
+    return worker.EventExtractionWorker(
+        worker_number, self._collection_queue, self._storage_queue_producer,
+        pre_obj, parsers)
 
   def GetSourceFileSystemSearcher(self):
     """Retrieves the file system searcher of the source.
 
     Returns:
       The file system searcher object (instance of dfvfs.FileSystemSearcher).
+
+    Raises:
+      RuntimeError: if source path specification is not set.
     """
+    if not self._source_path_spec:
+      raise RuntimeError(u'Missing source.')
+
     file_system = path_spec_resolver.Resolver.OpenFileSystem(
-        self._source_path_spec)
+        self._source_path_spec, resolver_context=self._resolver_context)
 
     type_indicator = self._source_path_spec.type_indicator
     if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
@@ -520,173 +172,110 @@ class Engine(object):
 
     return file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
-  def SetImageInformation(self, byte_offset):
-    """Sets the values necessary for collection from an image.
-
-       This function will enable image collection.
+  def PreprocessSource(self, pre_obj, platform):
+    """Preprocesses the source and fills the preprocessing object.
 
     Args:
-      byte_offset: Optional byte offset into the image file if this is
-                   a disk image. The default is None.
-
-    Raises:
-      BadConfigOption: if the byte offset is not defined and cannot be
-                       determined from the sector offset and bytes per sector.
+      pre_obj: the preprocessing object (instance of PreprocessObject).
+      platform: string that indicates the platform (operating system).
     """
-    if byte_offset is not None:
-      self._byte_offset = byte_offset
-    else:
-      # If no offset was provided default to 0.
-      self._byte_offset = 0
+    searcher = self.GetSourceFileSystemSearcher()
+    if not platform:
+      platform = preprocess_interface.GuessOS(searcher)
+    pre_obj.guessed_os = platform
 
-    self._process_image = True
-    # If we're dealing with a storage media image always run pre-processing.
-    self._run_preprocess = True
+    plugin_list = preprocessors.PreProcessList(pre_obj)
 
-  def SetOutput(self, output):
-    """Checks if the output file is valid and sets it accordingly.
+    for weight in plugin_list.GetWeightList(platform):
+      for plugin in plugin_list.GetWeight(platform, weight):
+        try:
+          plugin.Run(searcher)
+        except (IOError, errors.PreProcessFail) as exception:
+          logging.warning((
+              u'Unable to run preprocessor: {0:s} for attribute: {1:s} '
+              u'with error: {2:s}').format(
+                  plugin.plugin_name, plugin.ATTRIBUTE, exception))
 
-    Args:
-      output: The output file.
-
-    Raises:
-      BadConfigOption: if the output is invalid.
-    """
-    if os.path.exists(output):
-      if not os.path.isfile(output):
-        raise errors.BadConfigOption(
-            u'Output: {0:s} exists but is not a file.'.format(output))
-      logging.warning(u'Appending to an already existing output file.')
-
-    dirname = os.path.dirname(output)
-    if not dirname:
-      dirname = '.'
-
-    # TODO: add a more thorough check to see if the output really is
-    # a plaso storage file.
-
-    if not os.access(dirname, os.W_OK):
-      raise errors.BadConfigOption(
-          u'Unable to write to output file: {0:s}'.format(output))
-
-    self._output = output
-
-  def SetSource(self, source, source_path_spec):
-    """Checks if the source valid and sets it accordingly.
+  def SetSource(self, source_path_spec):
+    """Sets the source.
 
     Args:
-      source: The source device, file or directory.
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
                         scanner. The default is None.
-
-    Raises:
-      BadConfigOption: if the source is invalid.
     """
-    try:
-      source = unicode(source)
-    except UnicodeDecodeError as exception:
-      raise errors.BadConfigOption(
-          u'Unable to convert source to Unicode with error: {0:s}.'.format(
-              exception))
+    path_spec = source_path_spec
+    while path_spec.parent:
+      path_spec = path_spec.parent
 
-    if not source_path_spec:
-      source_path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_OS, location=source)
-
-    source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        source_path_spec, resolver_context=self._resolver_context)
-
-    if not source_file_entry:
-      raise errors.BadConfigOption(
-          u'No such device, file or directory: {0:s}.'.format(source))
-
-    if (not source_file_entry.IsDirectory() and
-        not source_file_entry.IsFile() and
-        not source_file_entry.IsDevice()):
-      raise errors.CollectorError(
-          u'Source path: {0:s} not a device, file or directory.'.format(source))
-
-    self._source = source
+    # Note that source should be used for output purposes only.
+    self._source = getattr(path_spec, 'location', u'')
     self._source_path_spec = source_path_spec
-    self._source_file_entry = source_file_entry
 
-  def SetVssInformation(self, vss_stores):
-    """Sets the Volume Shadow Snapshots (VSS) information.
+    self._source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+       self._source_path_spec, resolver_context=self._resolver_context)
 
-       This function will enable VSS collection.
+    if not self._source_file_entry:
+      raise errors.BadConfigOption(
+          u'No such device, file or directory: {0:s}.'.format(self._source))
 
-    Args:
-      vss_stores: List of VSS store index numbers to process.
-                  Where 1 represents the first store.
-    """
-    self._process_vss = True
-    self._vss_stores = vss_stores
+    if (not self._source_file_entry.IsDirectory() and
+        not self._source_file_entry.IsFile() and
+        not self._source_file_entry.IsDevice()):
+      raise errors.CollectorError(
+          u'Source path: {0:s} not a device, file or directory.'.format(
+              self._source))
 
-  # Note that this function is not called by the normal termination.
-  def StopThreads(self):
-    """Signals the tool to stop running nicely."""
-    if self._single_thread_mode and self._debug_mode:
-      logging.warning(u'Running in debug mode, set up debugger.')
-      pdb.post_mortem()
-      return
+    if self._source_path_spec.type_indicator in [
+        dfvfs_definitions.TYPE_INDICATOR_OS,
+        dfvfs_definitions.TYPE_INDICATOR_FAKE]:
 
-    logging.warning(u'Stopping collector.')
-    self._collector.SignalEndOfInput()
+      if self._source_file_entry.IsFile():
+        logging.debug(u'Starting a collection on a single file.')
+        # No need for multiple workers when parsing a single file.
 
-    logging.warning(u'Stopping storage.')
+      elif not self._source_file_entry.IsDirectory():
+        raise errors.BadConfigOption(
+            u'Source: {0:s} has to be a file or directory.'.format(
+                self._source))
+
+  def SignalEndOfInputStorageQueue(self):
+    """Signals the storage queue no input remains."""
     self._storage_queue_producer.SignalEndOfInput()
 
-    # Kill the collection thread.
-    if hasattr(self, 'collection_thread'):
-      logging.warning(u'Terminating the collection thread.')
-      self.collection_thread.terminate()
+  def SourceIsDirectory(self):
+    """Determines if the source is a directory.
 
-    try:
-      logging.warning(u'Waiting for workers to complete.')
-      for number, worker_thread in enumerate(self.worker_threads):
-        pid = worker_thread.pid
-        logging.warning(u'Waiting for worker: {0:d} [PID {1:d}]'.format(
-            number, pid))
-        # Let's kill the process, different methods depending on the platform
-        # used.
-        if sys.platform.startswith('win'):
-          import ctypes
-          process_terminate = 1
-          handle = ctypes.windll.kernel32.OpenProcess(
-              process_terminate, False, pid)
-          ctypes.windll.kernel32.TerminateProcess(handle, -1)
-          ctypes.windll.kernel32.CloseHandle(handle)
-        else:
-          try:
-            os.kill(pid, signal.SIGKILL)
-          except OSError as exception:
-            logging.error(
-                u'Unable to kill process {0:d} with error: {1:s}'.format(
-                    pid, exception))
+    Raises:
+      RuntimeError: if source path specification is not set.
+    """
+    if not self._source_file_entry:
+      raise RuntimeError(u'Missing source.')
 
-        logging.warning(u'Worker: {0:d} CLOSED'.format(pid))
+    return (not self.SourceIsStorageMediaImage() and
+            self._source_file_entry.IsDirectory())
 
-      logging.warning(u'Workers completed.')
-      if hasattr(self, 'storage_thread'):
-        logging.warning(u'Waiting for storage.')
-        self.storage_thread.join()
-        logging.warning(u'Storage ended.')
+  def SourceIsFile(self):
+    """Determines if the source is a file.
 
-      logging.info(u'Exiting the tool.')
-      # Sometimes the main thread will be unresponsive.
-      if not sys.platform.startswith('win'):
-        os.kill(os.getpid(), signal.SIGKILL)
+    Raises:
+      RuntimeError: if source path specification is not set.
+    """
+    if not self._source_file_entry:
+      raise RuntimeError(u'Missing source.')
 
-    except KeyboardInterrupt:
-      logging.warning(u'Terminating all processes.')
-      for t in self.worker_threads:
-        t.terminate()
-      logging.warning(u'Workers terminated.')
-      if hasattr(self, 'storage_thread'):
-        self.storage_thread.terminate()
-        logging.warning(u'Storage terminated.')
+    return (not self.SourceIsStorageMediaImage() and
+            self._source_file_entry.IsFile())
 
-      # Sometimes the main thread will be unresponsive.
-      if not sys.platform.startswith('win'):
-        os.kill(os.getpid(), signal.SIGKILL)
+  def SourceIsStorageMediaImage(self):
+    """Determines if the source is storage media image file or device.
+
+    Raises:
+      RuntimeError: if source path specification is not set.
+    """
+    if not self._source_path_spec:
+      raise RuntimeError(u'Missing source.')
+
+    return self._source_path_spec.type_indicator not in [
+        dfvfs_definitions.TYPE_INDICATOR_OS,
+        dfvfs_definitions.TYPE_INDICATOR_FAKE]
