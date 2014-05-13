@@ -50,11 +50,12 @@ import pymsiecf
 import pyregf
 
 import plaso
+from plaso.engine import worker
 from plaso.frontend import psort
+from plaso.frontend import utils as frontend_utils
+from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import utils
 from plaso.lib import queue
-from plaso.lib import worker
 
 
 # TODO: Remove this after the dfVFS integration.
@@ -89,6 +90,180 @@ class PprofEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     if plugin != u'N/A':
       self.counter[u'[Plugin] {}'.format(plugin)] += 1
     self.counter['Total'] += 1
+
+
+def PrintHeader(options):
+  """Print header information, including library versions."""
+  print frontend_utils.FormatHeader('File Parsed')
+  print u'{:>20s}'.format(options.file_to_parse)
+
+  print frontend_utils.FormatHeader('Versions')
+  print frontend_utils.FormatOutputString('plaso engine', plaso.GetVersion())
+  print frontend_utils.FormatOutputString('pyevt', pyevt.get_version())
+  print frontend_utils.FormatOutputString('pyevtx', pyevtx.get_version())
+  print frontend_utils.FormatOutputString('pylnk', pylnk.get_version())
+  print frontend_utils.FormatOutputString('pymsiecf', pymsiecf.get_version())
+  print frontend_utils.FormatOutputString('pyregf', pyregf.get_version())
+
+  if options.filter:
+    print frontend_utils.FormatHeader('Filter Used')
+    print frontend_utils.FormatOutputString('Filter String', options.filter)
+
+  if options.parsers:
+    print frontend_utils.FormatHeader('Parser Filter Used')
+    print frontend_utils.FormatOutputString('Parser String', options.parsers)
+
+
+def ProcessStorage(options):
+  """Process a storage file and produce profile results.
+
+  Args:
+    options: the command line arguments (instance of argparse.Namespace).
+
+  Returns:
+    The profiling statistics or None on error.
+  """
+  storage_parameters = options.storage.split()
+  storage_parameters.append(options.file_to_parse)
+  if options.filter:
+    storage_parameters.append(options.filter)
+
+  front_end = psort.PsortFrontend()
+
+  try:
+    front_end.ParseOptions(options)
+  except errors.BadConfigOption as exception:
+    logging.error(u'{0:s}'.format(exception))
+    return
+
+  if options.verbose:
+    # TODO: why not move this functionality into psort?
+    profiler = cProfile.Profile()
+    profiler.enable()
+  else:
+    time_start = time.time()
+
+  # Call psort and process output.
+  _ = front_end.ParseStorage(options)
+
+  if options.verbose:
+    profiler.disable()
+  else:
+    time_end = time.time()
+
+  if options.verbose:
+    return GetStats(profiler)
+  else:
+    print frontend_utils.FormatHeader('Time Used')
+    print u'{:>20f}s'.format(time_end - time_start)
+
+
+def ProcessFile(options):
+  """Process a file and produce profile results."""
+  if options.proto_file and os.path.isfile(options.proto_file):
+    with open(options.proto_file) as fh:
+      proto_string = fh.read()
+
+      proto = transmission_pb2.PathSpec()
+      try:
+        text_format.Merge(proto_string, proto)
+      except text_format.ParseError as exception:
+        logging.error(u'Unable to parse file, error: {}'.format(
+            exception))
+        sys.exit(1)
+
+      serializer = protobuf_serializer.ProtobufPathSpecSerializer
+      path_spec = serializer.ReadSerializedObject(proto)
+  else:
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=options.file_to_parse)
+
+  file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+  if file_entry is None:
+    logging.error(u'Unable to open file: {0:s}'.format(options.file_to_parse))
+    sys.exit(1)
+
+  pre_obj = event.PreprocessObject()
+  storage_queue = queue.SingleThreadedQueue()
+  storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+
+  # Set few options the engine expects to be there.
+  # TODO: Can we rather set this directly in argparse?
+  options.single_thread = True
+  options.debug = False
+  options.text_prepend = u''
+  my_worker = worker.EventExtractionWorker(
+      '0', None, storage_queue_producer, config=options, pre_obj=pre_obj)
+
+  if options.verbose:
+    profiler = cProfile.Profile()
+    profiler.enable()
+  else:
+    time_start = time.time()
+  my_worker.ParseFile(file_entry)
+
+  if options.verbose:
+    profiler.disable()
+  else:
+    time_end = time.time()
+
+  storage_queue_producer.SignalEndOfInput()
+
+  event_object_consumer = PprofEventObjectQueueConsumer(storage_queue)
+  event_object_consumer.ConsumeEventObjects()
+
+  if not options.verbose:
+    print frontend_utils.FormatHeader('Time Used')
+    print u'{:>20f}s'.format(time_end - time_start)
+
+  print frontend_utils.FormatHeader('Parsers Loaded')
+  # Accessing protected member.
+  # pylint: disable=protected-access
+  plugins = []
+  for parser in sorted(my_worker._parsers['all']):
+    print frontend_utils.FormatOutputString('', parser.parser_name)
+    parser_plugins = getattr(parser, '_plugins', [])
+    plugins.extend(parser_plugins)
+
+  print frontend_utils.FormatHeader('Plugins Loaded')
+  for plugin in sorted(plugins):
+    if isinstance(plugin, basestring):
+      print frontend_utils.FormatOutputString('', plugin)
+    else:
+      plugin_string = getattr(plugin, 'NAME', u'N/A')
+      print frontend_utils.FormatOutputString('', plugin_string)
+
+  print frontend_utils.FormatHeader('Parsers Used')
+  for parser in sorted(event_object_consumer.parsers):
+    print frontend_utils.FormatOutputString('', parser)
+
+  print frontend_utils.FormatHeader('Plugins Used')
+  for plugin in sorted(event_object_consumer.plugins):
+    print frontend_utils.FormatOutputString('', plugin)
+
+  print frontend_utils.FormatHeader('Counter')
+  for key, value in event_object_consumer.counter.most_common():
+    print frontend_utils.FormatOutputString(key, value)
+
+  if options.verbose:
+    return GetStats(profiler)
+
+
+def GetStats(profiler):
+  """Print verbose information from profiler and return a stats object."""
+  stats = pstats.Stats(profiler, stream=sys.stdout)
+  print frontend_utils.FormatHeader('Profiler')
+
+  print '\n{:-^20}'.format(' Top 10 Time Spent ')
+  stats.sort_stats('cumulative')
+  stats.print_stats(10)
+
+  print '\n{:-^20}'.format(' Sorted By Function Calls ')
+  stats.sort_stats('calls')
+  stats.print_stats()
+
+  return stats
 
 
 def Main():
@@ -156,11 +331,11 @@ def Main():
     arg_parser.print_usage()
     print ''
     logging.error('Not able to run without a file to process.')
-    sys.exit(1)
+    return False
 
   if options.file_to_parse and not os.path.isfile(options.file_to_parse):
     logging.error(u'File [{0:s}] needs to exist.'.format(options.file_to_parse))
-    sys.exit(1)
+    return False
 
   PrintHeader(options)
   # Stats attribute used for console sesssions.
@@ -175,166 +350,11 @@ def Main():
     ipshell.confirm_exit = False
     ipshell()
 
-
-def PrintHeader(options):
-  """Print header information, including library versions."""
-  print utils.FormatHeader('File Parsed')
-  print u'{:>20s}'.format(options.file_to_parse)
-
-  print utils.FormatHeader('Versions')
-  print utils.FormatOutputString('plaso engine', plaso.GetVersion())
-  print utils.FormatOutputString('pyevt', pyevt.get_version())
-  print utils.FormatOutputString('pyevtx', pyevtx.get_version())
-  print utils.FormatOutputString('pylnk', pylnk.get_version())
-  print utils.FormatOutputString('pymsiecf', pymsiecf.get_version())
-  print utils.FormatOutputString('pyregf', pyregf.get_version())
-
-  if options.filter:
-    print utils.FormatHeader('Filter Used')
-    print utils.FormatOutputString('Filter String', options.filter)
-
-  if options.parsers:
-    print utils.FormatHeader('Parser Filter Used')
-    print utils.FormatOutputString('Parser String', options.parsers)
-
-
-def ProcessStorage(options):
-  """Process a storage file and produce profile results."""
-  storage_parameters = options.storage.split()
-  storage_parameters.append(options.file_to_parse)
-  if options.filter:
-    storage_parameters.append(options.filter)
-
-  arguments = psort.ProcessArguments(storage_parameters)
-
-  if options.verbose:
-    profiler = cProfile.Profile()
-    profiler.enable()
-  else:
-    time_start = time.time()
-
-  # Call psort and process output.
-  psort.Main(arguments)
-
-  if options.verbose:
-    profiler.disable()
-  else:
-    time_end = time.time()
-
-  if options.verbose:
-    return GetStats(profiler)
-  else:
-    print utils.FormatHeader('Time Used')
-    print u'{:>20f}s'.format(time_end - time_start)
-
-
-def ProcessFile(options):
-  """Process a file and produce profile results."""
-  if options.proto_file and os.path.isfile(options.proto_file):
-    with open(options.proto_file) as fh:
-      proto_string = fh.read()
-
-      proto = transmission_pb2.PathSpec()
-      try:
-        text_format.Merge(proto_string, proto)
-      except text_format.ParseError as exception:
-        logging.error(u'Unable to parse file, error: {}'.format(
-            exception))
-        sys.exit(1)
-
-      serializer = protobuf_serializer.ProtobufPathSpecSerializer
-      path_spec = serializer.ReadSerializedObject(proto)
-  else:
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=options.file_to_parse)
-
-  file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
-  if file_entry is None:
-    logging.error(u'Unable to open file: {0:s}'.format(options.file_to_parse))
-    sys.exit(1)
-
-  pre_obj = event.PreprocessObject()
-  storage_queue = queue.SingleThreadedQueue()
-  storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
-
-  # Set few options the engine expects to be there.
-  # TODO: Can we rather set this directly in argparse?
-  options.single_thread = True
-  options.debug = False
-  options.text_prepend = u''
-  my_worker = worker.EventExtractionWorker(
-      '0', None, storage_queue_producer, config=options, pre_obj=pre_obj)
-
-  if options.verbose:
-    profiler = cProfile.Profile()
-    profiler.enable()
-  else:
-    time_start = time.time()
-  my_worker.ParseFile(file_entry)
-
-  if options.verbose:
-    profiler.disable()
-  else:
-    time_end = time.time()
-
-  storage_queue_producer.SignalEndOfInput()
-
-  event_object_consumer = PprofEventObjectQueueConsumer(storage_queue)
-  event_object_consumer.ConsumeEventObjects()
-
-  if not options.verbose:
-    print utils.FormatHeader('Time Used')
-    print u'{:>20f}s'.format(time_end - time_start)
-
-  print utils.FormatHeader('Parsers Loaded')
-  # Accessing protected member.
-  # pylint: disable=protected-access
-  plugins = []
-  for parser in sorted(my_worker._parsers['all']):
-    print utils.FormatOutputString('', parser.parser_name)
-    parser_plugins = getattr(parser, '_plugins', [])
-    plugins.extend(parser_plugins)
-
-  print utils.FormatHeader('Plugins Loaded')
-  for plugin in sorted(plugins):
-    if isinstance(plugin, basestring):
-      print utils.FormatOutputString('', plugin)
-    else:
-      plugin_string = getattr(plugin, 'NAME', u'N/A')
-      print utils.FormatOutputString('', plugin_string)
-
-  print utils.FormatHeader('Parsers Used')
-  for parser in sorted(event_object_consumer.parsers):
-    print utils.FormatOutputString('', parser)
-
-  print utils.FormatHeader('Plugins Used')
-  for plugin in sorted(event_object_consumer.plugins):
-    print utils.FormatOutputString('', plugin)
-
-  print utils.FormatHeader('Counter')
-  for key, value in event_object_consumer.counter.most_common():
-    print utils.FormatOutputString(key, value)
-
-  if options.verbose:
-    return GetStats(profiler)
-
-
-def GetStats(profiler):
-  """Print verbose information from profiler and return a stats object."""
-  stats = pstats.Stats(profiler, stream=sys.stdout)
-  print utils.FormatHeader('Profiler')
-
-  print '\n{:-^20}'.format(' Top 10 Time Spent ')
-  stats.sort_stats('cumulative')
-  stats.print_stats(10)
-
-  print '\n{:-^20}'.format(' Sorted By Function Calls ')
-  stats.sort_stats('calls')
-  stats.print_stats()
-
-  return stats
+  return True
 
 
 if __name__ == '__main__':
-  Main()
+  if not Main():
+    sys.exit(1)
+  else:
+    sys.exit(0)

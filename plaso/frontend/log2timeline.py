@@ -18,7 +18,6 @@
 """The log2timeline front-end."""
 
 import argparse
-import locale
 import logging
 import multiprocessing
 import sys
@@ -28,11 +27,11 @@ import textwrap
 import pytsk3
 
 import plaso
+from plaso.engine import engine
 from plaso.frontend import frontend
-from plaso.lib import engine
+from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
-from plaso.lib import info
-from plaso.lib import pfilter
+from plaso.lib import putils
 from plaso.preprocessors import interface as preprocess_interface
 
 import pytz
@@ -66,6 +65,87 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
     output_writer = engine.StdoutEngineOutputWriter()
 
     super(Log2TimelineFrontend, self).__init__(input_reader, output_writer)
+
+  def _GetPluginData(self):
+    """Return a dict object with a list of all available parsers and plugins."""
+    return_dict = {}
+
+    # Import all plugins and parsers to print out the necessary information.
+    # This is not import at top since this is only required if this parameter
+    # is set, otherwise these libraries get imported in their respected
+    # locations.
+
+    # The reason why some of these libraries are imported as '_' is to make sure
+    # all appropriate parsers and plugins are registered, yet we don't need to
+    # directly call these libraries, it is enough to load them up to get them
+    # registered.
+    from plaso import filters
+    from plaso import parsers as _
+    from plaso import output as _
+    from plaso.frontend import presets
+    from plaso.lib import output
+    from plaso.lib import plugin
+
+    return_dict['Versions'] = [
+        ('plaso engine', plaso.GetVersion()),
+        ('python', sys.version)]
+
+    return_dict['Parsers'] = []
+    for parser in sorted(putils.FindAllParsers()['all']):
+      doc_string, _, _ = parser.__doc__.partition('\n')
+      return_dict['Parsers'].append((parser.parser_name, doc_string))
+
+    return_dict['Parser Lists'] = []
+    for category, parsers in sorted(presets.categories.items()):
+      return_dict['Parser Lists'].append((category, ', '.join(parsers)))
+
+    return_dict['Output Modules'] = []
+    for name, description in sorted(output.ListOutputFormatters()):
+      return_dict['Output Modules'].append((name, description))
+
+    return_dict['Plugins'] = []
+
+    for plugin, obj in sorted(plugin.BasePlugin.classes.iteritems()):
+      doc_string, _, _ = obj.__doc__.partition('\n')
+      return_dict['Plugins'].append((plugin, doc_string))
+
+    return_dict['Filters'] = []
+    for filter_obj in sorted(filters.ListFilters()):
+      doc_string, _, _ = filter_obj.__doc__.partition('\n')
+      return_dict['Filters'].append((filter_obj.filter_name, doc_string))
+
+    return return_dict
+
+  def _GetTimeZones(self):
+    """Returns a generator of the names of all the supported time zones."""
+    yield 'local'
+    for zone in pytz.all_timezones:
+      yield zone
+
+  def ListPluginInformation(self):
+    """Lists all plugin and parser information."""
+    plugin_list = self._GetPluginData()
+    return_string_pieces = []
+
+    return_string_pieces.append(
+        u'{:=^80}'.format(u' log2timeline/plaso information. '))
+
+    for header, data in plugin_list.items():
+      return_string_pieces.append(self.FormatHeader(header))
+      for entry_header, entry_data in data:
+        return_string_pieces.append(
+            frontend_utils.FormatOutputString(entry_header, entry_data))
+
+    self._output_writer.Write(u'\n'.join(return_string_pieces))
+
+  def ListTimeZones(self):
+    """Lists the time zones."""
+    self._output_writer.Write(u'=' * 40)
+    self._output_writer.Write(u'       ZONES')
+    self._output_writer.Write(u'-' * 40)
+    for timezone in self._GetTimeZones():
+      self._output_writer.Write(u'  {0:s}'.format(timezone))
+    self._output_writer.Write(u'=' * 40)
 
   # TODO: move or rewrite this after dfVFS image support integration.
   def GetPartitionMap(self, image_path):
@@ -107,12 +187,6 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
 
     return partition_map
 
-  def GetTimeZoneList(self):
-    """Returns a generator of the names of all the supported time zones."""
-    yield 'local'
-    for zone in pytz.all_timezones:
-      yield zone
-
   def PrintParitionMap(self, source):
     """Prints the partition map.
 
@@ -121,7 +195,7 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
     """
     partition_map = self.GetPartitionMap(source)
 
-    print 'Sector size: {}'.format(partition_map[0])
+    print u'Sector size: {}'.format(partition_map[0])
     print u'Index  {:10s} {:10s} {}'.format('Offset', 'Length', 'Description')
     for entry in partition_map[1:]:
       print u'{:02d}:    {:010d} {:010d} {}'.format(
@@ -167,8 +241,8 @@ def Main():
   performance_group = arg_parser.add_argument_group('Performance Arguments')
 
   function_group.add_argument(
-      '-z', '--zone', dest='tzone', action='store', type=str, default='UTC',
-      help=(
+      '-z', '--zone', '--timezone', dest='timezone', action='store', type=str,
+      default='UTC', help=(
           'Define the timezone of the IMAGE (not the output). This is usually '
           'discovered automatically by preprocessing but might need to be '
           'specifically set if preprocessing does not properly detect or to '
@@ -264,7 +338,7 @@ def Main():
           ' --partition_map.'))
 
   # Build the version information.
-  version_string = u'log2timeline - plaso back-end {}'.format(
+  version_string = u'log2timeline - plaso back-end {0:s}'.format(
       plaso.GetVersion())
 
   info_group.add_argument(
@@ -324,8 +398,7 @@ def Main():
           'net/usage/filters'))
 
   # Properly prepare the attributes according to local encoding.
-  preferred_encoding = locale.getpreferredencoding()
-  if preferred_encoding.lower() == 'ascii':
+  if front_end.preferred_encoding == 'ascii':
     logging.warning(
         u'The preferred encoding of your system is ASCII, which is not optimal '
         u'for the typically non-ASCII characters that need to be parsed and '
@@ -335,22 +408,16 @@ def Main():
         u'encoding, otherwise continue at own risk.')
     time.sleep(5)
 
-  u_argv = [x.decode(preferred_encoding) for x in sys.argv]
+  u_argv = [x.decode(front_end.preferred_encoding) for x in sys.argv]
   sys.argv = u_argv
   options = arg_parser.parse_args()
-  options.preferred_encoding = preferred_encoding
 
-  if options.tzone == 'list':
-    print '=' * 40
-    print '       ZONES'
-    print '-' * 40
-    for zone in front_end.GetTimeZoneList():
-      print '  {0:s}'.format(zone)
-    print '=' * 40
+  if options.timezone == 'list':
+    front_end.ListTimeZones()
     return True
 
   if options.show_info:
-    print info.GetPluginInformation()
+    front_end.ListPluginInformation()
     return True
 
   format_str = (
@@ -375,9 +442,9 @@ def Main():
 
   if not options.output:
     arg_parser.print_help()
-    print ''
+    print u''
     arg_parser.print_usage()
-    print ''
+    print u''
     logging.error(u'Wrong usage: need to define an output.')
     return False
 
@@ -390,31 +457,17 @@ def Main():
     try:
       front_end.PrintParitionMap(source)
     except errors.UnableToOpenFilesystem as exception:
-      print exception
+      logging.error(u'{0:s}'.format(exception))
       return False
     return True
-
-  if not options.source:
-    arg_parser.print_help()
-    print ''
-    arg_parser.print_usage()
-    print ''
-    logging.error(u'No input source supplied.')
-    return False
-
-  if options.filter and not pfilter.GetMatcher(options.filter):
-    logging.error((
-        u'Filter error, unable to proceed. There is a problem with your '
-        u'filter: {0:s}').format(options.filter))
-    return False
 
   try:
     front_end.ParseOptions(options, 'source')
     front_end.SetStorageFile(options.output)
   except errors.BadConfigOption as exception:
     arg_parser.print_help()
-    print ''
-    logging.error('{0:s}'.format(exception))
+    print u''
+    logging.error(u'{0:s}'.format(exception))
     return False
 
   # Check to see if we are trying to parse a mount point.

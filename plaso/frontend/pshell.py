@@ -45,8 +45,10 @@ from plaso import output
 from plaso import parsers
 from plaso import preprocessors
 
-from plaso.collector import collector
-from plaso.collector import scanner
+from plaso.engine import collector
+from plaso.engine import engine
+from plaso.engine import scanner
+from plaso.engine import worker
 
 from plaso.frontend import frontend
 # TODO: why does preg and psort get imported here?
@@ -54,7 +56,6 @@ from plaso.frontend import preg
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
 
-from plaso.lib import engine
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -70,7 +71,6 @@ from plaso.lib import registry as class_registry
 from plaso.lib import storage
 from plaso.lib import text_parser
 from plaso.lib import timelib
-from plaso.lib import worker
 
 from plaso.output import helper
 
@@ -201,7 +201,7 @@ def Main():
   options.preprocess = False
   options.recursive = False
   options.single_thread = False
-  options.tzone = 'UTC'
+  options.timezone = 'UTC'
   options.workers = 5
 
   format_str = '[%(levelname)s] (%(processName)-10s) %(message)s'
@@ -321,6 +321,11 @@ def Main():
   ipshell.confirm_exit = False
   ipshell()
 
+  return True
+
 
 if __name__ == '__main__':
-  Main()
+  if not Main():
+    sys.exit(1)
+  else:
+    sys.exit(0)

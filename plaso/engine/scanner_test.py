@@ -20,10 +20,10 @@
 import os
 import unittest
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.collector import scanner
-from plaso.lib import engine
+from plaso.engine import engine
+from plaso.engine import scanner
 
 
 class UserInputException(Exception):
@@ -87,7 +87,7 @@ class FileSystemScannerTest(unittest.TestCase):
     path_spec = test_scanner.Scan(test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(test_scanner.partition_offset, 0)
 
   def _TestScanPartionedImage(self, test_file):
@@ -108,7 +108,7 @@ class FileSystemScannerTest(unittest.TestCase):
     path_spec = test_scanner.Scan(test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(test_scanner.partition_offset, 180224)
 
     test_scanner = TestFileSystemScanner(
@@ -124,7 +124,7 @@ class FileSystemScannerTest(unittest.TestCase):
     path_spec = test_scanner.Scan(test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(test_scanner.partition_offset, 180224)
 
     test_scanner = TestFileSystemScanner(
@@ -145,7 +145,7 @@ class FileSystemScannerTest(unittest.TestCase):
     path_spec = test_scanner.Scan(test_file)
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
-        path_spec.type_indicator, definitions.TYPE_INDICATOR_TSK)
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     self.assertEquals(test_scanner.partition_offset, 0)
     self.assertEquals(test_scanner.vss_stores, [1, 2])
 

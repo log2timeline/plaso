@@ -15,39 +15,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for psort front-end."""
+"""Tests for the psort front-end."""
 
 import os
 import StringIO
-import shutil
-import tempfile
 import unittest
 
 from plaso.frontend import psort
+from plaso.frontend import test_lib
 from plaso.lib import event
-from plaso.lib import output
 from plaso.lib import eventdata
+from plaso.lib import output
 from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.lib import timelib_test
-
-
-class TempDirectory(object):
-  """A self cleaning temporary directory."""
-
-  def __init__(self):
-    """Initializes the temporary directory."""
-    super(TempDirectory, self).__init__()
-    self.name = u''
-
-  def __enter__(self):
-    """Make this work with the 'with' statement."""
-    self.name = tempfile.mkdtemp()
-    return self.name
-
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make this work with the 'with' statement."""
-    shutil.rmtree(self.name, True)
 
 
 class TestEvent1(event.EventObject):
@@ -125,37 +106,38 @@ class TestEventBuffer(output.EventBuffer):
     pass
 
 
-class PsortTest(unittest.TestCase):
-  """Test the plaso psort front-end."""
+class PsortFrontendTest(test_lib.FrontendTestCase):
+  """Tests for the psort front-end."""
 
   def setUp(self):
     """Setup sets parameters that will be reused throughout this test."""
+    self._front_end = psort.PsortFrontend()
+
     # TODO: have sample output generated from the test.
-    self.test_file = os.path.join('test_data', 'psort_test.out')
+    self._test_file = os.path.join(self._TEST_DATA_PATH, 'psort_test.out')
     self.first = timelib_test.CopyStringToTimestamp('2012-07-24 21:45:24')
     self.last = timelib_test.CopyStringToTimestamp('2016-11-18 01:15:43')
 
-  def testSetupStorage(self):
-    storage_cls = psort.SetupStorage(self.test_file)
-    self.assertEquals(type(storage_cls), storage.StorageFile)
-
   def testReadEntries(self):
     """Ensure returned EventObjects from the storage are within timebounds."""
-    store = storage.StorageFile(self.test_file, read_only=True)
     timestamp_list = []
     pfilter.TimeRangeCache.ResetTimeConstraints()
     pfilter.TimeRangeCache.SetUpperTimestamp(self.last)
     pfilter.TimeRangeCache.SetLowerTimestamp(self.first)
-    store.SetStoreLimit()
 
-    event_object = store.GetSortedEntry()
+    storage_file = storage.StorageFile(self._test_file, read_only=True)
+    storage_file.SetStoreLimit()
+
+    event_object = storage_file.GetSortedEntry()
     while event_object:
       timestamp_list.append(event_object.timestamp)
-      event_object = store.GetSortedEntry()
+      event_object = storage_file.GetSortedEntry()
 
     self.assertEquals(len(timestamp_list), 8)
-    self.assertTrue(timestamp_list[0] >= self.first and
-                    timestamp_list[-1] <= self.last)
+    self.assertTrue(
+        timestamp_list[0] >= self.first and timestamp_list[-1] <= self.last)
+
+    storage_file.Close()
 
   def testOutput(self):
     """Testing if psort can output data."""
@@ -169,18 +151,20 @@ class PsortTest(unittest.TestCase):
 
     output_fd = StringIO.StringIO()
 
-    with TempDirectory() as dirname:
+    with test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, 'plaso.db')
-      store = storage.StorageFile(temp_file)
-      pfilter.TimeRangeCache.ResetTimeConstraints()
-      store.SetStoreLimit()
-      store.AddEventObjects(events)
-      store.Close()
 
-      with psort.SetupStorage(temp_file) as store:
-        store.store_range = [1]
-        formatter = TestFormatter(store, output_fd)
-        event_buffer = TestEventBuffer(store, formatter)
+      storage_file = storage.StorageFile(temp_file, read_only=False)
+      pfilter.TimeRangeCache.ResetTimeConstraints()
+      storage_file.SetStoreLimit()
+      storage_file.AddEventObjects(events)
+      storage_file.Close()
+
+      storage_file = storage.StorageFile(temp_file)
+      with storage_file:
+        storage_file.store_range = [1]
+        formatter = TestFormatter(storage_file, output_fd)
+        event_buffer = TestEventBuffer(storage_file, formatter)
 
         psort.ProcessOutput(event_buffer, formatter, None)
 
@@ -197,9 +181,9 @@ class PsortTest(unittest.TestCase):
     self.assertTrue('My text goes along: My text dude. lines' in lines[2])
     self.assertTrue('LOG/' in lines[2])
     self.assertTrue('None in Particular' in lines[2])
-    self.assertEquals(
-        lines[0], ('date,time,timezone,MACB,source,sourcetype,type,user,host,'
-                   'short,desc,version,filename,inode,notes,format,extra'))
+    self.assertEquals(lines[0], (
+        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        'version,filename,inode,notes,format,extra'))
 
 
 if __name__ == '__main__':

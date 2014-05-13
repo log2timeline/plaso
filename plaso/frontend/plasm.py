@@ -29,12 +29,114 @@ import textwrap
 
 from plaso import filters
 
+from plaso.engine import engine
+from plaso.frontend import frontend
+from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import output as output_lib
 from plaso.lib import storage
+from plaso.output import pstorage  # pylint: disable=unused-import
 
-# pylint: disable=unused-import
-from plaso.output import pstorage
+
+class PlasmFrontend(frontend.AnalysisFrontend):
+  """Class that implements the psort front-end."""
+
+  def __init__(self):
+    """Initializes the front-end object."""
+    input_reader = engine.StdinEngineInputReader()
+    output_writer = engine.StdoutEngineOutputWriter()
+
+    super(PlasmFrontend, self).__init__(input_reader, output_writer)
+
+    self._cluster_closeness = None
+    self._cluster_threshold = None
+    self._quiet = False
+    self._tagging_file_path = None
+
+    self.mode = None
+
+  def ClusterEvents(self):
+    """Clusters the event objects in the storage file."""
+    clustering_engine = ClusteringEngine(
+        self._storage_file_path, self._cluster_threshold,
+        self._cluster_closeness)
+    clustering_engine.Run()
+
+  def GroupEvents(self):
+    """Groups the event objects in the storage file.
+
+    Raises:
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    if not self._quiet:
+      self._output_writer.Write(u'Grouping tagged events.\n')
+
+    try:
+      storage_file = self.OpenStorageFile(read_only=False)
+    except IOError as exception:
+      raise RuntimeError(
+          u'Unable to open storage file: {0:s} with error: {1:s}.'.format(
+              self._storage_file_path, exception))
+
+    grouping_engine = GroupingEngine()
+    grouping_engine.Run(storage_file, quiet=self._quiet)
+    storage_file.Close()
+
+    if not self._quiet:
+      self._output_writer.Write(u'Grouping DONE.\n')
+
+  def TagsEvents(self):
+    """Tags the event objects in the storage file."""
+    tagging_engine = TaggingEngine(
+        self._storage_file_path, self._tagging_file_path, quiet=self._quiet)
+    tagging_engine.Run()
+
+  def ParseOptions(self, options):
+    """Parses the options and initializes the front-end.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    super(PlasmFrontend, self).ParseOptions(options)
+
+    self.mode = getattr(options, 'subcommand', None)
+    if not self.mode:
+      raise errors.BadConfigOption(u'Missing mode subcommand.')
+
+    if self.mode not in ['cluster', 'group', 'tag']:
+      raise errors.BadConfigOption(
+           u'Unsupported mode subcommand: {0:s}.'.format(self.mode))
+
+    if self.mode == 'cluster':
+      self._cluster_threshold = getattr(options, 'cluster_threshold', None)
+      if not self._cluster_threshold:
+        raise errors.BadConfigOption(u'Missing cluster threshold value.')
+
+      try:
+        self._cluster_threshold = int(self._cluster_threshold, 10)
+      except ValueError:
+        raise errors.BadConfigOption(u'Invalid cluster threshold value.')
+
+      self._cluster_closeness = getattr(options, 'cluster_closeness', None)
+      if not self._cluster_closeness:
+        raise errors.BadConfigOption(u'Missing cluster closeness value.')
+
+      try:
+        self._cluster_closeness = int(self._cluster_closeness, 10)
+      except ValueError:
+        raise errors.BadConfigOption(u'Invalid cluster closeness value.')
+
+    elif self.mode == 'tag':
+      tagging_file_path = getattr(options, 'tag_filename', None)
+      if tagging_file_path:
+        raise errors.BadConfigOption(u'Missing tagging file path.')
+
+      if not os.path.isfile(tagging_file_path):
+        errors.BadConfigOption(
+            u'No such tagging file: {0:s}'.format(tagging_file_path))
 
 
 def SetupStorage(input_file_path, pre_obj=None):
@@ -128,19 +230,20 @@ def ParseTaggingFile(tag_input):
 
 
 class TaggingEngine(object):
-  """Applies tags to the plaso store."""
+  """Class that defines a tagging engine."""
 
   def __init__(self, target_filename, tag_input, quiet=False):
-    """Constructor for the Tagging Engine.
+    """Initializes the tagging engine object.
 
     Args:
       target_filename: filename for a Plaso storage file to be tagged.
       tag_input: filesystem path to the tagging input file.
-      quiet: suppress the progress output (default: False).
+      quiet: Optional boolean value to indicate the progress output should
+             be suppressed. The default is False.
     """
     self.target_filename = target_filename
     self.tag_input = tag_input
-    self.quiet = quiet
+    self._quiet = quiet
 
   def Run(self):
     """Iterates through a Plaso Store file, tagging events according to the
@@ -153,13 +256,13 @@ class TaggingEngine(object):
     pre_obj.collection_information['tag_file'] = self.tag_input
     pre_obj.collection_information['tagging_engine'] = u'plasm'
 
-    if not self.quiet:
+    if not self._quiet:
       sys.stdout.write(u'Applying tags...\n')
     with SetupStorage(self.target_filename, pre_obj) as store:
       tags = ParseTaggingFile(self.tag_input)
       num_tags = 0
       event_tags = []
-      for event_object in EventObjectGenerator(store, self.quiet):
+      for event_object in EventObjectGenerator(store, self._quiet):
         matched_tags = []
         for tag, my_filters in tags.iteritems():
           for my_filter in my_filters:
@@ -177,48 +280,18 @@ class TaggingEngine(object):
           num_tags += 1
       store.StoreTagging(event_tags)
 
-    if not self.quiet:
+    if not self._quiet:
       sys.stdout.write(u'DONE (applied {} tags)\n'.format(num_tags))
 
 
 class GroupingEngine(object):
-  """Applies groups to the plaso store."""
+  """Class that defines a grouping engine."""
 
-  def __init__(self, target_filename, quiet=False):
-    """Constructor for the Grouping Engine.
-
-    Args:
-      target_filename: filename for a Plaso storage file to be tagged.
-      quiet: suppress the progress output (default: False).
-    """
-    self.target_filename = target_filename
-    self.quiet = quiet
-
-  @staticmethod
-  def ReadTags(store):
-    """Iterates through an opened Plaso Store, creating a dictionary of tags
-    pointing to a list of events.
-
-    Args:
-      store: initialized Plaso Store.
-    """
-    all_tags = {}
-    for event_tag in store.GetTagging():
-      tags = event_tag.tags
-      location = (event_tag.store_number, event_tag.store_index)
-      for tag in tags:
-        if tag in all_tags:
-          all_tags[tag].append(location)
-        else:
-          all_tags[tag] = [location]
-    return all_tags
-
-  @staticmethod
-  def GroupEvents(store, tags, quiet=False):
+  def _GroupEvents(self, storage_file, tags, quiet=False):
     """Separates each tag list into groups, and writes them to the Plaso Store.
 
     Args:
-      store: initialized Plaso Store.
+      storage_file: the storage file (instance of StorageFile).
       tags: dictionary of the form {tag: [event_object, ...]}.
       quiet: suppress the progress output (default: False).
     """
@@ -234,7 +307,7 @@ class GroupingEngine(object):
       for location in locations:
         store_number, store_index = location
         # TODO(ojensen): getting higher number event_objects seems to be slow.
-        event_object = store.GetEventObject(store_number, store_index)
+        event_object = storage_file.GetEventObject(store_number, store_index)
         if not hasattr(event_object, 'timestamp'):
           continue
         timestamp = getattr(event_object, 'timestamp')
@@ -247,24 +320,46 @@ class GroupingEngine(object):
         else:
           groups[-1].events.append(location)
         last_time = timestamp
+
     return groups
 
-  def Run(self):
+  # TODO: move this functionality to storage.
+  def _ReadTags(self, storage_file):
+    """Iterates through an opened Plaso Store, creating a dictionary of tags
+    pointing to a list of events.
+
+    Args:
+      storage_file: the storage file (instance of StorageFile).
+    """
+    all_tags = {}
+    for event_tag in storage_file.GetTagging():
+      tags = event_tag.tags
+      location = (event_tag.store_number, event_tag.store_index)
+      for tag in tags:
+        if tag in all_tags:
+          all_tags[tag].append(location)
+        else:
+          all_tags[tag] = [location]
+    return all_tags
+
+  def Run(self, storage_file, quiet=False):
     """Iterates through a tagged Plaso Store file, grouping events with the same
     tag into groups indicating a single instance of an action. It writes the
-    grouping information to the Plaso Store file."""
+    grouping information to the Plaso Store file.
 
-    if not self.quiet:
-      sys.stdout.write(u'Grouping tagged events...\n')
-    with SetupStorage(self.target_filename) as store:
-      if not store.HasTagging():
-        logging.error(u'Plaso storage file does not contain tagged events')
-        return
-      tags = GroupingEngine.ReadTags(store)
-      groups = GroupingEngine.GroupEvents(store, tags, self.quiet)
-      store.StoreGrouping(groups)
-    if not self.quiet:
-      sys.stdout.write(u'DONE\n')
+    Args:
+      storage_file: the storage file (instance of StorageFile).
+      quiet: Optional boolean value to indicate the progress output should
+             be suppressed. The default is False.
+    """
+    if not storage_file.HasTagging():
+      logging.error(u'Plaso storage file does not contain tagged events')
+      return
+
+    tags = self._ReadTags(storage_file)
+    groups = self._GroupEvents(storage_file, tags, quiet)
+
+    storage_file.StoreGrouping(groups)
 
 
 class ClusteringEngine(object):
@@ -614,11 +709,14 @@ class ClusteringEngine(object):
     (self.event_types, self.event_type_indeces) = self.BuildEventTypes(
         self.nodup_filename, self.threshold, self.frequent_words)
     # Next step, clustering the event types
-    # TODO(ojensen): clustering
+
+    # TODO: implement clustering.
 
 
 def Main():
   """The main application function."""
+  front_end = PlasmFrontend()
+
   epilog_tag = ("""
       Notes:
 
@@ -653,15 +751,15 @@ def Main():
       u'PLASM (Plaso Langar Ad Safna Minna)- Application to group and tag '
       u'Plaso storage files.')
 
-  argument_parser = argparse.ArgumentParser(
+  arg_parser = argparse.ArgumentParser(
       description=textwrap.dedent(description),
       formatter_class=argparse.RawDescriptionHelpFormatter)
 
-  argument_parser.add_argument(
+  arg_parser.add_argument(
       '-q', '--quiet', action='store_true', dest='quiet', default=False,
       help='Suppress nonessential output.')
 
-  subparsers = argument_parser.add_subparsers(dest='subcommand')
+  subparsers = arg_parser.add_subparsers(dest='subcommand')
 
   cluster_subparser = subparsers.add_parser(
       'cluster', formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -677,70 +775,50 @@ def Main():
       dest='cluster_threshold', default=5,
       help='Support threshold for pruning attributes.')
 
-  cluster_subparser.add_argument(
-      'storage_file', action='store', type=unicode, metavar='STORAGE_FILE',
-      nargs='?', help=(
-          'The path to the storage file, if the file exists data will '
-          'get appended to it.'))
+  front_end.AddStorageFileOptions(cluster_subparser)
 
-  subparsers.add_parser(
+  group_subparser = subparsers.add_parser(
       'group', formatter_class=argparse.RawDescriptionHelpFormatter,
       epilog=textwrap.dedent(epilog_group))
+
+  front_end.AddStorageFileOptions(group_subparser)
 
   tag_subparser = subparsers.add_parser(
       'tag', formatter_class=argparse.RawDescriptionHelpFormatter,
       epilog=textwrap.dedent(epilog_tag))
 
   tag_subparser.add_argument(
-      '--tagfile', action='store', type=unicode, metavar='FILE',
-      dest='tag_filename', help=(
+      '--tagfile', '--tag_file', '--tag-file', action='store', type=unicode,
+      metavar='FILE', dest='tag_filename', help=(
           'Name of the file containing a description of tags and rules '
           'for tagging events.'))
 
-  tag_subparser.add_argument(
-      'storage_file', action='store', type=unicode, metavar='STORAGE_FILE',
-      nargs='?', help=(
-          'The path to the storage file, if the file exists data will '
-          'get appended to it.'))
+  front_end.AddStorageFileOptions(tag_subparser)
 
-  arguments = argument_parser.parse_args()
+  options = arg_parser.parse_args()
 
-  if not os.path.isfile(getattr(arguments, 'storage_file', '')):
-    argument_parser.print_help()
+  try:
+    front_end.ParseOptions(options)
+  except errors.BadConfigOption as exception:
+    arg_parser.print_help()
     print u''
-    argument_parser.print_usage()
-    print u''
-    logging.error(u'No storage file supplied.')
-    sys.exit(1)
+    logging.error(u'{0:s}'.format(exception))
+    return False
 
-  if arguments.subcommand == 'cluster':
-    clustering_engine = ClusteringEngine(
-        arguments.storage_file, int(arguments.cluster_threshold, 10),
-        int(arguments.cluster_closeness, 10))
-    clustering_engine.Run()
+  if front_end.mode == 'cluster':
+    front_end.ClusterEvents()
 
-  elif arguments.subcommand == 'group':
-    grouping_engine = GroupingEngine(
-        arguments.storage_file, arguments.quiet)
-    grouping_engine.Run()
+  elif front_end.mode == 'group':
+    front_end.GroupEvents()
 
-  elif arguments.subcommand == 'tag':
-    if not getattr(arguments, 'tag_filename', ''):
-      argument_parser.print_help()
-      print u''
-      argument_parser.print_usage()
-      print u''
-      logging.error(u'No tag file supplied.')
-      sys.exit(1)
+  elif front_end.mode == 'tag':
+    front_end.TagEvents()
 
-    if not os.path.isfile(arguments.tag_filename):
-      logging.error(u'Tag file [{0:s}] does not exist.'.format(
-          arguments.tag_filename))
-      sys.exit(1)
+  return True
 
-    tagging_engine = TaggingEngine(
-        arguments.storage_file, arguments.tag_filename, arguments.quiet)
-    tagging_engine.Run()
 
 if __name__ == '__main__':
-  Main()
+  if not Main():
+    sys.exit(1)
+  else:
+    sys.exit(0)
