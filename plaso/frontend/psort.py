@@ -39,7 +39,6 @@ from plaso import formatters   # pylint: disable=unused-import
 from plaso import output   # pylint: disable=unused-import
 
 from plaso.analysis import interface as analysis_interface
-from plaso.engine import engine
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import bufferlib
@@ -59,8 +58,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = engine.StdinEngineInputReader()
-    output_writer = engine.StdoutEngineOutputWriter()
+    input_reader = frontend.StdinFrontendInputReader()
+    output_writer = frontend.StdoutFrontendOutputWriter()
 
     super(PsortFrontend, self).__init__(input_reader, output_writer)
 
