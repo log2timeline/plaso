@@ -27,7 +27,6 @@ import textwrap
 import pytsk3
 
 import plaso
-from plaso.engine import engine
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -61,8 +60,8 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = engine.StdinEngineInputReader()
-    output_writer = engine.StdoutEngineOutputWriter()
+    input_reader = frontend.StdinFrontendInputReader()
+    output_writer = frontend.StdoutFrontendOutputWriter()
 
     super(Log2TimelineFrontend, self).__init__(input_reader, output_writer)
 
