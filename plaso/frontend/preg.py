@@ -47,7 +47,6 @@ except ImportError:
 from IPython.core import magic
 
 from plaso import preprocessors
-from plaso.engine import engine
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -206,8 +205,8 @@ class PregFrontend(frontend.Frontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = engine.StdinEngineInputReader()
-    output_writer = engine.StdoutEngineOutputWriter()
+    input_reader = frontend.StdinFrontendInputReader()
+    output_writer = frontend.StdoutFrontendOutputWriter()
 
     super(PregFrontend, self).__init__(input_reader, output_writer)
 

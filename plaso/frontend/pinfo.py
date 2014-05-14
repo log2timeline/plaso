@@ -26,7 +26,6 @@ import logging
 import pprint
 import sys
 
-from plaso.engine import engine
 from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -37,8 +36,8 @@ class PinfoFrontend(frontend.AnalysisFrontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = engine.StdinEngineInputReader()
-    output_writer = engine.StdoutEngineOutputWriter()
+    input_reader = frontend.StdinFrontendInputReader()
+    output_writer = frontend.StdoutFrontendOutputWriter()
 
     super(PinfoFrontend, self).__init__(input_reader, output_writer)
 

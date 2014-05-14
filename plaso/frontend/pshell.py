@@ -46,7 +46,6 @@ from plaso import parsers
 from plaso import preprocessors
 
 from plaso.engine import collector
-from plaso.engine import engine
 from plaso.engine import scanner
 from plaso.engine import worker
 
@@ -87,8 +86,8 @@ class PshellFrontend(frontend.ExtractionFrontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = engine.StdinEngineInputReader()
-    output_writer = engine.StdoutEngineOutputWriter()
+    input_reader = frontend.StdinFrontendInputReader()
+    output_writer = frontend.StdoutFrontendOutputWriter()
 
     super(PshellFrontend, self).__init__(input_reader, output_writer)
 
