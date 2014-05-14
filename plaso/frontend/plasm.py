@@ -29,7 +29,6 @@ import textwrap
 
 from plaso import filters
 
-from plaso.engine import engine
 from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.lib import event
@@ -43,8 +42,8 @@ class PlasmFrontend(frontend.AnalysisFrontend):
 
   def __init__(self):
     """Initializes the front-end object."""
-    input_reader = engine.StdinEngineInputReader()
-    output_writer = engine.StdoutEngineOutputWriter()
+    input_reader = frontend.StdinFrontendInputReader()
+    output_writer = frontend.StdoutFrontendOutputWriter()
 
     super(PlasmFrontend, self).__init__(input_reader, output_writer)
 

@@ -42,7 +42,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     test_front_end = log2timeline.Log2TimelineFrontend()
 
     options = test_lib.Options()
-    options.source = os.path.join(self._TEST_DATA_PATH, 'image.dd')
+    options.source = self._GetTestFilePath(['image.dd'])
 
     storage_file_path = os.path.join(self._temp_directory, 'plaso.db')
 

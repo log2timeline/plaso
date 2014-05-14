@@ -35,347 +35,18 @@ input, e.g. directly from the user.
 """
 
 import logging
-import os
 
 from dfvfs.analyzer import analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
-from dfvfs.volume import tsk_volume_system
-from dfvfs.volume import vshadow_volume_system
 
 from plaso.lib import errors
-from plaso.lib import timelib
 
 
 class FileSystemScanner(object):
   """Class that implements a file system scanner."""
 
-  # TODO: move input reader and output writer out of scanner.
-  def __init__(self, input_reader, output_writer):
-    """Initializes the file system scanner.
-
-    Args:
-      input_reader: the input reader (instance of EngineInputReader).
-      output_writer: the output writer (instance of EngineOutputWriter).
-    """
-    super(FileSystemScanner, self).__init__()
-    self._input_reader = input_reader
-    self._output_writer = output_writer
-    self._partition_number = None
-    self._partition_offset = None
-    self._vss_stores = None
-
-    self.is_storage_media_image = None
-    self.partition_offset = None
-    self.vss_stores = None
-
-  def _GetNextLevelTSKPartionVolumeSystemPathSpec(self, source_path_spec):
-    """Determines the next level volume system path specification.
-
-    Args:
-      source_path_spec: the source path specification (instance of
-                        dfvfs.PathSpec).
-
-    Returns:
-      The next level volume system path specification (instance of
-      dfvfs.PathSpec). If no next level is found the source path
-      specification is returned.
-
-    Raises:
-      FileSystemScannerError: if the format of or within the source
-                              is not supported.
-      RuntimeError: if the volume for a specific identifier cannot be
-                    retrieved.
-    """
-    volume_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/',
-        parent=source_path_spec)
-
-    volume_system = tsk_volume_system.TSKVolumeSystem()
-    volume_system.Open(volume_system_path_spec)
-
-    volume_identifiers = self._GetVolumeIdentifiers(volume_system)
-
-    if not volume_identifiers:
-      logging.info(u'No supported partitions found.')
-      return source_path_spec
-
-    if self._partition_number is not None:
-      volume = volume_system.GetVolumeByIndex(self._partition_number)
-
-      if volume:
-        volume_extent = volume.extents[0]
-        self.partition_offset = volume_extent.offset
-        return path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-            start_offset=volume_extent.offset, parent=source_path_spec)
-
-      logging.warning(
-        u'No such partition: {0:d}.'.format(self._partition_number))
-
-    if self._partition_offset is not None:
-      for volume in volume_system.volumes:
-        volume_extent = volume.extents[0]
-        if volume_extent.offset == self._partition_offset:
-          self.partition_offset = volume_extent.offset
-          return path_spec_factory.Factory.NewPathSpec(
-              dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-              start_offset=volume_extent.offset, parent=source_path_spec)
-
-      logging.warning(
-        u'No such partition with offset: {0:d} (0x{0:08x}).'.format(
-            self._partition_offset))
-      self._partition_offset = None
-
-    if len(volume_identifiers) == 1:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifiers[0])
-      if not volume:
-        raise RuntimeError(
-            u'Unable to retieve volume by identifier: {0:s}'.format(
-                volume_identifiers[0]))
-
-      volume_extent = volume.extents[0]
-      self.partition_offset = volume_extent.offset
-      return path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
-          parent=source_path_spec)
-
-    try:
-      selected_volume_identifier = self._GetPartionIdentifierFromUser(
-          volume_system, volume_identifiers)
-    except KeyboardInterrupt:
-      raise errors.FileSystemScannerError(u'File system scan aborted.')
-
-    location = u'/{0:s}'.format(selected_volume_identifier)
-
-    volume = volume_system.GetVolumeByIdentifier(selected_volume_identifier)
-    if not volume:
-      raise RuntimeError(
-          u'Unable to retieve volume by identifier: {0:s}'.format(
-              selected_volume_identifier))
-
-    volume_extent = volume.extents[0]
-    self.partition_offset = volume_extent.offset
-    return path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=location,
-        parent=source_path_spec)
-
-  def _GetNextLevelVShadowVolumeSystemPathSpec(self, source_path_spec):
-    """Determines the next level volume system path specification.
-
-    Args:
-      source_path_spec: the source path specification (instance of
-                        dfvfs.PathSpec).
-
-    Returns:
-      The next level volume system path specification (instance of
-      dfvfs.PathSpec). If no next level is found the source path
-      specification is returned.
-
-    Raises:
-      FileSystemScannerError: if the format of or within the source
-                              is not supported.
-    """
-    if source_path_spec.type_indicator in [
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
-      raise errors.FileSystemScannerError(u'Unable to scan for VSS inside VSS.')
-
-    volume_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
-        parent=source_path_spec)
-
-    volume_system = vshadow_volume_system.VShadowVolumeSystem()
-    volume_system.Open(volume_system_path_spec)
-
-    volume_identifiers = self._GetVolumeIdentifiers(volume_system)
-
-    if not volume_identifiers:
-      return source_path_spec
-
-    try:
-      self.vss_stores = self._GetVShadowIdentifiersFromUser(
-          volume_system, volume_identifiers)
-    except KeyboardInterrupt:
-      raise errors.FileSystemScannerError(u'File system scan aborted.')
-
-    return source_path_spec
-
-  def _GetPartionIdentifierFromUser(self, volume_system, volume_identifiers):
-    """Asks the user to provide the partitioned volume identifier.
-
-    Args:
-      volume_system: The volume system (instance of dfvfs.TSKVolumeSystem).
-      volume_identifiers: List of allowed volume identifiers.
-    """
-    self._output_writer.Write(
-        u'The following partitions were found:\n'
-        u'Identifier\tOffset (in bytes)\tSize (in bytes)\n')
-
-    for volume_identifier in volume_identifiers:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.FileSystemScannerError(
-            u'Volume missing for identifier: {0:s}.'.format(
-                volume_identifier))
-
-      volume_extent = volume.extents[0]
-      self._output_writer.Write(
-          u'{0:s}\t\t{1:d} (0x{1:08x})\t{2:d}\n'.format(
-              volume.identifier, volume_extent.offset, volume_extent.size))
-
-    self._output_writer.Write(u'\n')
-
-    while True:
-      self._output_writer.Write(
-          u'Please specify the identifier of the partition that should '
-          u'be processed:\nNote that you can abort with Ctrl^C.\n')
-
-      selected_volume_identifier = self._input_reader.Read()
-      selected_volume_identifier = selected_volume_identifier.strip()
-
-      if selected_volume_identifier in volume_identifiers:
-        break
-
-      self._output_writer.Write(
-          u'\n'
-          u'Unsupported partition identifier, please try again or abort '
-          u'with Ctrl^C.\n'
-          u'\n')
-
-    return selected_volume_identifier
-
-  def _GetVShadowIdentifiersFromUser(self, volume_system, volume_identifiers):
-    """Asks the user to provide the VSS volume identifiers.
-
-    Args:
-      volume_system: The volume system (instance of dfvfs.VShadowVolumeSystem).
-      volume_identifiers: List of allowed volume identifiers.
-    """
-    normalized_volume_identifiers = []
-    for volume_identifier in volume_identifiers:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.FileSystemScannerError(
-            u'Volume missing for identifier: {0:s}.'.format(volume_identifier))
-
-      try:
-        volume_identifier = int(volume.identifier[3:], 10)
-        normalized_volume_identifiers.append(volume_identifier)
-      except ValueError:
-        pass
-
-    if self._vss_stores:
-      if not set(self._vss_stores).difference(
-          normalized_volume_identifiers):
-        return self._vss_stores
-
-    print_header = True
-    while True:
-      if print_header:
-        self._output_writer.Write(
-            u'The following Volume Shadow Snapshots (VSS) were found:\n'
-            u'Identifier\tVSS store identifier\tCreation Time\n')
-
-        for volume_identifier in volume_identifiers:
-          volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-          if not volume:
-            raise errors.FileSystemScannerError(
-                u'Volume missing for identifier: {0:s}.'.format(
-                    volume_identifier))
-
-          vss_identifier = volume.GetAttribute('identifier')
-          vss_creation_time = volume.GetAttribute('creation_time')
-          vss_creation_time = timelib.Timestamp.FromFiletime(
-              vss_creation_time.value)
-          vss_creation_time = timelib.Timestamp.CopyToIsoFormat(
-              vss_creation_time)
-          self._output_writer.Write(u'{0:s}\t\t{1:s}\t{2:s}\n'.format(
-              volume.identifier, vss_identifier.value, vss_creation_time))
-
-        self._output_writer.Write(u'\n')
-
-        print_header = False
-
-      self._output_writer.Write(
-          u'Please specify the identifier(s) of the VSS that should be '
-          u'processed:\nNote that a range of stores can be defined as: 3..5. '
-          u'Multiple stores can\nbe defined as: 1,3,5 (a list of comma '
-          u'separated values). Ranges and lists can\nalso be combined '
-          u'as: 1,3..5. The first store is 1. If no stores are specified\n'
-          u'none will be processed. You can abort with Ctrl^C.\n')
-
-      selected_volume_identifier = self._input_reader.Read()
-
-      selected_volume_identifier = selected_volume_identifier.strip()
-      if not selected_volume_identifier:
-        break
-
-      try:
-        selected_volume_identifier = self._ParseVssStores(
-            selected_volume_identifier)
-      except errors.BadConfigOption:
-        selected_volume_identifier = []
-
-      if not set(selected_volume_identifier).difference(
-          normalized_volume_identifiers):
-        break
-
-      self._output_writer.Write(
-          u'\n'
-          u'Unsupported VSS identifier(s), please try again or abort with '
-          u'Ctrl^C.\n'
-          u'\n')
-
-    return selected_volume_identifier
-
-  def _GetUpperLevelVolumeSystemPathSpec(self, source_path_spec):
-    """Determines the upper level volume system path specification.
-
-    Args:
-      source_path_spec: the source path specification (instance of
-                        dfvfs.PathSpec).
-
-    Returns:
-      The upper level volume system path specification (instance of
-      dfvfs.PathSpec).
-
-    Raises:
-      FileSystemScannerError: if the format of or within the source
-                              is not supported.
-    """
-    while True:
-      type_indicators = analyzer.Analyzer.GetVolumeSystemTypeIndicators(
-          source_path_spec)
-
-      logging.debug(u'Found volume system type indicators: {0!s}'.format(
-          type_indicators))
-      if not type_indicators:
-        # No supported volume system found, we are at the upper level.
-        return source_path_spec
-
-      if len(type_indicators) > 1:
-        raise errors.FileSystemScannerError(
-            u'Unsupported source found more than one volume system types.')
-
-      if type_indicators[0] == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
-        path_spec = self._GetNextLevelTSKPartionVolumeSystemPathSpec(
-            source_path_spec)
-
-      elif type_indicators[0] == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-        path_spec = self._GetNextLevelVShadowVolumeSystemPathSpec(
-          source_path_spec)
-        break
-
-      else:
-        raise errors.FileSystemScannerError((
-            u'Unsupported source found unsupported volume system '
-            u'type: {0:s}.').format(type_indicators[0]))
-
-      source_path_spec = path_spec
-
-    return path_spec
-
-  def _GetVolumeIdentifiers(self, volume_system):
+  def GetVolumeIdentifiers(self, volume_system):
     """Retrieves the volume identifiers.
 
     Args:
@@ -392,7 +63,7 @@ class FileSystemScanner(object):
 
     return sorted(volume_identifiers)
 
-  def _ParseVssStores(self, vss_stores):
+  def ParseVssStores(self, vss_stores):
     """Parses the user specified VSS stores stirng.
 
     Args:
@@ -436,111 +107,119 @@ class FileSystemScanner(object):
 
     return sorted(stores)
 
-  def Scan(self, source_path):
-    """Scans the source path for a file system.
+  def ScanForFileSystem(self, source_path_spec):
+    """Scans the path specification for a supported file system format.
 
     Args:
-      source_path: the source path.
+      source_path_spec: the source path specification (instance of
+                        dfvfs.PathSpec).
 
     Returns:
-      The base path specification (instance of dfvfs.PathSpec).
+      The file system path specification (instance of dfvfs.PathSpec) or None
+      if no supported file system type was found.
 
     Raises:
       FileSystemScannerError: if the source cannot be processed.
     """
-    source_path = os.path.abspath(source_path)
-    source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
-
-    # Note that os.path.isfile() will return false when source_path points
-    # to a device file.
-    if os.path.isdir(source_path):
-      self.is_storage_media_image = False
-      return source_path_spec
-
-    path_spec = source_path_spec
-    type_indicators = analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
-        path_spec)
-
-    logging.debug(u'Found storage media image type indicators: {0!s}'.format(
-        type_indicators))
-    if len(type_indicators) > 1:
-      raise errors.FileSystemScannerError((
-          u'Unsupported source: {0:s} found more than one storage media '
-          u'image types.').format(source_path))
-
-    if len(type_indicators) == 1:
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          type_indicators[0], parent=path_spec)
-
-    # In case we did not find a storage media image type we keep looking
-    # since the RAW storage media image type is detected by its content.
-
-    path_spec = self._GetUpperLevelVolumeSystemPathSpec(path_spec)
-
-    # In case we did not find a volume system type we keep looking
-    # since we could be dealing with a storage media image that contains
-    # a single volume.
-
     try:
       type_indicators = analyzer.Analyzer.GetFileSystemTypeIndicators(
-          path_spec)
+          source_path_spec)
     except RuntimeError as exception:
       raise errors.FileSystemScannerError(
-          u'Unable to process image, with error {:s}'.format(
-              exception))
+          u'Unable to process image with error {0:s}'.format(exception))
+
+    if not type_indicators:
+      return
 
     logging.debug(u'Found file system type indicators: {0!s}'.format(
         type_indicators))
-    if len(type_indicators) > 1:
-      raise errors.FileSystemScannerError((
-          u'Unsupported source: {0:s} found more than one file system '
-          u'types.').format(source_path))
 
-    if not type_indicators:
-      self.is_storage_media_image = False
-      return source_path_spec
+    if len(type_indicators) > 1:
+      raise errors.FileSystemScannerError(
+          u'Unsupported source found more than one file system types.')
 
     if type_indicators[0] != dfvfs_definitions.TYPE_INDICATOR_TSK:
       raise errors.FileSystemScannerError(
           u'Unsupported file system type: {0:s}.'.format(type_indicators[0]))
 
-    self.is_storage_media_image = True
-    if self.partition_offset is None:
-      self.partition_offset = 0
     return path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
-        parent=path_spec)
+        parent=source_path_spec)
 
-  def SetPartitionNumber(self, partition_number):
-    """Sets the partition number.
-
-    Args:
-      partition_number: The partition number.
-    """
-    if isinstance(partition_number, basestring):
-      try:
-        partition_number = int(partition_number, 10)
-      except ValueError:
-        logging.warning(u'Invalid partition number: {0:s}.'.format(
-            partition_number))
-        return
-
-    self._partition_number = partition_number
-
-  def SetPartitionOffset(self, partition_offset):
-    """Sets the partition offset.
+  def ScanForVolumeSystem(self, source_path_spec):
+    """Scans the path specification for a supported volume system format.
 
     Args:
-      partition_offset: The partition offset in bytes.
-    """
-    self._partition_offset = partition_offset
+      source_path_spec: the source path specification (instance of
+                        dfvfs.PathSpec).
 
-  def SetVssStores(self, vss_stores):
-    """Sets the VSS stores.
+    Returns:
+      The volume system path specification (instance of dfvfs.PathSpec) or
+      None if no supported volume system type was found.
+
+    Raises:
+      FileSystemScannerError: if the source cannot be processed.
+    """
+    # Do not scan for VSS in VSS.
+    if source_path_spec.type_indicator in [
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
+      return
+
+    type_indicators = analyzer.Analyzer.GetVolumeSystemTypeIndicators(
+        source_path_spec)
+
+    if not type_indicators:
+      return
+
+    logging.debug(u'Found volume system type indicators: {0!s}'.format(
+        type_indicators))
+
+    if len(type_indicators) > 1:
+      raise errors.FileSystemScannerError(
+          u'Unsupported source found more than one volume system types.')
+
+    if type_indicators[0] == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/',
+          parent=source_path_spec)
+
+    elif type_indicators[0] == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/',
+          parent=source_path_spec)
+
+    else:
+      raise errors.FileSystemScannerError(
+          u'Unsupported volume system type: {0:s}.'.format(type_indicators[0]))
+
+    return path_spec
+
+  def ScanForStorageMediaImage(self, source_path_spec):
+    """Scans the path specification for a supported storage media image format.
 
     Args:
-      vss_stores: a string containing the VSS stores.
-                  Where 1 represents the first store.
+      source_path_spec: the source path specification (instance of
+                        dfvfs.PathSpec).
+
+    Returns:
+      The storage media image path specification (instance of dfvfs.PathSpec)
+      or None if no supported storage media image type was found.
+
+    Raises:
+      FileSystemScannerError: if the source cannot be processed.
     """
-    self._vss_stores = self._ParseVssStores(vss_stores)
+    type_indicators = analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
+        source_path_spec)
+
+    if not type_indicators:
+      return
+
+    logging.debug(u'Found storage media image type indicators: {0!s}'.format(
+        type_indicators))
+
+    if len(type_indicators) > 1:
+      raise errors.FileSystemScannerError(
+          u'Unsupported source found more than one storage media image types.')
+
+    return path_spec_factory.Factory.NewPathSpec(
+        type_indicators[0], parent=source_path_spec)

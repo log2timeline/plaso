@@ -17,9 +17,7 @@
 # limitations under the License.
 """The processing engine."""
 
-import abc
 import logging
-import sys
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -31,54 +29,6 @@ from plaso.engine import worker
 from plaso.lib import errors
 from plaso.lib import queue
 from plaso.preprocessors import interface as preprocess_interface
-
-
-class EngineInputReader(object):
-  """Class that implements the input reader interface for the engine."""
-
-  @abc.abstractmethod
-  def Read(self):
-    """Reads a string from the input.
-
-    Returns:
-      A string containing the input.
-    """
-
-
-class EngineOutputWriter(object):
-  """Class that implements the output writer interface for the engine."""
-
-  @abc.abstractmethod
-  def Write(self, string):
-    """Wtites a string to the output.
-
-    Args:
-      string: A string containing the output.
-    """
-
-
-class StdinEngineInputReader(object):
-  """Class that implements a stdin input reader."""
-
-  def Read(self):
-    """Reads a string from the input.
-
-    Returns:
-      A string containing the input.
-    """
-    return sys.stdin.readline()
-
-
-class StdoutEngineOutputWriter(object):
-  """Class that implements a stdout output writer."""
-
-  def Write(self, string):
-    """Wtites a string to the output.
-
-    Args:
-      string: A string containing the output.
-    """
-    sys.stdout.write(string)
 
 
 class Engine(object):
@@ -102,17 +52,17 @@ class Engine(object):
     self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
 
   def CreateCollector(
-      self, include_directory_stat, vss_stores, filter_find_specs):
+      self, include_directory_stat, vss_stores=None, filter_find_specs=None):
     """Creates a collector.
 
     Args:
       include_directory_stat: Boolean value to indicate whether directory
                               stat information should be collected.
-      vss_stores: The range of VSS stores to include in the collection,
+      vss_stores: Optional list of VSS stores to include in the collection,
                   where 1 represents the first store. Set to None if no
-                  VSS stores should be processed.
-      filter_find_specs: List of filter find specifications (instances of
-                         dfvfs.FindSpec).
+                  VSS stores should be processed. The default is None.
+      filter_find_specs: Optional list of filter find specifications (instances
+                         of dfvfs.FindSpec). The default is None.
 
     Raises:
       RuntimeError: if source path specification is not set.

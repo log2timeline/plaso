@@ -22,7 +22,6 @@ import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.engine import engine
 from plaso.frontend import frontend
 from plaso.frontend import test_lib
 from plaso.lib import errors
@@ -42,13 +41,18 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
         self._input_reader, self._output_writer)
 
     options = test_lib.Options()
+    options.source = test_file
 
-    path_spec = test_front_end.ScanSource(options, test_file)
+    test_front_end.ParseOptions(options, 'source')
+
+    test_front_end.ScanSource(options)
+    path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
     self.assertEquals(path_spec.location, os.path.abspath(test_file))
     self.assertEquals(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_OS)
-    self.assertEquals(options.image_offset_bytes, None)
+    # pylint: disable=protected-access
+    self.assertEquals(test_front_end._partition_offset, None)
 
   def _TestScanSourceImage(self, test_file):
     """Tests the ScanSource function on the test image.
@@ -60,12 +64,17 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
         self._input_reader, self._output_writer)
 
     options = test_lib.Options()
+    options.source = test_file
 
-    path_spec = test_front_end.ScanSource(options, test_file)
+    test_front_end.ParseOptions(options, 'source')
+
+    test_front_end.ScanSource(options)
+    path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(options.image_offset_bytes, 0)
+    # pylint: disable=protected-access
+    self.assertEquals(test_front_end._partition_offset, 0)
 
   def _TestScanSourcePartitionedImage(self, test_file):
     """Tests the ScanSource function on the partitioned test image.
@@ -77,32 +86,47 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
         self._input_reader, self._output_writer)
 
     options = test_lib.Options()
+    options.source = test_file
     options.image_offset_bytes = 0x0002c000
 
-    path_spec = test_front_end.ScanSource(options, test_file)
+    test_front_end.ParseOptions(options, 'source')
+
+    test_front_end.ScanSource(options)
+    path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(options.image_offset_bytes, 180224)
+    # pylint: disable=protected-access
+    self.assertEquals(test_front_end._partition_offset, 180224)
 
     options = test_lib.Options()
+    options.source = test_file
     options.image_offset = 352
     options.bytes_per_sector = 512
 
-    path_spec = test_front_end.ScanSource(options, test_file)
+    test_front_end.ParseOptions(options, 'source')
+
+    test_front_end.ScanSource(options)
+    path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(options.image_offset_bytes, 180224)
+    # pylint: disable=protected-access
+    self.assertEquals(test_front_end._partition_offset, 180224)
 
     options = test_lib.Options()
+    options.source = test_file
     options.partition_number = 1
 
-    path_spec = test_front_end.ScanSource(options, test_file)
+    test_front_end.ParseOptions(options, 'source')
+
+    test_front_end.ScanSource(options)
+    path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(options.image_offset_bytes, 180224)
+    # pylint: disable=protected-access
+    self.assertEquals(test_front_end._partition_offset, 180224)
 
   def _TestScanSourceVssImage(self, test_file):
     """Tests the ScanSource function on the VSS test image.
@@ -114,29 +138,39 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
         self._input_reader, self._output_writer)
 
     options = test_lib.Options()
+    options.source = test_file
     options.vss_stores = '1,2'
 
-    path_spec = test_front_end.ScanSource(options, test_file)
+    test_front_end.ParseOptions(options, 'source')
+
+    test_front_end.ScanSource(options)
+    path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(options.image_offset_bytes, 0)
-    self.assertEquals(options.vss_stores, [1, 2])
+    # pylint: disable=protected-access
+    self.assertEquals(test_front_end._partition_offset, 0)
+    self.assertEquals(test_front_end._vss_stores, [1, 2])
 
     options = test_lib.Options()
+    options.source = test_file
     options.vss_stores = '1'
 
-    path_spec = test_front_end.ScanSource(options, test_file)
+    test_front_end.ParseOptions(options, 'source')
+
+    test_front_end.ScanSource(options)
+    path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
     self.assertEquals(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-    self.assertEquals(options.image_offset_bytes, 0)
-    self.assertEquals(options.vss_stores, [1])
+    # pylint: disable=protected-access
+    self.assertEquals(test_front_end._partition_offset, 0)
+    self.assertEquals(test_front_end._vss_stores, [1])
 
   def setUp(self):
-    """Setup sets parameters that will be reused throughout this test."""
-    self._input_reader = engine.StdinEngineInputReader()
-    self._output_writer = engine.StdoutEngineOutputWriter()
+    """Sets up the objects used throughout the test."""
+    self._input_reader = frontend.StdinFrontendInputReader()
+    self._output_writer = frontend.StdoutFrontendOutputWriter()
 
   def testParseOptions(self):
     """Tests the parse options function."""
@@ -148,7 +182,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     with self.assertRaises(errors.BadConfigOption):
       test_front_end.ParseOptions(options, 'source')
 
-    options.source = os.path.join(self._TEST_DATA_PATH, 'image.dd')
+    options.source = self._GetTestFilePath(['image.dd'])
 
     test_front_end.ParseOptions(options, 'source')
 
@@ -183,9 +217,9 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
   """Tests for the analysis front-end object."""
 
   def setUp(self):
-    """Setup sets parameters that will be reused throughout this test."""
-    self._input_reader = engine.StdinEngineInputReader()
-    self._output_writer = engine.StdoutEngineOutputWriter()
+    """Sets up the objects used throughout the test."""
+    self._input_reader = frontend.StdinFrontendInputReader()
+    self._output_writer = frontend.StdoutFrontendOutputWriter()
 
   def testOpenStorageFile(self):
     """Tests the open storage file function."""
@@ -193,7 +227,7 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
         self._input_reader, self._output_writer)
 
     options = test_lib.Options()
-    options.storage_file = os.path.join(self._TEST_DATA_PATH, 'psort_test.out')
+    options.storage_file = self._GetTestFilePath(['psort_test.out'])
 
     test_front_end.ParseOptions(options)
     storage_file = test_front_end.OpenStorageFile()
@@ -212,13 +246,12 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
     with self.assertRaises(errors.BadConfigOption):
       test_front_end.ParseOptions(options)
 
-    options.storage_file = os.path.join(
-        self._TEST_DATA_PATH, 'no_such_file.out')
+    options.storage_file = self._GetTestFilePath(['no_such_file.out'])
 
     with self.assertRaises(errors.BadConfigOption):
       test_front_end.ParseOptions(options)
 
-    options.storage_file = os.path.join(self._TEST_DATA_PATH, 'psort_test.out')
+    options.storage_file = self._GetTestFilePath(['psort_test.out'])
 
     test_front_end.ParseOptions(options)
 
