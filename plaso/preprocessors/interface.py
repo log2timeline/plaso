@@ -535,15 +535,15 @@ def GuessOS(searcher):
 
   locations = []
   for path_spec in searcher.Find(find_specs=find_specs):
-    locations.append(getattr(path_spec, 'location', u''))
+    locations.append(getattr(path_spec, 'location', u'').lower())
 
-  if (u'/Windows/System32' in locations or
-      u'/WINNT/System32' in locations or
-      u'/WINNT35/System32' in locations or
-      u'/WTSRV/System32' in locations):
+  if (u'/windows/system32' in locations or
+      u'/winnt/system32' in locations or
+      u'/winnt35/system32' in locations or
+      u'/wtsrv/system32' in locations):
     return 'Windows'
 
-  if u'/System/Library' in locations:
+  if u'/system/library' in locations:
     return 'MacOSX'
 
   if u'/etc' in locations:
