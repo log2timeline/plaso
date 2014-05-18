@@ -24,6 +24,7 @@ import unittest
 
 from plaso.frontend import log2timeline
 from plaso.frontend import test_lib
+from plaso.lib import storage
 
 
 class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
@@ -47,9 +48,20 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     storage_file_path = os.path.join(self._temp_directory, 'plaso.db')
 
     test_front_end.ParseOptions(options, 'source')
-    test_front_end.SetStorageFile(storage_file_path)
+    test_front_end.SetStorageFile(storage_file_path=storage_file_path)
+    test_front_end.SetRunForeman(run_foreman=False)
 
     test_front_end.ProcessSource(options)
+
+    try:
+      storage_file = storage.StorageFile(storage_file_path, read_only=True)
+    except IOError:
+      # This is not a storage file, we should fail.
+      self.assertTrue(False)
+
+    # Make sure we can read an event out of the storage.
+    event_object = storage_file.GetSortedEntry()
+    self.assertIsNotNone(event_object)
 
     # TODO: add more tests that cover more of the functionality of the frontend.
 

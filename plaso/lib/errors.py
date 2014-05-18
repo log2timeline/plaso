@@ -49,6 +49,10 @@ class PreProcessFail(Error):
   """Raised when a preprocess module is unable to gather information."""
 
 
+class ProxyFailedToStart(Error):
+  """Raised when unable to start a proxy."""
+
+
 class QueueEmpty(Error):
   """Class that implements a queue empty exception."""
 

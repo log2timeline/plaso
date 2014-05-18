@@ -353,6 +353,21 @@ def Main():
       dest='partition_map', default=False, help=(
           'Print out a partition map of a disk image.'))
 
+  info_group.add_argument(
+      '--show_memory_usage', '--show-memory-usage', action='store_true',
+      default=False, dest='foreman_verbose', help=(
+           u'Indicates that basic memory usage should be included in the '
+           u'output of the process monitor. If this option is not set the '
+           u'tool only displays basic status and counter information.'))
+
+  info_group.add_argument(
+      '--disable_worker_monitor', '--disable-worker-monitor',
+      action='store_false', default=True, dest='foreman_enabled', help=(
+          u'Turn off the foreman. The foreman monitors all worker processes '
+          u'and periodically prints out information about all running workers.'
+          u'By default the foreman is run, but it can be turned off using this '
+          u'parameter.'))
+
   function_group.add_argument(
       '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
       action='store_true', default=False, help=(
@@ -486,6 +501,10 @@ def Main():
           u'the image. Please consider running against the raw image. '
           u'Processing will continue in 5 seconds.')
       time.sleep(5)
+
+  # Configure the foreman (monitors workers).
+  front_end.SetShowMemoryInformation(show_memory=options.foreman_verbose)
+  front_end.SetRunForeman(run_foreman=options.foreman_enabled)
 
   try:
     front_end.ProcessSource(options)
