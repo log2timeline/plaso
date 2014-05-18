@@ -20,6 +20,7 @@
 import logging
 import os
 import pdb
+import threading
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
@@ -44,7 +45,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
   def __init__(
       self, identifier, process_queue, storage_queue_producer, pre_obj,
-      parsers):
+      parsers, rpc_proxy=None):
     """Initializes the event extraction worker object.
 
     Args:
@@ -55,6 +56,10 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       pre_obj: A preprocess object containing information collected from
                image (instance of PreprocessObject).
       parsers: A list of parser objects to use for processing.
+      rpc_proxy: A proxy object (instance of proxy.ProxyServer) that can be
+                 used to setup RPC functionality for the worker. This is
+                 optional and if not provided the worker will not listen to RPC
+                 requests. The default value is None.
     """
     super(EventExtractionWorker, self).__init__(process_queue)
     self._debug_mode = False
@@ -64,6 +69,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._open_files = False
     self._parsers = parsers
     self._pre_obj = pre_obj
+    self._rpc_proxy = rpc_proxy
 
     # We need a resolver context per process to prevent multi processing
     # issues with file objects stored in images.
@@ -71,6 +77,11 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._single_process_mode = False
     self._storage_queue_producer = storage_queue_producer
     self._text_prepend = None
+
+    # Few attributes that contain the current status of the worker.
+    self._counter_of_extracted_events = 0
+    self._current_working_file = u''
+    self._is_running = False
 
     if pre_obj:
       self._user_mapping = pre_obj.GetUserMappings()
@@ -147,6 +158,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
     if not self._filter_object or self._filter_object.Matches(event_object):
       self._storage_queue_producer.ProduceEventObject(event_object)
+      self._counter_of_extracted_events += 1
 
   def ParseFile(self, file_entry):
     """Run through classifier and appropriate parsers.
@@ -156,6 +168,9 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     """
     logging.debug(u'[ParseFile] Parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
+
+    self._current_working_file = getattr(
+        file_entry.path_spec, u'location', file_entry.name)
 
     # TODO: Not go through all parsers, just the ones
     # that the classifier classifies the file as.
@@ -207,6 +222,14 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     logging.debug(u'Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
 
+  def GetStatus(self):
+    """Returns a status dictionary for the worker process."""
+    return {
+        'is_running': self._is_running,
+        'identifier': u'Worker_{0:d}'.format(self._identifier),
+        'current_file': self._current_working_file,
+        'counter': self._counter_of_extracted_events}
+
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
     self.pid = os.getpid()
@@ -214,11 +237,31 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
         self._identifier, self.pid))
 
+    self._counter_of_extracted_events = 0
+    self._is_running = True
+
+    if self._rpc_proxy:
+      try:
+        self._rpc_proxy.SetListeningPort(self.pid)
+        self._rpc_proxy.Open()
+        self._rpc_proxy.RegisterFunction('status', self.GetStatus)
+
+        proxy_thread = threading.Thread(
+            name='rpc_proxy', target=self._rpc_proxy.StartProxy)
+        proxy_thread.start()
+      except errors.ProxyFailedToStart as exception:
+        logging.error(
+            u'Unable to setup a RPC server for the worker: {0:d} [PID {1:d}] '
+            u'with error: {2:s}'.format(self._identifier, self.pid, exception))
+
     self.ConsumePathSpecs()
 
     logging.info(
         'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
         self._identifier, os.getpid()))
+
+    self._is_running = False
+    self._current_working_file = u''
 
     self._resolver_context.Empty()
 
