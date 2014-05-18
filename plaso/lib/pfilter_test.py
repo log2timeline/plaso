@@ -73,7 +73,7 @@ class PfilterFakeParser(parser.BaseParser):
         u'/My Documents/goodfella/Documents/Hideout/myfile.txt')
     event_object.hostname = 'Agrabah'
     event_object.parser = 'Weirdo'
-    event_object.inode = '1245'
+    event_object.inode = 1245
     event_object.display_name = u'unknown:{0:s}'.format(event_object.filename)
     event_object.data_type = self.DATA_TYPE
 
@@ -139,7 +139,7 @@ class PFilterTest(unittest.TestCase):
         u'/My Documents/goodfella/Documents/Hideout/myfile.txt')
     event_object.hostname = 'Agrabah'
     event_object.parser = 'Weirdo'
-    event_object.inode = '1245'
+    event_object.inode = 1245
     event_object.mydict = {
         'value': 134, 'another': 'value', 'A Key (with stuff)': 'Here'}
     event_object.display_name = u'unknown:{0:s}'.format(event_object.filename)

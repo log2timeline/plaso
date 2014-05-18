@@ -38,8 +38,10 @@ from plaso import parsers   # pylint: disable=unused-import
 from plaso.engine import engine
 from plaso.engine import scanner
 from plaso.engine import utils as engine_utils
+from plaso.frontend import rpc_proxy
 from plaso.lib import errors
 from plaso.lib import event
+from plaso.lib import foreman
 from plaso.lib import pfilter
 from plaso.lib import putils
 from plaso.lib import queue
@@ -278,7 +280,7 @@ class ExtractionFrontend(Frontend):
                      output writer.
     """
     super(ExtractionFrontend, self).__init__(input_reader, output_writer)
-    self._collection_thread = None
+    self._collection_process = None
     self._collector = None
     self._debug_mode = False
     self._engine = None
@@ -290,17 +292,19 @@ class ExtractionFrontend(Frontend):
     self._partition_offset = None
     self._preprocess = False
     self._resolver_context = context.Context()
+    self._run_foreman = True
     self._single_process_mode = False
+    self._show_worker_memory_information = False
     self._source_path = None
     self._source_path_spec = None
     self._source_type = None
     self._storage_file_path = None
-    self._storage_thread = None
+    self._storage_process = None
     self._timezone = pytz.utc
     self._vss_stores = None
 
     # TODO: turn into a process pool.
-    self._worker_processes = []
+    self._worker_processes = {}
 
   def _CheckStorageFile(self, storage_file_path):
     """Checks if the storage file path is valid.
@@ -340,8 +344,12 @@ class ExtractionFrontend(Frontend):
     Returns:
       An extraction worker (instance of worker.ExtractionWorker).
     """
+    # Set up a simple XML RPC server for the worker for status indications.
+    # Since we don't know the worker's PID for now we'll set the initial port
+    # number to zero and then adjust it later.
+    proxy_server = rpc_proxy.StandardRpcProxy()
     extraction_worker = self._engine.CreateExtractionWorker(
-        worker_number, pre_obj, self._parsers)
+        worker_number, pre_obj, self._parsers, rpc_proxy=proxy_server)
 
     extraction_worker.SetDebugMode(self._debug_mode)
     extraction_worker.SetSingleProcessMode(self._single_process_mode)
@@ -706,9 +714,9 @@ class ExtractionFrontend(Frontend):
       collection_information['method'] = 'OS collection'
 
     if self._single_process_mode:
-      collection_information['runtime'] = 'single threaded'
+      collection_information['runtime'] = 'single process mode'
     else:
-      collection_information['runtime'] = 'multi threaded'
+      collection_information['runtime'] = 'multi process mode'
       collection_information['workers'] = self._number_of_worker_processes
 
     pre_obj.collection_information = collection_information
@@ -805,7 +813,7 @@ class ExtractionFrontend(Frontend):
       options: the command line arguments (instance of argparse.Namespace).
     """
     # TODO: replace by an option.
-    start_collection_thread = True
+    start_collection_process = True
 
     self._number_of_worker_processes = getattr(options, 'workers', 0)
     if self._number_of_worker_processes < 1:
@@ -876,52 +884,108 @@ class ExtractionFrontend(Frontend):
 
     self._DebugPrintCollector(options)
 
-    logging.info(u'Starting storage thread.')
-    self._storage_thread = multiprocessing.Process(
-        name='StorageThread', target=storage_writer.WriteEventObjects)
-    self._storage_thread.start()
+    logging.info(u'Starting storage process.')
 
-    if start_collection_thread:
-      logging.info(u'Starting collection thread.')
-      self._collection_thread = multiprocessing.Process(
+    self._storage_process = multiprocessing.Process(
+        name='StorageThread', target=storage_writer.WriteEventObjects)
+    self._storage_process.start()
+
+    if start_collection_process:
+      logging.info(u'Starting collection process.')
+      self._collection_process = multiprocessing.Process(
           name='Collection', target=self._collector.Collect)
-      self._collection_thread.start()
+      self._collection_process.start()
 
     logging.info(u'Starting worker processes to extract events.')
+    if self._run_foreman:
+      worker_foreman = foreman.Foreman(
+          show_memory_usage=self._show_worker_memory_information)
+    else:
+      worker_foreman = None
+
     for worker_nr in range(self._number_of_worker_processes):
       extraction_worker = self._CreateExtractionWorker(
           worker_nr, options, pre_obj)
 
       logging.debug(u'Starting worker: {0:d} process'.format(worker_nr))
-      self._worker_processes.append(multiprocessing.Process(
-          name='Worker_{0:d}'.format(worker_nr), target=extraction_worker.Run))
+      worker_name = u'Worker_{0:d}'.format(worker_nr)
+      # TODO: Test to see if a process pool can be a better choice.
+      self._worker_processes[worker_name] = multiprocessing.Process(
+          name=worker_name, target=extraction_worker.Run)
 
-      self._worker_processes[-1].start()
+      self._worker_processes[worker_name].start()
+      pid = self._worker_processes[worker_name].pid
+      if worker_foreman:
+        worker_foreman.MonitorWorker(pid=pid, name=worker_name)
 
     logging.info(u'Collecting and processing files.')
-    if self._collection_thread:
-      self._collection_thread.join()
+    if self._collection_process:
+      while self._collection_process.is_alive():
+        self._collection_process.join(10)
+        # Check the worker status regularly while collection is still ongoing.
+        if worker_foreman:
+          worker_foreman.CheckStatus()
     else:
       self._collector.Collect()
 
     logging.info(u'Collection is done, waiting for processing to complete.')
-    # TODO: Test to see if a process pool can be a better choice.
-    for thread_nr, thread in enumerate(self._worker_processes):
-      if thread.is_alive():
-        thread.join()
+    if worker_foreman:
+      worker_foreman.SignalEndOfProcessing()
 
-      # Note that we explicitly must test against exitcode 0 here since
-      # thread.exitcode will be None if there is no exitcode.
-      elif thread.exitcode != 0:
-        logging.warning((
-            u'Worker process: {0:d} already exited with code: {1:d}.').format(
-                thread_nr, thread.exitcode))
-        thread.terminate()
+    # Run through the running workers, one by one.
+    # This will go through a list of all active worker processes and check it's
+    # status. If a worker has completed it will be removed from the list.
+    # The process will not wait longer than five seconds for each worker to
+    # complete, if longer time passes it will simply check it's status and
+    # move on. That ensures that worker process is monitored and status is
+    # updated.
+    while self._worker_processes:
+      for process_name, process_obj in sorted(self._worker_processes.items()):
+        if worker_foreman:
+          worker_label = worker_foreman.GetLabel(
+              name=process_name, pid=process_obj.pid)
+        else:
+          worker_label = None
+
+        if not worker_label:
+          if process_obj.is_alive():
+            logging.info((
+                u'Process {0:s} [{1:d}] is not monitored by the foreman. Most '
+                u'likely due to a worker having completed it\'s processing '
+                u'while waiting for another worker to complete.').format(
+                    process_name, process_obj.pid))
+            logging.info(
+                u'Waiting for worker {0:s} to complete.'.format(process_name))
+            process_obj.join()
+            logging.info(u'Worker: {0:s} [{1:d}] has completed.'.format(
+                process_name, process_obj.pid))
+
+          del self._worker_processes[process_name]
+          continue
+
+        if process_obj.is_alive():
+          # Check status of worker.
+          worker_foreman.CheckStatus(label=worker_label)
+          process_obj.join(5)
+        # Note that we explicitly must test against exitcode 0 here since
+        # process.exitcode will be None if there is no exitcode.
+        elif process_obj.exitcode != 0:
+          logging.warning((
+              u'Worker process: {0:s} already exited with code: '
+              u'{1:d}.').format(process_name, process_obj.exitcode))
+          process_obj.terminate()
+          worker_foreman.TerminateProcess(label=worker_label)
+
+        else:
+          # Process is no longer alive, no need to monitor.
+          worker_foreman.StopMonitoringWorker(label=worker_label)
+          # Remove it from our list of active workers.
+          del self._worker_processes[process_name]
 
     logging.info(u'Processing is done, waiting for storage to complete.')
 
     self._engine.SignalEndOfInputStorageQueue()
-    self._storage_thread.join()
+    self._storage_process.join()
     logging.info(u'Storage is done.')
 
   def _ProcessSourceSingleProcessMode(self, options):
@@ -935,7 +999,7 @@ class ExtractionFrontend(Frontend):
     try:
       self._StartSingleThread(options)
     except Exception as exception:
-      # The tool should generally not be run in single threaded mode
+      # The tool should generally not be run in single process mode
       # for other reasons than to debug. Hence the general error
       # catching.
       logging.error(u'An uncaught exception occured: {0:s}.\n{1:s}'.format(
@@ -944,10 +1008,10 @@ class ExtractionFrontend(Frontend):
         pdb.post_mortem()
 
   def _StartSingleThread(self, options):
-    """Starts everything up in a single thread.
+    """Starts everything up in a single process.
 
     This should not normally be used, since running the tool in a single
-    thread buffers up everything into memory until the storage is called.
+    process buffers up everything into memory until the storage is called.
 
     Just to make it clear, this starts up the collection, completes that
     before calling the worker that extracts all EventObjects and stores
@@ -1042,17 +1106,17 @@ class ExtractionFrontend(Frontend):
     logging.warning(u'Stopping storage.')
     self._engine.SignalEndOfInputStorageQueue()
 
-    # Kill the collection thread.
-    if self._collection_thread:
-      logging.warning(u'Terminating the collection thread.')
-      self._collection_thread.terminate()
+    # Kill the collection process.
+    if self._collection_process:
+      logging.warning(u'Terminating the collection process.')
+      self._collection_process.terminate()
 
     try:
       logging.warning(u'Waiting for workers to complete.')
-      for number, worker_thread in enumerate(self._worker_processes):
-        pid = worker_thread.pid
-        logging.warning(u'Waiting for worker: {0:d} [PID {1:d}]'.format(
-            number, pid))
+      for worker_name, worker_process in self._worker_processes.iteritems():
+        pid = worker_process.pid
+        logging.warning(u'Waiting for worker: {0:s} [PID {1:d}]'.format(
+            worker_name, pid))
         # Let's kill the process, different methods depending on the platform
         # used.
         if sys.platform.startswith('win'):
@@ -1073,13 +1137,13 @@ class ExtractionFrontend(Frontend):
         logging.warning(u'Worker: {0:d} CLOSED'.format(pid))
 
       logging.warning(u'Workers completed.')
-      if hasattr(self, 'storage_thread'):
+      if hasattr(self, 'storage_process'):
         logging.warning(u'Waiting for storage.')
-        self._storage_thread.join()
+        self._storage_process.join()
         logging.warning(u'Storage ended.')
 
       logging.info(u'Exiting the tool.')
-      # Sometimes the main thread will be unresponsive.
+      # Sometimes the main process will be unresponsive.
       if not sys.platform.startswith('win'):
         os.kill(os.getpid(), signal.SIGKILL)
 
@@ -1089,11 +1153,11 @@ class ExtractionFrontend(Frontend):
         process.terminate()
 
       logging.warning(u'Worker processes terminated.')
-      if hasattr(self, 'storage_thread'):
-        self._storage_thread.terminate()
+      if hasattr(self, 'storage_process'):
+        self._storage_process.terminate()
         logging.warning(u'Storage terminated.')
 
-      # Sometimes the main thread will be unresponsive.
+      # Sometimes the main process will be unresponsive.
       if not sys.platform.startswith('win'):
         os.kill(os.getpid(), signal.SIGKILL)
 
@@ -1172,7 +1236,7 @@ class ExtractionFrontend(Frontend):
     if timezone_string:
       self._timezone = pytz.timezone(timezone_string)
 
-    if getattr(options, 'single_thread', False):
+    if getattr(options, 'single_process', False):
       self._single_process_mode = True
     else:
       self._single_process_mode = False
@@ -1379,6 +1443,25 @@ class ExtractionFrontend(Frontend):
       storage_file_path: The path of the storage file.
     """
     self._storage_file_path = storage_file_path
+
+  def SetRunForeman(self, run_foreman=True):
+    """Sets a flag indicating whether the frontend should monitor workers.
+
+    Args:
+      run_foreman: A boolean (defaults to true) that indicates whether or not
+                   the frontend should start a foreman that monitors workers.
+    """
+    self._run_foreman = run_foreman
+
+  def SetShowMemoryInformation(self, show_memory=True):
+    """Sets a flag telling the worker monitor to show memory information.
+
+    Args:
+      show_memory: A boolean (defaults to True) that indicates whether or not
+                   the foreman should include memory information as part of
+                   the worker monitoring.
+    """
+    self._show_worker_memory_information = show_memory
 
 
 class AnalysisFrontend(Frontend):
