@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,7 +15,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Formatter for the Apple System Log binary files."""
 
 from plaso.lib import eventdata
@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class AslFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for an ASL log entry."""
+
   DATA_TYPE = 'mac:asl:event'
 
   FORMAT_STRING_PIECES = [
@@ -44,4 +45,3 @@ class AslFormatter(eventdata.ConditionalEventFormatter):
 
   SOURCE_LONG = 'ASL entry'
   SOURCE_SHORT = 'LOG'
-

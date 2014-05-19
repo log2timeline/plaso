@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,13 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for PCAP files."""
+
 from plaso.lib import eventdata
+
 
 __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
 
 
 class PCAPFormatter(eventdata.ConditionalEventFormatter):
   """Define the formatting PCAP record."""
+
   DATA_TYPE = 'metadata:pcap'
 
   FORMAT_STRING_PIECES = [
@@ -44,4 +48,3 @@ class PCAPFormatter(eventdata.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Packet Capture File (pcap)'
   SOURCE_SHORT = 'PCAP'
-

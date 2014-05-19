@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for the Skype Main database events."""
+
 from plaso.lib import eventdata
 
 
 class SkypeAccountFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Skype Account information."""
+
   DATA_TYPE = 'skype:event:account'
 
   FORMAT_STRING_PIECES = [u'{username}', u'[{email}]', u'Country: {country}']
@@ -30,6 +33,7 @@ class SkypeAccountFormatter(eventdata.ConditionalEventFormatter):
 
 class SkypeChatFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Skype chat events."""
+
   DATA_TYPE = 'skype:event:chat'
 
   FORMAT_STRING_PIECES = [
@@ -46,6 +50,7 @@ class SkypeChatFormatter(eventdata.ConditionalEventFormatter):
 
 class SkypeSMSFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Skype SMS."""
+
   DATA_TYPE = 'skype:event:sms'
 
   FORMAT_STRING_PIECES = [u'To: {number}', u'[{text}]']
@@ -56,6 +61,7 @@ class SkypeSMSFormatter(eventdata.ConditionalEventFormatter):
 
 class SkypeCallFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Skype calls."""
+
   DATA_TYPE = 'skype:event:call'
 
   FORMAT_STRING_PIECES = [
@@ -69,6 +75,7 @@ class SkypeCallFormatter(eventdata.ConditionalEventFormatter):
 
 class SkypeTransferFileFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Skype transfer files"""
+
   DATA_TYPE = 'skype:event:transferfile'
 
   FORMAT_STRING_PIECES = [

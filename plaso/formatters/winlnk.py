@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for Windows Shortcut (LNK) files."""
+
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
 class WinLnkLinkFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Windows Shortcut (LNK) link event."""
+
   DATA_TYPE = 'windows:lnk:link'
 
   FORMAT_STRING_PIECES = [
@@ -82,6 +86,10 @@ class WinLnkLinkFormatter(eventdata.ConditionalEventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     # Update event object with a description if necessary.
     if not hasattr(event_object, 'description'):
       event_object.description = u'Empty description'

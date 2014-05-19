@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class KeychainApplicationRecordFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for keychain application record event."""
+
   DATA_TYPE = 'mac:keychain:application'
 
   FORMAT_STRING_PIECES = [
@@ -36,6 +37,7 @@ class KeychainApplicationRecordFormatter(eventdata.ConditionalEventFormatter):
 
 class KeychainInternetRecordFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for keychain internet record event."""
+
   DATA_TYPE = 'mac:keychain:internet'
 
   FORMAT_STRING_PIECES = [

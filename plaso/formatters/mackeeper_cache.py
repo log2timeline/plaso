@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a MacKeepr Cache formatter in plaso."""
+
 from plaso.lib import eventdata
 
 
 class MacKeeperCacheFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for MacKeeper Cache extracted events."""
+
   DATA_TYPE = 'mackeeper:cache'
 
   FORMAT_STRING_PIECES = [

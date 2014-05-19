@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a formatter for the Mozilla Firefox history."""
+
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
 class FirefoxBookmarkAnnotationFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite bookmark annotation."""
+
   DATA_TYPE = 'firefox:places:bookmark_annotation'
 
   FORMAT_STRING_PIECES = [
@@ -35,6 +39,7 @@ class FirefoxBookmarkAnnotationFormatter(eventdata.ConditionalEventFormatter):
 
 class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
   """Formatter for a Firefox places.sqlite bookmark folder."""
+
   DATA_TYPE = 'firefox:places:bookmark_folder'
 
   FORMAT_STRING = u'{title}'
@@ -45,6 +50,7 @@ class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
 
 class FirefoxBookmarkFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite URL bookmark."""
+
   DATA_TYPE = 'firefox:places:bookmark'
 
   FORMAT_STRING_PIECES = [
@@ -64,6 +70,7 @@ class FirefoxBookmarkFormatter(eventdata.ConditionalEventFormatter):
 
 class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite page visited."""
+
   DATA_TYPE = 'firefox:places:page_visited'
 
   # Transitions defined in the source file:
@@ -96,11 +103,15 @@ class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
 
   def GetMessages(self, event_object):
     """Return the message strings."""
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     transition = self._URL_TRANSITIONS.get(
         getattr(event_object, 'visit_type', 0), None)
 
     if transition:
-      transition_str = 'Transition: {}'.format(transition)
+      transition_str = u'Transition: {0!s}'.format(transition)
 
     if hasattr(event_object, 'extra'):
       if transition:
@@ -114,6 +125,7 @@ class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
 
 class FirefoxDowloadFormatter(eventdata.EventFormatter):
   """Formatter for a Firefox dowloads.sqlite dowload."""
+
   DATA_TYPE = 'firefox:downloads:download'
 
   FORMAT_STRING = (u'{url} ({full_path}). Received: {received_bytes} bytes '
@@ -122,5 +134,3 @@ class FirefoxDowloadFormatter(eventdata.EventFormatter):
 
   SOURCE_LONG = 'Firefox History'
   SOURCE_SHORT = 'WEBHIST'
-
-

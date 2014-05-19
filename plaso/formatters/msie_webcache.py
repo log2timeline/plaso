@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class MsieWebCacheContainerEventFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Container_# table record."""
+
   DATA_TYPE = 'msie:webcache:container'
 
   FORMAT_STRING_PIECES = [
@@ -47,6 +48,7 @@ class MsieWebCacheContainerEventFormatter(eventdata.ConditionalEventFormatter):
 
 class MsieWebCacheContainersEventFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Containers table record."""
+
   DATA_TYPE = 'msie:webcache:containers'
 
   FORMAT_STRING_PIECES = [
@@ -65,6 +67,7 @@ class MsieWebCacheContainersEventFormatter(eventdata.ConditionalEventFormatter):
 
 class MsieWebCacheLeakFilesEventFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database LeakFiles table record."""
+
   DATA_TYPE = 'msie:webcache:leak_file'
 
   FORMAT_STRING_PIECES = [
@@ -80,6 +83,7 @@ class MsieWebCacheLeakFilesEventFormatter(eventdata.ConditionalEventFormatter):
 
 class MsieWebCachePartitionsEventFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Partitions table record."""
+
   DATA_TYPE = 'msie:webcache:partitions'
 
   FORMAT_STRING_PIECES = [
