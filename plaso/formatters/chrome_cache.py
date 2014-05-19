@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class ChromeCacheEntryEventFormatter(eventdata.ConditionalEventFormatter):
   """Class contains the Chrome Cache Entry event formatter."""
+
   DATA_TYPE = 'chrome:cache:entry'
 
   FORMAT_STRING_PIECES = [

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for Android mmssms.db database events."""
+
 from plaso.lib import eventdata
 
 
 class AndroidSmsFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Android sms events."""
+
   DATA_TYPE = 'android:messaging:sms'
 
   FORMAT_STRING_PIECES = [

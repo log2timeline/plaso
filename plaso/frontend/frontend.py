@@ -347,7 +347,7 @@ class ExtractionFrontend(Frontend):
     # Set up a simple XML RPC server for the worker for status indications.
     # Since we don't know the worker's PID for now we'll set the initial port
     # number to zero and then adjust it later.
-    proxy_server = rpc_proxy.StandardRpcProxy()
+    proxy_server = rpc_proxy.StandardRpcProxyServer()
     extraction_worker = self._engine.CreateExtractionWorker(
         worker_number, pre_obj, self._parsers, rpc_proxy=proxy_server)
 

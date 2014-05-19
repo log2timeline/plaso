@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a formatter for the Google Chrome cookie."""
+
 from plaso.lib import errors
 from plaso.lib import eventdata
 
 
 class ChromeCookieFormatter(eventdata.ConditionalEventFormatter):
   """The event formatter for cookie data in Chrome Cookies database."""
+
   DATA_TYPE = 'chrome:cookie:entry'
 
   FORMAT_STRING_PIECES = [

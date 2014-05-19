@@ -26,7 +26,7 @@ from plaso.lib import errors
 from plaso.lib import proxy
 
 
-class StandardRpcProxy(proxy.ProxyServer):
+class StandardRpcProxyServer(proxy.ProxyServer):
   """Class that implements a simple XML RPC based proxy."""
 
   def __init__(self, port=0):
@@ -35,8 +35,15 @@ class StandardRpcProxy(proxy.ProxyServer):
     Args:
       port: The port number the proxy should listen on. Defaults to port zero.
     """
-    super(StandardRpcProxy, self).__init__(
+    super(StandardRpcProxyServer, self).__init__(
         proxy.GetProxyPortNumberFromPID(port))
+    self._proxy = None
+
+  def Close(self):
+    """Close the proxy object."""
+    if not self._proxy:
+      return
+    self._proxy.shutdown()
     self._proxy = None
 
   def Open(self):

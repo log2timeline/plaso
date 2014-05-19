@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for the Windows recycle files."""
+
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
 class WinRecyclerFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Windows recycle bin events."""
+
   DATA_TYPE = 'windows:metadata:deleted_item'
 
   DRIVE_LIST = {
@@ -66,6 +70,10 @@ class WinRecyclerFormatter(eventdata.ConditionalEventFormatter):
 
   def GetMessages(self, event_object):
     """Return the message strings."""
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     if hasattr(event_object, 'drive_number'):
       event_object.drive_letter = self.DRIVE_LIST.get(
           event_object.drive_number, 'C?')

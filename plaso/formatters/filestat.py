@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,24 +16,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a formatter for the Stat object of a PFile."""
+
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
 class PfileStatFormatter(eventdata.ConditionalEventFormatter):
   """Define the formatting for PFileStat."""
+
   DATA_TYPE = 'fs:stat'
 
   FORMAT_STRING_PIECES = [u'{display_name}',
                           u'({unallocated})']
+
   FORMAT_STRING_SHORT_PIECES = [u'{filename}']
 
   SOURCE_SHORT = 'FILE'
 
   def GetSources(self, event_object):
     """Return a list of source short and long messages."""
-    self.source_string = u'{} {}'.format(
-        getattr(event_object, 'fs_type', 'Unknown'),
-        getattr(event_object, 'timestamp_desc', 'Time'))
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
+    self.source_string = u'{0:s} {1:s}'.format(
+        getattr(event_object, 'fs_type', u'Unknown FS'),
+        getattr(event_object, 'timestamp_desc', u'Time'))
 
     return super(PfileStatFormatter, self).GetSources(event_object)
 
@@ -47,6 +56,10 @@ class PfileStatFormatter(eventdata.ConditionalEventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     if not getattr(event_object, 'allocated', True):
       event_object.unallocated = u'unallocated'
 

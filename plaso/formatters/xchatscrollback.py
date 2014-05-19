@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -21,6 +22,7 @@ from plaso.lib import eventdata
 
 class XChatScrollbackFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for XChat scrollback files."""
+
   DATA_TYPE = 'xchat:scrollback:line'
 
   FORMAT_STRING_SEPARATOR = u''

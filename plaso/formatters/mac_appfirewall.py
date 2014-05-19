@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -20,6 +21,7 @@ from plaso.lib import eventdata
 
 class MacAppFirewallLogFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Mac appfirewall.log file."""
+
   DATA_TYPE = 'mac:asl:appfirewall:line'
 
   FORMAT_STRING_PIECES = [
@@ -35,4 +37,3 @@ class MacAppFirewallLogFormatter(eventdata.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Mac AppFirewall Log'
   SOURCE_SHORT = 'LOG'
-

@@ -335,7 +335,7 @@ class PregFrontend(frontend.Frontend):
     for key in keys:
       if key.startswith('\\Software') and 'Wow6432Node' not in key:
         _, first, second = key.partition('\\Software')
-        keys.append(u'{0:s}\\Wow6432Node{0:s}'.format(first, second))
+        keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(first, second))
 
   def GetHivesAndCollectors(self, options):
     """Returns a list of discovered Registry hives and collectors.
@@ -627,7 +627,7 @@ class MyMagics(magic.Magics):
         break
 
     if not plugin_found:
-      print u'No plugin named: {0:s} available for Registry type {0:s}'.format(
+      print u'No plugin named: {0:s} available for Registry type {1:s}'.format(
           plugin_name, RegCache.hive_type)
       return
 
@@ -791,7 +791,7 @@ class MyMagics(magic.Magics):
 
     for value in RegCache.cur_key.GetValues():
       if not verbose:
-        sub.append((u'{:>19s} {:>14s}]  {:s}'.format(
+        sub.append((u'{0:>19s} {1:>14s}]  {2:s}'.format(
             u'', '[' + value.data_type_string, value.name), False))
       else:
         if value.DataIsString():
@@ -815,10 +815,10 @@ class MyMagics(magic.Magics):
         else:
           value_string = u''
 
-        sub.append(
-            u'{:>19s} {:>14s}]  {:<25s}  {:s}'.format(
+        sub.append((
+            u'{0:>19s} {1:>14s}]  {2:<25s}  {3:s}'.format(
                 u'', '[' + value.data_type_string, value.name, value_string),
-            False)
+            False))
 
     for entry, subkey in sorted(sub):
       if subkey:
@@ -914,7 +914,7 @@ def ParseHive(hive_path, hive_collectors, keys, use_plugins, verbose):
     # Printing '*' 80 times.
     print_strings.append(u'*'*80)
     print_strings.append(
-        u'{:>15} : {}{}'.format(u'Hive File', hive_path, name))
+        u'{0:>15} : {1:s}{2:s}'.format(u'Hive File', hive_path, name))
     OpenHive(hive_path, hive_collector)
     for key_str in keys:
       key_texts = []
@@ -934,26 +934,26 @@ def ParseHive(hive_path, hive_collectors, keys, use_plugins, verbose):
             u'{1:s}').format(key_str, exception))
 
       key = RegCache.hive.GetKeyByPath(key_str_use)
-      key_texts.append(u'{:>15} : {}'.format(u'Key Name', key_str_use))
+      key_texts.append(u'{0:>15} : {1:s}'.format(u'Key Name', key_str_use))
       if not key:
-        key_texts.append(u'Unable to open key: {}'.format(key_str_use))
+        key_texts.append(u'Unable to open key: {0:s}'.format(key_str_use))
         if verbose:
           print_strings.extend(key_texts)
         continue
       key_texts.append(
-          u'{:>15} : {}'.format(u'Subkeys', key.number_of_subkeys))
-      key_texts.append(u'{:>15} : {}'.format(
+          u'{0:s>15} : {1:s}'.format(u'Subkeys', key.number_of_subkeys))
+      key_texts.append(u'{0:s>15} : {1:s}'.format(
           u'Values', key.number_of_values))
       key_texts.append(u'')
 
       if verbose:
-        key_texts.append(u'{:-^80}'.format(u' SubKeys '))
+        key_texts.append(u'{0:-^80}'.format(u' SubKeys '))
         for subkey in key.GetSubkeys():
           key_texts.append(
-              u'{:>15} : {}'.format(u'Key Name', subkey.path))
+              u'{0:>15} : {1:s}'.format(u'Key Name', subkey.path))
 
       key_texts.append(u'')
-      key_texts.append(u'{:-^80}'.format(u' Plugins '))
+      key_texts.append(u'{0:-^80}'.format(u' Plugins '))
       key_texts.extend(
           ParseKey(key, verbose=verbose, use_plugins=use_plugins))
       print_strings.extend(key_texts)
@@ -1011,7 +1011,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
       call_back = plugin.Process(key)
       if call_back:
         print_strings.append(
-            u'{:^80}'.format(u' ** Plugin : {0:s} **'.format(
+            u'{0:^80}'.format(u' ** Plugin : {0:s} **'.format(
                 plugin.plugin_name)))
         first = True
         for event_object in call_back:
@@ -1113,7 +1113,7 @@ def RunModeConsole(front_end, options):
     banners.append('')
     banners.append('Registry files discovered:')
     for number, hive in enumerate(hives):
-      banners.append(' - {}  {}'.format(number, hive))
+      banners.append(' - {0:d}  {1:s}'.format(number, hive))
     banners.append('')
     banners.append('To load a hive use:')
     text = 'OpenHive(hives[NR], collector)'
@@ -1129,7 +1129,7 @@ def RunModeConsole(front_end, options):
       for name, _ in hive_collectors:
         if not name:
           name = 'Current Value'
-        banners.append(' {} = {}'.format(counter, name))
+        banners.append(' {0:d} = {1:s}'.format(counter, name))
         counter += 1
 
       banners.append(
@@ -1153,7 +1153,7 @@ def RunModeConsole(front_end, options):
     for name, _ in hive_collectors:
       if not name:
         name = 'Current Value'
-      banners.append(' {} = {}'.format(counter, name))
+      banners.append(' {0:d} = {1:s}'.format(counter, name))
       counter += 1
 
   banners.append('')

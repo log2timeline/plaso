@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for Windows EventLog (EVT) files."""
+
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
 class WinEvtFormatter(eventdata.ConditionalEventFormatter):
   """Define the formatting for Windows EventLog (EVT) record."""
+
   DATA_TYPE = 'windows:evt:record'
 
   FORMAT_STRING_PIECES = [
@@ -67,6 +71,10 @@ class WinEvtFormatter(eventdata.ConditionalEventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     # Update event object with the event type string.
     event_object.event_type_string = self.GetEventTypeString(
         event_object.event_type)

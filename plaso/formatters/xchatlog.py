@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class XChatLogFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for XChat log files."""
+
   DATA_TYPE = 'xchat:log:line'
 
   FORMAT_STRING_PIECES = [u'[nickname: {nickname}]',
