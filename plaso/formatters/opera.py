@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for Opera history events."""
+
 from plaso.lib import eventdata
 
 
 class OperaGlobalHistoryFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for an Opera global history event."""
+
   DATA_TYPE = 'opera:history:entry'
 
   FORMAT_STRING_PIECES = [
@@ -33,6 +36,7 @@ class OperaGlobalHistoryFormatter(eventdata.ConditionalEventFormatter):
 
 class OperaTypedHistoryFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for an Opera typed history event."""
+
   DATA_TYPE = 'opera:history:typed_entry'
 
   FORMAT_STRING_PIECES = [

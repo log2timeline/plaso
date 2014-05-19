@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a formatter for the Google Chrome history."""
+
 from plaso.lib import eventdata
 
 
 class ChromePageVisitedFormatter(eventdata.ConditionalEventFormatter):
   """The event formatter for page visited data in Chrome History."""
+
   DATA_TYPE = 'chrome:history:page_visited'
 
   FORMAT_STRING_PIECES = [
@@ -40,6 +43,7 @@ class ChromePageVisitedFormatter(eventdata.ConditionalEventFormatter):
 
 class ChromeFileDownloadFormatter(eventdata.ConditionalEventFormatter):
   """The event formatter for file downloaded data in Chrome History."""
+
   DATA_TYPE = 'chrome:history:file_downloaded'
 
   FORMAT_STRING_PIECES = [

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,12 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a formatter for Zeitgeist."""
+
 from plaso.lib import eventdata
 
 
 class ZeitgeistEventFormatter(eventdata.EventFormatter):
   """The event formatter for Zeitgeist event."""
+
   DATA_TYPE = 'zeitgeist:activity'
+
   FORMAT_STRING = u'{subject_uri}'
+
   SOURCE_LONG = 'Zeitgeist activity log'
   SOURCE_SHORT = 'LOG'

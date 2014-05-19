@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for the Mac OS X launch services quarantine events."""
+
 from plaso.lib import eventdata
 
 
 class LSQuarantineFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a LS Quarantine history event."""
+
   DATA_TYPE = 'macosx:lsquarantine'
 
   FORMAT_STRING_PIECES = [

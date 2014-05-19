@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,8 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Formatter for bencode parser events."""
+
 from plaso.lib import eventdata
 
 
@@ -23,6 +24,7 @@ class uTorrentFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a BitTorrent uTorrent active torrents."""
 
   DATA_TYPE = 'p2p:bittorrent:utorrent'
+
   SOURCE_LONG = 'uTorrent Active Torrents'
   SOURCE_SHORT = 'TORRENT'
 
@@ -35,7 +37,9 @@ class uTorrentFormatter(eventdata.ConditionalEventFormatter):
 
 class TransmissionFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a Transmission active torrents."""
+
   DATA_TYPE = 'p2p:bittorrent:transmission'
+
   SOURCE_LONG = 'Transmission Active Torrents'
   SOURCE_SHORT = 'TORRENT'
 

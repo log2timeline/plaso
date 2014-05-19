@@ -47,29 +47,34 @@ from plaso import preprocessors
 
 from plaso.engine import collector
 from plaso.engine import scanner
+from plaso.engine import utils as engine_utils
 from plaso.engine import worker
 
 from plaso.frontend import frontend
-# TODO: why does preg and psort get imported here?
-from plaso.frontend import preg
-from plaso.frontend import psort
+from plaso.frontend import rpc_proxy
 from plaso.frontend import utils as frontend_utils
 
+from plaso.lib import binary
+from plaso.lib import bufferlib
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import filter_interface
+from plaso.lib import foreman
 from plaso.lib import lexer
 from plaso.lib import objectfilter
 from plaso.lib import output
 from plaso.lib import parser
 from plaso.lib import pfilter
+from plaso.lib import plugin
+from plaso.lib import process_info
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import registry as class_registry
 from plaso.lib import storage
 from plaso.lib import text_parser
 from plaso.lib import timelib
+from plaso.lib import utils
 
 from plaso.output import helper
 

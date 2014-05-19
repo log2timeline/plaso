@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a formatter for Plist Events."""
+
 from plaso.lib import eventdata
 
 
 class PlistFormatter(eventdata.ConditionalEventFormatter):
   """Event Formatter for plist keys."""
+
   DATA_TYPE = 'plist:key'
 
   FORMAT_STRING_SEPARATOR = u''

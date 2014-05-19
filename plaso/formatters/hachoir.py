@@ -17,6 +17,7 @@
 # limitations under the License.
 """Formatter for Hachoir events."""
 
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
@@ -43,6 +44,10 @@ class HachoirFormatter(eventdata.EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     string_parts = []
     for key, value in sorted(event_object.metadata.items()):
       string_parts.append(u'{0:s}: {1:s}'.format(key, value))

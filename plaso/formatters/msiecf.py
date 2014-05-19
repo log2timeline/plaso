@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for Microsoft Internet Explorer (MSIE) Cache Files (CF) events."""
+
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
 class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for a MSIECF URL item."""
+
   DATA_TYPE = 'msiecf:url'
 
   FORMAT_STRING_PIECES = [
@@ -46,6 +50,10 @@ class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     if hasattr(event_object, 'http_headers'):
       event_object.http_headers_cleaned = event_object.http_headers.replace(
         '\r\n', ' - ')
@@ -55,4 +63,3 @@ class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
       event_object.recovered_string = '[Recovered Entry]'
 
     return super(MsiecfUrlFormatter, self).GetMessages(event_object)
-
