@@ -34,25 +34,22 @@ from plaso.preprocessors import interface as preprocess_interface
 class Engine(object):
   """Class that defines the processing engine."""
 
-  def __init__(
-      self, collection_queue, storage_queue, resolver_context=None):
+  def __init__(self, collection_queue, storage_queue):
     """Initialize the engine object.
 
     Args:
       collection_queue: the collection queue object (instance of Queue).
       storage_queue: the storage queue object (instance of Queue).
-      resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None.
     """
     self._collection_queue = collection_queue
-    self._resolver_context = resolver_context
     self._source = None
     self._source_path_spec = None
     self._source_file_entry = None
     self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
 
   def CreateCollector(
-      self, include_directory_stat, vss_stores=None, filter_find_specs=None):
+      self, include_directory_stat, vss_stores=None, filter_find_specs=None,
+      resolver_context=None):
     """Creates a collector.
 
     Args:
@@ -63,6 +60,9 @@ class Engine(object):
                   VSS stores should be processed. The default is None.
       filter_find_specs: Optional list of filter find specifications (instances
                          of dfvfs.FindSpec). The default is None.
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None. Note that every thread or process
+                        must have its own resolver context.
 
     Raises:
       RuntimeError: if source path specification is not set.
@@ -72,7 +72,7 @@ class Engine(object):
 
     collector_object = collector.Collector(
         self._collection_queue, self._storage_queue_producer, self._source,
-        self._source_path_spec, resolver_context=self._resolver_context)
+        self._source_path_spec, resolver_context=resolver_context)
 
     collector_object.collect_directory_metadata = include_directory_stat
 
@@ -104,8 +104,13 @@ class Engine(object):
         worker_number, self._collection_queue, self._storage_queue_producer,
         pre_obj, parsers, rpc_proxy=rpc_proxy)
 
-  def GetSourceFileSystemSearcher(self):
+  def GetSourceFileSystemSearcher(self, resolver_context=None):
     """Retrieves the file system searcher of the source.
+
+    Args:
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None. Note that every thread or process
+                        must have its own resolver context.
 
     Returns:
       The file system searcher object (instance of dfvfs.FileSystemSearcher).
@@ -117,7 +122,7 @@ class Engine(object):
       raise RuntimeError(u'Missing source.')
 
     file_system = path_spec_resolver.Resolver.OpenFileSystem(
-        self._source_path_spec, resolver_context=self._resolver_context)
+        self._source_path_spec, resolver_context=resolver_context)
 
     type_indicator = self._source_path_spec.type_indicator
     if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
@@ -127,14 +132,18 @@ class Engine(object):
 
     return file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
-  def PreprocessSource(self, pre_obj, platform):
+  def PreprocessSource(self, pre_obj, platform, resolver_context=None):
     """Preprocesses the source and fills the preprocessing object.
 
     Args:
       pre_obj: the preprocessing object (instance of PreprocessObject).
       platform: string that indicates the platform (operating system).
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None. Note that every thread or process
+                        must have its own resolver context.
     """
-    searcher = self.GetSourceFileSystemSearcher()
+    searcher = self.GetSourceFileSystemSearcher(
+        resolver_context=resolver_context)
     if not platform:
       platform = preprocess_interface.GuessOS(searcher)
     pre_obj.guessed_os = platform
@@ -151,13 +160,16 @@ class Engine(object):
               u'with error: {2:s}').format(
                   plugin.plugin_name, plugin.ATTRIBUTE, exception))
 
-  def SetSource(self, source_path_spec):
+  def SetSource(self, source_path_spec, resolver_context=None):
     """Sets the source.
 
     Args:
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
                         scanner. The default is None.
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None. Note that every thread or process
+                        must have its own resolver context.
     """
     path_spec = source_path_spec
     while path_spec.parent:
@@ -168,7 +180,7 @@ class Engine(object):
     self._source_path_spec = source_path_spec
 
     self._source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-       self._source_path_spec, resolver_context=self._resolver_context)
+       self._source_path_spec, resolver_context=resolver_context)
 
     if not self._source_file_entry:
       raise errors.BadConfigOption(
