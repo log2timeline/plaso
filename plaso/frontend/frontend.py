@@ -839,11 +839,10 @@ class ExtractionFrontend(Frontend):
 
     collection_queue = queue.MultiThreadedQueue()
     storage_queue = queue.MultiThreadedQueue()
-    self._engine = engine.Engine(
-        collection_queue, storage_queue,
-        resolver_context=self._resolver_context)
+    self._engine = engine.Engine(collection_queue, storage_queue)
 
-    self._engine.SetSource(self._source_path_spec)
+    self._engine.SetSource(
+        self._source_path_spec, resolver_context=self._resolver_context)
 
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
@@ -878,9 +877,14 @@ class ExtractionFrontend(Frontend):
     else:
       filter_find_specs = None
 
+    if start_collection_process:
+      resolver_context = context.Context()
+    else:
+      resolver_context = self._resolver_context
+
     self._collector = self._engine.CreateCollector(
         include_directory_stat, vss_stores=self._vss_stores,
-        filter_find_specs=filter_find_specs)
+        filter_find_specs=filter_find_specs, resolver_context=resolver_context)
 
     self._DebugPrintCollector(options)
 
@@ -1028,11 +1032,10 @@ class ExtractionFrontend(Frontend):
     """
     collection_queue = queue.SingleThreadedQueue()
     storage_queue = queue.SingleThreadedQueue()
-    self._engine = engine.Engine(
-        collection_queue, storage_queue,
-        resolver_context=self._resolver_context)
+    self._engine = engine.Engine(collection_queue, storage_queue)
 
-    self._engine.SetSource(self._source_path_spec)
+    self._engine.SetSource(
+        self._source_path_spec, resolver_context=self._resolver_context)
 
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
@@ -1060,7 +1063,8 @@ class ExtractionFrontend(Frontend):
 
     self._collector = self._engine.CreateCollector(
         include_directory_stat, vss_stores=self._vss_stores,
-        filter_find_specs=filter_find_specs)
+        filter_find_specs=filter_find_specs,
+        resolver_context=self._resolver_context)
 
     self._DebugPrintCollector(options)
 
@@ -1167,7 +1171,8 @@ class ExtractionFrontend(Frontend):
     Returns:
       The file system searcher object (instance of dfvfs.FileSystemSearcher).
     """
-    return self._engine.GetSourceFileSystemSearcher()
+    return self._engine.GetSourceFileSystemSearcher(
+        resolver_context=self._resolver_context)
 
   def GetSourcePathSpec(self):
     """Retrieves the source path specification.
@@ -1273,7 +1278,8 @@ class ExtractionFrontend(Frontend):
         self._SOURCE_TYPE_DIRECTORY, self._SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
       platform = getattr(options, 'os', None)
       try:
-        self._engine.PreprocessSource(pre_obj, platform)
+        self._engine.PreprocessSource(
+            pre_obj, platform, resolver_context=self._resolver_context)
       except IOError as exception:
         logging.error(u'Unable to preprocess with error: {0:s}'.format(
             exception))

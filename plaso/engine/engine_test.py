@@ -42,8 +42,7 @@ class EngineTest(unittest.TestCase):
     collection_queue = queue.SingleThreadedQueue()
     storage_queue = queue.SingleThreadedQueue()
     resolver_context = context.Context()
-    test_engine = engine.Engine(
-        collection_queue, storage_queue, resolver_context=resolver_context)
+    test_engine = engine.Engine(collection_queue, storage_queue)
 
     self.assertNotEquals(test_engine, None)
 
@@ -54,13 +53,14 @@ class EngineTest(unittest.TestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=os_path_spec)
 
-    test_engine.SetSource(source_path_spec)
+    test_engine.SetSource(source_path_spec, resolver_context=resolver_context)
 
     self.assertFalse(test_engine.SourceIsDirectory())
     self.assertFalse(test_engine.SourceIsFile())
     self.assertTrue(test_engine.SourceIsStorageMediaImage())
 
-    test_searcher = test_engine.GetSourceFileSystemSearcher()
+    test_searcher = test_engine.GetSourceFileSystemSearcher(
+        resolver_context=resolver_context)
     self.assertNotEquals(test_searcher, None)
     self.assertIsInstance(
         test_searcher, file_system_searcher.FileSystemSearcher)
@@ -69,7 +69,9 @@ class EngineTest(unittest.TestCase):
 
     test_engine.PreprocessSource(pre_obj, 'Windows')
 
-    test_collector = test_engine.CreateCollector(False, None, None)
+    test_collector = test_engine.CreateCollector(
+        False, vss_stores=None, filter_find_specs=None,
+        resolver_context=resolver_context)
     self.assertNotEquals(test_collector, None)
     self.assertIsInstance(test_collector, collector.Collector)
 
