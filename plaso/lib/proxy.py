@@ -57,14 +57,35 @@ class ProxyServer(object):
     super(ProxyServer, self).__init__()
     self._port_number = port
 
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    self.Close()
+
   @property
   def listening_port(self):
     """Returns back the port the proxy listens to."""
     return self._port_number
 
   @abc.abstractmethod
+  def Close(self):
+    """Close the proxy server."""
+
+  @abc.abstractmethod
   def Open(self):
     """Sets up the necessary objects in order for the proxy to be started."""
+
+  @abc.abstractmethod
+  def RegisterFunction(self, function_name, function):
+    """Register a function for this proxy.
+
+    Args:
+      function_name: The name of the registered proxy function.
+      function: The callback for the function providing the answer.
+    """
 
   @abc.abstractmethod
   def StartProxy(self):
@@ -77,15 +98,6 @@ class ProxyServer(object):
   @abc.abstractmethod
   def SetListeningPort(self, new_port_number):
     """Change the port the proxy listens to."""
-
-  @abc.abstractmethod
-  def RegisterFunction(self, function_name, function):
-    """Register a function for this proxy.
-
-    Args:
-      function_name: The name of the registered proxy function.
-      function: The callback for the function providing the answer.
-    """
 
 
 class ProxyClient(object):

@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class OleCfItemFormatter(eventdata.EventFormatter):
   """Formatter for an OLECF item."""
+
   DATA_TYPE = 'olecf:item'
 
   FORMAT_STRING = u'Name: {name}'
@@ -33,6 +34,7 @@ class OleCfItemFormatter(eventdata.EventFormatter):
 
 class OleCfDocumentSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for an OLECF Summary Info property set stream."""
+
   DATA_TYPE = 'olecf:document_summary_info'
 
   FORMAT_STRING_PIECES = [
@@ -64,6 +66,7 @@ class OleCfDocumentSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
 
 class OleCfSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for an OLECF Summary Info property set stream."""
+
   DATA_TYPE = 'olecf:summary_info'
 
   FORMAT_STRING_PIECES = [

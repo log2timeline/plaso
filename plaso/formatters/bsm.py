@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class MacBSMFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for an BSM log entry."""
+
   DATA_TYPE = 'mac:bsm:event'
 
   FORMAT_STRING_PIECES = [
@@ -39,6 +40,7 @@ class MacBSMFormatter(eventdata.ConditionalEventFormatter):
 
 class BSMFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for an BSM log entry."""
+
   DATA_TYPE = 'bsm:event'
 
   FORMAT_STRING_PIECES = [

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -14,12 +15,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Formatter for the UTMPX binary files."""
+
 from plaso.lib import eventdata
 
 class UtmpxSessionFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for UTMPX session."""
+
   DATA_TYPE = 'mac:utmpx:event'
 
   FORMAT_STRING_PIECES = [
@@ -32,4 +34,3 @@ class UtmpxSessionFormatter(eventdata.ConditionalEventFormatter):
 
   SOURCE_LONG = 'UTMPX session'
   SOURCE_SHORT = 'LOG'
-

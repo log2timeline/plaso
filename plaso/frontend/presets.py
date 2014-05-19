@@ -18,19 +18,18 @@
 """Helper file for filtering out parsers."""
 
 categories = {
-    'winxp': [
+    'win_gen': [
         'bencode', 'filestat', 'google_drive', 'java_idx', 'lnk',
         'mcafee_protection', 'olecf', 'openxml', 'prefetch',
-        'recycle_bin_info2', 'skydrive_log_error', 'skydrive_log', 'skype',
-        'symantec_scanlog', 'webhist', 'winevt', 'winfirewall', 'winjob',
+        'skydrive_log_error', 'skydrive_log', 'skype',
+        'symantec_scanlog', 'webhist', 'winfirewall', 'winjob',
         'winreg'],
+    'winxp': [
+        'recycle_bin_info2', 'win_gen', 'winevt'],
     'winxp_slow': [
         'hachoir', 'winxp'],
     'win7': [
-        'bencode', 'filestat', 'google_drive', 'java_idx', 'lnk',
-        'mcafee_protection', 'olecf', 'openxml', 'prefetch', 'recycle_bin',
-        'skydrive_log', 'skydrive_log_error', 'skype', 'symantec_scanlog',
-        'webhist', 'winevtx', 'winfirewall', 'winjob', 'winreg'],
+        'recycle_bin', 'win_gen', 'winevtx'],
     'win7_slow': [
         'hachoir', 'win7'],
     'webhist': [
@@ -46,7 +45,11 @@ categories = {
         'google_drive', 'java_idx', 'ls_quarantine', 'mac_appfirewall_log',
         'mac_document_versions', 'mac_keychain', 'mac_securityd',
         'mackeeper_cache', 'macwifi', 'olecf', 'openxml', 'plist', 'skype',
-        'syslog', 'utmpx', 'webhist'],
+        'utmpx', 'webhist'],
+    # TODO: Once syslog parser has been rewritten to be faster than the current
+    # one it's moved out of the default parsers for Mac OS X and into the "slow"
+    # mode.
+    'macosx_slow': ['macosx', 'syslog'],
     'android': [
         'android_calls', 'android_sms'],
 }

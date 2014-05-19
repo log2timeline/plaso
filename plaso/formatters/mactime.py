@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class MactimeFormatter(eventdata.EventFormatter):
   """Class that formats mactime bodyfile events."""
+
   DATA_TYPE = 'fs:mactime:line'
 
   # The format string.

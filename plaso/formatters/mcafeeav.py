@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for the McAfee AV Logs files."""
+
 from plaso.lib import eventdata
 
 
 class McafeeAccessProtectionLogEventFormatter(eventdata.EventFormatter):
   """Class that formats the McAfee Access Protection Log events."""
+
   DATA_TYPE = 'av:mcafee:accessprotectionlog'
 
   # The format string.

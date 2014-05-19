@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright David Nides (davnads.blogspot.com). All Rights Reserved.
+#
+# Copyright 2013 The Plaso Project Authors.
+# Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +15,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This file contains a formatter for Symantec logs."""
+
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
@@ -23,6 +26,8 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 class SymantecFormatter(eventdata.ConditionalEventFormatter):
   """Define the formatting for Symantec files."""
+
+  DATA_TYPE = 'av:symantec:scanlog'
 
   EVENT_NAMES = {
       '1': 'GL_EVENT_IS_ALERT',
@@ -134,7 +139,6 @@ class SymantecFormatter(eventdata.ConditionalEventFormatter):
   }
 
   # The indentifier for the formatter (a regular expression)
-  DATA_TYPE = 'av:symantec:scanlog'
   FORMAT_STRING_SEPARATOR = u'; '
   FORMAT_STRING_PIECES = [
       u'Event Name: {event_map}',
@@ -171,6 +175,10 @@ class SymantecFormatter(eventdata.ConditionalEventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     if hasattr(event_object, 'event'):
       event_object.event_map = self.EVENT_NAMES.get(
         event_object.event, 'Unknown')

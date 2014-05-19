@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for Windows firewall log files."""
+
 from plaso.lib import eventdata
 
 
 class WinFirewallFormatter(eventdata.ConditionalEventFormatter):
   """A formatter for Windows firewall log entries."""
+
   DATA_TYPE = 'windows:firewall:log_entry'
 
   # TODO: Add more "elegant" formatting, as in transform ICMP code/type into
@@ -58,4 +61,3 @@ class WinFirewallFormatter(eventdata.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Windows Firewall Log'
   SOURCE_SHORT = 'LOG'
-

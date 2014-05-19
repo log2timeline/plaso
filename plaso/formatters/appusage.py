@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This file contains a formatter for the Mac OS X application usage."""
+
 from plaso.lib import eventdata
 
 
 class ApplicationUsageFormatter(eventdata.EventFormatter):
   """Define the formatting for Application Usage information."""
+
   DATA_TYPE = 'macosx:application_usage'
 
   FORMAT_STRING = (u'{application} v.{app_version} (bundle: {bundle_id}).'

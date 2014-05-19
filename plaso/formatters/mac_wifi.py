@@ -22,6 +22,7 @@ from plaso.lib import eventdata
 
 class MacWifiLogFormatter(eventdata.ConditionalEventFormatter):
   """Formatter for Mac Wifi file."""
+
   DATA_TYPE = 'mac:wifilog:line'
 
   FORMAT_STRING_PIECES = [

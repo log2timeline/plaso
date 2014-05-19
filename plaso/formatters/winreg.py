@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,11 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatter for Windows NT Registry (REGF) files."""
+
+from plaso.lib import errors
 from plaso.lib import eventdata
 
 
 class WinRegistryGenericFormatter(eventdata.EventFormatter):
   """Formatter for a generic Windows Registry key or value."""
+
   DATA_TYPE = 'windows:registry:key_value'
 
   FORMAT_STRING = u'[{keyname}] {text}'
@@ -39,11 +43,15 @@ class WinRegistryGenericFormatter(eventdata.EventFormatter):
       A list that contains both the longer and shorter version of the message
       string.
     """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     regvalue = getattr(event_object, 'regvalue', {})
 
     string_parts = []
     for key, value in sorted(regvalue.items()):
-      string_parts.append(u'{0:s}: {1}'.format(key, value))
+      string_parts.append(u'{0:s}: {1!s}'.format(key, value))
 
     text = u' '.join(string_parts)
 
@@ -57,6 +65,10 @@ class WinRegistryGenericFormatter(eventdata.EventFormatter):
 
   def GetSources(self, event_object):
     """Returns a list of source short and long messages for the event."""
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
     self.source_string = getattr(event_object, 'source_long', None)
 
     if not self.source_string:

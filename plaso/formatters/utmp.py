@@ -21,8 +21,8 @@ from plaso.lib import eventdata
 
 
 class UtmpSessionFormatter(eventdata.ConditionalEventFormatter):
-
   """Formatter for UTMP session."""
+
   DATA_TYPE = 'linux:utmp:event'
 
   FORMAT_STRING_PIECES = [
@@ -39,4 +39,3 @@ class UtmpSessionFormatter(eventdata.ConditionalEventFormatter):
 
   SOURCE_LONG = 'UTMP session'
   SOURCE_SHORT = 'LOG'
-

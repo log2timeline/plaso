@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -22,6 +23,7 @@ from plaso.lib import eventdata
 
 class WinPrefetchExecutionFormatter(eventdata.ConditionalEventFormatter):
   """Class that formats Windows Prefetch execution events."""
+
   DATA_TYPE = 'windows:prefetch:execution'
 
   FORMAT_STRING_PIECES = [
