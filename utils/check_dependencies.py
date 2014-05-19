@@ -122,7 +122,9 @@ def CheckLibyal(libyal_python_modules):
   return result
 
 
-def CheckPythonModule(module_name, version_attribute_name, minimum_version):
+def CheckPythonModule(
+    module_name, version_attribute_name, minimum_version,
+    maximum_version=None):
   """Checks the availability of a Python module.
 
   Args:
@@ -130,6 +132,10 @@ def CheckPythonModule(module_name, version_attribute_name, minimum_version):
     version_attribute_name: the name of the attribute that contains the module
                             version.
     minimum_version: the minimum required version.
+    maximum_version: the maximum required version. This attribute is optional
+                     and should only be used if there is a recent API change
+                     that prevents the tool from running if a later version
+                     is used.
 
   Returns:
     True if the Python module is available and conforms to the minimum required
@@ -151,11 +157,20 @@ def CheckPythonModule(module_name, version_attribute_name, minimum_version):
     # A string compare of both version strings will yield an incorrect result.
     module_version_map = map(int, module_version.split('.'))
     minimum_version_map = map(int, minimum_version.split('.'))
+
     if module_version_map < minimum_version_map:
       print (
           u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
           u'required.').format(module_name, module_version, minimum_version)
       return False
+
+    if maximum_version:
+      maximum_version_map = map(int, maximum_version.split('.'))
+      if module_version_map > maximum_version_map:
+        print (
+            u'[FAILURE]\t{0:s} version: {1:s} is too recent, {2:s} or earlier '
+            u'required.').format(module_name, module_version, maximum_version)
+        return False
 
     print u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version)
   else:
@@ -223,6 +238,10 @@ if __name__ == '__main__':
     check_result = False
 
   if not CheckPythonModule('six', '__version__', '1.1.0'):
+    check_result = False
+
+  if not CheckPythonModule(
+      'psutil', '__version__', '1.2.1', maximum_version='1.2.1'):
     check_result = False
 
   if not CheckPythonModule('construct', '__version__', '2.5.2'):
