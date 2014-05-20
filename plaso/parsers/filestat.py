@@ -17,6 +17,8 @@
 # limitations under the License.
 """File system stat object parser."""
 
+from dfvfs.lib import definitions
+
 from plaso.lib import event
 from plaso.lib import parser
 from plaso.lib import timelib
@@ -30,8 +32,40 @@ class StatEvents(object):
   TIME_ATTRIBUTES = frozenset([
       'atime', 'bkup_time', 'ctime', 'crtime', 'dtime', 'mtime'])
 
+  # A copy of the collected file system type.
+  _file_system_type = u''
+
   @classmethod
-  def GetEventsFromStat(cls, stat_object):
+  def GetFileSystemTypeFromFileEntry(cls, file_entry):
+    """Return a filesystem type string from a file entry object.
+
+    Args:
+      file_entry: A file entry object (instance of vfs.file_entry.FileEntry).
+
+    Returns:
+      A string indicating the file system type.
+    """
+    if cls._file_system_type:
+      return cls._file_system_type
+
+    file_system = file_entry.GetFileSystem()
+    file_system_indicator = file_system.type_indicator
+
+    if file_system_indicator == definitions.TYPE_INDICATOR_TSK:
+      # TODO: Implement fs_type in dfVFS and remove this implementation
+      # once that is in place.
+      fs_info = file_system.GetFsInfo()
+      if fs_info.info:
+        type_string = unicode(fs_info.info.ftype)
+        if type_string.startswith('TSK_FS_TYPE'):
+          cls._file_system_type = type_string[12:]
+          return cls._file_system_type
+
+    cls._file_system_type = file_system_indicator
+    return cls._file_system_type
+
+  @classmethod
+  def GetEventsFromStat(cls, stat_object, file_system_type):
     """Yield event objects from a file stat object.
 
     This method takes a stat object and yields an EventObject,
@@ -45,6 +79,8 @@ class StatEvents(object):
 
     Args:
       stat_object: A stat object (instance of dfvfs.VFSStat).
+      file_system_type: A string that denotes the file system type,
+                        eg: OS, NTFS, EXT3, etc.
 
     Yields:
       An event object for each extracted timestamp contained in the stat
@@ -59,6 +95,8 @@ class StatEvents(object):
       return
 
     is_allocated = getattr(stat_object, 'allocated', True)
+
+    file_size = getattr(stat_object, 'size', None),
 
     for time_value in time_values:
       timestamp = getattr(stat_object, time_value, None)
@@ -78,9 +116,7 @@ class StatEvents(object):
         continue
 
       yield FileStatEvent(
-          timestamp, time_value, is_allocated,
-          getattr(stat_object, 'size', None),
-          getattr(stat_object, 'fs_type', u'N/A'))
+          timestamp, time_value, is_allocated, file_size, file_system_type)
 
 
 class FileStatEvent(event.TimestampEvent):
@@ -124,4 +160,5 @@ class FileStatParser(parser.BaseParser):
     stat_object = file_entry.GetStat()
 
     if stat_object:
-      return StatEvents.GetEventsFromStat(stat_object)
+      return StatEvents.GetEventsFromStat(
+          stat_object, StatEvents.GetFileSystemTypeFromFileEntry(file_entry))

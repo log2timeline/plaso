@@ -228,6 +228,8 @@ class FileProtoLogOutputFormatter(FileLogOutputFormatter):
 class EventBuffer(object):
   """Buffer class for EventObject output processing."""
 
+  MERGE_ATTRIBUTES = ['inode', 'filename', 'display_name']
+
   def __init__(self, formatter, check_dedups=True):
     """Initalizes the EventBuffer.
 
@@ -288,13 +290,20 @@ class EventBuffer(object):
     # inside the combined event, however which one should be chosen is
     # perhaps something that can be evaluated here (regular TSK in favor of
     # an event stored deep inside a VSS for instance).
-    combine = ['inode', 'filename', 'display_name']
-    for attr in combine:
+    for attr in self.MERGE_ATTRIBUTES:
       val_a = set(utils.GetUnicodeString(getattr(event_a, attr, '')).split(';'))
       val_b = set(utils.GetUnicodeString(getattr(event_b, attr, '')).split(';'))
       values_list = list(val_a | val_b)
       values_list.sort() # keeping this consistent across runs helps with diffs
       setattr(event_a, attr, u';'.join(values_list))
+
+    # Special instance if this is a filestat entry we need to combine the
+    # description field.
+    if getattr(event_a, 'parser', u'') == 'filestat':
+      # TODO: Improve this to make the description more like "MAC." or "MA.."
+      # instead of "mtime;atime".
+      setattr(event_a, 'timestamp_desc', u';'.join(
+          [event_a.timestamp_desc, event_b.timestamp_desc]))
 
   def End(self):
     """Call the formatter to produce the closing line."""
