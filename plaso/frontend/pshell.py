@@ -112,6 +112,24 @@ def GetEventData(event_proto, before=0):
   return frontend_utils.OutputWriter.GetEventDataHexDump(event_proto, before)
 
 
+def GetFileEntryFromEventObject(event_object):
+  """Return a file entry object from a pathspec object.
+
+  Args:
+    event_object: An event object (an instance of EventObject).
+
+  Returns:
+    A file entry object (instance of vfs.file_entry.FileEntry) or
+    None if the event object doesn't have a defined path spec.
+  """
+  path_spec = getattr(event_object, 'pathspec', None)
+
+  if not path_spec:
+    return
+
+  return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+
 def OpenOSFile(path):
   """Opens a file entry from the OS."""
   if not os.path.isfile(path):

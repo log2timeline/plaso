@@ -44,10 +44,13 @@ def _SendContainerToStorage(file_entry, storage_queue_producer):
   """
   stat_object = file_entry.GetStat()
 
-  for event_object in filestat.StatEvents.GetEventsFromStat(stat_object):
+  fs_type = filestat.StatEvents.GetFileSystemTypeFromFileEntry(file_entry)
+
+  for event_object in filestat.StatEvents.GetEventsFromStat(
+      stat_object, fs_type):
     # TODO: dfVFS refactor: move display name to output since the path
     # specification contains the full information.
-    event_object.display_name = u'{:s}:{:s}'.format(
+    event_object.display_name = u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, file_entry.name)
 
     event_object.filename = file_entry.name

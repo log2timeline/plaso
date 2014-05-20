@@ -126,7 +126,7 @@ class EventObject(object):
   # EventObjects are the same.
   COMPARE_EXCLUDE = frozenset([
       'timestamp', 'inode', 'pathspec', 'filename', 'uuid',
-      'data_type', 'display_name', 'store_number', 'store_index'])
+      'data_type', 'display_name', 'store_number', 'store_index', 'tag'])
 
   def __init__(self):
     """Initializes the event object."""
@@ -147,6 +147,21 @@ class EventObject(object):
     """
     fields = sorted(list(self.GetAttributes().difference(self.COMPARE_EXCLUDE)))
 
+    # TODO: Review this (after 1.1.0 release). Is there a better/more clean
+    # method of removing the timestamp description field out of the fields list?
+    parser = getattr(self, 'parser', u'')
+    if parser == u'filestat':
+      # We don't want to compare the timestamp description field when comparing
+      # filestat events. This is done to be able to join together FILE events
+      # that have the same timestamp, yet different description field (as in an
+      # event that has for instance the same timestamp for mtime and atime,
+      # joining it together into a single event).
+      try:
+        timestamp_desc_index = fields.index('timestamp_desc')
+        del fields[timestamp_desc_index]
+      except ValueError:
+        pass
+
     basic = [self.timestamp, self.data_type]
     attributes = []
     for attribute in fields:
@@ -159,7 +174,7 @@ class EventObject(object):
         attributes.append(value)
     identity = basic + [x for pair in zip(fields, attributes) for x in pair]
 
-    if 'filestat' in getattr(self, 'parser', ''):
+    if parser == 'filestat':
       inode = getattr(self, 'inode', 'a')
       if inode == 'a':
         inode = '_' + str(uuid.uuid4())
