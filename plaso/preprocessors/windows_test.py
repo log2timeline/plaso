@@ -34,7 +34,7 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     file_object = open(os.path.join(
-        self._TEST_DATA_PATH, u'SYSTEM'))
+        self._TEST_DATA_PATH, u'SYSTEM'), 'rb')
     file_data = file_object.read()
     file_object.close()
 
@@ -42,7 +42,7 @@ class WindowsSoftwareRegistryTest(test_lib.PreprocessPluginTest):
         u'/Windows/System32/config/SYSTEM', file_data)
 
     file_object = open(os.path.join(
-        self._TEST_DATA_PATH, u'SOFTWARE'))
+        self._TEST_DATA_PATH, u'SOFTWARE'), 'rb')
     file_data = file_object.read()
     file_object.close()
 
@@ -60,7 +60,7 @@ class WindowsSystemRegistryTest(test_lib.PreprocessPluginTest):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     file_object = open(os.path.join(
-        self._TEST_DATA_PATH, u'SYSTEM'))
+        self._TEST_DATA_PATH, u'SYSTEM'), 'rb')
     file_data = file_object.read()
     file_object.close()
 
