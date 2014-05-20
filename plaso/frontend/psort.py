@@ -215,7 +215,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
             u'Invalid filter expression: {0:s}'.format(self._filter_expression))
 
       # Check to see if we need to create a circular buffer.
-      if hasattr(options, 'slicer'):
+      if getattr(options, 'slicer', None):
         self._slice_size = getattr(options, 'slice_size', 5)
         self._filter_buffer = bufferlib.CircularBuffer(self._slice_size)
 

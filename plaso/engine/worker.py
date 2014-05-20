@@ -263,11 +263,14 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._is_running = False
     self._current_working_file = u''
 
+    self._resolver_context.Empty()
+
     if self._rpc_proxy:
       # Close the proxy, free up resources so we can shut down the thread.
       self._rpc_proxy.Close()
 
-    self._resolver_context.Empty()
+      if proxy_thread.isAlive():
+        proxy_thread.join()
 
   def SetDebugMode(self, debug_mode):
     """Sets the debug mode.
