@@ -25,6 +25,7 @@ import os
 import pdb
 import signal
 import sys
+import threading
 import traceback
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -882,14 +883,44 @@ class ExtractionFrontend(Frontend):
     else:
       resolver_context = self._resolver_context
 
+    engine_proxy = None
+    rpc_proxy_client = None
+
+    if self._run_foreman:
+      worker_foreman = foreman.Foreman(
+          show_memory_usage=self._show_worker_memory_information)
+
+      # Start a proxy server (only needed when a foreman is started).
+      engine_proxy = rpc_proxy.StandardRpcProxyServer(os.getpid())
+      try:
+        engine_proxy.Open()
+        engine_proxy.RegisterFunction(
+            'signal_end_of_collection', worker_foreman.SignalEndOfProcessing)
+
+        proxy_thread = threading.Thread(
+            name='rpc_proxy', target=engine_proxy.StartProxy)
+        proxy_thread.start()
+
+        rpc_proxy_client = rpc_proxy.StandardRpcProxyClient(
+            engine_proxy.listening_port)
+      except errors.ProxyFailedToStart as exception:
+        proxy_thread = None
+        logging.error((
+            u'Unable to setup a RPC server for the engine with error '
+            u'{0:s}').format(exception))
+    else:
+      worker_foreman = None
+
     self._collector = self._engine.CreateCollector(
         include_directory_stat, vss_stores=self._vss_stores,
         filter_find_specs=filter_find_specs, resolver_context=resolver_context)
 
+    if rpc_proxy_client:
+      self._collector.SetProxy(rpc_proxy_client)
+
     self._DebugPrintCollector(options)
 
     logging.info(u'Starting storage process.')
-
     self._storage_process = multiprocessing.Process(
         name='StorageThread', target=storage_writer.WriteEventObjects)
     self._storage_process.start()
@@ -901,11 +932,6 @@ class ExtractionFrontend(Frontend):
       self._collection_process.start()
 
     logging.info(u'Starting worker processes to extract events.')
-    if self._run_foreman:
-      worker_foreman = foreman.Foreman(
-          show_memory_usage=self._show_worker_memory_information)
-    else:
-      worker_foreman = None
 
     for worker_nr in range(self._number_of_worker_processes):
       extraction_worker = self._CreateExtractionWorker(
@@ -929,12 +955,23 @@ class ExtractionFrontend(Frontend):
         # Check the worker status regularly while collection is still ongoing.
         if worker_foreman:
           worker_foreman.CheckStatus()
+          # TODO: We get a signal when collection is done, which might happen
+          # before the collection thread joins. Look at the option of speeding
+          # up the process of the collector stopping by potentially killing it.
     else:
       self._collector.Collect()
 
     logging.info(u'Collection is done, waiting for processing to complete.')
     if worker_foreman:
       worker_foreman.SignalEndOfProcessing()
+
+    # Close the RPC server since the collection thread is done.
+    if engine_proxy:
+      # Close the proxy, free up resources so we can shut down the thread.
+      engine_proxy.Close()
+
+      if proxy_thread.isAlive():
+        proxy_thread.join()
 
     # Run through the running workers, one by one.
     # This will go through a list of all active worker processes and check it's

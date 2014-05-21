@@ -167,6 +167,14 @@ class Foreman(object):
   def SignalEndOfProcessing(self):
     """Indicate that processing is done."""
     self._processing_done = True
+    # TODO: Reconsider this as an info signal. Should this not be moved to
+    # a debug one?
+    logging.info(
+        u'Foreman received a signal indicating that processing is completed.')
+
+    # This function may be called via RPC functions that expect a value to be
+    # returned.
+    return True
 
   def TerminateProcess(self, label=None, pid=None, name=None):
     """Terminate a process, even if it is not in the watch list.
