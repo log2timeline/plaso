@@ -874,7 +874,8 @@ class ExtractionFrontend(Frontend):
 
     filter_file = getattr(options, 'file_filter', None)
     if filter_file:
-      filter_find_specs = engine_utils.BuildFindSpecsFromFile(filter_file)
+      filter_find_specs = engine_utils.BuildFindSpecsFromFile(
+          filter_file, pre_obj)
     else:
       filter_find_specs = None
 
@@ -1094,7 +1095,8 @@ class ExtractionFrontend(Frontend):
 
     filter_file = getattr(options, 'file_filter', None)
     if filter_file:
-      filter_find_specs = engine_utils.BuildFindSpecsFromFile(filter_file)
+      filter_find_specs = engine_utils.BuildFindSpecsFromFile(
+          filter_file, pre_obj)
     else:
       filter_find_specs = None
 
