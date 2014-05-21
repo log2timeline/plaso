@@ -257,7 +257,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self.ConsumePathSpecs()
 
     logging.info(
-        'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
+        u'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
         self._identifier, os.getpid()))
 
     self._is_running = False

@@ -55,6 +55,7 @@ from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import event
+from plaso.lib import putils
 from plaso.lib import queue
 
 
@@ -193,8 +194,9 @@ def ProcessFile(options):
   options.single_thread = True
   options.debug = False
   options.text_prepend = u''
+  parsers = putils.FindAllParsers(pre_obj, options)
   my_worker = worker.EventExtractionWorker(
-      '0', None, storage_queue_producer, config=options, pre_obj=pre_obj)
+      '0', None, storage_queue_producer, pre_obj, parsers)
 
   if options.verbose:
     profiler = cProfile.Profile()
