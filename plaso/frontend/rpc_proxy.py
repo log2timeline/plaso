@@ -50,7 +50,8 @@ class StandardRpcProxyServer(proxy.ProxyServer):
     """Set up the proxy so that it can be started."""
     try:
       self._proxy = SimpleXMLRPCServer.SimpleXMLRPCServer(
-          ('localhost', self.listening_port), logRequests=False)
+          ('localhost', self.listening_port), logRequests=False,
+          allow_none=True)
     except SocketServer.socket.error as exception:
       raise errors.ProxyFailedToStart(
           u'Unable to setup a RPC server for listening to port: {0:d} with '
@@ -104,7 +105,7 @@ class StandardRpcProxyClient(proxy.ProxyClient):
     """Set up the proxy so that it can be started."""
     try:
       self._proxy = xmlrpclib.ServerProxy(
-          u'http://localhost:{0:d}'.format(self._port_number))
+          u'http://localhost:{0:d}'.format(self._port_number), allow_none=True)
     except SocketServer.socket.error:
       self._proxy = None
 

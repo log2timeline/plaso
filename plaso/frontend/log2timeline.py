@@ -130,7 +130,11 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
         u'{:=^80}'.format(u' log2timeline/plaso information. '))
 
     for header, data in plugin_list.items():
-      return_string_pieces.append(self.FormatHeader(header))
+      # TODO: Using the frontend utils here instead of "self.PrintHeader"
+      # since the desired output here is a string that can be sent later
+      # to an output writer. Change this entire function so it can utilize
+      # PrintHeader or something similar.
+      return_string_pieces.append(frontend_utils.FormatHeader(header))
       for entry_header, entry_data in data:
         return_string_pieces.append(
             frontend_utils.FormatOutputString(entry_header, entry_data))

@@ -89,6 +89,7 @@ class Collector(queue.PathSpecQueueProducer):
     self._fs_collector = FileSystemCollector(
         process_queue, storage_queue_producer)
     self._resolver_context = resolver_context
+    self._rpc_proxy = None
     # TODO: remove the need to pass source_path
     self._source_path = os.path.abspath(source_path)
     self._source_path_spec = source_path_spec
@@ -221,8 +222,14 @@ class Collector(queue.PathSpecQueueProducer):
     source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
         self._source_path_spec, resolver_context=self._resolver_context)
 
+    if self._rpc_proxy:
+      self._rpc_proxy.Open()
+
     if not source_file_entry:
       logging.warning(u'No files to collect.')
+      if self._rpc_proxy:
+        # Send the notification.
+        _ = self._rpc_proxy.GetData(u'signal_end_of_collection')
       self.SignalEndOfInput()
       return
 
@@ -254,6 +261,10 @@ class Collector(queue.PathSpecQueueProducer):
       self._ProcessImage(
           self._source_path_spec.parent, find_specs=self._filter_find_specs)
 
+    if self._rpc_proxy:
+      # Send the notification.
+      _ = self._rpc_proxy.GetData(u'signal_end_of_collection')
+
     self.SignalEndOfInput()
 
   def SetFilter(self, filter_find_specs):
@@ -264,6 +275,14 @@ class Collector(queue.PathSpecQueueProducer):
                          dfvfs.FindSpec).
     """
     self._filter_find_specs = filter_find_specs
+
+  def SetProxy(self, rpc_proxy):
+    """Sets the RPC proxy the collector should use.
+
+    Args:
+      rpc_proxy: A proxy object (instance of lib.proxy.ProxyClient).
+    """
+    self._rpc_proxy = rpc_proxy
 
   def SetVssInformation(self, vss_stores):
     """Sets the Volume Shadow Snapshots (VSS) information.

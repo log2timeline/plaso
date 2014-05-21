@@ -16,10 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '1.1.0-dev'
+__version__ = '1.1.0-rc1'
 
 VERSION_DEV = True
-VERSION_DATE = '20140520'
+VERSION_DATE = '20140521'
 
 
 def GetVersion():
