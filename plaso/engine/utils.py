@@ -21,16 +21,30 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
+from plaso.winreg import path_expander
 
-def BuildFindSpecsFromFile(filter_file_path):
-  """Returns a list of find specification from a filter file."""
+
+def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
+  """Returns a list of find specification from a filter file.
+
+  Args:
+    filter_file_path: A path to a file that contains find specifications.
+    pre_obj: A preprocessing object (instance of PreprocessObject). This is
+             optional but when provided takes care of expanding each segment.
+  """
   find_specs = []
+
+  if pre_obj:
+    expander = path_expander.WinRegistryKeyPathExpander(pre_obj, None)
 
   with open(filter_file_path, 'rb') as file_object:
     for line in file_object:
       line = line.strip()
       if line.startswith(u'#'):
         continue
+
+      if pre_obj:
+        line = expander.ExpandPath(line)
 
       if not line.startswith(u'/'):
         logging.warning((
