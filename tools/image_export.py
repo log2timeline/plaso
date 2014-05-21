@@ -30,6 +30,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso import preprocessors
 from plaso.engine import collector
+from plaso.engine import utils as engine_utils
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import event
@@ -140,7 +141,8 @@ class ImageExtractor(object):
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
 
-    find_specs = collector.BuildFindSpecsFromFile(filter_file_path)
+    find_specs = engine_utils.BuildFindSpecsFromFile(
+        filter_file_path, pre_obj=self._pre_obj)
 
     # Save the regular files.
     FileSaver.calc_md5 = remove_duplicates
@@ -189,6 +191,8 @@ class ImageExtractor(object):
       remove_duplicates: optional boolean value to indicate if duplicates should
                          be detected and removed. The default is false.
     """
+    logging.info(u'Finding files with extensions: {0:s}'.format(extensions))
+
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
 
@@ -197,7 +201,7 @@ class ImageExtractor(object):
     output_producer = queue.EventObjectQueueProducer(output_queue)
 
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-         dfvfs_definitions.TYPE_INDICATOR_OS, location=self._source_path)
+         dfvfs_definitions.TYPE_INDICATOR_OS, location=self._image_path)
 
     if self._image_offset > 0:
       volume_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -304,8 +308,9 @@ class FileSaver(object):
     save_file = True
     if cls.calc_md5:
       stat = file_entry.GetStat()
-      inode = stat.attributes.get('ino', 0)
-      md5sum = CalculateHash(file_entry)
+      inode = getattr(stat, 'ino', 0)
+      file_object = file_entry.GetFileObject()
+      md5sum = CalculateHash(file_object)
       if inode in cls.md5_dict:
         if md5sum in cls.md5_dict[inode]:
           save_file = False
