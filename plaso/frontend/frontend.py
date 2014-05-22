@@ -232,14 +232,26 @@ class Frontend(object):
     self._output_writer.Write(
         u'Source path\t\t: {0:s}\n'.format(source_path))
 
-    is_image = getattr(options, 'image', False)
+    if self._source_type == self._SOURCE_TYPE_STORAGE_MEDIA_IMAGE:
+      is_image = True
+    else:
+      is_image = False
+
     self._output_writer.Write(
         u'Is storage media image\t: {0!s}\n'.format(is_image))
 
     if is_image:
-      image_offset_bytes = getattr(options, 'image_offset_bytes', 0)
+      image_offset_bytes = self._partition_offset
+      if isinstance(image_offset_bytes, basestring):
+        try:
+          image_offset_bytes = int(image_offset_bytes, 10)
+        except ValueError:
+          image_offset_bytes = 0
+      elif image_offset_bytes is None:
+        image_offset_bytes = 0
+
       self._output_writer.Write(
-          u'Partition offset\t: 0x{0:08x}\n'.format(image_offset_bytes))
+          u'Partition offset\t: {0:d} (0x{0:08x})\n'.format(image_offset_bytes))
 
       vss_stores = getattr(options, 'vss_stores', None)
       if vss_stores:
@@ -1280,10 +1292,8 @@ class ExtractionFrontend(Frontend):
     if timezone_string:
       self._timezone = pytz.timezone(timezone_string)
 
-    if getattr(options, 'single_process', False):
-      self._single_process_mode = True
-    else:
-      self._single_process_mode = False
+    self._single_process_mode = getattr(
+        options, 'single_process', False)
 
   def PreprocessSource(self, options):
     """Preprocesses the source.
