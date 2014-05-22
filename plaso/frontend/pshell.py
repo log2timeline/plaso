@@ -222,7 +222,7 @@ def Main():
   options.parse_vss = False
   options.preprocess = False
   options.recursive = False
-  options.single_thread = False
+  options.single_process = False
   options.timezone = 'UTC'
   options.workers = 5
 

@@ -191,7 +191,7 @@ def ProcessFile(options):
 
   # Set few options the engine expects to be there.
   # TODO: Can we rather set this directly in argparse?
-  options.single_thread = True
+  options.single_process = True
   options.debug = False
   options.text_prepend = u''
   parsers = putils.FindAllParsers(pre_obj, options)
