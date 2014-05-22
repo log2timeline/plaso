@@ -309,9 +309,10 @@ def Main():
   front_end.AddVssProcessingOptions(deep_group)
 
   performance_group.add_argument(
-      '--single_thread', '--single-thread', dest='single_thread',
-      action='store_true', default=False,
-      help='Indicate that the tool should run in a single thread.')
+      '--single_thread', '--single-thread', '--single_process',
+      '--single-process', dest='single_process', action='store_true',
+      default=False, help=(
+          u'Indicate that the tool should run in a single process.'))
 
   function_group.add_argument(
       '-f', '--file_filter', '--file-filter', dest='file_filter',
