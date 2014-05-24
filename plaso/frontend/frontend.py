@@ -91,13 +91,22 @@ class StdinFrontendInputReader(object):
 class StdoutFrontendOutputWriter(object):
   """Class that implements a stdout output writer."""
 
+  ENCODING = u'utf-8'
+
   def Write(self, string):
-    """Wtites a string to the output.
+    """Writes a string to the output.
 
     Args:
       string: A string containing the output.
     """
-    sys.stdout.write(string)
+    try:
+      sys.stdout.write(string.encode(self.ENCODING))
+    except UnicodeEncodeError:
+      logging.error(
+          u'Unable to properly write output, line will be partially '
+          u'written out.')
+      sys.stdout.write(u'LINE ERROR')
+      sys.stdout.write(string.encode(self.ENCODING, 'ignore'))
 
 
 class Frontend(object):
@@ -1156,7 +1165,8 @@ class ExtractionFrontend(Frontend):
       return
 
     logging.warning(u'Stopping collector.')
-    self._collector.SignalEndOfInput()
+    if self._collector:
+      self._collector.SignalEndOfInput()
 
     logging.warning(u'Stopping storage.')
     self._engine.SignalEndOfInputStorageQueue()

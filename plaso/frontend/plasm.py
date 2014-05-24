@@ -84,7 +84,7 @@ class PlasmFrontend(frontend.AnalysisFrontend):
     if not self._quiet:
       self._output_writer.Write(u'Grouping DONE.\n')
 
-  def TagsEvents(self):
+  def TagEvents(self):
     """Tags the event objects in the storage file."""
     tagging_engine = TaggingEngine(
         self._storage_file_path, self._tagging_file_path, quiet=self._quiet)
@@ -130,12 +130,14 @@ class PlasmFrontend(frontend.AnalysisFrontend):
 
     elif self.mode == 'tag':
       tagging_file_path = getattr(options, 'tag_filename', None)
-      if tagging_file_path:
+      if not tagging_file_path:
         raise errors.BadConfigOption(u'Missing tagging file path.')
 
       if not os.path.isfile(tagging_file_path):
         errors.BadConfigOption(
             u'No such tagging file: {0:s}'.format(tagging_file_path))
+
+      self._tagging_file_path = tagging_file_path
 
 
 def SetupStorage(input_file_path, pre_obj=None):
