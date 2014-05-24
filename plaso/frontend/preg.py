@@ -61,87 +61,6 @@ from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
 
 
-class RegistryPluginHeader(eventdata.EventFormatter):
-  """A formatting class that prints some Registry plugin header information."""
-  DATA_TYPE = 'windows:registry:key_value'
-  FMT_LENGTH = 15
-
-  # A list of attributes that do not need printing out.
-  SKIP_ATTRIBUTES = frozenset(
-      ['data_type', 'offset', 'timestamp', 'regvalue', 'source_append'])
-
-  # A small dictionary to map back attribute names to more
-  # friendly print names.
-  ATTRIBUTE_TO_NAME = {
-      'timestamp': 'Date',
-      'timestamp_desc': 'Type',
-      'keyname': 'Key Path',
-  }
-
-  def GetMessages(self, event_object):
-    """Return a list of short and long message string (short being empty)."""
-    ret_strings = []
-    fmt_length = self.FMT_LENGTH
-    for attribute in event_object.regvalue:
-      if len(attribute) > fmt_length:
-        fmt_length = len(attribute)
-
-    # TODO: add an explanation what this code is doing.
-    fmt = u'{{:>{0:d}s}} : {{}}'.format(fmt_length)
-    ret_strings.append(frontend_utils.FormatHeader('Attributes', '-'))
-    ret_strings.append(fmt.format(
-      'Date',
-      timelib.Timestamp.CopyToIsoFormat(event_object.timestamp)))
-
-    for attribute, value in event_object.GetValues().items():
-      if attribute in self.SKIP_ATTRIBUTES:
-        continue
-      ret_strings.append(fmt.format(
-          self.ATTRIBUTE_TO_NAME.get(attribute, attribute), value))
-
-    ret_strings.append(frontend_utils.FormatHeader('Data', '-'))
-    return u'\n'.join(ret_strings), u''
-
-
-class RegistryFormatter(eventdata.EventFormatter):
-  """A formatting class for Registry based events."""
-  DATA_TYPE = 'windows:registry:key_value'
-  FMT_LENGTH = 15
-
-  def GetMessages(self, event_object):
-    """Return a list of short and long message string (short being empty)."""
-    ret_strings = []
-    fmt_length = self.FMT_LENGTH
-    for attribute in event_object.regvalue:
-      if len(attribute) > fmt_length:
-        fmt_length = len(attribute)
-
-    # TODO: add an explanation what this code is doing.
-    fmt = u'{{:>{0:d}s}} : {{}}'.format(fmt_length)
-    for attribute, value in event_object.regvalue.items():
-      ret_strings.append(fmt.format(attribute, value))
-
-    return u'\n'.join(ret_strings), u''
-
-
-class RegistryHexFormatter(RegistryFormatter):
-  """A formatting class that adds hex data to printouts."""
-
-  def GetMessages(self, event_object):
-    """Return a list of short and long message strings (short being empty)."""
-    msg, _ = super(RegistryHexFormatter, self).GetMessages(event_object)
-
-    ret_strings = [msg]
-
-    event_object.pathspec = RegCache.file_entry.path_spec
-    ret_strings.append(frontend_utils.FormatHeader(
-        'Hex Output From Event.', '-'))
-    ret_strings.append(
-        frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
-
-    return u'\n'.join(ret_strings), u''
-
-
 class RegCache(object):
   """Cache for current hive and Registry key."""
 
@@ -200,17 +119,16 @@ class RegCache(object):
     return getattr(cls.hive, 'name', 'N/A')
 
 
-class PregFrontend(frontend.Frontend):
+class PregFrontend(frontend.ExtractionFrontend):
   """Class that implements the preg front-end."""
 
-  def __init__(self):
+  def __init__(self, output_writer):
     """Initializes the front-end object."""
     input_reader = frontend.StdinFrontendInputReader()
-    output_writer = frontend.StdoutFrontendOutputWriter()
 
     super(PregFrontend, self).__init__(input_reader, output_writer)
 
-  def ParseOptions(self, options):
+  def ParseOptions(self, options, unused_source):
     """Parses the options.
 
     Args:
@@ -224,6 +142,9 @@ class PregFrontend(frontend.Frontend):
 
     if not options.image and not options.regfile:
       raise errors.BadConfigOption(u'Not enough parameters to proceed.')
+
+    if options.image:
+      return
 
     # TODO: move this?
     if options.regfile and not os.path.isfile(options.regfile):
@@ -248,6 +169,8 @@ class PregFrontend(frontend.Frontend):
     # The path is split in segments to make it path segement separator
     # independent (and thus platform independent).
     path_segments = file_path.split(u'/')
+    if not path_segments[0]:
+      path_segments = path_segments[1:]
 
     find_spec = file_system_searcher.FindSpec(
         location_regex=path_segments, case_sensitive=False)
@@ -277,18 +200,11 @@ class PregFrontend(frontend.Frontend):
             file_name, directory_location))
         continue
 
-      for fh_path_spec in fh_path_specs:
-        file_location = getattr(fh_path_spec, 'location', None)
-        if not file_location:
-          raise errors.PreProcessFail(
-              u'Missing file location for: {0:s} in directory: {1:s}'.format(
-                  file_location, directory_location))
-
-        hive_paths.append(file_location)
+      hive_paths.extend(fh_path_specs)
 
     return hive_paths
 
-  def _GetSearchesForImage(self, volume_path_spec, options):
+  def _GetSearchersForImage(self, volume_path_spec, options):
     """Retrieves the file systems searchers for searching the image.
 
     Args:
@@ -313,7 +229,13 @@ class PregFrontend(frontend.Frontend):
 
     searchers.append((u'', searcher))
 
-    for store_index in options.vss_stores:
+    vss_stores = frontend_utils.ParseVssStores(
+        getattr(options, 'vss_stores', None))
+
+    if vss_stores is None:
+      vss_stores = []
+
+    for store_index in vss_stores:
       vss_path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
           parent=volume_path_spec)
@@ -349,14 +271,16 @@ class PregFrontend(frontend.Frontend):
     if options.image:
       # TODO: move to ParseOptions?
       try:
-        path_spec = self.ScanSource(options, 'image')
+        self._source_path = getattr(options, 'image', '')
+        self.ScanSource(options)
       except errors.FileSystemScannerError as exception:
         raise errors.BadConfigOption((
             u'Unable to scan for a supported filesystem with error: {0:s}.\n'
             u'Most likely the image format is not supported by the '
             u'tool.').format(exception))
 
-      searchers = self._GetSearchersForImage(path_spec.parent, options)
+      searchers = self._GetSearchersForImage(
+          self._source_path_spec.parent, options)
       _, searcher = searchers[0]
 
       # Run preprocessing on image.
@@ -435,6 +359,10 @@ class PregFrontend(frontend.Frontend):
         if restore_path:
           paths.append('{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
 
+    # Expand all the paths.
+    expander = winreg_path_expander.WinRegistryKeyPathExpander(
+        RegCache.pre_obj, None)
+    paths = map(expander.ExpandPath, paths)
     return paths
 
   def GetRegistryKeysFromType(self, options, registry_type):
@@ -462,7 +390,7 @@ class PregFrontend(frontend.Frontend):
     types = []
     for plugin in GetRegistryPlugins(options):
       for reg_plugin in options.plugins.GetAllKeyPlugins():
-        temp_obj = reg_plugin(None, None, None)
+        temp_obj = reg_plugin(None, None)
         if plugin is temp_obj.plugin_name:
           if temp_obj.REG_TYPE not in types:
             types.append(temp_obj.REG_TYPE)
@@ -490,7 +418,8 @@ class PregFrontend(frontend.Frontend):
     self.ExpandKeysRedirect(keys)
 
     for hive in hives:
-      ParseHive(hive, hive_collectors, keys, None, options.verbose)
+      self._output_writer.Write(ParseHive(
+          hive, hive_collectors, keys, None, options.verbose))
 
   def RunModeRegistryPlugin(self, options):
     """Run against a set of Registry plugins.
@@ -506,24 +435,27 @@ class PregFrontend(frontend.Frontend):
     # them, but to do so we need to open up one hive so that we
     # create the reg_cache object, which is necessary to fully
     # expand all keys.
-    OpenHive(hives[0], hive_collectors[0])
+    _, hive_collector = hive_collectors[0]
+    OpenHive(hives[0], hive_collector)
 
     # Get all the appropriate keys from these plugins.
-    keys = []
-    for hive in hives:
-      for hive_collector in hive_collectors:
-        OpenHive(hive, hive_collector)
-        for plugin in plugin_list:
-          for reg_plugin in options.plugins.GetAllKeyPlugins():
-            temp_obj = reg_plugin(
-                pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
-          if temp_obj.plugin_name == plugin:
-            for registry_key in temp_obj.expanded_keys:
-              if registry_key not in keys:
-                keys.append(registry_key)
+    key_plugins_all = options.plugins.GetAllKeyPlugins()
+    key_plugins = []
+    for key_plugin in key_plugins_all:
+      temp_obj = key_plugin(
+          pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
+      if temp_obj.plugin_name in plugin_list:
+        key_plugins.append(temp_obj)
+
+    registry_keys = []
+    for key_plugin in key_plugins:
+      for registry_key in key_plugin.expanded_keys:
+        if registry_key not in registry_keys:
+          registry_keys.append(registry_key)
 
     for hive in hives:
-      ParseHive(hive, hive_collectors, keys, plugin_list, options.verbose)
+      self._output_writer.Write(ParseHive(
+          hive, hive_collectors, registry_keys, plugin_list, options.verbose))
 
   def RunModeRegistryFile(self, options):
     """Run against a Registry file.
@@ -547,7 +479,8 @@ class PregFrontend(frontend.Frontend):
         keys = self.GetRegistryKeysFromType(options, options.plugin_name)
         self.ExpandKeysRedirect(keys)
         plugins_to_run = GetRegistryPlugins(options)
-        ParseHive(hive, hive_collectors, keys, plugins_to_run, options.verbose)
+        self._output_writer.Write(ParseHive(
+            hive, hive_collectors, keys, plugins_to_run, options.verbose))
 
 
 def CdCompleter(unused_self, unused_event):
@@ -574,9 +507,14 @@ def PluginCompleter(unused_self, event_object):
   for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
     plugin_obj = plugin_cls(
         pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
-    if plugin_obj.plugin_name == 'DefaultPlugin':
+
+    plugin_name = plugin_obj.plugin_name
+    if plugin_name.startswith('winreg'):
+      plugin_name = plugin_name[7:]
+
+    if plugin_name == 'default':
       continue
-    ret_list.append(plugin_obj.plugin_name)
+    ret_list.append(plugin_name)
 
   return ret_list
 
@@ -615,6 +553,9 @@ class MyMagics(magic.Magics):
         plugin_name = items[1]
       else:
         plugin_name = items[0]
+
+    if not plugin_name.startswith('winreg'):
+      plugin_name = u'winreg_{0:s}'.format(plugin_name)
 
     plugin_obj = winreg_interface.GetRegistryPlugins()
     plugin_found = False
@@ -844,14 +785,21 @@ def IsLoaded():
   return False
 
 
-def OpenHive(filename, hive_collector=None, codepage='cp1252'):
+def OpenHive(filename_or_path_spec, hive_collector, codepage='cp1252'):
   """Open a Registry hive based on a collector or a filename."""
+  if isinstance(filename_or_path_spec, basestring):
+    filename = filename_or_path_spec
+    path_spec = None
+  else:
+    filename = filename_or_path_spec.location
+    path_spec = filename_or_path_spec
+
   if not hive_collector:
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=filename)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
   else:
-    file_entry = hive_collector.OpenFileEntry(filename)
+    file_entry = hive_collector.GetFileEntryByPathSpec(path_spec)
 
   use_codepage = getattr(RegCache.pre_obj, 'code_page', codepage)
 
@@ -861,8 +809,14 @@ def OpenHive(filename, hive_collector=None, codepage='cp1252'):
   try:
     RegCache.hive = win_registry.OpenFile(file_entry, codepage=use_codepage)
   except IOError:
+    if filename is not None:
+      filename_string = filename
+    elif path_spec:
+      filename_string = path_spec.location
+    else:
+      filename_string = u'unknown file path'
     logging.error(
-        u'Unable to open Registry hive: {0:s}'.format(filename))
+        u'Unable to open Registry hive: {0:s}'.format(filename_string))
     sys.exit(1)
   RegCache.SetHiveType()
   RegCache.file_entry = file_entry
@@ -870,29 +824,63 @@ def OpenHive(filename, hive_collector=None, codepage='cp1252'):
   RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
 
 
+def GetFormatString(event_object):
+  """Return back a format string that can be used for a given event object."""
+  # Assign a default value to font align length.
+  align_length = 15
+
+  # Go through the attributes and see if there is an attribute
+  # value that is longer than the default font align length, and adjust
+  # it accordingly if found.
+  for attribute in event_object.regvalue:
+    attribute_len = len(attribute)
+    if attribute_len > align_length and attribute_len < 30:
+      align_length = len(attribute)
+
+  # Create the format string that will be used, using variable length
+  # font align length (calculated in the prior step).
+  return u'{{0:>{0:d}s}} : {{1!s}}'.format(align_length)
+
+
 def PrintEventHeader(event_object):
   """Print event header."""
-  event_formatter = RegistryPluginHeader()
+  format_string = GetFormatString(event_object)
 
-  msg, _ = event_formatter.GetMessages(event_object)
+  # Create the strings to return.
+  ret_strings = []
+  ret_strings.append(format_string.format(
+      u'Date', timelib.Timestamp.CopyToIsoFormat(event_object.timestamp)))
+  ret_strings.append(format_string.format(u'Key Path', event_object.keyname))
+  if event_object.timestamp_desc != eventdata.EventTimestamp.WRITTEN_TIME:
+    ret_strings.append(format_string.format(
+        u'Description', event_object.timestamp_desc))
 
-  return msg
+  ret_strings.append(frontend_utils.FormatHeader(u'Data', u'-'))
+
+  return u'\n'.join(ret_strings)
 
 
 def PrintEvent(event_object, show_hex=False):
   """Print information from an extracted EventObject."""
+  format_string = GetFormatString(event_object)
+
+  ret_strings = []
+  for attribute, value in event_object.regvalue.items():
+    ret_strings.append(format_string.format(attribute, value))
+
   if show_hex:
-    event_formatter = RegistryHexFormatter()
-  else:
-    event_formatter = RegistryFormatter()
+    event_object.pathspec = RegCache.file_entry.path_spec
+    ret_strings.append(frontend_utils.FormatHeader(
+        u'Hex Output From Event.', '-'))
+    ret_strings.append(
+        frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
 
-  msg, _ = event_formatter.GetMessages(event_object)
-
-  return msg
+  return u'\n'.join(ret_strings)
 
 
-def ParseHive(hive_path, hive_collectors, keys, use_plugins, verbose):
-  """Opens a hive file, and prints out information about parsed keys.
+def ParseHive(
+    hive_path_or_path_spec, hive_collectors, keys, use_plugins, verbose):
+  """Opens a hive file, and returns information about parsed keys.
 
   This function takes a path to a hive and a list of collectors (or
   none if the Registry file is passed to the tool).
@@ -908,17 +896,30 @@ def ParseHive(hive_path, hive_collectors, keys, use_plugins, verbose):
     use_plugins: A list of plugins used to parse the key, None if all
     plugins should be used.
     verbose: Print more verbose content, like hex dump of extracted events.
+
+  Returns:
+    A string containing extracted information.
   """
+  if isinstance(hive_path_or_path_spec, basestring):
+    hive_path_spec = None
+    hive_path = hive_path_or_path_spec
+  else:
+    hive_path_spec = hive_path_or_path_spec
+    hive_path = hive_path_spec.location
+
   print_strings = []
   for name, hive_collector in hive_collectors:
     # Printing '*' 80 times.
     print_strings.append(u'*'*80)
     print_strings.append(
         u'{0:>15} : {1:s}{2:s}'.format(u'Hive File', hive_path, name))
-    OpenHive(hive_path, hive_collector)
+    if hive_path_spec:
+      OpenHive(hive_path_spec, hive_collector)
+    else:
+      OpenHive(hive_path, hive_collector)
+
     for key_str in keys:
       key_texts = []
-      key_str_use = key_str
       key_dict = {}
       if RegCache.reg_cache:
         key_dict.update(RegCache.reg_cache.attributes.items())
@@ -926,23 +927,16 @@ def ParseHive(hive_path, hive_collectors, keys, use_plugins, verbose):
       if RegCache.pre_obj:
         key_dict.update(RegCache.pre_obj.__dict__.items())
 
-      try:
-        key_str_use = key_str.format(**key_dict)
-      except KeyError as exception:
-        logging.warning((
-            u'Unable to format key string {0:s} with error: '
-            u'{1:s}').format(key_str, exception))
-
-      key = RegCache.hive.GetKeyByPath(key_str_use)
-      key_texts.append(u'{0:>15} : {1:s}'.format(u'Key Name', key_str_use))
+      key = RegCache.hive.GetKeyByPath(key_str)
+      key_texts.append(u'{0:>15} : {1:s}'.format(u'Key Name', key_str))
       if not key:
-        key_texts.append(u'Unable to open key: {0:s}'.format(key_str_use))
+        key_texts.append(u'Unable to open key: {0:s}'.format(key_str))
         if verbose:
           print_strings.extend(key_texts)
         continue
       key_texts.append(
-          u'{0:s>15} : {1:s}'.format(u'Subkeys', key.number_of_subkeys))
-      key_texts.append(u'{0:s>15} : {1:s}'.format(
+          u'{0:>15} : {1:d}'.format(u'Subkeys', key.number_of_subkeys))
+      key_texts.append(u'{0:>15} : {1:d}'.format(
           u'Values', key.number_of_values))
       key_texts.append(u'')
 
@@ -958,11 +952,11 @@ def ParseHive(hive_path, hive_collectors, keys, use_plugins, verbose):
           ParseKey(key, verbose=verbose, use_plugins=use_plugins))
       print_strings.extend(key_texts)
 
-  print u'\n'.join(print_strings)
+  return u'\n'.join(print_strings)
 
 
 def ParseKey(key, verbose=False, use_plugins=None):
-  """Parse a single Registry key and print out parser information.
+  """Parse a single Registry key and return parsed information.
 
   Parses the Registry key either using the supplied plugin or trying against
   all avilable plugins.
@@ -1036,14 +1030,18 @@ def GetRegistryPlugins(options):
   """
   key_plugin_names = []
   for plugin in options.plugins.GetAllKeyPlugins():
-    temp_obj = plugin(None, None, None)
+    temp_obj = plugin(None, None)
     key_plugin_names.append(temp_obj.plugin_name)
 
   # Determine if we are running against a plugin or a key (behavior differs).
   plugins_to_run = []
   if options.plugin_name:
+    plugin_name = options.plugin_name.lower()
+    if not plugin_name.startswith('winreg'):
+      plugin_name = u'winreg_{0:s}'.format(plugin_name)
+
     for key_plugin in key_plugin_names:
-      if options.plugin_name.lower() in key_plugin.lower():
+      if plugin_name in key_plugin.lower():
         plugins_to_run.append(key_plugin)
   else:
     plugins_to_run = key_plugin_names
@@ -1183,7 +1181,8 @@ def RunModeConsole(front_end, options):
 
 def Main():
   """Run the tool."""
-  front_end = PregFrontend()
+  output_writer = frontend.StdoutFrontendOutputWriter()
+  front_end = PregFrontend(output_writer)
 
   epilog = textwrap.dedent("""
 
@@ -1288,7 +1287,7 @@ in a textual format.
     return True
 
   try:
-    front_end.ParseOptions(options)
+    front_end.ParseOptions(options, u'')
   except errors.BadConfigOption as exception:
     arg_parser.print_help()
     print u''
