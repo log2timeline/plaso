@@ -137,8 +137,10 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     try:
       response = urllib2.urlopen(self.WEB_STORE_URL.format(xid=extension_id))
     except urllib2.HTTPError as exception:
-      logging.warning(u'Unable to retrieve results with error: {0:s}'.format(
-          exception))
+      logging.warning((
+          u'Unable to retrieve results from URL: {1:s} with '
+          u'error: {0:s}').format(
+              exception, self.WEB_STORE_URL.format(xid=extension_id)))
       return
     except urllib2.URLError as exception:
       logging.warning(u'Not a valid Extension ID with error: {0:s}'.format(
@@ -172,7 +174,7 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     if not self._sep:
       self._sep = self._GetSeparator(filename)
 
-    if '{0}Extensions{0}'.format(self._sep) not in filename:
+    if u'{0:s}Extensions{0:s}'.format(self._sep) not in filename:
       return
 
     # Now we have extension ID's, let's check if we've got the
@@ -192,17 +194,19 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     # manually deduce the username.
     if not user:
       if len(filename) > 25:
-        user = u'Not found ({}...)'.format(filename[0:25])
+        user = u'Not found ({0:s}...)'.format(filename[0:25])
       else:
-        user = u'Not found ({})'.format(filename)
+        user = u'Not found ({0:s})'.format(filename)
 
     extension = self._GetTitleFromChromeWebStore(extension_id)
 
-    if extension:
-      self._results.setdefault(user, [])
-      extension_string = extension.decode('utf-8', 'ignore')
-      if (extension_string, extension_id) not in self._results[user]:
-        self._results[user].append((extension_string, extension_id))
+    if not extension:
+      extension = extension_id
+
+    self._results.setdefault(user, [])
+    extension_string = extension.decode('utf-8', 'ignore')
+    if (extension_string, extension_id) not in self._results[user]:
+      self._results[user].append((extension_string, extension_id))
 
   def CompileReport(self):
     """Compiles a report of the analysis.

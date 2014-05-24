@@ -198,11 +198,19 @@ class ProcessInfo(object):
 
     percent = self._process.get_memory_percent()
 
+    # Psutil will return different memory information depending on what is
+    # available in that platform.
+    # TODO: Not be as strict in what gets returned, have this object more
+    # flexible so that the memory information returned reflects the avilable
+    # information in the platform.
     return self._MEMORY_INFORMATION(
-        external_information.rss, external_information.vms,
-        external_information.shared, external_information.text,
-        external_information.lib, external_information.data,
-        external_information.dirty, percent)
+        getattr(external_information, 'rss', 0),
+        getattr(external_information, 'vms', 0),
+        getattr(external_information, 'shared', 0),
+        getattr(external_information, 'text', 0),
+        getattr(external_information, 'lib', 0),
+        getattr(external_information, 'data', 0),
+        getattr(external_information, 'dirty', 0), percent)
 
   def GetProcessStatus(self):
     """Attempt to connect to process via RPC to gather status information."""

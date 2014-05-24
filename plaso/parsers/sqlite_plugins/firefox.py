@@ -241,13 +241,15 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       An event object (instance of FirefoxPlacesBookmarkAnnotation) containing
       the event data.
     """
-    yield FirefoxPlacesBookmarkAnnotation(
-        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-        row['id'], row['title'], row['url'], row['content'])
+    if row['dateAdded']:
+      yield FirefoxPlacesBookmarkAnnotation(
+          row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
+          row['id'], row['title'], row['url'], row['content'])
 
-    yield FirefoxPlacesBookmarkAnnotation(
-        row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-        row['id'], row['title'], row['url'], row['content'])
+    if row['lastModified']:
+      yield FirefoxPlacesBookmarkAnnotation(
+          row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
+          row['id'], row['title'], row['url'], row['content'])
 
   def ParseBookmarkFolderRow(self, row, **unused_kwargs):
     """Parses a bookmark folder row.
@@ -264,13 +266,15 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     else:
       title = row['title']
 
-    yield FirefoxPlacesBookmarkFolder(
-        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-        row['id'], title)
+    if row['dateAdded']:
+      yield FirefoxPlacesBookmarkFolder(
+          row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
+          row['id'], title)
 
-    yield FirefoxPlacesBookmarkFolder(
-        row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-        row['id'], title)
+    if row['lastModified']:
+      yield FirefoxPlacesBookmarkFolder(
+          row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
+          row['id'], title)
 
   def ParseBookmarkRow(self, row, **unused_kwargs):
     """Parses a bookmark row.
@@ -282,17 +286,19 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       An event object (instance of FirefoxPlacesBookmark) containing the event
       data.
     """
-    yield FirefoxPlacesBookmark(
-        row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-        row['id'], row['type'], row['bookmark_title'], row['url'],
-        row['places_title'], getattr(row, 'rev_host', 'N/A'),
-        row['visit_count'])
+    if row['dateAdded']:
+      yield FirefoxPlacesBookmark(
+          row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
+          row['id'], row['type'], row['bookmark_title'], row['url'],
+          row['places_title'], getattr(row, 'rev_host', 'N/A'),
+          row['visit_count'])
 
-    yield FirefoxPlacesBookmark(
-        row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-        row['id'], row['type'], row['bookmark_title'], row['url'],
-        row['places_title'], getattr(row, 'rev_host', 'N/A'),
-        row['visit_count'])
+    if row['lastModified']:
+      yield FirefoxPlacesBookmark(
+          row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
+          row['id'], row['type'], row['bookmark_title'], row['url'],
+          row['places_title'], getattr(row, 'rev_host', 'N/A'),
+          row['visit_count'])
 
   def ParsePageVisitedRow(self, row, cache, database, **unused_kwargs):
     """Parses a page visited row.
@@ -319,10 +325,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     else:
       extras.append('(URL not typed directly)')
 
-    yield FirefoxPlacesPageVisitedEvent(
-        row['visit_date'], row['id'], row['url'], row['title'],
-        self._ReverseHostname(row['rev_host']), row['visit_count'],
-        row['visit_type'], extras)
+    if row['visit_date']:
+      yield FirefoxPlacesPageVisitedEvent(
+          row['visit_date'], row['id'], row['url'], row['title'],
+          self._ReverseHostname(row['rev_host']), row['visit_count'],
+          row['visit_type'], extras)
 
   def _ReverseHostname(self, hostname):
     """Reverses the hostname and strips the leading dot.
@@ -398,12 +405,14 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
     Yields:
       An event object (instance of FirefoxDownload) containing the event data.
     """
-    yield FirefoxDownload(
-        row['startTime'], eventdata.EventTimestamp.START_TIME,
-        row['id'], row['name'], row['source'], row['referrer'], row['target'],
-        row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
+    if row['startTime']:
+      yield FirefoxDownload(
+          row['startTime'], eventdata.EventTimestamp.START_TIME,
+          row['id'], row['name'], row['source'], row['referrer'], row['target'],
+          row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
 
-    yield FirefoxDownload(
-        row['endTime'], eventdata.EventTimestamp.END_TIME,
-        row['id'], row['name'], row['source'], row['referrer'], row['target'],
-        row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
+    if row['endTime']:
+      yield FirefoxDownload(
+          row['endTime'], eventdata.EventTimestamp.END_TIME,
+          row['id'], row['name'], row['source'], row['referrer'], row['target'],
+          row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])

@@ -141,7 +141,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     event_object.display_name = u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, file_path)
 
-    event_object.filename = file_path
+    if not getattr(event_object, 'filename', None):
+      event_object.filename = file_path
     event_object.pathspec = file_entry.path_spec
     event_object.parser = parser_name
 

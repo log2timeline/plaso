@@ -214,7 +214,8 @@ class StorageFileTest(unittest.TestCase):
         event_objects.append(event_object)
         timestamps.append(event_object.timestamp)
         if event_object.data_type == 'windows:registry:key_value':
-          self.assertEquals(event_object.timestamp_desc, 'Last Written')
+          self.assertEquals(event_object.timestamp_desc,
+                            eventdata.EventTimestamp.WRITTEN_TIME)
         else:
           self.assertEquals(event_object.timestamp_desc,
                             eventdata.EventTimestamp.WRITTEN_TIME)
