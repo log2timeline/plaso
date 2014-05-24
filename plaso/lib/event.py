@@ -491,6 +491,7 @@ class PythonDatetimeEvent(TimestampEvent):
 
 class WinRegistryEvent(EventObject):
   """Convenience class for a Windows Registry-based event."""
+
   DATA_TYPE = 'windows:registry:key_value'
 
   def __init__(self, key, value_dict, timestamp=None, usage=None, offset=None,
@@ -508,7 +509,7 @@ class WinRegistryEvent(EventObject):
     """
     super(WinRegistryEvent, self).__init__()
     self.timestamp = timestamp
-    self.timestamp_desc = usage or 'Last Written'
+    self.timestamp_desc = usage or eventdata.EventTimestamp.WRITTEN_TIME
 
     if key:
       self.keyname = key

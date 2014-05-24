@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import mactime as mactime_formatter
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers import mactime
 from plaso.parsers import test_lib
 
@@ -41,8 +42,8 @@ class MactimeUnitTest(test_lib.ParserTestCase):
     event_generator = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjects(event_generator)
 
-    # The file contains 10 lines x 4 timestamps per line, which should be
-    # 40 events in total. However several of these events have an empty
+    # The file contains 12 lines x 4 timestamps per line, which should be
+    # 48 events in total. However several of these events have an empty
     # timestamp value and are omitted.
     # Total number of valid entries per line:
     #   1: 3
@@ -55,22 +56,28 @@ class MactimeUnitTest(test_lib.ParserTestCase):
     #   8: 0
     #   9: 0
     #  10: 3
-    #  Total: 6 * 3 = 18
-    self.assertEquals(len(event_objects), 18)
+    #  11: 4
+    #  12: 4
+    #  Total: 6 * 3 + 2 * 4 = 26
+    self.assertEquals(len(event_objects), 26)
 
     # Test this entry:
     # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961583|
     # 1337961584|1337961585|0
     event_object = event_objects[6]
 
-    self.assertEquals(event_object.timestamp, 1337961583000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        u'2012-05-25 15:59:43+00:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEquals(event_object.inode, 16)
 
     event_object = event_objects[6]
 
-    self.assertEquals(event_object.timestamp, 1337961583000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        u'2012-05-25 15:59:43+00:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
@@ -79,17 +86,25 @@ class MactimeUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[8]
 
-    self.assertEquals(event_object.timestamp, 1337961584000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        u'2012-05-25 15:59:44+00:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
     event_object = event_objects[7]
 
-    self.assertEquals(event_object.timestamp, 1337961585000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        u'2012-05-25 15:59:45+00:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CHANGE_TIME)
     self.assertEquals(event_object.filename, u'/a_directory/another_file')
     self.assertEquals(event_object.mode_as_string, u'r/rrw-------')
+
+    event_object = event_objects[25]
+
+    self.assertEquals(event_object.inode, 4)
 
 
 if __name__ == '__main__':

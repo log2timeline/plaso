@@ -302,7 +302,7 @@ class Foreman(object):
           u'{4!s} <{5:s}>').format(
               label.label, label.pid, status.get('counter', -1),
               status.get('current_file', u''), status.get('is_running', False),
-              label.process.status))
+              unicode(label.process.status)))
 
   def _TerminateProcess(self, label):
     """Terminate a process given a process label.

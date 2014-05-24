@@ -46,9 +46,20 @@ class MactimeEvent(event.PosixTimeEvent):
     self.user_gid = data.get('gid', None)
     self.md5 = data.get('md5', None)
     self.filename = data.get('name', 'N/A')
-    self.inode = data.get('inode', 0)
     self.mode_as_string = data.get('mode_as_string', None)
     self.size = data.get('size', None)
+
+    inode_number = data.get('inode', 0)
+    if isinstance(inode_number, basestring):
+      if '-' in inode_number:
+        inode_number, _, _ = inode_number.partition('-')
+
+      try:
+        inode_number = int(inode_number, 10)
+      except ValueError:
+        inode_number = 0
+
+    self.inode = inode_number
 
 
 class MactimeParser(text_parser.TextCSVParser):
