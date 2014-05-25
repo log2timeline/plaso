@@ -284,7 +284,7 @@ if __name__ == '__main__':
       ('pyolecf', 20131012),
       ('pyqcow', 20131204),
       ('pyregf', 20130716),
-      ('pysmdev', 20140428),
+      ('pysmdev', 20140525),
       ('pyvhdi', 20131210),
       ('pyvmdk', 20140421),
       ('pyvshadow', 20131209),

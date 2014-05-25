@@ -537,6 +537,11 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     header_object = parser.ParseHeader(format_type, value_data)
 
+    # On Windows Vista and 2008 when the cache is empty it will
+    # only consist of the header.
+    if value_data_size <= header_object.header_size:
+      return
+
     cached_entry_offset = header_object.header_size
     cached_entry_size = parser.DetermineCacheEntrySize(
         format_type, value_data, cached_entry_offset)
