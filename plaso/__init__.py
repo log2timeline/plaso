@@ -19,7 +19,7 @@
 __version__ = '1.1.0-rc1'
 
 VERSION_DEV = True
-VERSION_DATE = '20140524'
+VERSION_DATE = '20140525'
 
 
 def GetVersion():
