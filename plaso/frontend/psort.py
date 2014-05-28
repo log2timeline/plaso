@@ -651,7 +651,7 @@ def Main():
 
   if argument_index > 0:
     module_names = arguments[argument_index]
-    front_end.AddOutputModuleOptions(output_group, module_names)
+    front_end.AddOutputModuleOptions(output_group, [module_names])
 
   # Add the analysis plugin options.
   if '--analysis' in arguments:
