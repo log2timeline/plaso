@@ -131,7 +131,7 @@ class Sql4n6(output.LogOutputFormatter):
         sql = 'CREATE INDEX {0}_idx ON log2timeline ({0})'.format(field_name)
         self.curs.execute(sql)
         if self.set_status:
-          self.set_status('Created index: {0:d}'.format(field_name))
+          self.set_status('Created index: {0:s}'.format(field_name))
 
     # Get meta info and save into their tables.
     if self.set_status:
@@ -143,7 +143,7 @@ class Sql4n6(output.LogOutputFormatter):
       for name, freq in vals.items():
         self.curs.execute((
             'INSERT INTO l2t_{0:s}s ({1:s}s, frequency) '
-            'VALUES("{2:s}", {3:s}) ').format(field, field, name, freq))
+            'VALUES("{2:s}", {3:d}) ').format(field, field, name, freq))
     self.curs.execute('DELETE FROM l2t_tags')
     for tag in self._ListTags():
       self.curs.execute('INSERT INTO l2t_tags (tag) VALUES (?)', [tag])
@@ -230,7 +230,7 @@ class Sql4n6(output.LogOutputFormatter):
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
-      extra.append(u'{0:s}: {1:s} '.format(
+      extra.append(u'{0:s}: {1!s} '.format(
           key, getattr(event_object, key, None)))
     extra = u' '.join(extra)
 
