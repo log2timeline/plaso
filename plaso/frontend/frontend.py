@@ -281,7 +281,7 @@ class ExtractionFrontend(Frontend):
   """Class that implements an extraction front-end."""
 
   # The minimum number of processes.
-  MINIMUM_WORKERS = 3
+  MINIMUM_WORKERS = 2
   # The maximum number of processes.
   MAXIMUM_WORKERS = 15
 
