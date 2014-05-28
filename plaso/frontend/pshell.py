@@ -17,6 +17,7 @@
 # limitations under the License.
 """This file contains a console, the CLI friendly front-end to plaso."""
 
+import argparse
 import logging
 import os
 import random
@@ -39,6 +40,7 @@ except ImportError:
 from IPython.config.loader import Config
 
 # pylint: disable=unused-import
+from plaso import analysis
 from plaso import filters
 from plaso import formatters
 from plaso import output
@@ -63,11 +65,12 @@ from plaso.lib import filter_interface
 from plaso.lib import foreman
 from plaso.lib import lexer
 from plaso.lib import objectfilter
-from plaso.lib import output
+from plaso.lib import output as output_lib
 from plaso.lib import parser
 from plaso.lib import pfilter
 from plaso.lib import plugin
 from plaso.lib import process_info
+from plaso.lib import proxy
 from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import registry as class_registry
@@ -76,11 +79,24 @@ from plaso.lib import text_parser
 from plaso.lib import timelib
 from plaso.lib import utils
 
-from plaso.output import helper
+from plaso.output import helper as output_helper
 
 from plaso.proto import plaso_storage_pb2
 
+from plaso.serializer import interface as serializer_interface
+from plaso.serializer import json_serializer
+from plaso.serializer import protobuf_serializer
+
+from plaso.unix import bsmtoken
+
+from plaso.winnt import environ_expand
+from plaso.winnt import knownfolderid
+
+from plaso.winreg import cache as win_registry_cache
 from plaso.winreg import interface as win_registry_interface
+from plaso.winreg import path_expander
+from plaso.winreg import utils as win_registry_utils
+from plaso.winreg import winpyregf
 from plaso.winreg import winregistry
 
 
@@ -141,27 +157,17 @@ def OpenOSFile(path):
   return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
 
-def OpenVssFile(path, image_path, store_number, image_offset):
-  """Opens a file entry inside a VSS inside an image file."""
-  path_spec = path_spec_factory.Factory.NewPathSpec(
-      definitions.TYPE_INDICATOR_OS, location=image_path)
+def OpenStorageFile(storage_path):
+  """Opens a storage file and returns the storage file object."""
+  if not os.path.isfile(storage_path):
+    return
 
-  if image_offset > 0:
-    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
-        parent=path_spec)
-  else:
-    volume_path_spec = path_spec
+  try:
+    store = storage.StorageFile(storage_path, read_only=True)
+  except IOError:
+    print 'Unable to load storage file, not a storage file?'
 
-  store_number -= 1
-
-  path_spec = path_spec_factory.Factory.NewPathSpec(
-      definitions.TYPE_INDICATOR_VSHADOW, store_index=store_number,
-      parent=volume_path_spec)
-  path_spec = path_spec_factory.Factory.NewPathSpec(
-      definitions.TYPE_INDICATOR_TSK, location=path, parent=path_spec)
-
-  return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+  return store
 
 
 def OpenTskFile(image_path, image_offset, path=None, inode=None):
@@ -187,6 +193,63 @@ def OpenTskFile(image_path, image_offset, path=None, inode=None):
         definitions.TYPE_INDICATOR_TSK, location=path, parent=volume_path_spec)
 
   return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+
+def OpenVssFile(path, image_path, store_number, image_offset):
+  """Opens a file entry inside a VSS inside an image file."""
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_OS, location=image_path)
+
+  if image_offset > 0:
+    volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_TSK_PARTITION, start_offset=image_offset,
+        parent=path_spec)
+  else:
+    volume_path_spec = path_spec
+
+  store_number -= 1
+
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_VSHADOW, store_index=store_number,
+      parent=volume_path_spec)
+  path_spec = path_spec_factory.Factory.NewPathSpec(
+      definitions.TYPE_INDICATOR_TSK, location=path, parent=path_spec)
+
+  return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+
+def ParseFile(file_entry):
+  """Parse a file given a file entry and yield results."""
+  if not file_entry:
+    return
+
+  # Create the necessary items.
+  proc_queue = queue.SingleThreadedQueue()
+  storage_queue = queue.SingleThreadedQueue()
+  storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+  pre_obj = event.PreprocessObject()
+  all_parsers = putils.FindAllParsers(pre_obj)
+
+  # Create a worker.
+  worker_object = worker.EventExtractionWorker(
+      'my_worker', proc_queue, storage_queue_producer, pre_obj, all_parsers)
+
+  # Parse the file.
+  worker_object.ParseFile(file_entry)
+
+  storage_queue.SignalEndOfInput()
+  proc_queue.SignalEndOfInput()
+
+  while True:
+    try:
+      item = storage_queue.PopItem()
+    except errors.QueueEmpty:
+      break
+
+    if isinstance(item, queue.QueueEndOfInput):
+      break
+
+    yield item
 
 
 def Pfile2File(file_object, path):
@@ -235,7 +298,7 @@ def Main():
     front_end.ParseOptions(options, 'filename')
     front_end.SetStorageFile(options.output)
   except errors.BadConfigOption as exception:
-    logging.error('{0:s}'.format(exception))
+    logging.error(u'{0:s}'.format(exception))
 
   # TODO: move to frontend object.
   if options.image and options.image_offset_bytes is None:
@@ -276,27 +339,52 @@ def Main():
       (u'God gave me a great body and it\'s my duty to take care of my '
        u'physical temple.'),
       u'This maniac should be wearing a number, not a badge',
+      u'Imagination is more important than knowledge.',
       u'Do you hate being dead?',
       u'You\'ve got 5 seconds... and 3 are up.',
-      u'He is in a gunfire right now. I\'m gonna have to take a message',
+      u'He is in a gunfight right now. I\'m gonna have to take a message',
       u'That would be better than losing your teeth',
       u'The less you know, the more you make',
       (u'A SQL query goes into a bar, walks up to two tables and asks, '
        u'"Can I join you?"'),
+      u'This is your captor speaking.',
+      (u'If I find out you\'re lying, I\'ll come back and kill you in your '
+       u'own kitchen.'),
+      u'That would be better than losing your teeth',
+      (u'He\'s the kind of guy who would drink a gallon of gasoline so '
+       u'that he can p*ss into your campfire.'),
+      u'I\'m gonna take you to the bank, Senator Trent. To the blood bank!',
+      u'I missed! I never miss! They must have been smaller than I thought',
+      u'Nah. I\'m just a cook.',
+      u'Next thing I know, you\'ll be dating musicians.',
+      u'Another cold day in hell',
+      u'Yeah, but I bet you she doesn\'t see these boys in the choir.',
+      u'You guys think you\'re above the law... well you ain\'t above mine!',
+      (u'One thought he was invincible... the other thought he could fly... '
+       u'They were both wrong'),
       u'To understand what recursion is, you must first understand recursion']
 
-  if len(sys.argv) > 1:
-    test_file = sys.argv[1]
-    if os.path.isfile(test_file):
-      try:
-        store = storage.StorageFile(test_file, read_only=True)
-        namespace.update({'store': store})
-      except IOError:
-        print 'Unable to load storage file, not a storage file?'
+  arg_description = (
+      u'pshell is the interactive session tool that can be used to'
+      u'MISSING')
+
+  arg_parser = argparse.ArgumentParser(description=arg_description)
+
+  arg_parser.add_argument(
+      '-s', '--storage_file', '--storage-file', dest='storage_file',
+      type=unicode, default=u'', help=u'Path to a plaso storage file.',
+      action='store', metavar='PATH')
+
+  configuration = arg_parser.parse_args()
+
+  if configuration.storage_file:
+    store = OpenStorageFile(configuration.storage_file)
+    if store:
+      namespace.update({'store': store})
 
   functions = [
-      FindAllParsers, FindAllOutputs, PrintTimestamp, OpenVssFile, OpenTskFile,
-      Pfile2File, GetEventData]
+      FindAllOutputs, FindAllParsers, GetEventData, OpenOSFile, OpenStorageFile,
+      OpenTskFile, OpenVssFile, ParseFile, Pfile2File, PrintTimestamp]
 
   functions_strings = []
   for function in functions:
