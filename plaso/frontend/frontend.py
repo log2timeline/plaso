@@ -1499,6 +1499,11 @@ class ExtractionFrontend(Frontend):
         self._partition_offset = 0
 
     else:
+      if scan_path_spec.type_indicator in [
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
+        logging.warning(
+            u'Unsupported file system falling back to single file mode.')
+
       self._source_type = self._SOURCE_TYPE_FILE
 
   def SetStorageFile(self, storage_file_path):
