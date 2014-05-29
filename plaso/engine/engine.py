@@ -170,6 +170,9 @@ class Engine(object):
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None. Note that every thread or process
                         must have its own resolver context.
+
+    Raises:
+      BadConfigOption: if source cannot be set.
     """
     path_spec = source_path_spec
     while path_spec.parent:
