@@ -38,6 +38,7 @@ import logging
 
 from dfvfs.analyzer import analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.lib import errors
@@ -208,8 +209,11 @@ class FileSystemScanner(object):
     Raises:
       FileSystemScannerError: if the source cannot be processed.
     """
-    type_indicators = analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
-        source_path_spec)
+    try:
+      type_indicators = analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
+          source_path_spec)
+    except dfvfs_errors.AccessError as exception:
+      raise errors.FileSystemScannerError(u'{0:s}'.format(exception))
 
     if not type_indicators:
       return
