@@ -44,7 +44,13 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
         continue
 
       if pre_obj:
-        line = expander.ExpandPath(line)
+        try:
+          line = expander.ExpandPath(line)
+        except KeyError as exception:
+          logging.error((
+              u'Unable to use collection filter line: {0:s} with error: '
+              u'{1:s}').format(line, exception))
+          continue
 
       if not line.startswith(u'/'):
         logging.warning((

@@ -17,6 +17,8 @@
 # limitations under the License.
 """The protobuf serializer object implementation."""
 
+import logging
+
 from dfvfs.serializer import protobuf_serializer as dfvfs_protobuf_serializer
 from google.protobuf import message
 
@@ -468,7 +470,18 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
               proto, attribute_name, attribute_value)
 
         else:
-          setattr(proto, attribute_name, attribute_value)
+          try:
+            setattr(proto, attribute_name, attribute_value)
+          except ValueError as exception:
+            path_spec = getattr(event_object, 'pathspec', None)
+            path = getattr(path_spec, 'location', u'')
+            logging.error((
+                u'Unable to save value for: {0:s} [{1:s}] with error: {2:s} '
+                u'coming from file: {3:s}').format(
+                    attribute_name, type(attribute_value), exception, path))
+            # Catch potential out of range errors.
+            if isinstance(attribute_value, (int, long)):
+              setattr(proto, attribute_name, -1)
 
       else:
         attribute_value = getattr(event_object, attribute_name)
