@@ -1,7 +1,6 @@
 #!/bin/bash
-# Script that installs the binary version of plaso on Mac OS X.
 #
-# Copyright 2012 The Plaso Project Authors.
+# Copyright 2014 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,70 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FOLDER=/usr/share/plaso
-OLD_FOLDER=/usr/local/share/plaso
-LNK_PATH=/usr/bin
+# This is a simple installer script for the Mac OS X platform.
 
-link()
-{
-  if [ -h "$LNK_PATH/$1" ]
-  then
-    sudo rm "$LNK_PATH/$1"
-  fi
-
-  sudo ln -s "$FOLDER/$1/$1" "$LNK_PATH/$1"
-}
-
-folder()
-{
-  if [ -d "$FOLDER/$1" ]
-  then
-    sudo /bin/rm -rf "$FOLDER/$1"
-  fi
-
-  sudo cp -r "$1/" "$FOLDER/$1/"
-}
-
-uninstall_tool()
-{
-  echo -n "Uninstalling $1..."
-  if [ -d "$1" ]
-  then
-    sudo /bin/rm -rf "$1"
-  fi
-}
-
-install_tool()
-{
-  echo -n "Installing $1..."
-  folder "$1"
-  link "$1"
-  echo " [DONE]"
-}
-
-if [ ! -d "$FOLDER" ]
+if [ "$USER" != "root" ]
 then
-  sudo mkdir -p $FOLDER
+  echo "Need to have root privileges, testing sudo."
+  sudo ls > /dev/null
+
+  if [ $? -ne 0 ]
+  then
+    echo "Do you have sudo privileges?"
+    exit 1
+  fi
 fi
 
-echo "Uninstalling previous versions."
-uninstall_tool $OLD_FOLDER
+echo "Installing packages."
+find /Volumes/plaso_rc2/packages/ -name "*.pkg" -exec sudo installer -target / -pkg {} \;
 
-echo "Installing tools."
-install_tool log2timeline
-install_tool pinfo
-install_tool plasm
-install_tool pprof
-install_tool preg
-install_tool pshell
-install_tool psort
-install_tool image_export
-
-echo "Installing missing dylibs."
-sudo mv libevt.1.dylib /usr/lib/
-sudo mv libevtx.1.dylib /usr/lib/
-sudo mv libmsiecf.1.dylib /usr/lib/
-sudo mv liblnk.1.dylib /usr/lib/
-sudo mv libregf.1.dylib /usr/lib/
-sudo mv libvshadow.1.dylib /usr/lib/
-sudo mv libolecf.1.dylib /usr/lib/
+echo "Done."
