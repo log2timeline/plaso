@@ -38,7 +38,15 @@ class Elastic(output.LogOutputFormatter):
       ('--case_name', {
           'dest': 'case_name',
           'type': unicode,
-          'help': 'Add a case name [ELASTIC].',
+          'help': 'Add a case name. This will be the name of the index in '
+                  'ElasticSearch.',
+          'action': 'store',
+          'default': ''}),
+      ('--document_type', {
+          'dest': 'document_type',
+          'type': unicode,
+          'help': 'Name of the document type. This is the name of the document '
+                  'type that will be used in ElasticSearch.',
           'action': 'store',
           'default': ''}),
       ('--elastic_server_ip', {
@@ -73,6 +81,7 @@ class Elastic(output.LogOutputFormatter):
         u'http://{}:{}'.format(elastic_host, elastic_port))
 
     case_name = getattr(config, 'case_name', u'')
+    document_type = getattr(config, 'document_type', u'')
 
     # case_name becomes the index name in Elastic.
     if case_name:
@@ -81,7 +90,10 @@ class Elastic(output.LogOutputFormatter):
       self._index_name = uuid.uuid4().hex
 
     # Name of the doc_type that holds the plaso events.
-    self._doc_type = u'plaso_event'
+    if document_type:
+      self._doc_type = document_type.lower()
+    else:
+      self._doc_type = u'event'
 
     # Build up a list of available hostnames in this storage file.
     self._hostnames = {}
