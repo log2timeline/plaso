@@ -50,6 +50,7 @@ from plaso.formatters import opera
 from plaso.formatters import oxml
 from plaso.formatters import pcap
 from plaso.formatters import plist
+from plaso.formatters import popcontest
 from plaso.formatters import recycler
 from plaso.formatters import safari
 from plaso.formatters import selinux
