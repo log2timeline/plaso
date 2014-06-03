@@ -38,8 +38,8 @@ categories = {
         'msiecf', 'opera_global', 'opera_typed_history', 'safari_history'],
     'linux': [
         'bencode', 'filestat', 'google_drive', 'java_idx', 'olecf', 'openxml',
-        'selinux', 'skype', 'syslog', 'utmp', 'webhist', 'xchatlog',
-        'xchatscrollback', 'zeitgeist'],
+        'popcontest', 'selinux', 'skype', 'syslog', 'utmp', 'webhist',
+        'xchatlog', 'xchatscrollback', 'zeitgeist'],
     'macosx': [
         'appusage', 'asl_log', 'bencode', 'bsm_log', 'cups_ipp', 'filestat',
         'google_drive', 'java_idx', 'ls_quarantine', 'mac_appfirewall_log',
