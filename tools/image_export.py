@@ -206,7 +206,7 @@ class ImageExtractor(object):
     if self._image_offset > 0:
       volume_path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-          start_offset=self._byte_offset, parent=os_path_spec)
+          start_offset=self._image_offset, parent=os_path_spec)
     else:
       volume_path_spec = os_path_spec
 

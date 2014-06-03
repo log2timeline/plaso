@@ -116,7 +116,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     options = test_lib.Options()
     options.source = test_file
-    options.partition_number = 1
+    options.partition_number = 2
 
     test_front_end.ParseOptions(options, 'source')
 

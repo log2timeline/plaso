@@ -497,7 +497,11 @@ class ExtractionFrontend(Frontend):
       logging.info(u'No supported partitions found.')
       return
 
-    if partition_number is not None:
+    if partition_number is not None and partition_number > 0:
+      # Plaso uses partition numbers starting with 1 while dfvfs expects
+      # the volume index to start with 0.
+      partition_number -= 1
+
       volume = volume_system.GetVolumeByIndex(partition_number)
 
       if volume:
