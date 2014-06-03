@@ -24,8 +24,6 @@ import sys
 import time
 import textwrap
 
-import pytsk3
-
 import plaso
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
@@ -150,61 +148,6 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
       self._output_writer.Write(u'  {0:s}'.format(timezone))
     self._output_writer.Write(u'=' * 40)
 
-  # TODO: move or rewrite this after dfVFS image support integration.
-  def GetPartitionMap(self, image_path):
-    """Returns a list of dict objects representing partition information.
-
-    Args:
-      image_path: The path to the image file.
-
-    Returns:
-      A list that contains a dict object for each partition in the image. The
-      dict contains the partition number (address), description of it alongside
-      an offset and length of the partition size.
-
-    Raises:
-      UnableToOpenFilesystem: if the parition map cannot be determined.
-    """
-    partition_map = []
-    try:
-      img = pytsk3.Img_Info(image_path)
-    except IOError as exception:
-      raise errors.UnableToOpenFilesystem(
-          u'Unable to open image file with error: {0:s}'.format(exception))
-
-    try:
-      volume = pytsk3.Volume_Info(img)
-    except IOError as exception:
-      raise errors.UnableToOpenFilesystem(
-          u'Unable to open file system with error: {0:s}'.format(exception))
-
-    block_size = getattr(volume.info, 'block_size', 512)
-    partition_map.append(block_size)
-
-    for part in volume:
-      partition_map.append({
-          'address': part.addr,
-          'description': part.desc,
-          'offset': part.start,
-          'length': part.len})
-
-    return partition_map
-
-  def PrintParitionMap(self, source):
-    """Prints the partition map.
-
-    Args:
-      source: the source to retrieve the partion map from.
-    """
-    partition_map = self.GetPartitionMap(source)
-
-    print u'Sector size: {}'.format(partition_map[0])
-    print u'Index  {:10s} {:10s} {}'.format('Offset', 'Length', 'Description')
-    for entry in partition_map[1:]:
-      print u'{:02d}:    {:010d} {:010d} {}'.format(
-          entry['address'], entry['offset'], entry['length'],
-          entry['description'])
-
 
 def Main():
   """Start the tool."""
@@ -217,10 +160,11 @@ def Main():
       Example usage:
 
       Run the tool against an image (full kitchen sink)
-          log2timeline.py -o 63 /cases/mycase/plaso.dump image.dd
+          log2timeline.py /cases/mycase/plaso.dump image.dd
 
-      Same as before except this time include VSS information as well.
-          log2timeline.py -o 63 --vss /cases/mycase/plaso_vss.dump image.dd
+      Instead of answering questions, indicate some of the options on the
+      command line (including data from particular VSS stores).
+          log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.dump image.E01
 
       And that's how you build a timeline using log2timeline...
       """)
@@ -338,8 +282,8 @@ def Main():
       '--partition', dest='partition_number', action='store', type=int,
       default=None, help=(
           'Choose a partition number from a disk image. This partition '
-          'number should correspond to the number displayed from the parameter'
-          ' --partition_map.'))
+          'number should correspond to the partion number on the disk '
+          'image, starting from partition 1.'))
 
   # Build the version information.
   version_string = u'log2timeline - plaso back-end {0:s}'.format(
@@ -352,11 +296,6 @@ def Main():
   info_group.add_argument(
       '--info', dest='show_info', action='store_true', default=False,
       help='Print out information about supported plugins and parsers.')
-
-  info_group.add_argument(
-      '--partition_map', '--partition-map', action='store_true',
-      dest='partition_map', default=False, help=(
-          'Print out a partition map of a disk image.'))
 
   info_group.add_argument(
       '--show_memory_usage', '--show-memory-usage', action='store_true',
@@ -466,19 +405,6 @@ def Main():
     print u''
     logging.error(u'Wrong usage: need to define an output.')
     return False
-
-  if options.partition_map:
-    if options.source:
-      source = options.source
-    else:
-      source = options.output
-
-    try:
-      front_end.PrintParitionMap(source)
-    except errors.UnableToOpenFilesystem as exception:
-      logging.error(u'{0:s}'.format(exception))
-      return False
-    return True
 
   try:
     front_end.ParseOptions(options, 'source')
