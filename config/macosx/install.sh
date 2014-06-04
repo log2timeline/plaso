@@ -17,6 +17,9 @@
 
 # This is a simple installer script for the Mac OS X platform.
 
+echo "==============================================================="
+echo "        PLASO INSTALLER"
+echo "==============================================================="
 if [ "$USER" != "root" ]
 then
   echo "Need to have root privileges, testing sudo."

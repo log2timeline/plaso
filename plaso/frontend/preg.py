@@ -842,14 +842,26 @@ def GetFormatString(event_object):
   return u'{{0:>{0:d}s}} : {{1!s}}'.format(align_length)
 
 
-def PrintEventHeader(event_object):
-  """Print event header."""
+def GetEventHeader(event_object, exclude_timestamp):
+  """Returns a list of strings that contains a header for the event.
+
+  Args:
+    event_object: An event object (instance of event.EventObject).
+    exclude_timestamp: A boolean. If it is set to True the method
+                       will not include the timestamp in the header.
+
+  Returns:
+    A list of strings containing header information for the event.
+  """
   format_string = GetFormatString(event_object)
 
   # Create the strings to return.
   ret_strings = []
-  ret_strings.append(format_string.format(
-      u'Date', timelib.Timestamp.CopyToIsoFormat(event_object.timestamp)))
+  ret_strings.append(u'Key information.')
+  if not exclude_timestamp:
+    ret_strings.append(format_string.format(
+        u'Last Written Time',
+        timelib.Timestamp.CopyToIsoFormat(event_object.timestamp)))
   ret_strings.append(format_string.format(u'Key Path', event_object.keyname))
   if event_object.timestamp_desc != eventdata.EventTimestamp.WRITTEN_TIME:
     ret_strings.append(format_string.format(
@@ -857,11 +869,20 @@ def PrintEventHeader(event_object):
 
   ret_strings.append(frontend_utils.FormatHeader(u'Data', u'-'))
 
-  return u'\n'.join(ret_strings)
+  return ret_strings
 
 
-def PrintEvent(event_object, show_hex=False):
-  """Print information from an extracted EventObject."""
+def GetEventBody(event_object, show_hex=False):
+  """Returns a list of strings containing information from an event.
+
+  Args:
+    event_object: An event object (instance of event.EventObject).
+    show_hex: A boolean, if set to True hex dump of the value is included in
+              the output. The default value is False.
+
+  Returns:
+    A list of strings containing the event body.
+  """
   format_string = GetFormatString(event_object)
 
   ret_strings = []
@@ -875,7 +896,7 @@ def PrintEvent(event_object, show_hex=False):
     ret_strings.append(
         frontend_utils.OutputWriter.GetEventDataHexDump(event_object))
 
-  return u'\n'.join(ret_strings)
+  return ret_strings
 
 
 def ParseHive(
@@ -1004,15 +1025,52 @@ def ParseKey(key, verbose=False, use_plugins=None):
     for plugin in plugins[weight]:
       call_back = plugin.Process(key)
       if call_back:
+        print_strings.append(u'')
         print_strings.append(
             u'{0:^80}'.format(u' ** Plugin : {0:s} **'.format(
                 plugin.plugin_name)))
-        first = True
+        print_strings.append(u'')
+        print_strings.append(u'[{0:s}] {1:s}'.format(
+            plugin.REG_TYPE, plugin.__doc__.partition('\n')[0]))
+        print_strings.append(u'')
+        if plugin.URLS:
+          print_strings.append(u'Additional information can be found here:')
+
+          for url in plugin.URLS:
+            print_strings.append(u'{0:>17s} {1:s}'.format(u'URL :', url))
+          print_strings.append(u'')
+
+        event_objects_and_timestamps = {}
         for event_object in call_back:
+          event_objects_and_timestamps.setdefault(
+              event_object.timestamp, []).append(event_object)
+
+        if not event_objects_and_timestamps:
+          continue
+
+        # If there is only a single timestamp then we'll include it in the
+        # header, otherwise each event will have it's own timestamp.
+        if len(event_objects_and_timestamps) > 1:
+          exclude_timestamp_in_header = True
+        else:
+          exclude_timestamp_in_header = False
+
+        first = True
+        for event_timestamp in sorted(event_objects_and_timestamps):
           if first:
-            print_strings.append(PrintEventHeader(event_object))
+            first_event = event_objects_and_timestamps[event_timestamp][0]
+            print_strings.extend(GetEventHeader(
+                first_event, exclude_timestamp_in_header))
             first = False
-          print_strings.append(PrintEvent(event_object, verbose))
+
+          if exclude_timestamp_in_header:
+            print_strings.append(u'')
+            print_strings.append(u'[{0:s}]'.format(
+                timelib.Timestamp.CopyToIsoFormat(event_timestamp)))
+
+          for event_object in event_objects_and_timestamps[event_timestamp]:
+            print_strings.extend(GetEventBody(event_object, verbose))
+
         print_strings.append(u'')
 
   # Printing '*' 80 times.
