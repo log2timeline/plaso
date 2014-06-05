@@ -22,6 +22,8 @@ import SimpleXMLRPCServer
 import SocketServer
 import xmlrpclib
 
+from xml.parsers import expat
+
 from plaso.lib import errors
 from plaso.lib import proxy
 
@@ -129,5 +131,5 @@ class StandardRpcProxyClient(proxy.ProxyClient):
 
     try:
       return call_back()
-    except SocketServer.socket.error:
+    except (SocketServer.socket.error, expat.ExpatError):
       return
