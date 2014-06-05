@@ -409,8 +409,21 @@ class StorageFile(object):
       # which is not optimal (loads up the entire max file
       # size into memory) Zipfile should be extended to
       # allow appending to files (implement lock).
+      try:
+        # Appending a timestamp to the timestamp index, this is used during
+        # time based filtering. If this is not done we would need to unserialize
+        # all events to get the timestamp value which is really slow.
+        timestamp_str.append(struct.pack('<q', timestamp))
+      except struct.error as exception:
+        # TODO: Instead of just logging the error unserialize the event
+        # and print out information from the event, eg. parser and path spec
+        # location. That way we can find the root cause and fix that instead of
+        # just catching the exception.
+        logging.error((
+            u'Unable to store event, not able to index timestamp value with '
+            u'error: {0:s} [timestamp: {1:d}]').format(exception, timestamp))
+        continue
       index_str.append(struct.pack('<I', ofs))
-      timestamp_str.append(struct.pack('<q', timestamp))
       packed = struct.pack('<I', len(entry)) + entry
       ofs += len(packed)
       proto_str.append(packed)

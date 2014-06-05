@@ -1289,7 +1289,7 @@ in a textual format.
       default=False, help=u'Include restore points for hive locations.')
 
   image_options.add_argument(
-      '-i', '--image', dest='image', action='store', type=str, default='',
+      '-i', '--image', dest='image', action='store', type=unicode, default='',
       metavar='IMAGE_PATH',
       help=(u'If the Registry file is contained within a storage media image, '
             u'set this option to specify the path of image file.'))
@@ -1311,11 +1311,11 @@ in a textual format.
 
   mode_options.add_argument(
       '-p', '--plugins', dest='plugin_name', action='store', default='',
-      type=str, metavar='PLUGIN_NAME',
+      type=unicode, metavar='PLUGIN_NAME',
       help=u'Substring match of the Registry plugin to be used.')
 
   mode_options.add_argument(
-      '-k', '--key', dest='key', action='store', default='', type=str,
+      '-k', '--key', dest='key', action='store', default='', type=unicode,
       metavar='REGISTRY_KEYPATH',
       help=(u'A Registry key path that the tool should parse using all '
             u'available plugins.'))
