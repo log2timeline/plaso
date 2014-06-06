@@ -302,8 +302,9 @@ class EventBuffer(object):
     if getattr(event_a, 'parser', u'') == 'filestat':
       # TODO: Improve this to make the description more like "MAC." or "MA.."
       # instead of "mtime;atime".
-      setattr(event_a, 'timestamp_desc', u';'.join(
-          [event_a.timestamp_desc, event_b.timestamp_desc]))
+      if event_b.timestamp_desc not in event_a.timestamp_desc:
+        setattr(event_a, 'timestamp_desc', u';'.join(
+            [event_a.timestamp_desc, event_b.timestamp_desc]))
 
   def End(self):
     """Call the formatter to produce the closing line."""
