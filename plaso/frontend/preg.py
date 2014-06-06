@@ -233,11 +233,14 @@ class PregFrontend(frontend.ExtractionFrontend):
         getattr(options, 'vss_stores', None))
 
     if vss_stores is None:
-      vss_stores = []
+      if self._vss_stores:
+        vss_stores = self._vss_stores
+      else:
+        vss_stores = []
 
     for store_index in vss_stores:
       vss_path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index,
+          dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index - 1,
           parent=volume_path_spec)
       path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
@@ -362,7 +365,12 @@ class PregFrontend(frontend.ExtractionFrontend):
     # Expand all the paths.
     expander = winreg_path_expander.WinRegistryKeyPathExpander(
         RegCache.pre_obj, None)
-    paths = map(expander.ExpandPath, paths)
+    try:
+      paths = map(expander.ExpandPath, paths)
+    except KeyError as exception:
+      logging.error(u'Unable to expand all keys, with error: {0:s}'.format(
+          exception))
+
     return paths
 
   def GetRegistryKeysFromType(self, options, registry_type):
@@ -428,6 +436,9 @@ class PregFrontend(frontend.ExtractionFrontend):
       options: the command line arguments (instance of argparse.Namespace).
     """
     hives, hive_collectors = self.GetHivesAndCollectors(options)
+
+    if not hives:
+      return
 
     plugin_list = GetRegistryPlugins(options)
 
@@ -1169,7 +1180,7 @@ def RunModeConsole(front_end, options):
     banners.append('')
     banners.append('Registry files discovered:')
     for number, hive in enumerate(hives):
-      banners.append(' - {0:d}  {1:s}'.format(number, hive))
+      banners.append(' - {0:d}  {1:s}'.format(number, hive.location))
     banners.append('')
     banners.append('To load a hive use:')
     text = 'OpenHive(hives[NR], collector)'
