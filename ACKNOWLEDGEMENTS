@@ -34,10 +34,24 @@ Thanks to contributors (alphabetically based on last name):
 * Joaquin Moreno Garijo
   * Parsers
     * ASL
+    * BSM
+    * Cups IPP
+    * Mac AppFirewall
+    * Mac KeyChain
+    * Mac Securityd
     * mac_wifi.log
+    * utmp
     * utmpx
   * SQLite plugins
     * Skype
+  * Plist plugins
+    * Airport
+    * Apple Account
+    * Install History
+    * Mac User
+    * Software Update
+    * Spotlight
+    * TimeMachine
 * David Nides (@davnads)
   * Output modules
     * 4n6time SQLite, with thanks to Eric Wong for assistance
@@ -61,7 +75,12 @@ Thanks to contributors (alphabetically based on last name):
     * WinRar
 * Francesco Picasso
   * Parsers
+    * PopContest
     * SELinux
+    * SkyDriveLog
+    * SkyDriveLogErr
+    * XChatLog
+    * XChatScrollBack
 * Jordi Sanchez
   * binplist
   * object filter
@@ -78,6 +97,9 @@ Thanks to contributors (alphabetically based on last name):
     * Android calls database
     * Android sms database
   * updates to the timezone transformation
+* Petter Bjelland
+  * Parsers
+    * Firefox Cache
 
 Test data:
 
