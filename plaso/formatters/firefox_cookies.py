@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2013 The Plaso Project Authors.
+# Copyright 2014 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,26 +15,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a formatter for the Google Chrome cookie."""
+"""This file contains a formatter for the Firefox cookie."""
 
 from plaso.lib import eventdata
 
 
-class ChromeCookieFormatter(eventdata.ConditionalEventFormatter):
-  """The event formatter for cookie data in Chrome Cookies database."""
+class FirefoxCookieFormatter(eventdata.ConditionalEventFormatter):
+  """The event formatter for cookie data in Firefox Cookies database."""
 
-  DATA_TYPE = 'chrome:cookie:entry'
+  DATA_TYPE = 'firefox:cookie:entry'
 
   FORMAT_STRING_PIECES = [
       u'{url}',
       u'({cookie_name})',
       u'Flags:',
-      u'[HTTP only] = {httponly}',
-      u'[Persistent] = {persistent}']
+      u'[HTTP only]: {httponly}',
+      u'(GA analysis: {ga_data})']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'{host}',
       u'({cookie_name})']
 
-  SOURCE_LONG = 'Chrome Cookies'
+  SOURCE_LONG = 'Firefox Cookies'
   SOURCE_SHORT = 'WEBHIST'

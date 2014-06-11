@@ -102,10 +102,11 @@ class MactimeParser(text_parser.TextCSVParser):
   def ParseRow(self, row):
     """Parse a single row and yield extracted EventObjects from it."""
     for key, value in row.iteritems():
-      try:
-        row[key] = int(value, 10)
-      except ValueError:
-        pass
+      if isinstance(row[key], basestring):
+        try:
+          row[key] = int(value, 10)
+        except ValueError:
+          pass
 
     for key, timestamp_description in self._TIMESTAMP_DESC_MAP.iteritems():
       value = row.get(key, None)

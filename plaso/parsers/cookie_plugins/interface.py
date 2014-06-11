@@ -23,7 +23,7 @@ from plaso.lib import errors
 from plaso.lib import plugin
 
 
-def GetPlugins(pre_obj, data_type):
+def GetPlugins(pre_obj):
   """Returns a list of all cookie plugins."""
   plugins = []
   for plugin_cls in CookiePlugin.classes.itervalues():
@@ -32,7 +32,7 @@ def GetPlugins(pre_obj, data_type):
     if parent_name != 'cookie':
       continue
 
-    plugins.append(plugin_cls(pre_obj, data_type))
+    plugins.append(plugin_cls(pre_obj))
 
   return plugins
 
@@ -55,22 +55,18 @@ class CookiePlugin(plugin.BasePlugin):
   # to parse the browser cookie.
   COOKIE_NAME = u''
 
-  def __init__(self, pre_obj, data_type=None):
+  def __init__(self, pre_obj):
     """Initialize the browser cookie plugin."""
     super(CookiePlugin, self).__init__(pre_obj)
-
-    if data_type:
-      self._data_type = data_type
-    else:
-      self._data_type = 'cookie:generic'
     self.cookie_data = ''
 
-  def Process(self, cookie_name=None, cookie_data=None, **kwargs):
+  def Process(self, cookie_name=None, cookie_data=None, url=None, **kwargs):
     """Determine if this is the right plugin for this cookie.
 
     Args:
       cookie_name: The name of the cookie value.
       cookie_data: The cookie data, as a byte string.
+      url: The full URL or path where the cookie got set.
 
     Returns:
       A generator that yields event objects.
@@ -89,14 +85,15 @@ class CookiePlugin(plugin.BasePlugin):
               cookie_name, self.plugin_name))
 
     super(CookiePlugin, self).Process(**kwargs)
-    return self.GetEntries(cookie_data=cookie_data)
+    return self.GetEntries(cookie_data=cookie_data, url=url)
 
   @abc.abstractmethod
-  def GetEntries(self, cookie_data=None, **kwargs):
+  def GetEntries(self, cookie_data=None, url=None, **kwargs):
     """Extract and return EventObjects from the data structure.
 
     Args:
       cookie_data: The cookie data, as a byte string.
+      url: The full URL or path where the cookie got set.
 
     Yields:
       An EventObject extracted from the cookie data.

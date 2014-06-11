@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2012 The Plaso Project Authors.
+#
+# Copyright 2014 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +15,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser for the Google Chrome Cookie database."""
+"""Parser for the Firefox Cookie database."""
 
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib
 
 # pylint: disable=unused-import
 from plaso.parsers import cookie_plugins
@@ -26,13 +28,14 @@ from plaso.parsers.cookie_plugins import interface as cookie_interface
 from plaso.parsers.sqlite_plugins import interface
 
 
-class ChromeCookieEvent(event.WebKitTimeEvent):
-  """Convenience class for a Chrome Cookie event."""
+class FirefoxCookieEvent(event.TimestampEvent):
+  """Convenience class for a Firefox Cookie event."""
 
-  DATA_TYPE = 'chrome:cookie:entry'
+  DATA_TYPE = 'firefox:cookie:entry'
 
-  def __init__(self, timestamp, usage, hostname, cookie_name, value,
-               path, secure, httponly, persistent):
+  def __init__(
+      self, timestamp, usage, hostname, cookie_name, value, path, secure,
+      httponly):
     """Initializes the event.
 
     Args:
@@ -43,12 +46,11 @@ class ChromeCookieEvent(event.WebKitTimeEvent):
       value: The value of the cookie.
       path: An URI of the page that set the cookie.
       secure: Indication if this cookie should only be transmitted over a secure
-      channel.
+              channel.
       httponly: An indication that the cookie cannot be accessed through client
-      side script.
-      persistent: A flag indicating cookies persistent value.
+                side script.
     """
-    super(ChromeCookieEvent, self).__init__(timestamp, usage)
+    super(FirefoxCookieEvent, self).__init__(timestamp, usage)
     if hostname.startswith('.'):
       hostname = hostname[1:]
 
@@ -58,7 +60,6 @@ class ChromeCookieEvent(event.WebKitTimeEvent):
     self.path = path
     self.secure = True if secure else False
     self.httponly = True if httponly else False
-    self.persistent = True if persistent else False
 
     if self.secure:
       scheme = u'https'
@@ -67,38 +68,28 @@ class ChromeCookieEvent(event.WebKitTimeEvent):
 
     self.url = u'{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
 
-class ChromeCookiePlugin(interface.SQLitePlugin):
-  """Parse Chrome Cookies file."""
 
-  NAME = 'chrome_cookies'
+class FirefoxCookiePlugin(interface.SQLitePlugin):
+  """Parse Firefox Cookies file."""
+
+  NAME = 'firefox_cookies'
 
   # Define the needed queries.
-  QUERIES = [(('SELECT creation_utc, host_key, name, value, path, expires_utc,'
-               'secure, httponly, last_access_utc, has_expires, persistent '
-               'FROM cookies'), 'ParseCookieRow')]
+  QUERIES = [((
+      'SELECT id, baseDomain, name, value, host, path, expiry, lastAccessed, '
+      'creationTime, isSecure, isHttpOnly FROM moz_cookies'), 'ParseCookieRow')]
 
   # The required tables common to Archived History and History.
-  REQUIRED_TABLES = frozenset(['cookies', 'meta'])
+  REQUIRED_TABLES = frozenset(['moz_cookies'])
 
   # Point to few sources for URL information.
   URLS = [
-      u'http://src.chromium.org/svn/trunk/src/net/cookies/',
-      (u'http://www.dfinews.com/articles/2012/02/'
-       u'google-analytics-cookies-and-forensic-implications')]
-
-  # Google Analytics __utmz variable translation.
-  # Taken from:
-  #   http://www.dfinews.com/sites/dfinews.com/files/u739/Tab2Cookies020312.jpg
-  GA_UTMZ_TRANSLATION = {
-      'utmcsr': 'Last source used to access.',
-      'utmccn': 'Ad campaign information.',
-      'utmcmd': 'Last type of visit.',
-      'utmctr': 'Keywords used to find site.',
-      'utmcct': 'Path to the page of referring link.'}
+      (u'https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/'
+       u'cookie/nsCookie.h')]
 
   def __init__(self, pre_obj):
     """Initialize the plugin."""
-    super(ChromeCookiePlugin, self).__init__(pre_obj)
+    super(FirefoxCookiePlugin, self).__init__(pre_obj)
     self._cookie_plugins = cookie_interface.GetPlugins(pre_obj)
 
   def ParseCookieRow(self, row, **unused_kwargs):
@@ -108,32 +99,40 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       row: The row resulting from the query.
 
     Yields:
-      An event object (instance of ChromeCookieEvent) containing the event
+      An event object (instance of FirefoxCookieEvent) containing the event
       data.
     """
-    yield ChromeCookieEvent(
-        row['creation_utc'], eventdata.EventTimestamp.CREATION_TIME,
-        row['host_key'], row['name'], row['value'], row['path'], row['secure'],
-        row['httponly'], row['persistent'])
+    if row['creationTime']:
+      yield FirefoxCookieEvent(
+          row['creationTime'], eventdata.EventTimestamp.CREATION_TIME,
+          row['host'], row['name'], row['value'], row['path'], row['isSecure'],
+          row['isHttpOnly'])
 
-    yield ChromeCookieEvent(
-        row['last_access_utc'], eventdata.EventTimestamp.ACCESS_TIME,
-        row['host_key'], row['name'], row['value'], row['path'], row['secure'],
-        row['httponly'], row['persistent'])
+    if row['lastAccessed']:
+      yield FirefoxCookieEvent(
+          row['lastAccessed'], eventdata.EventTimestamp.ACCESS_TIME,
+          row['host'], row['name'], row['value'], row['path'], row['isSecure'],
+          row['isHttpOnly'])
 
-    if row['has_expires']:
-      yield ChromeCookieEvent(
-          row['expires_utc'], 'Cookie Expires',
-          row['host_key'], row['name'], row['value'], row['path'],
-          row['secure'], row['httponly'], row['persistent'])
+    if row['expiry']:
+      # Expiry time (nsCookieService::GetExpiry in
+      # netwerk/cookie/nsCookieService.cpp).
+      # It's calculeated as the difference between the server time and the time
+      # the server wants the cookie to expire and adding that difference to the
+      # client time. This localizes the client time regardless of whether or not
+      # the TZ environment variable was set on the client.
+      timestamp = timelib.Timestamp.FromPosixTime(row['expiry'])
+      yield FirefoxCookieEvent(
+          timestamp, u'Cookie Expires', row['host'], row['name'], row['value'],
+          row['path'], row['isSecure'], row['isHttpOnly'])
 
     # Go through all cookie plugins to see if there are is any specific parsing
     # needed.
-    hostname = row['host_key']
+    hostname = row['host']
     if hostname.startswith('.'):
       hostname = hostname[1:]
     url = u'http{0:s}://{1:s}{2:s}'.format(
-        u's' if row['secure'] else u'', hostname, row['path'])
+        u's' if row['isSecure'] else u'', hostname, row['path'])
     for cookie_plugin in self._cookie_plugins:
       try:
         for event_object in cookie_plugin.Process(

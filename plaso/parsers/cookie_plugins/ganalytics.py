@@ -28,10 +28,26 @@ from plaso.parsers.cookie_plugins import interface
 class GoogleAnalyticsEvent(event.PosixTimeEvent):
   """A simple placeholder for a Google Analytics event."""
 
-  def __init__(self, timestamp, timestamp_desc, data_type, **kwargs):
-    """Initialize a Google Analytics event."""
+  DATA_TYPE = u'cookie:google:analytics'
+
+  def __init__(
+      self, timestamp, timestamp_desc, url, data_type_append, cookie_name,
+      **kwargs):
+    """Initialize a Google Analytics event.
+
+    Args:
+      timestamp: The timestamp in a POSIX format.
+      timestamp_desc: A string describing the timestamp.
+      url: The full URL where the cookie got set.
+      data_type_append: String to append to the data type.
+      cookie_name: The name of the cookie.
+    """
     super(GoogleAnalyticsEvent, self).__init__(
-        timestamp, timestamp_desc, data_type)
+        timestamp, timestamp_desc, u'{0:s}:{1:s}'.format(
+            self.DATA_TYPE, data_type_append))
+
+    self.url = url
+    self.cookie_name = cookie_name
 
     for key, value in kwargs.iteritems():
       setattr(self, key, value)
@@ -40,7 +56,7 @@ class GoogleAnalyticsEvent(event.PosixTimeEvent):
 class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
   """A browser cookie plugin for Google Analytics cookies."""
 
-  NAME = 'cookie_ganalytics_utmz'
+  NAME = 'google_analytics_utmz'
 
   COOKIE_NAME = u'__utmz'
 
@@ -49,56 +65,45 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
       (u'http://www.dfinews.com/articles/2012/02/'
        u'google-analytics-cookies-and-forensic-implications')]
 
-  # Google Analytics __utmz variable translation.
-  # Taken from:
-  #   http://www.dfinews.com/sites/dfinews.com/files/u739/Tab2Cookies020312.jpg
-  GA_UTMZ_TRANSLATION = {
-      'utmcsr': 'Last source used to access.',
-      'utmccn': 'Ad campaign information.',
-      'utmcmd': 'Last type of visit.',
-      'utmctr': 'Keywords used to find site.',
-      'utmcct': 'Path to the page of referring link.'}
-
-  def GetEntries(self, cookie_data, **unused_kwargs):
+  def GetEntries(self, cookie_data=None, url=None, **unused_kwargs):
     """Process the cookie."""
     # The structure of the field:
     #   <domain hash>.<last time>.<sessions>.<sources>.<variables>
     fields = cookie_data.split('.')
 
     if len(fields) > 5:
-      variables = '.'.join(fields[4:])
+      variables = u'.'.join(fields[4:])
       fields = fields[0:4]
       fields.append(variables)
 
     if len(fields) != 5:
-      raise errors.WrongPlugin(u'Wrong number of fields. [{} vs. 5]'.format(
+      raise errors.WrongPlugin(u'Wrong number of fields. [{0:d} vs. 5]'.format(
           len(fields)))
 
     domain_hash, last, sessions, sources, variables = fields
-    extra_variables = variables.split('|')
+    extra_variables = variables.split(u'|')
 
-    extra_variables_translated = []
+    kwargs = {}
     for variable in extra_variables:
-      key, _, value = variable.partition('=')
-      translation = self.GA_UTMZ_TRANSLATION.get(key, key)
+      key, _, value = variable.partition(u'=')
       try:
         value_line = unicode(urllib.unquote(str(value)), 'utf-8')
       except UnicodeDecodeError:
         value_line = repr(value)
 
-      extra_variables_translated.append(u'{} = {}'.format(
-          translation, value_line))
+      kwargs[key] = value_line
 
     yield GoogleAnalyticsEvent(
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
-        self._data_type, domain_hash=domain_hash, sessions=int(sessions, 10),
-        sources=int(sources, 10), extra=extra_variables_translated)
+        url, 'utmz', self.COOKIE_NAME, domain_hash=domain_hash,
+        sessions=int(sessions, 10), sources=int(sources, 10),
+        **kwargs)
 
 
 class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
   """A browser cookie plugin for Google Analytics cookies."""
 
-  NAME = 'cookie_ganalytics_utma'
+  NAME = 'google_analytics_utma'
 
   COOKIE_NAME = u'__utma'
 
@@ -107,16 +112,15 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
       (u'http://www.dfinews.com/articles/2012/02/'
        u'google-analytics-cookies-and-forensic-implications')]
 
-  def GetEntries(self, cookie_data, **unused_kwargs):
-    """Yield event objects extracted from the cookie."""
+  def GetEntries(self, cookie_data=None, url=None, **unused_kwargs):
     # Values has the structure of:
     # <domain hash>.<visitor ID>.<first visit>.<previous>.<last>.<# of
     # sessions>
-    fields = cookie_data.split('.')
+    fields = cookie_data.split(u'.')
 
     # Check for a valid record.
     if len(fields) != 6:
-      raise errors.WrongPlugin(u'Wrong number of fields. [{} vs. 6]'.format(
+      raise errors.WrongPlugin(u'Wrong number of fields. [{0:d} vs. 6]'.format(
           len(fields)))
 
     domain_hash, visitor_id, first_visit, previous, last, sessions = fields
@@ -124,25 +128,25 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
     # TODO: Double check this time is stored in UTC and not local time.
     first_epoch = int(first_visit, 10)
     yield GoogleAnalyticsEvent(
-        first_epoch, 'Analytics Creation Time', self._data_type,
+        first_epoch, 'Analytics Creation Time', url, 'utma', self.COOKIE_NAME,
         domain_hash=domain_hash, visitor_id=visitor_id,
         sessions=int(sessions, 10))
 
     yield GoogleAnalyticsEvent(
-        int(previous, 10), 'Analytics Previous Time', self._data_type,
-        domain_hash=domain_hash, visitor_id=visitor_id,
+        int(previous, 10), 'Analytics Previous Time', url, 'utma',
+        self.COOKIE_NAME, domain_hash=domain_hash, visitor_id=visitor_id,
         sessions=int(sessions, 10))
 
     yield GoogleAnalyticsEvent(
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
-        self._data_type, domain_hash=domain_hash, visitor_id=visitor_id,
-        sessions=int(sessions, 10))
+        url, 'utma', self.COOKIE_NAME, domain_hash=domain_hash,
+        visitor_id=visitor_id, sessions=int(sessions, 10))
 
 
 class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
   """A browser cookie plugin for Google Analytics cookies."""
 
-  NAME = 'cookie_ganalytics_utmb'
+  NAME = 'google_analytics_utmb'
 
   COOKIE_NAME = u'__utmb'
 
@@ -151,20 +155,20 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
       (u'http://www.dfinews.com/articles/2012/02/'
        u'google-analytics-cookies-and-forensic-implications')]
 
-  def GetEntries(self, cookie_data, **unused_kwargs):
+  def GetEntries(self, cookie_data=None, url=None, **unused_kwargs):
     """Yield event objects extracted from the cookie."""
     # Values has the structure of:
     #   <domain hash>.<pages viewed>.10.<last time>
-    fields = cookie_data.split('.')
+    fields = cookie_data.split(u'.')
 
     # Check for a valid record.
     if len(fields) != 4:
-      raise errors.WrongPlugin(u'Wrong number of fields. [{} vs. 4]'.format(
+      raise errors.WrongPlugin(u'Wrong number of fields. [{0:d} vs. 4]'.format(
           len(fields)))
 
     domain_hash, pages_viewed, _, last = fields
 
     yield GoogleAnalyticsEvent(
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
-        self._data_type, domain_hash=domain_hash,
+        url, 'utmb', self.COOKIE_NAME, domain_hash=domain_hash,
         pages_viewed=int(pages_viewed, 10))

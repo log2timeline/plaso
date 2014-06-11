@@ -151,7 +151,15 @@ class ProcessInformationFrontend(frontend.Frontend):
   def BuildProcessList(self):
     """Build a list of processes."""
     for process_object in psutil.get_process_list():
-      if 'log2timeline' in process_object.name:
+      # TODO: This may catch other processes, such as "vim
+      # foo/log2timeline/foo.py" since that's in the command line. However the
+      # python log2timeline.py will cause the older approach of name to fail.
+      try:
+        command_line = u' '.join(process_object.cmdline)
+      # pylint: disable-msg=protected-access
+      except psutil._error.AccessDenied:
+        continue
+      if 'log2timeline' in command_line:
         process_details = process_info.ProcessInfo(pid=process_object.pid)
         self._process_list.append(process_details)
         parent_process = process_details.parent
