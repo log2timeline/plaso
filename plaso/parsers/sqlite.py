@@ -80,7 +80,10 @@ class SQLiteParser(parser.BaseParser):
         try:
           for event_object in plugin_obj.Process(
               cache=cache, database=database):
-            event_object.plugin = plugin_obj.plugin_name
+            # The plugin attribute may be set by the plugin already, in the case
+            # where there may be a sub-plugin.
+            event_object.plugin = getattr(
+                event_object, 'plugin', plugin_obj.plugin_name)
             yield event_object
         except errors.WrongPlugin:
           logging.debug(
