@@ -235,6 +235,12 @@ class TimeLibUnitTest(unittest.TestCase):
     self.assertEquals(timelib.Timestamp.DayOfYear(0, 11, 2013),
                       31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30)
 
+  def testTimestampFromDelphiTime(self):
+    """Test the Delphi date time conversion."""
+    self.assertEquals(
+        timelib.Timestamp.FromDelphiTime(41443.8263953),
+        CopyStringToTimestamp('2013-06-18 19:50:00'))
+
   def testTimestampFromFatDateTime(self):
     """Test the FAT date time conversion."""
     self.assertEquals(
