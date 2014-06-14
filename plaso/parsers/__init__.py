@@ -42,6 +42,7 @@ from plaso.parsers import oxml
 #from plaso.parsers import pcap
 from plaso.parsers import plist
 from plaso.parsers import popcontest
+from plaso.parsers import pls_recall
 from plaso.parsers import recycler
 from plaso.parsers import selinux
 from plaso.parsers import skydrivelog

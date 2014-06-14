@@ -101,6 +101,10 @@ class Timestamp(object):
   #       cocoa/Conceptual/DatesAndTimes/Articles/dtDates.html
   COCOA_TIME_TO_POSIX_BASE = 978307200
 
+  # The difference between POSIX (Jan 1, 1970) and DELPHI (Dec 30, 1899).
+  # http://docwiki.embarcadero.com/Libraries/XE3/en/System.TDateTime
+  DELPHI_TIME_TO_POSIX_BASE = 25569
+
   @classmethod
   def CopyToDatetime(cls, timestamp, timezone):
     """Copies the timestamp to a datetime object.
@@ -223,6 +227,29 @@ class Timestamp(object):
       An integer containing the timestamp or 0 on error.
     """
     return cls.FromPosixTime(cocoa_time + cls.COCOA_TIME_TO_POSIX_BASE)
+
+  @classmethod
+  def FromDelphiTime(cls, delphi_time):
+    """Converts a Delphi time to a timestamp.
+
+    In Delphi, time and date values (TDateTime)
+    are stored in a unsigned little endian 64-bit
+    floating point containing the number of seconds
+    since December 30, 1899 at 00:00:00 (midnight) Local Timezone.
+    TDateTime does not have any time zone information.
+
+    Args:
+      delphi_time: The timestamp in Delphi format.
+
+    Returns:
+      An integer containing the timestamp or 0 on error.
+    """
+    posix_time = (delphi_time - cls.DELPHI_TIME_TO_POSIX_BASE) * 86400.0
+    if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
+        posix_time > cls.TIMESTAMP_MAX_SECONDS):
+      return 0
+
+    return cls.FromPosixTime(int(posix_time))
 
   @classmethod
   def FromFatDateTime(cls, fat_date_time):
