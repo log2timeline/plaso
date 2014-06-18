@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specifiSc language governing permissions and
 # limitations under the License.
-"""Parser for PL-Sql Developer Recall files."""
+"""Parser for PL-SQL Developer Recall files."""
 
 import construct
 import os
@@ -27,7 +27,7 @@ from plaso.lib import timelib
 
 
 class PlsRecallEvent(event.EventObject):
-  """Convenience class for a PL-Sql Recall file container."""
+  """Convenience class for a PL-SQL Recall file container."""
   DATA_TYPE = 'PLSRecall:event'
 
   def __init__(self, timestamp, sequence, user, database, query):
@@ -38,7 +38,7 @@ class PlsRecallEvent(event.EventObject):
       sequence: Sequence indicates the order of execution.
       username: The username that made the query.
       database_name: String containing the databe name.
-      query: String containing the PS-Sql query.
+      query: String containing the PL-SQL query.
     """
     super(PlsRecallEvent, self).__init__()
     self.timestamp = timestamp
@@ -49,7 +49,7 @@ class PlsRecallEvent(event.EventObject):
 
 
 class PlsRecallParser(parser.BaseParser):
-  """Parse PS-Sql Recall files.
+  """Parse PL-SQL Recall files.
 
   Parser is based on a:
     TRecallRecord = packed record
@@ -67,7 +67,7 @@ class PlsRecallParser(parser.BaseParser):
   NAME = 'pls_recall'
 
   PLS_STRUCT = construct.Struct(
-    'PS-Sql_Recall',
+    'PL-SQL_Recall',
     construct.ULInt32('Sequence'),
     construct.LFloat64('TimeStamp'),
     construct.String('Username', 31, None, '\x00'),
@@ -124,7 +124,7 @@ class PlsRecallParser(parser.BaseParser):
     """
     file_object.seek(0, os.SEEK_SET)
 
-    # The file consists of PL-Sql structures that are equal
+    # The file consists of PL-SQL structures that are equal
     # size (4125 bytes) TRecallRecord records. It should be
     # noted that the query value is free form.
     try:
