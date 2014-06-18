@@ -31,6 +31,9 @@ Thanks to contributors (alphabetically based on last name):
 * Dominique Kilman
   * Parsers
     * PCAP
+* Marc Leavitt
+  * Parsers
+    * PL-SQL recall (PLSRecall.dat)
 * Joaquin Moreno Garijo
   * Parsers
     * ASL
