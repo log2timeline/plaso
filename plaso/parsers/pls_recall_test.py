@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for PS-Sql recall file parser."""
+"""Tests for PL-SQL recall file parser."""
 
 import unittest
 
@@ -27,7 +27,7 @@ from plaso.parsers import test_lib
 
 
 class PlsRecallTest(test_lib.ParserTestCase):
-  """Tests for PS-Sql recall file parser."""
+  """Tests for PL-SQL recall file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
