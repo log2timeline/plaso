@@ -137,6 +137,7 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
         return_string_pieces.append(
             frontend_utils.FormatOutputString(entry_header, entry_data))
 
+    return_string_pieces.append(u'')
     self._output_writer.Write(u'\n'.join(return_string_pieces))
 
   def ListTimeZones(self):

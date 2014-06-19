@@ -166,6 +166,12 @@ class Frontend(object):
                       argparse._ArgumentGroup).
     """
     argument_group.add_argument(
+        '--no_vss', '--no-vss', dest='no_vss', action='store_true',
+        default=False, help=(
+            u'Do not scan for Volume Shadow Snapshots (VSS). This means that '
+            u'VSS information will not be included in the extraction phase.'))
+
+    argument_group.add_argument(
         '--vss_stores', '--vss-stores', dest='vss_stores', action='store',
         type=str, default=None, help=(
             u'Define Volume Shadow Snapshots (VSS) (or stores that need to be '
@@ -1483,8 +1489,11 @@ class ExtractionFrontend(Frontend):
 
       elif scan_path_spec.type_indicator in [
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
-        path_spec = self._GetVolumeVssStoreIdentifiers(
-            scan_path_spec, vss_stores=vss_stores)
+        if getattr(options, 'no_vss', False):
+          path_spec = None
+        else:
+          path_spec = self._GetVolumeVssStoreIdentifiers(
+              scan_path_spec, vss_stores=vss_stores)
 
         # Trace back to the parent volume path specification.
         scan_path_spec = scan_path_spec.parent
