@@ -212,7 +212,7 @@ class CupsIppParser(parser.BaseParser):
     if header.operation_id != self.IPP_OP_ID:
       # Warn if the operation ID differs from the standard one. We should be
       # able to parse the file nonetheless.
-      logging.warning(u'Unknown Cups IPP Operation ID.')
+      logging.debug(u'Unknown Cups IPP Operation ID.')
 
     # Read the pairs extracting the name and the value.
     data_dict = {}
