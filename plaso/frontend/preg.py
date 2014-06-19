@@ -28,6 +28,7 @@ import argparse
 import binascii
 import logging
 import os
+import re
 import sys
 import textwrap
 
@@ -47,6 +48,12 @@ except ImportError:
 from IPython.core import magic
 
 from plaso import preprocessors
+
+# Import the winreg formatter to register it, adding the option
+# to print event objects using the default formatter.
+# pylint: disable=unused-import
+from plaso.formatters import winreg as winreg_formatter
+
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -72,6 +79,7 @@ class RegCache(object):
   path_expander = None
   reg_cache = None
   file_entry = None
+  events_from_last_parse = []
 
   REG_TYPES = {
       'NTUSER': ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
@@ -542,6 +550,13 @@ def VerboseCompleter(unused_self, event_object):
 class MyMagics(magic.Magics):
   """A simple class holding all magic functions for console."""
 
+  EXPANSION_KEY_OPEN = r'{'
+  EXPANSION_KEY_CLOSE = r'}'
+
+  # Match against one instance, not two of the expansion key.
+  EXPANSION_RE = re.compile(r'{0:s}{{1}}[^{1:s}]+?{1:s}'.format(
+      EXPANSION_KEY_OPEN, EXPANSION_KEY_CLOSE))
+
   # Lowercase name since this is used inside the python console shell.
   @magic.line_magic
   def plugin(self, line):
@@ -659,6 +674,15 @@ class MyMagics(magic.Magics):
 
     if not key:
       self.cd('\\')
+
+    # Check if we need to expand environment attributes.
+    match = self.EXPANSION_RE.search(key)
+    if match and u'{0:s}{0:s}'.format(
+        self.EXPANSION_KEY_OPEN) not in match.group(0):
+      try:
+        key = RegCache.path_expander.ExpandPath(key)
+      except (KeyError, IndexError):
+        pass
 
     if key.startswith('\\'):
       registry_key = RegCache.hive.GetKeyByPath(key)
@@ -853,11 +877,13 @@ def GetFormatString(event_object):
   return u'{{0:>{0:d}s}} : {{1!s}}'.format(align_length)
 
 
-def GetEventHeader(event_object, exclude_timestamp):
+def GetEventHeader(event_object, descriptions, exclude_timestamp):
   """Returns a list of strings that contains a header for the event.
 
   Args:
     event_object: An event object (instance of event.EventObject).
+    descriptions: A list of strings describing the value of the header
+                  timestamp.
     exclude_timestamp: A boolean. If it is set to True the method
                        will not include the timestamp in the header.
 
@@ -870,9 +896,10 @@ def GetEventHeader(event_object, exclude_timestamp):
   ret_strings = []
   ret_strings.append(u'Key information.')
   if not exclude_timestamp:
-    ret_strings.append(format_string.format(
-        u'Last Written Time',
-        timelib.Timestamp.CopyToIsoFormat(event_object.timestamp)))
+    for description in descriptions:
+      ret_strings.append(format_string.format(
+          description, timelib.Timestamp.CopyToIsoFormat(
+              event_object.timestamp)))
   ret_strings.append(format_string.format(u'Key Path', event_object.keyname))
   if event_object.timestamp_desc != eventdata.EventTimestamp.WRITTEN_TIME:
     ret_strings.append(format_string.format(
@@ -1015,6 +1042,9 @@ def ParseKey(key, verbose=False, use_plugins=None):
   # Detect Registry type.
   registry_type = RegCache.hive_type
 
+  # Clear the last results from parse key.
+  RegCache.events_from_last_parse = []
+
   plugins = {}
   regplugins = winreg_interface.GetRegistryPlugins()
   # Compile a list of plugins we are about to use.
@@ -1053,6 +1083,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
 
         event_objects_and_timestamps = {}
         for event_object in call_back:
+          RegCache.events_from_last_parse.append(event_object)
           event_objects_and_timestamps.setdefault(
               event_object.timestamp, []).append(event_object)
 
@@ -1070,8 +1101,11 @@ def ParseKey(key, verbose=False, use_plugins=None):
         for event_timestamp in sorted(event_objects_and_timestamps):
           if first:
             first_event = event_objects_and_timestamps[event_timestamp][0]
+            descriptions = set()
+            for event_object in event_objects_and_timestamps[event_timestamp]:
+              descriptions.add(getattr(event_object, 'timestamp_desc', u''))
             print_strings.extend(GetEventHeader(
-                first_event, exclude_timestamp_in_header))
+                first_event, list(descriptions), exclude_timestamp_in_header))
             first = False
 
           if exclude_timestamp_in_header:
@@ -1080,6 +1114,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
                 timelib.Timestamp.CopyToIsoFormat(event_timestamp)))
 
           for event_object in event_objects_and_timestamps[event_timestamp]:
+            print_strings.append(u'')
             print_strings.extend(GetEventBody(event_object, verbose))
 
         print_strings.append(u'')
