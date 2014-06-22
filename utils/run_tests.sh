@@ -34,7 +34,14 @@ do
     fi
 
     echo "---+ ${TEST_FILE} +---";
-    PYTHONPATH=. /usr/bin/python ${TEST_FILE};
+
+    PYTHON="/usr/bin/python";
+    if ! test -x "${PYTHON}";
+    then
+      # MSYS-MinGW allows to run the script using the Windows Python version.
+      PYTHON="/c/python27/python.exe";
+    fi
+    PYTHONPATH=. ${PYTHON} ${TEST_FILE};
 
     if test $? -ne 0;
     then
