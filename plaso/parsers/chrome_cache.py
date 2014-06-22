@@ -57,6 +57,7 @@ class CacheAddress(object):
     self.block_number = None
     self.block_offset = None
     self.block_size = None
+    self.filename = None
     self.value = cache_address
 
     if cache_address & 0x80000000:
@@ -324,8 +325,6 @@ class ChromeCacheParser(parser.BaseParser):
 
   NAME = 'chrome_cache'
 
-  _EMPTY_CACHE_ADDRESS = CacheAddress(0x00000000)
-
   def Parse(self, file_entry):
     """Extract event objects from Chrome Cache files.
 
@@ -396,10 +395,11 @@ class ChromeCacheParser(parser.BaseParser):
           logging.error(u'Maximum allowed cache address chain length reached.')
           break
 
-        data_file = data_block_files[cache_address.filename]
+        data_file = data_block_files.get(cache_address.filename, None)
         if not data_file:
-          cache_address = self._EMPTY_CACHE_ADDRESS
-          continue
+          logging.debug(u'Cache address: 0x{0:08x} missing data file.'.format(
+              cache_address.value))
+          break
 
         try:
           cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
@@ -407,8 +407,7 @@ class ChromeCacheParser(parser.BaseParser):
           logging.error(
               u'Unable to parse cache entry with error: {0:s}'.format(
                   exception))
-          cache_address = self._EMPTY_CACHE_ADDRESS
-          continue
+          break
 
         yield ChromeCacheEntryEvent(cache_entry)
 
