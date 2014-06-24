@@ -206,6 +206,110 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
+    expected_mapped_files = [
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTDLL.DLL '
+         u'[MFT entry: 46299, sequence: 1]'),
+        u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TASKHOST.EXE',
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNEL32.DLL '
+         u'[MFT entry: 45747, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNELBASE.DLL '
+         u'[MFT entry: 45734, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\LOCALE.NLS '
+         u'[MFT entry: 45777, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\MSVCRT.DLL '
+         u'[MFT entry: 46033, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RPCRT4.DLL '
+         u'[MFT entry: 46668, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\COMBASE.DLL '
+         u'[MFT entry: 44616, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\OLEAUT32.DLL '
+         u'[MFT entry: 46309, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\OLE32.DLL '
+         u'[MFT entry: 46348, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RPCSS.DLL '
+         u'[MFT entry: 46654, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNEL.APPCORE.DLL '
+         u'[MFT entry: 45698, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CRYPTBASE.DLL '
+         u'[MFT entry: 44560, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\BCRYPTPRIMITIVES.DLL '
+         u'[MFT entry: 44355, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\USER32.DLL '
+         u'[MFT entry: 47130, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\GDI32.DLL '
+         u'[MFT entry: 45344, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\EN-US\\'
+         u'TASKHOST.EXE.MUI'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SECHOST.DLL '
+         u'[MFT entry: 46699, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CLBCATQ.DLL '
+         u'[MFT entry: 44511, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RACENGN.DLL '
+         u'[MFT entry: 46549, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTMARTA.DLL '
+         u'[MFT entry: 46262, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WEVTAPI.DLL '
+         u'[MFT entry: 47223, sequence: 1]'),
+        u'\\DEVICE\\HARDDISKVOLUME2\\$MFT',
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SQMAPI.DLL '
+         u'[MFT entry: 46832, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\AEPIC.DLL '
+         u'[MFT entry: 43991, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WINTRUST.DLL '
+         u'[MFT entry: 47372, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SLWGA.DLL '
+         u'[MFT entry: 46762, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\DXGI.DLL '
+         u'[MFT entry: 44935, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\ESENT.DLL '
+         u'[MFT entry: 45256, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WMICLNT.DLL '
+         u'[MFT entry: 47413, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\ADVAPI32.DLL '
+         u'[MFT entry: 43994, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SFC_OS.DLL '
+         u'[MFT entry: 46729, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\VERSION.DLL '
+         u'[MFT entry: 47120, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\CRYPT32.DLL '
+         u'[MFT entry: 44645, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\MSASN1.DLL '
+         u'[MFT entry: 45909, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\WTSAPI32.DLL '
+         u'[MFT entry: 47527, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SPPC.DLL '
+         u'[MFT entry: 46803, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\POWRPROF.DLL '
+         u'[MFT entry: 46413, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\PROFAPI.DLL '
+         u'[MFT entry: 46441, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\PROGRAMDATA\\MICROSOFT\\RAC\\STATEDATA\\'
+         u'RACMETADATA.DAT [MFT entry: 39345, sequence: 2]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\GLOBALIZATION\\SORTING\\'
+         u'SORTDEFAULT.NLS [MFT entry: 37452, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RACRULES.XML '
+         u'[MFT entry: 46509, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TASKSCHD.DLL '
+         u'[MFT entry: 47043, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\SSPICLI.DLL '
+         u'[MFT entry: 46856, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\XMLLITE.DLL '
+         u'[MFT entry: 47569, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\PROGRAMDATA\\MICROSOFT\\RAC\\STATEDATA\\'
+         u'RACWMIEVENTDATA.DAT [MFT entry: 23870, sequence: 3]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\PROGRAMDATA\\MICROSOFT\\RAC\\STATEDATA\\'
+         u'RACWMIDATABOOKMARKS.DAT [MFT entry: 23871, sequence: 2]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TPMTASKS.DLL '
+         u'[MFT entry: 47003, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NCRYPT.DLL '
+         u'[MFT entry: 46073, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\BCRYPT.DLL '
+         u'[MFT entry: 44346, sequence: 1]'),
+        (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTASN1.DLL '
+         u'[MFT entry: 46261, sequence: 1]')]
+
+    self.assertEquals(event_object.mapped_files, expected_mapped_files)
+
 
 if __name__ == '__main__':
   unittest.main()
