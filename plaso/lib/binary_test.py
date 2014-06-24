@@ -70,7 +70,7 @@ class BinaryTests(unittest.TestCase):
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
   def testUt16StreamCopyToString(self):
-    """Test copying an UTF-16 formatted byte stream to a string."""
+    """Test copying an UTF-16 byte stream to a string."""
     path = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as fh:
       byte_stream = fh.read()
@@ -98,7 +98,7 @@ class BinaryTests(unittest.TestCase):
       self.assertEquals(string, expected_string)
 
   def testArrayOfUt16StreamCopyToString(self):
-    """Test copying an array of UTF-16 formatted byte streams to strings."""
+    """Test copying an array of UTF-16 byte streams to strings."""
     path = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
     with open(path, 'rb') as fh:
       byte_stream = fh.read()
@@ -135,6 +135,47 @@ class BinaryTests(unittest.TestCase):
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WSHIP6.DLL']
 
       self.assertEquals(strings_array, expected_strings_array)
+
+  def testArrayOfUt16StreamCopyToStringTable(self):
+    """Test copying an array of UTF-16 byte streams to a string table."""
+    path = os.path.join('test_data', 'PING.EXE-B29F6629.pf')
+    with open(path, 'rb') as fh:
+      byte_stream = fh.read()
+
+      string_table = binary.ArrayOfUt16StreamCopyToStringTable(
+          byte_stream[0x1c44:], byte_stream_size=2876)
+      expected_string_table = {
+          0: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL',
+          102: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\KERNEL32.DLL',
+          210: (u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\'
+                u'APISETSCHEMA.DLL'),
+          326: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\KERNELBASE.DLL',
+          438: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\LOCALE.NLS',
+          542: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\PING.EXE',
+          642: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\ADVAPI32.DLL',
+          750: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\MSVCRT.DLL',
+          854: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\SECHOST.DLL',
+          960: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\RPCRT4.DLL',
+          1064: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL',
+          1172: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NSI.DLL',
+          1270: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WINNSI.DLL',
+          1374: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\USER32.DLL',
+          1478: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\GDI32.DLL',
+          1580: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\LPK.DLL',
+          1678: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\USP10.DLL',
+          1780: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WS2_32.DLL',
+          1884: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\IMM32.DLL',
+          1986: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\MSCTF.DLL',
+          2088: (u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\EN-US\\'
+                 u'PING.EXE.MUI'),
+          2208: (u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\GLOBALIZATION\\'
+                 u'SORTING\\SORTDEFAULT.NLS'),
+          2348: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\MSWSOCK.DLL',
+          2454: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WSHQOS.DLL',
+          2558: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WSHTCPIP.DLL',
+          2666: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WSHIP6.DLL'}
+
+      self.assertEquals(string_table, expected_string_table)
 
   def testStringParsing(self):
     """Test parsing the ASCII string."""

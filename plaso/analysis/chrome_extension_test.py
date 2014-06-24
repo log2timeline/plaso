@@ -206,7 +206,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     # is needed to create the last empty line.
     expected_text = u'\n'.join([
         u' == USER: dude ==',
-        u'  Google Keep [hmjkmjkepdijhoojdojkdfohbdgmmhki]',
+        u'  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]',
         u'',
         u' == USER: frank ==',
         u'  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]',

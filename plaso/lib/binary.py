@@ -25,8 +25,8 @@ import os
 def ReadUtf16Stream(file_object, offset=None, byte_size=0):
   """Reads an UTF-16 formatted stream from a file-like object.
 
-  Read an UTF-16 formatted stream that's terminated by
-  an end-of-line character (\x00\x00) or upto the byte size.
+  Reads an UTF-16 formatted stream that's terminated by
+  an end-of-string character (\x00\x00) or upto the byte size.
 
   Args:
     file_object: A file-like object to read the data from.
@@ -61,8 +61,8 @@ def ReadUtf16Stream(file_object, offset=None, byte_size=0):
 def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
   """Copies an UTF-16 formatted byte stream to a string.
 
-  The UTF-16 formatted byte stream should be terminated by an end-of-line
-  character (\x00\x00). Otherwise the function read upto the byte stream size.
+  The UTF-16 formatted byte stream should be terminated by an end-of-string
+  character (\x00\x00). Otherwise the function reads upto the byte stream size.
 
   Args:
     byte_stream: The UTF-16 formatted byte stream.
@@ -95,8 +95,8 @@ def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
 def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
   """Copies an array of UTF-16 formatted byte streams to an array of strings.
 
-  The UTF-16 formatted byte stream should be terminated by an end-of-line
-  character (\x00\x00). Otherwise the function read upto the byte stream size.
+  The UTF-16 formatted byte stream should be terminated by an end-of-string
+  character (\x00\x00). Otherwise the function reads upto the byte stream size.
 
   Args:
     byte_stream: The UTF-16 formatted byte stream.
@@ -127,6 +127,44 @@ def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
     byte_stream_index += 2
 
   return array_of_strings
+
+
+def ArrayOfUt16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
+  """Copies an array of UTF-16 formatted byte streams to a string table.
+
+  The string table is a dict of strings with the byte offset as their key.
+  The UTF-16 formatted byte stream should be terminated by an end-of-string
+  character (\x00\x00). Otherwise the function reads upto the byte stream size.
+
+  Args:
+    byte_stream: The UTF-16 formatted byte stream.
+    byte_stream_size: The byte stream size or None if the entire byte stream
+                      should be used.
+
+  Returns:
+    A dict of Unicode strings with the byte offset as their key.
+  """
+  string_table = {}
+  utf16_stream_start = 0
+  byte_stream_index = 0
+  if not byte_stream_size:
+    byte_stream_size = len(byte_stream)
+
+  while byte_stream_index + 1 < byte_stream_size:
+    if (byte_stream[byte_stream_index] == '\x00' and
+        byte_stream[byte_stream_index + 1] == '\x00'):
+
+      if byte_stream_index - utf16_stream_start <= 2:
+        break
+
+      string = byte_stream[utf16_stream_start:byte_stream_index].decode(
+          'utf-16-le')
+      string_table[utf16_stream_start] = string
+      utf16_stream_start = byte_stream_index + 2
+
+    byte_stream_index += 2
+
+  return string_table
 
 
 def ReadUtf16(string_buffer):
