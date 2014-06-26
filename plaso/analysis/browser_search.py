@@ -27,6 +27,12 @@ from plaso.lib import event
 from plaso.lib import eventdata
 
 
+# Create a lightweight object that is used to store timeline based information
+# about each search term.
+SEARCH_OBJECT = collections.namedtuple(
+    'SEARCH_OBJECT', 'time source engine search_term')
+
+
 def ScrubLine(line):
   """Scrub the line of most obvious HTML codes.
 
@@ -161,6 +167,10 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
     self._filter_dict = {}
     self._counter = collections.Counter()
 
+    # Store a list of search terms in a timeline format.
+    # The format is key = timestamp, value = (source, engine, search term).
+    self._search_term_timeline = []
+
     for filter_str, call_back in self.FILTERS:
       filter_obj = filters.GetFilter(filter_str)
       call_back_obj = getattr(FilterClass, call_back, None)
@@ -189,6 +199,13 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
           continue
         self._counter[u'{}:{}'.format(call_back_name, returned_line)] += 1
 
+        # Add the timeline format for each search term.
+        self._search_term_timeline.append(SEARCH_OBJECT(
+            getattr(event_object, 'timestamp', 0),
+            getattr(event_object, 'plugin', getattr(
+                event_object, 'parser', u'N/A')),
+            call_back_name, returned_line))
+
   def CompileReport(self):
     """Compiles a report of the analysis.
 
@@ -203,6 +220,7 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
       results.setdefault(search_engine, {})
       results[search_engine][search_term] = count
     report.report_dict = results
+    report.report_array = self._search_term_timeline
 
     lines_of_text = []
     for search_engine, terms in sorted(results.items()):
