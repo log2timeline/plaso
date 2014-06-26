@@ -204,6 +204,10 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
+    # TODO: This is a FLAKY test and needs to be changed.
+    # Sometimes the added text of: " - notes and lists" is added making
+    # the test fail. The result somehow need to be cached or changed
+    # to make this test less flaky.
     expected_text = u'\n'.join([
         u' == USER: dude ==',
         u'  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]',

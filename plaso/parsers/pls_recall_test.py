@@ -59,7 +59,7 @@ class PlsRecallTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.database_name, database_name_expected)
 
     # The test file actually has 'test_databae' in the SQL string.
-    query_expected = u"SELECT * from test_databae where date > '01/01/2012'"
+    query_expected = u'SELECT * from test_databae where date > \'01/01/2012\''
     self.assertEqual(event_object.query, query_expected)
 
     expected_msg = (
