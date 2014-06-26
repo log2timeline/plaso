@@ -24,10 +24,12 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.lib import utils
 
 
 class PlsRecallEvent(event.EventObject):
   """Convenience class for a PL-SQL Recall file container."""
+
   DATA_TYPE = 'PLSRecall:event'
 
   def __init__(self, timestamp, sequence, user, database, query):
@@ -128,8 +130,31 @@ class PlsRecallParser(parser.BaseParser):
     # size (4125 bytes) TRecallRecord records. It should be
     # noted that the query value is free form.
     try:
-      self.PLS_STRUCT.parse_stream(file_object)
+      structure = self.PLS_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError):
+      return False
+
+    # Verify few entries inside the structure.
+    try:
+      timestamp = timelib.Timestamp.FromDelphiTime(structure.TimeStamp)
+    except ValueError:
+      return False
+
+    if timestamp <= 0:
+      return False
+
+    # TODO: Add other verification checks here. For instance make sure
+    # that the query actually looks like a SQL query. This structure produces a
+    # lot of false positives and thus we need to add additional verification to
+    # make sure we are not parsing non-PLSRecall files.
+    # Another check might be to make sure the username looks legitimate, or the
+    # sequence number, or the database name.
+    # For now we just check if all three fields pass our "is this a text" test.
+    if not utils.IsText(structure.Username):
+      return False
+    if not utils.IsText(structure.Query):
+      return False
+    if not utils.IsText(structure.Database):
       return False
 
     return True
