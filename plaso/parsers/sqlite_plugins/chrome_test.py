@@ -65,10 +65,11 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.title, expected_title)
 
     expected_msg = (
-         u'{} ({}) [count: 0] Host: start.ubuntu.com '
-         u'(URL not typed directly - no typed count)').format(
-             expected_url, expected_title)
-    expected_short = u'{} ({})'.format(expected_url, expected_title)
+        u'{0:s} ({1:s}) [count: 0] Host: start.ubuntu.com '
+        u'Visit Source: [SOURCE_FIREFOX_IMPORTED] Type: [LINK - User clicked '
+        u'a link] (URL not typed directly - no typed count)').format(
+            expected_url, expected_title)
+    expected_short = u'{0:s} ({1:s})'.format(expected_url, expected_title)
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
@@ -91,9 +92,11 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.full_path, expected_full_path)
 
     expected_msg = (
-         u'{} ({}). Received: 1132155 bytes out of: 1132155 bytes.').format(
-             expected_url, expected_full_path)
-    expected_short = u'{} downloaded (1132155 bytes)'.format(expected_full_path)
+        u'{0:s} ({1:s}). Received: 1132155 bytes out of: '
+        u'1132155 bytes.').format(
+            expected_url, expected_full_path)
+    expected_short = u'{0:s} downloaded (1132155 bytes)'.format(
+        expected_full_path)
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
 
