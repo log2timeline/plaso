@@ -60,7 +60,7 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
 
   # TODO: refactor extra to be conditional arguments.
   def __init__(self, timestamp, row_id, url, title, hostname, typed_count,
-               from_visit, extra):
+               from_visit, extra, visit_source):
     """Initializes the event object.
 
     Args:
@@ -73,6 +73,7 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
       typed_count: The number of charcters of the URL that were typed.
       from_visit: The URL where the visit originated from.
       extra: String containing extra event data.
+      visit_source: The source of the page visit, if defined.
     """
     super(ChromeHistoryPageVisitedEvent, self).__init__()
     self.timestamp = timestamp
@@ -85,6 +86,8 @@ class ChromeHistoryPageVisitedEvent(event.EventObject):
     self.typed_count = typed_count
     self.from_visit = from_visit
     self.extra = extra
+    if visit_source is not None:
+      self.visit_source = visit_source
 
 
 class ChromeHistoryPlugin(interface.SQLitePlugin):
@@ -95,8 +98,9 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   # Define the needed queries.
   QUERIES = [(('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
                'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'
-               'visit_time, visits.from_visit, visits.transition FROM urls, '
-               'visits WHERE urls.id = visits.url ORDER BY visits.visit_time'),
+               'visit_time, visits.from_visit, visits.transition, visits.id '
+               'AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER '
+               'BY visits.visit_time'),
               'ParseLastVisitedRow'),
              (('SELECT downloads.id AS id, downloads.start_time,'
                'downloads.target_path, downloads_url_chains.url, '
@@ -110,44 +114,60 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([
       'keyword_search_terms', 'meta', 'urls', 'visits', 'visit_source'])
 
-  # Query for cache building.
+  # Queries for cache building.
   URL_CACHE_QUERY = (
       'SELECT visits.id AS id, urls.url, urls.title FROM '
       'visits, urls WHERE urls.id = visits.url')
+  SYNC_CACHE_QUERY = 'SELECT id, source FROM visit_source'
 
   # The following definition for values can be found here:
   # http://src.chromium.org/svn/trunk/src/content/public/common/ \
   # page_transition_types_list.h
   PAGE_TRANSITION = {
-      '0': 'LINK',
-      '1': 'TYPED',
-      '2': 'AUTO_BOOKMARK',
-      '3': 'AUTO_SUBFRAME',
-      '4': 'MANUAL_SUBFRAME',
-      '5': 'GENERATED',
-      '6': 'START_PAGE',
-      '7': 'FORM_SUBMIT',
-      '8': 'RELOAD',
-      '9': 'KEYWORD',
-      '10': 'KEYWORD_GENERATED '
+      0: 'LINK',
+      1: 'TYPED',
+      2: 'AUTO_BOOKMARK',
+      3: 'AUTO_SUBFRAME',
+      4: 'MANUAL_SUBFRAME',
+      5: 'GENERATED',
+      6: 'START_PAGE',
+      7: 'FORM_SUBMIT',
+      8: 'RELOAD',
+      9: 'KEYWORD',
+      10: 'KEYWORD_GENERATED '
   }
 
   TRANSITION_LONGER = {
-      '0': 'User clicked a link',
-      '1': 'User typed the URL in the URL bar',
-      '2': 'Got through a suggestion in the UI',
-      '3': ('Content automatically loaded in a non-toplevel frame - user may '
+      0: 'User clicked a link',
+      1: 'User typed the URL in the URL bar',
+      2: 'Got through a suggestion in the UI',
+      3: ('Content automatically loaded in a non-toplevel frame - user may '
             'not realize'),
-      '4': 'Subframe explicitly requested by the user',
-      '5': ('User typed in the URL bar and selected an entry from the list - '
+      4: 'Subframe explicitly requested by the user',
+      5: ('User typed in the URL bar and selected an entry from the list - '
             'such as a search bar'),
-      '6': 'The start page of the browser',
-      '7': 'A form the user has submitted values to',
-      '8': ('The user reloaded the page, eg by hitting the reload button or '
+      6: 'The start page of the browser',
+      7: 'A form the user has submitted values to',
+      8: ('The user reloaded the page, eg by hitting the reload button or '
             'restored a session'),
-      '9': ('URL what was generated from a replaceable keyword other than the '
+      9: ('URL what was generated from a replaceable keyword other than the '
             'default search provider'),
-      '10': 'Corresponds to a visit generated from a KEYWORD'
+      10: 'Corresponds to a visit generated from a KEYWORD'
+  }
+
+  # The following is the values for the source enum found in the visit_source
+  # table and describes where a record originated from (if it originates from a
+  # different storage than locally generated).
+  # The source can be found here:
+  # http://src.chromium.org/svn/trunk/src/chrome/browser/history/\
+  # history_types.h
+  VISIT_SOURCE = {
+      0: u'SOURCE_SYNCED',
+      1: u'SOURCE_BROWSED',
+      2: u'SOURCE_EXTENSION',
+      3: u'SOURCE_FIREFOX_IMPORTED',
+      4: u'SOURCE_IE_IMPORTED',
+      5: u'SOURCE_SAFARI_IMPORTED'
   }
 
   CORE_MASK = 0xff
@@ -204,7 +224,8 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     if row['hidden'] == '1':
       extras.append(u'(url hidden)')
 
-    count = int(row['typed_count'])
+    count = row['typed_count']
+
     if count >= 1:
       if count > 1:
         multi = u's'
@@ -212,28 +233,61 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         multi = u''
 
       extras.append(
-          (u'(typed {1} time{0} - not indicating directly typed '
-           'count)').format(multi, count))
+          u'(type count {1} time{0})'.format(multi, count))
     else:
       extras.append(u'(URL not typed directly - no typed count)')
+
+    visit_source = self._GetVisitSource(row['visit_id'], cache, database)
 
     # TODO: replace extras by conditional formatting.
     yield ChromeHistoryPageVisitedEvent(
         timelib.Timestamp.FromWebKitTime(int(row['visit_time'])),
         row['id'], row['url'], row['title'], self._GetHostname(row['url']),
         row['typed_count'], self._GetUrl(
-            row['from_visit'], cache, database), u' '.join(extras))
+            row['from_visit'], cache, database), u' '.join(extras),
+        visit_source)
 
   def _GetHostname(self, hostname):
     """Return a hostname from a full URL."""
-    # TODO: Fix this to provide a more error prone
-    # and optimal method of extracting the hostname.
-    # Often times the URL is an email address (mailto:...)
-    # or a Chrome specific site: 'about:plugins'
-    try:
-      return hostname.split('/')[2]
-    except IndexError:
-      return 'N/A'
+    if hostname.startswith('http') or hostname.startswith('ftp'):
+      _, _, uri = hostname.partition('//')
+      hostname, _, _ = uri.partition('/')
+
+      return hostname
+
+    if hostname.startswith('about') or hostname.startswith('chrome'):
+      site, _, _ = hostname.partition('/')
+      return site
+
+    return hostname
+
+  def _GetVisitSource(self, visit_id, cache, database):
+    """Return a string denoting the visit source type if possible.
+
+    Args:
+      visit_id: The ID from the visits table for the particular record.
+      cache: A cache object (instance of SQLiteCache).
+      database: A database object (instance of SQLiteDatabase).
+
+    Returns:
+      A string with the visit source, None if not found.
+    """
+    if not visit_id:
+      return
+
+    sync_cache_results = cache.GetResults('sync')
+    if not sync_cache_results:
+      cursor = database.cursor
+      result_set = cursor.execute(self.SYNC_CACHE_QUERY)
+      cache.CacheQueryResults(
+          result_set, 'sync', 'id', ('source',))
+      sync_cache_results = cache.GetResults('sync')
+
+    results = sync_cache_results.get(visit_id, None)
+    if results is None:
+      return
+
+    return self.VISIT_SOURCE.get(results, None)
 
   def _GetUrl(self, url, cache, database):
     """Return an URL from a reference to an entry in the from_visit table."""
