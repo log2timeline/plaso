@@ -1514,7 +1514,7 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
   """Watch a queue with EventObjects and send them directly to output."""
 
   def __init__(
-      self, storage_queue, output_file, output_module_string='lst2csv',
+      self, storage_queue, output_file, output_module_string='l2tcsv',
       pre_obj=None):
     """Initializes the bypass storage writer.
 
@@ -1557,7 +1557,7 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
     """Writes the event objects that are pushed on the queue."""
     output_class = output.GetOutputFormatter(self._output_module_string)
     if not output_class:
-      output_class = output.GetOutputFormatter('Lst2csv')
+      output_class = output.GetOutputFormatter('L2tcsv')
 
     self._output_module = output_class(
         self, self._output_file, config=self._pre_obj)
