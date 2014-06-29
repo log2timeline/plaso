@@ -19,6 +19,28 @@
 EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
+COVERAGE="/usr/bin/coverage";
+COVERAGE_REPORT="tests-coverage.txt";
+PYTHON="/usr/bin/python";
+
+if ! test -x "${PYTHON}";
+then
+  # MSYS-MinGW allows to run the script using the Windows Python version.
+  PYTHON="/c/python27/python.exe";
+fi
+
+if ! test -x "${PYTHON}";
+then
+  echo "Unable to locate Python interpreter."
+  echo "";
+  exit ${EXIT_FAILURE};
+fi
+
+if test -x "${COVERAGE}";
+then
+  rm -f .coverage ${COVERAGE_REPORT};
+fi
+
 # Run the tests in a specific order.
 SUBDIRS="lib serializer winreg filters classifier collector parsers output analysis frontend";
 
@@ -33,15 +55,14 @@ do
       continue;
     fi
 
-    echo "---+ ${TEST_FILE} +---";
+    echo "---+ ${TEST_FILE} +---"
 
-    PYTHON="/usr/bin/python";
-    if ! test -x "${PYTHON}";
+    if test -x "${COVERAGE}";
     then
-      # MSYS-MinGW allows to run the script using the Windows Python version.
-      PYTHON="/c/python27/python.exe";
+      PYTHONPATH=. ${COVERAGE} run -a ${TEST_FILE};
+    else
+      PYTHONPATH=. ${PYTHON} ${TEST_FILE};
     fi
-    PYTHONPATH=. ${PYTHON} ${TEST_FILE};
 
     if test $? -ne 0;
     then
@@ -54,6 +75,15 @@ do
     echo "";
   done
 done
+
+if test -x "${COVERAGE}";
+then
+  echo "Writing tests coverage report: ${COVERAGE_REPORT}"; 
+  SITE_PACKAGES="/usr/lib/python2.7/site-packages";
+  ${COVERAGE} report -m --omit="${SITE_PACKAGES}/*,*_test.py" > ${COVERAGE_REPORT};
+
+  rm -f .coverage
+fi
 
 exit ${EXIT_SUCCESS};
 
