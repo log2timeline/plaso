@@ -78,6 +78,7 @@ def CheckLibyal(libyal_python_modules):
   Returns:
     True if the libyal libraries are available, false otherwise.
   """
+  connection_error = False
   result = True
   for module_name, module_version in libyal_python_modules:
     try:
@@ -96,11 +97,10 @@ def CheckLibyal(libyal_python_modules):
         latest_version = GetLibyalGoogleDriveVersion(libyal_name)
       except urllib2.URLError:
         print (
-            u'Unable to verify version of {0:s} ({1:s}).\n'
-            u'Does this system have Internet access?').format(
+            u'Unable to determine latest version of {0:s} ({1:s}).\n').format(
                 libyal_name, module_name)
-        result = False
-        break
+        latest_version = None
+        connection_error = True
 
       if module_version is not None and installed_version < module_version:
         print (
@@ -109,7 +109,7 @@ def CheckLibyal(libyal_python_modules):
                 libyal_name, module_name, installed_version, module_version)
         result = False
 
-      elif installed_version != latest_version:
+      elif latest_version and installed_version != latest_version:
         print (
             u'[INFO]\t\t{0:s} ({1:s}) version: {2:d} installed, '
             u'version: {3:d} available.').format(
@@ -118,6 +118,11 @@ def CheckLibyal(libyal_python_modules):
       else:
         print u'[OK]\t\t{0:s} ({1:s}) version: {2:d}'.format(
             libyal_name, module_name, installed_version)
+
+  if connection_error:
+    print (
+        u'[INFO] to check for the latest versions this script needs Internet '
+        u'access.')
 
   return result
 
