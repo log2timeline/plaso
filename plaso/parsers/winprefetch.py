@@ -146,9 +146,9 @@ class WinPrefetchParser(parser.BaseParser):
       'metrics_array_entry_v17',
       construct.ULInt32('start_time'),
       construct.ULInt32('duration'),
-      construct.ULInt32('average_duration'),
       construct.ULInt32('filename_string_offset'),
-      construct.ULInt32('filename_string_number_of_characters'))
+      construct.ULInt32('filename_string_number_of_characters'),
+      construct.Padding(4))
 
   # Note that at the moment for the purpose of this parser
   # the v23 and v26 metrics array entry structures are the same.
