@@ -8,5 +8,9 @@
 # And don't care about the 'egg'.
 /plaso.egg-info
 
+# Test files
+.coverage
+tests-coverage.txt
+
 # And don't care about the temporary code review file if it exists.
 ._code_review_number
