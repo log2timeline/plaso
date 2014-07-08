@@ -1499,6 +1499,10 @@ class ExtractionFrontend(Frontend):
         scan_path_spec = scan_path_spec.parent
         break
 
+    # Set the VSS stores in the options so PrintOptions can print them.
+    if self._vss_stores:
+      options.vss_stores = self._vss_stores
+
     # In case we did not find a volume system type we keep looking
     # since we could be dealing with a storage media image that contains
     # a single volume.
