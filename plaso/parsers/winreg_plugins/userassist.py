@@ -15,10 +15,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains the UserAssist plugins."""
+"""This file contains the UserAssist Windows Registry plugin."""
+
+import logging
 
 import construct
-import logging
 
 from plaso.lib import event
 from plaso.lib import timelib
@@ -97,26 +98,28 @@ class UserAssistPlugin(interface.KeyPlugin):
     """
     version_value = key.GetValue('Version')
     count_subkey = key.GetSubkey('Count')
-    regalert_string = ''
+    regalert_string = u''
 
     if not version_value:
-      regalert_string = 'missing version value'
+      regalert_string = u'missing version value'
     elif not version_value.DataIsInteger():
-      regalert_string = 'unsupported version value data type'
+      regalert_string = u'unsupported version value data type'
     elif version_value.data not in [3, 5]:
-      regalert_string = 'unsupported version: {0:d}'.format(
+      regalert_string = u'unsupported version: {0:d}'.format(
           version_value.data)
     elif not count_subkey:
-      regalert_string = 'missing count subkey'
+      regalert_string = u'missing count subkey'
 
     if regalert_string:
       text_dict = {}
-      text_dict['Version'] = 'REGALERT {0:s}.'.format(regalert_string)
-      regalert_string = ''
+      text_dict[u'Version'] = u'REGALERT {0:s}.'.format(regalert_string)
+      regalert_string = u''
       yield event.WinRegistryEvent(
           key.path, text_dict, timestamp=key.last_written_timestamp)
 
     else:
+      userassist_entry_index = 0
+
       for value in count_subkey.GetValues():
         try:
           value_name = value.name.decode('rot-13')
@@ -139,7 +142,7 @@ class UserAssistPlugin(interface.KeyPlugin):
           value_name = u''.join(characters)
 
         if version_value.data == 5:
-          path_segments = value_name.split('\\')
+          path_segments = value_name.split(u'\\')
 
           for segment_index in range(0, len(path_segments)):
             path_segments[segment_index] = knownfolderid.IDENTIFIERS.get(
@@ -152,12 +155,12 @@ class UserAssistPlugin(interface.KeyPlugin):
                 value_name, self._config)
 
         if not value.DataIsBinaryData():
-          regalert_string = 'unsupported value data type: {0:s}'.format(
+          regalert_string = u'unsupported value data type: {0:s}'.format(
               value.data_type_string)
 
         elif version_value.data == 3:
           if len(value.data) != self.USERASSIST_V3_STRUCT.sizeof():
-            regalert_string = 'unsupported value data size: {0:d}'.format(
+            regalert_string = u'unsupported value data size: {0:d}'.format(
                 len(value.data))
           else:
             parsed_data = self.USERASSIST_V3_STRUCT.parse(value.data)
@@ -168,7 +171,7 @@ class UserAssistPlugin(interface.KeyPlugin):
               count -= 5
 
             text_dict = {}
-            text_dict[value_name] = u'[Count: {0}]'.format(count)
+            text_dict[value_name] = u'[Count: {0:d}]'.format(count)
             yield event.WinRegistryEvent(
                 count_subkey.path, text_dict,
                 timestamp=timelib.Timestamp.FromFiletime(filetime),
@@ -176,12 +179,12 @@ class UserAssistPlugin(interface.KeyPlugin):
 
         elif version_value.data == 5:
           if len(value.data) != self.USERASSIST_V5_STRUCT.sizeof():
-            regalert_string = 'unsupported value data size: {0:d}'.format(
+            regalert_string = u'unsupported value data size: {0:d}'.format(
                 len(value.data))
 
           parsed_data = self.USERASSIST_V5_STRUCT.parse(value.data)
 
-          userassist_entry = parsed_data.get('userassist_entry', None)
+          userassist_entry_index += 1
           count = parsed_data.get('count', None)
           app_focus_count = parsed_data.get('app_focus_count', None)
           focus_duration = parsed_data.get('focus_duration', None)
@@ -189,9 +192,9 @@ class UserAssistPlugin(interface.KeyPlugin):
 
           text_dict = {}
           text_dict[value_name] = (
-              u'[userassist_entry: {0}, Count: {1}, app_focus_count: {2}, '
-              u'focus_duration: {3}]').format(
-              userassist_entry, count, app_focus_count, focus_duration)
+              u'[UserAssist entry: {0:d}, Count: {1:d}, '
+              u'Application focus count: {2:d}, Focus duration: {3:d}]').format(
+              userassist_entry_index, count, app_focus_count, focus_duration)
 
           yield event.WinRegistryEvent(
               count_subkey.path, text_dict,
@@ -199,7 +202,7 @@ class UserAssistPlugin(interface.KeyPlugin):
 
     if regalert_string:
       text_dict = {}
-      text_dict[value_name] = 'REGALERT {0:s}.'.format(regalert_string)
-      regalert_string = ''
+      text_dict[value_name] = u'REGALERT {0:s}.'.format(regalert_string)
+      regalert_string = u''
       yield event.WinRegistryEvent(
           key.path, text_dict, timestamp=key.last_written_timestamp)
