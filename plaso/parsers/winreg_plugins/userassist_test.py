@@ -27,15 +27,15 @@ from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import userassist
 
 
-class WindowsXPUserAssistPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the Windows XP UserAssist Windows Registry plugin."""
+class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the UserAssist Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._plugin = userassist.UserAssistPlugin()
 
   def testProcessOnWinXP(self):
-    """Tests the Process function."""
+    """Tests the Process function on a Windows XP Registry file."""
     test_file = self._GetTestFilePath(['NTUSER.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
@@ -64,7 +64,7 @@ class WindowsXPUserAssistPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testProcessOnWin7(self):
-    """Tests the Process function."""
+    """Tests the Process function on a Windows 7 Registry file."""
     test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
@@ -83,8 +83,8 @@ class WindowsXPUserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     regvalue_identifier = u'Microsoft.Windows.GettingStarted'
     expected_value = (
-        u'[userassist_entry: None, Count: 14, app_focus_count: 21, '
-        u'focus_duration: 420000]')
+        u'[UserAssist entry: 1, Count: 14, Application focus count: 21, '
+        u'Focus duration: 420000]')
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
     expected_msg = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
