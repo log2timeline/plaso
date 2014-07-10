@@ -56,6 +56,11 @@ class EventTimestamp(object):
 
   LAST_PRINTED = u'Last Printed Time'
 
+  # Note that the unknown time is used for date and time values
+  # of which the exact meaning is unknown and being researched.
+  # For most cases do not use this timestamp description.
+  UNKNOWN = u'Unknown Time'
+
 
 class EventFormatterManager(object):
   """Class to manage the event formatters."""
