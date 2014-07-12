@@ -88,6 +88,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
     test_file = self._GetTestFilePath(['SYSTEM'])
@@ -127,6 +128,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestRegvalue(event_object, u'Type', u'Service - Share Process (0x20)')
     self._TestRegvalue(event_object, u'Start', u'Manual (3)')
+    self._TestRegvalue(
+        event_object, u'ServiceDll', u'%SystemRoot%\\System32\\qmgr.dll')
 
     # Test the McTaskManager subkey event objects.
     self.assertEquals(len(mc_task_manager_event_objects), 1)
