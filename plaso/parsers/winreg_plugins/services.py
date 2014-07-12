@@ -142,11 +142,27 @@ class ServicesPlugin(interface.ValuePlugin):
             object_name_str)
     return None
 
+  def GetServiceDll(self, key):
+    """Get the Service DLL for a service, if it exists.
+
+    Checks for a ServiceDLL for a service key.
+
+    Args:
+      key: A Windows Registry key (instance of WinRegKey).
+    """
+    parameters_key = key.GetSubkey('Parameters')
+    if parameters_key:
+      service_dll = parameters_key.GetValue('ServiceDll')
+      if service_dll:
+        return service_dll.data
+    else:
+      return None
+
   def GetEntries(self, key, **unused_kwargs):
     """Create one event for each subkey under Services that has Type and Start.
 
-    Adds descriptions of the ErrorControl, Type and StartvValues.
-    Alerts on unusual settingssuch as Start/Type mismatches or drivers outside
+    Adds descriptions of the ErrorControl, Type and Start Values.
+    Alerts on unusual settings such as Start/Type mismatches or drivers outside
     of C:/Windows/system32/drivers.
 
     Args:
@@ -191,6 +207,10 @@ class ServicesPlugin(interface.ValuePlugin):
       image_path = self.GetImagePath(key, service_type)
       if image_path:
         text_dict['ImagePath'] = image_path
+
+      service_dll = self.GetServiceDll(key)
+      if service_dll:
+        text_dict['ServiceDll'] = service_dll
 
       # Gather all the other string and integer values and insert as they are.
       for value in key.GetValues():

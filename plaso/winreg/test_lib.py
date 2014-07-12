@@ -53,7 +53,10 @@ class TestRegKey(interface.WinRegKey):
     self._last_written_timestamp = last_written_timestamp
     self._values = values
     self._offset = offset
-    self._subkeys = subkeys
+    if subkeys == None:
+      self._subkeys = []
+    else:
+      self._subkeys = subkeys
 
   @property
   def path(self):
