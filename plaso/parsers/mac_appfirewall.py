@@ -20,7 +20,7 @@
 import datetime
 import logging
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
@@ -32,7 +32,7 @@ import pytz
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class MacAppFirewallLogEvent(event.TimestampEvent):
+class MacAppFirewallLogEvent(time_events.TimestampEvent):
   """Convenience class for a Mac Wifi log line event."""
 
   DATA_TYPE = 'mac:asl:appfirewall:line'

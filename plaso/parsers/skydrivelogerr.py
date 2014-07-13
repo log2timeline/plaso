@@ -18,9 +18,10 @@
 """This file contains SkyDrive error log file parser in plaso."""
 
 import logging
+
 import pyparsing
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
@@ -29,7 +30,7 @@ from plaso.lib import timelib
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class SkyDriveLogErrorEvent(event.TimestampEvent):
+class SkyDriveLogErrorEvent(time_events.TimestampEvent):
   """Convenience class for a SkyDrive error log line event."""
   DATA_TYPE = 'skydrive:error:line'
 

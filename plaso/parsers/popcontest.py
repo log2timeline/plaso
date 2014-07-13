@@ -97,9 +97,10 @@
 """
 
 import logging
+
 import pyparsing
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
@@ -108,7 +109,7 @@ from plaso.lib import timelib
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class PopularityContestSessionEvent(event.PosixTimeEvent):
+class PopularityContestSessionEvent(time_events.PosixTimeEvent):
   """Convenience class for a Popularity Contest start/end event."""
 
   DATA_TYPE = 'popularity_contest:session:event'
@@ -131,7 +132,7 @@ class PopularityContestSessionEvent(event.PosixTimeEvent):
     self.details = details
 
 
-class PopularityContestEvent(event.PosixTimeEvent):
+class PopularityContestEvent(time_events.PosixTimeEvent):
   """Convenience class for a Popularity Contest line event."""
 
   DATA_TYPE = 'popularity_contest:log:event'

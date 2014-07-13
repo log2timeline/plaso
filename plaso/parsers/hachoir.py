@@ -20,8 +20,8 @@
 
 import datetime
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import parser
 from plaso.lib import timelib
 
@@ -41,7 +41,7 @@ import hachoir_metadata
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class HachoirEvent(event.TimestampEvent):
+class HachoirEvent(time_events.TimestampEvent):
   """Process timestamps from Hachoir Events."""
 
   DATA_TYPE = 'metadata:hachoir'

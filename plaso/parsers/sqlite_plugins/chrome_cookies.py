@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -16,8 +17,8 @@
 # limitations under the License.
 """Parser for the Google Chrome Cookie database."""
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 
 # pylint: disable=unused-import
@@ -26,7 +27,7 @@ from plaso.parsers.cookie_plugins import interface as cookie_interface
 from plaso.parsers.sqlite_plugins import interface
 
 
-class ChromeCookieEvent(event.WebKitTimeEvent):
+class ChromeCookieEvent(time_events.WebKitTimeEvent):
   """Convenience class for a Chrome Cookie event."""
 
   DATA_TYPE = 'chrome:cookie:entry'

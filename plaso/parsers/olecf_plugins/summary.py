@@ -17,13 +17,12 @@
 # limitations under the License.
 """Plugin to parse the OLECF summary/document summary information items."""
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
-
 from plaso.parsers.olecf_plugins import interface
 
 
-class OleCfSummaryInfoEvent(event.FiletimeEvent):
+class OleCfSummaryInfoEvent(time_events.FiletimeEvent):
   """Convenience class for an OLECF Summary info event."""
 
   DATA_TYPE = 'olecf:summary_info'
@@ -203,7 +202,7 @@ class OleCfSummaryInfo(object):
           eventdata.EventTimestamp.MODIFICATION_TIME, self.attributes)
 
 
-class OleCfDocumentSummaryInfoEvent(event.FiletimeEvent):
+class OleCfDocumentSummaryInfoEvent(time_events.FiletimeEvent):
   """Convenience class for an OLECF Document Summary info event."""
 
   DATA_TYPE = 'olecf:document_summary_info'
@@ -358,6 +357,7 @@ class DocumentSummaryPlugin(interface.OlecfPlugin):
 
   NAME = 'olecf_document_summary'
 
+  # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005DocumentSummaryInformation'])
 
   def GetEntries(self, root_item, items, **unused_kwargs):
@@ -387,6 +387,7 @@ class SummaryInfoPlugin(interface.OlecfPlugin):
 
   NAME = 'olecf_summary'
 
+  # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005SummaryInformation'])
 
   def GetEntries(self, root_item, items, **unused_kwargs):

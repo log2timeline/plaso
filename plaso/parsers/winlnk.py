@@ -17,19 +17,19 @@
 # limitations under the License.
 """Parser for Windows Shortcut (LNK) files."""
 
+import pylnk
+
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
-
-import pylnk
 
 
 if pylnk.get_version() < '20130304':
   raise ImportWarning('WinLnkParser requires at least pylnk 20130304.')
 
 
-class WinLnkLinkEvent(event.FiletimeEvent):
+class WinLnkLinkEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows Shortcut (LNK) link event."""
 
   def __init__(self, timestamp, timestamp_description, lnk_file):

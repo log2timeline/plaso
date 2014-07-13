@@ -25,8 +25,8 @@ import construct
 from dfvfs.resolver import resolver as path_spec_resolver
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 
@@ -304,7 +304,7 @@ class DataBlockFile(object):
     self._ReadFileHeader()
 
 
-class ChromeCacheEntryEvent(event.WebKitTimeEvent):
+class ChromeCacheEntryEvent(time_events.WebKitTimeEvent):
   """Class that contains a Chrome Cache event."""
 
   DATA_TYPE = 'chrome:cache:entry'

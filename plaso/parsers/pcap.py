@@ -18,12 +18,13 @@
 """Parser for PCAP files."""
 
 import binascii
-import dpkt
 import operator
 import socket
 
+import dpkt
+
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 
@@ -455,7 +456,7 @@ class Stream(object):
       self.stream_data = ''.join(clean_data)
 
 
-class PcapEvent(event.PosixTimeEvent):
+class PcapEvent(time_events.PosixTimeEvent):
   """Convenience class for a PCAP record event."""
 
   DATA_TYPE = 'metadata:pcap'

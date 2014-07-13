@@ -17,8 +17,8 @@
 # limitations under the License.
 """Parser for the Firefox Cookie database."""
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 
@@ -28,7 +28,7 @@ from plaso.parsers.cookie_plugins import interface as cookie_interface
 from plaso.parsers.sqlite_plugins import interface
 
 
-class FirefoxCookieEvent(event.TimestampEvent):
+class FirefoxCookieEvent(time_events.TimestampEvent):
   """Convenience class for a Firefox Cookie event."""
 
   DATA_TYPE = 'firefox:cookie:entry'

@@ -20,7 +20,7 @@
 import datetime
 import logging
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
@@ -36,7 +36,7 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 # http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
 
 
-class MacSecuritydLogEvent(event.TimestampEvent):
+class MacSecuritydLogEvent(time_events.TimestampEvent):
   """Convenience class for a ASL securityd line event."""
 
   DATA_TYPE = 'mac:asl:securityd:line'

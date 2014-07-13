@@ -22,8 +22,8 @@ import re
 import struct
 import zipfile
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
@@ -33,7 +33,7 @@ from xml.etree import ElementTree
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class OpenXMLParserEvent(event.TimestampEvent):
+class OpenXMLParserEvent(time_events.TimestampEvent):
   """Process timestamps from MS Office XML Events."""
 
   DATA_TYPE = 'metadata:openxml'
