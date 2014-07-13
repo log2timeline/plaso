@@ -43,7 +43,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_objects), 6)
+    self.assertEquals(len(event_objects), 15)
 
     event_object = event_objects[0]
 
@@ -77,7 +77,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[5]
+    event_object = event_objects[14]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-08-04 15:19:16.997750')

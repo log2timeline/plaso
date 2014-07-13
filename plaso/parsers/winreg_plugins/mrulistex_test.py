@@ -62,6 +62,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
 
     self.assertEquals(len(event_objects), 1)
 
+    # A MRUListEx event object.
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
@@ -97,9 +98,10 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEquals(len(event_objects), 65)
 
-    event_object = event_objects[1]
+    # A MRUListEx event object.
+    event_object = event_objects[40]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-08-28 22:48:28.159308')
@@ -116,6 +118,25 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     expected_msg_short = (
         u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'OpenSavePidlMRU...')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
+    # A shell item event object.
+    event_object = event_objects[0]
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-03-08 22:16:02')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+
+    expected_msg = (
+        u'Name: ALLOYR~1 '
+        u'Long name: Alloy Research '
+        u'Origin: {0:s}\\*').format(key_path)
+
+    expected_msg_short = (
+        u'Name: ALLOYR~1 '
+        u'Origin: \\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
+        u'Co...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
@@ -138,6 +159,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
 
     self.assertEquals(len(event_objects), 6)
 
+    # A MRUListEx event object.
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
@@ -211,9 +233,10 @@ class TestMRUListExStringAndShellItemListPlugin(
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEquals(len(event_objects), 31)
 
-    event_object = event_objects[0]
+    # A MRUListEx event object.
+    event_object = event_objects[30]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-04-01 13:52:38.966290')
