@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the Popularity Contest parser events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class PopularityContestSessionFormatter(eventdata.ConditionalEventFormatter):
+class PopularityContestSessionFormatter(interface.ConditionalEventFormatter):
   """Formatter for Popularity Contest Session information."""
 
   DATA_TYPE = 'popularity_contest:session:event'
@@ -39,7 +39,7 @@ class PopularityContestSessionFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-class PopularityContestLogFormatter(eventdata.ConditionalEventFormatter):
+class PopularityContestLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for Popularity Contest Log events."""
 
   DATA_TYPE = 'popularity_contest:log:event'

@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a formatter for the Mac OS X application usage."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class ApplicationUsageFormatter(eventdata.EventFormatter):
+class ApplicationUsageFormatter(interface.EventFormatter):
   """Define the formatting for Application Usage information."""
 
   DATA_TYPE = 'macosx:application_usage'

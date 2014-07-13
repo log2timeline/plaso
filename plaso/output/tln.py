@@ -27,10 +27,11 @@ Fields:
   User - The user associated with the data.
   Description - Message string describing the data.
 """
+
 import logging
 
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
@@ -75,7 +76,9 @@ class Tln(output.FileLogOutputFormatter):
     if not hasattr(event_object, 'timestamp'):
       return
 
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    # TODO: move this to an output module interface.
+    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
+        event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
@@ -98,7 +101,7 @@ class Tln(output.FileLogOutputFormatter):
         if check_user != '-':
           username = check_user
 
-    out_write = u'{}|{}|{}|{}|{}\n'.format(
+    out_write = u'{0!s}|{1:s}|{2:s}|{3:s}|{4!s}\n'.format(
         date_use,
         source_short.replace(self.DELIMITER, u' '),
         hostname.replace(self.DELIMITER, u' '),

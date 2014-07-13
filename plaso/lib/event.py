@@ -21,6 +21,7 @@ import collections
 import logging
 import uuid
 
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.lib import utils
@@ -272,7 +273,9 @@ class EventObject(object):
         timelib.Timestamp.CopyToIsoFormat(self.timestamp)))
     out_write.append(u'\n[Message Strings]:')
 
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(self)
+    # TODO: move formatting testing to a formatters (manager) test.
+    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
+        self)
     if not event_formatter:
       out_write.append(u'None')
     else:

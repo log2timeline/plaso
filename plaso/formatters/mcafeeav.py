@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the McAfee AV Logs files."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class McafeeAccessProtectionLogEventFormatter(eventdata.EventFormatter):
+class McafeeAccessProtectionLogEventFormatter(interface.EventFormatter):
   """Class that formats the McAfee Access Protection Log events."""
 
   DATA_TYPE = 'av:mcafee:accessprotectionlog'

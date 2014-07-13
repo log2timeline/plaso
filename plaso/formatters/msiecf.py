@@ -18,10 +18,10 @@
 """Formatter for Microsoft Internet Explorer (MSIE) Cache Files (CF) events."""
 
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class MsiecfUrlFormatter(eventdata.ConditionalEventFormatter):
+class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIECF URL item."""
 
   DATA_TYPE = 'msiecf:url'

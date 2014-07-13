@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a selinux formatter in plaso."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class SELinuxFormatter(eventdata.ConditionalEventFormatter):
+class SELinuxFormatter(interface.ConditionalEventFormatter):
   """Formatter for selinux files."""
 
   DATA_TYPE = 'selinux:line'

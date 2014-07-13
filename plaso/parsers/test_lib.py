@@ -20,12 +20,12 @@
 import os
 import unittest
 
+from plaso.formatters import manager as formatters_manager
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.lib import event
-from plaso.lib import eventdata
 
 
 class ParserTestCase(unittest.TestCase):
@@ -101,7 +101,7 @@ class ParserTestCase(unittest.TestCase):
     return event_generator
 
   def _TestGetMessageStrings(
-      self, event_object, expected_msg, expected_msg_short):
+      self, event_object, expected_message, expected_message_short):
     """Tests the formatting of the message strings.
 
        This function invokes the GetMessageStrings function of the event
@@ -110,10 +110,30 @@ class ParserTestCase(unittest.TestCase):
 
     Args:
       event_object: the event object (instance of EventObject).
-      expected_msg: the expected message string.
-      expected_msg_shor: the expected short message string.
+      expected_message: the expected message string.
+      expected_message_short: the expected short message string.
     """
-    msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
-        event_object)
-    self.assertEquals(msg, expected_msg)
-    self.assertEquals(msg_short, expected_msg_short)
+    manager_object = formatters_manager.EventFormatterManager
+    message, message_short = manager_object.GetMessageStrings(event_object)
+    self.assertEquals(message, expected_message)
+    self.assertEquals(message_short, expected_message_short)
+
+  def _TestGetSourceStrings(
+      self, event_object, expected_source, expected_source_short):
+    """Tests the formatting of the source strings.
+
+       This function invokes the GetSourceStrings function of the event
+       formatter on the event object and compares the resulting source
+       strings with those expected.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+      expected_source: the expected source string.
+      expected_source_short: the expected short source string.
+    """
+    manager_object = formatters_manager.EventFormatterManager
+    # TODO: change this to return the long variant first so it is consistent
+    # with GetMessageStrings.
+    source_short, source = manager_object.GetSourceStrings(event_object)
+    self.assertEquals(source, expected_source)
+    self.assertEquals(source_short, expected_source_short)

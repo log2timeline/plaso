@@ -17,9 +17,9 @@
 # limitations under the License.
 """Formatter for the Mac appfirewall.log file."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
-class MacAppFirewallLogFormatter(eventdata.ConditionalEventFormatter):
+class MacAppFirewallLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for Mac appfirewall.log file."""
 
   DATA_TYPE = 'mac:asl:appfirewall:line'

@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Windows firewall log files."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class WinFirewallFormatter(eventdata.ConditionalEventFormatter):
+class WinFirewallFormatter(interface.ConditionalEventFormatter):
   """A formatter for Windows firewall log entries."""
 
   DATA_TYPE = 'windows:firewall:log_entry'

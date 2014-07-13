@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Windows Scheduled Task job events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class WinJobFormatter(eventdata.ConditionalEventFormatter):
+class WinJobFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Java Cache IDX download item."""
 
   DATA_TYPE = 'windows:tasks:job'

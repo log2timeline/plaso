@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a syslog formatter in plaso."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class SyslogLineFormatter(eventdata.ConditionalEventFormatter):
+class SyslogLineFormatter(interface.ConditionalEventFormatter):
   """Formatter for syslog files."""
 
   DATA_TYPE = 'syslog:line'

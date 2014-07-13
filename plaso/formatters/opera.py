@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Opera history events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class OperaGlobalHistoryFormatter(eventdata.ConditionalEventFormatter):
+class OperaGlobalHistoryFormatter(interface.ConditionalEventFormatter):
   """Formatter for an Opera global history event."""
 
   DATA_TYPE = 'opera:history:entry'
@@ -34,7 +34,7 @@ class OperaGlobalHistoryFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class OperaTypedHistoryFormatter(eventdata.ConditionalEventFormatter):
+class OperaTypedHistoryFormatter(interface.ConditionalEventFormatter):
   """Formatter for an Opera typed history event."""
 
   DATA_TYPE = 'opera:history:typed_entry'

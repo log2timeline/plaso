@@ -18,10 +18,10 @@
 """Formatter for Windows NT Registry (REGF) files."""
 
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class WinRegistryGenericFormatter(eventdata.EventFormatter):
+class WinRegistryGenericFormatter(interface.EventFormatter):
   """Formatter for a generic Windows Registry key or value."""
 
   DATA_TYPE = 'windows:registry:key_value'

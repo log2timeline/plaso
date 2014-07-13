@@ -1,6 +1,6 @@
 #!/usr/bin/python
-#
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,17 +15,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a unit test for the EventFilter."""
+"""This file contains a unit test for the event formatters."""
 
 import unittest
 
+from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import event_test
-from plaso.lib import eventdata
-# pylint: disable=unused-import
-from plaso.formatters import winreg
 
 
-class TestEvent1Formatter(eventdata.EventFormatter):
+class TestEvent1Formatter(interface.EventFormatter):
   """Test event 1 formatter."""
   DATA_TYPE = 'test:event1'
   FORMAT_STRING = u'{text}'
@@ -34,7 +34,7 @@ class TestEvent1Formatter(eventdata.EventFormatter):
   SOURCE_LONG = 'Weird Log File'
 
 
-class WrongEventFormatter(eventdata.EventFormatter):
+class WrongEventFormatter(interface.EventFormatter):
   """A simple event formatter."""
   DATA_TYPE = 'test:wrong'
   FORMAT_STRING = u'This format string does not match {body}.'
@@ -48,14 +48,15 @@ class EventFormatterUnitTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    self._formatters_manager = manager.EventFormatterManager
     self.event_objects = event_test.GetEventObjects()
 
   def GetCSVLine(self, event_object):
     """Takes an EventObject and prints out a simple CSV line from it."""
-    get_sources = eventdata.EventFormatterManager.GetSourceStrings
     try:
-      msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
-      source_short, source_long = get_sources(event_object)
+      msg, _ = self._formatters_manager.GetMessageStrings(event_object)
+      source_short, source_long = self._formatters_manager.GetSourceStrings(
+          event_object)
     except KeyError:
       print event_object.GetAttributes()
     return u'{0:d},{1:s},{2:s},{3:s}'.format(
@@ -91,10 +92,9 @@ class EventFormatterUnitTest(unittest.TestCase):
   def testTextBasedEvent(self):
     """Test a text based event."""
     for event_object in self.event_objects:
-      source_short, _ = eventdata.EventFormatterManager.GetSourceStrings(
-          event_object)
+      source_short, _ = self._formatters_manager.GetSourceStrings(event_object)
       if source_short == 'LOG':
-        msg, msg_short = eventdata.EventFormatterManager.GetMessageStrings(
+        msg, msg_short = self._formatters_manager.GetMessageStrings(
             event_object)
 
         self.assertEquals(msg, (
@@ -110,7 +110,7 @@ class ConditionalTestEvent1(event_test.TestEvent1):
   DATA_TYPE = 'test:conditional_event1'
 
 
-class ConditionalTestEvent1Formatter(eventdata.ConditionalEventFormatter):
+class ConditionalTestEvent1Formatter(interface.ConditionalEventFormatter):
   """Test event 1 conditional (event) formatter."""
   DATA_TYPE = 'test:conditional_event1'
   FORMAT_STRING_PIECES = [
@@ -124,7 +124,7 @@ class ConditionalTestEvent1Formatter(eventdata.ConditionalEventFormatter):
   SOURCE_LONG = 'Some Text File.'
 
 
-class BrokenConditionalEventFormatter(eventdata.ConditionalEventFormatter):
+class BrokenConditionalEventFormatter(interface.ConditionalEventFormatter):
   """A broken conditional event formatter."""
   DATA_TYPE = 'test:broken_conditional'
   FORMAT_STRING_PIECES = [u'{too} {many} formatting placeholders']

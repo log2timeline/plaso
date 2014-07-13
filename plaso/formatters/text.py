@@ -15,26 +15,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a formatter for the Firefox cookie."""
+"""Formatter for text file-based events."""
 
 from plaso.formatters import interface
 
 
-class FirefoxCookieFormatter(interface.ConditionalEventFormatter):
-  """The event formatter for cookie data in Firefox Cookies database."""
+class TextEventFormatter(interface.EventFormatter):
+  """Text event formatter."""
 
-  DATA_TYPE = 'firefox:cookie:entry'
+  DATA_TYPE = u'text:entry'
+  FORMAT_STRING = u'{text}'
 
-  FORMAT_STRING_PIECES = [
-      u'{url}',
-      u'({cookie_name})',
-      u'Flags:',
-      u'[HTTP only]: {httponly}',
-      u'(GA analysis: {ga_data})']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      u'{host}',
-      u'({cookie_name})']
-
-  SOURCE_LONG = 'Firefox Cookies'
-  SOURCE_SHORT = 'WEBHIST'
+  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = u'Text File'

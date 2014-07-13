@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a xchatscrollback formatter in plaso."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class XChatScrollbackFormatter(eventdata.ConditionalEventFormatter):
+class XChatScrollbackFormatter(interface.ConditionalEventFormatter):
   """Formatter for XChat scrollback files."""
 
   DATA_TYPE = 'xchat:scrollback:line'
