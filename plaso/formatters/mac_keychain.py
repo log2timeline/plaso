@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the Keychain password database file."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class KeychainApplicationRecordFormatter(eventdata.ConditionalEventFormatter):
+class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
   """Formatter for keychain application record event."""
 
   DATA_TYPE = 'mac:keychain:application'
@@ -35,7 +35,7 @@ class KeychainApplicationRecordFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-class KeychainInternetRecordFormatter(eventdata.ConditionalEventFormatter):
+class KeychainInternetRecordFormatter(interface.ConditionalEventFormatter):
   """Formatter for keychain internet record event."""
 
   DATA_TYPE = 'mac:keychain:internet'

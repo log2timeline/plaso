@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a MacKeepr Cache formatter in plaso."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class MacKeeperCacheFormatter(eventdata.ConditionalEventFormatter):
+class MacKeeperCacheFormatter(interface.ConditionalEventFormatter):
   """Formatter for MacKeeper Cache extracted events."""
 
   DATA_TYPE = 'mackeeper:cache'

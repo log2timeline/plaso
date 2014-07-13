@@ -18,10 +18,10 @@
 """Formatter for the Windows recycle files."""
 
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class WinRecyclerFormatter(eventdata.ConditionalEventFormatter):
+class WinRecyclerFormatter(interface.ConditionalEventFormatter):
   """Formatter for Windows recycle bin events."""
 
   DATA_TYPE = 'windows:metadata:deleted_item'

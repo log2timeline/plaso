@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Java Cache IDX events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class JavaIDXFormatter(eventdata.ConditionalEventFormatter):
+class JavaIDXFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Java Cache IDX download item."""
 
   DATA_TYPE = 'java:download:idx'

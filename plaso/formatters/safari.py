@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the Safari History events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class SafariHistoryFormatter(eventdata.ConditionalEventFormatter):
+class SafariHistoryFormatter(interface.ConditionalEventFormatter):
   """Formatter for Safari history events."""
 
   DATA_TYPE = 'safari:history:visit'

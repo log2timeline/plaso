@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Task Scheduler events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class TaskCacheEventFormatter(eventdata.ConditionalEventFormatter):
+class TaskCacheEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a generic Task Cache event."""
 
   DATA_TYPE = 'task_scheduler:task_cache:entry'

@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Basic Security Module binary files."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class MacBSMFormatter(eventdata.ConditionalEventFormatter):
+class MacBSMFormatter(interface.ConditionalEventFormatter):
   """Formatter for an BSM log entry."""
 
   DATA_TYPE = 'mac:bsm:event'
@@ -38,7 +38,7 @@ class MacBSMFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-class BSMFormatter(eventdata.ConditionalEventFormatter):
+class BSMFormatter(interface.ConditionalEventFormatter):
   """Formatter for an BSM log entry."""
 
   DATA_TYPE = 'bsm:event'

@@ -18,10 +18,10 @@
 """This file contains a formatter for the Stat object of a PFile."""
 
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class PfileStatFormatter(eventdata.ConditionalEventFormatter):
+class PfileStatFormatter(interface.ConditionalEventFormatter):
   """Define the formatting for PFileStat."""
 
   DATA_TYPE = 'fs:stat'

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,9 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for plaso.output.l2t_csv."""
+
 import StringIO
 import unittest
 
+from plaso.formatters import interface as formatters_interface
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.output import dynamic
@@ -37,7 +40,7 @@ class TestEvent(event.EventObject):
         u'closed for user root)')
 
 
-class TestEventFormatter(eventdata.EventFormatter):
+class TestEventFormatter(formatters_interface.EventFormatter):
   DATA_TYPE = 'test:dynamic'
   FORMAT_STRING = u'{text}'
 

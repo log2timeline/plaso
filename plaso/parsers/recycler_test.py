@@ -107,11 +107,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[2]
 
-    short, source = eventdata.EventFormatterManager.GetSourceStrings(
-        event_object)
-
-    self.assertEquals(source, u'Recycle Bin')
-    self.assertEquals(short, u'RECBIN')
+    self._TestGetSourceStrings(event_object, u'Recycle Bin', u'RECBIN')
 
 
 if __name__ == '__main__':

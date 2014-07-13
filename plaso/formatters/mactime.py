@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the Sleuthkit (TSK) bodyfile or mactime format."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class MactimeFormatter(eventdata.EventFormatter):
+class MactimeFormatter(interface.EventFormatter):
   """Class that formats mactime bodyfile events."""
 
   DATA_TYPE = 'fs:mactime:line'

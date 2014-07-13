@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatters for the MSIE WebCache ESE database events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class MsieWebCacheContainerEventFormatter(eventdata.ConditionalEventFormatter):
+class MsieWebCacheContainerEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Container_# table record."""
 
   DATA_TYPE = 'msie:webcache:container'
@@ -46,7 +46,7 @@ class MsieWebCacheContainerEventFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class MsieWebCacheContainersEventFormatter(eventdata.ConditionalEventFormatter):
+class MsieWebCacheContainersEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Containers table record."""
 
   DATA_TYPE = 'msie:webcache:containers'
@@ -65,7 +65,7 @@ class MsieWebCacheContainersEventFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class MsieWebCacheLeakFilesEventFormatter(eventdata.ConditionalEventFormatter):
+class MsieWebCacheLeakFilesEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database LeakFiles table record."""
 
   DATA_TYPE = 'msie:webcache:leak_file'
@@ -81,7 +81,7 @@ class MsieWebCacheLeakFilesEventFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class MsieWebCachePartitionsEventFormatter(eventdata.ConditionalEventFormatter):
+class MsieWebCachePartitionsEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIE WebCache ESE database Partitions table record."""
 
   DATA_TYPE = 'msie:webcache:partitions'

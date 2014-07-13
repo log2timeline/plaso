@@ -19,8 +19,8 @@
 
 import unittest
 
+from plaso.formatters import interface as formatters_interface
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import objectfilter
 from plaso.lib import parser
 from plaso.lib import pfilter
@@ -33,7 +33,7 @@ class Empty(object):
   """An empty object."""
 
 
-class PfilterFakeFormatter(eventdata.EventFormatter):
+class PfilterFakeFormatter(formatters_interface.EventFormatter):
   """A formatter for this fake class."""
   DATA_TYPE = 'Weirdo:Made up Source:Last Written'
 

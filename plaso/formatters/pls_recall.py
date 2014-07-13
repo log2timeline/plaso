@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for PL-Sql Recall events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class PlsRecallFormatter(eventdata.EventFormatter):
+class PlsRecallFormatter(interface.EventFormatter):
   """Formatter for a for a PL-Sql Recall file container."""
   DATA_TYPE = 'PLSRecall:event'
   SOURCE_LONG = 'PL-Sql Developer Recall file'

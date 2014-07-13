@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a formatter for the Google Chrome cookie."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class ChromeCookieFormatter(eventdata.ConditionalEventFormatter):
+class ChromeCookieFormatter(interface.ConditionalEventFormatter):
   """The event formatter for cookie data in Chrome Cookies database."""
 
   DATA_TYPE = 'chrome:cookie:entry'

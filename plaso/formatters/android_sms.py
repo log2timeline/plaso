@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Android mmssms.db database events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class AndroidSmsFormatter(eventdata.ConditionalEventFormatter):
+class AndroidSmsFormatter(interface.ConditionalEventFormatter):
   """Formatter for Android sms events."""
 
   DATA_TYPE = 'android:messaging:sms'

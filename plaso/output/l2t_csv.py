@@ -23,8 +23,8 @@ Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
 import logging
 import re
 
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.lib import utils
@@ -73,7 +73,9 @@ class L2tcsv(output.FileLogOutputFormatter):
     if not hasattr(event_object, 'timestamp'):
       return
 
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    # TODO: move this to an output module interface.
+    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
+        event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
@@ -116,25 +118,26 @@ class L2tcsv(output.FileLogOutputFormatter):
         if check_user != '-':
           username = check_user
 
-    row = ('{0:02d}/{1:02d}/{2:04d}'.format(
-               date_use.month, date_use.day, date_use.year),
-           '{0:02d}:{1:02d}:{2:02d}'.format(
-               date_use.hour, date_use.minute, date_use.second),
-           self.zone,
-           helper.GetLegacy(event_object),
-           source_short,
-           source_long,
-           getattr(event_object, 'timestamp_desc', u'-'),
-           username,
-           hostname,
-           msg_short,
-           msg,
-           '2',
-           getattr(event_object, 'display_name', u'-'),
-           inode,
-           getattr(event_object, 'notes', u'-'),  # Notes field placeholder.
-           getattr(event_object, 'parser', u'-'),
-           extra.replace('\n', u'-').replace('\r', u''))
+    row = (
+        '{0:02d}/{1:02d}/{2:04d}'.format(
+            date_use.month, date_use.day, date_use.year),
+        '{0:02d}:{1:02d}:{2:02d}'.format(
+            date_use.hour, date_use.minute, date_use.second),
+        self.zone,
+        helper.GetLegacy(event_object),
+        source_short,
+        source_long,
+        getattr(event_object, 'timestamp_desc', u'-'),
+        username,
+        hostname,
+        msg_short,
+        msg,
+        '2',
+        getattr(event_object, 'display_name', u'-'),
+        inode,
+        getattr(event_object, 'notes', u'-'),  # Notes field placeholder.
+        getattr(event_object, 'parser', u'-'),
+        extra.replace('\n', u'-').replace('\r', u''))
 
     out_write = u'{0:s}\n'.format(
         u','.join(unicode(x).replace(',', u' ') for x in row))

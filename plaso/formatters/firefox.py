@@ -18,10 +18,10 @@
 """This file contains a formatter for the Mozilla Firefox history."""
 
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class FirefoxBookmarkAnnotationFormatter(eventdata.ConditionalEventFormatter):
+class FirefoxBookmarkAnnotationFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite bookmark annotation."""
 
   DATA_TYPE = 'firefox:places:bookmark_annotation'
@@ -37,7 +37,7 @@ class FirefoxBookmarkAnnotationFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
+class FirefoxBookmarkFolderFormatter(interface.EventFormatter):
   """Formatter for a Firefox places.sqlite bookmark folder."""
 
   DATA_TYPE = 'firefox:places:bookmark_folder'
@@ -48,7 +48,7 @@ class FirefoxBookmarkFolderFormatter(eventdata.EventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class FirefoxBookmarkFormatter(eventdata.ConditionalEventFormatter):
+class FirefoxBookmarkFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite URL bookmark."""
 
   DATA_TYPE = 'firefox:places:bookmark'
@@ -68,7 +68,7 @@ class FirefoxBookmarkFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
+class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Firefox places.sqlite page visited."""
 
   DATA_TYPE = 'firefox:places:page_visited'
@@ -123,7 +123,7 @@ class FirefoxPageVisitFormatter(eventdata.ConditionalEventFormatter):
     return super(FirefoxPageVisitFormatter, self).GetMessages(event_object)
 
 
-class FirefoxDowloadFormatter(eventdata.EventFormatter):
+class FirefoxDowloadFormatter(interface.EventFormatter):
   """Formatter for a Firefox dowloads.sqlite dowload."""
 
   DATA_TYPE = 'firefox:downloads:download'
