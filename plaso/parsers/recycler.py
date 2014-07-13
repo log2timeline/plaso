@@ -17,18 +17,19 @@
 # limitations under the License.
 """Parser for Windows Recycle files, INFO2 and $I/$R pairs."""
 
-import construct
 import logging
 
+import construct
+
+from plaso.events import time_events
 from plaso.lib import binary
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import utils
 
 
-class WinRecycleEvent(event.FiletimeEvent):
+class WinRecycleEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows Recycle bin EventObject."""
 
   DATA_TYPE = 'windows:metadata:deleted_item'

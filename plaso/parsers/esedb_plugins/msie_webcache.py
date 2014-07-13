@@ -23,12 +23,12 @@ as of version 10.
 
 import logging
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.parsers.esedb_plugins import interface
 
 
-class MsieWebCacheContainersEventObject(event.FiletimeEvent):
+class MsieWebCacheContainersEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache Containers table event."""
 
   DATA_TYPE = 'msie:webcache:containers'
@@ -49,7 +49,7 @@ class MsieWebCacheContainersEventObject(event.FiletimeEvent):
     self.directory = record_values.get('Directory', u'')
 
 
-class MsieWebCacheContainerEventObject(event.FiletimeEvent):
+class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache Container table event."""
 
   DATA_TYPE = 'msie:webcache:container'
@@ -92,7 +92,7 @@ class MsieWebCacheContainerEventObject(event.FiletimeEvent):
       self.response_headers = response_headers
 
 
-class MsieWebCacheLeakFilesEventObject(event.FiletimeEvent):
+class MsieWebCacheLeakFilesEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache LeakFiles table event."""
 
   DATA_TYPE = 'msie:webcache:leak_file'
@@ -111,7 +111,7 @@ class MsieWebCacheLeakFilesEventObject(event.FiletimeEvent):
     self.cached_filename = record_values.get('Filename', u'')
 
 
-class MsieWebCachePartitionsEventObject(event.FiletimeEvent):
+class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache Partitions table event."""
 
   DATA_TYPE = 'msie:webcache:partitions'

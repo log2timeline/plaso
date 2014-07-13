@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -16,11 +17,11 @@
 # limitations under the License.
 """This file is the template for Plist events."""
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 
 
-class PlistEvent(event.PythonDatetimeEvent):
+class PlistEvent(time_events.PythonDatetimeEvent):
   """Convenience class for a plist events."""
 
   DATA_TYPE = 'plist:key'
@@ -55,7 +56,7 @@ class PlistEvent(event.PythonDatetimeEvent):
       self.username = user
 
 
-class PlistTimeEvent(event.TimestampEvent):
+class PlistTimeEvent(time_events.TimestampEvent):
   """Convenience class for a plist event that does not use datetime objects."""
 
   DATA_TYPE = 'plist:key'

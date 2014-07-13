@@ -17,13 +17,13 @@
 # limitations under the License.
 """This file contains a bencode plugin for uTorrent data."""
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.bencode_plugins import interface
 
 
-class UTorrentEvent(event.PosixTimeEvent):
+class UTorrentEvent(time_events.PosixTimeEvent):
   """Convenience class for a uTorrent active torrents history entries."""
 
   DATA_TYPE = 'p2p:bittorrent:utorrent'

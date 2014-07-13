@@ -19,15 +19,15 @@
 
 import logging
 
+import pyevt
+
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 
-import pyevt
 
-
-class WinEvtRecordEvent(event.PosixTimeEvent):
+class WinEvtRecordEvent(time_events.PosixTimeEvent):
   """Convenience class for a Windows EventLog (EVT) record event."""
 
   DATA_TYPE = 'windows:evt:record'

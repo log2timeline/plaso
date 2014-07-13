@@ -17,19 +17,21 @@
 # limitations under the License.
 """This file contains a parser for the Mozilla Firefox history."""
 
+import sqlite3
+
+from plaso.events import time_events
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.sqlite_plugins import interface
 
-# Check SQlite version, bail out early if too old.
-import sqlite3
 
+# Check SQlite version, bail out early if too old.
 if sqlite3.sqlite_version_info < (3, 7, 8):
   raise ImportWarning(
       'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
 
 
-class FirefoxPlacesBookmarkAnnotation(event.TimestampEvent):
+class FirefoxPlacesBookmarkAnnotation(time_events.TimestampEvent):
   """Convenience class for a Firefox bookmark annotation event."""
 
   DATA_TYPE = 'firefox:places:bookmark_annotation'
@@ -54,7 +56,7 @@ class FirefoxPlacesBookmarkAnnotation(event.TimestampEvent):
     self.content = content
 
 
-class FirefoxPlacesBookmarkFolder(event.TimestampEvent):
+class FirefoxPlacesBookmarkFolder(time_events.TimestampEvent):
   """Convenience class for a Firefox bookmark folder event."""
 
   DATA_TYPE = 'firefox:places:bookmark_folder'
@@ -75,7 +77,7 @@ class FirefoxPlacesBookmarkFolder(event.TimestampEvent):
     self.title = title
 
 
-class FirefoxPlacesBookmark(event.TimestampEvent):
+class FirefoxPlacesBookmark(time_events.TimestampEvent):
   """Convenience class for a Firefox bookmark event."""
 
   DATA_TYPE = 'firefox:places:bookmark'
@@ -150,7 +152,7 @@ class FirefoxPlacesPageVisitedEvent(event.EventObject):
       self.extra = extra
 
 
-class FirefoxDownload(event.TimestampEvent):
+class FirefoxDownload(time_events.TimestampEvent):
   """Convenience class for a Firefox download event."""
 
   DATA_TYPE = 'firefox:downloads:download'

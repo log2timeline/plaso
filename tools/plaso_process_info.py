@@ -139,7 +139,7 @@ class ProcessInformationFrontend(frontend.Frontend):
     self._output_writer.Write(u'Memory:\n')
     # We need to access a protected attribute to get the
     # name of all the fields in the memory object.
-    # pylint: disable-msg=protected-access
+    # pylint: disable=protected-access
     for field in mem_info._fields:
       self._output_writer.Write(u'\t{0:s} = {1!s}\n'.format(
           field, getattr(mem_info, field, u'')))
@@ -156,7 +156,7 @@ class ProcessInformationFrontend(frontend.Frontend):
       # python log2timeline.py will cause the older approach of name to fail.
       try:
         command_line = u' '.join(process_object.cmdline)
-      # pylint: disable-msg=protected-access
+      # pylint: disable=protected-access
       except psutil._error.AccessDenied:
         continue
       if 'log2timeline' in command_line:

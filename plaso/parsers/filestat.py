@@ -19,7 +19,7 @@
 
 from dfvfs.lib import definitions
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import parser
 from plaso.lib import timelib
 
@@ -119,7 +119,7 @@ class StatEvents(object):
           timestamp, time_value, is_allocated, file_size, file_system_type)
 
 
-class FileStatEvent(event.TimestampEvent):
+class FileStatEvent(time_events.TimestampEvent):
   """File system stat event."""
 
   DATA_TYPE = 'fs:stat'

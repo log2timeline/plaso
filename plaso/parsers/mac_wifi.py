@@ -20,19 +20,21 @@
 import datetime
 import logging
 import re
-import pyparsing
-import pytz
 
-from plaso.lib import event
+import pyparsing
+
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
+
+import pytz
 
 
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
 
-class MacWifiLogEvent(event.TimestampEvent):
+class MacWifiLogEvent(time_events.TimestampEvent):
   """Convenience class for a Mac Wifi log line event."""
 
   DATA_TYPE = 'mac:wifilog:line'

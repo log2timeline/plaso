@@ -17,12 +17,12 @@
 # limitations under the License.
 """This file contains a bencode plugin for Transmission BitTorrent data."""
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.parsers.bencode_plugins import interface
 
 
-class TransmissionEvent(event.PosixTimeEvent):
+class TransmissionEvent(time_events.PosixTimeEvent):
   """Convenience class for a Transmission BitTorrent activity event."""
 
   DATA_TYPE = 'p2p:bittorrent:transmission'

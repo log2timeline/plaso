@@ -24,14 +24,14 @@
 #    be present. 6.02 files will currently return 'Unknown'.
 import construct
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
 
-class JavaIDXEvent(event.TimestampEvent):
+class JavaIDXEvent(time_events.TimestampEvent):
   """Convenience class for a Java IDX cache file download event."""
 
   DATA_TYPE = 'java:download:idx'

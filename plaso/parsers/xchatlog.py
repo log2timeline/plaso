@@ -68,19 +68,21 @@
 """
 
 import logging
-import pyparsing
-import pytz
 
-from plaso.lib import event
+import pyparsing
+
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
+
+import pytz
 
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class XChatLogEvent(event.TimestampEvent):
+class XChatLogEvent(time_events.TimestampEvent):
   """Convenience class for a XChat Log line event."""
   DATA_TYPE = 'xchat:log:line'
 
