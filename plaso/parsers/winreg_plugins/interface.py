@@ -62,14 +62,15 @@ class RegistryPlugin(plugin.BasePlugin):
     self._reg_cache = reg_cache
 
   @abc.abstractmethod
-  def GetEntries(self, key=None, **kwargs):
+  def GetEntries(self, key=None, codepage='cp1252', **kwargs):
     """Extracts event objects from the Windows Registry key."""
 
-  def Process(self, key=None, **kwargs):
-    """Processes the Windows Registry key or value if the plugin applies.
+  def Process(self, key=None, unused_codepage='cp1252', **kwargs):
+    """Processes a Windows Registry key or value.
 
     Args:
-      key: A Windows Registry key (instance of WinRegKey).
+      key: The Registry key (instance of winreg.WinRegKey).
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
 
     Raises:
       ValueError: If the key value is not set.
@@ -132,18 +133,23 @@ class KeyPlugin(RegistryPlugin):
         self.expanded_keys.append(u'\\Wow6432Node{:s}'.format(key_fixed))
 
   @abc.abstractmethod
-  def GetEntries(self, key=None, **kwargs):
+  def GetEntries(self, key=None, codepage='cp1252', **kwargs):
     """Extracts event objects from the Windows Registry key."""
 
-  def Process(self, key=None, **kwargs):
-    """Process a Windows Registry key."""
+  def Process(self, key=None, codepage='cp1252', **kwargs):
+    """Processes a Windows Registry key.
+
+    Args:
+      key: The Registry key (instance of winreg.WinRegKey).
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+    """
     if not key:
       return
 
     super(KeyPlugin, self).Process(key=key, **kwargs)
 
     if key.path in self.expanded_keys:
-      return self.GetEntries(key=key)
+      return self.GetEntries(key=key, codepage=codepage)
 
 
 class ValuePlugin(RegistryPlugin):
@@ -157,16 +163,22 @@ class ValuePlugin(RegistryPlugin):
   WEIGHT = 2
 
   @abc.abstractmethod
-  def GetEntries(self, key=None, **kwargs):
+  def GetEntries(self, key=None, codepage='cp1252', **kwargs):
     """Extracts event objects from the Windows Registry key."""
 
-  def Process(self, key=None, **kwargs):
-    """Processes the Windows Registry value."""
+  def Process(self, key=None, codepage='cp1252', **kwargs):
+    """Processes a Windows Registry value.
+
+    Args:
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+    """
     super(ValuePlugin, self).Process(key=key, **kwargs)
 
     values = frozenset([val.name for val in key.GetValues()])
     if self.REG_VALUES.issubset(values):
-      return self.GetEntries(key=key)
+      return self.GetEntries(key=key, codepage=codepage)
 
 
 class PluginList(object):
