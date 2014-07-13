@@ -25,9 +25,10 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 import pyparsing
 
+from plaso.formatters import interface as formatters_interface
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import lexer
 from plaso.lib import parser
 from plaso.lib import text_parser
@@ -38,7 +39,7 @@ class TestTextEvent(event.TextEvent):
   DATA_TYPE = 'test:parser:text'
 
 
-class TestTextEventFormatter(eventdata.EventFormatter):
+class TestTextEventFormatter(formatters_interface.EventFormatter):
   """Test text event formatter."""
   DATA_TYPE = 'test:parser:text'
   FORMAT_STRING = u'{body}'
@@ -146,13 +147,17 @@ class TextParserTest(unittest.TestCase):
     first_entry = text_generator.next()
     second_entry = text_generator.next()
 
-    msg1, _ = eventdata.EventFormatterManager.GetMessageStrings(first_entry)
+    # TODO: refactor this to use the parsers test_lib.
+    msg1, _ = formatters_manager.EventFormatterManager.GetMessageStrings(
+        first_entry)
     self.assertEquals(first_entry.timestamp, 1293859395000000)
     self.assertEquals(msg1, 'first line.')
     self.assertEquals(first_entry.hostname, 'myhost')
     self.assertEquals(first_entry.username, 'myuser')
 
-    msg2, _ = eventdata.EventFormatterManager.GetMessageStrings(second_entry)
+    # TODO: refactor this to use the parsers test_lib.
+    msg2, _ = formatters_manager.EventFormatterManager.GetMessageStrings(
+        second_entry)
     self.assertEquals(second_entry.timestamp, 693604686000000)
     self.assertEquals(msg2, 'second line.')
     self.assertEquals(second_entry.hostname, 'myhost')

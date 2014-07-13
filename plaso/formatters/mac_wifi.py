@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Mac wifi.log file."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class MacWifiLogFormatter(eventdata.ConditionalEventFormatter):
+class MacWifiLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for Mac Wifi file."""
 
   DATA_TYPE = 'mac:wifilog:line'

@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the Apple System Log binary files."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class AslFormatter(eventdata.ConditionalEventFormatter):
+class AslFormatter(interface.ConditionalEventFormatter):
   """Formatter for an ASL log entry."""
 
   DATA_TYPE = 'mac:asl:event'

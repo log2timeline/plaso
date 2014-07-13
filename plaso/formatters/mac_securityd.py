@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for ASL securityd log file."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class MacSecuritydLogFormatter(eventdata.ConditionalEventFormatter):
+class MacSecuritydLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for ASL Securityd file."""
 
   DATA_TYPE = 'mac:asl:securityd:line'

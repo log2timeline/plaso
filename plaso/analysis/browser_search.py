@@ -23,8 +23,8 @@ import urllib
 
 from plaso import filters
 from plaso.analysis import interface
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
-from plaso.lib import eventdata
 
 
 # Create a lightweight object that is used to store timeline based information
@@ -185,8 +185,10 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
     if not url_attribute:
       return
 
+    # TODO: refactor this the source should be used in formatting only.
     # Check if we are dealing with a web history event.
-    source, _ = eventdata.EventFormatterManager.GetSourceStrings(event_object)
+    source, _ = formatters_manager.EventFormatterManager.GetSourceStrings(
+        event_object)
 
     if source != 'WEBHIST':
       return
@@ -197,7 +199,7 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
         returned_line = ScrubLine(call_back_object(url_attribute))
         if not returned_line:
           continue
-        self._counter[u'{}:{}'.format(call_back_name, returned_line)] += 1
+        self._counter[u'{0:s}:{1:s}'.format(call_back_name, returned_line)] += 1
 
         # Add the timeline format for each search term.
         self._search_term_timeline.append(SEARCH_OBJECT(

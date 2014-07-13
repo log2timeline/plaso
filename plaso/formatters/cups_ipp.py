@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for CUPS IPP file."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class CupsIppFormatter(eventdata.ConditionalEventFormatter):
+class CupsIppFormatter(interface.ConditionalEventFormatter):
   """Formatter for CUPS IPP file."""
 
   DATA_TYPE = 'cups:ipp:event'

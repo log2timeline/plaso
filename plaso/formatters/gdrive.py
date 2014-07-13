@@ -17,13 +17,13 @@
 # limitations under the License.
 """This file contains a formatter for the Google Drive snaphots."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class GDriveCloudEntryFormatter(eventdata.ConditionalEventFormatter):
+class GDriveCloudEntryFormatter(interface.ConditionalEventFormatter):
   """Formatter for Google Drive snapshot cloud entry."""
 
   DATA_TYPE = 'gdrive:snapshot:cloud_entry'
@@ -40,7 +40,7 @@ class GDriveCloudEntryFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-class GDriveLocalEntryFormatter(eventdata.ConditionalEventFormatter):
+class GDriveLocalEntryFormatter(interface.ConditionalEventFormatter):
   """Formatter for Google Drive snapshot local entry."""
 
   DATA_TYPE = 'gdrive:snapshot:local_entry'

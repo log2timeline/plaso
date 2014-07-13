@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a formatter for the Google Chrome history."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class ChromePageVisitedFormatter(eventdata.ConditionalEventFormatter):
+class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
   """The event formatter for page visited data in Chrome History."""
 
   DATA_TYPE = 'chrome:history:page_visited'
@@ -42,7 +42,7 @@ class ChromePageVisitedFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-class ChromeFileDownloadFormatter(eventdata.ConditionalEventFormatter):
+class ChromeFileDownloadFormatter(interface.ConditionalEventFormatter):
   """The event formatter for file downloaded data in Chrome History."""
 
   DATA_TYPE = 'chrome:history:file_downloaded'

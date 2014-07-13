@@ -15,10 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatters for Windows XML EventLog (EVTX) related events."""
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class WinEvtxFormatter(eventdata.ConditionalEventFormatter):
+class WinEvtxFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows XML EventLog (EVTX) record."""
   DATA_TYPE = 'windows:evtx:record'
 

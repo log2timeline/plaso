@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Chrome Cache files based-events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class ChromeCacheEntryEventFormatter(eventdata.ConditionalEventFormatter):
+class ChromeCacheEntryEventFormatter(interface.ConditionalEventFormatter):
   """Class contains the Chrome Cache Entry event formatter."""
 
   DATA_TYPE = 'chrome:cache:entry'

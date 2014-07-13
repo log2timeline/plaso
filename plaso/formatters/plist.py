@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a formatter for Plist Events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class PlistFormatter(eventdata.ConditionalEventFormatter):
+class PlistFormatter(interface.ConditionalEventFormatter):
   """Event Formatter for plist keys."""
 
   DATA_TYPE = 'plist:key'

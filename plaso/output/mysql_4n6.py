@@ -20,14 +20,16 @@ import logging
 import re
 import sys
 
-from plaso.output import helper
+import MySQLdb
+
+from plaso import formatters
+from plaso.formatters import interface as formatters_interface
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.lib import utils
-from plaso import formatters
-import MySQLdb
+from plaso.output import helper
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -108,6 +110,9 @@ class Mysql4n6(output.LogOutputFormatter):
     """
     # TODO: Add a unit test for this output module.
     super(Mysql4n6, self).__init__(store, filehandle, config, filter_use)
+    # TODO: move this to an output module interface.
+    self._formatters_manager = formatters_manager.EventFormatterManager
+
     self.set_status = getattr(config, 'set_status', None)
 
     self.host = getattr(config, 'db_host', 'localhost')
@@ -140,7 +145,8 @@ class Mysql4n6(output.LogOutputFormatter):
       self.curs.execute(u'SET GLOBAL innodb_large_prefix=ON')
       self.curs.execute(u'SET GLOBAL innodb_file_format=barracuda')
       self.curs.execute(u'SET GLOBAL innodb_file_per_table=ON')
-      self.curs.execute(u'CREATE DATABASE IF NOT EXISTS {0:s}'.format(self.dbname))
+      self.curs.execute(
+          u'CREATE DATABASE IF NOT EXISTS {0:s}'.format(self.dbname))
       self.curs.execute(u'USE {0:s}'.format(self.dbname))
       # Create tables.
       self.curs.execute(
@@ -264,7 +270,6 @@ class Mysql4n6(output.LogOutputFormatter):
             all_tags.append(tag)
     return all_tags
 
-
   def EventBody(self, event_object):
     """Formats data as 4n6time database table format and writes to the db.
 
@@ -274,25 +279,29 @@ class Mysql4n6(output.LogOutputFormatter):
     Raises:
       raise errors.NoFormatterFound: If no formatter for this event is found.
     """
-
     if not hasattr(event_object, 'timestamp'):
       return
 
-    formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
-    if not formatter:
+    event_formatter = self._formatters_manager.GetFormatter(event_object)
+    if not event_formatter:
       raise errors.NoFormatterFound(
-          u'Unable to output event, no formatter found.')
+          u'Unable to output event, no event formatter found.')
 
     if (isinstance(
-      formatter, formatters.winreg.WinRegistryGenericFormatter) and
-        formatter.FORMAT_STRING.find('<|>') == -1):
-      formatter.FORMAT_STRING = u'[{keyname}]<|>{text}<|>'
-    elif isinstance(formatter, eventdata.ConditionalEventFormatter):
-      formatter.FORMAT_STRING_SEPARATOR = u'<|>'
-    elif isinstance(formatter, eventdata.EventFormatter):
-      formatter.format_string = formatter.format_string.replace('}', '}<|>')
-    msg, msg_short = formatter.GetMessages(event_object)
-    source_short, source_long = formatter.GetSources(event_object)
+      event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
+        event_formatter.FORMAT_STRING.find('<|>') == -1):
+      event_formatter.FORMAT_STRING = u'[{keyname}]<|>{text}<|>'
+
+    elif isinstance(
+        event_formatter, formatters_interface.ConditionalEventFormatter):
+      event_formatter.FORMAT_STRING_SEPARATOR = u'<|>'
+
+    elif isinstance(event_formatter, formatters_interface.EventFormatter):
+      event_formatter.format_string = event_formatter.format_string.replace(
+          '}', '}<|>')
+
+    msg, _ = event_formatter.GetMessages(event_object)
+    source_short, source_long = event_formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
@@ -301,7 +310,7 @@ class Mysql4n6(output.LogOutputFormatter):
       return
     extra = []
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
-        formatter.format_string)
+        event_formatter.format_string)
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
@@ -316,49 +325,48 @@ class Mysql4n6(output.LogOutputFormatter):
           hasattr(event_object.pathspec, 'image_inode')):
         inode = event_object.pathspec.image_inode
 
-    date_use_string = u'{0}-{1}-{2} {3}:{4}:{5}'.format(
+    date_use_string = u'{0:d}-{1:d}-{2:d} {3:d}:{4:d}:{5:d}'.format(
         date_use.year, date_use.month, date_use.day, date_use.hour,
         date_use.minute, date_use.second)
 
     tags = []
-    if hasattr(event_object, 'tag'):
-        if hasattr(event_object.tag, 'tags'):
-          tags = event_object.tag.tags
-        else:
-          tags = u''
+    if hasattr(event_object, 'tag') and hasattr(event_object.tag, 'tags'):
+      tags = event_object.tag.tags
     else:
       tags = u''
+
     taglist = u','.join(tags)
-    row = (str(self.zone),
-           helper.GetLegacy(event_object),
-           source_short,
-           source_long,
-           getattr(event_object, 'timestamp_desc', '-'),
-           getattr(event_object, 'username', '-'),
-           getattr(event_object, 'hostname', '-'),
-           msg,
-           getattr(event_object, 'filename', '-'),
-           inode,
-           getattr(event_object, 'notes', '-'),
-           getattr(event_object, 'parser', '-'),
-           extra,
-           date_use_string,
-           '',
-           '',
-           taglist,
-           '',
-           getattr(event_object, 'offset', 0),
-           event_object.store_number,
-           event_object.store_index,
-           self.GetVSSNumber(event_object),
-           getattr(event_object, 'url', '-'),
-           getattr(event_object, 'record_number', 0),
-           getattr(event_object, 'event_identifier', '-'),
-           getattr(event_object, 'event_type', '-'),
-           getattr(event_object, 'source_name', '-'),
-           getattr(event_object, 'user_sid', '-'),
-           getattr(event_object, 'computer_name', '-'),
-           self.evidence)
+    row = (
+        str(self.zone),
+        helper.GetLegacy(event_object),
+        source_short,
+        source_long,
+        getattr(event_object, 'timestamp_desc', '-'),
+        getattr(event_object, 'username', '-'),
+        getattr(event_object, 'hostname', '-'),
+        msg,
+        getattr(event_object, 'filename', '-'),
+        inode,
+        getattr(event_object, 'notes', '-'),
+        getattr(event_object, 'parser', '-'),
+        extra,
+        date_use_string,
+        '',
+        '',
+        taglist,
+        '',
+        getattr(event_object, 'offset', 0),
+        event_object.store_number,
+        event_object.store_index,
+        self.GetVSSNumber(event_object),
+        getattr(event_object, 'url', '-'),
+        getattr(event_object, 'record_number', 0),
+        getattr(event_object, 'event_identifier', '-'),
+        getattr(event_object, 'event_type', '-'),
+        getattr(event_object, 'source_name', '-'),
+        getattr(event_object, 'user_sid', '-'),
+        getattr(event_object, 'computer_name', '-'),
+        self.evidence)
 
     try:
       self.curs.execute(

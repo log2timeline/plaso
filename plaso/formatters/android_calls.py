@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for Android contacts2.db database events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class AndroidCallFormatter(eventdata.ConditionalEventFormatter):
+class AndroidCallFormatter(interface.ConditionalEventFormatter):
   """Formatter for Android call history events."""
 
   DATA_TYPE = 'android:event:call'

@@ -16,9 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the L2tCsv output class."""
+
 import StringIO
 import unittest
 
+from plaso.formatters import interface as formatters_interface
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.output import l2t_csv
@@ -43,7 +45,7 @@ class L2tTestEvent(event.EventObject):
         u'closed for user root)')
 
 
-class L2tTestEventFormatter(eventdata.EventFormatter):
+class L2tTestEventFormatter(formatters_interface.EventFormatter):
   """Formatter for the test event."""
   DATA_TYPE = 'test:l2t_csv'
   FORMAT_STRING = u'{text}'

@@ -17,13 +17,13 @@
 # limitations under the License.
 """Formatter for PCAP files."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
 __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
 
 
-class PCAPFormatter(eventdata.ConditionalEventFormatter):
+class PCAPFormatter(interface.ConditionalEventFormatter):
   """Define the formatting PCAP record."""
 
   DATA_TYPE = 'metadata:pcap'

@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a formatter for the Google Analytics cookie."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class AnalyticsUtmaCookieFormatter(eventdata.ConditionalEventFormatter):
+class AnalyticsUtmaCookieFormatter(interface.ConditionalEventFormatter):
   """The event formatter for UTMA Google Analytics cookie."""
 
   DATA_TYPE = 'cookie:google:analytics:utma'
