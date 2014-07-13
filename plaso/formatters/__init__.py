@@ -57,6 +57,7 @@ from plaso.formatters import pls_recall
 from plaso.formatters import recycler
 from plaso.formatters import safari
 from plaso.formatters import selinux
+from plaso.formatters import shell_items
 from plaso.formatters import skydrivelog
 from plaso.formatters import skydrivelogerr
 from plaso.formatters import skype

@@ -21,12 +21,11 @@ import abc
 import logging
 
 import construct
-import pyfwsi
 
 from plaso.lib import binary
 from plaso.lib import event
+from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
-from plaso.winnt import shell_item
 
 
 # A mixin class is used here to not to have the duplicate functionality
@@ -41,15 +40,19 @@ class MRUListExPluginMixin(object):
   _MRULISTEX_STRUCT = construct.Range(1, 500, construct.ULInt32('entry_number'))
 
   @abc.abstractmethod
-  def _CopyValueToString(self, value, **kwargs):
-    """Returns a string that represents the MRU entry.
+  def _ParseMRUListExEntryValue(
+      self, key, entry_index, entry_number, text_dict, **kwargs):
+    """Parses the MRUListEx entry value.
 
     Args:
-      value: the Registry value (instance of winreg.WinRegValue) that contains
-             the MRUListEx entry.
+      key: the Registry key (instance of winreg.WinRegKey) that contains
+           the MRUListEx value.
+      entry_index: integer value representing the MRUListEx entry index.
+      entry_number: integer value representing the entry number.
+      text_dict: text dictionary object to append textual strings.
 
-    Returns:
-      An Unicode string representing the MRU entry.
+    Yields:
+      Event objects (instances of EventObject).
     """
 
   def _ParseMRUListExValue(self, key):
@@ -68,8 +71,8 @@ class MRUListExPluginMixin(object):
     try:
       mru_list = self._MRULISTEX_STRUCT.parse(mru_list_value.data)
     except construct.FieldError:
-      logging.warning(u'Unable to parse the MRU key: {0:s}'.format(
-          key.path))
+      logging.warning(u'[{0:s}] Unable to parse the MRU key: {2:s}'.format(
+          self.NAME, key.path))
       return enumerate([])
 
     return enumerate(mru_list)
@@ -84,27 +87,19 @@ class MRUListExPluginMixin(object):
     Yields:
       Event objects (instances of EventObject).
     """
-    event_timestamp = key.last_written_timestamp
-
     text_dict = {}
-    for index, entry in self._ParseMRUListExValue(key):
+    for index, entry_number in self._ParseMRUListExValue(key):
       # TODO: detect if list ends prematurely.
       # MRU lists are terminated with 0xffffffff (-1).
-      if entry == 0xffffffff:
+      if entry_number == 0xffffffff:
         break
-      value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(index + 1, entry)
 
-      value = key.GetValue(u'{0:d}'.format(entry))
-      if value is None:
-        logging.debug(u'Missing MRU value: {0:d}.'.format(entry))
-        value_string = u''
-      else:
-        value_string = self._CopyValueToString(value, codepage=codepage)
-
-      text_dict[value_text] = value_string
+      for event_object in self._ParseMRUListExEntryValue(
+          key, index, entry_number, text_dict, codepage=codepage):
+        yield event_object
 
     yield event.WinRegistryEvent(
-        key.path, text_dict, timestamp=event_timestamp,
+        key.path, text_dict, timestamp=key.last_written_timestamp,
         source_append=': MRUListEx')
 
 
@@ -125,24 +120,48 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
       construct.RepeatUntil(
           lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)))
 
-  def _CopyValueToString(self, value, **unused_kwargs):
-    """Returns a string that represents the MRU entry.
+  def _ParseMRUListExEntryValue(
+      self, key, entry_index, entry_number, text_dict, **unused_kwargs):
+    """Parses the MRUListEx entry value.
 
     Args:
-      value: the Registry value (instance of winreg.WinRegValue) that contains
-             the MRUListEx entry.
+      key: the Registry key (instance of winreg.WinRegKey) that contains
+           the MRUListEx value.
+      entry_index: integer value representing the MRUListEx entry index.
+      entry_number: integer value representing the entry number.
+      text_dict: text dictionary object to append textual strings.
 
-    Returns:
-      An Unicode string representing the MRU entry.
+    Yields:
+      Event objects (instances of EventObject).
     """
-    if value.DataIsString():
-      return value.data
+    event_object = None
+    value_string = u''
 
-    if value.DataIsBinaryData():
-      logging.debug(u'Non-string MRUListEx parsed as string.')
-      return binary.Ut16StreamCopyToString(value.data)
+    value = key.GetValue(u'{0:d}'.format(entry_number))
+    if value is None:
+      logging.debug(
+          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
+              self.NAME, entry_number, key.path))
 
-    return u''
+    elif value.DataIsString():
+      value_string = value.data
+
+    elif value.DataIsBinaryData():
+      logging.debug((
+          u'[{0:s}] Non-string MRUListEx entry value: {1:d} parsed as string '
+          u'in key: {2:s}.').format(self.NAME, entry_number, key.path))
+      value_string = binary.Ut16StreamCopyToString(value.data)
+
+    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
+        entry_index + 1, entry_number)
+
+    text_dict[value_text] = value_string
+
+    if not event_object:
+      # If no event object was yield return an empty generator.
+      # pylint: disable-msg=unreachable
+      return
+      yield
 
   def GetEntries(self, key=None, codepage='cp1252', **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
@@ -170,26 +189,55 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
        u'OpenSavePidlMRU'),
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StreamMRU'])
 
-  def _CopyValueToString(self, value, codepage='cp1252', **unused_kwargs):
-    """Returns a string that represents the MRU entry.
+  def _ParseMRUListExEntryValue(
+      self, key, entry_index, entry_number, text_dict, codepage='cp1252',
+      **unused_kwargs):
+    """Parses the MRUListEx entry value.
 
     Args:
-      value: the Registry value (instance of winreg.WinRegValue) that contains
-             the MRUListEx entry.
+      key: the Registry key (instance of winreg.WinRegKey) that contains
+           the MRUListEx value.
+      entry_index: integer value representing the MRUListEx entry index.
+      entry_number: integer value representing the entry number.
+      text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
 
-    Returns:
-      An Unicode string representing the MRU entry.
+    Yields:
+      Event objects (instances of EventObject).
     """
-    if value.data_type != value.REG_BINARY:
-      return u''
+    event_object = None
+    value_string = u''
 
-    shell_item_list = pyfwsi.item_list()
+    value = key.GetValue(u'{0:d}'.format(entry_number))
+    if value is None:
+      logging.debug(
+          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
+              self.NAME, entry_number, key.path))
 
-    shell_item_list.copy_from_byte_stream(value.data, ascii_codepage=codepage)
+    elif not value.DataIsBinaryData():
+      logging.debug((
+          u'[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
+          u'{2:s}.').format(self.NAME, entry_number, key.path))
 
-    return u'Shell item list: [{0:s}]'.format(
-        shell_item.ShellItemListCopyToPath(shell_item_list))
+    elif value.data:
+      shell_items_parser = shell_items.ShellItemsParser(key.path)
+      for event_object in shell_items_parser.Parse(
+          value.data, codepage=codepage):
+        yield event_object
+
+      value_string = u'Shell item list: [{0:s}]'.format(
+          shell_items_parser.CopyToPath())
+
+    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
+        entry_index + 1, entry_number)
+
+    text_dict[value_text] = value_string
+
+    if not event_object:
+      # If no event object was yield return an empty generator.
+      # pylint: disable-msg=unreachable
+      return
+      yield
 
   def GetEntries(self, key=None, codepage='cp1252', **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
@@ -229,45 +277,77 @@ class MRUListExStringAndShellItemPlugin(
           lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)),
       construct.Anchor('shell_item'))
 
-  def _CopyValueToString(self, value, codepage='cp1252', **unused_kwargs):
-    """Returns a string that represents the MRU entry.
+  def _ParseMRUListExEntryValue(
+      self, key, entry_index, entry_number, text_dict, codepage='cp1252',
+      **unused_kwargs):
+    """Parses the MRUListEx entry value.
 
     Args:
-      value: the Registry value (instance of winreg.WinRegValue) that contains
-             the MRUListEx entry.
+      key: the Registry key (instance of winreg.WinRegKey) that contains
+           the MRUListEx value.
+      entry_index: integer value representing the MRUListEx entry index.
+      entry_number: integer value representing the entry number.
+      text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
 
-    Returns:
-      An Unicode string representing the MRU entry.
+    Yields:
+      Event objects (instances of EventObject).
     """
-    if value.data_type != value.REG_BINARY:
-      return u''
+    event_object = None
+    value_string = u''
 
-    value_struct = self._STRING_AND_SHELL_ITEM_STRUCT.parse(value.data)
+    value = key.GetValue(u'{0:d}'.format(entry_number))
+    if value is None:
+      logging.debug(
+          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
+              self.NAME, entry_number, key.path))
 
-    try:
-      # The struct includes the end-of-string character that we need
-      # to strip off.
-      path = ''.join(value_struct.string).decode('utf16')[:-1]
-    except UnicodeDecodeError as exception:
-      logging.warning((
-          u'Unable to decode string value in string and shell item '
-          u'with error: {0:s}').format(exception))
-      path = u''
+    elif not value.DataIsBinaryData():
+      logging.debug((
+          u'[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
+          u'{2:s}.').format(self.NAME, entry_number, key.path))
 
-    # Although we have one shell item here we need the list to parse it.
-    shell_item_list = pyfwsi.item_list()
+    elif value.data:
+      value_struct = self._STRING_AND_SHELL_ITEM_STRUCT.parse(value.data)
 
-    shell_item_list_data = value.data[value_struct.shell_item:]
-    if not shell_item_list_data:
-      logging.debug(u'Missing shell item.')
-      return u'Path: {0:s}'.format(path)
+      try:
+        # The struct includes the end-of-string character that we need
+        # to strip off.
+        path = ''.join(value_struct.string).decode('utf16')[:-1]
+      except UnicodeDecodeError as exception:
+        logging.warning((
+            u'[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
+            u'in key: {2:s} with error: {3:s}').format(
+                self.NAME, entry_number, key.path, exception))
+        path = u''
 
-    shell_item_list.copy_from_byte_stream(
-        shell_item_list_data, ascii_codepage=codepage)
+      if path:
+        shell_item_list_data = value.data[value_struct.shell_item:]
+        if not shell_item_list_data:
+          logging.debug((
+              u'[{0:s}] Missing shell item in MRUListEx entry value: {1:d}'
+              u'in key: {2:s}').format(self.NAME, entry_number, key.path))
+          value_string = u'Path: {0:s}'.format(path)
 
-    return u'Path: {0:s}, Shell item: [{1:s}]'.format(
-        path, shell_item.ShellItemListCopyToPath(shell_item_list))
+        else:
+          shell_items_parser = shell_items.ShellItemsParser(key.path)
+          for event_object in shell_items_parser.Parse(
+              shell_item_list_data, codepage=codepage):
+            yield event_object
+
+          value_string = u'Path: {0:s}, Shell item: [{1:s}]'.format(
+              path, shell_items_parser.CopyToPath())
+
+    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
+        entry_index + 1, entry_number)
+
+    text_dict[value_text] = value_string
+
+    if not event_object:
+      # If no event object was yield return an empty generator.
+      # pylint: disable-msg=unreachable
+      return
+      yield
 
   def GetEntries(self, key=None, codepage='cp1252', **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
@@ -307,44 +387,77 @@ class MRUListExStringAndShellItemListPlugin(
           lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)),
       construct.Anchor('shell_item_list'))
 
-  def _CopyValueToString(self, value, codepage='cp1252', **unused_kwargs):
-    """Returns a string that represents the MRU entry.
+  def _ParseMRUListExEntryValue(
+      self, key, entry_index, entry_number, text_dict, codepage='cp1252',
+      **unused_kwargs):
+    """Parses the MRUListEx entry value.
 
     Args:
-      value: the Registry value (instance of winreg.WinRegValue) that contains
-             the MRUListEx entry.
+      key: the Registry key (instance of winreg.WinRegKey) that contains
+           the MRUListEx value.
+      entry_index: integer value representing the MRUListEx entry index.
+      entry_number: integer value representing the entry number.
+      text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
 
-    Returns:
-      An Unicode string representing the MRU entry.
+    Yields:
+      Event objects (instances of EventObject).
     """
-    if value.data_type != value.REG_BINARY:
-      return u''
+    event_object = None
+    value_string = u''
 
-    value_struct = self._STRING_AND_SHELL_ITEM_LIST_STRUCT.parse(value.data)
+    value = key.GetValue(u'{0:d}'.format(entry_number))
+    if value is None:
+      logging.debug(
+          u'[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
+              self.NAME, entry_number, key.path))
 
-    try:
-      # The struct includes the end-of-string character that we need
-      # to strip off.
-      path = ''.join(value_struct.string).decode('utf16')[:-1]
-    except UnicodeDecodeError as exception:
-      logging.warning((
-          u'Unable to decode string value in string and shell item '
-          u'with error: {0:s}').format(exception))
-      path = u''
+    elif not value.DataIsBinaryData():
+      logging.debug((
+          u'[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
+          u'{2:s}.').format(self.NAME, entry_number, key.path))
 
-    shell_item_list = pyfwsi.item_list()
+    elif value.data:
+      value_struct = self._STRING_AND_SHELL_ITEM_LIST_STRUCT.parse(value.data)
 
-    shell_item_list_data = value.data[value_struct.shell_item_list:]
-    if not shell_item_list_data:
-      logging.debug(u'Missing shell item list.')
-      return u'Path: {0:s}'.format(path)
+      try:
+        # The struct includes the end-of-string character that we need
+        # to strip off.
+        path = ''.join(value_struct.string).decode('utf16')[:-1]
+      except UnicodeDecodeError as exception:
+        logging.warning((
+            u'[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
+            u'in key: {2:s} with error: {3:s}').format(
+                self.NAME, entry_number, key.path, exception))
+        path = u''
 
-    shell_item_list.copy_from_byte_stream(
-        shell_item_list_data, ascii_codepage=codepage)
+      if path:
+        shell_item_list_data = value.data[value_struct.shell_item_list:]
+        if not shell_item_list_data:
+          logging.debug((
+              u'[{0:s}] Missing shell item in MRUListEx entry value: {1:d}'
+              u'in key: {2:s}').format(self.NAME, entry_number, key.path))
+          value_string = u'Path: {0:s}'.format(path)
 
-    return u'Path: {0:s}, Shell item list: [{1:s}]'.format(
-        path, shell_item.ShellItemListCopyToPath(shell_item_list))
+        else:
+          shell_items_parser = shell_items.ShellItemsParser(key.path)
+          for event_object in shell_items_parser.Parse(
+              shell_item_list_data, codepage=codepage):
+            yield event_object
+
+          value_string = u'Path: {0:s}, Shell item list: [{1:s}]'.format(
+              path, shell_items_parser.CopyToPath())
+
+    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
+        entry_index + 1, entry_number)
+
+    text_dict[value_text] = value_string
+
+    if not event_object:
+      # If no event object was yield return an empty generator.
+      # pylint: disable-msg=unreachable
+      return
+      yield
 
   def GetEntries(self, key=None, codepage='cp1252', **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
