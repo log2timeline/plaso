@@ -19,17 +19,17 @@
 
 import logging
 
+import pymsiecf
+
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
 
-import pymsiecf
-
 
 if pymsiecf.get_version() < '20130317':
-  raise ImportWarning('MsiecfParser requires at least pymsiecf 20130317.')
+  raise ImportWarning(u'MsiecfParser requires at least pymsiecf 20130317.')
 
 
 class MsiecfUrlEvent(time_events.TimestampEvent):

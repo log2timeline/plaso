@@ -23,8 +23,8 @@ VERSION_DATE = '20140713'
 
 
 def GetVersion():
-  """Returns a version information for plaso."""
+  """Returns version information for plaso."""
   if not VERSION_DEV:
     return __version__
 
-  return u'{}_{}'.format(__version__, VERSION_DATE)
+  return u'{0:s}_{1:s}'.format(__version__, VERSION_DATE)
