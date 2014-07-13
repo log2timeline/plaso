@@ -23,6 +23,7 @@ import os
 import construct
 
 from plaso.events import time_events
+from plaso.events import windows_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -405,7 +406,6 @@ class WinPrefetchParser(parser.BaseParser):
 
     volume_serial_numbers = []
     volume_device_paths = []
-    prefetch_events = []
     path = u''
 
     for volume_information in self._ParseVolumesInformationSection(
@@ -419,8 +419,9 @@ class WinPrefetchParser(parser.BaseParser):
 
       timestamp = volume_information.get('creation_time', 0)
       if timestamp:
-        prefetch_events.append(
-            (timestamp, eventdata.EventTimestamp.CREATION_TIME))
+        yield windows_events.WindowsVolumeCreationEvent(
+            timestamp, volume_device_path, volume_serial_number,
+            file_entry.name)
 
       for filename in filename_strings.itervalues():
         if (filename.startswith(volume_device_path) and
@@ -448,12 +449,6 @@ class WinPrefetchParser(parser.BaseParser):
         mapped_file_string = filename
 
       mapped_files.append(mapped_file_string)
-
-    for prefetch_timestamp, prefetch_description in prefetch_events:
-      yield WinPrefetchExecutionEvent(
-          prefetch_timestamp, prefetch_description, file_header,
-          file_information, mapped_files, path, volume_serial_numbers,
-          volume_device_paths)
 
     timestamp = file_information.get('last_run_time', 0)
     if timestamp:

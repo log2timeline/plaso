@@ -66,6 +66,7 @@ from plaso.formatters import task_scheduler
 from plaso.formatters import text
 from plaso.formatters import utmp
 from plaso.formatters import utmpx
+from plaso.formatters import windows
 from plaso.formatters import winevt
 from plaso.formatters import winevtx
 from plaso.formatters import winfirewall
