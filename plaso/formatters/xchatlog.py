@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a xchatlog formatter in plaso."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class XChatLogFormatter(eventdata.ConditionalEventFormatter):
+class XChatLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for XChat log files."""
 
   DATA_TYPE = 'xchat:log:line'

@@ -17,9 +17,9 @@
 # limitations under the License.
 """Formatter for Firefox cache records."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
-class FirefoxCacheFormatter(eventdata.ConditionalEventFormatter):
+class FirefoxCacheFormatter(interface.ConditionalEventFormatter):
   """Formatter for Firefox cache record."""
 
   DATA_TYPE = 'firefox:cache:record'

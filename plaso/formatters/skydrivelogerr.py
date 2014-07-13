@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a skydrivelogerr formatter in plaso."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class SkyDriveLogErrorFormatter(eventdata.ConditionalEventFormatter):
+class SkyDriveLogErrorFormatter(interface.ConditionalEventFormatter):
   """Formatter for SkyDrive log error files events."""
 
   DATA_TYPE = 'skydrive:error:line'

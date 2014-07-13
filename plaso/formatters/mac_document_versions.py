@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a formatter for the Mac OS X Document Versions files."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class MacDocumentVersionsFormatter(eventdata.ConditionalEventFormatter):
+class MacDocumentVersionsFormatter(interface.ConditionalEventFormatter):
   """The event formatter for page visited data in Document Versions."""
 
   DATA_TYPE = 'mac:document_versions:file'

@@ -16,11 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the TLN output class."""
+
 import StringIO
 import unittest
 
+from plaso.formatters import interface as formatters_interface
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.output import tln
 
 
@@ -41,7 +42,7 @@ class TlnTestEvent(event.EventObject):
     self.username = u'root'
 
 
-class L2TTlnTestEventFormatter(eventdata.EventFormatter):
+class L2TTlnTestEventFormatter(formatters_interface.EventFormatter):
   """Formatter for the test event."""
   DATA_TYPE = 'test:l2ttln'
   FORMAT_STRING = u'{text}'

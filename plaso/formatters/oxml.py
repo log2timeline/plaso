@@ -17,12 +17,12 @@
 # limitations under the License.
 """Formatter for OpenXML events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class OpenXMLParserFormatter(eventdata.ConditionalEventFormatter):
+class OpenXMLParserFormatter(interface.ConditionalEventFormatter):
   """Formatter for OXML events."""
 
   DATA_TYPE = 'metadata:openxml'

@@ -18,13 +18,13 @@
 """This file contains a formatter for Symantec logs."""
 
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class SymantecFormatter(eventdata.ConditionalEventFormatter):
+class SymantecFormatter(interface.ConditionalEventFormatter):
   """Define the formatting for Symantec files."""
 
   DATA_TYPE = 'av:symantec:scanlog'

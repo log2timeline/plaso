@@ -30,10 +30,11 @@ Fields:
   TZ - L2T 0.65 field. Timezone of the event.
   Notes - L2T 0.65 field. Optional notes field or filename and inode.
 """
+
 import logging
 
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
@@ -78,7 +79,9 @@ class L2ttln(output.FileLogOutputFormatter):
     if not hasattr(event_object, 'timestamp'):
       return
 
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    # TODO: move this to an output module interface.
+    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
+        event_object)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
@@ -103,11 +106,11 @@ class L2ttln(output.FileLogOutputFormatter):
 
     notes = getattr(event_object, 'notes', u'')
     if not notes:
-      notes = u'File: {} inode: {}'.format(
+      notes = u'File: {0:s} inode: {1!s}'.format(
           getattr(event_object, 'display_name', u''),
           getattr(event_object, 'inode', u''))
 
-    out_write = u'{}|{}|{}|{}|{}|{}|{}\n'.format(
+    out_write = u'{0!s}|{1:s}|{2:s}|{3:s}|{4:s}|{5:s}|{6!s}\n'.format(
         date_use,
         source_short.replace(self.DELIMITER, u' '),
         hostname.replace(self.DELIMITER, u' '),

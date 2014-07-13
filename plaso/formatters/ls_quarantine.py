@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the Mac OS X launch services quarantine events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class LSQuarantineFormatter(eventdata.ConditionalEventFormatter):
+class LSQuarantineFormatter(interface.ConditionalEventFormatter):
   """Formatter for a LS Quarantine history event."""
 
   DATA_TYPE = 'macosx:lsquarantine'

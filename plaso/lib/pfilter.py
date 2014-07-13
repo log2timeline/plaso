@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -19,11 +20,12 @@
 import datetime
 import logging
 
+from plaso.formatters import manager as formatters_manager
+
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
 from plaso.frontend import presets
 
-from plaso.lib import eventdata
 from plaso.lib import limit
 from plaso.lib import objectfilter
 from plaso.lib import timelib
@@ -84,12 +86,17 @@ class DictObject(object):
 class PlasoValueExpander(objectfilter.AttributeValueExpander):
   """An expander that gives values based on object attribute names."""
 
+  def __init__(self):
+    """Initialize an attribue value expander."""
+    super(PlasoValueExpander, self).__init__()
+    self._formatters_manager = formatters_manager.EventFormatterManager
+
   def _GetMessage(self, obj):
     """Return a properly formatted message string."""
     ret = u''
 
     try:
-      ret, _ = eventdata.EventFormatterManager.GetMessageStrings(obj)
+      ret, _ = self._formatters_manager.GetMessageStrings(obj)
     except KeyError as exception:
       logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))
@@ -99,8 +106,7 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
   def _GetSources(self, obj):
     """Return a properly formatted source strings."""
     try:
-      get_sources = eventdata.EventFormatterManager.GetSourceStrings
-      source_short, source_long = get_sources(obj)
+      source_short, source_long = self._formatters_manager.GetSourceStrings(obj)
     except KeyError as exception:
       logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))

@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatters for OLE Compound File (OLECF) events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class OleCfItemFormatter(eventdata.EventFormatter):
+class OleCfItemFormatter(interface.EventFormatter):
   """Formatter for an OLECF item."""
 
   DATA_TYPE = 'olecf:item'
@@ -32,7 +32,7 @@ class OleCfItemFormatter(eventdata.EventFormatter):
   SOURCE_SHORT = 'OLECF'
 
 
-class OleCfDocumentSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
+class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF Summary Info property set stream."""
 
   DATA_TYPE = 'olecf:document_summary_info'
@@ -64,7 +64,7 @@ class OleCfDocumentSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'OLECF'
 
 
-class OleCfSummaryInfoFormatter(eventdata.ConditionalEventFormatter):
+class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF Summary Info property set stream."""
 
   DATA_TYPE = 'olecf:summary_info'

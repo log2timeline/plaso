@@ -24,7 +24,7 @@ import uuid
 
 import pyelasticsearch
 
-from plaso.lib import eventdata
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
@@ -68,17 +68,19 @@ class Elastic(output.LogOutputFormatter):
           'action': 'store',
           'default': 9200})]
 
-  def __init__(self, store, filehandle=sys.stdout, config=None,
-               filter_use=None):
-    """Constructor for the Elastic output module."""
+  def __init__(
+      self, store, filehandle=sys.stdout, config=None, filter_use=None):
+    """Initializes the Elastic output module."""
     super(Elastic, self).__init__(store, filehandle, config, filter_use)
     self._counter = 0
     self._data = []
+    # TODO: move this to an output module interface.
+    self._formatters_manager = formatters_manager.EventFormatterManager
 
     elastic_host = getattr(config, 'elastic_server', '127.0.0.1')
     elastic_port = getattr(config, 'elastic_port', 9200)
     self._elastic_db = pyelasticsearch.ElasticSearch(
-        u'http://{}:{}'.format(elastic_host, elastic_port))
+        u'http://{0:s}:{1:d}'.format(elastic_host, elastic_port))
 
     case_name = getattr(config, 'case_name', u'')
     document_type = getattr(config, 'document_type', u'')
@@ -126,10 +128,10 @@ class Elastic(output.LogOutputFormatter):
     # conversion).
     ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
         timelib.Timestamp.RoundToSeconds(event_object.timestamp))
-    msg, _ = eventdata.EventFormatterManager.GetMessageStrings(event_object)
+    msg, _ = self._formatters_manager.GetMessageStrings(event_object)
     ret_dict['message'] = msg
 
-    source_type, source = eventdata.EventFormatterManager.GetSourceStrings(
+    source_type, source = self._formatters_manager.GetSourceStrings(
         event_object)
 
     ret_dict['source_short'] = source_type

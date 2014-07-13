@@ -17,9 +17,9 @@
 # limitations under the License.
 """Formatter for the UTMPX binary files."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
-class UtmpxSessionFormatter(eventdata.ConditionalEventFormatter):
+class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
   """Formatter for UTMPX session."""
 
   DATA_TYPE = 'mac:utmpx:event'

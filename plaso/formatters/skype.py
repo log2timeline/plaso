@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the Skype Main database events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class SkypeAccountFormatter(eventdata.ConditionalEventFormatter):
+class SkypeAccountFormatter(interface.ConditionalEventFormatter):
   """Formatter for Skype Account information."""
 
   DATA_TYPE = 'skype:event:account'
@@ -31,7 +31,7 @@ class SkypeAccountFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-class SkypeChatFormatter(eventdata.ConditionalEventFormatter):
+class SkypeChatFormatter(interface.ConditionalEventFormatter):
   """Formatter for Skype chat events."""
 
   DATA_TYPE = 'skype:event:chat'
@@ -48,7 +48,7 @@ class SkypeChatFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-class SkypeSMSFormatter(eventdata.ConditionalEventFormatter):
+class SkypeSMSFormatter(interface.ConditionalEventFormatter):
   """Formatter for Skype SMS."""
 
   DATA_TYPE = 'skype:event:sms'
@@ -59,7 +59,7 @@ class SkypeSMSFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-class SkypeCallFormatter(eventdata.ConditionalEventFormatter):
+class SkypeCallFormatter(interface.ConditionalEventFormatter):
   """Formatter for Skype calls."""
 
   DATA_TYPE = 'skype:event:call'
@@ -73,7 +73,7 @@ class SkypeCallFormatter(eventdata.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-class SkypeTransferFileFormatter(eventdata.ConditionalEventFormatter):
+class SkypeTransferFileFormatter(interface.ConditionalEventFormatter):
   """Formatter for Skype transfer files"""
 
   DATA_TYPE = 'skype:event:transferfile'

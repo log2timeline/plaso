@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for bencode parser events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class uTorrentFormatter(eventdata.ConditionalEventFormatter):
+class uTorrentFormatter(interface.ConditionalEventFormatter):
   """Formatter for a BitTorrent uTorrent active torrents."""
 
   DATA_TYPE = 'p2p:bittorrent:utorrent'
@@ -35,7 +35,7 @@ class uTorrentFormatter(eventdata.ConditionalEventFormatter):
                           u'Minutes seeded: {seedtime}']
 
 
-class TransmissionFormatter(eventdata.ConditionalEventFormatter):
+class TransmissionFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Transmission active torrents."""
 
   DATA_TYPE = 'p2p:bittorrent:transmission'

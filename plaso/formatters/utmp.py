@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the UTMP binary files."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class UtmpSessionFormatter(eventdata.ConditionalEventFormatter):
+class UtmpSessionFormatter(interface.ConditionalEventFormatter):
   """Formatter for UTMP session."""
 
   DATA_TYPE = 'linux:utmp:event'

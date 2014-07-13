@@ -18,13 +18,13 @@
 """Formatter for Hachoir events."""
 
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class HachoirFormatter(eventdata.EventFormatter):
+class HachoirFormatter(interface.EventFormatter):
   """Formatter for Hachoir based events."""
 
   DATA_TYPE = 'metadata:hachoir'

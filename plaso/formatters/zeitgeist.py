@@ -17,10 +17,10 @@
 # limitations under the License.
 """This file contains a formatter for Zeitgeist."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class ZeitgeistEventFormatter(eventdata.EventFormatter):
+class ZeitgeistEventFormatter(interface.EventFormatter):
   """The event formatter for Zeitgeist event."""
 
   DATA_TYPE = 'zeitgeist:activity'

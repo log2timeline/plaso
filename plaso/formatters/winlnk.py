@@ -18,10 +18,10 @@
 """Formatter for Windows Shortcut (LNK) files."""
 
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class WinLnkLinkFormatter(eventdata.ConditionalEventFormatter):
+class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows Shortcut (LNK) link event."""
 
   DATA_TYPE = 'windows:lnk:link'

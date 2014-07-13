@@ -17,10 +17,10 @@
 # limitations under the License.
 """Formatter for the iPod device events."""
 
-from plaso.lib import eventdata
+from plaso.formatters import interface
 
 
-class IPodDeviceFormatter(eventdata.ConditionalEventFormatter):
+class IPodDeviceFormatter(interface.ConditionalEventFormatter):
   """Formatter for iPod device events."""
 
   DATA_TYPE = 'ipod:device:entry'

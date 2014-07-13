@@ -21,10 +21,11 @@ import os
 import StringIO
 import unittest
 
+from plaso.formatters import interface as formatters_interface
+from plaso.formatters import manager as formatters_manager
 from plaso.frontend import psort
 from plaso.frontend import test_lib
 from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.lib import output
 from plaso.lib import pfilter
 from plaso.lib import storage
@@ -55,7 +56,7 @@ class TestEvent2(event.EventObject):
     self.var = {'Issue': False, 'Closed': True}
 
 
-class TestEvent2Formatter(eventdata.EventFormatter):
+class TestEvent2Formatter(formatters_interface.EventFormatter):
   DATA_TYPE = 'test:psort:2'
 
   FORMAT_STRING = 'My text goes along: {some} lines'
@@ -76,10 +77,16 @@ class TestFormatter(output.LogOutputFormatter):
         'short,desc,version,filename,inode,notes,format,extra\n'))
 
   def EventBody(self, event_object):
-    event_formatter = eventdata.EventFormatterManager.GetFormatter(event_object)
+    """Writes the event body.
+
+    Args:
+      event_object: The event object (instance of EventObject).
+    """
+    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
+        event_object)
     msg, _ = event_formatter.GetMessages(event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
-    self.filehandle.write(u'{}/{} {}\n'.format(
+    self.filehandle.write(u'{0:s}/{1:s} {2:s}\n'.format(
         source_short, source_long, msg))
 
 
