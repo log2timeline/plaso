@@ -23,12 +23,12 @@ The format specifications can be read here:
 
 import re
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 
 
-class MactimeEvent(event.PosixTimeEvent):
+class MactimeEvent(time_events.PosixTimeEvent):
   """Convenience class for a mactime-based event."""
 
   DATA_TYPE = 'fs:mactime:line'

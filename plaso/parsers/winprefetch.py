@@ -22,14 +22,14 @@ import os
 
 import construct
 
+from plaso.events import time_events
 from plaso.lib import binary
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 
 
-class WinPrefetchExecutionEvent(event.FiletimeEvent):
+class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
   """Class that defines a Windows Prefetch execution event."""
 
   DATA_TYPE = 'windows:prefetch:execution'

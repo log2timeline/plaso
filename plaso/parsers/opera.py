@@ -24,6 +24,7 @@ import urllib2
 from dfvfs.helpers import text_file
 from xml.etree import ElementTree
 
+from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -61,7 +62,7 @@ class OperaTypedHistoryEvent(event.EventObject):
     self.timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
 
 
-class OperaGlobalHistoryEvent(event.PosixTimeEvent):
+class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
   """An EventObject for an Opera global history entry."""
 
   DATA_TYPE = 'opera:history:entry'

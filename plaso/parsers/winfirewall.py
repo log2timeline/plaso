@@ -19,12 +19,13 @@
 
 import logging
 
-from plaso.lib import event
+import pyparsing
+
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
 
-import pyparsing
 import pytz
 
 
@@ -140,7 +141,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     if not timestamp:
       return
 
-    event_object = event.TimestampEvent(
+    event_object = time_events.TimestampEvent(
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME, self.DATA_TYPE)
 
     for key, value in log_dict.items():

@@ -24,16 +24,17 @@ import os
 import construct
 import pyparsing
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
+
 
 __author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
 
 
-class FirefoxCacheEvent(event.PosixTimeEvent):
-  """Convenience class for an firefox cache record event."""
+class FirefoxCacheEvent(time_events.PosixTimeEvent):
+  """Convenience class for a Firefox cache record event."""
 
   DATA_TYPE = 'firefox:cache:record'
 
@@ -54,6 +55,7 @@ class FirefoxCacheEvent(event.PosixTimeEvent):
     self.request_method = request_method
     self.url = url
     self.response_code = response_code
+
 
 class FirefoxCacheParser(parser.BaseParser):
   """Extract cached records from Firefox."""
@@ -83,7 +85,7 @@ class FirefoxCacheParser(parser.BaseParser):
       construct.UBInt32('info_size'))
 
   ALTERNATIVE_CACHE_NAME = (pyparsing.Word(pyparsing.hexnums, exact=5) +
-      pyparsing.Word("m", exact=1) + pyparsing.Word(pyparsing.nums, exact=2))
+      pyparsing.Word('m', exact=1) + pyparsing.Word(pyparsing.nums, exact=2))
 
   FIREFOX_CACHE_CONFIG = collections.namedtuple(
       u'firefox_cache_config',
@@ -99,7 +101,7 @@ class FirefoxCacheParser(parser.BaseParser):
     if file_entry.name[0:9] != '_CACHE_00':
       try:
         # Match alternative filename. Five hex characters + 'm' + two digit
-        # number, e.g. "01ABCm02". 'm' is for metadata. Cache files with 'd'
+        # number, e.g. '01ABCm02'. 'm' is for metadata. Cache files with 'd'
         # instead contain data only.
         self.ALTERNATIVE_CACHE_NAME.parseString(file_entry.name)
       except pyparsing.ParseException:
@@ -178,17 +180,17 @@ class FirefoxCacheParser(parser.BaseParser):
 
     _, _, response_head = headers.partition('response-head\x00')
 
-    response_code, _, _ = response_head.partition("\r\n")
+    response_code, _, _ = response_head.partition('\r\n')
 
     if request_method not in self.REQUEST_METHODS:
-      logging.debug(
-          u'{0:s}:{1:d}: Unknown HTTP method "{2:s}". Response "{3:s}"'.format(
-              filename, offset, request_method, headers))
+      logging.debug((
+          u'{0:s}:{1:d}: Unknown HTTP method \'{2:s}\'. Response '
+          u'\'{3:s}\'').format(filename, offset, request_method, headers))
 
     if response_code[0:4] != 'HTTP':
       logging.debug(
           u'{0:s}:{1:d}: Could not determine HTTP response code. '
-          u'Response headers: "{2:s}".'.format(filename, offset, headers))
+          u'Response headers: \'{2:s}\'.'.format(filename, offset, headers))
 
     # A request can span multiple blocks, so we use modulo.
     _, remainder = divmod(file_object.get_offset() - offset, block_size)

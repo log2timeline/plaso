@@ -17,13 +17,12 @@
 # limitations under the License.
 """The default plugin for parsing OLE Compound Files (OLECF)."""
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
-
 from plaso.parsers.olecf_plugins import interface
 
 
-class OleCfItemEvent(event.FiletimeEvent):
+class OleCfItemEvent(time_events.FiletimeEvent):
   """Convenience class for an OLECF item event."""
 
   DATA_TYPE = 'olecf:item'

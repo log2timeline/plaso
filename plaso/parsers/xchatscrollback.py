@@ -50,9 +50,10 @@
 """
 
 import logging
+
 import pyparsing
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import text_parser
 from plaso.lib import timelib
@@ -61,7 +62,7 @@ from plaso.lib import timelib
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class XChatScrollbackEvent(event.PosixTimeEvent):
+class XChatScrollbackEvent(time_events.PosixTimeEvent):
   """Convenience class for a XChat Scrollback line event."""
   DATA_TYPE = 'xchat:scrollback:line'
 
