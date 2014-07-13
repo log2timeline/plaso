@@ -167,7 +167,7 @@ class WinRegistryParser(parser.BaseParser):
         if parsed:
           break
         for plugin in plugins[weight]:
-          call_back = plugin.Process(key)
+          call_back = plugin.Process(key, codepage=self._codepage)
           if call_back:
             parsed = True
             for event_object in self.GetEvents(call_back, key):

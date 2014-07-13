@@ -79,6 +79,7 @@ class WinRegistry(object):
 
     Args:
       file_entry: The file entry object.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
 
     Returns:
       The a Windows Registry file (instance of WinRegFile) if successful
