@@ -25,7 +25,7 @@ from plaso.lib import event
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import environ_expand
-from plaso.winnt import knownfolderid
+from plaso.winnt import known_folder_ids
 
 
 class UserAssistPlugin(interface.KeyPlugin):
@@ -145,8 +145,10 @@ class UserAssistPlugin(interface.KeyPlugin):
           path_segments = value_name.split(u'\\')
 
           for segment_index in range(0, len(path_segments)):
-            path_segments[segment_index] = knownfolderid.IDENTIFIERS.get(
-                path_segments[segment_index], path_segments[segment_index])
+            # Remove the { } from the path segment to get the GUID.
+            guid = path_segments[segment_index][1:-1]
+            path_segments[segment_index] = known_folder_ids.PATHS.get(
+                guid, path_segments[segment_index])
 
           value_name = u'\\'.join(path_segments)
           # Check if we might need to substitute values.
