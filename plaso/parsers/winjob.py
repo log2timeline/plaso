@@ -19,9 +19,9 @@
 
 import construct
 
+from plaso.events import time_events
 from plaso.lib import binary
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 from plaso.lib import timelib
@@ -30,7 +30,7 @@ from plaso.lib import timelib
 __author__ = 'Brian Baskin (brian@thebaskins.com)'
 
 
-class WinJobEvent(event.TimestampEvent):
+class WinJobEvent(time_events.TimestampEvent):
   """Convenience class for a Windows Scheduled Task event."""
 
   DATA_TYPE = 'windows:tasks:job'

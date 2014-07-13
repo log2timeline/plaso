@@ -19,13 +19,13 @@
 
 import urllib
 
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.cookie_plugins import interface
 
 
-class GoogleAnalyticsEvent(event.PosixTimeEvent):
+class GoogleAnalyticsEvent(time_events.PosixTimeEvent):
   """A simple placeholder for a Google Analytics event."""
 
   DATA_TYPE = u'cookie:google:analytics'

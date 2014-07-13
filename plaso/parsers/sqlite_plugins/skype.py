@@ -19,13 +19,14 @@
 
 import logging
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.parsers.sqlite_plugins import interface
+
 
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
 
-class SkypeChatEvent(event.PosixTimeEvent):
+class SkypeChatEvent(time_events.PosixTimeEvent):
   """Convenience class for a Skype event."""
 
   DATA_TYPE = 'skype:event:chat'
@@ -49,7 +50,7 @@ class SkypeChatEvent(event.PosixTimeEvent):
     self.to_account = to_account
 
 
-class SkypeAccountEvent(event.PosixTimeEvent):
+class SkypeAccountEvent(time_events.PosixTimeEvent):
   """Convenience class for account information."""
 
   DATA_TYPE = 'skype:event:account'
@@ -78,7 +79,7 @@ class SkypeAccountEvent(event.PosixTimeEvent):
     self.data_type = self.DATA_TYPE
 
 
-class SkypeSMSEvent(event.PosixTimeEvent):
+class SkypeSMSEvent(time_events.PosixTimeEvent):
   """Convenience EventObject for SMS."""
 
   DATA_TYPE = 'skype:event:sms'
@@ -100,7 +101,7 @@ class SkypeSMSEvent(event.PosixTimeEvent):
     self.text = row['msg_sms']
 
 
-class SkypeCallEvent(event.PosixTimeEvent):
+class SkypeCallEvent(time_events.PosixTimeEvent):
   """Convenience EventObject for the calls."""
 
   DATA_TYPE = 'skype:event:call'
@@ -129,7 +130,7 @@ class SkypeCallEvent(event.PosixTimeEvent):
     self.video_conference = video_conference
 
 
-class SkypeTransferFileEvent(event.PosixTimeEvent):
+class SkypeTransferFileEvent(time_events.PosixTimeEvent):
   """Evaluate the action of send a file."""
 
   DATA_TYPE = 'skype:event:transferfile'

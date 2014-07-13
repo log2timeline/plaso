@@ -20,15 +20,17 @@ The Google Drive snapshots are stored in SQLite database files named
 snapshot.db.
 """
 
+from plaso.events import time_events
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import interface
 
+
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class GoogleDriveSnapshotCloudEntryEvent(event.PosixTimeEvent):
+class GoogleDriveSnapshotCloudEntryEvent(time_events.PosixTimeEvent):
   """Convenience class for a Google Drive snapshot cloud entry."""
 
   DATA_TYPE = 'gdrive:snapshot:cloud_entry'

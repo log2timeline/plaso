@@ -19,15 +19,15 @@
 
 import logging
 
+import pyevtx
+
+from plaso.events import time_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import parser
 
-import pyevtx
 
-
-class WinEvtxRecordEvent(event.FiletimeEvent):
+class WinEvtxRecordEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows XML EventLog (EVTX) record event."""
   DATA_TYPE = 'windows:evtx:record'
 

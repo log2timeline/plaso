@@ -21,12 +21,13 @@ import logging
 
 import construct
 
+from plaso.events import time_events
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import interface
 
 
-class TaskCacheEvent(event.FiletimeEvent):
+class TaskCacheEvent(time_events.FiletimeEvent):
   """Convenience class for a Task Cache event."""
 
   DATA_TYPE = 'task_scheduler:task_cache:entry'

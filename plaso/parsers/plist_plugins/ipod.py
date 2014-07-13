@@ -17,12 +17,12 @@
 # limitations under the License.
 """This file contains a plist plugin for the iPod/iPhone storage plist."""
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.parsers.plist_plugins import interface
 
 
-class IPodPlistEvent(event.PythonDatetimeEvent):
+class IPodPlistEvent(time_events.PythonDatetimeEvent):
   """An event object for an entry in the iPod plist file."""
 
   DATA_TYPE = 'ipod:device:entry'
