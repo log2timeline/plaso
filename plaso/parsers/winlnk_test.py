@@ -54,7 +54,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(event_objects), 3)
 
-    # The Last Accessed timestamp.
+    # A shortcut event object.
     event_object = event_objects[0]
 
     expected_string = u'@%windir%\\system32\\migwiz\\wet.dll,-590'
@@ -70,12 +70,14 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.icon_location, expected_string)
     self.assertEquals(event_object.env_var_location, expected_string)
 
+    # The last accessed timestamp.
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-13 23:29:02.849131')
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
+    # The creation timestamp.
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-13 23:29:02.849131')
     event_object = event_objects[1]
@@ -83,6 +85,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
+    # The last modification timestamp.
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-14 01:39:18.220000')
     event_object = event_objects[2]
@@ -101,6 +104,62 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     expected_msg_short = (
         u'[@%windir%\\system32\\migwiz\\wet.dll,-590]')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
+  def testParseLinkTargetIdentifier(self):
+    """Tests the Parse function on an LNK with a link target identifier."""
+    test_file = self._GetTestFilePath(['NeroInfoTool.lnk'])
+    event_generator = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjects(event_generator)
+
+    self.assertEqual(len(event_objects), 18)
+
+    # A shortcut event object.
+    event_object = event_objects[0]
+
+    expected_msg = (
+        u'[Nero InfoTool provides you with information about the most '
+        u'important features of installed drives, inserted discs, installed '
+        u'software and much more. With Nero InfoTool you can find out all '
+        u'about your drive and your system configuration.] '
+        u'File size: 4635160 '
+        u'File attribute flags: 0x00000020 '
+        u'Drive type: 3 '
+        u'Drive serial number: 0x70ecfa33 '
+        u'Volume label: OS '
+        u'Local path: C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool\\'
+        u'InfoTool.exe '
+        u'cmd arguments: -ScParameter=30002   '
+        u'Relative path: ..\\..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\'
+        u'Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe '
+        u'Working dir: C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool '
+        u'Icon location: %ProgramFiles%\\Nero\\Nero 9\\Nero InfoTool\\'
+        u'InfoTool.exe')
+
+    expected_msg_short = (
+        u'[Nero InfoTool provides you with information about the most '
+        u'important feature...')
+
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
+    # A shell item event object.
+    event_object = event_objects[15]
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2009-06-05 20:13:20')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+
+    expected_msg = (
+        u'Name: InfoTool.exe '
+        u'Long name: InfoTool.exe '
+        u'NTFS file reference: 81349-1 '
+        u'Origin: NeroInfoTool.lnk')
+
+    expected_msg_short = (
+        u'Name: InfoTool.exe '
+        u'NTFS file reference: 81349-1 '
+        u'Origin: NeroInfoTool.lnk')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
