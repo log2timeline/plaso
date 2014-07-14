@@ -24,9 +24,9 @@ from plaso.lib import eventdata
 from plaso.winnt import shell_folder_ids
 
 
-if pyfwsi.get_version() < '20140713':
+if pyfwsi.get_version() < '20140714':
   raise ImportWarning(
-      u'Shell item support fuctions require at least pyfwsi 20140713.')
+      u'Shell item support fuctions require at least pyfwsi 20140714.')
 
 
 class ShellItemsParser(object):
@@ -71,28 +71,36 @@ class ShellItemsParser(object):
     elif isinstance(shell_item, pyfwsi.file_entry):
       long_name = u''
       localized_name = u''
+      file_reference = u''
       for exension_block in shell_item.extension_blocks:
         if isinstance(exension_block, pyfwsi.file_entry_extension):
           long_name = exension_block.long_name
           localized_name = exension_block.localized_name
+          file_reference = exension_block.file_reference
+          if file_reference:
+            file_reference = u'{0:d}-{1:d}'.format(
+                file_reference & 0xffffffffffff, file_reference >> 48)
 
           fat_date_time = exension_block.get_creation_time_as_integer()
           if fat_date_time:
             yield shell_item_events.ShellItemFileEntryEvent(
                fat_date_time, eventdata.EventTimestamp.CREATION_TIME,
-               shell_item.name, long_name, localized_name, self._origin)
+               shell_item.name, long_name, localized_name, file_reference,
+               self._origin)
 
           fat_date_time = exension_block.get_access_time_as_integer()
           if fat_date_time:
             yield shell_item_events.ShellItemFileEntryEvent(
                fat_date_time, eventdata.EventTimestamp.ACCESS_TIME,
-               shell_item.name, long_name, localized_name, self._origin)
+               shell_item.name, long_name, localized_name, file_reference,
+               self._origin)
 
       fat_date_time = shell_item.get_modification_time_as_integer()
       if fat_date_time:
         yield shell_item_events.ShellItemFileEntryEvent(
            fat_date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-           shell_item.name, long_name, localized_name, self._origin)
+           shell_item.name, long_name, localized_name, file_reference,
+           self._origin)
 
       if long_name:
         path_segment = long_name

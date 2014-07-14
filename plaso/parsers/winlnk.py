@@ -23,6 +23,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import parser
+from plaso.parsers.shared import shell_items
 
 
 if pylnk.get_version() < '20130304':
@@ -97,7 +98,6 @@ class WinLnkParser(parser.BaseParser):
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
           self.parser_name, file_entry.name, exception))
 
-
     yield WinLnkLinkEvent(
         lnk_file.get_file_access_time_as_integer(),
         eventdata.EventTimestamp.ACCESS_TIME, lnk_file)
@@ -110,7 +110,12 @@ class WinLnkParser(parser.BaseParser):
         lnk_file.get_file_modification_time_as_integer(),
         eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file)
 
+    if lnk_file.link_target_identifier_data:
+      shell_items_parser = shell_items.ShellItemsParser(file_entry.name)
+      for event_object in shell_items_parser.Parse(
+          lnk_file.link_target_identifier_data, codepage=self._codepage):
+        yield event_object
+
     # TODO: add support for the distributed link tracker.
-    # TODO: add support for the shell item.
 
     file_object.close()
