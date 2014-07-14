@@ -29,10 +29,12 @@ class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
       u'Name: {name}',
       u'Long name: {long_name}',
       u'Localized name: {localized_name}',
+      u'NTFS file reference: {file_reference}',
       u'Origin: {origin}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'Name: {name}',
+      u'NTFS file reference: {file_reference}',
       u'Origin: {origin}']
 
   SOURCE_LONG = 'File entry shell item'

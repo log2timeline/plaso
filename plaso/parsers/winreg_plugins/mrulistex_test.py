@@ -131,12 +131,13 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     expected_msg = (
         u'Name: ALLOYR~1 '
         u'Long name: Alloy Research '
+        u'NTFS file reference: 44518-33 '
         u'Origin: {0:s}\\*').format(key_path)
 
     expected_msg_short = (
         u'Name: ALLOYR~1 '
-        u'Origin: \\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
-        u'Co...')
+        u'NTFS file reference: 44518-33 '
+        u'Origin: \\Software\\Microsoft\\Wind...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
