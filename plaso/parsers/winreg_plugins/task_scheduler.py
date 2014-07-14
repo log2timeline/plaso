@@ -97,7 +97,7 @@ class TaskCachePlugin(interface.KeyPlugin):
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
-      An event object (instance of EventObject) that contains a Task Cache 
+      An event object (instance of EventObject) that contains a Task Cache
       entry.
     """
     tasks_key = key.GetSubkey(u'Tasks')
@@ -120,6 +120,9 @@ class TaskCachePlugin(interface.KeyPlugin):
 
     for sub_key in tasks_key.GetSubkeys():
       dynamic_info_value = sub_key.GetValue(u'DynamicInfo')
+      if not dynamic_info_value:
+        continue
+
       if len(dynamic_info_value.raw_data) != self._DYNAMIC_INFO_STRUCT_SIZE:
         logging.warning(
             u'[{0:s}] unsupported DynamicInfo value data size.'.format(
