@@ -37,13 +37,13 @@ class BagMRUPlugin(interface.ValuePlugin):
   REG_KEYS = frozenset([
       u'\\Software\\Microsoft\\Windows\\Shell\\BagMRU',
       u'\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU',
-      (u'\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\'
+      (u'\\Local Settings\\Software\\Microsoft\\Windows\\'
        u'Shell\\BagMRU'),
-      (u'\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\'
+      (u'\\Local Settings\\Software\\Microsoft\\Windows\\'
        u'ShellNoRoam\\BagMRU'),
-      (u'\\Software\\Classes\\Wow6432Node\\Local Settings\\Software\\'
+      (u'\\Wow6432Node\\Local Settings\\Software\\'
        u'Microsoft\\Windows\\Shell\\BagMRU'),
-      (u'\\Software\\Classes\\Wow6432Node\\Local Settings\\Software\\'
+      (u'\\Wow6432Node\\Local Settings\\Software\\'
        u'Microsoft\\Windows\\ShellNoRoam\\BagMRU')])
 
   URLS = [u'https://code.google.com/p/winreg-kb/wiki/MRUKeys']
