@@ -22,6 +22,34 @@ import logging
 import os
 
 
+def ByteStreamCopyToUtf16Stream(byte_stream, byte_stream_size=None):
+  """Reads an UTF-16 formatted stream from a byte stream.
+
+  The UTF-16 formatted stream should be terminated by an end-of-string
+  character (\x00\x00). Otherwise the function reads upto the byte stream size.
+
+  Args:
+    byte_stream: The byte stream that contains the UTF-16 formatted stream.
+    byte_stream_size: The byte stream size or None if the entire byte stream
+                      should be read.
+
+  Returns:
+    String containing the UTF-16 formatted stream.
+  """
+  byte_stream_index = 0
+  if not byte_stream_size:
+    byte_stream_size = len(byte_stream)
+
+  while byte_stream_index + 1 < byte_stream_size:
+    if (byte_stream[byte_stream_index] == '\x00' and
+        byte_stream[byte_stream_index + 1] == '\x00'):
+      break
+
+    byte_stream_index += 2
+
+  return byte_stream[0:byte_stream_index]
+
+
 def ReadUtf16Stream(file_object, offset=None, byte_size=0):
   """Reads an UTF-16 formatted stream from a file-like object.
 
@@ -72,24 +100,16 @@ def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
   Returns:
     An Unicode string.
   """
-  byte_stream_index = 0
-  if not byte_stream_size:
-    byte_stream_size = len(byte_stream)
-
-  while byte_stream_index + 1 < byte_stream_size:
-    if (byte_stream[byte_stream_index] == '\x00' and
-        byte_stream[byte_stream_index + 1] == '\x00'):
-      break
-
-    byte_stream_index += 2
+  utf16_stream = ByteStreamCopyToUtf16Stream(
+      byte_stream, byte_stream_size=byte_stream_size)
 
   try:
-    return byte_stream[0:byte_stream_index].decode('utf-16-le')
+    return utf16_stream.decode('utf-16-le')
   except (UnicodeDecodeError, UnicodeEncodeError) as exception:
     logging.error(u'Unable to decode string: {0:s} with error: {1:s}'.format(
-        HexifyBuffer(byte_stream[0:byte_stream_index]), exception))
+        HexifyBuffer(utf16_stream), exception))
 
-  return byte_stream[0:byte_stream_index].decode('utf-16-le', errors='ignore')
+  return utf16_stream.decode('utf-16-le', errors='ignore')
 
 
 def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
