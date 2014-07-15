@@ -150,7 +150,16 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
       logging.debug((
           u'[{0:s}] Non-string MRUListEx entry value: {1:d} parsed as string '
           u'in key: {2:s}.').format(self.NAME, entry_number, key.path))
-      value_string = binary.Ut16StreamCopyToString(value.data)
+      utf16_stream = binary.ByteStreamCopyToUtf16Stream(value.data)
+
+      try:
+        value_string = utf16_stream.decode('utf-16-le')
+      except UnicodeDecodeError as exception:
+        value_string = binary.HexifyBuffer(utf16_stream)
+        logging.warning((
+            u'[{0:s}] Unable to decode UTF-16 stream: {1:s} in MRUListEx entry '
+            u'value: {2:d} in key: {3:s} with error: {4:s}').format(
+                self.NAME, value_string, entry_number, key.path, exception))
 
     value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
         entry_index + 1, entry_number)
