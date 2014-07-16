@@ -216,8 +216,11 @@ class MacPlistPreprocess(PreprocessPlugin):
     match = None
     key_name = ''
     for plist_key in self.PLIST_KEYS:
-      match = plist_interface.GetKeys(
-          top_level_object, frozenset([plist_key]))
+      try:
+        match = plist_interface.GetKeys(
+            top_level_object, frozenset([plist_key]))
+      except KeyError:
+        continue
       if match:
         key_name = plist_key
         break
