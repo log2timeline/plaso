@@ -132,18 +132,32 @@ class Dynamic(output.FileLogOutputFormatter):
 
   # TODO: move this into a base output class.
   def ParseUsername(self, event_object):
-    """Return the username."""
-    username = getattr(event_object, 'username', '-')
+    """Determines an username based on an event and extracted information.
+
+    Uses the extracted information from the pre processing information and the
+    event object itself to determine an username.
+
+    Args:
+      event_object: The event object (instance of EventObject).
+
+    Returns:
+      An Unicode string containing the username, or - if none found.
+    """
+    username = getattr(event_object, u'username', u'-')
     if self.store:
       pre_obj = self._preprocesses.get(event_object.store_number)
-      check_user = pre_obj.GetUsernameById(username)
+      if pre_obj:
+        check_user = pre_obj.GetUsernameById(username)
 
-      if check_user != '-':
-        username = check_user
+        if check_user != u'-':
+          username = check_user
 
-    if username == '-' and hasattr(event_object, 'user_sid'):
+    if username == '-' and hasattr(event_object, u'user_sid'):
+      if not pre_obj:
+        return getattr(event_object, u'user_sid', u'-')
+
       return pre_obj.GetUsernameById(
-          getattr(event_object, 'user_sid', '-'))
+          getattr(event_object, u'user_sid', u'-'))
 
     return username
 

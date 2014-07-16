@@ -201,30 +201,6 @@ class FileLogOutputFormatter(LogOutputFormatter):
     self.filehandle.Close()
 
 
-class ProtoLogOutputFormatter(LogOutputFormatter):
-  """A simple formatter that processes EventObject protobufs."""
-  __abstract = True
-
-  def FetchEntry(self, store_number=-1, store_index=-1):
-    """Fetches an entry from the storage."""
-    if store_index > 0:
-      return self.store.GetProtoEntry(store_number, store_index)
-    else:
-      return self.store.GetSortedEntry(True)
-
-
-class FileProtoLogOutputFormatter(FileLogOutputFormatter):
-  """A sipmle file based output formatter that processes raw protobufs."""
-  __abstract = True
-
-  def FetchEntry(self, store_number=-1, store_index=-1):
-    """Fetches an entry from the storage."""
-    if store_index > 0:
-      return self.store.GetProtoEntry(store_number, store_index)
-    else:
-      return self.store.GetSortedEntry(True)
-
-
 class EventBuffer(object):
   """Buffer class for EventObject output processing."""
 

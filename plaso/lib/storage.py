@@ -1007,16 +1007,11 @@ class StorageFile(object):
 
     self._bound_first, self._bound_last = pfilter.TimeRangeCache.GetTimeRange()
 
-  def GetSortedEntry(self, proto_out=False):
+  def GetSortedEntry(self):
     """Return a sorted entry from the storage file.
 
-    Args:
-      proto_out: A boolean variable indicating whether or not a protobuf
-      or a python object should be returned.
-
     Returns:
-      An EventObject python object, unless proto_out is set then an EventObject
-      protobuf is returned back.
+      An event object (instance of EventObject).
     """
     if not hasattr(self, '_bound_first'):
       self._GetTimeBounds()
@@ -1025,22 +1020,13 @@ class StorageFile(object):
       self._merge_buffer = []
       number_range = getattr(self, 'store_range', list(self.GetProtoNumbers()))
       for store_number in number_range:
-        if proto_out:
-          event_object = self.GetProtoEntry(store_number)
-          if not event_object:
-            return
-          while event_object.timestamp < self._bound_first:
-            event_object = self.GetProtoEntry(store_number)
-            if not event_object:
-              return
-        else:
+        event_object = self.GetEventObject(store_number)
+        if not event_object:
+          return
+        while event_object.timestamp < self._bound_first:
           event_object = self.GetEventObject(store_number)
           if not event_object:
             return
-          while event_object.timestamp < self._bound_first:
-            event_object = self.GetEventObject(store_number)
-            if not event_object:
-              return
 
         heapq.heappush(
             self._merge_buffer,
@@ -1057,10 +1043,7 @@ class StorageFile(object):
     if event_read.timestamp > self._bound_last:
       return
 
-    if proto_out:
-      new_event_object = self.GetProtoEntry(store_number)
-    else:
-      new_event_object = self.GetEventObject(store_number)
+    new_event_object = self.GetEventObject(store_number)
 
     if new_event_object:
       heapq.heappush(
@@ -1213,6 +1196,11 @@ class StorageFile(object):
 
     event_object_data = self._event_object_serializer.WriteSerialized(
         event_object)
+
+    # TODO: Re-think this approach with the re-design of the storage.
+    # Check if the event object failed to serialize (none is returned).
+    if event_object_data is None:
+      return
 
     heapq.heappush(
         self._buffer, (event_object.timestamp, event_object_data))

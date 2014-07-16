@@ -273,7 +273,7 @@ def GetKeys(top_level, keys, depth=1):
 
   if depth == 1:
     for key in keys:
-      match[key] = top_level[key]
+      match[key] = top_level.get(key, None)
   else:
     for _, parsed_key, parsed_value in RecurseKey(top_level, depth=depth):
       if parsed_key in keys:
