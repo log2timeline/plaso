@@ -509,7 +509,12 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
       A protobuf string containing the serialized form.
     """
     proto = cls.WriteSerializedObject(event_object)
-    return proto.SerializeToString()
+    try:
+      return proto.SerializeToString()
+    except message.EncodeError:
+      # TODO: Add better error handling so this can be traced to a parser or
+      # a plugin and to which file that caused it.
+      logging.error(u'Unable to serialize event object.')
 
 
 class ProtobufEventTagSerializer(interface.EventTagSerializer):

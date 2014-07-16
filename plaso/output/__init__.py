@@ -28,7 +28,6 @@ try:
 except ImportError:
   pass
 from plaso.output import pstorage
-from plaso.output import raw
 from plaso.output import rawpy
 from plaso.output import sqlite_4n6
 from plaso.output import tln

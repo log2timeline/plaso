@@ -237,14 +237,13 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     searchers.append((u'', searcher))
 
-    vss_stores = frontend_utils.ParseVssStores(
-        getattr(options, 'vss_stores', None))
-
+    # TODO: Remove this option parsing and rely on self._vss_stores instead.
+    vss_stores = getattr(options, 'vss_stores', [])
     if vss_stores is None:
-      if self._vss_stores:
-        vss_stores = self._vss_stores
-      else:
-        vss_stores = []
+      vss_stores = []
+
+    if not vss_stores and self._vss_stores:
+      vss_stores = self._vss_stores
 
     for store_index in vss_stores:
       vss_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -557,6 +556,18 @@ class MyMagics(magic.Magics):
   EXPANSION_RE = re.compile(r'{0:s}{{1}}[^{1:s}]+?{1:s}'.format(
       EXPANSION_KEY_OPEN, EXPANSION_KEY_CLOSE))
 
+  output_writer = sys.stdout
+
+  @magic.line_magic
+  def redirect_output(self, output_object):
+    """Change the output writer to redirect plugin output to a file."""
+
+    if isinstance(output_object, basestring):
+      output_object = open(output_object, 'wb')
+
+    if hasattr(output_object, 'write'):
+      self.output_writer = output_object
+
   # Lowercase name since this is used inside the python console shell.
   @magic.line_magic
   def plugin(self, line):
@@ -621,7 +632,8 @@ class MyMagics(magic.Magics):
       # Parse the key.
       print_strings = ParseKey(
           RegCache.cur_key, verbose=False, use_plugins=[plugin_name])
-      print u'\n'.join(print_strings)
+      self.output_writer.write(u'\n'.join(print_strings))
+    self.output_writer.flush()
 
   # Lowercase name since this is used inside the python console shell.
   @magic.line_magic
@@ -638,7 +650,7 @@ class MyMagics(magic.Magics):
       return
 
     print_strings = ParseKey(RegCache.cur_key, verbose=verbose)
-    print u'\n'.join(print_strings)
+    self.output_writer.write(u'\n'.join(print_strings))
 
     # Print out a hex dump of all binary values.
     if verbose:
@@ -649,13 +661,19 @@ class MyMagics(magic.Magics):
             header_shown = True
             print frontend_utils.FormatHeader('Hex Dump')
           # Print '-' 80 times.
-          print u'-'*80
-          print frontend_utils.FormatOutputString('Attribute', value.name)
-          print u'-'*80
-          print frontend_utils.OutputWriter.GetHexDump(value.data)
-          print u''
-          print u'+-'*40
-          print u''
+          self.output_writer.write(u'-'*80)
+          self.output_writer.write(u'\n')
+          self.output_writer.write(
+              frontend_utils.FormatOutputString('Attribute', value.name))
+          self.output_writer.write(u'-'*80)
+          self.output_writer.write(u'\n')
+          self.output_writer.write(
+              frontend_utils.OutputWriter.GetHexDump(value.data))
+          self.output_writer.write(u'\n')
+          self.output_writer.write(u'+-'*40)
+          self.output_writer.write(u'\n')
+
+    self.output_writer.flush()
 
   # Lowercase name since this is used inside the python console shell.
   @magic.line_magic
@@ -820,6 +838,10 @@ def IsLoaded():
   return False
 
 
+# TODO: Refactor this function or add another helper that makes opening up other
+# hives simpler (and to find other hives within the image, eg I open SYSTEM and
+# then I realize I need SOFTWARE, etc). Also to allow opening NTUSER based on
+# usernames.
 def OpenHive(filename_or_path_spec, hive_collector, codepage='cp1252'):
   """Open a Registry hive based on a collector or a filename."""
   if isinstance(filename_or_path_spec, basestring):
