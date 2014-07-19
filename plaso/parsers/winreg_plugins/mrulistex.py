@@ -185,6 +185,16 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
     for event_object in self._ParseMRUListExKey(key, codepage=codepage):
       yield event_object
 
+  def Process(self, key=None, **kwargs):		
+    """Determine if we can process this Registry key or not."""
+    # Prevent this pluging triggering on sub paths of non-string MRUListEx
+    # values.
+    if (u'BagMRU' in key.path or u'Explorer\\StreamMRU' in key.path or
+        u'\\Explorer\\ComDlg32\\OpenSavePidlMRU' in key.path):
+      return
+
+    return super(MRUListExStringPlugin, self).Process(key=key, **kwargs)
+
 
 class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
   """Windows Registry plugin to parse a shell item list MRUListEx."""
