@@ -1391,7 +1391,11 @@ class ExtractionFrontend(Frontend):
 
     # No need to multi process when we're only processing a single file.
     if self._source_type == self._SOURCE_TYPE_FILE:
-      self._single_process_mode = True
+      # If we are only processing a single file we don't need more than a
+      # single worker.
+      # TODO: Refactor this use of using the options object.
+      options.workers = 1
+      self._single_process_mode = False
 
     if self._single_process_mode:
       self._ProcessSourceSingleProcessMode(options)

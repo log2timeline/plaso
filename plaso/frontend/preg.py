@@ -772,7 +772,6 @@ class MyMagics(magic.Magics):
     else:
       verbose = False
 
-
     sub = []
     for key in RegCache.cur_key.GetSubkeys():
       # TODO: move this construction into a separate function in OutputWriter.
@@ -838,6 +837,53 @@ def IsLoaded():
   return False
 
 
+def GetValue(value_name):
+  """Return a value object from the currently loaded Registry key.
+
+  Args:
+    value_name: A string containing the name of the value to be retrieved.
+
+  Returns:
+    The registry value (instance of WinPyregfValue) if it exists, None if
+    either there is no currently loaded Registry key or if the value does
+    not exist.
+  """
+  current_key = RegCache.cur_key
+
+  if not current_key:
+    return
+
+  return current_key.GetValue(value_name)
+
+
+def GetValueData(value_name):
+  """Return the value data from a value in the currently loaded Registry key.
+
+  Args:
+    value_name: A string containing the name of the value to be retrieved.
+
+  Returns:
+    The data from a Registry value if it exists, None if either there is no
+    currently loaded Registry key or if the value does not exist.
+  """
+  value = GetValue(value_name)
+
+  if not value:
+    return
+
+  return value.data
+
+
+def GetCurrentKey():
+  """Return the currently loaded Registry key (instance of WinPyregfKey).
+
+  Returns:
+    The currently loaded Registry key (instance of WinPyregfKey) or None
+    if there is no loaded key.
+  """
+  return RegCache.cur_key
+
+
 # TODO: Refactor this function or add another helper that makes opening up other
 # hives simpler (and to find other hives within the image, eg I open SYSTEM and
 # then I realize I need SOFTWARE, etc). Also to allow opening NTUSER based on
@@ -889,7 +935,13 @@ def GetFormatString(event_object):
   # Go through the attributes and see if there is an attribute
   # value that is longer than the default font align length, and adjust
   # it accordingly if found.
-  for attribute in event_object.regvalue:
+  if hasattr(event_object, 'regvalue'):
+    attributes = event_object.regvalue.keys()
+  else:
+    attributes = event_object.GetAttributes().difference(
+        event_object.COMPARE_EXCLUDE)
+
+  for attribute in attributes:
     attribute_len = len(attribute)
     if attribute_len > align_length and attribute_len < 30:
       align_length = len(attribute)
@@ -946,7 +998,19 @@ def GetEventBody(event_object, show_hex=False):
   format_string = GetFormatString(event_object)
 
   ret_strings = []
-  for attribute, value in event_object.regvalue.items():
+  if hasattr(event_object, 'regvalue'):
+    attributes = event_object.regvalue
+  else:
+    # TODO: Add a function for this to avoid repeating code.
+    keys = event_object.GetAttributes().difference(
+        event_object.COMPARE_EXCLUDE)
+    keys.discard('offset')
+    keys.discard('timestamp_desc')
+    attributes = {}
+    for key in keys:
+      attributes[key] = getattr(event_object, key)
+
+  for attribute, value in attributes.items():
     ret_strings.append(format_string.format(attribute, value))
 
   if show_hex:
@@ -1187,31 +1251,40 @@ def RunModeConsole(front_end, options):
   function_name_length = 23
   banners = []
   banners.append(frontend_utils.FormatHeader(
-      'Welcome to PREG - home of the Plaso Windows Registry Parsing.'))
-  banners.append('')
-  banners.append('Some of the commands that are available for use are:')
-  banners.append('')
+      u'Welcome to PREG - home of the Plaso Windows Registry Parsing.'))
+  banners.append(u'')
+  banners.append(u'Some of the commands that are available for use are:')
+  banners.append(u'')
   banners.append(frontend_utils.FormatOutputString(
-      'cd key', 'Navigate the Registry like a directory structure.',
+      u'cd key', u'Navigate the Registry like a directory structure.',
       function_name_length))
   banners.append(frontend_utils.FormatOutputString(
-      'ls [-v]', (
-          'List all subkeys and values of a Registry key. If called as '
-          'ls True then values of keys will be included in the output.'),
+      u'ls [-v]', (
+          u'List all subkeys and values of a Registry key. If called as '
+          u'ls True then values of keys will be included in the output.'),
       function_name_length))
   banners.append(frontend_utils.FormatOutputString(
-      'parse -[v]', 'Parse the current key using all plugins.',
+      u'parse -[v]', u'Parse the current key using all plugins.',
       function_name_length))
   banners.append(frontend_utils.FormatOutputString(
-      'pwd', 'Print the working "directory" or the path of the current key.',
+      u'pwd', u'Print the working "directory" or the path of the current key.',
       function_name_length))
   banners.append(frontend_utils.FormatOutputString(
-      'plugin [-h] plugin_name', (
-          'Run a particular key-based plugin on the loaded hive. The correct '
-          'Registry key will be loaded, opened and then parsed.'),
+      u'plugin [-h] plugin_name', (
+          u'Run a particular key-based plugin on the loaded hive. The correct '
+          u'Registry key will be loaded, opened and then parsed.'),
       function_name_length))
+  banners.append(frontend_utils.FormatOutputString(
+      u'get_value value_name', (
+          u'Get a value from the currently loaded registry key.')))
+  banners.append(frontend_utils.FormatOutputString(
+      u'get_value_data value_name', (
+          u'Get a value data from a value stored in the currently loaded '
+          u'registry key.')))
+  banners.append(frontend_utils.FormatOutputString(
+      u'get_key', u'Return the currently loaded registry key.'))
 
-  banners.append('')
+  banners.append(u'')
 
   if len(hives) == 1:
     hive = hives[0]
@@ -1286,6 +1359,10 @@ def RunModeConsole(front_end, options):
   # Adding variables in scope.
   namespace.update(globals())
   namespace.update({
+      'get_current_key': GetCurrentKey,
+      'get_key': GetCurrentKey,
+      'get_value': GetValue,
+      'get_value_data': GetValueData,
       'hives': hives,
       'hive': hive,
       'collector': hive_collector,
@@ -1297,6 +1374,10 @@ def RunModeConsole(front_end, options):
   ipshell.confirm_exit = False
   # Adding "magic" functions.
   ipshell.register_magics(MyMagics)
+  # Set autocall to two, making parenthesis not necessary when calling
+  # function names (although they can be used and are necessary sometimes,
+  # like in variable assignements, etc).
+  ipshell.autocall = 2
   # Registering command completion for the magic commands.
   ipshell.set_hook('complete_command', CdCompleter, str_key='%cd')
   ipshell.set_hook('complete_command', VerboseCompleter, str_key='%ls')
