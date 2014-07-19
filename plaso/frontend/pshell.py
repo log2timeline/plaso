@@ -219,9 +219,22 @@ def OpenVssFile(path, image_path, store_number, image_offset):
 
 
 def ParseFile(file_entry):
-  """Parse a file given a file entry and yield results."""
+  """Parse a file given a file entry or path and return a list of results.
+
+  Args:
+    file_entry: Either a file entry object (instance of dfvfs.FileEntry)
+                or a string containing a path (absolute or relative) to a
+                local file.
+
+  Returns:
+    A list of event object (instance of EventObject) that were extracted from
+    the file (or an empty list if no events were extracted).
+  """
   if not file_entry:
     return
+
+  if isinstance(file_entry, basestring):
+    file_entry = OpenOSFile(file_entry)
 
   # Create the necessary items.
   proc_queue = queue.SingleThreadedQueue()
@@ -240,6 +253,7 @@ def ParseFile(file_entry):
   storage_queue.SignalEndOfInput()
   proc_queue.SignalEndOfInput()
 
+  results = []
   while True:
     try:
       item = storage_queue.PopItem()
@@ -249,7 +263,8 @@ def ParseFile(file_entry):
     if isinstance(item, queue.QueueEndOfInput):
       break
 
-    yield item
+    results.append(item)
+  return results
 
 
 def Pfile2File(file_object, path):
@@ -258,8 +273,13 @@ def Pfile2File(file_object, path):
 
 
 def PrintTimestamp(timestamp):
-  """Prints a human readable timestamp from values stored in an event object."""
+  """Prints a human readable timestamp from a timestamp value."""
   return frontend_utils.OutputWriter.GetDateTimeString(timestamp)
+
+
+def PrintTimestampFromEvent(event_object):
+  """Prints a human readable timestamp from values stored in an event object."""
+  return PrintTimestamp(getattr(event_object, 'timestamp', 0))
 
 
 def Main():
@@ -314,7 +334,10 @@ def Main():
 
   namespace.update(globals())
   namespace.update({
-      'frontend': front_end, 'pre_obj': pre_obj, 'options': options})
+      'frontend': front_end, 'pre_obj': pre_obj, 'options': options,
+      'find_all_output': FindAllOutputs, 'find_all_parsers': FindAllParsers,
+      'parse_file': ParseFile, 'timestamp_from_event': PrintTimestampFromEvent,
+      'message': formatters.manager.EventFormatterManager.GetMessageStrings})
 
   # Include few random phrases that get thrown in once the user exists the
   # shell.
@@ -384,7 +407,8 @@ def Main():
 
   functions = [
       FindAllOutputs, FindAllParsers, GetEventData, OpenOSFile, OpenStorageFile,
-      OpenTskFile, OpenVssFile, ParseFile, Pfile2File, PrintTimestamp]
+      OpenTskFile, OpenVssFile, ParseFile, Pfile2File, PrintTimestamp,
+      PrintTimestampFromEvent]
 
   functions_strings = []
   for function in functions:
@@ -394,24 +418,25 @@ def Main():
   functions_strings = u'\n'.join(functions_strings)
 
   banner = (
-      '--------------------------------------------------------------\n'
-      ' Welcome to Plaso console - home of the Plaso adventure land.\n'
-      '--------------------------------------------------------------\n'
-      'This is the place where everything is allowed, as long as it is '
-      'written in Python.\n\n'
-      'Objects available:\n\toptions - set of options to the frontend.\n'
-      '\tfrontend - A copy of the pshell frontend.\n'
-      '\n'
-      'All libraries have been imported and can be used, see help(frontend) '
-      'or help(parser).\n'
-      '\n'
-      'Base methods:\n'
-      '{0:s}'
-      '\n'
-      '\n'
-      'p.s. typing in "pdb" and pressing enter puts the shell in debug'
-      'mode which causes all exceptions being sent to pdb.\n'
-      'Happy command line console fu-ing.\n\n').format(functions_strings)
+      u'--------------------------------------------------------------\n'
+      u' Welcome to Plaso console - home of the Plaso adventure land.\n'
+      u'--------------------------------------------------------------\n'
+      u'This is the place where everything is allowed, as long as it is '
+      u'written in Python.\n\n'
+      u'Objects available:\n\toptions - set of options to the frontend.\n'
+      u'\tfrontend - A copy of the pshell frontend.\n'
+      u'\n'
+      u'All libraries have been imported and can be used, see help(frontend) '
+      u'or help(parser).\n'
+      u'\n'
+      u'Base methods:\n'
+      u'{0:s}'
+      u'\n\tmessage - Print message strings from an event object.'
+      u'\n'
+      u'\n'
+      u'p.s. typing in "pdb" and pressing enter puts the shell in debug'
+      u'mode which causes all exceptions being sent to pdb.\n'
+      u'Happy command line console fu-ing.\n\n').format(functions_strings)
 
   exit_message = u'You are now leaving the winter wonderland.\n\n{}'.format(
       random.choice(_my_random_phrases))
@@ -429,6 +454,10 @@ def Main():
       user_ns=namespace, config=shell_config, banner1=banner,
       exit_msg=exit_message)
   ipshell.confirm_exit = False
+  # Set autocall to two, making parenthesis not necessary when calling
+  # function names (although they can be used and are necessary sometimes,
+  # like in variable assignements, etc).
+  ipshell.autocall = 2
   ipshell()
 
   return True
