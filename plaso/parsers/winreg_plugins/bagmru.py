@@ -26,7 +26,7 @@ from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
 
 
-class BagMRUPlugin(interface.ValuePlugin):
+class BagMRUPlugin(interface.KeyPlugin):
   """Class that defines a BagMRU Windows Registry plugin."""
 
   NAME = 'winreg_bagmru'
