@@ -51,6 +51,8 @@ class EventTimestamp(object):
 
   LAST_PRINTED = u'Last Printed Time'
 
+  LAST_RESUME_TIME = u'Last Resume Time'
+
   # Note that the unknown time is used for date and time values
   # of which the exact meaning is unknown and being researched.
   # For most cases do not use this timestamp description.
