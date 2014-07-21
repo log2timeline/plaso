@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<usage-history>
+<pkg name="com.google.android.setupwizard">
+<comp name="com.google.android.setupwizard.NoAccountTosActivity" lrt="1380311174491" />
+<comp name="com.google.android.setupwizard.SetupCompleteActivity" lrt="1380311174998" />
+<comp name="com.google.android.setupwizard.LocationSharingActivity" lrt="1380311148382" />
+<comp name="com.google.android.setupwizard.WelcomeActivity" lrt="1380311133257" />
+<comp name="com.google.android.setupwizard.SetupWizardActivity" lrt="1380311179383" />
+</pkg>
+<pkg name="com.sec.android.preloadinstaller">
+<comp name="com.sec.android.preloadinstaller.SN1301302010.PreloadInstallerActivity" lrt="1380310951357" />
+</pkg>
+<pkg name="android">
+<comp name="com.android.internal.app.PlatLogoActivity" lrt="321734035" />
+</pkg>
+<pkg name="com.android.settings">
+<comp name="com.android.settings.wifi.WifiPickerActivity" lrt="330421528" />
+<comp name="com.android.settings.CryptKeeper" lrt="1380310950375" />
+<comp name="com.android.settings.SubSettings" lrt="321739312" />
+<comp name="com.android.settings.Settings" lrt="330395127" />
+<comp name="com.android.settings.Settings$DateTimeSettingsActivity" lrt="1380311143512" />
+</pkg>
+<pkg name="com.android.mms">
+<comp name="com.android.mms.ui.ConversationComposer" lrt="1380311786215" />
+</pkg>
+<pkg name="com.google.android.googlequicksearchbox">
+<comp name="com.google.android.googlequicksearchbox.VoiceSearchActivity" lrt="330454752" />
+<comp name="com.google.android.googlequicksearchbox.SearchActivity" lrt="330455195" />
+</pkg>
+<pkg name="com.sec.android.app.popupuireceiver">
+<comp name="com.sec.android.app.popupuireceiver.popupNITZ" lrt="1380311135770" />
+</pkg>
+<pkg name="com.google.android.gsf.login">
+<comp name="com.google.android.gsf.login.AccountIntroActivity" lrt="330423587" />
+<comp name="com.google.android.gsf.login.NameActivity" lrt="1380311155675" />
+<comp name="com.google.android.gsf.login.AccountPreIntroUIActivity" lrt="1380311148273" />
+<comp name="com.google.android.gsf.login.AccountIntroUIActivity" lrt="330422840" />
+<comp name="com.google.android.gsf.login.SetupWirelessActivity" lrt="330422731" />
+</pkg>
+<pkg name="com.sec.android.app.videoplayer">
+<comp name="com.sec.android.app.videoplayer.activity.MainTab" lrt="330426618" />
+</pkg>
+<pkg name="com.sec.android.widgetapp.ap.hero.accuweather">
+<comp name="com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd" lrt="1386617313047" />
+</pkg>
+<pkg name="com.sec.android.app.voicerecorder">
+<comp name="com.sec.android.app.voicerecorder.VoiceListActivity" lrt="330448256" />
+<comp name="com.sec.android.app.voicerecorder.VoiceRecorderMainActivity" lrt="330451266" />
+</pkg>
+<pkg name="com.sec.android.app.launcher">
+<comp name="com.android.launcher2.Launcher" lrt="337170926" />
+</pkg>
+<pkg name="com.sec.android.app.camera">
+<comp name="com.sec.android.app.camera.Camera" lrt="330469676" />
+</pkg>
+<pkg name="com.google.android.apps.books">
+<comp name="com.google.android.apps.books.app.BooksActivity" lrt="330423640" />
+</pkg>
+</usage-history>
