@@ -18,6 +18,7 @@
 """This file contains an import statement for each parser."""
 
 from plaso.parsers import asl
+from plaso.parsers import android_app_usage
 from plaso.parsers import bencode_parser
 from plaso.parsers import bsm
 from plaso.parsers import chrome_cache
