@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2012 The Plaso Project Authors.
+# Copyright 2014 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Formatter for Android Application Usage."""
 
-__version__ = '1.1.1'
-
-VERSION_DEV = True
-VERSION_DATE = '20140721'
+from plaso.formatters import interface
 
 
-def GetVersion():
-  """Returns version information for plaso."""
-  if not VERSION_DEV:
-    return __version__
+class AndroidApplicationFormatter(interface.ConditionalEventFormatter):
+  """Formatter for an Application Last Resumed event."""
 
-  return u'{0:s}_{1:s}'.format(__version__, VERSION_DATE)
+  DATA_TYPE = 'android:event:last_resume_time'
+
+  FORMAT_STRING_PIECES = [
+      u'Package: {package}',
+      u'Component: {component}']
+
+  SOURCE_LONG = 'Android App Usage'
+  SOURCE_SHORT = 'LOG'
