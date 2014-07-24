@@ -76,7 +76,9 @@ class AndroidAppUsageParser(parser.BaseParser):
     # b) the right XML.
     first_line = text_file_object.readline(90)
 
-    if not first_line.startswith(u'<?xml version='):
+    # Note that we must check the data here as a string first, otherwise
+    # forcing first_line to convert to Unicode can raise a UnicodeDecodeError.
+    if not first_line.startswith('<?xml'):
       raise errors.UnableToParseFile(
           u'Not an Android usage history file [not XML]')
 
