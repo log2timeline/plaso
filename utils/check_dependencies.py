@@ -267,7 +267,7 @@ if __name__ == '__main__':
   if not CheckPythonModule('google.protobuf', '', ''):
     check_result = False
 
-  if not CheckPythonModule('dfvfs', '__version__', '20140603'):
+  if not CheckPythonModule('dfvfs', '__version__', '20140724'):
     check_result = False
 
   if not CheckPythonModule('sqlite3', 'sqlite_version', '3.7.8'):

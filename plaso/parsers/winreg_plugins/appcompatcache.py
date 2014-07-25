@@ -22,8 +22,36 @@ import logging
 
 from plaso.lib import binary
 from plaso.lib import event
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import interface
+
+
+class AppCompatCacheEvent(event.EventObject):
+  """Class that contains the event object for AppCompatCache entries."""
+
+  DATA_TYPE = 'windows:registry:appcompatcache'
+
+  def __init__(self, key, entry_index, path, usage=None, timestamp=None,
+               offset=None):
+    """Initializes a Windows Registry event.
+
+    Args:
+      key: Name of the Registry key being parsed.
+      entry_index: The cache entry index number for the record.
+      path: The full path to the executable.
+      timestamp: Optional timestamp time value. The timestamp contains the
+                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      usage: The description of the usage of the time value.
+      offset: The (data) offset of the Registry key or value.
+    """
+    super(AppCompatCacheEvent, self).__init__()
+    self.timestamp = timestamp
+    self.keyname = key
+    self.timestamp_desc = usage or eventdata.EventTimestamp.WRITTEN_TIME
+    self.offset = offset
+    self.entry_index = entry_index
+    self.path = path
 
 
 class AppCompatCacheHeader(object):
@@ -532,11 +560,11 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     format_type = self._CheckSignature(value_data)
     if not format_type:
-      text_dict = {}
-      text_dict['AppCompatCache'] = u'REGALERT: Unsupported signature.'
-
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp)
+      # TODO: Instead of logging emit a parser error object that once that
+      # mechanism is implemented.
+      logging.error(
+          u'AppCompatCache format error: [{0:s}] Unsupported signature'.format(
+              key.path))
       return
 
     header_object = self._ParseHeader(format_type, value_data)
@@ -551,11 +579,11 @@ class AppCompatCachePlugin(interface.KeyPlugin):
         format_type, value_data, cached_entry_offset)
 
     if not cached_entry_size:
-      text_dict = {}
-      text_dict['AppCompatCache'] = u'REGALERT: Unsupported cached entry size.'
-
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp)
+      # TODO: Instead of logging emit a parser error object that once that
+      # mechanism is implemented.
+      logging.error(
+          u'AppCompatCache format error: [{0:s}] Unsupported cached entry '
+          u'size.'.format(key.path))
       return
 
     cached_entry_index = 0
@@ -563,37 +591,25 @@ class AppCompatCachePlugin(interface.KeyPlugin):
       cached_entry_object = self._ParseCachedEntry(
           format_type, value_data, cached_entry_offset, cached_entry_size)
 
-      value_name = u'Cached entry: {0:d}'.format(
-          cached_entry_index + 1)
-
-      text_dict = {}
-      text_dict[value_name] = u'[Path: {0:s}]'.format(
-          cached_entry_object.path)
-
       if cached_entry_object.last_modification_time is not None:
-        yield event.WinRegistryEvent(
-            key.path, text_dict,
+        yield AppCompatCacheEvent(
+            key.path, cached_entry_index + 1, cached_entry_object.path,
             timestamp=timelib.Timestamp.FromFiletime(
                 cached_entry_object.last_modification_time),
-            offset=cached_entry_offset)
+            offset=cached_entry_offset,
+            usage=u'File Last Modification Time')
 
       if cached_entry_object.last_update_time is not None:
-        yield event.WinRegistryEvent(
-            key.path, text_dict,
+        yield AppCompatCacheEvent(
+            key.path, cached_entry_index + 1, cached_entry_object.path,
             timestamp=timelib.Timestamp.FromFiletime(
                 cached_entry_object.last_update_time),
-            offset=cached_entry_offset)
+            offset=cached_entry_offset,
+            usage=eventdata.EventTimestamp.LAST_RUNTIME)
 
       cached_entry_offset += cached_entry_object.cached_entry_size
-
       cached_entry_index += 1
 
       if (header_object.number_of_cached_entries != 0 and
           cached_entry_index >= header_object.number_of_cached_entries):
         break
-
-    text_dict = {}
-    text_dict['AppCompatCache'] = u'[Number of cached entries: {0:d}]'.format(
-        cached_entry_index)
-    yield event.WinRegistryEvent(
-        key.path, text_dict, timestamp=key.last_written_timestamp)

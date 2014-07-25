@@ -45,22 +45,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
-    self.assertEquals(len(event_objects), 331)
-
-    event_object = event_objects[330]
-
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-04-04 01:58:40.776749')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-
-    expected_msg = (
-        u'[{0:s}] '
-        u'AppCompatCache: [Number of cached entries: 330]').format(key_path)
-
-    expected_msg_short = (
-        u'[{0:s}] AppCompatCache: [Numb...').format(key_path)
-
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self.assertEquals(len(event_objects), 330)
 
     event_object = event_objects[9]
 
@@ -68,13 +53,13 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2012-04-04 01:46:37.932964')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
+    self.assertEquals(event_object.keyname, key_path)
     expected_msg = (
-        u'[{0:s}] '
-        u'Cached entry: 10: [Path: \\??\\C:\\Windows\\PSEXESVC.EXE]').format(
-            key_path)
+        u'[{0:s}] Cached entry: 10 Path: '
+        u'\\??\\C:\\Windows\\PSEXESVC.EXE'.format(event_object.keyname))
 
     expected_msg_short = (
-        u'[{0:s}] Cached entry: 10: [Pa...').format(key_path)
+        u'Path: \\??\\C:\\Windows\\PSEXESVC.EXE')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
