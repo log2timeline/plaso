@@ -1397,6 +1397,11 @@ class ExtractionFrontend(Frontend):
       options.workers = 1
       self._single_process_mode = False
 
+    if self._source_type == self._SOURCE_TYPE_DIRECTORY:
+      # If we are dealing with a directory we would like to attempt
+      # pre-processing.
+      self._preprocess = True
+
     if self._single_process_mode:
       self._ProcessSourceSingleProcessMode(options)
     else:

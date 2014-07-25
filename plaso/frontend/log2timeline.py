@@ -29,7 +29,6 @@ from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import putils
-from plaso.preprocessors import interface as preprocess_interface
 
 import pytz
 
@@ -415,24 +414,6 @@ def Main():
     print u''
     logging.error(u'{0:s}'.format(exception))
     return False
-
-  # Check to see if we are trying to parse a mount point.
-  if getattr(options, 'recursive', False):
-    searcher = front_end.GetSourceFileSystemSearcher()
-
-    guessed_os = preprocess_interface.GuessOS(searcher)
-    if guessed_os != 'None':
-      options.preprocess = True
-      logging.info((
-          u'Running against a mount point [{0:s}]. Turning on '
-          u'preprocessing.').format(guessed_os))
-      logging.warning(
-          u'It is highly recommended to run the tool directly against '
-          u'the image, instead of parsing a mount point (you may get '
-          u'inconsistence results depending on the driver you use to mount '
-          u'the image. Please consider running against the raw image. '
-          u'Processing will continue in 5 seconds.')
-      time.sleep(5)
 
   # Configure the foreman (monitors workers).
   front_end.SetShowMemoryInformation(show_memory=options.foreman_verbose)

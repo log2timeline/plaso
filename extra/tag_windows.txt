@@ -7,6 +7,7 @@ Application Execution
   data_type is 'windows:tasks:job'
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 592
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4688
+  data_type is 'windows:registry:appcompatcache'
 
 Document Opened
   data_type is 'windows:registry:key_value' AND plugin contains 'mru' AND regvalue.__all__ not contains '.exe' AND timestamp > 0

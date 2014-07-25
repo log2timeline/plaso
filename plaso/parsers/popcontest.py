@@ -71,7 +71,7 @@
 
     <atime> and <ctime> are the access time and creation time of the
     <mru-program> on your disk, respectively, represented as the number of
-    seconds since midnight GMT on January 1, 1970 (i.e. in Unix time_t format). 
+    seconds since midnight GMT on January 1, 1970 (i.e. in Unix time_t format).
     Linux updates <atime> whenever you open the file; <ctime> was set when you
     first installed the package.
 
@@ -153,7 +153,7 @@ class PopularityContestEvent(time_events.PosixTimeEvent):
     self.ctime = ctime
     self.package = package
     self.mru = mru
-    self.tag = tag
+    self.record_tag = tag
 
 
 class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
@@ -171,7 +171,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
       pyparsing.Literal(u'TIME:').suppress() + EPOCH +
       pyparsing.Literal('ID:').suppress() +
-      pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') + 
+      pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') +
       pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('details'))
 
   FOOTER = (
@@ -206,7 +206,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     # TODO: Add anomaly objects for abnormal timestamps, such as when the log
     # timestamp is greater than the session start.
     if key == 'logline':
-      return self._ParseLogLine(structure)      
+      return self._ParseLogLine(structure)
     elif key == 'header':
       if not structure.epoch:
         logging.debug(u'PopularityContestParser, header with invalid epoch.')
