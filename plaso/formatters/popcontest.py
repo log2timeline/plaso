@@ -47,7 +47,7 @@ class PopularityContestLogFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'mru [{mru}]',
       u'package [{package}]',
-      u'tag [{tag}]']
+      u'tag [{record_tag}]']
 
   FORMAT_STRING_SHORT_PIECES = [u'{mru}']
 

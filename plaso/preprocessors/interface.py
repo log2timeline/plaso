@@ -317,7 +317,7 @@ class WindowsRegistryPreprocess(PreprocessPlugin):
 
   By default registry needs information about system paths, which excludes
   them to run in priority 1, in some cases they may need to run in priority
-  3, for instance if the registry key is dependent on which version of Windows
+  3, for instance if the Registry key is dependent on which version of Windows
   is running, information that is collected during priority 2.
   """
   __abstract = True
@@ -342,7 +342,7 @@ class WindowsRegistryPreprocess(PreprocessPlugin):
     self._key_path_expander = None
 
   def GetValue(self, searcher):
-    """Return the value gathered from a registry key for preprocessing.
+    """Return the value gathered from a Registry key for preprocessing.
 
     Args:
       searcher: The file system searcher object (instance of
@@ -369,7 +369,7 @@ class WindowsRegistryPreprocess(PreprocessPlugin):
       raise errors.PreProcessFail(
           u'Unable to find directory: {0:s}'.format(self.REG_PATH))
 
-    directory_location = getattr(path_specs[0], 'location', None)
+    directory_location = searcher.GetRelativePath(path_specs[0])
     if not directory_location:
       raise errors.PreProcessFail(
           u'Missing directory location for: {0:s}'.format(self.REG_PATH))
@@ -467,7 +467,7 @@ class WindowsRegistryPreprocess(PreprocessPlugin):
 
   @abc.abstractmethod
   def ParseKey(self, key):
-    """Extract information from a registry key and save in storage."""
+    """Extract information from a Registry key and save in storage."""
 
 
 class PreprocessGetPath(PreprocessPlugin):
@@ -499,12 +499,12 @@ class PreprocessGetPath(PreprocessPlugin):
       raise errors.PreProcessFail(
           u'Unable to find path: {0:s}'.format(self.PATH))
 
-    path_location = getattr(path_specs[0], 'location', None)
-    if not path_location:
+    relative_path = searcher.GetRelativePath(path_specs[0])
+    if not relative_path:
       raise errors.PreProcessFail(
-          u'Missing path location for: {0:s}'.format(self.PATH))
+          u'Missing relative path for: {0:s}'.format(self.PATH))
 
-    return path_location
+    return relative_path
 
 
 def GuessOS(searcher):
@@ -538,12 +538,19 @@ def GuessOS(searcher):
 
   locations = []
   for path_spec in searcher.Find(find_specs=find_specs):
-    locations.append(getattr(path_spec, 'location', u'').lower())
+    relative_path = searcher.GetRelativePath(path_spec)
+    if relative_path:
+      locations.append(relative_path.lower())
 
-  if (u'/windows/system32' in locations or
-      u'/winnt/system32' in locations or
-      u'/winnt35/system32' in locations or
-      u'/wtsrv/system32' in locations):
+  # We need to check for both forward and backward slashes since the path
+  # spec will be OS dependent, as in running the tool on Windows will return
+  # Windows paths (backward slash) vs. forward slash on *NIX systems.
+  windows_locations = set([
+      u'/windows/system32', u'\\windows\\system32', u'/winnt/system32',
+      u'\\winnt\\system32', u'/winnt35/system32', u'\\winnt35\\system32',
+      u'\\wtsrv\\system32', u'/wtsrv/system32'])
+
+  if windows_locations.intersection(set(locations)):
     return 'Windows'
 
   if u'/system/library' in locations:
