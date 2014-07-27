@@ -90,7 +90,7 @@ from plaso.serializer import protobuf_serializer
 from plaso.unix import bsmtoken
 
 from plaso.winnt import environ_expand
-from plaso.winnt import knownfolderid
+from plaso.winnt import known_folder_ids
 
 from plaso.winreg import cache as win_registry_cache
 from plaso.winreg import interface as win_registry_interface
