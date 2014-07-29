@@ -43,7 +43,8 @@ class BootVerificationPlugin(interface.KeyPlugin):
       Extracted event objects from the boot verify key.
     """
     text_dict = {}
-    text_dict['BootVerification'] = u'REGALERT'
+    # TODO: Remove RegAlert completely
+    # text_dict['BootVerification'] = u'REGALERT'
     for value in key.GetValues():
       text_dict[value.name] = value.data
     yield event.WinRegistryEvent(
