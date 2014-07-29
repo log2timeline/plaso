@@ -54,7 +54,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       '1001', '1004', '1200', '1201', '1400', '1402', '1405', '1406', '1407',
       '1601', '1604', '1606', '1607', '1608', '1609', '1800', '1802', '1803',
       '1804', '1809', '1A04', '2000', '2001', '2004', '2100', '2101', '2102',
-      '2200', '2201', '2300' ]
+      '2200', '2201', '2300']
 
   CONTROL_VALUES_PERMISSIONS = {
       0x00000000: '0 (Allow)',
@@ -203,7 +203,9 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       logging.info('No subkeys for Internet Settings/Zones')
 
       text_dict = {}
-      text_dict['Zone Subkeys'] = u'REGALERT No Zones set for Internet Settings'
+      # TODO: Remove RegAlert completely
+      # text_dict['Zone Subkeys'] = (
+          # u'REGALERT No Zones set for Internet Settings')
 
       yield event.WinRegistryEvent(
           key.path, text_dict, timestamp=key.last_written_timestamp,

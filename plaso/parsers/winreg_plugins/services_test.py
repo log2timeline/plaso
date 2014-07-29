@@ -70,7 +70,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     # Timestamp is: Tue, 28 Aug 2012 09:23:49 GMT.
     self.assertEquals(event_object.timestamp, 1346145829002031)
-    self.assertTrue(event_object.regalert)
+    # TODO: Remove RegAlert completely
+    # self.assertTrue(event_object.regalert)
 
     expected_msg = (
         u'[{0:s}] '
@@ -78,8 +79,11 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'DriverPackageId: testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
         u'ErrorControl: Normal (1) '
         u'Group: Pnp Filter '
-        u'ImagePath: REGALERT Driver not in system32: C:\\Dell\\testdriver.sys '
-        u'Start: REGALERT Unusual Start for Driver: Auto Start (2) '
+        u'ImagePath: C:\\Dell\\testdriver.sys '
+        u'Start: Auto Start (2) '
+        # u'ImagePath: REGALERT Driver not in system32: '
+        # u'C:\\Dell\\testdriver.sys '
+        # u'Start: REGALERT Unusual Start for Driver: Auto Start (2) '
         u'Type: File System Driver (0x2)').format(key_path)
     expected_msg_short = (
         u'[{0:s}] '

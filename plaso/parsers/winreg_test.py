@@ -58,7 +58,9 @@ class WinRegTest(test_lib.ParserTestCase):
 
     self.assertTrue('winreg_userassist' in plugins)
 
-    self.assertEquals(plugins['winreg_userassist'], 16)
+    # TODO: Delete this once RegAlert is completely removed
+    # self.assertEquals(plugins['winreg_userassist'], 16)
+    self.assertEquals(plugins['winreg_userassist'], 14)
 
   def testSystemParsing(self):
     """Parse a SYSTEM hive an run few tests."""
