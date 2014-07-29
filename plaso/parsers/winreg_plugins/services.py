@@ -79,25 +79,28 @@ class ServicesPlugin(interface.ValuePlugin):
       if not image_path:
         return None
 
-      if not image_path.data or not image_path.DataIsString():
-        return 'REGALERT: Driver does not have a valid ImagePath.'
+      # TODO: Remove RegAlert completely
+      # if not image_path.data or not image_path.DataIsString():
+        # return 'REGALERT: Driver does not have a valid ImagePath.'
 
       image_path_str = image_path.data
-      if 'system32\\drivers' not in image_path_str.lower():
-        return u'REGALERT Driver not in system32: {}'.format(image_path_str)
+      # if 'system32\\drivers' not in image_path_str.lower():
+        # return u'REGALERT Driver not in system32: {}'.format(image_path_str)
       return image_path_str
 
-    elif service_type > 15 and service_type < 257:
-      if not image_path:
-        return 'REGALERT: Service does not have ImagePath.'
 
-      if not image_path.data or not image_path.DataIsString():
-        return 'REGALERT: Service does not have a valid ImagePath.'
+    # elif service_type > 15 and service_type < 257:
+      # if not image_path:
+        # return 'REGALERT: Service does not have ImagePath.'
 
-      return u'\'{}\''.format(image_path.data)
+      # if not image_path.data or not image_path.DataIsString():
+        # return 'REGALERT: Service does not have a valid ImagePath.'
+
+      # return u'\'{}\''.format(image_path.data)
     return None
 
-  def GetObjectName(self, subkey, service_type):
+  # TODO: Remove service_type when RegAlert goes away
+  def GetObjectName(self, subkey, unused_service_type):
     """Returns the ObjectName for Service with alerts for unusual settings.
 
     Alerts are for:
@@ -115,32 +118,37 @@ class ServicesPlugin(interface.ValuePlugin):
     """
     # Only Services should have ObjectName -- the "user" who started it.
     object_name = subkey.GetValue('ObjectName')
+    if object_name and object_name.data and object_name.DataIsString():
+      return object_name.data
+    else:
+      return None
+    # TODO: Remove RegAlert completely
     # Handle Drivers first.  Alert if Driver has an ObjectName.
-    if service_type > 0 and service_type < 15:
-      if not object_name:
-        return None
+    # if service_type > 0 and service_type < 15:
+      # if not object_name:
+        # return None
 
-      if object_name.data and object_name.DataIsString():
-        object_name_str = object_name.data
-      else:
-        object_name_str = u'UNKNOWN'
+      # if object_name.data and object_name.DataIsString():
+        # object_name_str = object_name.data
+      # else:
+        # object_name_str = u'UNKNOWN'
 
-      return u'REGALERT Driver has ObjectName: {}'.format(
-          object_name_str)
+      # return u'REGALERT Driver has ObjectName: {}'.format(
+          # object_name_str)
 
-    elif service_type > 15 and service_type < 257:
-      if not object_name:
-        return u'REGALERT Service does not have ObjectName'
+    # elif service_type > 15 and service_type < 257:
+      # if not object_name:
+        # return u'REGALERT Service does not have ObjectName'
 
-      if not object_name.data or not object_name.DataIsString():
-        return u'REGALERT Service does not have a valid ObjectName'
+      # if not object_name.data or not object_name.DataIsString():
+        # return u'REGALERT Service does not have a valid ObjectName'
 
-      object_name_str = object_name.data
-      if object_name_str.lower() not in self.OBJECT_NAMES:
+      # object_name_str = object_name.data
+      # if object_name_str.lower() not in self.OBJECT_NAMES:
         # There are 3 primary owners, all others are noteworthy.
-        return u'REGALERT Unusual Owner: {}'.format(
-            object_name_str)
-    return None
+        # return u'REGALERT Unusual Owner: {}'.format(
+            # object_name_str)
+    # return None
 
   def GetServiceDll(self, key):
     """Get the Service DLL for a service, if it exists.
@@ -183,14 +191,15 @@ class ServicesPlugin(interface.ValuePlugin):
       service_start = service_start_value.data
       service_start_str = self.SERVICE_START.get(service_start, service_start)
 
+      # TODO: Remove RegAlert completely
       # Check for unusal Type/Start pairs.
-      if service_type > 0 and service_type < 15 and service_start == 2:
-        service_start_str = 'REGALERT Unusual Start for Driver: {}'.format(
-            self.SERVICE_START[service_start])
+      # if service_type > 0 and service_type < 15 and service_start == 2:
+        # service_start_str = 'REGALERT Unusual Start for Driver: {}'.format(
+            # self.SERVICE_START[service_start])
 
-      if service_type > 15 and service_type < 257 and service_start in [0, 1]:
-        service_start_str = 'REGALERT Unusal Start for Service: {}'.format(
-            self.SERVICE_START[service_start])
+      # if service_type > 15 and service_type < 257 and service_start in [0, 1]:
+        # service_start_str = 'REGALERT Unusal Start for Service: {}'.format(
+            # self.SERVICE_START[service_start])
 
       text_dict['Start'] = service_start_str
 

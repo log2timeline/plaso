@@ -98,24 +98,26 @@ class UserAssistPlugin(interface.KeyPlugin):
     """
     version_value = key.GetValue('Version')
     count_subkey = key.GetSubkey('Count')
+    # TODO: Remove RegAlert completely
     regalert_string = u''
 
-    if not version_value:
-      regalert_string = u'missing version value'
-    elif not version_value.DataIsInteger():
-      regalert_string = u'unsupported version value data type'
-    elif version_value.data not in [3, 5]:
-      regalert_string = u'unsupported version: {0:d}'.format(
-          version_value.data)
-    elif not count_subkey:
-      regalert_string = u'missing count subkey'
+    # if not version_value:
+      # regalert_string = u'missing version value'
+    # elif not version_value.DataIsInteger():
+      # regalert_string = u'unsupported version value data type'
+    # elif version_value.data not in [3, 5]:
+      # regalert_string = u'unsupported version: {0:d}'.format(
+          # version_value.data)
+    # elif not count_subkey:
+      # regalert_string = u'missing count subkey'
 
     if regalert_string:
-      text_dict = {}
-      text_dict[u'Version'] = u'REGALERT {0:s}.'.format(regalert_string)
-      regalert_string = u''
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp)
+      pass
+      # text_dict = {}
+      # text_dict[u'Version'] = u'REGALERT {0:s}.'.format(regalert_string)
+      # regalert_string = u''
+      # yield event.WinRegistryEvent(
+          # key.path, text_dict, timestamp=key.last_written_timestamp)
 
     else:
       userassist_entry_index = 0
@@ -157,13 +159,15 @@ class UserAssistPlugin(interface.KeyPlugin):
                 value_name, self._config)
 
         if not value.DataIsBinaryData():
-          regalert_string = u'unsupported value data type: {0:s}'.format(
-              value.data_type_string)
+          pass
+          # regalert_string = u'unsupported value data type: {0:s}'.format(
+              # value.data_type_string)
 
         elif version_value.data == 3:
           if len(value.data) != self.USERASSIST_V3_STRUCT.sizeof():
-            regalert_string = u'unsupported value data size: {0:d}'.format(
-                len(value.data))
+            pass
+            # regalert_string = u'unsupported value data size: {0:d}'.format(
+                # len(value.data))
           else:
             parsed_data = self.USERASSIST_V3_STRUCT.parse(value.data)
             filetime = parsed_data.get('timestamp', 0)
@@ -181,8 +185,9 @@ class UserAssistPlugin(interface.KeyPlugin):
 
         elif version_value.data == 5:
           if len(value.data) != self.USERASSIST_V5_STRUCT.sizeof():
-            regalert_string = u'unsupported value data size: {0:d}'.format(
-                len(value.data))
+            pass
+            # regalert_string = u'unsupported value data size: {0:d}'.format(
+                # len(value.data))
 
           parsed_data = self.USERASSIST_V5_STRUCT.parse(value.data)
 
@@ -202,9 +207,10 @@ class UserAssistPlugin(interface.KeyPlugin):
               count_subkey.path, text_dict,
               timestamp=timelib.Timestamp.FromFiletime(timestamp))
 
-    if regalert_string:
-      text_dict = {}
-      text_dict[value_name] = u'REGALERT {0:s}.'.format(regalert_string)
-      regalert_string = u''
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp)
+    # TODO: Remove RegAlert completely
+    # if regalert_string:
+      # text_dict = {}
+      # text_dict[value_name] = u'REGALERT {0:s}.'.format(regalert_string)
+      # regalert_string = u''
+      # yield event.WinRegistryEvent(
+          # key.path, text_dict, timestamp=key.last_written_timestamp)
