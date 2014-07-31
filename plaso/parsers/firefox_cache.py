@@ -138,8 +138,8 @@ class FirefoxCacheParser(parser.BaseParser):
         return self.FIREFOX_CACHE_CONFIG(block_size, offset)
 
       except IOError:
-        logging.debug(
-            u'{0:s}:{1:d}: Invalid record.'.format(file_entry.name, offset))
+        logging.debug(u'[{0:s}] {1:s}:{2:d}: Invalid record.'.format(
+            self.NAME, file_entry.name, offset))
 
     raise errors.UnableToParseFile(
         u'Could not find a valid cache record. '
@@ -183,14 +183,18 @@ class FirefoxCacheParser(parser.BaseParser):
     response_code, _, _ = response_head.partition('\r\n')
 
     if request_method not in self.REQUEST_METHODS:
+      safe_headers = headers.decode('ascii', errors='replace')
       logging.debug((
-          u'{0:s}:{1:d}: Unknown HTTP method \'{2:s}\'. Response '
-          u'\'{3:s}\'').format(filename, offset, request_method, headers))
+          u'[{0:s}] {1:s}:{2:d}: Unknown HTTP method \'{3:s}\'. Response '
+          u'headers: \'{4:s}\'').format(
+              self.NAME, filename, offset, request_method, safe_headers))
 
     if response_code[0:4] != 'HTTP':
-      logging.debug(
-          u'{0:s}:{1:d}: Could not determine HTTP response code. '
-          u'Response headers: \'{2:s}\'.'.format(filename, offset, headers))
+      safe_headers = headers.decode('ascii', errors='replace')
+      logging.debug((
+          u'[{0:s}] {1:s}:{2:d}: Could not determine HTTP response code. '
+          u'Response headers: \'{3:s}\'.').format(
+              self.NAME, filename, offset, safe_headers))
 
     # A request can span multiple blocks, so we use modulo.
     _, remainder = divmod(file_object.get_offset() - offset, block_size)
@@ -214,5 +218,6 @@ class FirefoxCacheParser(parser.BaseParser):
         yield self.__NextRecord(file_entry.name, file_object,
             firefox_config.block_size)
       except IOError:
-        logging.debug(u'{0:s}:{1:d}: Invalid cache record.'.format(
-            file_entry.name, file_object.get_offset() - self.MIN_BLOCK_SIZE))
+        logging.debug(u'[{0:s}] {1:s}:{2:d}: Invalid cache record.'.format(
+            self.NAME, file_entry.name,
+            file_object.get_offset() - self.MIN_BLOCK_SIZE))
