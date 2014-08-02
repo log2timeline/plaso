@@ -90,7 +90,7 @@ def CheckLibyal(libyal_python_modules):
       result = False
 
     if module_loaded:
-      libyal_name = u'lib{}'.format(module_name[2:])
+      libyal_name = u'lib{0:s}'.format(module_name[2:])
 
       installed_version = int(module_object.get_version())
       try:
