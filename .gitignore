@@ -2,6 +2,7 @@
 *.pyc
 
 # Don't include build related files.
+/dependencies/
 /dist/
 /build/
 
