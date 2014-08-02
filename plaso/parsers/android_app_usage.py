@@ -25,8 +25,8 @@ from dfvfs.helpers import text_file
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 class AndroidAppUsageEvent(event.EventObject):
@@ -52,7 +52,7 @@ class AndroidAppUsageEvent(event.EventObject):
     self.timestamp_desc = eventdata.EventTimestamp.LAST_RESUME_TIME
 
 
-class AndroidAppUsageParser(parser.BaseParser):
+class AndroidAppUsageParser(interface.BaseParser):
   """Parses the Android usage-history.xml file."""
 
   NAME = 'android_app_usage'

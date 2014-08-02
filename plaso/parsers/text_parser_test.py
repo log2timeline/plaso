@@ -30,8 +30,8 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
-from plaso.lib import parser
-from plaso.lib import text_parser
+from plaso.parsers import interface
+from plaso.parsers import text_parser
 
 
 class TestTextEvent(event.TextEvent):
@@ -88,7 +88,7 @@ class BaseParserTest(unittest.TestCase):
 
   def testParserNotImplemented(self):
     """Test the base class Parse function."""
-    self.assertRaises(TypeError, parser.BaseParser)
+    self.assertRaises(TypeError, interface.BaseParser)
 
 
 class TextParserTest(unittest.TestCase):

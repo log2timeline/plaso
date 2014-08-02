@@ -26,8 +26,8 @@ import logging
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -56,7 +56,7 @@ class UtmpxMacOsXEvent(event.EventObject):
     self.computer_name = computer_name
 
 
-class UtmpxParser(parser.BaseParser):
+class UtmpxParser(interface.BaseParser):
   """Parser for UTMPX files. """
 
   NAME = 'utmpx'

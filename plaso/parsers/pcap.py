@@ -26,7 +26,7 @@ import dpkt
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.parsers import interface
 
 
 __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
@@ -484,7 +484,7 @@ class PcapEvent(time_events.PosixTimeEvent):
     self.stream_data = repr(this_stream.stream_data[:50])
 
 
-class PcapParser(parser.BaseParser):
+class PcapParser(interface.BaseParser):
   """Parses PCAP files."""
 
   NAME = 'pcap'

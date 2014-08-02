@@ -28,7 +28,7 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.parsers import interface
 
 
 class CacheAddress(object):
@@ -320,7 +320,7 @@ class ChromeCacheEntryEvent(time_events.WebKitTimeEvent):
     self.original_url = cache_entry.key
 
 
-class ChromeCacheParser(parser.BaseParser):
+class ChromeCacheParser(interface.BaseParser):
   """Parses Chrome Cache files."""
 
   NAME = 'chrome_cache'

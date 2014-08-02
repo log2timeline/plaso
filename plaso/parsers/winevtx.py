@@ -24,7 +24,7 @@ import pyevtx
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.parsers import interface
 
 
 class WinEvtxRecordEvent(time_events.FiletimeEvent):
@@ -78,7 +78,7 @@ class WinEvtxRecordEvent(time_events.FiletimeEvent):
     self.xml_string = evtx_record.xml_string
 
 
-class WinEvtxParser(parser.BaseParser):
+class WinEvtxParser(interface.BaseParser):
   """Parses Windows XML EventLog (EVTX) files."""
 
   NAME = 'winevtx'

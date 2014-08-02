@@ -19,20 +19,18 @@
 
 import logging
 
-from plaso.lib import errors
-from plaso.lib import parser
-from plaso.lib import plugin
-
-from plaso.parsers.sqlite_plugins import interface
-
-# Register all sqlite plugins.
-# pylint: disable=unused-import
-from plaso.parsers import sqlite_plugins
-
 import sqlite3
 
+from plaso.lib import errors
+from plaso.lib import plugin
+from plaso.parsers import interface
+from plaso.parsers.sqlite_plugins import interface as sqlite_plugins_interface
 
-class SQLiteParser(parser.BaseParser):
+# Register all sqlite plugins.
+from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
+
+
+class SQLiteParser(interface.BaseParser):
   """A SQLite parser for Plaso."""
 
   # Name of the parser, which enables all plugins by default.
@@ -51,7 +49,8 @@ class SQLiteParser(parser.BaseParser):
     parser_filter_string = getattr(self._config, 'parsers', None)
 
     self._plugins = plugin.GetRegisteredPlugins(
-        interface.SQLitePlugin, self._pre_obj, parser_filter_string)
+        sqlite_plugins_interface.SQLitePlugin, self._pre_obj,
+        parser_filter_string)
 
   def Parse(self, file_entry):
     """Parses an SQLite database.
@@ -62,7 +61,7 @@ class SQLiteParser(parser.BaseParser):
     Returns:
       A event object generator (EventObjects) extracted from the database.
     """
-    with interface.SQLiteDatabase(file_entry) as database:
+    with sqlite_plugins_interface.SQLiteDatabase(file_entry) as database:
       try:
         database.Open()
       except IOError as exception:
@@ -75,7 +74,7 @@ class SQLiteParser(parser.BaseParser):
                 repr(exception)))
 
       # Create a cache in which the resulting tables are cached.
-      cache = interface.SQLiteCache()
+      cache = sqlite_plugins_interface.SQLiteCache()
       for plugin_obj in self._plugins.itervalues():
         try:
           for event_object in plugin_obj.Process(

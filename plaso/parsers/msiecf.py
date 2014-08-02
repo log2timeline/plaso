@@ -24,8 +24,8 @@ import pymsiecf
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 if pymsiecf.get_version() < '20130317':
@@ -67,7 +67,7 @@ class MsiecfUrlEvent(time_events.TimestampEvent):
       # OLE VT parsing.
 
 
-class MsiecfParser(parser.BaseParser):
+class MsiecfParser(interface.BaseParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
   NAME = 'msiecf'
