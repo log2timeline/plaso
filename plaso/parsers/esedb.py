@@ -22,9 +22,9 @@ import logging
 import pyesedb
 
 from plaso.lib import errors
-from plaso.lib import parser
 from plaso.lib import plugin
-from plaso.parsers.esedb_plugins import interface
+from plaso.parsers import interface
+from plaso.parsers.esedb_plugins import interface as esedb_plugins_interface
 
 # This import is necessary to register all the ESEDB plugins.
 from plaso.parsers import esedb_plugins  # pylint: disable=unused-import
@@ -34,7 +34,7 @@ if pyesedb.get_version() < '20140301':
   raise ImportWarning(u'EseDbParser requires at least pyesedb 20140301.')
 
 
-class EseDbParser(parser.BaseParser):
+class EseDbParser(interface.BaseParser):
   """Parses Extensible Storage Engine (ESE) database Files (EDB)."""
 
   NAME = 'esedb'
@@ -50,7 +50,8 @@ class EseDbParser(parser.BaseParser):
     parser_filter_string = getattr(self._config, 'parsers', None)
 
     self._plugins = plugin.GetRegisteredPlugins(
-        interface.EseDbPlugin, self._pre_obj, parser_filter_string)
+        esedb_plugins_interface.EseDbPlugin, self._pre_obj,
+        parser_filter_string)
 
   def Parse(self, file_entry):
     """Extracts data from an ESE database File.
@@ -73,7 +74,7 @@ class EseDbParser(parser.BaseParser):
               self.parser_name, file_entry.name, exception))
 
     # Compare the list of available plugins.
-    cache = interface.EseDbCache()
+    cache = esedb_plugins_interface.EseDbCache()
     for esedb_plugin in self._plugins.itervalues():
       try:
         for event_object in esedb_plugin.Process(

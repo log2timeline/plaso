@@ -23,8 +23,8 @@ updated, and when files match the virus database."""
 import logging
 
 from plaso.lib import event
-from plaso.lib import text_parser
 from plaso.lib import timelib
+from plaso.parsers import text_parser
 
 
 class McafeeAVEvent(event.TextEvent):

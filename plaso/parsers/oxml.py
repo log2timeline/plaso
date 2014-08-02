@@ -25,9 +25,9 @@ import zipfile
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
 from xml.etree import ElementTree
+from plaso.parsers import interface
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -52,7 +52,7 @@ class OpenXMLParserEvent(time_events.TimestampEvent):
       setattr(self, key, value)
 
 
-class OpenXMLParser(parser.BaseParser):
+class OpenXMLParser(interface.BaseParser):
   """Parse metadata from OXML files."""
 
   NAME = 'openxml'

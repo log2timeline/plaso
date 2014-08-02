@@ -75,12 +75,12 @@ from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import registry as class_registry
 from plaso.lib import storage
-from plaso.lib import text_parser
 from plaso.lib import timelib
 from plaso.lib import utils
 
 from plaso.output import helper as output_helper
 
+from plaso.parsers import text_parser
 from plaso.proto import plaso_storage_pb2
 
 from plaso.serializer import interface as serializer_interface

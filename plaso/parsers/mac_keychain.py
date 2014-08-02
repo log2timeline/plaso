@@ -37,8 +37,8 @@ import os
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -107,7 +107,7 @@ class KeychainApplicationRecordEvent(event.EventObject):
     self.ssgp_hash = ssgp_hash
 
 
-class KeychainParser(parser.BaseParser):
+class KeychainParser(interface.BaseParser):
   """Parser for Keychain files."""
 
   NAME = 'mac_keychain'

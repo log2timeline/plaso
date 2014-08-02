@@ -25,8 +25,8 @@ import socket
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -69,7 +69,7 @@ class UtmpEvent(event.EventObject):
     self.terminal_id = structure.terminal_id
 
 
-class UtmpParser(parser.BaseParser):
+class UtmpParser(interface.BaseParser):
   """Parser for Linux UTMP files."""
 
   NAME = 'utmp'

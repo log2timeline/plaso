@@ -20,9 +20,9 @@
 import logging
 
 from plaso.lib import output
-from plaso.lib import parser
 from plaso.lib import plugin
 from plaso.lib import utils
+from plaso.parsers import interface as parsers_interface
 
 
 # TODO: Refactor the putils library so it does not end up being a trash can
@@ -80,7 +80,7 @@ def FindAllParsers(pre_obj=None, config=None, parser_filter_string=''):
   # and other values that the preprocssing object collects.
   # TODO: remove pre_obj and config pass specific values e.g. parser_expression.
   # Also see if some of these values can be passed after initialization.
-  for parser_obj in _FindClasses(parser.BaseParser, pre_obj, config):
+  for parser_obj in _FindClasses(parsers_interface.BaseParser, pre_obj, config):
     add = False
     if not (filter_exclude or filter_include):
       add = True

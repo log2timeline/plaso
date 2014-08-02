@@ -33,9 +33,9 @@ import pyparsing
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
-from plaso.lib import parser
 from plaso.lib import timelib
 from plaso.lib import utils
+from plaso.parsers import interface
 
 import pytz
 
@@ -44,7 +44,7 @@ import pytz
 # pylint: disable=abstract-method
 
 
-class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
+class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
   """Generic text based parser that uses lexer to assist with parsing.
 
   This text parser is based on a rather slow lexer, which makes the
@@ -82,7 +82,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     # TODO: remove the multiple inheritance.
     self._pre_obj = pre_obj
     lexer.SelfFeederMixIn.__init__(self)
-    parser.BaseParser.__init__(self, pre_obj, config)
+    interface.BaseParser.__init__(self, pre_obj, config)
     self.line_ready = False
     self.attributes = {
         'body': '',
@@ -371,7 +371,7 @@ class SlowLexicalTextParser(parser.BaseParser, lexer.SelfFeederMixIn):
     return event_object
 
 
-class TextCSVParser(parser.BaseParser):
+class TextCSVParser(interface.BaseParser):
   """An implementation of a simple CSV line-per-entry log files."""
 
   __abstract = True
@@ -627,7 +627,7 @@ class PyparsingConstants(object):
       pyparsing.nums, min=1, max=5).setParseAction(PyParseIntCast)
 
 
-class PyparsingSingleLineTextParser(parser.BaseParser):
+class PyparsingSingleLineTextParser(interface.BaseParser):
   """Single line text parser based on the pyparsing library."""
   __abstract = True
 

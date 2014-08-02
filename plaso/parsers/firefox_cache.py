@@ -27,7 +27,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.parsers import interface
 
 
 __author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
@@ -57,7 +57,7 @@ class FirefoxCacheEvent(time_events.PosixTimeEvent):
     self.response_code = response_code
 
 
-class FirefoxCacheParser(parser.BaseParser):
+class FirefoxCacheParser(interface.BaseParser):
   """Extract cached records from Firefox."""
 
   NAME = 'firefox_cache'
