@@ -46,8 +46,8 @@ import re
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
-from plaso.lib import text_parser
 from plaso.lib import timelib
+from plaso.parsers import text_parser
 
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'

@@ -24,8 +24,8 @@ import os
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -104,7 +104,7 @@ class CupsIppEvent(event.EventObject):
     return u', '.join(values)
 
 
-class CupsIppParser(parser.BaseParser):
+class CupsIppParser(interface.BaseParser):
   """Parser for CUPS IPP files. """
 
   NAME = 'cups_ipp'

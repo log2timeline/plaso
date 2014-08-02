@@ -27,14 +27,13 @@ import re
 import os
 
 from plaso.lib import errors
-from plaso.lib import parser
 from plaso.lib import plugin
-# pylint: disable=unused-import
-from plaso.parsers import bencode_plugins
-from plaso.parsers.bencode_plugins import interface
+from plaso.parsers import bencode_plugins  # pylint: disable=unused-import
+from plaso.parsers import interface
+from plaso.parsers.bencode_plugins import interface as bencode_plugins_interface
 
 
-class BencodeParser(parser.BaseParser):
+class BencodeParser(interface.BaseParser):
   """Deserializes bencoded file; yields dictionary containing bencoded data.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
@@ -69,7 +68,8 @@ class BencodeParser(parser.BaseParser):
     parser_filter_string = getattr(self._config, 'parsers', None)
 
     return plugin.GetRegisteredPlugins(
-        interface.BencodePlugin, self._pre_obj, parser_filter_string)
+        bencode_plugins_interface.BencodePlugin, self._pre_obj,
+        parser_filter_string)
 
   def GetTopLevel(self, file_object):
     """Returns deserialized content of a bencoded file as a dictionary object.

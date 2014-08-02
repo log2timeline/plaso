@@ -21,15 +21,14 @@ import logging
 import os
 
 from plaso.lib import errors
-from plaso.lib import parser
-# pylint: disable=unused-import
-from plaso.parsers import winreg_plugins
-from plaso.parsers.winreg_plugins import interface
+from plaso.parsers import interface
+from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
+from plaso.parsers.winreg_plugins import interface as winreg_plugins_interface
 from plaso.winreg import cache
 from plaso.winreg import winregistry
 
 
-class WinRegistryParser(parser.BaseParser):
+class WinRegistryParser(interface.BaseParser):
   """Parses Windows NT Registry (REGF) files."""
 
   NAME = 'winreg'
@@ -55,7 +54,8 @@ class WinRegistryParser(parser.BaseParser):
     super(WinRegistryParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
     parser_filter_string = getattr(self._config, 'parsers', None)
-    self._plugins = interface.GetRegistryPlugins(parser_filter_string)
+    self._plugins = winreg_plugins_interface.GetRegistryPlugins(
+        parser_filter_string)
 
   def _RecurseKey(self, key):
     """A generator that takes a key and yields every subkey of it."""

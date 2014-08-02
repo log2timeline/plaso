@@ -26,11 +26,12 @@ import socket
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
 from plaso.unix import bsmtoken
+from plaso.parsers import interface
 
 import pytz
+
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
@@ -117,7 +118,7 @@ class BsmEvent(event.EventObject):
     self.offset = offset
 
 
-class BsmParser(parser.BaseParser):
+class BsmParser(interface.BaseParser):
   """Parser for BSM files."""
 
   NAME = 'bsm_log'

@@ -27,7 +27,7 @@ from plaso.events import windows_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.parsers import interface
 
 
 class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
@@ -69,7 +69,7 @@ class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
     self.volume_device_paths = volume_device_paths
 
 
-class WinPrefetchParser(parser.BaseParser):
+class WinPrefetchParser(interface.BaseParser):
   """A parser for Windows Prefetch files."""
 
   NAME = 'prefetch'

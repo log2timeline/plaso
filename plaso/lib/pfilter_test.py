@@ -22,9 +22,9 @@ import unittest
 from plaso.formatters import interface as formatters_interface
 from plaso.lib import event
 from plaso.lib import objectfilter
-from plaso.lib import parser
 from plaso.lib import pfilter
 from plaso.lib import timelib_test
+from plaso.parsers import interface as parsers_interface
 
 import pytz
 
@@ -44,7 +44,7 @@ class PfilterFakeFormatter(formatters_interface.EventFormatter):
   SOURCE_SHORT = 'REG'
 
 
-class PfilterFakeParser(parser.BaseParser):
+class PfilterFakeParser(parsers_interface.BaseParser):
   """A fake parser that does not parse anything, but registers."""
 
   NAME = 'pfilter_fake_parser'

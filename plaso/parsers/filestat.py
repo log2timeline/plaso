@@ -20,8 +20,8 @@
 from dfvfs.lib import definitions
 
 from plaso.events import time_events
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 # TODO: move this function to lib or equiv since it is used from the collector
@@ -142,7 +142,7 @@ class FileStatEvent(time_events.TimestampEvent):
     self.fs_type = fs_type
 
 
-class FileStatParser(parser.BaseParser):
+class FileStatParser(interface.BaseParser):
   """Class that defines a file system stat object parser."""
 
   NAME = 'filestat'

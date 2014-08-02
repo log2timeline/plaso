@@ -24,7 +24,7 @@ import pyevt
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.parsers import interface
 
 
 class WinEvtRecordEvent(time_events.PosixTimeEvent):
@@ -71,7 +71,7 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
     self.strings = list(evt_record.strings)
 
 
-class WinEvtParser(parser.BaseParser):
+class WinEvtParser(interface.BaseParser):
   """Parses Windows EventLog (EVT) files."""
 
   NAME = 'winevt'

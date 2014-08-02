@@ -18,8 +18,8 @@
 """This file contains a Symantec parser in plaso."""
 
 from plaso.lib import event
-from plaso.lib import text_parser
 from plaso.lib import timelib
+from plaso.parsers import text_parser
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'

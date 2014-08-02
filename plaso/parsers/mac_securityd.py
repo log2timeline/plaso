@@ -20,12 +20,13 @@
 import datetime
 import logging
 
+import pyparsing
+
 from plaso.events import time_events
 from plaso.lib import eventdata
-from plaso.lib import text_parser
 from plaso.lib import timelib
+from plaso.parsers import text_parser
 
-import pyparsing
 import pytz
 
 

@@ -23,8 +23,8 @@ from plaso.events import time_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 __author__ = 'Brian Baskin (brian@thebaskins.com)'
@@ -59,7 +59,7 @@ class WinJobEvent(time_events.TimestampEvent):
     self.comment = binary.ReadUtf16(comment)
 
 
-class WinJobParser(parser.BaseParser):
+class WinJobParser(interface.BaseParser):
   """Parse Windows Scheduled Task files for job events."""
 
   NAME = 'winjob'

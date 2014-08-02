@@ -25,8 +25,8 @@ from plaso.events import time_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import utils
+from plaso.parsers import interface
 
 
 class WinRecycleEvent(time_events.FiletimeEvent):
@@ -63,7 +63,7 @@ class WinRecycleEvent(time_events.FiletimeEvent):
       self.orig_filename_legacy = filename_ascii
 
 
-class WinRecycleBinParser(parser.BaseParser):
+class WinRecycleBinParser(interface.BaseParser):
   """Parses the Windows $I recycle files."""
 
   NAME = 'recycle_bin'
@@ -110,7 +110,7 @@ class WinRecycleBinParser(parser.BaseParser):
     yield WinRecycleEvent('', filename_utf, record, 0)
 
 
-class WinRecycleInfo2Parser(parser.BaseParser):
+class WinRecycleInfo2Parser(interface.BaseParser):
   """Parses the Windows INFO2 recycle bin file."""
 
   NAME = 'recycle_bin_info2'

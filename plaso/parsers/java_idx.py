@@ -27,8 +27,8 @@ import construct
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
+from plaso.parsers import interface
 
 
 class JavaIDXEvent(time_events.TimestampEvent):
@@ -53,7 +53,7 @@ class JavaIDXEvent(time_events.TimestampEvent):
     self.ip_address = ip_address
 
 
-class JavaIDXParser(parser.BaseParser):
+class JavaIDXParser(interface.BaseParser):
   """Parse Java IDX files for download events.
 
   There are five structures defined. 6.02 files had one generic section
