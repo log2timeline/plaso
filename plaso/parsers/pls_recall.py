@@ -22,9 +22,9 @@ import os
 
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import parser
 from plaso.lib import timelib
 from plaso.lib import utils
+from plaso.parsers import interface
 
 
 class PlsRecallEvent(event.EventObject):
@@ -50,7 +50,7 @@ class PlsRecallEvent(event.EventObject):
     self.query = query
 
 
-class PlsRecallParser(parser.BaseParser):
+class PlsRecallParser(interface.BaseParser):
   """Parse PL-SQL Recall files.
 
   Parser is based on a:

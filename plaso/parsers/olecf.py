@@ -22,21 +22,20 @@ import logging
 import pyolecf
 
 from plaso.lib import errors
-from plaso.lib import parser
 from plaso.lib import plugin
+from plaso.parsers import interface
 
-from plaso.parsers.olecf_plugins import interface
+from plaso.parsers.olecf_plugins import interface as olecf_plugins_interface
 
 # Register all OLECF plugins.
-# pylint: disable=unused-import
-from plaso.parsers import olecf_plugins
+from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
 
 
 if pyolecf.get_version() < '20131012':
   raise ImportWarning('OleCfParser requires at least pyolecf 20131012.')
 
 
-class OleCfParser(parser.BaseParser):
+class OleCfParser(interface.BaseParser):
   """Parses OLE Compound Files (OLECF)."""
 
   NAME = 'olecf'
@@ -53,7 +52,8 @@ class OleCfParser(parser.BaseParser):
     parser_filter_string = getattr(self._config, 'parsers', None)
 
     self._plugins = plugin.GetRegisteredPlugins(
-        interface.OlecfPlugin, self._pre_obj, parser_filter_string)
+        olecf_plugins_interface.OlecfPlugin, self._pre_obj,
+        parser_filter_string)
 
   def Parse(self, file_entry):
     """Extracts data from an OLE Compound File (OLECF).

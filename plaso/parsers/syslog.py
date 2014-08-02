@@ -22,9 +22,9 @@ import logging
 
 from plaso.lib import event
 from plaso.lib import lexer
-from plaso.lib import text_parser
 from plaso.lib import timelib
 from plaso.lib import utils
+from plaso.parsers import text_parser
 
 
 class SyslogLineEvent(event.TextEvent):

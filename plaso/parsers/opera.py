@@ -28,9 +28,9 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import parser
 from plaso.lib import timelib
 from plaso.lib import utils
+from plaso.parsers import interface
 
 
 class OperaTypedHistoryEvent(event.EventObject):
@@ -84,7 +84,7 @@ class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
       self.description = 'Last Visit'
 
 
-class OperaTypedHistoryParser(parser.BaseParser):
+class OperaTypedHistoryParser(interface.BaseParser):
   """Parses the Opera typed_history.xml file."""
 
   NAME = 'opera_typed_history'
@@ -138,7 +138,7 @@ class OperaTypedHistoryParser(parser.BaseParser):
     file_object.close()
 
 
-class OperaGlobalHistoryParser(parser.BaseParser):
+class OperaGlobalHistoryParser(interface.BaseParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = 'opera_global'

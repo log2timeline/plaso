@@ -22,7 +22,7 @@ import pylnk
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import parser
+from plaso.parsers import interface
 from plaso.parsers.shared import shell_items
 
 
@@ -62,7 +62,7 @@ class WinLnkLinkEvent(time_events.FiletimeEvent):
     self.icon_location = lnk_file.icon_location
 
 
-class WinLnkParser(parser.BaseParser):
+class WinLnkParser(interface.BaseParser):
   """Parses Windows Shortcut (LNK) files."""
 
   NAME = 'lnk'
