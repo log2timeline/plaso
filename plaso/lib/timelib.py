@@ -255,7 +255,7 @@ class Timestamp(object):
   def FromFatDateTime(cls, fat_date_time):
     """Converts a FAT date and time into a timestamp.
 
-    FAT date time is mainly used in DOS/Windows file formats and NTFS.
+    FAT date time is mainly used in DOS/Windows file formats and FAT.
 
     The FAT date and time is a 32-bit value containing two 16-bit values:
       * The date (lower 16-bit).
