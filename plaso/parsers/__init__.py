@@ -27,6 +27,7 @@ from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
 from plaso.parsers import hachoir
+from plaso.parsers import iis
 from plaso.parsers import java_idx
 from plaso.parsers import mac_appfirewall
 from plaso.parsers import mac_keychain

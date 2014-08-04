@@ -28,6 +28,10 @@ Thanks to contributors (alphabetically based on last name):
 * Johan Berggren
   * SQLite plugins
     * Zeitgeist activity database
+* Ashley Holtz
+  * Parsers
+    * IIS
+    * Adobe ColdFusion
 * Dominique Kilman
   * Parsers
     * PCAP

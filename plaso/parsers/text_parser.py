@@ -664,6 +664,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     super(PyparsingSingleLineTextParser, self).__init__(pre_obj, config)
     self.encoding = self.ENCODING
     self._current_offset = 0
+    self._line_structures = self.LINE_STRUCTURES
 
   def _ReadLine(self, text_file_object, max_len=0, quiet=False, depth=0):
     """Read a single line from a text file and return it back.
@@ -724,7 +725,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
 
     file_object = file_entry.GetFileObject()
 
-    if not self.LINE_STRUCTURES:
+    if not self._line_structures:
       raise errors.UnableToParseFile(
           u'Line structure undeclared, unable to proceed.')
 
