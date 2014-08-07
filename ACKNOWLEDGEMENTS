@@ -28,6 +28,9 @@ Thanks to contributors (alphabetically based on last name):
 * Johan Berggren
   * SQLite plugins
     * Zeitgeist activity database
+* Petter Bjelland
+  * Parsers
+    * Firefox Cache
 * Ashley Holtz
   * Parsers
     * IIS
@@ -104,9 +107,6 @@ Thanks to contributors (alphabetically based on last name):
     * Android calls database
     * Android sms database
   * updates to the timezone transformation
-* Petter Bjelland
-  * Parsers
-    * Firefox Cache
 
 Test data:
 
