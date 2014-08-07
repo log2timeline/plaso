@@ -84,10 +84,11 @@ class TestCommand(Command):
     test_results = run_tests.RunTests()
 
 
+# Unicode in the description will break python-setuptools, hence
+# "Plaso Langar Að Safna Öllu" was removed.
 plaso_description = (
-    'plaso (or Plaso Langar Að Safna Öllu) is a tool designed to extract '
-    'timestamps from various files found on a typical computer system(s) '
-    'and aggregate them.')
+    u'plaso is a tool designed to extract timestamps from various files found '
+    u'on a typical computer system(s) and aggregate them.')
 
 setup(
     name='plaso',
@@ -96,6 +97,7 @@ setup(
     long_description=plaso_description,
     license='Apache License, Version 2.0',
     url='https://sites.google.com/a/kiddaland.net/plaso',
+    maintainer='Plaso development team',
     maintainer_email='log2timeline-dev@googlegroups.com',
     scripts=GetTools(),
     cmdclass={'test': TestCommand},
