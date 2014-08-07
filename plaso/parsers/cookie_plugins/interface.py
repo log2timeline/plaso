@@ -20,24 +20,24 @@
 import abc
 
 from plaso.lib import errors
-from plaso.lib import plugin
+from plaso.parsers import plugins
 
 
 def GetPlugins(pre_obj):
   """Returns a list of all cookie plugins."""
-  plugins = []
+  plugins_list = []
   for plugin_cls in CookiePlugin.classes.itervalues():
     parent_name = getattr(plugin_cls, 'parent_class_name', 'NOTHERE')
 
     if parent_name != 'cookie':
       continue
 
-    plugins.append(plugin_cls(pre_obj))
+    plugins_list.append(plugin_cls(pre_obj))
 
-  return plugins
+  return plugins_list
 
 
-class CookiePlugin(plugin.BasePlugin):
+class CookiePlugin(plugins.BasePlugin):
   """A browser cookie plugin for Plaso.
 
   This is a generic cookie parsing interface that can handle parsing

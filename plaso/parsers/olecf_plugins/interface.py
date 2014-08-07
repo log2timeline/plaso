@@ -21,10 +21,10 @@ import abc
 import logging
 
 from plaso.lib import errors
-from plaso.lib import plugin
+from plaso.parsers import plugins
 
 
-class OlecfPlugin(plugin.BasePlugin):
+class OlecfPlugin(plugins.BasePlugin):
   """An OLECF plugin for Plaso."""
 
   __abstract = True

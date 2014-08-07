@@ -19,12 +19,11 @@
 
 import unittest
 
-# Always import plist to force plugin registration.
 from plaso.events import plist_event
 from plaso.lib import errors
-from plaso.lib import plugin
-# pylint: disable=unused-import
-from plaso.parsers import plist
+# Register plist plugins.
+from plaso.parsers import plist  # pylint: disable=unused-import
+from plaso.parsers import utils
 from plaso.parsers.plist_plugins import interface
 
 
@@ -55,7 +54,7 @@ class TestPlistPlugin(unittest.TestCase):
 
   def testGetRegisteredPlugins(self):
     """Tests the GetRegisteredPlugins function."""
-    plugins = plugin.GetRegisteredPlugins(interface.PlistPlugin)
+    plugins = utils.GetRegisteredPlugins(interface.PlistPlugin)
 
     self.assertNotEquals(plugins, {})
 
