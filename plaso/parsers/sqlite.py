@@ -22,12 +22,11 @@ import logging
 import sqlite3
 
 from plaso.lib import errors
-from plaso.lib import plugin
 from plaso.parsers import interface
-from plaso.parsers.sqlite_plugins import interface as sqlite_plugins_interface
-
-# Register all sqlite plugins.
+# Register sqlite plugins.
 from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
+from plaso.parsers import utils
+from plaso.parsers.sqlite_plugins import interface as sqlite_plugins_interface
 
 
 class SQLiteParser(interface.BaseParser):
@@ -48,7 +47,7 @@ class SQLiteParser(interface.BaseParser):
     self.db = None
     parser_filter_string = getattr(self._config, 'parsers', None)
 
-    self._plugins = plugin.GetRegisteredPlugins(
+    self._plugins = utils.GetRegisteredPlugins(
         sqlite_plugins_interface.SQLitePlugin, self._pre_obj,
         parser_filter_string)
 

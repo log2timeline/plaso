@@ -19,7 +19,6 @@
 
 import logging
 
-from plaso.frontend import presets
 from plaso.lib import errors
 from plaso.lib import lexer
 
@@ -198,42 +197,3 @@ def GetInodeValue(inode_raw):
       return int(inode_string)
     except ValueError:
       return -1
-
-
-def GetParserListsFromString(parser_string):
-  """Return a list of parsers to include and exclude from a string.
-
-  Takes a comma separated string and splits it up into two lists,
-  of parsers or plugins to include and to exclude from selection.
-  If a particular filter is prepended with a minus sign it will
-  be included int he exclude section, otherwise in the include.
-
-  Args:
-    parser_string: The comma separated string.
-
-  Returns:
-    A tuple of two lists, include and exclude.
-  """
-  include = []
-  exclude = []
-
-  preset_categories = presets.categories.keys()
-
-  for filter_string in parser_string.split(','):
-    filter_string = filter_string.strip()
-    if not filter_string:
-      continue
-    if filter_string.startswith('-'):
-      filter_strings_use = exclude
-      filter_string = filter_string[1:]
-    else:
-      filter_strings_use = include
-
-    filter_string_lower = filter_string.lower()
-    if filter_string_lower in preset_categories:
-      filter_strings_use.extend(
-          presets.GetParsersFromCategory(filter_string_lower))
-    else:
-      filter_strings_use.append(filter_string_lower)
-
-  return include, exclude

@@ -21,15 +21,17 @@ Plaso's engine calls BencodeParser when it encounters bencoded files to be
 processed, typically seen for BitTorrent data.
 """
 
-import bencode
 import logging
 import re
 import os
 
+import bencode
+
 from plaso.lib import errors
-from plaso.lib import plugin
+# Register all bencode plugins.
 from plaso.parsers import bencode_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
+from plaso.parsers import utils
 from plaso.parsers.bencode_plugins import interface as bencode_plugins_interface
 
 
@@ -67,7 +69,7 @@ class BencodeParser(interface.BaseParser):
     """Return a list of all available plugins."""
     parser_filter_string = getattr(self._config, 'parsers', None)
 
-    return plugin.GetRegisteredPlugins(
+    return utils.GetRegisteredPlugins(
         bencode_plugins_interface.BencodePlugin, self._pre_obj,
         parser_filter_string)
 

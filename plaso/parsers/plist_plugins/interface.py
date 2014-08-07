@@ -28,11 +28,11 @@ and operation of plugins for plist files which will be used by PlistParser.
 import logging
 
 from plaso.lib import errors
-from plaso.lib import plugin
 from plaso.lib import registry
+from plaso.parsers import plugins
 
 
-class PlistPlugin(plugin.BasePlugin):
+class PlistPlugin(plugins.BasePlugin):
   """This is an abstract class from which plugins should be based.
 
   The following are the attributes and methods expected to be overriden by a

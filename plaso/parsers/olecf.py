@@ -22,13 +22,11 @@ import logging
 import pyolecf
 
 from plaso.lib import errors
-from plaso.lib import plugin
 from plaso.parsers import interface
-
-from plaso.parsers.olecf_plugins import interface as olecf_plugins_interface
-
 # Register all OLECF plugins.
 from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
+from plaso.parsers import utils
+from plaso.parsers.olecf_plugins import interface as olecf_plugins_interface
 
 
 if pyolecf.get_version() < '20131012':
@@ -51,7 +49,7 @@ class OleCfParser(interface.BaseParser):
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
     parser_filter_string = getattr(self._config, 'parsers', None)
 
-    self._plugins = plugin.GetRegisteredPlugins(
+    self._plugins = utils.GetRegisteredPlugins(
         olecf_plugins_interface.OlecfPlugin, self._pre_obj,
         parser_filter_string)
 

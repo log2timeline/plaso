@@ -25,7 +25,6 @@ projects that may want to use the Plaso plugin system.
 """
 
 from plaso.lib import registry
-from plaso.lib import utils
 
 
 class BasePlugin(object):
@@ -130,70 +129,3 @@ class BasePluginCache(object):
   def GetResults(self, attribute):
     """Return back a cached attribute if it exists."""
     return getattr(self, attribute, None)
-
-
-def GetRegisteredPlugins(
-    parent_class=BasePlugin, pre_obj=None, parser_filter_string=u''):
-  """Build a list of all available plugins and return them.
-
-  This method uses the class registration library to find all classes that have
-  implemented the plugin class.
-
-  This should mostly be used by parsers or other assistant methods that know
-  the parent class of the plugin (something like the base class for all Windows
-  registry plugins, etc).
-
-  Args:
-    parent_class: The top level class of the specific plugin to query.
-    pre_obj: The preprocessing object or the knowledge base.
-    parser_filter_string: Optional comma separated list of parsers and plugins
-                          to include. The default is an empty string.
-
-  Returns:
-    A dict with keys being the plugin names and values the plugin class.
-
-  Raises:
-    ValueError: If two plugins have the same name.
-  """
-  if parser_filter_string:
-    parser_include, parser_exclude = utils.GetParserListsFromString(
-        parser_filter_string)
-
-  results = {}
-  all_plugins = {}
-
-  for plugin_name, plugin_cls in parent_class.classes.iteritems():
-    # Go through the entire chain of parents to see if we have a match.
-    # We need to do that in case some plugins inherit from other plugins
-    # to add minor enhancements and need to be included in the list of plugins.
-    # This is common behavior with registry plugins for instance.
-    plugin_parent = plugin_cls
-    plugin_match = False
-    while plugin_parent != object:
-      parent_name = getattr(plugin_parent, 'parent_class_name', 'NOTHERE')
-
-      if parent_name == parent_class.NAME:
-        plugin_match = True
-        break
-      plugin_parent = getattr(plugin_parent, 'parent_class', object)
-
-    if not plugin_match:
-      continue
-
-    if plugin_name in all_plugins:
-      raise ValueError(
-          u'The plugin "{}" appears twice in the plugin list.'.format(
-              plugin_name))
-
-    if not parser_filter_string:
-      all_plugins[plugin_name] = plugin_cls(pre_obj=pre_obj)
-    else:
-      if plugin_name in parser_include and plugin_name not in parser_exclude:
-        results[plugin_name] = plugin_cls(pre_obj=pre_obj)
-      if plugin_name not in parser_exclude:
-        all_plugins[plugin_name] = plugin_cls(pre_obj=pre_obj)
-
-  if parser_filter_string and results:
-    return results
-
-  return all_plugins
