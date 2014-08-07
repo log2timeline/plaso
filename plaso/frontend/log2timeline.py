@@ -28,7 +28,7 @@ import plaso
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
-from plaso.lib import putils
+from plaso.parsers import utils as parsers_utils
 
 import pytz
 
@@ -75,19 +75,22 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
     # all appropriate parsers and plugins are registered, yet we don't need to
     # directly call these libraries, it is enough to load them up to get them
     # registered.
+
+    # TODO: remove this hack includes should be a the top if this does not work
+    # remove the need for implicit behavior on import.
     from plaso import filters
     from plaso import parsers as _
     from plaso import output as _
     from plaso.frontend import presets
     from plaso.lib import output
-    from plaso.lib import plugin
+    from plaso.parsers import plugins
 
     return_dict['Versions'] = [
         ('plaso engine', plaso.GetVersion()),
         ('python', sys.version)]
 
     return_dict['Parsers'] = []
-    for parser in sorted(putils.FindAllParsers()['all']):
+    for parser in sorted(parsers_utils.FindAllParsers()['all']):
       doc_string, _, _ = parser.__doc__.partition('\n')
       return_dict['Parsers'].append((parser.parser_name, doc_string))
 
@@ -101,7 +104,7 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
 
     return_dict['Plugins'] = []
 
-    for plugin, obj in sorted(plugin.BasePlugin.classes.iteritems()):
+    for plugin, obj in sorted(plugins.BasePlugin.classes.iteritems()):
       doc_string, _, _ = obj.__doc__.partition('\n')
       return_dict['Plugins'].append((plugin, doc_string))
 
