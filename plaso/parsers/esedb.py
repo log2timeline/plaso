@@ -22,12 +22,11 @@ import logging
 import pyesedb
 
 from plaso.lib import errors
-from plaso.lib import plugin
-from plaso.parsers import interface
-from plaso.parsers.esedb_plugins import interface as esedb_plugins_interface
-
-# This import is necessary to register all the ESEDB plugins.
+# Register all ESEDB plugins.
 from plaso.parsers import esedb_plugins  # pylint: disable=unused-import
+from plaso.parsers import interface
+from plaso.parsers import utils
+from plaso.parsers.esedb_plugins import interface as esedb_plugins_interface
 
 
 if pyesedb.get_version() < '20140301':
@@ -49,7 +48,7 @@ class EseDbParser(interface.BaseParser):
     super(EseDbParser, self).__init__(pre_obj, config)
     parser_filter_string = getattr(self._config, 'parsers', None)
 
-    self._plugins = plugin.GetRegisteredPlugins(
+    self._plugins = utils.GetRegisteredPlugins(
         esedb_plugins_interface.EseDbPlugin, self._pre_obj,
         parser_filter_string)
 

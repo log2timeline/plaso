@@ -21,14 +21,15 @@ import logging
 import os
 import tempfile
 
-from plaso.lib import errors
-from plaso.lib import plugin
-
-import pytz
 import sqlite3
 
+from plaso.lib import errors
+from plaso.parsers import plugins
 
-class SQLiteCache(plugin.BasePluginCache):
+import pytz
+
+
+class SQLiteCache(plugins.BasePluginCache):
   """A cache storing query results for SQLite plugins."""
 
   def CacheQueryResults(
@@ -85,7 +86,7 @@ class SQLiteCache(plugin.BasePluginCache):
       row = sql_results.fetchone()
 
 
-class SQLitePlugin(plugin.BasePlugin):
+class SQLitePlugin(plugins.BasePlugin):
   """A SQLite plugin for Plaso."""
 
   __abstract = True

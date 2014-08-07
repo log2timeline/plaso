@@ -23,14 +23,14 @@ import logging
 import pyesedb
 
 from plaso.lib import errors
-from plaso.lib import plugin
+from plaso.parsers import plugins
 
 
-class EseDbCache(plugin.BasePluginCache):
+class EseDbCache(plugins.BasePluginCache):
   """A cache storing query results for ESEDB plugins."""
 
 
-class EseDbPlugin(plugin.BasePlugin):
+class EseDbPlugin(plugins.BasePlugin):
   """The ESE database plugin interface."""
 
   __abstract = True

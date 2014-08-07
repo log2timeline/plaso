@@ -44,10 +44,10 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import foreman
 from plaso.lib import pfilter
-from plaso.lib import putils
 from plaso.lib import queue
 from plaso.lib import storage
 from plaso.lib import timelib
+from plaso.parsers import utils as parsers_utils
 
 import pytz
 
@@ -881,7 +881,7 @@ class ExtractionFrontend(Frontend):
 
     # TODO: move FindAllParsers to engine as a class method?
     filter_query = getattr(options, 'parsers', '')
-    self._parsers = putils.FindAllParsers(
+    self._parsers = parsers_utils.FindAllParsers(
         pre_obj=pre_obj, config=options, parser_filter_string=filter_query)
     self._parser_names = [parser.parser_name for parser in self._parsers['all']]
 
@@ -1111,7 +1111,7 @@ class ExtractionFrontend(Frontend):
 
     # TODO: move FindAllParsers to engine as a class method?
     filter_query = getattr(options, 'parsers', '')
-    self._parsers = putils.FindAllParsers(
+    self._parsers = parsers_utils.FindAllParsers(
         pre_obj=pre_obj, config=options, parser_filter_string=filter_query)
     self._parser_names = [parser.parser_name for parser in self._parsers['all']]
 

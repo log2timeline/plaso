@@ -20,11 +20,12 @@
 import abc
 import logging
 
-from plaso.lib import plugin
+from plaso.parsers import plugins
+from plaso.parsers import utils
 from plaso.winreg import path_expander as winreg_path_expander
 
 
-class RegistryPlugin(plugin.BasePlugin):
+class RegistryPlugin(plugins.BasePlugin):
   """Class that defines the Windows Registry plugin object interface."""
 
   __abstract = True
@@ -319,7 +320,7 @@ def GetRegistryPlugins(filter_list=None):
   """
   plugins_list = PluginList()
 
-  for plugin_cls in plugin.GetRegisteredPlugins(
+  for plugin_cls in utils.GetRegisteredPlugins(
       RegistryPlugin, parser_filter_string=filter_list).itervalues():
     plugin_type = plugin_cls.REG_TYPE
     plugins_list.AddPlugin(
