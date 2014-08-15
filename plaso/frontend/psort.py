@@ -543,7 +543,7 @@ def ProcessOutput(
   return counter
 
 
-def Main():
+def Main(arguments=None):
   """Start the tool."""
   multiprocessing.freeze_support()
 
@@ -637,7 +637,8 @@ def Main():
           ' and it\'s usage can be found here: http://plaso.kiddaland.'
           'net/usage/filters'))
 
-  arguments = sys.argv[1:]
+  if arguments is None:
+    arguments = sys.argv[1:]
 
   # Add the output module options.
   if '-o' in arguments:
