@@ -37,7 +37,7 @@ from plaso.lib import errors
 class Classifier(object):
   """Class that defines the file format classifier."""
 
-  MAGIC_VALUES = {
+  _MAGIC_VALUES = {
       'ZIP': {'length': 4, 'offset': 0, 'values': ['P', 'K', '\x03', '\x04']},
       'TAR': {'length': 5, 'offset': 257, 'values': ['u', 's', 't', 'a', 'r']},
       'GZ': {'length': 2, 'offset': 0, 'values': ['\x1f', '\x8b']},
@@ -51,35 +51,7 @@ class Classifier(object):
   MAX_FILE_DEPTH = 3
 
   @classmethod
-  def SmartOpenFiles(cls, file_entry, depth=0):
-    """Generate a list of all available PathSpecs extracted from a file.
-
-    Args:
-      file_entry: A file entry object.
-      depth: Incrementing number that defines the current depth into
-             a file (file inside a ZIP file is depth 1, file inside a tar.gz
-             would be of depth 2).
-
-    Yields:
-      A file entry object (instance of dfvfs.FileEntry).
-    """
-    if depth >= cls.MAX_FILE_DEPTH:
-      return
-
-    for path_spec in cls.SmartOpenFile(file_entry):
-      new_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-      if new_file_entry is None:
-        logging.debug((
-            u'Unable to open file: {0:s}').format(path_spec.comparable))
-        continue
-      yield new_file_entry
-
-      depth += 1
-      for sub_file_entry in cls.SmartOpenFiles(new_file_entry, depth=depth):
-        yield sub_file_entry
-
-  @classmethod
-  def SmartOpenFile(cls, file_entry):
+  def _SmartOpenFile(cls, file_entry):
     """Return a generator for all pathspec protobufs extracted from a file.
 
     If the file is compressed then extract all members and include
@@ -89,7 +61,8 @@ class Classifier(object):
       file_entry: The file entry object.
 
     Yields:
-      Path specifications (instance of dfvfs.PathSpec) of embedded file entries.
+      A path specification (instance of dfvfs.PathSpec) of embedded file
+      entries.
     """
     file_object = file_entry.GetFileObject()
 
@@ -100,7 +73,7 @@ class Classifier(object):
     file_object.seek(0, os.SEEK_SET)
 
     if not cls.magic_max_length:
-      for magic_value in cls.MAGIC_VALUES.values():
+      for magic_value in cls._MAGIC_VALUES.values():
         cls.magic_max_length = max(
             cls.magic_max_length,
             magic_value['length'] + magic_value['offset'])
@@ -112,7 +85,7 @@ class Classifier(object):
     # each read byte (according to original offset and current one)
     # If all match, then we have a particular file format and we
     # can move on.
-    for m_value, m_dict in cls.MAGIC_VALUES.items():
+    for m_value, m_dict in cls._MAGIC_VALUES.items():
       length = m_dict['length'] + m_dict['offset']
       if len(header) < length:
         continue
@@ -165,6 +138,7 @@ class Classifier(object):
         file_object.seek(0, os.SEEK_SET)
         gzip_file = gzip.GzipFile(fileobj=file_object, mode='rb')
         _ = gzip_file.read(4)
+        gzip_file.close()
 
         logging.debug((
             u'Including: {0:s} as GZIP compressed stream into process '
@@ -198,3 +172,31 @@ class Classifier(object):
         pass
 
     file_object.close()
+
+  @classmethod
+  def SmartOpenFiles(cls, file_entry, depth=0):
+    """Generate a list of all available PathSpecs extracted from a file.
+
+    Args:
+      file_entry: A file entry object.
+      depth: Incrementing number that defines the current depth into
+             a file (file inside a ZIP file is depth 1, file inside a tar.gz
+             would be of depth 2).
+
+    Yields:
+      A file entry object (instance of dfvfs.FileEntry).
+    """
+    if depth >= cls.MAX_FILE_DEPTH:
+      return
+
+    for path_spec in cls._SmartOpenFile(file_entry):
+      sub_file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+      if sub_file_entry is None:
+        logging.debug(
+            u'Unable to open file: {0:s}'.format(path_spec.comparable))
+        continue
+      yield sub_file_entry
+
+      depth += 1
+      for sub_file_entry in cls.SmartOpenFiles(sub_file_entry, depth=depth):
+        yield sub_file_entry
