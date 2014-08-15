@@ -19,6 +19,7 @@
 
 import unittest
 
+# pylint: disable=unused-import
 from plaso.formatters import iis as iis_formatter
 from plaso.lib import event
 from plaso.lib import timelib_test
@@ -51,17 +52,19 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         '2013-07-30 00:00:00')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.source_ip, '10.10.10.100')
-    self.assertEquals(event_object.dest_ip, '10.10.10.100')
+    self.assertEquals(event_object.source_ip, u'10.10.10.100')
+    self.assertEquals(event_object.dest_ip, u'10.10.10.100')
     self.assertEquals(event_object.dest_port, 80)
 
     expected_msg = (
-        u'GET /some/image/path/something.jpg [ 10.10.10.100 ' +
-        u'> 10.10.10.100 : 80 ] Http Status: 200 User Agent: Mozilla' +
-        u'/4.0+(compatible;+Win32;+WinHttp.WinHttpRequest.5)')
+        u'GET /some/image/path/something.jpg '
+        u'[ 10.10.10.100 > 10.10.10.100 : 80 ] '
+        u'Http Status: 200 '
+        u'User Agent: Mozilla/4.0+(compatible;+Win32;'
+        u'+WinHttp.WinHttpRequest.5)')
     expected_msg_short = (
-        u'GET /some/image/path/something.jpg [ 10.10.10.100 ' +
-        u'> 10.10.10.100 : 80 ]')
+        u'GET /some/image/path/something.jpg '
+         u'[ 10.10.10.100 > 10.10.10.100 : 80 ]')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
@@ -75,18 +78,20 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.http_method, 'GET')
     self.assertEquals(event_object.http_status, 200)
     self.assertEquals(event_object.requested_uri_stem,
-        r'/some/image/path/something.jpg')
+        u'/some/image/path/something.jpg')
 
     event_object = event_objects[1]
 
     expected_msg = (
-        u'GET /some/image/path/something.htm [ 22.22.22.200 ' +
-        u'> 10.10.10.100 : 80 ] Http Status: 404 User Agent: Mozilla/5.0+' +
-        u'(Macintosh;+Intel+Mac+OS+X+10_6_8)+AppleWebKit/534.57.2+' +
-        u'(KHTML,+like+Gecko)+Version/5.1.7+Safari/534.57.2')
+        u'GET /some/image/path/something.htm '
+        u'[ 22.22.22.200 > 10.10.10.100 : 80 ] '
+        u'Http Status: 404 '
+        u'User Agent: Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_6_8)'
+        u'+AppleWebKit/534.57.2+(KHTML,+like+Gecko)+Version/5.1.7'
+        u'+Safari/534.57.2')
     expected_msg_short = (
-        u'GET /some/image/path/something.htm [ 22.22.22.200 ' +
-        u'> 10.10.10.100 : 80 ]')
+        u'GET /some/image/path/something.htm '
+        u'[ 22.22.22.200 > 10.10.10.100 : 80 ]')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
