@@ -26,7 +26,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.lib import classifier
+from plaso.engine import classifier
 from plaso.lib import errors
 from plaso.lib import queue
 from plaso.lib import utils

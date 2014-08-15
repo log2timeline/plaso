@@ -382,7 +382,7 @@ class ExtractionFrontend(Frontend):
     extraction_worker.SetDebugMode(self._debug_mode)
     extraction_worker.SetSingleProcessMode(self._single_process_mode)
 
-    open_files = getattr(options, 'open_files', None)
+    open_files = getattr(options, 'open_files', False)
     extraction_worker.SetOpenFiles(open_files)
 
     if getattr(options, 'os', None):
