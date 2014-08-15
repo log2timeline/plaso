@@ -53,7 +53,6 @@ import plaso
 from plaso.engine import worker
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
-from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import queue
 from plaso.parsers import utils as parsers_utils
@@ -126,16 +125,9 @@ def ProcessStorage(options):
   """
   storage_parameters = options.storage.split()
   storage_parameters.append(options.file_to_parse)
+
   if options.filter:
     storage_parameters.append(options.filter)
-
-  front_end = psort.PsortFrontend()
-
-  try:
-    front_end.ParseOptions(options)
-  except errors.BadConfigOption as exception:
-    logging.error(u'{0:s}'.format(exception))
-    return
 
   if options.verbose:
     # TODO: why not move this functionality into psort?
@@ -145,12 +137,17 @@ def ProcessStorage(options):
     time_start = time.time()
 
   # Call psort and process output.
-  _ = front_end.ParseStorage(options)
+  return_value = psort.Main(storage_parameters)
 
   if options.verbose:
     profiler.disable()
   else:
     time_end = time.time()
+
+  if return_value:
+    print u'Parsed storage file.'
+  else:
+    print u'It appears the storage file may not have processed correctly.'
 
   if options.verbose:
     return GetStats(profiler)
