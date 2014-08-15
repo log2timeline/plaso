@@ -296,6 +296,7 @@ class PyPiDownloadHelper(DownloadHelper):
     Returns:
       The a string containing the latest version number or None on error.
     """
+    # TODO: add support to handle index of packages pages, e.g. for pyparsing.
     download_url = u'https://pypi.python.org/pypi/{0:s}'.format(project_name)
 
     page_content = self.DownloadPageContent(download_url)
@@ -335,6 +336,56 @@ class PyPiDownloadHelper(DownloadHelper):
         u'https://pypi.python.org/packages/source/{0:s}/{1:s}/'
         u'{1:s}-{2:s}.tar.gz').format(
             project_name[0], project_name, project_version)
+
+
+class SourceForgeDownloadHelper(DownloadHelper):
+  """Class that helps in downloading a Source Forge project."""
+
+  def GetLatestVersion(self, project_name):
+    """Retrieves the latest version number for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The a string containing the latest version number or None on error.
+    """
+    # TODO: make this more robust to detect different naming schemes.
+    download_url = 'http://sourceforge.net/projects/{0:s}/files/{0:s}/'.format(
+        project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return 0
+
+    # The format of the project download URL is:
+    # /projects/{project name}/files/{project name}/{project name}-{version}/
+    expression_string = (
+        '<a href="/projects/{0:s}/files/{0:s}/'
+        '{0:s}-([0-9]+[.][0-9]+[.][0-9]+)/"').format(project_name)
+    matches = re.findall(expression_string, page_content)
+
+    if not matches:
+      return 0
+
+    numeric_matches = [''.join(match.split('.')) for match in matches]
+    return matches[numeric_matches.index(max(numeric_matches))]
+
+  def GetDownloadUrl(self, project_name, project_version):
+    """Retrieves the download URL for a given project name and version.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+
+    Returns:
+      The download URL of the project or None on error.
+    """
+    download_url = (
+        'http://downloads.sourceforge.net/project/{0:s}/{0:s}/{0:s}-{1:s}'
+        '/{0:s}-{1:s}.tar.gz').format(project_name, project_version)
+
+    return self.DownloadFile(download_url)
 
 
 class BuildHelper(object):
@@ -671,6 +722,7 @@ class DependencyBuilder(object):
   PROJECT_TYPE_GOOGLE_CODE = 1
   PROJECT_TYPE_GOOGLE_CODE_WIKI = 2
   PROJECT_TYPE_PYPI = 3
+  PROJECT_TYPE_SOURCE_FORGE = 4
 
   def __init__(self, build_target):
     """Initializes the dependency builder.
@@ -797,6 +849,8 @@ class DependencyBuilder(object):
       download_helper = GoogleCodeWikiDownloadHelper()
     elif project_type == self.PROJECT_TYPE_PYPI:
       download_helper = PyPiDownloadHelper()
+    elif project_type == self.PROJECT_TYPE_SOURCE_FORGE:
+      download_helper = SourceForgeDownloadHelper()
     else:
       raise ValueError(u'Unsupported project type.')
 
@@ -843,11 +897,8 @@ def Main():
   # protobuf
   # ipython
 
-  # TODO: rpm build of psutil is broken, fix upstream.
+  # TODO: rpm build of psutil is broken, fix upstream or add patching.
   # (u'psutil', DependencyBuilder.PROJECT_TYPE_PYPI),
-
-  # TODO: handle index of packages.
-  # (u'pyparsing', DependencyBuilder.PROJECT_TYPE_PYPI),
 
   # TODO: dependency sqlite-devel (rpm) or libsqlite3-dev (deb)
   # or download and build sqlite3 from source?
@@ -860,12 +911,13 @@ def Main():
     (u'construct', DependencyBuilder.PROJECT_TYPE_PYPI),
     (u'dfvfs', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
     (u'dpkt', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI),
+    (u'pyparsing', DependencyBuilder.PROJECT_TYPE_SOURCE_FORGE),
     (u'pysqlite', DependencyBuilder.PROJECT_TYPE_PYPI),
     (u'pytz', DependencyBuilder.PROJECT_TYPE_PYPI),
     (u'PyYAML', DependencyBuilder.PROJECT_TYPE_PYPI),
     (u'six', DependencyBuilder.PROJECT_TYPE_PYPI)]
 
-  build_directory = u'dependencies' 
+  build_directory = u'dependencies'
   if not os.path.exists(build_directory):
     os.mkdir(build_directory)
   os.chdir(build_directory)
