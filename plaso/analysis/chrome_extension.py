@@ -33,7 +33,7 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  EXTENSION_NAME_RE = re.compile('<title>Chrome Web Store - ([^<]+)</title>')
+  EXTENSION_NAME_RE = re.compile('<title>([^<]+) - Chrome Web Store</title>')
   WEB_STORE_URL = u'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
   def __init__(self, pre_obj, incoming_queue, outgoing_queue):
