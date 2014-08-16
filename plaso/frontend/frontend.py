@@ -28,8 +28,8 @@ import sys
 import threading
 import traceback
 
+from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
@@ -37,7 +37,6 @@ from dfvfs.volume import vshadow_volume_system
 import plaso
 from plaso import parsers   # pylint: disable=unused-import
 from plaso.engine import engine
-from plaso.engine import scanner
 from plaso.engine import utils as engine_utils
 from plaso.frontend import rpc_proxy
 from plaso.lib import errors
@@ -236,48 +235,6 @@ class Frontend(object):
     header_string = format_string.format(u' {0:s} '.format(text))
     self._output_writer.Write(header_string)
 
-  def PrintOptions(self, options, source_path):
-    """Prints the options.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      source_path: the source path.
-    """
-    self._output_writer.Write(u'\n')
-    self._output_writer.Write(
-        u'Source path\t\t: {0:s}\n'.format(source_path))
-
-    if self._source_type == self._SOURCE_TYPE_STORAGE_MEDIA_IMAGE:
-      is_image = True
-    else:
-      is_image = False
-
-    self._output_writer.Write(
-        u'Is storage media image\t: {0!s}\n'.format(is_image))
-
-    if is_image:
-      image_offset_bytes = self._partition_offset
-      if isinstance(image_offset_bytes, basestring):
-        try:
-          image_offset_bytes = int(image_offset_bytes, 10)
-        except ValueError:
-          image_offset_bytes = 0
-      elif image_offset_bytes is None:
-        image_offset_bytes = 0
-
-      self._output_writer.Write(
-          u'Partition offset\t: {0:d} (0x{0:08x})\n'.format(image_offset_bytes))
-
-      vss_stores = getattr(options, 'vss_stores', None)
-      if vss_stores:
-        self._output_writer.Write(u'VSS stores\t\t: {0!s}\n'.format(vss_stores))
-
-    filter_file = getattr(options, 'file_filter', None)
-    if filter_file:
-      self._output_writer.Write(u'Filter file\t\t: {0:s}\n'.format(filter_file))
-
-    self._output_writer.Write(u'\n')
-
   def PrintSeparatorLine(self):
     """Prints a separator line."""
     self._output_writer.Write(u'{0:s}\n'.format(u'-' * self._LINE_LENGTH))
@@ -290,11 +247,6 @@ class ExtractionFrontend(Frontend):
   MINIMUM_WORKERS = 2
   # The maximum number of processes.
   MAXIMUM_WORKERS = 15
-
-  _SOURCE_TYPE_DEVICE = 1
-  _SOURCE_TYPE_DIRECTORY = 2
-  _SOURCE_TYPE_FILE = 3
-  _SOURCE_TYPE_STORAGE_MEDIA_IMAGE = 4
 
   def __init__(self, input_reader, output_writer):
     """Initializes the front-end object.
@@ -312,20 +264,20 @@ class ExtractionFrontend(Frontend):
     self._collector = None
     self._debug_mode = False
     self._engine = None
-    self._file_system_scanner = scanner.FileSystemScanner()
     self._filter_expression = None
     self._filter_object = None
     self._number_of_worker_processes = 0
     self._parsers = None
     self._partition_offset = None
     self._preprocess = False
+    self._process_vss = True
     self._resolver_context = context.Context()
     self._run_foreman = True
+    self._scan_context = source_scanner.SourceScannerContext()
     self._single_process_mode = False
     self._show_worker_memory_information = False
     self._source_path = None
-    self._source_path_spec = None
-    self._source_type = None
+    self._source_scanner = source_scanner.SourceScanner()
     self._storage_file_path = None
     self._storage_process = None
     self._timezone = pytz.utc
@@ -406,19 +358,22 @@ class ExtractionFrontend(Frontend):
       options: the command line arguments (instance of argparse.Namespace).
     """
     filter_file = getattr(options, 'file_filter', None)
-    if self._source_type == self._SOURCE_TYPE_STORAGE_MEDIA_IMAGE:
+    if self._scan_context.source_type in [
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
       if filter_file:
         logging.debug(u'Starting a collection on image with filter.')
       else:
         logging.debug(u'Starting a collection on image.')
 
-    elif self._source_type == self._SOURCE_TYPE_DIRECTORY:
+    elif self._scan_context.source_type in [
+        self._scan_context.SOURCE_TYPE_DIRECTORY]:
       if filter_file:
         logging.debug(u'Starting a collection on directory with filter.')
       else:
         logging.debug(u'Starting a collection on directory.')
 
-    elif self._source_type == self._SOURCE_TYPE_FILE:
+    elif self._scan_context.source_type == self._scan_context.SOURCE_TYPE_FILE:
       logging.debug(u'Starting a collection on a single file.')
 
     else:
@@ -471,34 +426,36 @@ class ExtractionFrontend(Frontend):
     return selected_volume_identifier
 
   def _GetVolumeTSKPartition(
-      self, volume_system_path_spec, partition_number=None,
-      partition_offset=None):
+      self, scan_context, partition_number=None, partition_offset=None):
     """Determines the volume path specification.
 
     Args:
-      volume_system_path_spec: the volume system path specification (instance
-                               of dfvfs.PathSpec).
+      scan_context: the scan context (instance of dfvfs.ScanContext).
       partition_number: Optional preferred partition number. The default is
                         None.
       partition_offset: Optional preferred partition byte offset. The default
                         is None.
 
     Returns:
-      The TSK partition volume path specification (instance of dfvfs.PathSpec)
-      or None if no supported partition was found.
+      The volume scan node (instance of dfvfs.SourceScanNode) or None
+      if no supported partition was found.
 
     Raises:
       FileSystemScannerError: if the format of or within the source
-                              is not supported.
+                              is not supported or the the scan context
+                              is invalid.
       RuntimeError: if the volume for a specific identifier cannot be
                     retrieved.
     """
+    if (not scan_context or not scan_context.last_scan_node or
+        not scan_context.last_scan_node.path_spec):
+      raise errors.FileSystemScannerError(u'Invalid scan context.')
+
     volume_system = tsk_volume_system.TSKVolumeSystem()
-    volume_system.Open(volume_system_path_spec)
+    volume_system.Open(scan_context.last_scan_node.path_spec)
 
-    volume_identifiers = self._file_system_scanner.GetVolumeIdentifiers(
+    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
         volume_system)
-
     if not volume_identifiers:
       logging.info(u'No supported partitions found.')
       return
@@ -506,17 +463,16 @@ class ExtractionFrontend(Frontend):
     if partition_number is not None and partition_number > 0:
       # Plaso uses partition numbers starting with 1 while dfvfs expects
       # the volume index to start with 0.
-      partition_number -= 1
-
-      volume = volume_system.GetVolumeByIndex(partition_number)
-
+      volume = volume_system.GetVolumeByIndex(partition_number - 1)
       if volume:
-        volume_extent = volume.extents[0]
-        self._partition_offset = volume_extent.offset
-        return path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-            start_offset=volume_extent.offset,
-            parent=volume_system_path_spec.parent)
+        volume_location = u'/{0:s}'.format(volume.identifier)
+        volume_scan_node = scan_context.last_scan_node.GetSubNodeByLocation(
+            volume_location)
+        if not volume_scan_node:
+          raise RuntimeError(
+              u'Unable to retieve volume scan node by location: {0:s}'.format(
+                  volume_location))
+        return volume_scan_node
 
       logging.warning(u'No such partition: {0:d}.'.format(partition_number))
 
@@ -524,72 +480,67 @@ class ExtractionFrontend(Frontend):
       for volume in volume_system.volumes:
         volume_extent = volume.extents[0]
         if volume_extent.offset == partition_offset:
-          self._partition_offset = volume_extent.offset
-          return path_spec_factory.Factory.NewPathSpec(
-              dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-              start_offset=volume_extent.offset,
-              parent=volume_system_path_spec.parent)
+          volume_location = u'/{0:s}'.format(volume.identifier)
+          volume_scan_node = scan_context.last_scan_node.GetSubNodeByLocation(
+              volume_location)
+          if not volume_scan_node:
+            raise RuntimeError(
+                u'Unable to retieve volume scan node by location: {0:s}'.format(
+                    volume_location))
+          return volume_scan_node
 
       logging.warning(
           u'No such partition with offset: {0:d} (0x{0:08x}).'.format(
               partition_offset))
 
     if len(volume_identifiers) == 1:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifiers[0])
+      volume_location = u'/{0:s}'.format(volume_identifiers[0])
+
+    else:
+      try:
+        selected_volume_identifier = self._GetPartionIdentifierFromUser(
+            volume_system, volume_identifiers)
+      except KeyboardInterrupt:
+        raise errors.FileSystemScannerError(u'File system scan aborted.')
+
+      volume = volume_system.GetVolumeByIdentifier(selected_volume_identifier)
       if not volume:
         raise RuntimeError(
             u'Unable to retieve volume by identifier: {0:s}'.format(
-                volume_identifiers[0]))
+                selected_volume_identifier))
 
-      volume_extent = volume.extents[0]
-      self._partition_offset = volume_extent.offset
-      return path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
-          parent=volume_system_path_spec.parent)
+      volume_location = u'/{0:s}'.format(selected_volume_identifier)
 
-    try:
-      selected_volume_identifier = self._GetPartionIdentifierFromUser(
-          volume_system, volume_identifiers)
-    except KeyboardInterrupt:
-      raise errors.FileSystemScannerError(u'File system scan aborted.')
-
-    location = u'/{0:s}'.format(selected_volume_identifier)
-
-    volume = volume_system.GetVolumeByIdentifier(selected_volume_identifier)
-    if not volume:
+    volume_scan_node = scan_context.last_scan_node.GetSubNodeByLocation(
+        volume_location)
+    if not volume_scan_node:
       raise RuntimeError(
-          u'Unable to retieve volume by identifier: {0:s}'.format(
-              selected_volume_identifier))
+          u'Unable to retieve volume scan node by location: {0:s}'.format(
+              volume_location))
+    return volume_scan_node
 
-    volume_extent = volume.extents[0]
-    self._partition_offset = volume_extent.offset
-    return path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=location,
-        parent=volume_system_path_spec.parent)
-
-  def _GetVolumeVssStoreIdentifiers(
-      self, volume_system_path_spec, vss_stores=None):
+  def _GetVolumeVssStoreIdentifiers(self, scan_context, vss_stores=None):
     """Determines the VSS store identifiers.
 
     Args:
-      volume_system_path_spec: the volume system path specification (instance
-                               of dfvfs.PathSpec).
+      scan_context: the scan context (instance of dfvfs.ScanContext).
       vss_stores: Optional list of preferred VSS stored identifiers. The
                   default is None.
 
-    Returns:
-      None to indicate no sub volume system was found.
-
     Raises:
       FileSystemScannerError: if the format of or within the source
-                              is not supported.
+                              is not supported or the the scan context
+                              is invalid.
     """
+    if (not scan_context or not scan_context.last_scan_node or
+        not scan_context.last_scan_node.path_spec):
+      raise errors.FileSystemScannerError(u'Invalid scan context.')
+
     volume_system = vshadow_volume_system.VShadowVolumeSystem()
-    volume_system.Open(volume_system_path_spec)
+    volume_system.Open(scan_context.last_scan_node.path_spec)
 
-    volume_identifiers = self._file_system_scanner.GetVolumeIdentifiers(
+    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
         volume_system)
-
     if not volume_identifiers:
       return
 
@@ -677,8 +628,7 @@ class ExtractionFrontend(Frontend):
         break
 
       try:
-        selected_vss_stores = self._file_system_scanner.ParseVssStores(
-            selected_vss_stores)
+        selected_vss_stores = self._ParseVssStores(selected_vss_stores)
       except errors.BadConfigOption:
         selected_vss_stores = []
 
@@ -692,6 +642,50 @@ class ExtractionFrontend(Frontend):
           u'\n')
 
     return selected_vss_stores
+
+  def _ParseVssStores(self, vss_stores):
+    """Parses the user specified VSS stores stirng.
+
+    Args:
+      vss_stores: a string containing the VSS stores.
+                  Where 1 represents the first store.
+
+    Returns:
+      The list of VSS stores.
+
+    Raises:
+      BadConfigOption: if the VSS stores option is invalid.
+    """
+    if not vss_stores:
+      return []
+
+    stores = []
+    for vss_store_range in vss_stores.split(','):
+      # Determine if the range is formatted as 1..3 otherwise it indicates
+      # a single store number.
+      if '..' in vss_store_range:
+        first_store, last_store = vss_store_range.split('..')
+        try:
+          first_store = int(first_store, 10)
+          last_store = int(last_store, 10)
+        except ValueError:
+          raise errors.BadConfigOption(
+              u'Invalid VSS store range: {0:s}.'.format(vss_store_range))
+
+        for store_number in range(first_store, last_store + 1):
+          if store_number not in stores:
+            stores.append(store_number)
+      else:
+        try:
+          store_number = int(vss_store_range, 10)
+        except ValueError:
+          raise errors.BadConfigOption(
+              u'Invalid VSS store range: {0:s}.'.format(vss_store_range))
+
+        if store_number not in stores:
+          stores.append(store_number)
+
+    return sorted(stores)
 
   # TODO: have the frontend fill collecton information gradually
   # and set it as the last step of preprocessing?
@@ -717,7 +711,8 @@ class ExtractionFrontend(Frontend):
     collection_information['parsers'] = self._parser_names
     collection_information['preprocess'] = self._preprocess
 
-    if self._source_type == self._SOURCE_TYPE_DIRECTORY:
+    if self._scan_context.source_type in [
+        self._scan_context.SOURCE_TYPE_DIRECTORY]:
       recursive = True
     else:
       recursive = False
@@ -739,7 +734,9 @@ class ExtractionFrontend(Frontend):
 
     collection_information['os_detected'] = getattr(options, 'os', 'N/A')
 
-    if self._source_type == self._SOURCE_TYPE_STORAGE_MEDIA_IMAGE:
+    if self._scan_context.source_type in [
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
       collection_information['method'] = 'imaged processed'
       collection_information['image_offset'] = self._partition_offset
     else:
@@ -874,7 +871,8 @@ class ExtractionFrontend(Frontend):
     self._engine = engine.Engine(collection_queue, storage_queue)
 
     self._engine.SetSource(
-        self._source_path_spec, resolver_context=self._resolver_context)
+        self._scan_context.last_scan_node.path_spec,
+        resolver_context=self._resolver_context)
 
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
@@ -1104,7 +1102,8 @@ class ExtractionFrontend(Frontend):
     self._engine = engine.Engine(collection_queue, storage_queue)
 
     self._engine.SetSource(
-        self._source_path_spec, resolver_context=self._resolver_context)
+        self._scan_context.last_scan_node.path_spec,
+        resolver_context=self._resolver_context)
 
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
@@ -1249,9 +1248,10 @@ class ExtractionFrontend(Frontend):
     """Retrieves the source path specification.
 
     Returns:
-      The source path specification (instance of dfvfs.PathSpec).
+      The source path specification (instance of dfvfs.PathSpec) or None.
     """
-    return self._source_path_spec
+    if self._scan_context and self._scan_context.last_scan_node:
+      return self._scan_context.last_scan_node.path_spec
 
   def ParseOptions(self, options, source_option):
     """Parses the options and initializes the front-end.
@@ -1343,8 +1343,10 @@ class ExtractionFrontend(Frontend):
     if not pre_obj:
       pre_obj = event.PreprocessObject()
 
-    if self._preprocess and self._source_type in [
-        self._SOURCE_TYPE_DIRECTORY, self._SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
+    if self._preprocess and self._scan_context.source_type in [
+        self._scan_context.SOURCE_TYPE_DIRECTORY,
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
       platform = getattr(options, 'os', None)
       try:
         self._engine.PreprocessSource(
@@ -1358,6 +1360,52 @@ class ExtractionFrontend(Frontend):
     self._PreprocessSetParserFilter(options, pre_obj)
 
     return pre_obj
+
+  def PrintOptions(self, options, source_path):
+    """Prints the options.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+      source_path: the source path.
+    """
+    self._output_writer.Write(u'\n')
+    self._output_writer.Write(
+        u'Source path\t\t\t\t: {0:s}\n'.format(source_path))
+
+    if self._scan_context.source_type in [
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
+      is_image = True
+    else:
+      is_image = False
+
+    self._output_writer.Write(
+        u'Is storage media image or device\t: {0!s}\n'.format(is_image))
+
+    if is_image:
+      image_offset_bytes = self._partition_offset
+      if isinstance(image_offset_bytes, basestring):
+        try:
+          image_offset_bytes = int(image_offset_bytes, 10)
+        except ValueError:
+          image_offset_bytes = 0
+      elif image_offset_bytes is None:
+        image_offset_bytes = 0
+
+      self._output_writer.Write(
+          u'Partition offset\t\t\t: {0:d} (0x{0:08x})\n'.format(
+              image_offset_bytes))
+
+      if self._process_vss and self._vss_stores:
+        self._output_writer.Write(
+            u'VSS stores\t\t\t\t: {0!s}\n'.format(self._vss_stores))
+
+    filter_file = getattr(options, 'file_filter', None)
+    if filter_file:
+      self._output_writer.Write(u'Filter file\t\t\t\t: {0:s}\n'.format(
+          filter_file))
+
+    self._output_writer.Write(u'\n')
 
   def ProcessSource(self, options):
     """Processes the source.
@@ -1390,14 +1438,15 @@ class ExtractionFrontend(Frontend):
     self._CheckStorageFile(self._storage_file_path)
 
     # No need to multi process when we're only processing a single file.
-    if self._source_type == self._SOURCE_TYPE_FILE:
+    if self._scan_context.source_type == self._scan_context.SOURCE_TYPE_FILE:
       # If we are only processing a single file we don't need more than a
       # single worker.
       # TODO: Refactor this use of using the options object.
       options.workers = 1
       self._single_process_mode = False
 
-    if self._source_type == self._SOURCE_TYPE_DIRECTORY:
+    if self._scan_context.source_type in [
+        self._scan_context.SOURCE_TYPE_DIRECTORY]:
       # If we are dealing with a directory we would like to attempt
       # pre-processing.
       self._preprocess = True
@@ -1415,6 +1464,11 @@ class ExtractionFrontend(Frontend):
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      FileSystemScannerError: if the format of or within the source
+                              is not supported or the the scan context
+                              is invalid.
     """
     partition_number = getattr(options, 'partition_number', None)
     if (partition_number is not None and
@@ -1458,79 +1512,88 @@ class ExtractionFrontend(Frontend):
       if image_offset:
         partition_offset = image_offset * bytes_per_sector
 
-    vss_stores = getattr(options, 'vss_stores', None)
-    if vss_stores:
-      vss_stores = self._file_system_scanner.ParseVssStores(vss_stores)
+    self._process_vss = not getattr(options, 'no_vss', False)
+    if self._process_vss:
+      vss_stores = getattr(options, 'vss_stores', None)
+      if vss_stores:
+        vss_stores = self._ParseVssStores(vss_stores)
 
-    self._source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=self._source_path)
+    # Use the dfVFS source scanner to do the actual scanning.
+    scan_path_spec = None
 
-    # Note that os.path.isfile() can return false when source_path points
-    # to a device file.
-    if os.path.isdir(self._source_path):
-      self._source_type = self._SOURCE_TYPE_DIRECTORY
-      return
-
-    scan_path_spec = self._source_path_spec
-    path_spec = self._file_system_scanner.ScanForStorageMediaImage(
-        scan_path_spec)
-    if path_spec:
-      scan_path_spec = path_spec
-
-    # In case we did not find a storage media image type we keep looking
-    # since the RAW storage media image type is detected by its content.
+    self._scan_context.OpenSourcePath(self._source_path)
 
     while True:
-      path_spec = self._file_system_scanner.ScanForVolumeSystem(scan_path_spec)
-      if not path_spec:
+      self._scan_context = self._source_scanner.Scan(
+          self._scan_context, scan_path_spec=scan_path_spec)
+
+      # The source is a directory or file.
+      if self._scan_context.source_type in [
+          self._scan_context.SOURCE_TYPE_DIRECTORY,
+          self._scan_context.SOURCE_TYPE_FILE]:
         break
 
-      scan_path_spec = path_spec
+      if not self._scan_context.last_scan_node:
+        raise errors.FileSystemScannerError(
+            u'No supported file system found in source: {0:s}.'.format(
+                self._source_path))
 
-      if scan_path_spec.type_indicator in [
+      # The source scanner found a file system.
+      if self._scan_context.last_scan_node.type_indicator in [
+          dfvfs_definitions.TYPE_INDICATOR_TSK]:
+        break
+
+      # The source scanner found a BitLocker encrypted volume and we need
+      # a credential to unlock the volume.
+      if self._scan_context.last_scan_node.type_indicator in [
+          dfvfs_definitions.TYPE_INDICATOR_BDE]:
+        # TODO: ask for password.
+        raise errors.FileSystemScannerError(
+            u'BitLocker encrypted volume not yet supported.')
+
+      # The source scanner found a partition table and we need to determine
+      # which partition needs to be processed.
+      elif self._scan_context.last_scan_node.type_indicator in [
           dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
-        path_spec = self._GetVolumeTSKPartition(
-            scan_path_spec, partition_number=partition_number,
+        scan_node = self._GetVolumeTSKPartition(
+            self._scan_context, partition_number=partition_number,
             partition_offset=partition_offset)
-        if not path_spec:
+        if not scan_node:
           break
-        scan_path_spec = path_spec
+        self._scan_context.last_scan_node = scan_node
 
-      elif scan_path_spec.type_indicator in [
+        self._partition_offset = getattr(scan_node.path_spec, 'start_offset', 0)
+
+      elif self._scan_context.last_scan_node.type_indicator in [
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
-        if getattr(options, 'no_vss', False):
-          path_spec = None
-        else:
-          path_spec = self._GetVolumeVssStoreIdentifiers(
-              scan_path_spec, vss_stores=vss_stores)
+        if self._process_vss:
+          self._GetVolumeVssStoreIdentifiers(
+              self._scan_context, vss_stores=vss_stores)
 
-        # Trace back to the parent volume path specification.
-        scan_path_spec = scan_path_spec.parent
+        # Get the scan node of the current volume.
+        scan_node = self._scan_context.last_scan_node.GetSubNodeByLocation(u'/')
+        self._scan_context.last_scan_node = scan_node
         break
 
-    # Set the VSS stores in the options so PrintOptions can print them.
-    if self._vss_stores:
-      options.vss_stores = self._vss_stores
+      else:
+        raise errors.FileSystemScannerError(
+            u'Unsupported volume system found in source: {0:s}.'.format(
+                self._source_path))
 
-    # In case we did not find a volume system type we keep looking
-    # since we could be dealing with a storage media image that contains
-    # a single volume.
+    self._source_type = self._scan_context.source_type
 
-    path_spec = self._file_system_scanner.ScanForFileSystem(scan_path_spec)
-    if path_spec:
-      self._source_path_spec = path_spec
-      self._source_type = self._SOURCE_TYPE_STORAGE_MEDIA_IMAGE
+    if self._scan_context.source_type in [
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
 
-      if self._partition_offset is None:
-        self._partition_offset = 0
-
-    else:
-      if scan_path_spec.type_indicator in [
-          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
+      if self._scan_context.last_scan_node.type_indicator not in [
+          dfvfs_definitions.TYPE_INDICATOR_TSK]:
         logging.warning(
             u'Unsupported file system falling back to single file mode.')
+        self._source_type = self._scan_context.source_type
 
-      self._source_type = self._SOURCE_TYPE_FILE
+      elif self._partition_offset is None:
+        self._partition_offset = 0
 
   def SetStorageFile(self, storage_file_path):
     """Sets the storage file path.
