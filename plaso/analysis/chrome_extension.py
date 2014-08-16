@@ -33,11 +33,19 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  EXTENSION_NAME_RE = re.compile('<title>([^<]+) - Chrome Web Store</title>')
-  WEB_STORE_URL = u'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
+  _TITLE_RE = re.compile('<title>([^<]+)</title>')
+  _WEB_STORE_URL = u'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
   def __init__(self, pre_obj, incoming_queue, outgoing_queue):
-    """Constructor for the Chrome extension plugin."""
+    """Initializes the Chrome extension analysis plugin.
+
+    Args:
+      pre_obj: The preprocessing object that contains information gathered
+               during preprocessing of data.
+      incoming_queue: A queue that is used to listen to incoming events.
+      outgoing_queue: The queue used to send back reports, tags and anomaly
+                      related events.
+    """
     super(AnalyzeChromeExtensionPlugin, self).__init__(
         pre_obj, incoming_queue, outgoing_queue)
 
@@ -62,38 +70,38 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
         if not user_separator:
           user_separator = self._GetSeparator(path)
 
-        if user_separator != '/':
-          path = path.replace(user_separator, '/').replace('//', '/')
+        if user_separator != u'/':
+          path = path.replace(user_separator, u'/').replace(u'//', u'/')
 
-        if path[1:].startswith(':/'):
+        if path[1:].startswith(u':/'):
           path = path[2:]
 
         self._user_paths[name.lower()] = path.lower()
 
   def _GetSeparator(self, path):
     """Given a path give back the path separator as a best guess."""
-    if path.startswith('\\') or path[1:].startswith(':\\'):
-      return '\\'
+    if path.startswith(u'\\') or path[1:].startswith(u':\\'):
+      return u'\\'
 
-    if path.startswith('/'):
-      return '/'
+    if path.startswith(u'/'):
+      return u'/'
 
-    if '/' and '\\' in path:
+    if u'/' and u'\\' in path:
       # Let's count slashes and guess which one is the right one.
-      forward_count = len(path.split('/'))
-      backward_count = len(path.split('\\'))
+      forward_count = len(path.split(u'/'))
+      backward_count = len(path.split(u'\\'))
 
       if forward_count > backward_count:
-        return '/'
+        return u'/'
       else:
-        return '\\'
+        return u'\\'
 
     # Now we are sure there is only one type of separators yet
     # the path does not start with one.
-    if '/' in path:
-      return '/'
+    if u'/' in path:
+      return u'/'
     else:
-      return '\\'
+      return u'\\'
 
   def _GetUserNameFromPath(self, file_path):
     """Return a username based on gathered information in pre_obj and path.
@@ -114,12 +122,12 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     if not self._user_paths:
       return
 
-    if self._sep != '/':
-      use_path = file_path.replace(self._sep, '/')
+    if self._sep != u'/':
+      use_path = file_path.replace(self._sep, u'/')
     else:
       use_path = file_path
 
-    if use_path[1:].startswith(':/'):
+    if use_path[1:].startswith(u':/'):
       use_path = use_path[2:]
 
     use_path = use_path.lower()
@@ -128,33 +136,60 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
       if use_path.startswith(path):
         return user
 
+  def _GetChromeWebStorePage(self, extension_id):
+    """Retrieves the page for the extension from the Chrome store website.
+
+    Args:
+      extension_id: string containing the extension identifier.
+    """
+    web_store_url = self._WEB_STORE_URL.format(xid=extension_id)
+    try:
+      response = urllib2.urlopen(web_store_url)
+
+    except urllib2.HTTPError as exception:
+      logging.warning((
+          u'[{0:s}] unable to retrieve URL: {1:s} with error: {2:s}').format(
+              self.NAME, web_store_url, exception))
+      return
+
+    except urllib2.URLError as exception:
+      logging.warning((
+          u'[{0:s}] invalid URL: {1:s} with error: {2:s}').format(
+              self.NAME, web_store_url, exception))
+      return
+
+    return response
+
   def _GetTitleFromChromeWebStore(self, extension_id):
-    """Read the extension name from a Chrome store for a given extension ID."""
+    """Retrieves the name of the extension from the Chrome store website.
+
+    Args:
+      extension_id: string containing the extension identifier.
+    """
     # Check if we have already looked this extension up.
     if extension_id in self._extensions:
       return self._extensions.get(extension_id)
 
-    try:
-      response = urllib2.urlopen(self.WEB_STORE_URL.format(xid=extension_id))
-    except urllib2.HTTPError as exception:
-      logging.warning((
-          u'Unable to retrieve results from URL: {1:s} with '
-          u'error: {0:s}').format(
-              exception, self.WEB_STORE_URL.format(xid=extension_id)))
-      return
-    except urllib2.URLError as exception:
-      logging.warning(u'Not a valid Extension ID with error: {0:s}'.format(
-          exception))
+    response = self._GetChromeWebStorePage(extension_id)
+    if not response:
+      logging.warning(
+          u'[{0:s}] no data returned for extension identifier: {1:s}'.format(
+              self.NAME, extension_id))
       return
 
     first_line = response.readline()
-    match = self.EXTENSION_NAME_RE.search(first_line)
+    match = self._TITLE_RE.search(first_line)
     if match:
-      name = match.group(1)
+      title = match.group(1)
+      if title.startswith(u'Chrome Web Store - '):
+        name = title[19:]
+      elif title.endswith(u'- Chrome Web Store'):
+        name = title[:-19]
+
       self._extensions[extension_id] = name
       return name
 
-    self._extensions[extension_id] = 'Not Found'
+    self._extensions[extension_id] = u'Not Found'
 
   def ExamineEvent(self, event_object):
     """Take an EventObject and send it through analysis."""
@@ -163,12 +198,11 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
       return
 
     filename = getattr(event_object, 'filename', None)
-
     if not filename:
       return
 
     # Determine if we have a Chrome extension ID.
-    if 'chrome' not in filename.lower():
+    if u'chrome' not in filename.lower():
       return
 
     if not self._sep:
@@ -180,12 +214,12 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     # Now we have extension ID's, let's check if we've got the
     # folder, nothing else.
     paths = filename.split(self._sep)
-    if paths[-2] != 'Extensions':
+    if paths[-2] != u'Extensions':
       return
 
     extension_id = paths[-1]
 
-    if extension_id == 'Temp':
+    if extension_id == u'Temp':
       return
 
     # Get the user and ID.
