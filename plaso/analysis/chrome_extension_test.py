@@ -17,6 +17,7 @@
 # limitations under the License.
 """Tests for the browser_search analysis plugin."""
 
+import os
 import unittest
 
 from plaso.analysis import chrome_extension
@@ -27,6 +28,28 @@ from plaso.lib import queue
 # We are accessing quite a lot of protected members in this test file.
 # Suppressing that message test file wide.
 # pylint: disable=protected-access
+
+
+class AnalyzeChromeExtensionTestPlugin(
+    chrome_extension.AnalyzeChromeExtensionPlugin):
+  """Chrome extention analysis plugin used for testing."""
+
+  NAME = 'chrome_extension_test'
+
+  _TEST_DATA_PATH = os.path.join(
+      os.getcwd(), u'test_data', u'chrome_extensions')
+
+  def _GetChromeWebStorePage(self, extension_id):
+    """Retrieves the page for the extension from the Chrome store test data.
+
+    Args:
+      extension_id: string containing the extension identifier.
+    """
+    chrome_web_store_file = os.path.join(self._TEST_DATA_PATH, extension_id)
+    if not os.path.exists(chrome_web_store_file):
+      return
+
+    return open(chrome_web_store_file, 'rb')
 
 
 class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
@@ -100,7 +123,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     pre_obj.users = self.MAC_USERS
 
     # Initialize plugin.
-    analysis_plugin = chrome_extension.AnalyzeChromeExtensionPlugin(
+    analysis_plugin = AnalyzeChromeExtensionTestPlugin(
         pre_obj, incoming_queue, outgoing_queue)
 
     # Test the user creation.
@@ -151,7 +174,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         u''])
 
     self.assertEquals(analysis_report.text, expected_text)
-    self.assertEquals(analysis_report.plugin_name, 'chrome_extension')
+    self.assertEquals(analysis_report.plugin_name, 'chrome_extension_test')
 
     expected_keys = set([u'frank', u'dude'])
     self.assertEquals(set(analysis_report.report_dict.keys()), expected_keys)
@@ -166,7 +189,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     pre_obj.users = self.WIN_USERS
 
     # Initialize plugin.
-    analysis_plugin = chrome_extension.AnalyzeChromeExtensionPlugin(
+    analysis_plugin = AnalyzeChromeExtensionTestPlugin(
         pre_obj, incoming_queue, outgoing_queue)
 
     # Test the user creation.
@@ -204,10 +227,6 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
-    # TODO: This is a FLAKY test and needs to be changed.
-    # Sometimes the added text of: " - notes and lists" is added making
-    # the test fail. The result somehow need to be cached or changed
-    # to make this test less flaky.
     expected_text = u'\n'.join([
         u' == USER: dude ==',
         u'  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]',
@@ -219,7 +238,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         u''])
 
     self.assertEquals(analysis_report.text, expected_text)
-    self.assertEquals(analysis_report.plugin_name, 'chrome_extension')
+    self.assertEquals(analysis_report.plugin_name, 'chrome_extension_test')
 
     expected_keys = set([u'frank', u'dude'])
     self.assertEquals(set(analysis_report.report_dict.keys()), expected_keys)
