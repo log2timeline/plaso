@@ -71,11 +71,11 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
   ARGUMENTS = []
 
   def __init__(self, pre_obj, incoming_queue, outgoing_queue):
-    """Constructor for an analysis plugin.
+    """Initializes an analysis plugin.
 
     Args:
       pre_obj: The preprocessing object that contains information gathered
-      during preprocessing of data.
+               during preprocessing of data.
       incoming_queue: A queue that is used to listen to incoming events.
       outgoing_queue: The queue used to send back reports, tags and anomaly
                       related events.
