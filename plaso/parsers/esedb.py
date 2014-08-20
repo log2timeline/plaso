@@ -25,7 +25,7 @@ from plaso.lib import errors
 # Register all ESEDB plugins.
 from plaso.parsers import esedb_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
-from plaso.parsers import utils
+from plaso.parsers import manager
 from plaso.parsers.esedb_plugins import interface as esedb_plugins_interface
 
 
@@ -46,11 +46,9 @@ class EseDbParser(interface.BaseParser):
       config: configuration object.
     """
     super(EseDbParser, self).__init__(pre_obj, config)
-    parser_filter_string = getattr(self._config, 'parsers', None)
-
-    self._plugins = utils.GetRegisteredPlugins(
-        esedb_plugins_interface.EseDbPlugin, self._pre_obj,
-        parser_filter_string)
+    self._plugins = manager.ParsersManager.GetRegisteredPlugins(
+        parent_class=esedb_plugins_interface.EseDbPlugin,
+        pre_obj=self._pre_obj)
 
   def Parse(self, file_entry):
     """Extracts data from an ESE database File.
