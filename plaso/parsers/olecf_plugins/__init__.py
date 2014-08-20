@@ -1,6 +1,6 @@
 #!/usr/bin/python
-#
 # -*- coding: utf-8 -*-
+#
 # Copyright 2014 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -17,5 +17,6 @@
 # limitations under the License.
 """This file contains an import statement for each OLECF plugin."""
 
+from plaso.parsers.olecf_plugins import automatic_destinations
 from plaso.parsers.olecf_plugins import default
 from plaso.parsers.olecf_plugins import summary

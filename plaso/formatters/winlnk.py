@@ -39,7 +39,8 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
       u'env location: {env_var_location}',
       u'Relative path: {relative_path}',
       u'Working dir: {working_directory}',
-      u'Icon location: {icon_location}']
+      u'Icon location: {icon_location}',
+      u'Link target: [{link_target}]']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'[{description}]',

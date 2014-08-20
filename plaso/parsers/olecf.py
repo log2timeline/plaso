@@ -43,6 +43,7 @@ class OleCfParser(interface.BaseParser):
     super(OleCfParser, self).__init__()
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
         parent_class=olecf_plugins_interface.OlecfPlugin)
+    self._default_plugin = self._plugins.get('olecf_default', None)
 
   def Parse(self, parser_context, file_entry):
     """Extracts data from an OLE Compound File (OLECF).
@@ -76,15 +77,15 @@ class OleCfParser(interface.BaseParser):
     # works will we use the default plugin.
     parsed = False
     for olecf_name, olecf_plugin in self._plugins.iteritems():
-      # We would like to skip the default plugin for now.
+      # Skip the default plugin.
       if olecf_name == 'olecf_default':
         continue
+
       try:
-        for event_object in olecf_plugin.Process(
-            root_item=root_item, item_names=item_names):
-          parsed = True
-          event_object.plugin = olecf_plugin.plugin_name
-          yield event_object
+        olecf_plugin.Process(
+            parser_context, file_entry=file_entry, root_item=root_item,
+            item_names=item_names)
+
       except errors.WrongPlugin:
         logging.debug(
             u'[{0:s}] plugin: {1:s} cannot parse the OLECF file: {2:s}'.format(
@@ -92,12 +93,10 @@ class OleCfParser(interface.BaseParser):
 
     # Check if we still haven't parsed the file, and if so we will use
     # the default OLECF plugin.
-    if not parsed:
-      default_plugin = self._plugins.get('olecf_default', None)
-      if default_plugin:
-        for event_object in default_plugin.Process(
-            root_item=root_item, item_names=item_names):
-          event_object.plugin = default_plugin.plugin_name
-          yield event_object
+    if not parsed and self._default_plugin:
+      self._default_plugin.Process(
+          parser_context, file_entry=file_entry, root_item=root_item,
+          item_names=item_names)
 
+    olecf_file.close()
     file_object.close()

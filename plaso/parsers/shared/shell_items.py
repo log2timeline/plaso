@@ -32,6 +32,8 @@ if pyfwsi.get_version() < '20140714':
 class ShellItemsParser(object):
   """Parses for Windows NT shell items."""
 
+  NAME = 'shell_items'
+
   def __init__(self, origin):
     """Initializes the parser.
 
@@ -42,14 +44,12 @@ class ShellItemsParser(object):
     self._origin = origin
     self._path_segments = []
 
-  def _ParseShellItem(self, shell_item):
+  def _ParseShellItem(self, parser_context, shell_item):
     """Parses a shell item.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       shell_item: the shell item (instance of pyfwsi.item).
-
-    Yields:
-      Event objects (instances of EventObject).
     """
     path_segment = None
 
@@ -83,24 +83,27 @@ class ShellItemsParser(object):
 
           fat_date_time = exension_block.get_creation_time_as_integer()
           if fat_date_time:
-            yield shell_item_events.ShellItemFileEntryEvent(
+            event_object = shell_item_events.ShellItemFileEntryEvent(
                fat_date_time, eventdata.EventTimestamp.CREATION_TIME,
                shell_item.name, long_name, localized_name, file_reference,
                self._origin)
+            parser_context.ProduceEvent(event_object, parser_name=self.NAME)
 
           fat_date_time = exension_block.get_access_time_as_integer()
           if fat_date_time:
-            yield shell_item_events.ShellItemFileEntryEvent(
+            event_object = shell_item_events.ShellItemFileEntryEvent(
                fat_date_time, eventdata.EventTimestamp.ACCESS_TIME,
                shell_item.name, long_name, localized_name, file_reference,
                self._origin)
+            parser_context.ProduceEvent(event_object, parser_name=self.NAME)
 
       fat_date_time = shell_item.get_modification_time_as_integer()
       if fat_date_time:
-        yield shell_item_events.ShellItemFileEntryEvent(
+        event_object = shell_item_events.ShellItemFileEntryEvent(
            fat_date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
            shell_item.name, long_name, localized_name, file_reference,
            self._origin)
+        parser_context.ProduceEvent(event_object, parser_name=self.NAME)
 
       if long_name:
         path_segment = long_name
@@ -131,20 +134,17 @@ class ShellItemsParser(object):
 
     return u', '.join(self._path_segments)
 
-  def Parse(self, byte_stream, codepage='cp1252'):
+  def Parse(self, parser_context, byte_stream, codepage='cp1252'):
     """Parses the shell items from the byte stream.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       byte_stream: a string holding the shell items data.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
+      codepage: Optional byte stream codepage. The default is cp1252.
     """
     self._path_segments = []
     shell_item_list = pyfwsi.item_list()
     shell_item_list.copy_from_byte_stream(byte_stream, ascii_codepage=codepage)
 
     for shell_item in shell_item_list.items:
-      for event_object in self._ParseShellItem(shell_item):
-        yield event_object
+      self._ParseShellItem(parser_context, shell_item)

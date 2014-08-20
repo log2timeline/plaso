@@ -77,19 +77,16 @@ class OleCfSummaryInfo(object):
   PIDSI_LASTSAVE_DTM = 0x000d
   PIDSI_THUMBNAIL = 0x0011
 
-  def __init__(self, olecf_item, root_creation_time, root_modification_time):
+  def __init__(self, olecf_item):
     """Initialize the OLECF summary object.
 
     Args:
       olecf_item: The OLECF item (instance of pyolecf.property_set_stream).
-      root_creation_time: The creation time of the root OLECF item.
-      root_modification_time: The modification time of the root OLECF item.
     """
     super(OleCfSummaryInfo, self).__init__()
-    self._root_creation_time = root_creation_time
-    self._root_modification_time = root_modification_time
-    self._events = []
     self.attributes = {}
+    self.events = []
+
     self._InitFromPropertySet(olecf_item.set)
 
   def _InitFromPropertySet(self, property_set):
@@ -172,34 +169,21 @@ class OleCfSummaryInfo(object):
                       of type VT_FILETIME).
     """
     if property_value.identifier == self.PIDSI_LASTPRINTED:
-      self._events.append(
+      self.events.append(
           (property_value.data_as_integer, 'Document Last Printed Time'))
+
     elif property_value.identifier == self.PIDSI_CREATE_DTM:
-      self._events.append(
+      self.events.append(
           (property_value.data_as_integer, 'Document Creation Time'))
+
     elif property_value.identifier == self.PIDSI_LASTSAVE_DTM:
-      self._events.append(
+      self.events.append(
           (property_value.data_as_integer, 'Document Last Save Time'))
+
     elif property_value.identifier == self.PIDSI_EDITTIME:
       # property_name = 'total_edit_time'
       # TODO: handle duration.
       pass
-
-  def GetEventObjects(self):
-    """Yields extracted event objects."""
-    for timestamp, timestamp_description in self._events:
-      yield OleCfSummaryInfoEvent(
-          timestamp, timestamp_description, self.attributes)
-
-    if self._root_creation_time:
-      yield OleCfSummaryInfoEvent(
-          self._root_creation_time, eventdata.EventTimestamp.CREATION_TIME,
-          self.attributes)
-
-    if self._root_modification_time:
-      yield OleCfSummaryInfoEvent(
-          self._root_modification_time,
-          eventdata.EventTimestamp.MODIFICATION_TIME, self.attributes)
 
 
 class OleCfDocumentSummaryInfoEvent(time_events.FiletimeEvent):
@@ -352,62 +336,76 @@ class OleCfDocumentSummaryInfoEvent(time_events.FiletimeEvent):
       setattr(self, property_name, property_value.data_as_string)
 
 
-class DocumentSummaryPlugin(interface.OlecfPlugin):
+class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
   """Plugin that parses DocumentSummary information from an OLECF file."""
 
   NAME = 'olecf_document_summary'
 
   # pylint: disable=anomalous-backslash-in-string
-  REQUIRED_ITEMS = frozenset(['\005DocumentSummaryInformation'])
+  REQUIRED_ITEMS = frozenset([u'\005DocumentSummaryInformation'])
 
-  def GetEntries(
-      self, unused_parser_context, root_item=None, items=None, **unused_kwargs):
-    """Generate event based on the document summary item.
+  def ParseItems(
+      self, parser_context, root_item=None, items=None, **unused_kwargs):
+    """Parses a document summary information OLECF item.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      root_item: The root item of the OLECF file.
-      items: A list of all items discovered in the root.
-
-    Yields:
-      Event objects (instance of OleCfDocumentSummaryInfoEvent).
+      root_item: Optional root item of the OLECF file. The default is None.
+      item_names: Optional list of all items discovered in the root.
+                  The default is None.
     """
-    creation_time, modification_time = self.GetTimestamps(root_item)
+    root_creation_time, root_modification_time = self.GetTimestamps(root_item)
 
     for item in items:
-      if creation_time:
-        yield OleCfDocumentSummaryInfoEvent(
-            creation_time, eventdata.EventTimestamp.CREATION_TIME, item)
-      if modification_time:
-        yield OleCfDocumentSummaryInfoEvent(
-            modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+      if root_creation_time:
+        event_object = OleCfDocumentSummaryInfoEvent(
+            root_creation_time, eventdata.EventTimestamp.CREATION_TIME, item)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+      if root_modification_time:
+        event_object = OleCfDocumentSummaryInfoEvent(
+            root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             item)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
-class SummaryInfoPlugin(interface.OlecfPlugin):
+class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
   """Plugin that parses the SummaryInformation item from an OLECF file."""
 
   NAME = 'olecf_summary'
 
   # pylint: disable=anomalous-backslash-in-string
-  REQUIRED_ITEMS = frozenset(['\005SummaryInformation'])
+  REQUIRED_ITEMS = frozenset([u'\005SummaryInformation'])
 
-  def GetEntries(
-      self, unused_parser_context, root_item=None, items=None, **unused_kwargs):
-    """Generate event based on the summary information item.
+  def ParseItems(
+      self, parser_context, root_item=None, items=None, **unused_kwargs):
+    """Parses a summary information OLECF item.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      root_item: The root item of the OLECF file.
-      items: A list of all items discovered in the root.
-
-    Yields:
-      Event objects (instance of OleCfSummaryInfoEvent).
+      root_item: Optional root item of the OLECF file. The default is None.
+      item_names: Optional list of all items discovered in the root.
+                  The default is None.
     """
     root_creation_time, root_modification_time = self.GetTimestamps(root_item)
 
     for item in items:
-      summary_information_object = OleCfSummaryInfo(
-          item, root_creation_time, root_modification_time)
-      for event_object in summary_information_object.GetEventObjects():
-        yield event_object
+      summary_information_object = OleCfSummaryInfo(item)
+
+      for timestamp, timestamp_description in summary_information_object.events:
+        event_object = OleCfSummaryInfoEvent(
+            timestamp, timestamp_description,
+            summary_information_object.attributes)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+      if root_creation_time:
+        event_object = OleCfSummaryInfoEvent(
+            root_creation_time, eventdata.EventTimestamp.CREATION_TIME,
+            summary_information_object.attributes)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+      if root_modification_time:
+        event_object = OleCfSummaryInfoEvent(
+            root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+            summary_information_object.attributes)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
