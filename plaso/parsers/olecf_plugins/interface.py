@@ -34,62 +34,6 @@ class OlecfPlugin(plugins.BasePlugin):
   # List of tables that should be present in the database, for verification.
   REQUIRED_ITEMS = frozenset([])
 
-  def Process(self, parser_context, root_item=None, item_names=None, **kwargs):
-    """Determine if this is the right plugin for this OLECF file.
-
-    This function takes a list of sub items found in the root of a
-    OLECF file and compares that to a list of required items defined
-    in this plugin.
-
-    If the list of required items is a subset of the overall items
-    this plugin is considered to be the correct plugin and the function
-    will return back a generator that yields event objects.
-
-    Args:
-      parser_context: A parser context object (instance of ParserContext).
-      root_item: The root item of the OLECF file.
-      item_names: A list of all items discovered in the root.
-
-    Returns:
-      A generator that yields event objects.
-
-    Raises:
-      errors.WrongPlugin: If the set of required items is not a subset
-      of the available items.
-      ValueError: If the root_item or items are not set.
-    """
-    if root_item is None or item_names is None:
-      raise ValueError(u'Root item or items are not set.')
-
-    if not frozenset(item_names) >= self.REQUIRED_ITEMS:
-      raise errors.WrongPlugin(
-          u'Not the correct items for: {}'.format(
-              self.plugin_name))
-
-    # This will raise if unhandled keyword arguments are passed.
-    super(OlecfPlugin, self).Process(parser_context, **kwargs)
-
-    items = []
-    for item_string in self.REQUIRED_ITEMS:
-      item = root_item.get_sub_item_by_name(item_string)
-
-      if item:
-        items.append(item)
-
-    return self.GetEntries(
-        parser_context, root_item=root_item, items=items)
-
-  @abc.abstractmethod
-  def GetEntries(
-      self, parser_context, root_item=None, items=None, **kwargs):
-    """Extract and return EventObjects from the data structure.
-
-    Args:
-      parser_context: A parser context object (instance of ParserContext).
-      root_item: The root item of the OLECF file.
-      items: A list of all items discovered in the root.
-    """
-
   def GetTimestamps(self, olecf_item):
     """Takes an OLECF object and returns extracted timestamps.
 
@@ -128,6 +72,63 @@ class OlecfPlugin(plugins.BasePlugin):
       creation_time = 0
 
     return creation_time, modification_time
+
+  @abc.abstractmethod
+  def ParseItems(
+      self, parser_context, file_entry=None, root_item=None, items=None,
+      **kwargs):
+    """Parses OLECF items.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      root_item: Optional root item of the OLECF file. The default is None.
+      item_names: Optional list of all items discovered in the root.
+                  The default is None.
+    """
+
+  def Process(
+      self, parser_context, file_entry=None, root_item=None, item_names=None,
+      **kwargs):
+    """Determine if this is the right plugin for this OLECF file.
+
+    This function takes a list of sub items found in the root of a
+    OLECF file and compares that to a list of required items defined
+    in this plugin.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      root_item: Optional root item of the OLECF file. The default is None.
+      item_names: Optional list of all items discovered in the root.
+                  The default is None.
+
+    Raises:
+      errors.WrongPlugin: If the set of required items is not a subset
+                          of the available items.
+      ValueError: If the root_item or items are not set.
+    """
+    if root_item is None or item_names is None:
+      raise ValueError(u'Root item or items are not set.')
+
+    if not frozenset(item_names) >= self.REQUIRED_ITEMS:
+      raise errors.WrongPlugin(
+          u'Not the correct items for: {0:s}'.format(self.plugin_name))
+
+    # This will raise if unhandled keyword arguments are passed.
+    super(OlecfPlugin, self).Process(parser_context, **kwargs)
+
+    items = []
+    for item_string in self.REQUIRED_ITEMS:
+      item = root_item.get_sub_item_by_name(item_string)
+
+      if item:
+        items.append(item)
+
+    return self.ParseItems(
+        parser_context, file_entry=file_entry, root_item=root_item, items=items)
 
 
 class OleDefinitions(object):

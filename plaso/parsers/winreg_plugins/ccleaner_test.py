@@ -21,6 +21,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import ccleaner
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import winregistry
@@ -41,14 +42,17 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath(['NTUSER-CCLEANER.DAT'])
     key_path = u'\\Software\\Piriform\\CCleaner'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPluginAndQueue(
+        self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 17)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.timestamp, 1373709794000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-07-13 10:03:14')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'UpdateKey'
     expected_value = u'07/13/2013 10:03:14 AM'

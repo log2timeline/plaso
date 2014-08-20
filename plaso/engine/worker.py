@@ -112,7 +112,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # Need to apply time skew, and other information extracted from
     # the configuration of the tool.
     self._parser_context.ProcessEvent(
-        parser_name, event_object, file_entry=file_entry)
+        event_object, parser_name=parser_name, file_entry=file_entry)
 
     if not self._parser_context.MatchesFilter(event_object):
       self._storage_queue_producer.ProduceEventObject(event_object)

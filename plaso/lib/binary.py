@@ -22,6 +22,68 @@ import logging
 import os
 
 
+def ByteArrayCopyToString(byte_array, codepage='utf-8'):
+  """Copies a UTF-8 encoded byte array into a Unicode string.
+
+  Args:
+    byte_array: A byte array containing an UTF-8 encoded string.
+    codepage: The codepage of the byte stream. The default is utf-8.
+
+  Returns:
+    A Unicode string.
+  """
+  byte_stream = ''.join(map(chr, byte_array))
+  return ByteStreamCopyToString(byte_stream, codepage=codepage)
+
+
+def ByteStreamCopyToString(byte_stream, codepage='utf-8'):
+  """Copies a UTF-8 encoded byte stream into a Unicode string.
+
+  Args:
+    byte_stream: A byte stream containing an UTF-8 encoded string.
+    codepage: The codepage of the byte stream. The default is utf-8.
+
+  Returns:
+    A Unicode string.
+  """
+  try:
+    string = byte_stream.decode(codepage)
+  except UnicodeDecodeError:
+    logging.warning(
+        u'Unable to decode {0:s} formatted byte stream.'.format(codepage))
+    string = byte_stream.decode(codepage, errors='ignore')
+
+  string, _, _ = string.partition('\x00')
+  return string
+
+
+def ByteStreamCopyToGuid(byte_stream, byte_order='little-endian'):
+  """Reads a GUID from the byte stream.
+
+  Args:
+    byte_stream: The byte stream that contains the UTF-16 formatted stream.
+    byte_order: The byte order, either big- or little-endian. The default is
+                little-endian.
+
+  Returns:
+    String containing the GUID.
+  """
+  if len(byte_stream) >= 16:
+    if byte_order == 'big-endian':
+      return (
+          u'{{{0:02x}{1:02x}{2:02x}{3:02x}-{4:02x}{5:02x}-'
+          u'{6:02x}{7:02x}-{8:02x}{9:02x}-'
+          u'{10:02x}{11:02x}{12:02x}{13:02x}{14:02x}{15:02x}}}').format(
+              *byte_stream[:16])
+    elif byte_order == 'little-endian':
+      return (
+          u'{{{3:02x}{2:02x}{1:02x}{0:02x}-{5:02x}{4:02x}-'
+          u'{7:02x}{6:02x}-{8:02x}{9:02x}-'
+          u'{10:02x}{11:02x}{12:02x}{13:02x}{14:02x}{15:02x}}}').format(
+              *byte_stream[:16])
+  return u''
+
+
 def ByteStreamCopyToUtf16Stream(byte_stream, byte_stream_size=None):
   """Reads an UTF-16 formatted stream from a byte stream.
 
@@ -30,8 +92,8 @@ def ByteStreamCopyToUtf16Stream(byte_stream, byte_stream_size=None):
 
   Args:
     byte_stream: The byte stream that contains the UTF-16 formatted stream.
-    byte_stream_size: The byte stream size or None if the entire byte stream
-                      should be read.
+    byte_stream_size: Optional byte stream size or None if the entire
+                      byte stream should be read. The default is None.
 
   Returns:
     String containing the UTF-16 formatted stream.

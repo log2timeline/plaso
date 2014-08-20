@@ -27,20 +27,19 @@ from plaso.parsers.olecf_plugins import summary
 from plaso.parsers.olecf_plugins import test_lib
 
 
-class TestSummaryInfoPlugin(test_lib.OleCfPluginTestCase):
-  """Tests for the OLECF summary plugins."""
+class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
+  """Tests for the OLECF summary information plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._summary_plugin = summary.SummaryInfoPlugin()
-    self._document_summary_plugin = summary.DocumentSummaryPlugin()
+    self._summary_plugin = summary.SummaryInfoOlecfPlugin()
     self._test_file = self._GetTestFilePath(['Document.doc'])
 
-  def testProcessSummaryInfo(self):
-    """Tests the Process function on a SummaryInfo stream."""
-    event_generator = self._ParseOleCfFileWithPlugin(
+  def testProcess(self):
+    """Tests the Process function on a SummaryInformation stream."""
+    event_queue_consumer = self._ParseOleCfFileWithPlugin(
         self._test_file, self._summary_plugin)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # There is one summary info stream with three event objects.
     self.assertEquals(len(event_objects), 3)
@@ -84,11 +83,20 @@ class TestSummaryInfoPlugin(test_lib.OleCfPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-  def testProcessDocumentSummaryInfo(self):
-    """Tests the Process function on a SummaryInfo stream."""
-    event_generator = self._ParseOleCfFileWithPlugin(
+
+class TestDocumentSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
+  """Tests for the OLECF document summary information plugin."""
+
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    self._document_summary_plugin = summary.DocumentSummaryOlecfPlugin()
+    self._test_file = self._GetTestFilePath(['Document.doc'])
+
+  def testProcess(self):
+    """Tests the Process function on a DocumentSummaryInformation stream."""
+    event_queue_consumer = self._ParseOleCfFileWithPlugin(
         self._test_file, self._document_summary_plugin)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # There should only be one summary info stream with one event.
     self.assertEquals(len(event_objects), 1)
