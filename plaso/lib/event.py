@@ -460,12 +460,12 @@ class PreprocessObject(object):
       return self._user_ids_to_names
 
     for user in getattr(self, 'users', []):
-      if u'sid' in user:
-        user_id = user.get('sid', '')
+      if 'sid' in user:
+        user_id = user.get('sid', u'')
       elif 'uid' in user:
-        user_id = user.get('uid', '')
+        user_id = user.get('uid', u'')
       else:
-        user_id = ''
+        user_id = u''
 
       if user_id:
         self._user_ids_to_names[user_id] = user.get('name', user_id)

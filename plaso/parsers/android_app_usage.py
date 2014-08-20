@@ -57,11 +57,12 @@ class AndroidAppUsageParser(interface.BaseParser):
 
   NAME = 'android_app_usage'
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract the Android usage-history file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (EventObject) that contains the parsed

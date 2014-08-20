@@ -22,10 +22,10 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import firefox_cache as firefox_cache_formatter
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import timelib_test
-from plaso.parsers import firefox_cache as firefox_cache_parser
+from plaso.parsers import firefox_cache
 from plaso.parsers import test_lib
+
 
 __author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
 
@@ -34,8 +34,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCacheParser."""
 
   def setUp(self):
-    pre_obj = event.PreprocessObject()
-    self._parser = firefox_cache_parser.FirefoxCacheParser(pre_obj)
+    self._parser = firefox_cache.FirefoxCacheParser()
 
   def VerifyMajorMinor(self, events):
     """Verify that valid Firefox cahce version is extracted."""

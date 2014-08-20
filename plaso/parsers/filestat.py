@@ -147,11 +147,12 @@ class FileStatParser(interface.BaseParser):
 
   NAME = 'filestat'
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a file system stat entry.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (instance of FileStatEvent) that contains the parsed

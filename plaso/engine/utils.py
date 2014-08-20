@@ -35,7 +35,7 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
   find_specs = []
 
   if pre_obj:
-    expander = path_expander.WinRegistryKeyPathExpander(pre_obj, None)
+    expander = path_expander.WinRegistryKeyPathExpander()
 
   with open(filter_file_path, 'rb') as file_object:
     for line in file_object:
@@ -45,7 +45,7 @@ def BuildFindSpecsFromFile(filter_file_path, pre_obj=None):
 
       if pre_obj:
         try:
-          line = expander.ExpandPath(line)
+          line = expander.ExpandPath(line, pre_obj=pre_obj)
         except KeyError as exception:
           logging.error((
               u'Unable to use collection filter line: {0:s} with error: '

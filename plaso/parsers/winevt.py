@@ -76,15 +76,6 @@ class WinEvtParser(interface.BaseParser):
 
   NAME = 'winevt'
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(WinEvtParser, self).__init__(pre_obj)
-    self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
-
   def _ParseRecord(self, evt_record, recovered=False):
     """Extract data from a Windows EventLog (EVT) record.
 
@@ -123,11 +114,12 @@ class WinEvtParser(interface.BaseParser):
           written_time, eventdata.EventTimestamp.WRITTEN_TIME,
           evt_record, recovered)
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a Windows EventLog (EVT) file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (instance of WinEvtRecordEvent) that contains the parsed
@@ -135,7 +127,7 @@ class WinEvtParser(interface.BaseParser):
     """
     file_object = file_entry.GetFileObject()
     evt_file = pyevt.file()
-    evt_file.set_ascii_codepage(self._codepage)
+    evt_file.set_ascii_codepage(parser_context.codepage)
 
     try:
       evt_file.open_file_object(file_object)

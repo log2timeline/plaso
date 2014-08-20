@@ -19,7 +19,6 @@
 
 import unittest
 
-from plaso.lib import event
 from plaso.parsers import test_lib
 from plaso.parsers import winreg
 
@@ -29,9 +28,7 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.current_control_set = 'ControlSet001'
-    self._parser = winreg.WinRegistryParser(pre_obj)
+    self._parser = winreg.WinRegistryParser()
 
   def _GetPlugins(self, event_generator):
     """Return a dict with a plugin count given an event generator."""
@@ -46,8 +43,10 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def testNtuserParsing(self):
     """Parse a NTUSER.dat file and check few items."""
+    knowledge_base_values = {'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath(['NTUSER.DAT'])
-    event_generator = self._ParseFile(self._parser, test_file)
+    event_generator = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
 
     plugins = self._GetPlugins(event_generator)
 
@@ -64,8 +63,10 @@ class WinRegTest(test_lib.ParserTestCase):
 
   def testSystemParsing(self):
     """Parse a SYSTEM hive an run few tests."""
+    knowledge_base_values = {'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath(['SYSTEM'])
-    event_generator = self._ParseFile(self._parser, test_file)
+    event_generator = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
 
     plugins = self._GetPlugins(event_generator)
 

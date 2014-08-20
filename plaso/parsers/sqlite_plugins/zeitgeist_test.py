@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import zeitgeist as zeitgeist_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import test_lib
 from plaso.parsers.sqlite_plugins import zeitgeist
@@ -32,8 +31,7 @@ class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = zeitgeist.ZeitgeistPlugin(pre_obj)
+    self._plugin = zeitgeist.ZeitgeistPlugin()
 
   def testProcess(self):
     """Tests the Process function."""

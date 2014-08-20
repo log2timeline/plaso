@@ -17,12 +17,10 @@
 # limitations under the License.
 """Tests for the xchatscrollback log parser."""
 
-import pytz
 import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import xchatscrollback as xchatscrollback_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers import xchatscrollback as xchatscrollback_parser
 from plaso.parsers import test_lib
@@ -36,9 +34,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.zone = pytz.timezone('UTC')
-    self._parser = xchatscrollback_parser.XChatScrollbackParser(pre_obj)
+    self._parser = xchatscrollback_parser.XChatScrollbackParser()
 
   def testParse(self):
     """Tests the Parse function."""
@@ -48,6 +44,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     self.assertEquals(len(event_objects), 10)
 
+    # TODO: refactor this to use timelib_test.
     self.assertEquals(event_objects[0].timestamp, 1232074579000000)
     self.assertEquals(event_objects[1].timestamp, 1232074587000000)
     self.assertEquals(event_objects[2].timestamp, 1232315916000000)

@@ -25,11 +25,13 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 import pyparsing
 
+from plaso.artifacts import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
+from plaso.parsers import context
 from plaso.parsers import interface
 from plaso.parsers import text_parser
 
@@ -127,22 +129,25 @@ class TextParserTest(unittest.TestCase):
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def setUp(self):
-    pre_obj = event.PreprocessObject()
-    self._parser = TestTextParser(pre_obj)
+    self._parser = TestTextParser()
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    parser_context = context.ParserContext(knowledge_base_object)
     test_file = self._GetTestFilePath(['text_parser', 'test1.txt'])
     file_entry = self._GetTestFileEntry(test_file)
-    text_generator = self._parser.Parse(file_entry)
+    text_generator = self._parser.Parse(parser_context, file_entry)
 
     self.assertRaises(errors.UnableToParseFile, list, text_generator)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    parser_context = context.ParserContext(knowledge_base_object)
     test_file = self._GetTestFilePath(['text_parser', 'test2.txt'])
     file_entry = self._GetTestFileEntry(test_file)
-    text_generator = self._parser.Parse(file_entry)
+    text_generator = self._parser.Parse(parser_context, file_entry)
 
     first_entry = text_generator.next()
     second_entry = text_generator.next()
@@ -150,6 +155,7 @@ class TextParserTest(unittest.TestCase):
     # TODO: refactor this to use the parsers test_lib.
     msg1, _ = formatters_manager.EventFormatterManager.GetMessageStrings(
         first_entry)
+    # TODO: refactor this to use timelib_test.
     self.assertEquals(first_entry.timestamp, 1293859395000000)
     self.assertEquals(msg1, 'first line.')
     self.assertEquals(first_entry.hostname, 'myhost')
@@ -158,6 +164,7 @@ class TextParserTest(unittest.TestCase):
     # TODO: refactor this to use the parsers test_lib.
     msg2, _ = formatters_manager.EventFormatterManager.GetMessageStrings(
         second_entry)
+    # TODO: refactor this to use timelib_test.
     self.assertEquals(second_entry.timestamp, 693604686000000)
     self.assertEquals(msg2, 'second line.')
     self.assertEquals(second_entry.hostname, 'myhost')

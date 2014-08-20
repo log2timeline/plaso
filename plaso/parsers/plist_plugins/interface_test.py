@@ -19,8 +19,10 @@
 
 import unittest
 
+from plaso.artifacts import knowledge_base
 from plaso.events import plist_event
 from plaso.lib import errors
+from plaso.parsers import context
 # Register plist plugins.
 from plaso.parsers import plist  # pylint: disable=unused-import
 from plaso.parsers import manager
@@ -32,7 +34,7 @@ class MockPlugin(interface.PlistPlugin):
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
-  def GetEntries(self, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, **unused_kwargs):
     yield plist_event.PlistEvent(
         u'/DeviceCache/44-00-00-00-00-00', u'LastInquiryUpdate',
         1351827808261762)
@@ -43,6 +45,8 @@ class TestPlistPlugin(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    self._parser_context = context.ParserContext(knowledge_base_object)
     self._top_level_dict = {
         'DeviceCache': {
             '44-00-00-00-00-04': {
@@ -64,24 +68,28 @@ class TestPlistPlugin(unittest.TestCase):
   def testProcess(self):
     """Tests the Process function."""
     # Ensure the plugin only processes if both filename and keys exist.
-    mock_plugin = MockPlugin(None)
+    mock_plugin = MockPlugin()
 
     # Test correct filename and keys.
-    self.assertTrue(mock_plugin.Process('plist_binary', {
+    self.assertTrue(mock_plugin.Process(
+        self._parser_context, plist_name='plist_binary', top_level={
         'DeviceCache': 1, 'PairedDevices': 1}))
 
     # Correct filename with odd filename cAsinG.  Adding an extra useless key.
-    self.assertTrue(mock_plugin.Process('pLiSt_BinAry', {
+    self.assertTrue(mock_plugin.Process(
+        self._parser_context, plist_name='pLiSt_BinAry', top_level={
         'DeviceCache': 1, 'PairedDevices': 1, 'R@ndomExtraKey': 1}))
 
     # Test wrong filename.
     with self.assertRaises(errors.WrongPlistPlugin):
-      mock_plugin.Process('wrong_file.plist', {
+      mock_plugin.Process(
+        self._parser_context, plist_name='wrong_file.plist', top_level={
           'DeviceCache': 1, 'PairedDevices': 1})
 
     # Test not enough required keys.
     with self.assertRaises(errors.WrongPlistPlugin):
-      mock_plugin.Process('plist_binary', {
+      mock_plugin.Process(
+        self._parser_context, plist_name='plist_binary', top_level={
           'Useless_Key': 0, 'PairedDevices': 1})
 
   def testRecurseKey(self):

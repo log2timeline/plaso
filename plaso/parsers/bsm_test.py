@@ -21,79 +21,24 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import bsm as bsm_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers import bsm
 from plaso.parsers import test_lib
 
 
-class BsmParserTest(test_lib.ParserTestCase):
+class MacOSXBsmParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    mac_pre_obj = event.PreprocessObject()
-    mac_pre_obj.guessed_os = 'MacOSX'
-    self._parser_macbsm = bsm.BsmParser(mac_pre_obj)
-
-    openbsm_pre_obj = event.PreprocessObject()
-    openbsm_pre_obj.guessed_os = 'openbsm'
-    self._parser_openbsm = bsm.BsmParser(openbsm_pre_obj)
+    self._parser = bsm.BsmParser()
 
   def testParse(self):
-    """Tests the Parse function on a "generic" BSM file."""
-    test_file = self._GetTestFilePath(['openbsm.bsm'])
-    event_generator = self._ParseFile(self._parser_openbsm, test_file)
-    event_objects = self._GetEventObjects(event_generator)
-
-    self.assertEqual(len(event_objects), 50)
-
-    expected_extra_tokens = [
-        u'[BSM_TOKEN_ARGUMENT32: test_arg32_token(3) is 0xABCDEF00]',
-        u'[BSM_TOKEN_DATA: Format data: String, Data: SomeData]',
-        u'[BSM_TOKEN_FILE: test, timestamp: 1970-01-01 20:42:45]',
-        u'[BSM_TOKEN_ADDR: 192.168.100.15]',
-        u'[IPv4_Header: 0x400000145478000040010000c0a8649bc0a86e30]',
-        u'[BSM_TOKEN_IPC: object type 1, object id 305419896]',
-        u'[BSM_TOKEN_PORT: 20480]',
-        u'[BSM_TOKEN_OPAQUE: aabbccdd]',
-        u'[BSM_TOKEN_PATH: /test/this/is/a/test]',
-        (u'[BSM_TOKEN_PROCESS32: aid(305419896), euid(19088743), '
-         u'egid(591751049), uid(2557891634), gid(159868227), '
-         u'pid(321140038), session_id(2542171492), '
-         u'terminal_port(374945606), terminal_ip(127.0.0.1)]'),
-        (u'[BSM_TOKEN_PROCESS64: aid(305419896), euid(19088743), '
-         u'egid(591751049), uid(2557891634), gid(159868227), '
-         u'pid(321140038), session_id(2542171492), '
-         u'terminal_port(374945606), terminal_ip(127.0.0.1)]'),
-        (u'[BSM_TOKEN_RETURN32: Invalid argument (22), '
-         u'System call status: 305419896]'),
-        u'[BSM_TOKEN_SEQUENCE: 305419896]',
-        (u'[BSM_TOKEN_AUT_SOCKINET32_EX: '
-         u'from 127.0.0.1 port 0 to 127.0.0.1 port 0]'),
-        (u'[BSM_TOKEN_SUBJECT32: aid(305419896), euid(19088743), '
-         u'egid(591751049), uid(2557891634), gid(159868227), '
-         u'pid(321140038), session_id(2542171492), '
-         u'terminal_port(374945606), terminal_ip(127.0.0.1)]'),
-        (u'[BSM_TOKEN_SUBJECT32_EX: aid(305419896), euid(19088743), '
-         u'egid(591751049), uid(2557891634), gid(159868227), '
-         u'pid(321140038), session_id(2542171492), '
-         u'terminal_port(374945606), terminal_ip(fe80::1)]'),
-        u'[BSM_TOKEN_TEXT: This is a test.]',
-        u'[BSM_TOKEN_ZONENAME: testzone]',
-        (u'[BSM_TOKEN_RETURN32: Argument list too long (7), '
-         u'System call status: 4294967295]')]
-
-    extra_tokens = []
-    for event_object_index in range(0, 19):
-      extra_tokens.append(event_objects[event_object_index].extra_tokens)
-
-    self.assertEqual(extra_tokens, expected_extra_tokens)
-
-  def testParseFileMacOSX(self):
     """Tests the Parse function on a Mac OS X BSM file."""
+    knowledge_base_values = {'guessed_os': 'MacOSX'}
     test_file = self._GetTestFilePath(['apple.bsm'])
-    event_generator = self._ParseFile(self._parser_macbsm, test_file)
+    event_generator = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjects(event_generator)
 
     self.assertEqual(len(event_objects), 54)
@@ -186,6 +131,66 @@ class BsmParserTest(test_lib.ParserTestCase):
     expected_return_value = (
         u'[BSM_TOKEN_RETURN32: Success (0), System call status: 0]')
     self.assertEqual(event_object.return_value, expected_return_value)
+
+
+class OpenBsmParserTest(test_lib.ParserTestCase):
+  """Tests for Basic Security Module (BSM) file parser."""
+
+  def setUp(self):
+    """Sets up the needed objects used throughout the test."""
+    self._parser = bsm.BsmParser()
+
+  def testParse(self):
+    """Tests the Parse function on a "generic" BSM file."""
+    knowledge_base_values = {'guessed_os': 'openbsm'}
+    test_file = self._GetTestFilePath(['openbsm.bsm'])
+    event_generator = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
+    event_objects = self._GetEventObjects(event_generator)
+
+    self.assertEqual(len(event_objects), 50)
+
+    expected_extra_tokens = [
+        u'[BSM_TOKEN_ARGUMENT32: test_arg32_token(3) is 0xABCDEF00]',
+        u'[BSM_TOKEN_DATA: Format data: String, Data: SomeData]',
+        u'[BSM_TOKEN_FILE: test, timestamp: 1970-01-01 20:42:45]',
+        u'[BSM_TOKEN_ADDR: 192.168.100.15]',
+        u'[IPv4_Header: 0x400000145478000040010000c0a8649bc0a86e30]',
+        u'[BSM_TOKEN_IPC: object type 1, object id 305419896]',
+        u'[BSM_TOKEN_PORT: 20480]',
+        u'[BSM_TOKEN_OPAQUE: aabbccdd]',
+        u'[BSM_TOKEN_PATH: /test/this/is/a/test]',
+        (u'[BSM_TOKEN_PROCESS32: aid(305419896), euid(19088743), '
+         u'egid(591751049), uid(2557891634), gid(159868227), '
+         u'pid(321140038), session_id(2542171492), '
+         u'terminal_port(374945606), terminal_ip(127.0.0.1)]'),
+        (u'[BSM_TOKEN_PROCESS64: aid(305419896), euid(19088743), '
+         u'egid(591751049), uid(2557891634), gid(159868227), '
+         u'pid(321140038), session_id(2542171492), '
+         u'terminal_port(374945606), terminal_ip(127.0.0.1)]'),
+        (u'[BSM_TOKEN_RETURN32: Invalid argument (22), '
+         u'System call status: 305419896]'),
+        u'[BSM_TOKEN_SEQUENCE: 305419896]',
+        (u'[BSM_TOKEN_AUT_SOCKINET32_EX: '
+         u'from 127.0.0.1 port 0 to 127.0.0.1 port 0]'),
+        (u'[BSM_TOKEN_SUBJECT32: aid(305419896), euid(19088743), '
+         u'egid(591751049), uid(2557891634), gid(159868227), '
+         u'pid(321140038), session_id(2542171492), '
+         u'terminal_port(374945606), terminal_ip(127.0.0.1)]'),
+        (u'[BSM_TOKEN_SUBJECT32_EX: aid(305419896), euid(19088743), '
+         u'egid(591751049), uid(2557891634), gid(159868227), '
+         u'pid(321140038), session_id(2542171492), '
+         u'terminal_port(374945606), terminal_ip(fe80::1)]'),
+        u'[BSM_TOKEN_TEXT: This is a test.]',
+        u'[BSM_TOKEN_ZONENAME: testzone]',
+        (u'[BSM_TOKEN_RETURN32: Argument list too long (7), '
+         u'System call status: 4294967295]')]
+
+    extra_tokens = []
+    for event_object_index in range(0, 19):
+      extra_tokens.append(event_objects[event_object_index].extra_tokens)
+
+    self.assertEqual(extra_tokens, expected_extra_tokens)
 
 
 if __name__ == '__main__':

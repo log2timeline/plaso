@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import chrome as chrome_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import chrome
@@ -34,8 +33,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = chrome.ChromeHistoryPlugin(pre_obj)
+    self._plugin = chrome.ChromeHistoryPlugin()
 
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""

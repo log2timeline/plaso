@@ -204,19 +204,23 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     paths.reverse()
     return u'/' + u'/'.join(paths) + u'/'
 
-  def ParseCloudEntryRow(self, row, cache, database, **unused_kwargs):
+  def ParseCloudEntryRow(
+      self, unused_parser_context, row, cache=None, database=None,
+      **unused_kwargs):
     """Parses a cloud entry row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
       cache: The local cache object.
+      database: The database object.
 
     Yields:
       An event object (instance of GoogleDriveSnapshotCloudEntryEvent)
       containing the event data.
     """
     cloud_path = self.GetCloudPath(row['parent_resource_id'], cache, database)
-    cloud_filename = u'{}{}'.format(cloud_path, row['filename'])
+    cloud_filename = u'{0:s}{1:s}'.format(cloud_path, row['filename'])
 
     if row['shared']:
       shared = 'Shared'
@@ -232,10 +236,13 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
           row['created'], eventdata.EventTimestamp.CREATION_TIME,
           row['url'], cloud_filename, row['size'], row['doc_type'], shared)
 
-  def ParseLocalEntryRow(self, row, cache, database, **unused_kwargs):
+  def ParseLocalEntryRow(
+      self, unused_parser_context, row, cache=None, database=None,
+      **unused_kwargs):
     """Parses a local entry row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
       cache: The local cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).

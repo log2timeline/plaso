@@ -108,11 +108,11 @@ class Lexer(object):
       for action in token.actions:
 
         # Is there a callback to handle this action?
-        cb = getattr(self, action, self.Default)
+        callback = getattr(self, action, self.Default)
 
         # Allow a callback to skip other callbacks.
         try:
-          possible_next_state = cb(string=m.group(0), match=m)
+          possible_next_state = callback(string=m.group(0), match=m)
           if possible_next_state == self._CONTINUE_STATE:
             continue
           # Override the state from the Token

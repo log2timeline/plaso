@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.lib import event
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import airport
 from plaso.parsers.plist_plugins import test_lib
@@ -32,9 +31,8 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = airport.AirportPlugin(None)
-    pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj)
+    self._plugin = airport.AirportPlugin()
+    self._parser = plist.PlistParser()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -61,7 +59,7 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
         u'[WiFi] Connected to network: <europa> using security '
         u'WPA/WPA2 Personal')
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/RememberedNetworks/item {}'.format(expected_desc)
+    expected_string = u'/RememberedNetworks/item {0:s}'.format(expected_desc)
     expected_short = expected_string[:77] + u'...'
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short)

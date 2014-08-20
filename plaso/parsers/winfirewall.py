@@ -73,20 +73,23 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
   DATA_TYPE = 'windows:firewall:log_entry'
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(WinFirewallParser, self).__init__(pre_obj)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(WinFirewallParser, self).__init__()
     self.version = None
     self.use_local_zone = False
     self.software = None
-    self.local_zone = getattr(pre_obj, 'zone', pytz.utc)
 
-  def VerifyStructure(self, line):
-    """Verify that this file is a firewall log file."""
+  def VerifyStructure(self, parser_context, line):
+    """Verify that this file is a firewall log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     # TODO: Examine other versions of the file format and if this parser should
     # support them.
     if line == '#Version: 1.5':
@@ -94,18 +97,34 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     return False
 
-  def ParseRecord(self, key, structure):
-    """Parse each record structure and return an EventObject if applicable."""
+  def ParseRecord(self, parser_context, key, structure):
+    """Parse each record structure and return an event object if applicable.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     if key == 'comment':
       self._ParseCommentRecord(structure)
     elif key == 'logline':
-      return self._ParseLogLine(structure)
+      return self._ParseLogLine(parser_context, structure)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def _ParseCommentRecord(self, structure):
-    """Parse a comment and store appropriate attributes."""
+    """Parse a comment and store appropriate attributes.
+
+    Args:
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+    """
     comment = structure[1]
     if comment.startswith('Version'):
       _, _, self.version = comment.partition(':')
@@ -116,21 +135,30 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       if 'local' in time_format.lower():
         self.use_local_zone = True
 
-  def _ParseLogLine(self, structure):
-    """Parse a single log line and return an EventObject."""
+  def _ParseLogLine(self, parser_context, structure):
+    """Parse a single log line and return an event object.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     log_dict = structure.asDict()
 
     date = log_dict.get('date', None)
     time = log_dict.get('time', None)
 
     if not (date and time):
-      logging.warning('Unable to extract timestamp from Winfirewall logline.')
+      logging.warning(u'Unable to extract timestamp from Winfirewall logline.')
       return
 
     year, month, day = date
     hour, minute, second = time
     if self.use_local_zone:
-      zone = self.local_zone
+      zone = parser_context.timezone
     else:
       zone = pytz.utc
 

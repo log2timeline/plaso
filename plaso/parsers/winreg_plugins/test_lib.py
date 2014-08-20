@@ -21,6 +21,8 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.artifacts import knowledge_base
+from plaso.parsers import context
 from plaso.parsers import test_lib
 from plaso.winreg import winregistry
 
@@ -45,19 +47,28 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
     return winreg_file.GetKeyByPath(key_path)
 
-  def _ParseKeyWithPlugin(self, plugin_object, winreg_key):
+  def _ParseKeyWithPlugin(
+      self, plugin_object, winreg_key, knowledge_base_values=None):
     """Parses a key within a Windows Registry file using the plugin object.
 
     Args:
       plugin_object: the plugin object.
       winreg_key: the Windows Registry Key.
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
 
     Returns:
       A generator of event objects as returned by the plugin.
     """
     self.assertNotEquals(winreg_key, None)
 
-    event_generator = plugin_object.Process(key=winreg_key)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        knowledge_base_object.SetValue(identifier, value)
+
+    parser_context = context.ParserContext(knowledge_base_object)
+    event_generator = plugin_object.Process(parser_context, key=winreg_key)
     self.assertNotEquals(event_generator, None)
 
     return event_generator

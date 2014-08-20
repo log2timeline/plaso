@@ -209,10 +209,12 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
           yield MsieWebCacheContainerEventObject(
               timestamp, u'Post check time', record_values)
 
-  def ParseContainersTable(self, database=None, table=None, **unused_kwargs):
+  def ParseContainersTable(
+      self, unused_parser_context, database=None, table=None, **unused_kwargs):
     """Parses the Containers table.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       database: Optional database object (instance of pyesedb.file).
                 The default is None.
       table: Optional table object (instance of pyesedb.table).
@@ -259,10 +261,12 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
           esedb_table, container_name):
         yield event_object
 
-  def ParseLeakFilesTable(self, database=None, table=None, **unused_kwargs):
+  def ParseLeakFilesTable(
+      self, unused_parser_context, database=None, table=None, **unused_kwargs):
     """Parses the LeakFiles table.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       database: Optional database object (instance of pyesedb.file).
                 The default is None.
       table: Optional table object (instance of pyesedb.table).
@@ -287,10 +291,12 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
         yield MsieWebCacheLeakFilesEventObject(
             timestamp, eventdata.EventTimestamp.CREATION_TIME, record_values)
 
-  def ParsePartitionsTable(self, database=None, table=None, **unused_kwargs):
+  def ParsePartitionsTable(
+      self, unused_parser_context, database=None, table=None, **unused_kwargs):
     """Parses the Partitions table.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       database: Optional database object (instance of pyesedb.file).
                 The default is None.
       table: Optional table object (instance of pyesedb.table).

@@ -38,22 +38,18 @@ class OleCfParser(interface.BaseParser):
 
   NAME = 'olecf'
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(OleCfParser, self).__init__(pre_obj)
-    self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
+  def __init__(self):
+    """Initializes a parser object."""
+    super(OleCfParser, self).__init__()
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=olecf_plugins_interface.OlecfPlugin, pre_obj=self._pre_obj)
+        parent_class=olecf_plugins_interface.OlecfPlugin)
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extracts data from an OLE Compound File (OLECF).
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       Event objects (EventObject) that contains the parsed
@@ -61,7 +57,7 @@ class OleCfParser(interface.BaseParser):
     """
     file_object = file_entry.GetFileObject()
     olecf_file = pyolecf.file()
-    olecf_file.set_ascii_codepage(self._codepage)
+    olecf_file.set_ascii_codepage(parser_context.codepage)
 
     try:
       olecf_file.open_file_object(file_object)

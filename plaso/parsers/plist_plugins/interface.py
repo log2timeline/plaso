@@ -85,7 +85,7 @@ class PlistPlugin(plugins.BasePlugin):
   # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
   URLS = []
 
-  def Process(self, plist_name=None, top_level=None, **kwargs):
+  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current plist being processed is a match for a
@@ -98,6 +98,7 @@ class PlistPlugin(plugins.BasePlugin):
     plugin.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
 
@@ -134,14 +135,16 @@ class PlistPlugin(plugins.BasePlugin):
       if not set(keys).issuperset(self.PLIST_KEYS):
         raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
 
-    super(PlistPlugin, self).Process(**kwargs)
+    # This will raise if unhandled keyword arguments are passed.
+    super(PlistPlugin, self).Process(parser_context, **kwargs)
 
-    logging.debug(u'Plist Plugin Used: {} for: {}'.format(
+    logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
         self.plugin_name, plist_name))
     match = GetKeys(top_level, self.PLIST_KEYS)
-    return self.GetEntries(top_level=top_level, match=match)
+    return self.GetEntries(parser_context, top_level=top_level, match=match)
 
-  def GetEntries(self, top_level=None, match=None, **unused_kwargs):
+  def GetEntries(
+      self, unused_parser_context, top_level=None, match=None, **unused_kwargs):
     """Yields PlistEvents from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
@@ -176,6 +179,7 @@ class PlistPlugin(plugins.BasePlugin):
     See plist/bluetooth.py for the implemented example plugin.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       top_level: Plist in dictionary form.
       match: A dictionary containing extracted keys from PLIST_KEYS.
 
@@ -241,9 +245,9 @@ def GetKeys(top_level, keys, depth=1):
   """Helper function to return keys nested in a plist dict.
 
   By default this function will return the values for the named keys requested
-  by a plugin in match{}. The default setting is to look a single layer down
-  from the root (same as the check for plugin applicability). This level is
-  suitable for most cases.
+  by a plugin in match dictonary objecte. The default setting is to look
+  a single layer down from the root (same as the check for plugin
+  applicability). This level is suitable for most cases.
 
   For cases where there is varability in the name at the first level
   (e.g. it is the MAC addresses of a device, or a UUID) it is possible to

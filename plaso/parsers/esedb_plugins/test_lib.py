@@ -19,7 +19,9 @@
 
 import pyesedb
 
+from plaso.artifacts import knowledge_base
 from dfvfs.lib import definitions
+from plaso.parsers import context
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -30,7 +32,11 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for ESE database based plugins."""
 
   def _OpenEseDbFile(self, path):
-    """Opens an ESE database file and returns back a pyesedb.file object."""
+    """Opens an ESE database file and returns back a pyesedb.file object.
+
+    Args:
+      path: The path to the ESE database test file.
+    """
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
@@ -42,19 +48,29 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
 
     return esedb_file
 
-  def _ParseEseDbFileWithPlugin(self, path, plugin_object):
+  def _ParseEseDbFileWithPlugin(
+      self, path, plugin_object, knowledge_base_values=None):
     """Parses a file as an ESE database file and returns an event generator.
 
     Args:
       path: The path to the ESE database test file.
       plugin_object: The plugin object that is used to extract an event
                      generator.
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
 
     Returns:
       A generator of event objects as returned by the plugin.
     """
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        knowledge_base_object.SetValue(identifier, value)
+
+    parser_context = context.ParserContext(knowledge_base_object)
     esedb_file = self._OpenEseDbFile(path)
-    event_generator = plugin_object.Process(database=esedb_file)
+    event_generator = plugin_object.Process(
+        parser_context, database=esedb_file)
 
     self.assertNotEquals(event_generator, None)
 

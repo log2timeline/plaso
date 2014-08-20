@@ -22,7 +22,7 @@ import unittest
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
-from plaso.lib import event
+from plaso.artifacts import knowledge_base
 from plaso.preprocessors import linux
 from plaso.preprocessors import test_lib
 
@@ -44,13 +44,12 @@ class LinuxHostnameTest(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = linux.LinuxHostname(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = linux.LinuxHostname()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    hostname = getattr(pre_obj, 'hostname', None)
-    self.assertEquals(hostname, u'plaso.kiddaland.net')
+    self.assertEquals(knowledge_base_object.hostname, u'plaso.kiddaland.net')
 
 
 class LinuxUsernamesTest(test_lib.PreprocessPluginTest):
@@ -82,12 +81,12 @@ class LinuxUsernamesTest(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = linux.LinuxUsernames(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = linux.LinuxUsernames()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    users = getattr(pre_obj, 'users', None)
+    users = knowledge_base_object.GetValue('users')
     self.assertEquals(len(users), 13)
 
     self.assertEquals(users[11].get('uid', None), u'14')

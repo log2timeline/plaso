@@ -54,11 +54,49 @@ class SymantecParser(text_parser.TextCSVParser):
       'domain_guid', 'log_session_guid', 'vbin_session_id',
       'login_domain', 'extra']
 
-  def VerifyRow(self, row):
-    """Verify a single line of a Symantec log file."""
+  def _GetTimestamp(self, timestamp_raw, timezone):
+    """Return a 64-bit signed timestamp value in micro seconds since Epoch.
 
+     The timestamp consists of six hexadecimal octets.
+     They represent the following:
+       First octet: Number of years since 1970
+       Second octet: Month, where January = 0
+       Third octet: Day
+       Fourth octet: Hour
+       Fifth octet: Minute
+       Sixth octet: Second
+
+     For example, 200A13080122 represents November 19, 2002, 8:01:34 AM.
+
+     Args:
+       timestamp_raw: The hexadecimal encoded timestamp value.
+       timezone: The timezone object.
+
+     Returns:
+       A plaso timestamp value, micro seconds since Epoch in UTC.
+    """
+    if timestamp_raw == '':
+      return 0
+
+    year, month, day, hour, minute, sec = (
+        int(x[0] + x[1], 16) for x in zip(
+            timestamp_raw[::2], timestamp_raw[1::2]))
+
+    return timelib.Timestamp.FromTimeParts(
+        year + 1970, month + 1, day, hour, minute, sec, timezone=timezone)
+
+  def VerifyRow(self, parser_context, row):
+    """Verify a single line of a Symantec log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: A single row from the CSV file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     try:
-      timestamp = self.GetTimestamp(row['time'])
+      timestamp = self._GetTimestamp(row['time'], parser_context.timezone)
     except (TypeError, ValueError):
       return False
 
@@ -84,41 +122,17 @@ class SymantecParser(text_parser.TextCSVParser):
 
     return True
 
-  def GetTimestamp(self, timestamp_raw):
-    """Return a 64-bit signed timestamp value in micro seconds since Epoch.
+  def ParseRow(self, parser_context, row):
+    """Parse a single line from the symantec log file.
 
-     The timestamp consists of six hexadecimal octets.
-     They represent the following:
-       First octet: Number of years since 1970
-       Second octet: Month, where January = 0
-       Third octet: Day
-       Fourth octet: Hour
-       Fifth octet: Minute
-       Sixth octet: Second
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: A dictionary containing all the fields as denoted in the
+           COLUMNS class list.
 
-     For example, 200A13080122 represents November 19, 2002, 8:01:34 AM.
-
-     Args:
-       timestamp_raw: The hexadecimal encoded timestamp value.
-
-     Returns:
-       A plaso timestamp value, micro seconds since Epoch in UTC.
+    Yields:
+      An EventObject extracted from a single line from the log file.
     """
-    if timestamp_raw == '':
-      return 0
-
-    year, month, day, hour, minute, sec = (
-        int(x[0] + x[1], 16) for x in zip(
-            timestamp_raw[::2], timestamp_raw[1::2]))
-
-    timestamp = timelib.Timestamp.FromTimeParts(
-        year + 1970, month + 1, day, hour, minute, sec,
-        timezone=self._pre_obj.zone)
-
-    return timestamp
-
-  def ParseRow(self, row):
-    """Parse a single line from the symantec log file."""
-    epoch = self.GetTimestamp(row['time'])
+    epoch = self._GetTimestamp(row['time'], parser_context.timezone)
     # TODO: Create new dict object that only contains valuable attributes.
     yield SymantecEvent(epoch, row)

@@ -166,7 +166,7 @@ class ServicesPlugin(interface.ValuePlugin):
     else:
       return None
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Create one event for each subkey under Services that has Type and Start.
 
     Adds descriptions of the ErrorControl, Type and Start Values.
@@ -174,6 +174,7 @@ class ServicesPlugin(interface.ValuePlugin):
     of C:/Windows/system32/drivers.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:

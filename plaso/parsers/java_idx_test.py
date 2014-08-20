@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import java_idx as java_idx_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers import java_idx
@@ -33,8 +32,7 @@ class IDXTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = java_idx.JavaIDXParser(pre_obj)
+    self._parser = java_idx.JavaIDXParser()
 
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""

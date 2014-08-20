@@ -35,10 +35,15 @@ class USBStorPlugin(interface.KeyPlugin):
   REG_TYPE = 'SYSTEM'
   DESCRIPTION = 'USBStor Entries'
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Collect Values under USBStor and return an event object for each one."""
-    for subkey in key.GetSubkeys():
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Collect Values under USBStor and return an event object for each one.
 
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+    """
+    for subkey in key.GetSubkeys():
       text_dict = {}
       text_dict['subkey_name'] = subkey.name
 
@@ -53,8 +58,8 @@ class USBStorPlugin(interface.KeyPlugin):
         device_type, vendor, product, revision = subkey.name.split('&')
       except ValueError as exception:
         logging.warning(
-            u'Unable to split string: {} - [{}]'.format(
-              subkey.name, exception))
+            u'Unable to split string: {0:s} with error: {1:s}'.format(
+                subkey.name, exception))
 
       text_dict['device_type'] = device_type
       text_dict['vendor'] = vendor

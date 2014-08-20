@@ -101,23 +101,27 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseFailed', 'INITIAL')
   ]
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
+  def __init__(self):
+    """Initializes a parser object."""
     # Set local_zone to false, since timestamps are UTC.
-    super(SELinuxParser, self).__init__(pre_obj, False)
+    super(SELinuxParser, self).__init__(local_zone=False)
     self.attributes = {'audit_type': '', 'pid': '', 'body': ''}
     self.timestamp = 0
 
-  def ParseType(self, match, **_):
-    """Parse the audit event type."""
+  def ParseType(self, match=None, **unused_kwargs):
+    """Parse the audit event type.
+
+    Args:
+      match: The regular expression match object.
+    """
     self.attributes['audit_type'] = match.group(1)
 
-  def ParseTime(self, match, **_):
-    """Parse the log timestamp."""
+  def ParseTime(self, match=None, **unused_kwargs):
+    """Parse the log timestamp.
+
+    Args:
+      match: The regular expression match object.
+    """
     # TODO: do something with match.group(3) ?
     try:
       number_of_seconds = int(match.group(1), 10)
@@ -130,11 +134,14 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
       self.timestamp = 0
       raise lexer.ParseError(u'Not a valid timestamp.')
 
-  def ParseString(self, match, **unused_kwargs):
+  def ParseString(self, match=None, **unused_kwargs):
     """Add a string to the body attribute.
 
     This method extends the one from TextParser slightly,
     searching for the 'pid=[0-9]+' value inside the message body.
+
+    Args:
+      match: The regular expression match object.
     """
     try:
       self.attributes['body'] += match.group(1)
@@ -152,15 +159,14 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     """Entry parsing failed callback."""
     raise lexer.ParseError(u'Unable to parse SELinux log line.')
 
-  def ParseLine(self, zone):
+  def ParseLine(self, parser_context):
     """Parse a single line from the SELinux audit file.
 
     This method extends the one from TextParser slightly, creating a
     SELinux event with the timestamp (UTC) taken from log entries.
 
     Args:
-      zone: The timezone of the host computer, not used since the
-      timestamp are UTC.
+      parser_context: A parser context object (instance of ParserContext).
 
     Returns:
       An event object (instance of EventObject) that is constructed

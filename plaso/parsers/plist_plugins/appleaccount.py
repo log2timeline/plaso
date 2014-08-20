@@ -33,10 +33,11 @@ class AppleAccountPlugin(interface.PlistPlugin):
   PLIST_PATH = u'com.apple.coreservices.appleidauthenticationinfo'
   PLIST_KEYS = frozenset(['AuthCertificates', 'AccessorVersions', 'Accounts'])
 
-  def Process(self, plist_name=None, top_level=None, **kwargs):
+  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
     """Check if it is a valid Apple account plist file name.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       plist_name: name of the plist file.
       top_level: dictionary with the plist file parsed.
 
@@ -46,7 +47,8 @@ class AppleAccountPlugin(interface.PlistPlugin):
     if not plist_name.startswith(self.PLIST_PATH):
       raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
     return super(AppleAccountPlugin, self).Process(
-        plist_name=self.PLIST_PATH, top_level=top_level, **kwargs)
+        parser_context, plist_name=self.PLIST_PATH, top_level=top_level,
+        **kwargs)
 
   # Yield Events
   # Accounts: account name.
@@ -56,10 +58,11 @@ class AppleAccountPlugin(interface.PlistPlugin):
   # LastSuccessfulConnect: last time when the account was connected.
   # ValidationDate: last time when the account was validated.
 
-  def GetEntries(self, match, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
     """Extracts relevant Apple Account entries.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
@@ -68,21 +71,23 @@ class AppleAccountPlugin(interface.PlistPlugin):
     root = '/Accounts'
 
     for name_account, account in match['Accounts'].iteritems():
-      general_description = u'{} ({} {})'.format(
+      general_description = u'{0:s} ({1:s} {2:s})'.format(
           name_account, account.get('FirstName', '<FirstName>'),
           account.get('LastName', '<LastName>'))
       key = name_account
-      description = u'Configured Apple account {}'.format(general_description)
+      description = u'Configured Apple account {0:s}'.format(
+          general_description)
       yield plist_event.PlistEvent(
           root, key, account['CreationDate'], description)
 
       if 'LastSuccessfulConnect' in account:
-        description = u'Connected Apple account {}'.format(general_description)
+        description = u'Connected Apple account {0:s}'.format(
+            general_description)
         yield plist_event.PlistEvent(
             root, key, account['LastSuccessfulConnect'], description)
 
       if 'ValidationDate' in account:
-        description = u'Last validation Apple account {}'.format(
+        description = u'Last validation Apple account {0:s}'.format(
             general_description)
         yield plist_event.PlistEvent(
             root, key, account['ValidationDate'], description)

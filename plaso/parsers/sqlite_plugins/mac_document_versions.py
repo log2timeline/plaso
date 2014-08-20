@@ -79,10 +79,11 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   # For this reason the Path to the program has to be added at the beginning.
   ROOT_VERSION_PATH = u'/.DocumentRevisions-V100/'
 
-  def DocumentVersionsRow(self, row, **unused_kwargs):
+  def DocumentVersionsRow(self, unused_parser_context, row, **unused_kwargs):
     """Parses a document versions row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -100,4 +101,3 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
     yield MacDocumentVersionsEvent(
         row['version_time'], row['name'], path,
         version_path, row['last_time'], user_sid)
-

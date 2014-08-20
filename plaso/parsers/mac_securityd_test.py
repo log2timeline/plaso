@@ -22,7 +22,6 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import mac_securityd as mac_securityd_formatter
 from plaso.lib import eventdata
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers import mac_securityd as mac_securityd_parser
 from plaso.parsers import test_lib
@@ -33,25 +32,27 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.year = 2013
-    self._parser = mac_securityd_parser.MacSecuritydLogParser(pre_obj)
+    self._parser = mac_securityd_parser.MacSecuritydLogParser()
 
   def testParseFile(self):
     """Test parsing of a ASL securityd log file."""
+    knowledge_base_values = {'year': 2013}
     test_file = self._GetTestFilePath(['security.log'])
-    events = self._ParseFile(self._parser, test_file)
+    events = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjects(events)
 
     self.assertEqual(len(event_objects), 9)
 
     event_object = event_objects[0]
-    expected_msg = (u'Sender: secd (1) Level: Error Facility: user '
-                    u'Text: securityd_xpc_dictionary_handler EscrowSecurityAl'
-                    u'[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 '
-                    u'virka l\xedka, setja \xedslensku inn.')
-    expected_msg_short = (u'Text: securityd_xpc_dictionary_handler '
-                          u'EscrowSecurityAl[3273] DeviceInCircle ...')
+    expected_msg = (
+        u'Sender: secd (1) Level: Error Facility: user '
+        u'Text: securityd_xpc_dictionary_handler EscrowSecurityAl'
+        u'[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 '
+        u'virka l\xedka, setja \xedslensku inn.')
+    expected_msg_short = (
+        u'Text: securityd_xpc_dictionary_handler '
+        u'EscrowSecurityAl[3273] DeviceInCircle ...')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
@@ -64,9 +65,10 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.security_api, u'unknown')
     self.assertEqual(event_object.caller, u'unknown')
     self.assertEqual(event_object.level, u'Error')
-    expected_msg = (u'securityd_xpc_dictionary_handler EscrowSecurityAl'
-                    u'[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 virka '
-                    u'l\xedka, setja \xedslensku inn.')
+    expected_msg = (
+        u'securityd_xpc_dictionary_handler EscrowSecurityAl'
+        u'[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 virka '
+        u'l\xedka, setja \xedslensku inn.')
     self.assertEqual(event_object.message, expected_msg)
 
     event_object = event_objects[1]

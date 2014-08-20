@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import pcap as pcap_formatter
-from plaso.lib import event
 from plaso.parsers import pcap
 from plaso.parsers import test_lib
 
@@ -31,8 +30,7 @@ class PCAPParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = pcap.PcapParser(pre_obj)
+    self._parser = pcap.PcapParser()
 
   def testParse(self):
     """Tests the Parse function."""

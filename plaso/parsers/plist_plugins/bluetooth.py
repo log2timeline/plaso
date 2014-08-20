@@ -39,8 +39,11 @@ class BluetoothPlugin(interface.PlistPlugin):
   # LastServicesUpdate = Time set when device was polled to determine what it
   #   is.  Usually done at setup or manually requested via advanced menu.
 
-  def GetEntries(self, match, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
     """Extracts relevant BT entries.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
 
     Yields:
       EventObject objects extracted from the plist.
@@ -53,7 +56,7 @@ class BluetoothPlugin(interface.PlistPlugin):
         name = u''.join(('Name:', name))
 
       if device in match['PairedDevices']:
-        desc = 'Paired:True {}'.format(name)
+        desc = 'Paired:True {0:s}'.format(name)
         key = device
         if 'LastInquiryUpdate' in value:
           yield plist_event.PlistEvent(

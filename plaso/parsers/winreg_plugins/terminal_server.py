@@ -35,8 +35,14 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Servers',
       u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Collect Values in Servers and return event for each one."""
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Collect Values in Servers and return event for each one.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+    """
     for subkey in key.GetSubkeys():
       username_value = subkey.GetValue('UsernameHint')
 
@@ -66,8 +72,14 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Default',
       u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Collect MRU Values and return event for each one."""
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Collect MRU Values and return event for each one.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+    """
     for value in key.GetValues():
       # TODO: add a check for the value naming scheme.
       # Ignore the default value.

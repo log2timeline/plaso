@@ -186,11 +186,12 @@ class CupsIppParser(interface.BaseParser):
       'com.apple.print.JobInfo.PMApplicationName': u'application',
       'com.apple.print.JobInfo.PMJobOwner': u'owner'}
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract a entry from an CUPS IPP file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An CUPS IPP event for each time in the file.

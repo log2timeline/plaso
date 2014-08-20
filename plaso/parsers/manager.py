@@ -23,6 +23,8 @@ from plaso.frontend import presets
 from plaso.lib import putils
 from plaso.parsers import interface
 from plaso.parsers import plugins
+from plaso.parsers.winreg_plugins import interface as winreg_plugins_interface
+from plaso.parsers.winreg_plugins import plugins_list as winreg_plugins_list
 
 
 class ParsersManager(object):
@@ -121,7 +123,7 @@ class ParsersManager(object):
     return include, exclude
 
   @classmethod
-  def FindAllParsers(cls, pre_obj=None):
+  def FindAllParsers(cls):
     """Find all available parser objects.
 
     A parser is defined as an object that implements the BaseParser
@@ -132,19 +134,12 @@ class ParsersManager(object):
     parsers in the "winxp" preset, EXCEPT parsers that have the substring
     "lnk" somewhere in the parser name.
 
-    Args:
-      pre_obj: A preprocess object containing information collected from
-               an image (instance of PreprocessObject).
-
     Returns:
       A dict that contains a list of all detected parsers. The key values in
       the dict will represent the type of the parser, eg 'all' will contain
       all parsers, while other keys will contain a subset of them, e.g.:
       'sqlite' will contain parsers capable of parsing SQLite databases.
     """
-    if not pre_obj:
-      pre_obj = putils.Options()
-
     # Process the filter string.
     filter_include, filter_exclude = cls._GetParserListsFromString(
         cls._parser_filter_string)
@@ -155,14 +150,8 @@ class ParsersManager(object):
 
     results = {}
     results['all'] = []
-    # The pre_obj adds the value of the parser knowing time zone information,
-    # and other values that the preprocssing object collects.
-    # TODO: remove pre_obj pass specific values e.g.
-    # parser_expression. Also see if some of these values can be passed after
-    # initialization.
     # pylint: disable=protected-access
-    for parser_obj in putils._FindClasses(
-        interface.BaseParser, pre_obj):
+    for parser_obj in putils._FindClasses(interface.BaseParser):
       add = False
       if not (filter_exclude or filter_include):
         add = True
@@ -184,7 +173,7 @@ class ParsersManager(object):
     return results
 
   @classmethod
-  def GetRegisteredPlugins(cls, parent_class=plugins.BasePlugin, pre_obj=None):
+  def GetRegisteredPlugins(cls, parent_class=plugins.BasePlugin):
     """Build a list of all available plugins and return them.
 
     This method uses the class registration library to find all classes that
@@ -195,8 +184,8 @@ class ParsersManager(object):
     all Windows registry plugins, etc).
 
     Args:
-      parent_class: The top level class of the specific plugin to query.
-      pre_obj: The preprocessing object or the knowledge base.
+      parent_class: Optional top level class of the specific plugin to query.
+                    The default is plugins.BasePlugin.
 
     Returns:
       A dict with keys being the plugin names and values the plugin class.
@@ -235,17 +224,38 @@ class ParsersManager(object):
                 plugin_name))
 
       if not cls._parser_filter_string:
-        all_plugins[plugin_name] = plugin_cls(pre_obj=pre_obj)
+        all_plugins[plugin_name] = plugin_cls()
       else:
         if plugin_name in parser_include and plugin_name not in parser_exclude:
-          results[plugin_name] = plugin_cls(pre_obj=pre_obj)
+          results[plugin_name] = plugin_cls()
         if plugin_name not in parser_exclude:
-          all_plugins[plugin_name] = plugin_cls(pre_obj=pre_obj)
+          all_plugins[plugin_name] = plugin_cls()
 
     if cls._parser_filter_string and results:
       return results
 
     return all_plugins
+
+  @classmethod
+  def GetWindowsRegistryPlugins(cls):
+    """Build a list of all available Windows Registry plugins.
+
+       This function uses the class registry library to find all classes that
+       are inherited from the RegistryPlugin class.
+
+    Returns:
+      A plugins list (instance of PluginList).
+    """
+    registered_plugins = cls.GetRegisteredPlugins(
+        parent_class=winreg_plugins_interface.RegistryPlugin)
+
+    plugins_list = winreg_plugins_list.PluginList()
+    for plugin_cls in registered_plugins.itervalues():
+      plugin_type = plugin_cls.REG_TYPE
+      plugins_list.AddPlugin(
+          plugin_type, plugin_cls.classes.get(plugin_cls.plugin_name))
+
+    return plugins_list
 
   @classmethod
   def SetParserFilterString(cls, parser_filter_string):

@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import olecf as olecf_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.olecf_plugins import interface
@@ -34,8 +33,7 @@ class TestOleCfDefaultPlugin(test_lib.OleCfPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = default.DefaultOleCFPlugin(pre_obj)
+    self._plugin = default.DefaultOleCFPlugin()
 
   def testProcess(self):
     """Tests the Process function."""

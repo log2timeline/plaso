@@ -56,10 +56,11 @@ class IPodPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.iPod.plist'
   PLIST_KEYS = frozenset(['Devices'])
 
-  def GetEntries(self, match, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
     """Extract device information from the iPod plist.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:

@@ -35,24 +35,20 @@ class SQLiteParser(interface.BaseParser):
   # Name of the parser, which enables all plugins by default.
   NAME = 'sqlite'
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(SQLiteParser, self).__init__(pre_obj)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(SQLiteParser, self).__init__()
     self._local_zone = False
     self.db = None
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=sqlite_plugins_interface.SQLitePlugin,
-        pre_obj=self._pre_obj)
+        parent_class=sqlite_plugins_interface.SQLitePlugin)
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Parses an SQLite database.
 
     Args:
-      file_entry: the file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Returns:
       A event object generator (EventObjects) extracted from the database.
@@ -74,7 +70,7 @@ class SQLiteParser(interface.BaseParser):
       for plugin_obj in self._plugins.itervalues():
         try:
           for event_object in plugin_obj.Process(
-              cache=cache, database=database):
+              parser_context, cache=cache, database=database):
             # The plugin attribute may be set by the plugin already, in the case
             # where there may be a sub-plugin.
             event_object.plugin = getattr(

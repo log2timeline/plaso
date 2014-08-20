@@ -29,7 +29,7 @@ class DefaultPlugin(interface.PlistPlugin):
 
   NAME = 'plist_default'
 
-  def Process(self, plist_name, top_level, **kwargs):
+  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
     """Overwrite the default Process function so it always triggers.
 
     Process() checks if the current plist being processed is a match for a
@@ -41,20 +41,22 @@ class DefaultPlugin(interface.PlistPlugin):
     and KEY.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
 
     Returns:
       A generator of events processed by the plugin.
     """
-    logging.debug(u'Plist {} plugin used for: {}'.format(
+    logging.debug(u'Plist {0:s} plugin used for: {1:s}'.format(
         self.plugin_name, plist_name))
-    return self.GetEntries(top_level=top_level)
+    return self.GetEntries(parser_context, top_level=top_level, **kwargs)
 
-  def GetEntries(self, top_level, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, top_level=None, **unused_kwargs):
     """Simple method to exact date values from a Plist.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       top_level: Plist in dictionary form.
 
     Yields:
@@ -63,5 +65,5 @@ class DefaultPlugin(interface.PlistPlugin):
     for root, key, value in interface.RecurseKey(top_level):
       if isinstance(value, datetime.datetime):
         yield plist_event.PlistEvent(root, key, value)
-      # TODO(make): Binplist keeps a list of offsets but not mapped to a key.
+      # TODO: Binplist keeps a list of offsets but not mapped to a key.
       # adjust code when there is a way to map keys to offsets.

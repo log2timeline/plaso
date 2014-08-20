@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import utmp as utmp_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers import test_lib
 from plaso.parsers import utmp
@@ -32,8 +31,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = utmp.UtmpParser(pre_obj)
+    self._parser = utmp.UtmpParser()
 
   def testParseUtmpFile(self):
     """Tests the Parse function for an UTMP file."""

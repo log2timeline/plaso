@@ -39,23 +39,13 @@ class BaseParser(object):
 
   NAME = 'base_parser'
 
-  def __init__(self, pre_obj):
-    """Initializes a base parser object.
-
-    Args:
-      pre_obj: A preprocess object that may contain information gathered
-               from a preprocessing process (instance of PreprocessObject).
-    """
-    super(BaseParser, self).__init__()
-    self._pre_obj = pre_obj
-
   @property
   def parser_name(self):
     """Return the name of the parser."""
     return self.NAME
 
   @abc.abstractmethod
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Verifies and parses the log file and returns EventObjects.
 
     This is the main function of the class, the one that actually
@@ -71,7 +61,8 @@ class BaseParser(object):
     the reason why the class does not parse it.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Raises:
       NotImplementedError when not implemented.

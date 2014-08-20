@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import macuser
@@ -33,9 +32,8 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = macuser.MacUserPlugin(None)
-    pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj)
+    self._plugin = macuser.MacUserPlugin()
+    self._parser = plist.PlistParser()
 
   def testProcess(self):
     """Tests the Process function."""

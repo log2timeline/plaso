@@ -167,8 +167,7 @@ class WinJobParser(interface.BaseParser):
       construct.ULInt16('trigger_reserved3')
       )
 
-
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a Windows job file.
 
     This is the main parsing engine for the parser. It determines if
@@ -176,7 +175,8 @@ class WinJobParser(interface.BaseParser):
     the scheduled task data.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An EventObject (instance of WinJobEvent) that contains the extracted
@@ -214,7 +214,7 @@ class WinJobParser(interface.BaseParser):
         header.ran_minute,
         header.ran_second,
         microseconds=(header.ran_millisecond * 1000),
-        timezone=self._pre_obj.zone)
+        timezone=parser_context.timezone)
 
     scheduled_date = timelib.Timestamp.FromTimeParts(
         data.sched_start_year,
@@ -223,7 +223,7 @@ class WinJobParser(interface.BaseParser):
         data.sched_start_hour,
         data.sched_start_minute,
         0,  # Seconds are not stored.
-        timezone=self._pre_obj.zone)
+        timezone=parser_context.timezone)
 
     # Create two timeline events, one for created date and the other for last
     # run.
@@ -245,7 +245,7 @@ class WinJobParser(interface.BaseParser):
           0,  # Hours are not stored.
           0,  # Minutes are not stored.
           0,  # Seconds are not stored.
-          timezone=self._pre_obj.zone)
+          timezone=parser_context.timezone)
 
       yield WinJobEvent(
           scheduled_end_date, 'Scheduled To End', data.app_name, data.parameter,

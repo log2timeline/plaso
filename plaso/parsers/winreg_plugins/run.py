@@ -35,8 +35,15 @@ class RunUserPlugin(interface.KeyPlugin):
   URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
   DESCRIPTION = 'Run Key'
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Collect the Values under the Run Key and return an event for each one."""
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Collect the Values under the Run Key and return an event for each one.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+    """
     for value in key.GetValues():
       # Ignore the default value.
       if not value.name:

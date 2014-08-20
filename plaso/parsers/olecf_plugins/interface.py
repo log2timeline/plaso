@@ -34,7 +34,7 @@ class OlecfPlugin(plugins.BasePlugin):
   # List of tables that should be present in the database, for verification.
   REQUIRED_ITEMS = frozenset([])
 
-  def Process(self, root_item=None, item_names=None, **kwargs):
+  def Process(self, parser_context, root_item=None, item_names=None, **kwargs):
     """Determine if this is the right plugin for this OLECF file.
 
     This function takes a list of sub items found in the root of a
@@ -46,6 +46,7 @@ class OlecfPlugin(plugins.BasePlugin):
     will return back a generator that yields event objects.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       root_item: The root item of the OLECF file.
       item_names: A list of all items discovered in the root.
 
@@ -65,7 +66,8 @@ class OlecfPlugin(plugins.BasePlugin):
           u'Not the correct items for: {}'.format(
               self.plugin_name))
 
-    super(OlecfPlugin, self).Process(**kwargs)
+    # This will raise if unhandled keyword arguments are passed.
+    super(OlecfPlugin, self).Process(parser_context, **kwargs)
 
     items = []
     for item_string in self.REQUIRED_ITEMS:
@@ -74,17 +76,25 @@ class OlecfPlugin(plugins.BasePlugin):
       if item:
         items.append(item)
 
-    return self.GetEntries(root_item=root_item, items=items)
+    return self.GetEntries(
+        parser_context, root_item=root_item, items=items)
 
   @abc.abstractmethod
-  def GetEntries(self, root_item=None, items=None, **kwargs):
-    """Extract and return EventObjects from the data structure."""
+  def GetEntries(
+      self, parser_context, root_item=None, items=None, **kwargs):
+    """Extract and return EventObjects from the data structure.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      root_item: The root item of the OLECF file.
+      items: A list of all items discovered in the root.
+    """
 
   def GetTimestamps(self, olecf_item):
     """Takes an OLECF object and returns extracted timestamps.
 
     Args:
-      olecf_item: A OLE CF item object (instance of pyolecf.item).
+      olecf_item: A OLECF item (instance of pyolecf.item).
 
     Returns:
       A tuple of two timestamps: created and modified.

@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.lib import event
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import appleaccount
 from plaso.parsers.plist_plugins import test_lib
@@ -32,9 +31,8 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = appleaccount.AppleAccountPlugin(None)
-    pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj)
+    self._plugin = appleaccount.AppleAccountPlugin()
+    self._parser = plist.PlistParser()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -61,7 +59,7 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     expected_desc = (u'Configured Apple account '
                     u'email@domain.com (Joaquin Moreno Garijo)')
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/Accounts/email@domain.com {}'.format(expected_desc)
+    expected_string = u'/Accounts/email@domain.com {0:s}'.format(expected_desc)
     expected_short = expected_string[:77] + u'...'
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short)

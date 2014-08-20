@@ -45,7 +45,7 @@ class SkypeChatEvent(time_events.PosixTimeEvent):
 
     self.title = row['title']
     self.text = row['body_xml']
-    self.from_account = u'{} <{}>'.format(
+    self.from_account = u'{0:s} <{1:s}>'.format(
         row['from_displayname'], row['author'])
     self.to_account = to_account
 
@@ -72,7 +72,7 @@ class SkypeAccountEvent(time_events.PosixTimeEvent):
     """
     super(SkypeAccountEvent, self).__init__(timestamp, usage)
 
-    self.username = u'{} <{}>'.format(full_name, display_name)
+    self.username = u'{0:s} <{1:s}>'.format(full_name, display_name)
     self.display_name = display_name
     self.email = email
     self.country = country
@@ -160,7 +160,7 @@ class SkypeTransferFileEvent(time_events.PosixTimeEvent):
     try:
       self.transferred_filesize = int(row['filesize'])
     except ValueError:
-      logging.debug(u'Unknown filesize {}'.format(
+      logging.debug(u'Unknown filesize {0:s}'.format(
           self.transferred_filename))
       self.transferred_filesize = 0
 
@@ -200,12 +200,21 @@ class SkypePlugin(interface.SQLitePlugin):
         'WHERE c.id = cm.call_db_id;'), 'ParseCall')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset(
-      ['Chats', 'Accounts', 'Conversations', 'Contacts', 'SMSes', 'Transfers',
-       'CallMembers', 'Calls'])
+  REQUIRED_TABLES = frozenset([
+      'Chats', 'Accounts', 'Conversations', 'Contacts', 'SMSes', 'Transfers',
+      'CallMembers', 'Calls'])
 
-  def ParseAccountInformation(self, row, **unused_kwargs):
-    """Parses the Accounts database."""
+  def ParseAccountInformation(
+      self, unused_parser_context, row, **unused_kwargs):
+    """Parses the Accounts database.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: The row resulting from the query.
+
+    Yields:
+      An event object (SkypeChatEvent) containing the event data.
+    """
     if row['profile_timestamp']:
       yield SkypeAccountEvent(
           row['profile_timestamp'], 'Profile Changed',
@@ -242,10 +251,11 @@ class SkypePlugin(interface.SQLitePlugin):
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
 
-  def ParseChat(self, row, **unused_kwargs):
+  def ParseChat(self, unused_parser_context, row, **unused_kwargs):
     """Parses a chat message row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -267,16 +277,25 @@ class SkypePlugin(interface.SQLitePlugin):
 
     yield SkypeChatEvent(row, to_account)
 
-  def ParseSMS(self, row, **unused_kwargs):
-    """Parse SMS."""
+  def ParseSMS(self, unused_parser_context, row, **unused_kwargs):
+    """Parse SMS.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: The row resulting from the query.
+
+    Yields:
+      An event object (instance of SkypeSMSlEvent).
+    """
     dst_number = row['dstnum_sms'].replace(' ', '')
 
     yield SkypeSMSEvent(row, dst_number)
 
-  def ParseCall(self, row, **unused_kwargs):
+  def ParseCall(self, unused_parser_context, row, **unused_kwargs):
     """Parse the calls taking into accounts some rows.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -297,14 +316,14 @@ class SkypePlugin(interface.SQLitePlugin):
         src_aux = u'Unknown [no GUID]'
         dst_aux = u'Unknown [no GUID]'
     except IndexError:
-      src_aux = u'Unknown [{}]'.format(row['guid'])
-      dst_aux = u'Unknown [{}]'.format(row['guid'])
+      src_aux = u'Unknown [{0:s}]'.format(row['guid'])
+      dst_aux = u'Unknown [{0:s}]'.format(row['guid'])
 
     if row['is_incoming'] == '0':
       user_start_call = True
       source = src_aux
       if row['ip_address']:
-        destination = u'{} <{}>'.format(dst_aux, row['ip_address'])
+        destination = u'{0:s} <{1:s}>'.format(dst_aux, row['ip_address'])
       else:
         destination = dst_aux
     else:
@@ -328,13 +347,16 @@ class SkypePlugin(interface.SQLitePlugin):
           yield SkypeCallEvent(timestamp, 'FINISHED', user_start_call,
                                source, destination, video_conference)
         except ValueError:
-          logging.debug(u'Unknown when the call {} was'
+          logging.debug(u'Unknown when the call {0:s} was'
                         u'finished.'.format(row['id']))
 
-  def ParseFileTransfer(self, row, cache, database, **unused_kwargs):
+  def ParseFileTransfer(
+      self, unused_parser_context, row, cache=None, database=None,
+      **unused_kwargs):
     """Parse the transfer files.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: the row with all information related with the file transfers.
       cache: a cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
@@ -372,19 +394,19 @@ class SkypePlugin(interface.SQLitePlugin):
     destination = u'Unknown'
 
     if row['parent_id']:
-      destination = u'{} <{}>'.format(
+      destination = u'{0:s} <{1:s}>'.format(
           row['partner_handle'], row['partner_dispname'])
       skype_id, skype_name = source_dict.get(row['parent_id'], [None, None])
       if skype_name:
-        source = u'{} <{}>'.format(skype_id, skype_name)
+        source = u'{0:s} <{1:s}>'.format(skype_id, skype_name)
     else:
-      source = u'{} <{}>'.format(
+      source = u'{0:s} <{1:s}>'.format(
           row['partner_handle'], row['partner_dispname'])
 
       if row['pk_id']:
         skype_id, skype_name = dest_dict.get(row['pk_id'], [None, None])
         if skype_name:
-          destination = u'{} <{}>'.format(skype_id, skype_name)
+          destination = u'{0:s} <{1:s}>'.format(skype_id, skype_name)
 
     if row['status'] == 8:
       if row['starttime']:

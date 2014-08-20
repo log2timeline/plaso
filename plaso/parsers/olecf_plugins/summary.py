@@ -360,12 +360,14 @@ class DocumentSummaryPlugin(interface.OlecfPlugin):
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005DocumentSummaryInformation'])
 
-  def GetEntries(self, root_item, items, **unused_kwargs):
+  def GetEntries(
+      self, unused_parser_context, root_item=None, items=None, **unused_kwargs):
     """Generate event based on the document summary item.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       root_item: The root item of the OLECF file.
-      item_names: A list of all items discovered in the root.
+      items: A list of all items discovered in the root.
 
     Yields:
       Event objects (instance of OleCfDocumentSummaryInfoEvent).
@@ -390,12 +392,14 @@ class SummaryInfoPlugin(interface.OlecfPlugin):
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005SummaryInformation'])
 
-  def GetEntries(self, root_item, items, **unused_kwargs):
+  def GetEntries(
+      self, unused_parser_context, root_item=None, items=None, **unused_kwargs):
     """Generate event based on the summary information item.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       root_item: The root item of the OLECF file.
-      item_names: A list of all items discovered in the root.
+      items: A list of all items discovered in the root.
 
     Yields:
       Event objects (instance of OleCfSummaryInfoEvent).

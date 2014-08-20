@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import firefox_cookies as firefox_cookies_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import firefox_cookies
@@ -33,8 +32,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = firefox_cookies.FirefoxCookiePlugin(pre_obj)
+    self._plugin = firefox_cookies.FirefoxCookiePlugin()
 
   def testProcess(self):
     """Tests the Process function on a Firefox 29 cookie database file."""

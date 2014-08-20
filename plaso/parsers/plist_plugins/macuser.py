@@ -49,10 +49,11 @@ class MacUserPlugin(interface.PlistPlugin):
 
   _ROOT = u'/'
 
-  def Process(self, plist_name=None, top_level=None, **kwargs):
+  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
     """Check if it is a valid Mac OS X system  account plist file name.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       plist_name: name of the plist file.
       top_level: dictionary with the plist file parsed.
 
@@ -60,7 +61,8 @@ class MacUserPlugin(interface.PlistPlugin):
       A MacUserPlugin event with a valid plist name.
     """
     return super(MacUserPlugin, self).Process(
-        plist_name=self.PLIST_PATH, top_level=top_level, **kwargs)
+        parser_context, plist_name=self.PLIST_PATH, top_level=top_level,
+        **kwargs)
 
   # Yield Events
   # name: string with the system user.
@@ -74,10 +76,11 @@ class MacUserPlugin(interface.PlistPlugin):
   #        It is translated by the library as a 2001-01-01 00:00:00 (COCAO
   #        zero time representation). If this happens, the event is not yield.
 
-  def GetEntries(self, match=None, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
     """Extracts relevant user timestamp entries.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
 

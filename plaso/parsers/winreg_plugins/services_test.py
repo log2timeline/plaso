@@ -19,10 +19,12 @@
 
 import unittest
 
+from plaso.artifacts import knowledge_base
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
+from plaso.parsers import context
 from plaso.parsers.winreg_plugins import services
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -95,6 +97,9 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    parser_context = context.ParserContext(knowledge_base_object)
+
     test_file = self._GetTestFilePath(['SYSTEM'])
     key_path = u'\\ControlSet001\\services'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
@@ -107,7 +112,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     rdp_video_miniport_event_objects = None
 
     for winreg_subkey in winreg_key.GetSubkeys():
-      event_generator = self._plugin.Process(key=winreg_subkey)
+      event_generator = self._plugin.Process(
+          parser_context, key=winreg_subkey)
       if event_generator:
         sub_event_objects = self._GetEventObjects(event_generator)
         event_objects.extend(sub_event_objects)

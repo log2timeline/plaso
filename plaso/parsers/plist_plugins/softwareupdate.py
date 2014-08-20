@@ -39,10 +39,11 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
   # LastFullSuccessfulDate: timestamp when Mac OS X was full udpate.
   # LastSuccessfulDate: tiemstamp when Mac OS X was partially udpate.
 
-  def GetEntries(self, match, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
     """Extracts relevant Mac OS X update entries.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
@@ -53,16 +54,17 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
     version = match.get('LastAttemptSystemVersion', u'N/A')
     pending = match['LastUpdatesAvailable']
 
-    description = u'Last Mac OS X {} full update.'.format(version)
+    description = u'Last Mac OS X {0:s} full update.'.format(version)
     yield plist_event.PlistEvent(
         root, key, match['LastFullSuccessfulDate'], description)
 
     if pending:
       software = []
       for update in match['RecommendedUpdates']:
-        software.append(u'{}({})'.format(
+        software.append(u'{0:s}({1:s})'.format(
             update['Identifier'], update['Product Key']))
-      description = u'Last Mac OS {} partially udpate, pending {}: {}.'.format(
-          version, pending, u','.join(software))
+      description = (
+          u'Last Mac OS {0!s} partially update, pending {1!s}: {2:s}.').format(
+              version, pending, u','.join(software))
       yield plist_event.PlistEvent(
           root, key, match['LastSuccessfulDate'], description)

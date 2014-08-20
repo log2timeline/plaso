@@ -28,7 +28,6 @@ from dfvfs.resolver import context
 from plaso.engine import collector
 from plaso.engine import engine
 from plaso.engine import worker
-from plaso.lib import event
 from plaso.lib import queue
 
 
@@ -65,9 +64,7 @@ class EngineTest(unittest.TestCase):
     self.assertIsInstance(
         test_searcher, file_system_searcher.FileSystemSearcher)
 
-    pre_obj = event.PreprocessObject()
-
-    test_engine.PreprocessSource(pre_obj, 'Windows')
+    test_engine.PreprocessSource('Windows')
 
     test_collector = test_engine.CreateCollector(
         False, vss_stores=None, filter_find_specs=None,
@@ -75,8 +72,7 @@ class EngineTest(unittest.TestCase):
     self.assertNotEquals(test_collector, None)
     self.assertIsInstance(test_collector, collector.Collector)
 
-    test_extraction_worker = test_engine.CreateExtractionWorker(
-        0, None, pre_obj)
+    test_extraction_worker = test_engine.CreateExtractionWorker(0, None)
     self.assertNotEquals(test_extraction_worker, None)
     self.assertIsInstance(test_extraction_worker, worker.EventExtractionWorker)
 

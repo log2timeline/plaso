@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import android_sms as android_sms_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import android_sms
@@ -33,8 +32,7 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = android_sms.AndroidSmsPlugin(pre_obj)
+    self._plugin = android_sms.AndroidSmsPlugin()
 
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""

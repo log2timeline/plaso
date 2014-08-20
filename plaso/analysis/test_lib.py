@@ -24,7 +24,9 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.artifacts import knowledge_base
 from plaso.lib import queue
+from plaso.parsers import context
 
 
 class TestAnalysisPluginConsumer(queue.AnalysisReportQueueConsumer):
@@ -71,21 +73,30 @@ class AnalysisPluginTestCase(unittest.TestCase):
     # and not a list.
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
-  def _ParseFile(self, parser_object, path):
+  def _ParseFile(
+      self, parser_object, path, knowledge_base_values=None):
     """Parses a file using the parser object.
 
     Args:
       parser_object: the parser object.
       path: the path of the file to parse.
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
 
     Returns:
       A generator of event objects as returned by the parser.
     """
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        knowledge_base_object.SetValue(identifier, value)
+
+    parser_context = context.ParserContext(knowledge_base_object)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-    event_generator = parser_object.Parse(file_entry)
+    event_generator = parser_object.Parse(parser_context, file_entry)
     self.assertNotEquals(event_generator, None)
 
     return event_generator

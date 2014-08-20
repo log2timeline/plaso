@@ -50,10 +50,10 @@ import pymsiecf
 import pyregf
 
 import plaso
+from plaso.artifacts import knowledge_base
 from plaso.engine import worker
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
-from plaso.lib import event
 from plaso.lib import queue
 from plaso.parsers import manager as parsers_manager
 
@@ -182,7 +182,7 @@ def ProcessFile(options):
     logging.error(u'Unable to open file: {0:s}'.format(options.file_to_parse))
     sys.exit(1)
 
-  pre_obj = event.PreprocessObject()
+  knowledge_base_object = knowledge_base.KnowledgeBase()
   storage_queue = queue.SingleThreadedQueue()
   storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
 
@@ -191,10 +191,9 @@ def ProcessFile(options):
   options.single_process = True
   options.debug = False
   options.text_prepend = u''
-  parsers = parsers_manager.ParsersManager.FindAllParsers(
-      pre_obj=pre_obj, config=options)
+  parsers = parsers_manager.ParsersManager.FindAllParsers()
   my_worker = worker.EventExtractionWorker(
-      '0', None, storage_queue_producer, pre_obj, parsers)
+      '0', None, storage_queue_producer, knowledge_base_object, parsers)
 
   if options.verbose:
     profiler = cProfile.Profile()

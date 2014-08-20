@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import lfu
 from plaso.parsers.winreg_plugins import test_lib
@@ -34,11 +33,9 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
     registry_cache = cache.WinRegistryCache()
     registry_cache.attributes['current_control_set'] = 'ControlSet001'
-    self._plugin = lfu.BootExecutePlugin(
-        pre_obj=pre_obj, reg_cache=registry_cache)
+    self._plugin = lfu.BootExecutePlugin(reg_cache=registry_cache)
 
   def testProcess(self):
     """Tests the Process function."""
@@ -106,11 +103,9 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
     registry_cache = cache.WinRegistryCache()
     registry_cache.attributes['current_control_set'] = 'ControlSet001'
-    self._plugin = lfu.BootVerificationPlugin(
-        pre_obj=pre_obj, reg_cache=registry_cache)
+    self._plugin = lfu.BootVerificationPlugin(reg_cache=registry_cache)
 
   def testProcess(self):
     """Tests the Process function."""

@@ -65,8 +65,13 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
       (u'http://www.dfinews.com/articles/2012/02/'
        u'google-analytics-cookies-and-forensic-implications')]
 
-  def GetEntries(self, cookie_data=None, url=None, **unused_kwargs):
-    """Process the cookie."""
+  def GetEntries(
+      self, unused_parser_context, cookie_data=None, url=None, **unused_kwargs):
+    """Extracts event objects from the cookie.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+    """
     # The structure of the field:
     #   <domain hash>.<last time>.<sessions>.<sources>.<variables>
     fields = cookie_data.split('.')
@@ -112,7 +117,13 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
       (u'http://www.dfinews.com/articles/2012/02/'
        u'google-analytics-cookies-and-forensic-implications')]
 
-  def GetEntries(self, cookie_data=None, url=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, cookie_data=None, url=None, **unused_kwargs):
+    """Extracts event objects from the cookie.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+    """
     # Values has the structure of:
     # <domain hash>.<visitor ID>.<first visit>.<previous>.<last>.<# of
     # sessions>
@@ -155,8 +166,13 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
       (u'http://www.dfinews.com/articles/2012/02/'
        u'google-analytics-cookies-and-forensic-implications')]
 
-  def GetEntries(self, cookie_data=None, url=None, **unused_kwargs):
-    """Yield event objects extracted from the cookie."""
+  def GetEntries(
+      self, unused_parser_context, cookie_data=None, url=None, **unused_kwargs):
+    """Extracts event objects from the cookie.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+    """
     # Values has the structure of:
     #   <domain hash>.<pages viewed>.10.<last time>
     fields = cookie_data.split(u'.')
