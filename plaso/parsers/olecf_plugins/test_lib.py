@@ -63,9 +63,11 @@ class OleCfPluginTestCase(test_lib.ParserTestCase):
                              values. The default is None.
 
     Returns:
-      A generator of event objects as returned by the plugin.
+      An event object queue consumer object (instance of
+      TestEventObjectQueueConsumer).
     """
     event_queue = queue.SingleThreadedQueue()
+    event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
     event_queue_producer = queue.EventObjectQueueProducer(event_queue)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -81,9 +83,7 @@ class OleCfPluginTestCase(test_lib.ParserTestCase):
     root_item = olecf_file.root_item
     item_names = [item.name for item in root_item.sub_items]
 
-    event_generator = plugin_object.Process(
+    plugin_object.Process(
         parser_context, root_item=root_item, item_names=item_names)
 
-    self.assertNotEquals(event_generator, None)
-
-    return event_generator
+    return event_queue_consumer

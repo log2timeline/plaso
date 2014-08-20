@@ -114,7 +114,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 18)
 
     # A shortcut event object.
-    event_object = event_objects[0]
+    event_object = event_objects[16]
 
     expected_msg = (
         u'[Nero InfoTool provides you with information about the most '
@@ -133,7 +133,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         u'Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe '
         u'Working dir: C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool '
         u'Icon location: %ProgramFiles%\\Nero\\Nero 9\\Nero InfoTool\\'
-        u'InfoTool.exe')
+        u'InfoTool.exe '
+        u'Link target: [My Computer, C:\\, Program Files (x86), Nero, Nero 9, '
+        u'Nero InfoTool, InfoTool.exe]')
 
     expected_msg_short = (
         u'[Nero InfoTool provides you with information about the most '
@@ -142,7 +144,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # A shell item event object.
-    event_object = event_objects[15]
+    event_object = event_objects[12]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-06-05 20:13:20')

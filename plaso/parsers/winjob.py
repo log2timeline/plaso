@@ -164,8 +164,7 @@ class WinJobParser(interface.BaseParser):
       construct.ULInt16('trigger_arg2'),
       construct.ULInt16('trigger_padding'),
       construct.ULInt16('trigger_reserved2'),
-      construct.ULInt16('trigger_reserved3')
-      )
+      construct.ULInt16('trigger_reserved3'))
 
   def Parse(self, parser_context, file_entry):
     """Extract data from a Windows job file.
@@ -187,7 +186,7 @@ class WinJobParser(interface.BaseParser):
       header = self.JOB_FIXED_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parser Windows Task Job file with error: {0:s}'.format(
+          u'Unable to parse Windows Task Job file with error: {0:s}'.format(
               exception))
 
     if not header.product_version in self.PRODUCT_VERSIONS:
@@ -201,10 +200,10 @@ class WinJobParser(interface.BaseParser):
       data = self.JOB_VARIABLE_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parser Windows Task Job file with error: {0:s}'.format(
+          u'Unable to parse Windows Task Job file with error: {0:s}'.format(
               exception))
 
-    trigger_type = self.TRIGGER_TYPES.get(data.trigger_type, 'Unknown')
+    trigger_type = self.TRIGGER_TYPES.get(data.trigger_type, u'Unknown')
 
     last_run_date = timelib.Timestamp.FromTimeParts(
         header.ran_year,
@@ -233,7 +232,7 @@ class WinJobParser(interface.BaseParser):
         data.comment)
 
     yield WinJobEvent(
-        scheduled_date, 'Scheduled To Start', data.app_name, data.parameter,
+        scheduled_date, u'Scheduled To Start', data.app_name, data.parameter,
         data.working_dir, data.username, trigger_type, data.comment)
 
     # A scheduled end date is optional.

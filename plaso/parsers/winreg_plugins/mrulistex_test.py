@@ -57,8 +57,9 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, 1346145829002031, values, 1456)
 
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPluginAndQueue(
+        self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1)
 
@@ -95,8 +96,9 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'OpenSavePidlMRU')
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPluginAndQueue(
+        self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 65)
 
@@ -155,8 +157,9 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs')
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPluginAndQueue(
+        self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 6)
 
@@ -231,8 +234,9 @@ class TestMRUListExStringAndShellItemListPlugin(
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'LastVisitedPidlMRU')
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPluginAndQueue(
+        self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 31)
 

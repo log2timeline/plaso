@@ -52,6 +52,56 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
 
   NAME = 'olecf_default'
 
+  def _ParseItem(self, parser_context, olecf_item):
+    """Parses an OLECF item.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      olecf_item: An OLECF item (instance of pyolecf.item).
+
+    Returns:
+      A boolean value indicating if an event object was produced.
+    """
+    event_object = None
+    result = False
+
+    creation_time, modification_time = self.GetTimestamps(olecf_item)
+
+    if creation_time:
+      event_object = OleCfItemEvent(
+          creation_time, eventdata.EventTimestamp.CREATION_TIME,
+          olecf_item)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+    if modification_time:
+      event_object = OleCfItemEvent(
+          modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+          olecf_item)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+    if event_object:
+      result = True
+
+    for sub_item in olecf_item.sub_items:
+      if self._ParseItem(parser_context, sub_item):
+        result = True
+
+    return result
+
+  def ParseItems(self, parser_context, root_item=None, **unused_kwargs):
+    """Parses OLECF items.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      root_item: Optional root item of the OLECF file. The default is None.
+    """
+    if not self._ParseItem(parser_context, root_item):
+      # If no event object was produced, produce at least one for
+      # the root item.
+      event_object = OleCfItemEvent(
+          0, eventdata.EventTimestamp.CREATION_TIME, root_item)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
   def Process(
       self, parser_context, root_item=None, item_names=None, **kwargs):
     """Determine if this is the right plugin for this OLECF file.
@@ -60,17 +110,11 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     OLECF file and compares that to a list of required items defined
     in this plugin.
 
-    If the list of required items is a subset of the overall items
-    this plugin is considered to be the correct plugin and the function
-    will return back a generator that yields event objects.
-
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      root_item: The root OLECF item (an instance of pyolecf.item).
-      item_names: A list of all items discovered in the root.
-
-    Returns:
-      A generator that yields event objects.
+      root_item: Optional root item of the OLECF file. The default is None.
+      item_names: Optional list of all items discovered in the root.
+                  The default is None.
 
     Raises:
       errors.WrongPlugin: If the set of required items is not a subset
@@ -80,42 +124,4 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     if root_item is None or item_names is None:
       raise ValueError(u'Root item or items are not set.')
 
-    return self.GetEntries(parser_context, root_item=root_item)
-
-  def _ParseItem(self, olecf_item):
-    """Parses an OLECF item.
-
-    Args:
-      olecf_item: An OLECF item (instance of pyolecf.item).
-    """
-    creation_time, modification_time = self.GetTimestamps(olecf_item)
-
-    if creation_time:
-      yield OleCfItemEvent(
-          creation_time, eventdata.EventTimestamp.CREATION_TIME, olecf_item)
-
-    if modification_time:
-      yield OleCfItemEvent(
-          modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-          olecf_item)
-
-    for sub_item in olecf_item.sub_items:
-      for sub_event_object in self._ParseItem(sub_item):
-        yield sub_event_object
-
-  def GetEntries(self, unused_parser_context, root_item=None, **unused_kwargs):
-    """Yields an event object for every entry.
-
-    Args:
-      parser_context: A parser context object (instance of ParserContext).
-      root_item: The root OLECF item (an instance of pyolecf.item).
-    """
-    record_yielded = False
-    for event_object in self._ParseItem(root_item):
-      yield event_object
-      record_yielded = True
-
-    # If no record has been created, let's add one in.
-    if not record_yielded:
-      yield OleCfItemEvent(
-          0, eventdata.EventTimestamp.CREATION_TIME, root_item)
+    self.ParseItems(parser_context, root_item=root_item)

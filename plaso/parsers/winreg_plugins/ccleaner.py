@@ -40,29 +40,25 @@ class CCleanerPlugin(interface.KeyPlugin):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      An event object (instance of EventObject) that contains a MRU list.
     """
     for value in key.GetValues():
-      if not value.name:
+      if not value.name or not value.data:
         continue
+
       text_dict = {}
       text_dict[value.name] = value.data
-      if not text_dict[value.name]:
-        continue
 
-      if value.name == 'UpdateKey':
-        update_key = key.GetValue('UpdateKey')
-        reg_evt = event.WinRegistryEvent(
-            key.path, text_dict, timelib.Timestamp.FromTimeString(
-                update_key.data, timezone=parser_context.timezone))
+      if value.name == u'UpdateKey':
+        timestamp = timelib.Timestamp.FromTimeString(
+            value.data, timezone=parser_context.timezone)
+        event_object = event.WinRegistryEvent(key.path, text_dict, timestamp)
+
       elif value.name == '0':
-        reg_evt = event.WinRegistryEvent(
+        event_object = event.WinRegistryEvent(
             key.path, text_dict, key.timestamp)
-      else:
-        reg_evt = event.WinRegistryEvent(
-            key.path, text_dict, 0)
 
-      reg_evt.source_append = ': {}'.format(self.DESCRIPTION)
-      yield reg_evt
+      else:
+        event_object = event.WinRegistryEvent(key.path, text_dict, 0)
+
+      event_object.source_append = u': {0:s}'.format(self.DESCRIPTION)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
