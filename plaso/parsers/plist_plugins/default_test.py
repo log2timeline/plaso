@@ -23,6 +23,7 @@ import unittest
 from plaso.artifacts import knowledge_base
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
+from plaso.lib import queue
 from plaso.parsers import context
 from plaso.parsers.plist_plugins import default
 from plaso.parsers.plist_plugins import test_lib
@@ -36,8 +37,14 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._plugin = default.DefaultPlugin()
+
+    # TODO: refactor to use test_lib.
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    self._parser_context = context.ParserContext(knowledge_base_object)
+    self._parser_context = context.ParserContext(
+        event_queue_producer, knowledge_base_object)
 
   def testProcessSingle(self):
     """Tests Process on a plist containing a root, value and timestamp."""

@@ -60,6 +60,7 @@ from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import queue
 from plaso.lib import timelib
 from plaso.parsers import context as parsers_context
 from plaso.parsers import manager as parsers_manager
@@ -532,8 +533,10 @@ class PregFrontend(frontend.ExtractionFrontend):
     _, hive_collector = hive_collectors[0]
     OpenHive(hives[0], hive_collector)
 
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
     parser_context = parsers_context.ParserContext(
-        RegCache.knowledge_base_object)
+        event_queue_producer, RegCache.knowledge_base_object)
 
     # Get all the appropriate keys from these plugins.
     key_paths = self.plugins.GetExpandedKeyPaths(
@@ -1228,8 +1231,10 @@ def ParseKey(key, verbose=False, use_plugins=None):
       else:
         plugins[weight].append(plugin(reg_cache=RegCache.reg_cache))
 
+  event_queue = queue.SingleThreadedQueue()
+  event_queue_producer = queue.EventObjectQueueProducer(event_queue)
   parser_context = parsers_context.ParserContext(
-      RegCache.knowledge_base_object)
+      event_queue_producer, RegCache.knowledge_base_object)
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:

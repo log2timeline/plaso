@@ -56,6 +56,7 @@ def _SendContainerToStorage(file_entry, storage_queue_producer):
     event_object.filename = file_entry.name
     event_object.pathspec = file_entry.path_spec
     event_object.parser = u'filestat'
+    # TODO: clean up the GetInodeValue function.
     event_object.inode = utils.GetInodeValue(stat_object.ino)
 
     storage_queue_producer.ProduceEventObject(event_object)
