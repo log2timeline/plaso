@@ -28,7 +28,7 @@ from plaso.parsers.olecf_plugins import default
 from plaso.parsers.olecf_plugins import test_lib
 
 
-class TestOleCfDefaultPlugin(test_lib.OleCfPluginTestCase):
+class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF default plugin."""
 
   def setUp(self):
@@ -38,8 +38,9 @@ class TestOleCfDefaultPlugin(test_lib.OleCfPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     test_file = self._GetTestFilePath(['Document.doc'])
-    event_generator = self._ParseOleCfFileWithPlugin(test_file, self._plugin)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseOleCfFileWithPlugin(
+        test_file, self._plugin)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 5)
 

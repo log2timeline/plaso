@@ -41,18 +41,17 @@ class MRUListExPluginMixin(object):
 
   @abc.abstractmethod
   def _ParseMRUListExEntryValue(
-      self, key, entry_index, entry_number, text_dict, **kwargs):
+      self, parser_context, key, entry_index, entry_number, text_dict,
+      **kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey) that contains
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
       text_dict: text dictionary object to append textual strings.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
 
   def _ParseMRUListExValue(self, key):
@@ -62,7 +61,7 @@ class MRUListExPluginMixin(object):
       key: the Registry key (instance of winreg.WinRegKey) that contains
            the MRUListEx value.
 
-    Yields:
+    Returns:
       A MRUListEx value generator, which returns the MRU index number
       and entry value.
     """
@@ -77,15 +76,13 @@ class MRUListExPluginMixin(object):
 
     return enumerate(mru_list)
 
-  def _ParseMRUListExKey(self, key, codepage='cp1252'):
+  def _ParseMRUListExKey(self, parser_context, key, codepage='cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
     text_dict = {}
     for index, entry_number in self._ParseMRUListExValue(key):
@@ -94,13 +91,14 @@ class MRUListExPluginMixin(object):
       if entry_number == 0xffffffff:
         break
 
-      for event_object in self._ParseMRUListExEntryValue(
-          key, index, entry_number, text_dict, codepage=codepage):
-        yield event_object
+      self._ParseMRUListExEntryValue(
+          parser_context, key, index, entry_number, text_dict,
+          codepage=codepage)
 
-    yield event.WinRegistryEvent(
+    event_object = event.WinRegistryEvent(
         key.path, text_dict, timestamp=key.last_written_timestamp,
         source_append=': MRUListEx')
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
@@ -121,20 +119,18 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
           lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)))
 
   def _ParseMRUListExEntryValue(
-      self, key, entry_index, entry_number, text_dict, **unused_kwargs):
+      self, unused_parser_context, key, entry_index, entry_number, text_dict,
+      **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey) that contains
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
       text_dict: text dictionary object to append textual strings.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
-    event_object = None
     value_string = u''
 
     value = key.GetValue(u'{0:d}'.format(entry_number))
@@ -166,26 +162,16 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
 
     text_dict[value_text] = value_string
 
-    if not event_object:
-      # If no event object was yield return an empty generator.
-      # pylint: disable-msg=unreachable
-      return
-      yield
-
   def GetEntries(
-     self, unused_parser_context, key=None, codepage='cp1252', **unused_kwargs):
+     self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
-    for event_object in self._ParseMRUListExKey(key, codepage=codepage):
-      yield event_object
+    self._ParseMRUListExKey(parser_context, key, codepage=codepage)
 
   def Process(self, parser_context, key=None, codepage='cp1252', **kwargs):
     """Determine if we can process this Registry key or not.
@@ -194,9 +180,6 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
       parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      An event object (instance of EventObject) that contains a cached entry.
     """
     # Prevent this pluging triggering on sub paths of non-string MRUListEx
     # values.
@@ -204,7 +187,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
         u'\\Explorer\\ComDlg32\\OpenSavePidlMRU' in key.path):
       return
 
-    return super(MRUListExStringPlugin, self).Process(
+    super(MRUListExStringPlugin, self).Process(
         parser_context, key=key, codepage=codepage, **kwargs)
 
 
@@ -221,22 +204,19 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StreamMRU'])
 
   def _ParseMRUListExEntryValue(
-      self, key, entry_index, entry_number, text_dict, codepage='cp1252',
-      **unused_kwargs):
+      self, parser_context, key, entry_index, entry_number, text_dict,
+      codepage='cp1252', **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey) that contains
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
       text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
-    event_object = None
     value_string = u''
 
     value = key.GetValue(u'{0:d}'.format(entry_number))
@@ -252,9 +232,7 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
-      for event_object in shell_items_parser.Parse(
-          value.data, codepage=codepage):
-        yield event_object
+      shell_items_parser.Parse(parser_context, value.data, codepage=codepage)
 
       value_string = u'Shell item list: [{0:s}]'.format(
           shell_items_parser.CopyToPath())
@@ -264,35 +242,23 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
 
     text_dict[value_text] = value_string
 
-    if not event_object:
-      # If no event object was yield return an empty generator.
-      # pylint: disable-msg=unreachable
-      return
-      yield
-
   def GetEntries(
-      self, unused_parser_context, key=None, codepage='cp1252',
-      **unused_kwargs):
+      self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
     if key.name != u'OpenSavePidlMRU':
-      for event_object in self._ParseMRUListExKey(key, codepage=codepage):
-        yield event_object
+      self._ParseMRUListExKey(parser_context, key, codepage=codepage)
 
     if key.name == u'OpenSavePidlMRU':
       # For the OpenSavePidlMRU MRUListEx we also need to parse its subkeys
       # since the Registry key path does not support wildcards yet.
       for subkey in key.GetSubkeys():
-        for event_object in self._ParseMRUListExKey(subkey, codepage=codepage):
-          yield event_object
+        self._ParseMRUListExKey(parser_context, subkey, codepage=codepage)
 
 
 class MRUListExStringAndShellItemPlugin(
@@ -312,22 +278,19 @@ class MRUListExStringAndShellItemPlugin(
       construct.Anchor('shell_item'))
 
   def _ParseMRUListExEntryValue(
-      self, key, entry_index, entry_number, text_dict, codepage='cp1252',
-      **unused_kwargs):
+      self, parser_context, key, entry_index, entry_number, text_dict,
+      codepage='cp1252', **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey) that contains
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
       text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
-    event_object = None
     value_string = u''
 
     value = key.GetValue(u'{0:d}'.format(entry_number))
@@ -365,9 +328,8 @@ class MRUListExStringAndShellItemPlugin(
 
         else:
           shell_items_parser = shell_items.ShellItemsParser(key.path)
-          for event_object in shell_items_parser.Parse(
-              shell_item_list_data, codepage=codepage):
-            yield event_object
+          shell_items_parser.Parse(
+              parser_context, shell_item_list_data, codepage=codepage)
 
           value_string = u'Path: {0:s}, Shell item: [{1:s}]'.format(
               path, shell_items_parser.CopyToPath())
@@ -377,34 +339,22 @@ class MRUListExStringAndShellItemPlugin(
 
     text_dict[value_text] = value_string
 
-    if not event_object:
-      # If no event object was yield return an empty generator.
-      # pylint: disable-msg=unreachable
-      return
-      yield
-
   def GetEntries(
-      self, unused_parser_context, key=None, codepage='cp1252',
-      **unused_kwargs):
+      self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
-    for event_object in self._ParseMRUListExKey(key, codepage=codepage):
-      yield event_object
+    self._ParseMRUListExKey(parser_context, key, codepage=codepage)
 
     if key.name == u'RecentDocs':
       # For the RecentDocs MRUListEx we also need to parse its subkeys
       # since the Registry key path does not support wildcards yet.
       for subkey in key.GetSubkeys():
-        for event_object in self._ParseMRUListExKey(subkey, codepage=codepage):
-          yield event_object
+        self._ParseMRUListExKey(parser_context, subkey, codepage=codepage)
 
 
 class MRUListExStringAndShellItemListPlugin(
@@ -425,22 +375,19 @@ class MRUListExStringAndShellItemListPlugin(
       construct.Anchor('shell_item_list'))
 
   def _ParseMRUListExEntryValue(
-      self, key, entry_index, entry_number, text_dict, codepage='cp1252',
-      **unused_kwargs):
+      self, parser_context, key, entry_index, entry_number, text_dict,
+      codepage='cp1252', **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey) that contains
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
       text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
-    event_object = None
     value_string = u''
 
     value = key.GetValue(u'{0:d}'.format(entry_number))
@@ -478,9 +425,8 @@ class MRUListExStringAndShellItemListPlugin(
 
         else:
           shell_items_parser = shell_items.ShellItemsParser(key.path)
-          for event_object in shell_items_parser.Parse(
-              shell_item_list_data, codepage=codepage):
-            yield event_object
+          shell_items_parser.Parse(
+              parser_context, shell_item_list_data, codepage=codepage)
 
           value_string = u'Path: {0:s}, Shell item list: [{1:s}]'.format(
               path, shell_items_parser.CopyToPath())
@@ -490,24 +436,13 @@ class MRUListExStringAndShellItemListPlugin(
 
     text_dict[value_text] = value_string
 
-    if not event_object:
-      # If no event object was yield return an empty generator.
-      # pylint: disable-msg=unreachable
-      return
-      yield
-
   def GetEntries(
-      self, unused_parser_context, key=None, codepage='cp1252',
-      **unused_kwargs):
+      self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-
-    Yields:
-      Event objects (instances of EventObject).
     """
-    for event_object in self._ParseMRUListExKey(key, codepage=codepage):
-      yield event_object
+    self._ParseMRUListExKey(parser_context, key, codepage=codepage)

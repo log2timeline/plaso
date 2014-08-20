@@ -72,7 +72,9 @@ class WinRecycleBinParser(interface.BaseParser):
   # Struct read from:
   # https://code.google.com/p/rifiuti2/source/browse/trunk/src/rifiuti-vista.h
   RECORD_STRUCT = construct.Struct(
-      'record', construct.ULInt64('filesize'), construct.ULInt64('filetime'))
+      'record',
+      construct.ULInt64('filesize'),
+      construct.ULInt64('filetime'))
 
   MAGIC_STRUCT = construct.ULInt64('magic')
 
@@ -120,13 +122,18 @@ class WinRecycleInfo2Parser(interface.BaseParser):
   INT32_LE = construct.ULInt32('my_int')
 
   FILE_HEADER_STRUCT = construct.Struct(
-      'file_header', construct.Padding(8), construct.ULInt32('record_size'))
+      'file_header',
+      construct.Padding(8),
+      construct.ULInt32('record_size'))
 
   # Struct based on (-both unicode and legacy string):
   # https://code.google.com/p/rifiuti2/source/browse/trunk/src/rifiuti.h
   RECORD_STRUCT = construct.Struct(
-      'record', construct.ULInt32('index'), construct.ULInt32('drive'),
-      construct.ULInt64('filetime'), construct.ULInt32('filesize'))
+      'record',
+      construct.ULInt32('index'),
+      construct.ULInt32('drive'),
+      construct.ULInt64('filetime'),
+      construct.ULInt32('filesize'))
 
   STRING_STRUCT = construct.CString('legacy_filename')
 
@@ -169,8 +176,8 @@ class WinRecycleInfo2Parser(interface.BaseParser):
     record_size = file_header['record_size']
     if record_size > 65536:
       logging.error((
-          u'Record size is too large for INFO2 [{}], reducing size to '
-          '65.535').format(record_size))
+          u'Record size: {0:d} is too large for INFO2 reducing to: '
+          u'65535').format(record_size))
       record_size = 65535
 
     # If recordsize is 0x320 then we have UTF/unicode names as well.

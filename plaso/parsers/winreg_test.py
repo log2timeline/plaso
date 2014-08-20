@@ -48,6 +48,8 @@ class WinRegTest(test_lib.ParserTestCase):
     event_generator = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
 
+    # TODO: this will break once the yield-based parsers have been replaced
+    # by produce (or emit)-based variants.
     plugins = self._GetPlugins(event_generator)
 
     # The _registry_type member is created dynamically by invoking
@@ -68,6 +70,8 @@ class WinRegTest(test_lib.ParserTestCase):
     event_generator = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
 
+    # TODO: this will break once the yield-based parsers have been replaced
+    # by produce (or emit)-based variants.
     plugins = self._GetPlugins(event_generator)
 
     # The _registry_type member is created dynamically by invoking

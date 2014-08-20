@@ -83,6 +83,9 @@ Thanks to contributors (alphabetically based on last name):
     * USBStor
     * Win7 UserAssist
     * WinRar
+* Patrik Nisen
+  * For providing input for parsing the DestList stream for the automatic
+    destinations OLECF plugin
 * Francesco Picasso
   * Parsers
     * PopContest
@@ -92,8 +95,9 @@ Thanks to contributors (alphabetically based on last name):
     * XChatLog
     * XChatScrollBack
 * Jordi Sanchez
-  * binplist
-  * object filter
+  * For providing:
+    * binplist
+    * object filter
 * Elizabeth Schweinsberg
   * Parsers
     * McAfee AV Access Protection Log
@@ -120,6 +124,8 @@ Copied with permission granted by Jerome Marty.
 
 Copied with permission granted by Rob Lee.
 Copyright SANS Institute - Digital Forensics and Incident Response.
+* 1b4dd67f29cb1962.automaticDestinations-ms
+* 5afe4de1b92fc382.customDestinations-ms
 * example.lnk
 * SysEvent.Evt
 * System.evtx

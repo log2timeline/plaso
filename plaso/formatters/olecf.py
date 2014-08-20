@@ -18,6 +18,7 @@
 """Formatters for OLE Compound File (OLECF) events."""
 
 from plaso.formatters import interface
+from plaso.lib import errors
 
 
 class OleCfItemFormatter(interface.EventFormatter):
@@ -30,6 +31,50 @@ class OleCfItemFormatter(interface.EventFormatter):
 
   SOURCE_LONG = 'OLECF Item'
   SOURCE_SHORT = 'OLECF'
+
+
+class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
+  """Formatter for an OLECF DestList stream."""
+
+  DATA_TYPE = 'olecf:dest_list:entry'
+
+  FORMAT_STRING_PIECES = [
+      u'Entry: {entry_number}',
+      u'Pin status: {pin_status_string}',
+      u'Hostname: {hostname}',
+      u'Path: {path}',
+      u'Droid volume identifier: {droid_volume_identifier}',
+      u'Droid file identifier: {droid_file_identifier}',
+      u'Birth droid volume identifier: {birth_droid_volume_identifier}',
+      u'Birth droid file identifier: {birth_droid_file_identifier}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Entry: {entry_number}',
+      u'Pin status: {pin_status_string}',
+      u'Path: {path}']
+
+  def GetMessages(self, event_object):
+    """Returns a list of messages extracted from an event object.
+
+    Args:
+      event_object: The event object (EventObject) containing the event
+                    specific data.
+
+    Returns:
+      A list that contains both the longer and shorter version of the message
+      string.
+    """
+    if self.DATA_TYPE != event_object.data_type:
+      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+          event_object.data_type))
+
+    pin_status = getattr(event_object, 'pin_status', None)
+    if pin_status == 0xffffffff:
+      event_object.pin_status_string = u'Unpinned'
+    else:
+      event_object.pin_status_string = u'Pinned'
+
+    return super(OleCfDestListEntryFormatter, self).GetMessages(event_object)
 
 
 class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
