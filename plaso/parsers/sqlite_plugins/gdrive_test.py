@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import gdrive as gdrive_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import gdrive
@@ -34,8 +33,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = gdrive.GoogleDrivePlugin(pre_obj)
+    self._plugin = gdrive.GoogleDrivePlugin()
 
   def testProcess(self):
     """Tests the Process function on a Google Drive database file."""

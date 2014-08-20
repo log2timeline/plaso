@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import asl as asl_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers import asl
 from plaso.parsers import test_lib
@@ -32,8 +31,7 @@ class AslParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = asl.AslParser(pre_obj)
+    self._parser = asl.AslParser()
 
   def testParse(self):
     """Tests the Parse function."""

@@ -168,10 +168,13 @@ class BagMRUPlugin(interface.KeyPlugin):
           sub_key, value_string, codepage=codepage):
         yield event_object
 
-  def GetEntries(self, key=None, codepage='cp1252', **unused_kwargs):
+  def GetEntries(
+      self, unused_parser_context, key=None, codepage='cp1252',
+       **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
 

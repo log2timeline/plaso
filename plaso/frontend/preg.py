@@ -48,6 +48,7 @@ except ImportError:
 from IPython.core import magic
 
 from plaso import preprocessors
+from plaso.artifacts import knowledge_base
 
 # Import the winreg formatter to register it, adding the option
 # to print event objects using the default formatter.
@@ -60,6 +61,8 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import context as parsers_context
+from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg as winreg_parser
 from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
 from plaso.preprocessors import interface as preprocess_interface
@@ -75,7 +78,7 @@ class RegCache(object):
   cur_key = ''
   hive = None
   hive_type = 'UNKNOWN'
-  pre_obj = None
+  knowledge_base_object = knowledge_base.KnowledgeBase()
   path_expander = None
   reg_cache = None
   file_entry = None
@@ -116,7 +119,7 @@ class RegCache(object):
     cls.reg_cache = cache.WinRegistryCache()
     cls.reg_cache.BuildCache(cls.hive, cls.hive_type)
     cls.path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
-        cls.pre_obj, cls.reg_cache)
+        reg_cache=cls.reg_cache)
 
   @classmethod
   def GetHiveName(cls):
@@ -135,6 +138,11 @@ class PregFrontend(frontend.ExtractionFrontend):
     input_reader = frontend.StdinFrontendInputReader()
 
     super(PregFrontend, self).__init__(input_reader, output_writer)
+    self._key_path = None
+    self._parse_restore_points = False
+    self._registry_file = None
+    self._verbose_output = False
+    self.plugins = None
 
   def ParseOptions(self, options, unused_source):
     """Parses the options.
@@ -148,16 +156,48 @@ class PregFrontend(frontend.ExtractionFrontend):
     if not options:
       raise errors.BadConfigOption(u'Missing options.')
 
-    if not options.image and not options.regfile:
+    image = getattr(options, 'image', None)
+    regfile = getattr(options, 'regfile', None)
+
+    if not image and not regfile:
       raise errors.BadConfigOption(u'Not enough parameters to proceed.')
 
-    if options.image:
-      return
+    if image:
+      self._source_path = image
 
-    # TODO: move this?
-    if options.regfile and not os.path.isfile(options.regfile):
-      raise errors.BadConfigOption(
-          u'Registry file: {0:s} does not exist.'.format(options.regfile))
+    if regfile:
+      if not os.path.isfile(regfile):
+        raise errors.BadConfigOption(
+            u'Registry file: {0:s} does not exist.'.format(regfile))
+      self._registry_file = regfile
+
+    self._key_path = getattr(options, 'key', None)
+    self._parse_restore_points = getattr(options, 'restore_points', False)
+
+    self._verbose_output = getattr(options, 'verbose', False)
+
+    self.plugins = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+
+  def PrintSupportedPlugins(self):
+    """Prints information about the supported plugins."""
+    # TODO: replace frontend_utils.FormatHeader by frontend function.
+    print frontend_utils.FormatHeader(u'Supported Plugins')
+    key_plugin_cls = self.plugins.GetAllKeyPlugins()[0]
+
+    for plugin, obj in sorted(key_plugin_cls.classes.items()):
+      doc_string, _, _ = obj.__doc__.partition('\n')
+      print frontend_utils.FormatOutputString(plugin, doc_string)
+
+  def _ExpandKeysRedirect(self, keys):
+    """Expands a list of Registry key paths with their redirect equivalents.
+
+    Args:
+      keys: a list of Windows Registry key paths.
+    """
+    for key in keys:
+      if key.startswith('\\Software') and 'Wow6432Node' not in key:
+        _, first, second = key.partition('\\Software')
+        keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(first, second))
 
   # TODO: clean up this function as part of dfvfs find integration.
   # TODO: a duplicate of this function exists in class: WinRegistryPreprocess
@@ -212,6 +252,137 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     return hive_paths
 
+  def _GetRegistryFilePaths(self, plugin_name, registry_type=None):
+    """Returns a list of Registry paths from a configuration object.
+
+    Args:
+      plugin_name: string containing the name of the plugin or an empty
+                   string for all the types.
+      registry_type: optional Registry type string. None by default.
+    """
+    if self._parse_restore_points:
+      restore_path = u'/System Volume Information/_restor.+/RP[0-9]+/snapshot/'
+    else:
+      restore_path = u''
+
+    if registry_type:
+      types = [registry_type]
+    else:
+      types = self._GetRegistryTypes(plugin_name)
+
+    # Gather the Registry files to fetch.
+    paths = []
+
+    for reg_type in types:
+      if reg_type == 'NTUSER':
+        paths.append('/Documents And Settings/.+/NTUSER.DAT')
+        paths.append('/Users/.+/NTUSER.DAT')
+        if restore_path:
+          paths.append('{0:s}/_REGISTRY_USER_NTUSER.+'.format(restore_path))
+
+      elif reg_type == 'SOFTWARE':
+        paths.append('{sysregistry}/SOFTWARE')
+        if restore_path:
+          paths.append('{0:s}/_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
+
+      elif reg_type == 'SYSTEM':
+        paths.append('{sysregistry}/SYSTEM')
+        if restore_path:
+          paths.append('{0:s}/_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
+
+      elif reg_type == 'SECURITY':
+        paths.append('{sysregistry}/SECURITY')
+        if restore_path:
+          paths.append('{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
+
+      elif reg_type == 'SAM':
+        paths.append('{sysregistry}/SAM')
+        if restore_path:
+          paths.append('{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
+
+    # Expand all the paths.
+    expanded_paths = []
+    expander = winreg_path_expander.WinRegistryKeyPathExpander()
+    for path in paths:
+      try:
+        expanded_paths.append(expander.ExpandPath(
+            path, pre_obj=RegCache.knowledge_base_object.pre_obj))
+
+      except KeyError as exception:
+        logging.error(u'Unable to expand keys with error: {0:s}'.format(
+            exception))
+
+    return expanded_paths
+
+  def _GetRegistryKeysFromType(self, registry_type):
+    """Retrieves a list of all key plugins for a given Registry type.
+
+    Args:
+      registry_type: the Registry type string.
+
+    Returns:
+      A list of Windows Registry keys.
+    """
+    keys = []
+    for key_plugin_cls in self.plugins.GetAllKeyPlugins():
+      temp_obj = key_plugin_cls(reg_cache=RegCache.reg_cache)
+      if temp_obj.REG_TYPE == registry_type:
+        keys.extend(temp_obj.expanded_keys)
+
+    return keys
+
+  def _GetRegistryPlugins(self, plugin_name):
+    """Retrieves the Windows Registry plugins based on a filter string.
+
+    Args:
+      plugin_name: string containing the name of the plugin or an empty
+                   string for all the plugins.
+
+    Returns:
+      A list of Windows Registry plugins.
+    """
+    key_plugin_names = []
+    for plugin in self.plugins.GetAllKeyPlugins():
+      temp_obj = plugin(None)
+      key_plugin_names.append(temp_obj.plugin_name)
+
+    # TODO: fix this comment it makes no sense in this context.
+    # Determine if we are running against a plugin or a key (behavior differs).
+    if not plugin_name:
+      return key_plugin_names
+
+    plugin_name = plugin_name.lower()
+    if not plugin_name.startswith('winreg'):
+      plugin_name = u'winreg_{0:s}'.format(plugin_name)
+
+    plugins_to_run = []
+    for key_plugin in key_plugin_names:
+      if plugin_name in key_plugin.lower():
+        plugins_to_run.append(key_plugin)
+
+    return plugins_to_run
+
+  def _GetRegistryTypes(self, plugin_name):
+    """Retrieves the Windows Registry types based on a filter string.
+
+    Args:
+      plugin_name: string containing the name of the plugin or an empty
+                   string for all the types.
+
+    Returns:
+      A list of Windows Registry types.
+    """
+    types = []
+    for plugin in self._GetRegistryPlugins(plugin_name):
+      for key_plugin_cls in self.plugins.GetAllKeyPlugins():
+        temp_obj = key_plugin_cls(reg_cache=RegCache.reg_cache)
+        if plugin is temp_obj.plugin_name:
+          if temp_obj.REG_TYPE not in types:
+            types.append(temp_obj.REG_TYPE)
+          break
+
+    return types
+
   def _GetSearchersForImage(self, volume_path_spec, options):
     """Retrieves the file systems searchers for searching the image.
 
@@ -262,26 +433,19 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     return searchers
 
-  def ExpandKeysRedirect(self, keys):
-    """Expand a key list with Registry redirect keys."""
-    for key in keys:
-      if key.startswith('\\Software') and 'Wow6432Node' not in key:
-        _, first, second = key.partition('\\Software')
-        keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(first, second))
-
-  def GetHivesAndCollectors(self, options):
+  def GetHivesAndCollectors(self, options, plugin_name):
     """Returns a list of discovered Registry hives and collectors.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      plugin_name: string containing the name of the plugin or an empty
+                   string for all the types.
     """
     # TODO: use non-preprocess collector with filter to collect hives.
 
     # TODO: rewrite to always use collector or equiv.
-    if options.image:
-      # TODO: move to ParseOptions?
+    if self._source_path:
       try:
-        self._source_path = getattr(options, 'image', '')
         self.ScanSource(options)
       except errors.FileSystemScannerError as exception:
         raise errors.BadConfigOption((
@@ -294,126 +458,35 @@ class PregFrontend(frontend.ExtractionFrontend):
       _, searcher = searchers[0]
 
       # Run preprocessing on image.
-      RegCache.pre_obj = event.PreprocessObject()
-
-      pre_plugin_list = preprocessors.PreProcessList(RegCache.pre_obj)
-      guessed_os = preprocess_interface.GuessOS(searcher)
-      for weight in pre_plugin_list.GetWeightList(guessed_os):
-        for plugin in pre_plugin_list.GetWeight(guessed_os, weight):
+      platform = preprocess_interface.GuessOS(searcher)
+      for weight in preprocessors.PreProcessorsManager.GetWeightList(platform):
+        for plugin in preprocessors.PreProcessorsManager.GetWeight(
+            platform, weight):
           try:
-            plugin.Run(searcher)
+            plugin.Run(searcher, RegCache.knowledge_base_object)
           except (IOError, errors.PreProcessFail) as exception:
             logging.warning(
                 u'Unable to run plugin: {0:s} with error: {1:s}'.format(
                     plugin.plugin_name, exception))
 
       # Find all the Registry paths we need to check.
-      if options.regfile:
-        paths = self.GetRegistryFilePaths(options, options.regfile.upper())
+      if self._registry_file:
+        paths = self._GetRegistryFilePaths(
+            plugin_name, registry_type=self._registry_file.upper())
       else:
-        paths = self.GetRegistryFilePaths(options)
+        paths = self._GetRegistryFilePaths(plugin_name)
 
       hives = []
       for path in paths:
         hives.extend(self._FindRegistryPaths(searcher, path))
+
     else:
-      hives = [options.regfile]
+      hives = [self._registry_file]
       searchers = [(u'', None)]
 
     return hives, searchers
 
-  def GetRegistryFilePaths(self, options, registry_type=None):
-    """Returns a list of Registry paths from a configuration object.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      registry_type: optional Registry type string. None by default.
-    """
-    if options.restore_points:
-      restore_path = u'/System Volume Information/_restor.+/RP[0-9]+/snapshot/'
-    else:
-      restore_path = u''
-
-    if registry_type:
-      types = [registry_type]
-    else:
-      types = self.GetRegistryTypes(options)
-
-    # Gather the Registry files to fetch.
-    paths = []
-
-    for reg_type in types:
-      if reg_type == 'NTUSER':
-        paths.append('/Documents And Settings/.+/NTUSER.DAT')
-        paths.append('/Users/.+/NTUSER.DAT')
-        if restore_path:
-          paths.append('{0:s}/_REGISTRY_USER_NTUSER.+'.format(restore_path))
-
-      elif reg_type == 'SOFTWARE':
-        paths.append('{sysregistry}/SOFTWARE')
-        if restore_path:
-          paths.append('{0:s}/_REGISTRY_MACHINE_SOFTWARE'.format(restore_path))
-
-      elif reg_type == 'SYSTEM':
-        paths.append('{sysregistry}/SYSTEM')
-        if restore_path:
-          paths.append('{0:s}/_REGISTRY_MACHINE_SYSTEM'.format(restore_path))
-
-      elif reg_type == 'SECURITY':
-        paths.append('{sysregistry}/SECURITY')
-        if restore_path:
-          paths.append('{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
-
-      elif reg_type == 'SAM':
-        paths.append('{sysregistry}/SAM')
-        if restore_path:
-          paths.append('{0:s}/_REGISTRY_MACHINE_SAM'.format(restore_path))
-
-    # Expand all the paths.
-    expander = winreg_path_expander.WinRegistryKeyPathExpander(
-        RegCache.pre_obj, None)
-    try:
-      paths = map(expander.ExpandPath, paths)
-    except KeyError as exception:
-      logging.error(u'Unable to expand all keys, with error: {0:s}'.format(
-          exception))
-
-    return paths
-
-  def GetRegistryKeysFromType(self, options, registry_type):
-    """Return a list of all key plugins for a given Registry type.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      registry_type: the Registry type string.
-    """
-    keys = []
-    for reg_plugin in options.plugins.GetAllKeyPlugins():
-      temp_obj = reg_plugin(
-          pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
-      if temp_obj.REG_TYPE == registry_type:
-        keys.extend(temp_obj.expanded_keys)
-
-    return keys
-
-  def GetRegistryTypes(self, options):
-    """Return back a list of all available Registry types.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-    """
-    types = []
-    for plugin in GetRegistryPlugins(options):
-      for reg_plugin in options.plugins.GetAllKeyPlugins():
-        temp_obj = reg_plugin(None, None)
-        if plugin is temp_obj.plugin_name:
-          if temp_obj.REG_TYPE not in types:
-            types.append(temp_obj.REG_TYPE)
-          break
-
-    return types
-
-  def RunModeRegistryKey(self, options):
+  def RunModeRegistryKey(self, options, plugin_name):
     """Run against a specific Registry key.
 
     Finds and opens all Registry hives as configured in the configuration
@@ -423,31 +496,34 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      plugin_name: string containing the name of the plugin or an empty
+                   string for all the types.
     """
-    hives, hive_collectors = self.GetHivesAndCollectors(options)
+    hives, hive_collectors = self.GetHivesAndCollectors(options, plugin_name)
 
-    # Get the Registry key.
-    keys = [options.key]
+    key_paths = [self._key_path]
 
-    # Expand the keys if there is a need (due to Windows redirect).
-    self.ExpandKeysRedirect(keys)
+    # Expand the keys paths if there is a need (due to Windows redirect).
+    self._ExpandKeysRedirect(key_paths)
 
     for hive in hives:
-      self._output_writer.Write(ParseHive(
-          hive, hive_collectors, keys, None, options.verbose))
+      output_string = ParseHive(
+          hive, hive_collectors, key_paths, None, self._verbose_output)
+      self._output_writer.Write(output_string)
 
-  def RunModeRegistryPlugin(self, options):
+  def RunModeRegistryPlugin(self, options, plugin_name):
     """Run against a set of Registry plugins.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      plugin_name: string containing the name of the plugin or an empty
+                   string for all the types.
     """
-    hives, hive_collectors = self.GetHivesAndCollectors(options)
-
+    hives, hive_collectors = self.GetHivesAndCollectors(options, plugin_name)
     if not hives:
       return
 
-    plugin_list = GetRegistryPlugins(options)
+    plugin_list = self._GetRegistryPlugins(plugin_name)
 
     # In order to get all the Registry keys we need to expand
     # them, but to do so we need to open up one hive so that we
@@ -456,24 +532,17 @@ class PregFrontend(frontend.ExtractionFrontend):
     _, hive_collector = hive_collectors[0]
     OpenHive(hives[0], hive_collector)
 
-    # Get all the appropriate keys from these plugins.
-    key_plugins_all = options.plugins.GetAllKeyPlugins()
-    key_plugins = []
-    for key_plugin in key_plugins_all:
-      temp_obj = key_plugin(
-          pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
-      if temp_obj.plugin_name in plugin_list:
-        key_plugins.append(temp_obj)
+    parser_context = parsers_context.ParserContext(
+        RegCache.knowledge_base_object)
 
-    registry_keys = []
-    for key_plugin in key_plugins:
-      for registry_key in key_plugin.expanded_keys:
-        if registry_key not in registry_keys:
-          registry_keys.append(registry_key)
+    # Get all the appropriate keys from these plugins.
+    key_paths = self.plugins.GetExpandedKeyPaths(
+        parser_context, reg_cache=RegCache.reg_cache)
 
     for hive in hives:
-      self._output_writer.Write(ParseHive(
-          hive, hive_collectors, registry_keys, plugin_list, options.verbose))
+      output_string = ParseHive(
+          hive, hive_collectors, key_paths, plugin_list, self._verbose_output)
+      self._output_writer.Write(output_string)
 
   def RunModeRegistryFile(self, options):
     """Run against a Registry file.
@@ -488,17 +557,21 @@ class PregFrontend(frontend.ExtractionFrontend):
       options: the command line arguments (instance of argparse.Namespace).
     """
     # Get all the hives and collectors.
-    hives, hive_collectors = self.GetHivesAndCollectors(options)
+    hives, hive_collectors = self.GetHivesAndCollectors(
+        options, options.plugin_name)
 
     for hive in hives:
       for _, hive_collector in hive_collectors:
         OpenHive(hive, hive_collector)
-        options.plugin_name = RegCache.hive_type
-        keys = self.GetRegistryKeysFromType(options, options.plugin_name)
-        self.ExpandKeysRedirect(keys)
-        plugins_to_run = GetRegistryPlugins(options)
-        self._output_writer.Write(ParseHive(
-            hive, hive_collectors, keys, plugins_to_run, options.verbose))
+
+        key_paths = self._GetRegistryKeysFromType(RegCache.hive_type)
+        self._ExpandKeysRedirect(key_paths)
+
+        plugins_to_run = self._GetRegistryPlugins(RegCache.hive_type)
+        output_string = ParseHive(
+            hive, hive_collectors, key_paths, plugins_to_run,
+            self._verbose_output)
+        self._output_writer.Write(output_string)
 
 
 def CdCompleter(unused_self, unused_event):
@@ -520,13 +593,12 @@ def PluginCompleter(unused_self, event_object):
   if not '-h' in event_object.line:
     ret_list.append('-h')
 
-  plugin_obj = winreg_parser.WinRegistryParser.GetRegistryPlugins()
+  plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
 
-  for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
-    plugin_obj = plugin_cls(
-        pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
+  for plugin_cls in plugins_list.GetKeyPlugins(RegCache.hive_type):
+    plugins_list = plugin_cls(reg_cache=RegCache.reg_cache)
 
-    plugin_name = plugin_obj.plugin_name
+    plugin_name = plugins_list.plugin_name
     if plugin_name.startswith('winreg'):
       plugin_name = plugin_name[7:]
 
@@ -594,11 +666,10 @@ class MyMagics(magic.Magics):
     if not plugin_name.startswith('winreg'):
       plugin_name = u'winreg_{0:s}'.format(plugin_name)
 
-    plugin_obj = winreg_parser.WinRegistryParser.GetRegistryPlugins()
+    plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
     plugin_found = False
-    for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
-      plugin = plugin_cls(
-          pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
+    for plugin_cls in plugins_list.GetKeyPlugins(RegCache.hive_type):
+      plugin = plugin_cls(reg_cache=RegCache.reg_cache)
       if plugin.plugin_name == plugin_name:
         # If we found the correct plugin.
         plugin_found = True
@@ -698,7 +769,8 @@ class MyMagics(magic.Magics):
     if match and u'{0:s}{0:s}'.format(
         self.EXPANSION_KEY_OPEN) not in match.group(0):
       try:
-        key = RegCache.path_expander.ExpandPath(key)
+        key = RegCache.path_expander.ExpandPath(
+            key, pre_obj=RegCache.knowledge_base_object.pre_obj)
       except (KeyError, IndexError):
         pass
 
@@ -890,6 +962,8 @@ def GetCurrentKey():
 # usernames.
 def OpenHive(filename_or_path_spec, hive_collector, codepage='cp1252'):
   """Open a Registry hive based on a collector or a filename."""
+  RegCache.knowledge_base_object.SetDefaultCodepage(codepage)
+
   if isinstance(filename_or_path_spec, basestring):
     filename = filename_or_path_spec
     path_spec = None
@@ -904,13 +978,12 @@ def OpenHive(filename_or_path_spec, hive_collector, codepage='cp1252'):
   else:
     file_entry = hive_collector.GetFileEntryByPathSpec(path_spec)
 
-  use_codepage = getattr(RegCache.pre_obj, 'code_page', codepage)
-
   win_registry = winregistry.WinRegistry(
       winregistry.WinRegistry.BACKEND_PYREGF)
 
   try:
-    RegCache.hive = win_registry.OpenFile(file_entry, codepage=use_codepage)
+    RegCache.hive = win_registry.OpenFile(
+        file_entry, codepage=RegCache.knowledge_base_object.codepage)
   except IOError:
     if filename is not None:
       filename_string = filename
@@ -1031,7 +1104,7 @@ def GetEventBody(event_object, show_hex=False):
 
 
 def ParseHive(
-    hive_path_or_path_spec, hive_collectors, keys, use_plugins, verbose):
+    hive_path_or_path_spec, hive_collectors, key_paths, use_plugins, verbose):
   """Opens a hive file, and returns information about parsed keys.
 
   This function takes a path to a hive and a list of collectors (or
@@ -1044,7 +1117,7 @@ def ParseHive(
   Args:
     hive_path: Full path to the hive file in question.
     hive_collectors: A list of collectors to use.
-    keys: A list of Registry keys (strings) that are to be parsed.
+    key_paths: A list of Registry keys paths that are to be parsed.
     use_plugins: A list of plugins used to parse the key, None if all
     plugins should be used.
     verbose: Print more verbose content, like hex dump of extracted events.
@@ -1070,19 +1143,19 @@ def ParseHive(
     else:
       OpenHive(hive_path, hive_collector)
 
-    for key_str in keys:
+    for key_path in key_paths:
       key_texts = []
       key_dict = {}
       if RegCache.reg_cache:
         key_dict.update(RegCache.reg_cache.attributes.items())
 
-      if RegCache.pre_obj:
-        key_dict.update(RegCache.pre_obj.__dict__.items())
+      if RegCache.knowledge_base_object.pre_obj:
+        key_dict.update(RegCache.knowledge_base_object.pre_obj.__dict__.items())
 
-      key = RegCache.hive.GetKeyByPath(key_str)
-      key_texts.append(u'{0:>15} : {1:s}'.format(u'Key Name', key_str))
+      key = RegCache.hive.GetKeyByPath(key_path)
+      key_texts.append(u'{0:>15} : {1:s}'.format(u'Key Name', key_path))
       if not key:
-        key_texts.append(u'Unable to open key: {0:s}'.format(key_str))
+        key_texts.append(u'Unable to open key: {0:s}'.format(key_path))
         if verbose:
           print_strings.extend(key_texts)
         continue
@@ -1100,8 +1173,10 @@ def ParseHive(
 
       key_texts.append(u'')
       key_texts.append(u'{0:-^80}'.format(u' Plugins '))
-      key_texts.extend(
-          ParseKey(key, verbose=verbose, use_plugins=use_plugins))
+
+      output_string = ParseKey(key, verbose=verbose, use_plugins=use_plugins)
+      key_texts.extend(output_string)
+
       print_strings.extend(key_texts)
 
   return u'\n'.join(print_strings)
@@ -1139,26 +1214,28 @@ def ParseKey(key, verbose=False, use_plugins=None):
   RegCache.events_from_last_parse = []
 
   plugins = {}
-  regplugins = winreg_parser.WinRegistryParser.GetRegistryPlugins()
+  plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+
   # Compile a list of plugins we are about to use.
-  for weight in regplugins.GetWeights():
-    plugin_list = regplugins.GetWeightPlugins(weight, registry_type)
+  for weight in plugins_list.GetWeights():
+    plugin_list = plugins_list.GetWeightPlugins(weight, registry_type)
     plugins[weight] = []
     for plugin in plugin_list:
       if use_plugins:
-        plugin_obj = plugin(
-            pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache)
+        plugin_obj = plugin(reg_cache=RegCache.reg_cache)
         if plugin_obj.plugin_name in use_plugins:
           plugins[weight].append(plugin_obj)
       else:
-        plugins[weight].append(plugin(
-            pre_obj=RegCache.pre_obj, reg_cache=RegCache.reg_cache))
+        plugins[weight].append(plugin(reg_cache=RegCache.reg_cache))
+
+  parser_context = parsers_context.ParserContext(
+      RegCache.knowledge_base_object)
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:
     for plugin in plugins[weight]:
-      call_back = plugin.Process(key)
-      if not call_back:
+      event_objects_generator = plugin.Process(parser_context, key=key)
+      if not event_objects_generator:
         continue
 
       print_strings.append(u'')
@@ -1177,7 +1254,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
         print_strings.append(u'')
 
       event_objects_and_timestamps = {}
-      for event_object in call_back:
+      for event_object in event_objects_generator:
         RegCache.events_from_last_parse.append(event_object)
         event_objects_and_timestamps.setdefault(
             event_object.timestamp, []).append(event_object)
@@ -1221,33 +1298,6 @@ def ParseKey(key, verbose=False, use_plugins=None):
   return print_strings
 
 
-def GetRegistryPlugins(options):
-  """Return a list of Registry plugins by examining configuration object.
-
-  Args:
-    options: the command line arguments (instance of argparse.Namespace).
-  """
-  key_plugin_names = []
-  for plugin in options.plugins.GetAllKeyPlugins():
-    temp_obj = plugin(None, None)
-    key_plugin_names.append(temp_obj.plugin_name)
-
-  # Determine if we are running against a plugin or a key (behavior differs).
-  plugins_to_run = []
-  if options.plugin_name:
-    plugin_name = options.plugin_name.lower()
-    if not plugin_name.startswith('winreg'):
-      plugin_name = u'winreg_{0:s}'.format(plugin_name)
-
-    for key_plugin in key_plugin_names:
-      if plugin_name in key_plugin.lower():
-        plugins_to_run.append(key_plugin)
-  else:
-    plugins_to_run = key_plugin_names
-
-  return plugins_to_run
-
-
 def RunModeConsole(front_end, options):
   """Open up an iPython console.
 
@@ -1255,7 +1305,8 @@ def RunModeConsole(front_end, options):
     options: the command line arguments (instance of argparse.Namespace).
   """
   namespace = {}
-  hives, hive_collectors = front_end.GetHivesAndCollectors(options)
+  hives, hive_collectors = front_end.GetHivesAndCollectors(
+      options, options.plugin_name)
 
   function_name_length = 23
   banners = []
@@ -1486,22 +1537,6 @@ in a textual format.
   # Parse the command line arguments.
   options = arg_parser.parse_args()
 
-  options.plugins = winreg_parser.WinRegistryParser.GetRegistryPlugins()
-
-  # TODO: Move some of this logic to a separate function calls to make
-  # GUI writing on top of this front-end simpler.
-
-  # Run some common operations (common to all run modes)
-  # Detect run mode and run appropriate method calls.
-  if options.info:
-    print frontend_utils.FormatHeader(u'Supported Plugins')
-    key_plugin = options.plugins.GetAllKeyPlugins()[0]
-
-    for plugin, obj in sorted(key_plugin.classes.items()):
-      doc_string, _, _ = obj.__doc__.partition('\n')
-      print frontend_utils.FormatOutputString(plugin, doc_string)
-    return True
-
   try:
     front_end.ParseOptions(options, u'')
   except errors.BadConfigOption as exception:
@@ -1512,12 +1547,16 @@ in a textual format.
 
   # Run the tool, using the run mode according to the options passed
   # to the tool.
-  if options.console:
+  if options.info:
+    front_end.PrintSupportedPlugins()
+  elif options.console:
     RunModeConsole(front_end, options)
+
+  # TODO: merge the following run functions.
   elif options.key and options.regfile:
-    front_end.RunModeRegistryKey(options)
+    front_end.RunModeRegistryKey(options, options.plugin_name)
   elif options.plugin_name:
-    front_end.RunModeRegistryPlugin(options)
+    front_end.RunModeRegistryPlugin(options, options.plugin_name)
   elif options.regfile:
     front_end.RunModeRegistryFile(options)
   else:

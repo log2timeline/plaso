@@ -17,15 +17,13 @@
 # limitations under the License.
 """Tests for the Mac wifi.log parser."""
 
-import pytz
 import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import mac_wifi as mac_wifi_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
-from plaso.parsers import mac_wifi as mac_wifi_parser
+from plaso.parsers import mac_wifi
 from plaso.parsers import test_lib
 
 
@@ -34,15 +32,14 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.year = 2013
-    pre_obj.zone = pytz.timezone('UTC')
-    self._parser = mac_wifi_parser.MacWifiLogParser(pre_obj)
+    self._parser = mac_wifi.MacWifiLogParser()
 
   def testParse(self):
     """Tests the Parse function."""
+    knowledge_base_values = {'year': 2013}
     test_file = self._GetTestFilePath(['wifi.log'])
-    event_generator = self._ParseFile(self._parser, test_file)
+    event_generator = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjects(event_generator)
 
     self.assertEqual(len(event_objects), 9)

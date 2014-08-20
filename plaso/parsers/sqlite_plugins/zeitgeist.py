@@ -54,10 +54,11 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
              'ParseZeitgeistEventRow')]
   REQUIRED_TABLES = frozenset(['event', 'actor'])
 
-  def ParseZeitgeistEventRow(self, row, **unused_kwargs):
+  def ParseZeitgeistEventRow(self, unused_parser_context, row, **unused_kwargs):
     """Parses zeitgeist event row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:

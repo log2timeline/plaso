@@ -156,7 +156,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
   }
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
@@ -164,6 +164,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       Internet Settings\\Lockdown_Zones key
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:

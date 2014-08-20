@@ -42,8 +42,14 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
 
   _RE_VALUE_NAME = re.compile(r'^[0-9]+$', re.I)
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Collect values under WinRAR ArcHistory and return event for each one."""
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Collect values under WinRAR ArcHistory and return event for each one.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+    """
     for value in key.GetValues():
       # Ignore any value not in the form: '[0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):

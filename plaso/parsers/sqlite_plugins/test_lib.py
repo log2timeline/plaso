@@ -21,6 +21,8 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.artifacts import knowledge_base
+from plaso.parsers import context
 from plaso.parsers import test_lib
 from plaso.parsers.sqlite_plugins import interface as sqlite_interface
 
@@ -28,7 +30,8 @@ from plaso.parsers.sqlite_plugins import interface as sqlite_interface
 class SQLitePluginTestCase(test_lib.ParserTestCase):
   """The unit test case for SQLite database plugins."""
 
-  def _ParseDatabaseFileWithPlugin(self, plugin_object, path, cache=None):
+  def _ParseDatabaseFileWithPlugin(
+      self, plugin_object, path, cache=None, knowledge_base_values=None):
     """Parses a file as a SQLite database and returns an event generator.
 
     Args:
@@ -36,16 +39,25 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
                      generator.
       path: The path to the SQLite database file.
       cache: A cache object (instance of SQLiteCache).
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
 
     Returns:
       A generator of event objects as returned by the plugin.
     """
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        knowledge_base_object.SetValue(identifier, value)
+
+    parser_context = context.ParserContext(knowledge_base_object)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
     with sqlite_interface.SQLiteDatabase(file_entry) as database:
-      event_generator = plugin_object.Process(cache=cache, database=database)
+      event_generator = plugin_object.Process(
+          parser_context, cache=cache, database=database)
 
     self.assertNotEquals(event_generator, None)
 

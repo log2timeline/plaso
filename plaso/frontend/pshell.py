@@ -47,6 +47,7 @@ from plaso import output
 from plaso import parsers
 from plaso import preprocessors
 
+from plaso.artifacts import knowledge_base
 from plaso.engine import collector
 from plaso.engine import scanner
 from plaso.engine import utils as engine_utils
@@ -237,15 +238,17 @@ def ParseFile(file_entry):
     file_entry = OpenOSFile(file_entry)
 
   # Create the necessary items.
+  knowledge_base_object = knowledge_base.KnowledgeBase()
+
   proc_queue = queue.SingleThreadedQueue()
   storage_queue = queue.SingleThreadedQueue()
   storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
-  pre_obj = event.PreprocessObject()
-  all_parsers = parsers_manager.ParsersManager.FindAllParsers(pre_obj=pre_obj)
+  parsers_list = parsers_manager.ParsersManager.FindAllParsers()
 
   # Create a worker.
   worker_object = worker.EventExtractionWorker(
-      'my_worker', proc_queue, storage_queue_producer, pre_obj, all_parsers)
+      'my_worker', proc_queue, storage_queue_producer, knowledge_base_object,
+      parsers_list)
 
   # Parse the file.
   worker_object.ParseFile(file_entry)

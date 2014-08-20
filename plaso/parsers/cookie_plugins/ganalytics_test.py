@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import ganalytics
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import chrome_cookies
@@ -34,7 +33,6 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._pre_obj = event.PreprocessObject()
 
   def _GetAnalyticsCookies(self, generator):
     """Return a list of analytics cookies."""
@@ -49,7 +47,7 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
 
   def testParsingFirefox29CookieDatabase(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
-    plugin = firefox_cookies.FirefoxCookiePlugin(self._pre_obj)
+    plugin = firefox_cookies.FirefoxCookiePlugin()
     test_file = self._GetTestFilePath(['firefox_cookies.sqlite'])
     event_generator = self._ParseDatabaseFileWithPlugin(plugin, test_file)
     event_objects = self._GetAnalyticsCookies(event_generator)
@@ -79,7 +77,7 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
 
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
-    plugin = chrome_cookies.ChromeCookiePlugin(self._pre_obj)
+    plugin = chrome_cookies.ChromeCookiePlugin()
     test_file = self._GetTestFilePath(['cookies.db'])
     event_generator = self._ParseDatabaseFileWithPlugin(plugin, test_file)
     event_objects = self._GetAnalyticsCookies(event_generator)

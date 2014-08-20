@@ -204,9 +204,16 @@ class FirefoxCacheParser(interface.BaseParser):
 
     return FirefoxCacheEvent(candidate, request_method, url, response_code)
 
-  def Parse(self, file_entry):
-    """Extract records from a Firefox cache file."""
+  def Parse(self, parser_context, file_entry):
+    """Extract records from a Firefox cache file.
 
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Yields:
+      An event object (instance of EventObject).
+    """
     firefox_config = self.__GetFirefoxConfig(file_entry)
 
     file_object = file_entry.GetFileObject()

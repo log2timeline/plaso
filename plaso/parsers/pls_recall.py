@@ -76,10 +76,11 @@ class PlsRecallParser(interface.BaseParser):
     construct.String('Database', 81, None, '\x00'),
     construct.String('Query', 4001, None, '\x00'))
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract entries from a PLSRecall.dat file.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:

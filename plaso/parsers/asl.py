@@ -190,11 +190,12 @@ class AslParser(interface.BaseParser):
           'value',
           length_field=construct.UBInt32('length')))
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract entries from an ASL file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An ASL event for each entry in the file.

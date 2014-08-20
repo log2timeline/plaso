@@ -21,11 +21,13 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import xchatlog as xchatlog_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers import xchatlog
 from plaso.parsers import test_lib
+
+import pytz
+
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
@@ -35,14 +37,14 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.SetTimezone('Europe/Rome')
-    self._parser = xchatlog.XChatLogParser(pre_obj)
+    self._parser = xchatlog.XChatLogParser()
 
   def testParse(self):
     """Tests the Parse function."""
+    knowledge_base_values = {'zone': pytz.timezone('Europe/Rome')}
     test_file = self._GetTestFilePath(['xchat.log'])
-    event_generator = self._ParseFile(self._parser, test_file)
+    event_generator = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjects(event_generator)
 
     self.assertEquals(len(event_objects), 9)

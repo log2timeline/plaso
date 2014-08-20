@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import mac_document_versions as mac_doc_rev_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import mac_document_versions
@@ -33,8 +32,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = mac_document_versions.MacDocumentVersionsPlugin(pre_obj)
+    self._plugin = mac_document_versions.MacDocumentVersionsPlugin()
 
   def testProcess(self):
     """Tests the Process function on a Mac OS X Document Versions file."""

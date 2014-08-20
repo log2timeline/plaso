@@ -34,10 +34,11 @@ class MountPoints2Plugin(interface.KeyPlugin):
 
   URLS = [u'http://support.microsoft.com/kb/932463']
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Retrieves information from the MountPoints2 registry key.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:

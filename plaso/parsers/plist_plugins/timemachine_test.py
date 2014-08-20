@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.lib import event
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import timemachine
 from plaso.parsers.plist_plugins import test_lib
@@ -32,9 +31,8 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = timemachine.TimeMachinePlugin(None)
-    pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj)
+    self._plugin = timemachine.TimeMachinePlugin()
+    self._parser = plist.PlistParser()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -59,8 +57,9 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
     event_object = event_objects[0]
     self.assertEqual(event_object.root, u'/Destinations')
     self.assertEqual(event_object.key, u'item/SnapshotDates')
-    expected_desc = (u'TimeMachine Backup in BackUpFast '
-                    u'(5B33C22B-A4A1-4024-A2F5-C9979C4AAAAA)')
+    expected_desc = (
+        u'TimeMachine Backup in BackUpFast '
+        u'(5B33C22B-A4A1-4024-A2F5-C9979C4AAAAA)')
     self.assertEqual(event_object.desc, expected_desc)
     expected_string = u'/Destinations/item/SnapshotDates {}'.format(
         expected_desc)

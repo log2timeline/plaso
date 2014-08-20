@@ -55,8 +55,15 @@ class WinVerPlugin(interface.KeyPlugin):
       return ''
     return value.data
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Gather minimal information about system install and return an event."""
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Gather minimal information about system install and return an event.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+    """
     text_dict = {}
     text_dict[u'Owner'] = self.GetValueString(key, 'RegisteredOwner')
     text_dict[u'sp'] = self.GetValueString(key, 'CSDBuildNumber')

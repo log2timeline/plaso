@@ -31,17 +31,16 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.current_control_set = 'ControlSet001'
-    self._plugin = usbstor.USBStorPlugin(pre_obj=pre_obj)
+    self._plugin = usbstor.USBStorPlugin()
 
   def testProcess(self):
     """Tests the Process function."""
+    knowledge_base_values = {'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath(['SYSTEM'])
-    # TODO: change into: u'{current_control_set}\\Enum\\USBSTOR'?
     key_path = u'\\ControlSet001\\Enum\\USBSTOR'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_generator = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjects(event_generator)
 
     self.assertEquals(len(event_objects), 3)

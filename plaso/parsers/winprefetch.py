@@ -375,10 +375,11 @@ class WinPrefetchParser(interface.BaseParser):
 
     return device_path
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extracts events from a Windows Prefetch file.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:

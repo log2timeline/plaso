@@ -17,14 +17,12 @@
 # limitations under the License.
 """Tests for the skydrivelog parser."""
 
-import pytz
 import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import skydrivelog as skydrivelog_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
-from plaso.parsers import skydrivelog as skydrivelog_parser
+from plaso.parsers import skydrivelog
 from plaso.parsers import test_lib
 
 
@@ -36,9 +34,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.zone = pytz.timezone('UTC')
-    self._parser = skydrivelog_parser.SkyDriveLogParser(pre_obj)
+    self._parser = skydrivelog.SkyDriveLogParser()
 
   def testParse(self):
     """Tests the Parse function."""

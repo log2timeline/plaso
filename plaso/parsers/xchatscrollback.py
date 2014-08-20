@@ -114,18 +114,22 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   MSG_ENTRY = MSG_ENTRY_NICK + MSG_ENTRY_TEXT
   MSG_ENTRY.parseWithTabs()
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(XChatScrollbackParser, self).__init__(pre_obj)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(XChatScrollbackParser, self).__init__()
     self.use_local_zone = False
     self.offset = 0
 
-  def VerifyStructure(self, line):
-    """Verify that this file is a XChat scrollback log file."""
+  def VerifyStructure(self, parser_context, line):
+    """Verify that this file is a XChat scrollback log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     structure = self.LOG_LINE
     parsed_structure = None
     epoch = None
@@ -144,26 +148,38 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       return False
     return True
 
-  def ParseRecord(self, key, structure):
-    """Parse each record structure and return an EventObject if applicable."""
+  def ParseRecord(self, parser_context, key, structure):
+    """Parse each record structure and return an EventObject if applicable.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     if key != 'logline':
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
       return
-    epoch = None
+
     try:
       epoch = int(structure.epoch)
     except ValueError:
-      logging.debug(
-        u'Invalid epoch string {}, skipping record'.format(structure.epoch))
+      logging.debug(u'Invalid epoch string {0:s}, skipping record'.format(
+          structure.epoch))
       return
+
     try:
       nickname, text = self._StripThenGetNicknameAndText(structure.text)
     except pyparsing.ParseException:
-      logging.debug(u'Error parsing entry at offset {}'.format(self.offset))
+      logging.debug(u'Error parsing entry at offset {0:d}'.format(self.offset))
       return
-    evt = XChatScrollbackEvent(epoch, self.offset, nickname, text)
-    return evt
+
+    return XChatScrollbackEvent(epoch, self.offset, nickname, text)
 
   def _StripThenGetNicknameAndText(self, text):
     """Strips decorators from text and gets <nickname> if available.

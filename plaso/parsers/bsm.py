@@ -546,26 +546,19 @@ class BsmParser(interface.BaseParser):
       129: ['BSM_TOKEN_AUT_SOCKINET128', BSM_TOKEN_AUT_SOCKINET128],
       130: ['BSM_TOKEN_SOCKET_UNIX', BSM_TOKEN_SOCKET_UNIX]}
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(BsmParser, self).__init__(pre_obj)
-
-    # BSM can be in more than one OS: BSD, Solaris and Mac OS X.
-    self.os = getattr(self._pre_obj, 'guessed_os', 'Unknown')
-
+  def __init__(self):
+    """Initializes a parser object."""
+    super(BsmParser, self).__init__()
     # Create the dictionary with all token IDs: tested and untested.
     self.bsm_type_list_all = self.BSM_TYPE_LIST.copy()
     self.bsm_type_list_all.update(self.BSM_TYPE_LIST_NOT_TESTED)
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract entries from a BSM file.
 
     Args:
-      file_entry: file entry for the bsm file.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An BSM event for each entry in the file.
@@ -574,7 +567,7 @@ class BsmParser(interface.BaseParser):
     file_object.seek(0, os.SEEK_SET)
 
     try:
-      is_bsm = self.VerifyFile(file_object)
+      is_bsm = self.VerifyFile(parser_context, file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse BSM file with error: {0:s}'.format(exception))
@@ -583,18 +576,19 @@ class BsmParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not a BSM File, unable to parse.')
 
-    event_object = self.ReadBSMEvent(file_object)
+    event_object = self.ReadBSMEvent(parser_context, file_object)
     while event_object:
       yield event_object
-      event_object = self.ReadBSMEvent(file_object)
+      event_object = self.ReadBSMEvent(parser_context, file_object)
 
     file_object.close()
 
-  def ReadBSMEvent(self, file_object):
+  def ReadBSMEvent(self, parser_context, file_object):
     """Returns a BsmEvent from a single BSM entry.
 
     Args:
-      file_object: BSM file.
+      parser_context: A parser context object (instance of ParserContext).
+      file_object: A file-like object.
 
     Returns:
       An event object.
@@ -664,7 +658,8 @@ class BsmParser(interface.BaseParser):
             u'Unable to jump to next entry with error: {0:s}'.format(exception))
         return
 
-    if self.os and self.os == 'MacOSX':
+    # BSM can be in more than one OS: BSD, Solaris and Mac OS X.
+    if parser_context.platform == 'MacOSX':
       # In Mac OS X the last two tokens are the return status and the trailer.
       if len(extra_tokens) >= 2:
         return_value = extra_tokens[-2:-1][0]
@@ -699,10 +694,11 @@ class BsmParser(interface.BaseParser):
       return BsmEvent(
           event_type, timestamp, u'. '.join(extra_tokens), trailer, offset)
 
-  def VerifyFile(self, file_object):
+  def VerifyFile(self, parser_context, file_object):
     """Check if the file is a BSM file.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       file_event: file that we want to check.
 
     Returns:
@@ -741,7 +737,7 @@ class BsmParser(interface.BaseParser):
 
     # If is Mac OS X BSM file, next entry is a  text token indicating
     # if it is a normal start or it is a recovery track.
-    if self.os == 'MacOSX':
+    if parser_context.platform == 'MacOSX':
       if self.BSM_TYPE_LIST[token_id][0] != 'BSM_TOKEN_TEXT':
         logging.warning(u'It is not a valid first entry for Mac OS X BSM.')
         return False

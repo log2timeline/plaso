@@ -27,8 +27,6 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import text_parser
 
-import pytz
-
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
@@ -100,16 +98,23 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       ('logline', FIREWALL_LINE),
       ('repeated', REPEATED_LINE)]
 
-  def __init__(self, pre_obj):
-    """Initialize the parser."""
-    super(MacAppFirewallParser, self).__init__(pre_obj)
-    self._year_use = getattr(pre_obj, 'year', 0)
-    self.local_zone = getattr(pre_obj, 'zone', pytz.utc)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(MacAppFirewallParser, self).__init__()
+    self._year_use = 0
     self._last_month = None
     self.previous_structure = None
 
-  def VerifyStructure(self, line):
-    """Verify that this file is a Mac AppFirewall log file."""
+  def VerifyStructure(self, parser_context, line):
+    """Verify that this file is a Mac AppFirewall log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     try:
       line = self.FIREWALL_LINE.parseString(line)
     except pyparsing.ParseException:
@@ -120,28 +125,44 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       return False
     return True
 
-  def ParseRecord(self, key, structure):
-    """Parse each record structure and return an EventObject if applicable."""
+  def ParseRecord(self, parser_context, key, structure):
+    """Parses each record structure and return an event object if applicable.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     if key == 'logline' or key == 'repeated':
-      return self._ParseLogLine(structure, key)
+      return self._ParseLogLine(parser_context, structure, key)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def _ParseLogLine(self, structure, key):
+  def _ParseLogLine(self, parser_context, structure, key):
     """Parse a logline and store appropriate attributes.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       structure: log line of structure.
       key: type of line log (normal or repeated).
 
     Returns:
       Return an object MacAppFirewallLogEvent.
     """
-    # TODO: improving this to get a valid year.
+    # TODO: improve this to get a valid year.
+    if not self._year_use:
+      self._year_use = parser_context.year
+
     if not self._year_use:
       # Get from the creation time of the file.
-      self._year_use = self._GetYear(self.file_entry.GetStat(), self.local_zone)
+      self._year_use = self._GetYear(
+          self.file_entry.GetStat(), parser_context.timezone)
       # If fail, get from the current time.
       if not self._year_use:
         self._year_use = timelib.GetCurrentYear()
@@ -158,7 +179,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
         self._year_use,
         structure.time)
     if not timestamp:
-      logging.debug(u'Invalid timestamp {}'.format(structure.timestamp))
+      logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
       return
     self._last_month = month
 
@@ -208,7 +229,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       timestamp = 0
     return timestamp
 
-  def _GetYear(self, stat, zone):
+  def _GetYear(self, stat, timezone):
     """Retrieves the year either from the input file or from the settings."""
     time = getattr(stat, 'crtime', 0)
     if not time:
@@ -221,7 +242,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       return timelib.GetCurrentYear()
 
     try:
-      timestamp = datetime.datetime.fromtimestamp(time, zone)
+      timestamp = datetime.datetime.fromtimestamp(time, timezone)
     except ValueError as exception:
       logging.error((
           u'Unable to determine correct year of log file with error: {0:s}, '

@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import skype as skype_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import skype
@@ -33,8 +32,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = skype.SkypePlugin(pre_obj)
+    self._plugin = skype.SkypePlugin()
 
   def testProcess(self):
     """Tests the Process function on a Skype History database file.

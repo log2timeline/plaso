@@ -31,12 +31,13 @@ class BootVerificationPlugin(interface.KeyPlugin):
 
   URLS = ['http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Gather the BootVerification key values and return one event for all.
 
     This key is rare, so its presence is suspect.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: The extracted registry key.
 
     Yields:
@@ -61,12 +62,13 @@ class BootExecutePlugin(interface.KeyPlugin):
 
   URLS = ['http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Gather the BootExecute Value, compare to default, return event.
 
     The rest of the values in the Session Manager key are in a separate event.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: The extracted registry key.
 
     Yields:

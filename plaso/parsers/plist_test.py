@@ -19,7 +19,6 @@
 
 import unittest
 
-from plaso.lib import event
 from plaso.parsers import manager
 from plaso.parsers import plist
 from plaso.parsers import test_lib
@@ -32,9 +31,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     parser_filter_string = 'plist_bluetooth, plist_default'
     manager.ParsersManager.SetParserFilterString(parser_filter_string)
-
-    pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj)
+    self._parser = plist.PlistParser()
 
   def testParse(self):
     """Tests the Parse function."""

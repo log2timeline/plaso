@@ -27,22 +27,23 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class SpotlightVolumePlugin(interface.PlistPlugin):
   """Basic plugin to extract the Spotlight Volume Configuration."""
 
-  NAME = 'plist_spotligth_volume'
+  NAME = 'plist_spotlight_volume'
 
   PLIST_PATH = 'VolumeConfiguration.plist'
   PLIST_KEYS = frozenset(['Stores'])
 
-  def GetEntries(self, match, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
     """Extracts relevant VolumeConfiguration Spotlight entries.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
     """
     for volume_name, volume in match['Stores'].iteritems():
-      description = u'Spotlight Volume {} ({}) activated.'.format(
+      description = u'Spotlight Volume {0:s} ({1:s}) activated.'.format(
           volume_name, volume['PartialPath'])
       yield plist_event.PlistEvent(
           u'/Stores', '', volume['CreationDate'], description)

@@ -49,8 +49,13 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
 
   REG_TYPE = 'NTUSER'
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Collect the values under Outlook and return event for each one."""
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Collect the values under Outlook and return event for each one.
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+    """
     value_index = 0
     for value in key.GetValues():
       # Ignore the default value.

@@ -34,8 +34,11 @@ class InstallHistoryPlugin(interface.PlistPlugin):
       ['date', 'displayName', 'displayVersion',
        'processName', 'packageIdentifiers'])
 
-  def GetEntries(self, top_level, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, top_level=None, **unused_kwargs):
     """Extracts relevant install history entries.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
 
     Yields:
       EventObject objects extracted from the plist.
@@ -45,12 +48,9 @@ class InstallHistoryPlugin(interface.PlistPlugin):
       for package in entry.get('packageIdentifiers'):
         packages.append(package)
       description = (
-          u'Installation of [{} {}] '
-          u'using [{}]. Packages: {}.').format(
-              entry.get('displayName'),
-              entry.get('displayVersion'),
-              entry.get('processName'),
-              u', '.join(packages))
+          u'Installation of [{0:s} {1:s}] using [{2:s}]. '
+          u'Packages: {3:s}.').format(
+              entry.get('displayName'), entry.get('displayVersion'),
+              entry.get('processName'), u', '.join(packages))
       yield plist_event.PlistEvent(
           u'/item', u'', entry.get('date'), description)
-

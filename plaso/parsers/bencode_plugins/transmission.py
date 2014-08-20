@@ -50,7 +50,7 @@ class TransmissionPlugin(interface.BencodePlugin):
       ['activity-date', 'done-date', 'added-date', 'destination',
        'seeding-time-seconds'])
 
-  def GetEntries(self, data, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 
     This is the main parsing engine for the parser. It determines if
@@ -61,13 +61,13 @@ class TransmissionPlugin(interface.BencodePlugin):
     in a folder named resume under the user's application data folder.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       data: Bencode data in dictionary form.
 
     Yields:
       An EventObject (TransmissionEvent) that contains the extracted
       attributes.
     """
-
     # Place the obtained values into the event.
     destination = data.get('destination', None)
     seeding_time = data.get('seeding-time-seconds', None)

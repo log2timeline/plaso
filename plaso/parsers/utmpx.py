@@ -172,11 +172,12 @@ class UtmpxParser(interface.BaseParser):
 
     return True
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a UTMPX file.
 
     Args:
-      file_entry: a file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Returns:
       An event object (instance of UtmpxMacOsXEvent) for each logon/logoff

@@ -76,11 +76,12 @@ class WinRecycleBinParser(interface.BaseParser):
 
   MAGIC_STRUCT = construct.ULInt64('magic')
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract entries from a Windows RecycleBin $Ixx file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object.
@@ -133,11 +134,12 @@ class WinRecycleInfo2Parser(interface.BaseParser):
   UNICODE_FILENAME_OFFSET = 0x11C
   RECORD_INDEX_OFFSET = 0x108
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract entries from Windows Recycler INFO2 file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object.

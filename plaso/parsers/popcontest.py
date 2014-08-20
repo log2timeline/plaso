@@ -189,8 +189,16 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       ('footer', FOOTER),
   ]
 
-  def VerifyStructure(self, line):
-    """Verify that this file is a Popularity Contest log file."""
+  def VerifyStructure(self, parser_context, line):
+    """Verify that this file is a Popularity Contest log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     try:
       header_struct = self.HEADER.parseString(line)
     except pyparsing.ParseException:
@@ -201,8 +209,19 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       return False
     return True
 
-  def ParseRecord(self, key, structure):
-    """Parse each record structure and return an EventObject if applicable."""
+  def ParseRecord(self, parser_context, key, structure):
+    """Parse each record structure and return an EventObject if applicable.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     # TODO: Add anomaly objects for abnormal timestamps, such as when the log
     # timestamp is greater than the session start.
     if key == 'logline':
@@ -249,4 +268,3 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     return PopularityContestEvent(
         structure.atime, structure.ctime, structure.package, structure.mru,
         structure.tag)
-
