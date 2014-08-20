@@ -36,7 +36,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
     pre_obj = event.PreprocessObject()
     pre_obj.year = 2013
     pre_obj.zone = pytz.timezone('UTC')
-    self._parser = mac_appfirewall.MacAppFirewallParser(pre_obj, None)
+    self._parser = mac_appfirewall.MacAppFirewallParser(pre_obj)
 
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""

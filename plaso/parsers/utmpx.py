@@ -77,6 +77,8 @@ class UtmpxParser(interface.BaseParser):
       construct.String('hostname', 256),
       construct.Padding(64))
 
+  MAC_UTMPX_ENTRY_SIZE = MAC_UTMPX_ENTRY.sizeof()
+
   # 9, 10 and 11 are only for Darwin and IOS.
   MAC_STATUS_TYPE = {
       0: 'EMPTY',
@@ -92,16 +94,6 @@ class UtmpxParser(interface.BaseParser):
       10: 'SIGNATURE',
       11: 'SHUTDOWN_TIME'}
 
-  def __init__(self, pre_obj, config):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-      config: configuration object.
-    """
-    super(UtmpxParser, self).__init__(pre_obj, config)
-    self._utmpx_record_size = self.MAC_UTMPX_ENTRY.sizeof()
-
   def _ReadEntry(self, file_object):
     """Reads an UTMPX entry.
 
@@ -111,8 +103,8 @@ class UtmpxParser(interface.BaseParser):
     Returns:
       An event object constructed from the UTMPX entry.
     """
-    data = file_object.read(self._utmpx_record_size)
-    if len(data) != self._utmpx_record_size:
+    data = file_object.read(self.MAC_UTMPX_ENTRY_SIZE)
+    if len(data) != self.MAC_UTMPX_ENTRY_SIZE:
       return
 
     try:

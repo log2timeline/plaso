@@ -67,14 +67,13 @@ class WinLnkParser(interface.BaseParser):
 
   NAME = 'lnk'
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(WinLnkParser, self).__init__(pre_obj, config)
+    super(WinLnkParser, self).__init__(pre_obj)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
   def Parse(self, file_entry):

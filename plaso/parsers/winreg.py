@@ -46,14 +46,13 @@ class WinRegistryParser(interface.BaseParser):
       'UNKNOWN': (),
   }
 
-  def __init__(self, pre_obj, config=None):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: A configuration object.
     """
-    super(WinRegistryParser, self).__init__(pre_obj, config)
+    super(WinRegistryParser, self).__init__(pre_obj)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
     self._plugins = WinRegistryParser.GetRegistryPlugins(pre_obj=self._pre_obj)
 

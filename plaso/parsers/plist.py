@@ -51,14 +51,13 @@ class PlistParser(interface.BaseParser):
 
   NAME = 'plist'
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(PlistParser, self).__init__(pre_obj, config)
+    super(PlistParser, self).__init__(pre_obj)
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
         parent_class=plist_plugins_interface.PlistPlugin, pre_obj=self._pre_obj)
 

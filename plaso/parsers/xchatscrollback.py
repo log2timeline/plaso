@@ -114,14 +114,13 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   MSG_ENTRY = MSG_ENTRY_NICK + MSG_ENTRY_TEXT
   MSG_ENTRY.parseWithTabs()
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(XChatScrollbackParser, self).__init__(pre_obj, config)
+    super(XChatScrollbackParser, self).__init__(pre_obj)
     self.use_local_zone = False
     self.offset = 0
 

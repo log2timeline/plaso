@@ -138,14 +138,13 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
       ('logline', LOG_LINE_6_0)]
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(WinIISParser, self).__init__(pre_obj, config)
+    super(WinIISParser, self).__init__(pre_obj)
     self.version = None
     self.software = None
 

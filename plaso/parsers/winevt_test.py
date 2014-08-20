@@ -34,7 +34,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    self._parser = winevt.WinEvtParser(pre_obj, None)
+    self._parser = winevt.WinEvtParser(pre_obj)
 
   def testParse(self):
     """Tests the Parse function."""

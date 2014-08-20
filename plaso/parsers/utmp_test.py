@@ -33,7 +33,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
-    self._parser = utmp.UtmpParser(pre_obj, None)
+    self._parser = utmp.UtmpParser(pre_obj)
 
   def testParseUtmpFile(self):
     """Tests the Parse function for an UTMP file."""

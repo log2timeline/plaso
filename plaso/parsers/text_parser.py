@@ -67,13 +67,12 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
       lexer.Token('INITIAL', '(.+)\n', 'ParseString', ''),
       ]
 
-  def __init__(self, pre_obj, config, local_zone=True):
+  def __init__(self, pre_obj, local_zone=True):
     """Constructor for the SlowLexicalTextParser.
 
     Args:
       pre_obj: A preprocess object that may contain information gathered
                from a preprocessing process (instance of PreprocessObject).
-      config: A configuration object.
       local_zone: A boolean value that determines if the entries
                   in the log file are stored in the local time
                   zone of the computer that stored it or in a fixed
@@ -82,7 +81,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     # TODO: remove the multiple inheritance.
     self._pre_obj = pre_obj
     lexer.SelfFeederMixIn.__init__(self)
-    interface.BaseParser.__init__(self, pre_obj, config)
+    interface.BaseParser.__init__(self, pre_obj)
     self.line_ready = False
     self.attributes = {
         'body': '',
@@ -659,9 +658,9 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
   # attribute.
   ENCODING = ''
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """A constructor for the pyparsing assistant."""
-    super(PyparsingSingleLineTextParser, self).__init__(pre_obj, config)
+    super(PyparsingSingleLineTextParser, self).__init__(pre_obj)
     self.encoding = self.ENCODING
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
@@ -822,9 +821,9 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
   BUFFER_SIZE = 2048
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """A constructor for the pyparsing assistant."""
-    super(PyparsingMultiLineTextParser, self).__init__(pre_obj, config)
+    super(PyparsingMultiLineTextParser, self).__init__(pre_obj)
     self._buffer = ''
     self._buffer_size = self.BUFFER_SIZE
 

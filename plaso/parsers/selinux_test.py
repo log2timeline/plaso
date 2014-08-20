@@ -37,7 +37,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
     pre_obj.year = 2013
-    self._parser = selinux.SELinuxParser(pre_obj, None)
+    self._parser = selinux.SELinuxParser(pre_obj)
 
   def testParse(self):
     """Tests the Parse function."""
