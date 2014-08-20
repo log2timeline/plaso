@@ -86,12 +86,16 @@ class AnalysisPluginTestCase(unittest.TestCase):
     Returns:
       A generator of event objects as returned by the parser.
     """
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in knowledge_base_values.iteritems():
         knowledge_base_object.SetValue(identifier, value)
 
-    parser_context = context.ParserContext(knowledge_base_object)
+    parser_context = context.ParserContext(
+        event_queue_producer, knowledge_base_object)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)

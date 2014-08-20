@@ -31,6 +31,7 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
+from plaso.lib import queue
 from plaso.parsers import context
 from plaso.parsers import interface
 from plaso.parsers import text_parser
@@ -133,8 +134,13 @@ class TextParserTest(unittest.TestCase):
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
+    # TODO: refactor to use test_lib.
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_context = context.ParserContext(knowledge_base_object)
+    parser_context = context.ParserContext(
+        event_queue_producer, knowledge_base_object)
     test_file = self._GetTestFilePath(['text_parser', 'test1.txt'])
     file_entry = self._GetTestFileEntry(test_file)
     text_generator = self._parser.Parse(parser_context, file_entry)
@@ -143,8 +149,13 @@ class TextParserTest(unittest.TestCase):
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
+    # TODO: refactor to use test_lib.
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_context = context.ParserContext(knowledge_base_object)
+    parser_context = context.ParserContext(
+        event_queue_producer, knowledge_base_object)
     test_file = self._GetTestFilePath(['text_parser', 'test2.txt'])
     file_entry = self._GetTestFileEntry(test_file)
     text_generator = self._parser.Parse(parser_context, file_entry)

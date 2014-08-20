@@ -270,7 +270,8 @@ class EventObjectQueueProducer(QueueProducer):
     """Produces event objects onto the queue.
 
     Args:
-      event_objects: a generator of event objects (instances of EventObject).
+      event_objects: a list or generator of event objects (instances of
+                     EventObject).
     """
     for event_object in event_objects:
       self.ProduceEventObject(event_object)
@@ -278,9 +279,6 @@ class EventObjectQueueProducer(QueueProducer):
 
 class AnalysisPluginProducer(EventObjectQueueProducer):
   """Producer for Event Objects sent to analysis plugins."""
-
-  def __init__(self, queue_object):
-    super(AnalysisPluginProducer, self).__init__(queue_object)
 
 
 class ItemQueueConsumer(QueueConsumer):

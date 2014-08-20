@@ -73,12 +73,21 @@ class WinLnkParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of WinLnkLinkEvent) that contains the parsed
-      attributes.
     """
     file_object = file_entry.GetFileObject()
+    self.ParseFileObject(parser_context, file_object, file_entry=file_entry)
+    file_object.close()
+
+  def ParseFileObject(self, parser_context, file_object, file_entry=None):
+    """Extracts data from a Windows Shortcut (LNK) file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      file_object: A file-like object.
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+    """
+    display_name = parser_context.GetDisplayName(file_entry)
     lnk_file = pylnk.file()
     lnk_file.set_ascii_codepage(parser_context.codepage)
 
@@ -87,27 +96,29 @@ class WinLnkParser(interface.BaseParser):
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, display_name, exception))
 
-    yield WinLnkLinkEvent(
-        lnk_file.get_file_access_time_as_integer(),
-        eventdata.EventTimestamp.ACCESS_TIME, lnk_file)
-
-    yield WinLnkLinkEvent(
-        lnk_file.get_file_creation_time_as_integer(),
-        eventdata.EventTimestamp.CREATION_TIME, lnk_file)
-
-    yield WinLnkLinkEvent(
-        lnk_file.get_file_modification_time_as_integer(),
-        eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file)
+    parser_context.ProduceEvents(
+        self.NAME, 
+        [WinLnkLinkEvent(
+            lnk_file.get_file_access_time_as_integer(),
+            eventdata.EventTimestamp.ACCESS_TIME, lnk_file),
+        WinLnkLinkEvent(
+            lnk_file.get_file_creation_time_as_integer(),
+            eventdata.EventTimestamp.CREATION_TIME, lnk_file),
+        WinLnkLinkEvent(
+            lnk_file.get_file_modification_time_as_integer(),
+            eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file)],
+        file_entry=file_entry)
 
     if lnk_file.link_target_identifier_data:
+      # TODO: change file_entry.name to display name once it is generated
+      # correctly.
       shell_items_parser = shell_items.ShellItemsParser(file_entry.name)
       for event_object in shell_items_parser.Parse(
           lnk_file.link_target_identifier_data,
           codepage=parser_context.codepage):
-        yield event_object
+        parser_context.ProduceEvent(
+            self.NAME, event_object, file_entry=file_entry)
 
     # TODO: add support for the distributed link tracker.
-
-    file_object.close()
