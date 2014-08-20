@@ -880,7 +880,7 @@ class ExtractionFrontend(Frontend):
     parser_filter_string = getattr(options, 'parsers', '')
     parsers_manager.ParsersManager.SetParserFilterString(parser_filter_string)
     self._parsers = parsers_manager.ParsersManager.FindAllParsers(
-        pre_obj=pre_obj, config=options)
+        pre_obj=pre_obj)
     self._parser_names = [parser.parser_name for parser in self._parsers['all']]
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
@@ -1111,7 +1111,7 @@ class ExtractionFrontend(Frontend):
     parser_filter_string = getattr(options, 'parsers', '')
     parsers_manager.ParsersManager.SetParserFilterString(parser_filter_string)
     self._parsers = parsers_manager.ParsersManager.FindAllParsers(
-        pre_obj=pre_obj, config=options)
+        pre_obj=pre_obj)
     self._parser_names = [parser.parser_name for parser in self._parsers['all']]
 
     self._PreprocessSetCollectionInformation(options, pre_obj)

@@ -101,15 +101,14 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseFailed', 'INITIAL')
   ]
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
     # Set local_zone to false, since timestamps are UTC.
-    super(SELinuxParser, self).__init__(pre_obj, config, False)
+    super(SELinuxParser, self).__init__(pre_obj, False)
     self.attributes = {'audit_type': '', 'pid': '', 'body': ''}
     self.timestamp = 0
 

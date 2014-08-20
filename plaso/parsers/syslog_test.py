@@ -34,7 +34,7 @@ class SyslogUnitTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
     pre_obj.year = 2012
-    self._parser = syslog.SyslogParser(pre_obj, None)
+    self._parser = syslog.SyslogParser(pre_obj)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -44,9 +44,9 @@ class SyslogUnitTest(test_lib.ParserTestCase):
 
     self.assertEquals(len(event_objects), 13)
 
-    # TODO let's add code to convert Jan 22 2012 07:52:33 into the
-    # corresponding timestamp, I think that will be more readable
-    self.assertEquals(event_objects[0].timestamp, 1327218753000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-01-22 07:52:33')
+    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
     self.assertEquals(event_objects[0].hostname, 'myhostname.myhost.com')
 
     expected_string = (

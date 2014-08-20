@@ -34,11 +34,11 @@ class BsmParserTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     mac_pre_obj = event.PreprocessObject()
     mac_pre_obj.guessed_os = 'MacOSX'
-    self._parser_macbsm = bsm.BsmParser(mac_pre_obj, None)
+    self._parser_macbsm = bsm.BsmParser(mac_pre_obj)
 
     openbsm_pre_obj = event.PreprocessObject()
     openbsm_pre_obj.guessed_os = 'openbsm'
-    self._parser_openbsm = bsm.BsmParser(openbsm_pre_obj, None)
+    self._parser_openbsm = bsm.BsmParser(openbsm_pre_obj)
 
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""

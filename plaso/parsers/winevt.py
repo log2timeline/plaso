@@ -76,14 +76,13 @@ class WinEvtParser(interface.BaseParser):
 
   NAME = 'winevt'
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: Configuration object.
     """
-    super(WinEvtParser, self).__init__(pre_obj, config)
+    super(WinEvtParser, self).__init__(pre_obj)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
 
   def _ParseRecord(self, evt_record, recovered=False):

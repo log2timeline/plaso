@@ -35,7 +35,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
     pre_obj.year = 2013
-    self._parser = mac_securityd_parser.MacSecuritydLogParser(pre_obj, None)
+    self._parser = mac_securityd_parser.MacSecuritydLogParser(pre_obj)
 
   def testParseFile(self):
     """Test parsing of a ASL securityd log file."""

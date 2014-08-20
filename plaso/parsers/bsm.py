@@ -546,14 +546,13 @@ class BsmParser(interface.BaseParser):
       129: ['BSM_TOKEN_AUT_SOCKINET128', BSM_TOKEN_AUT_SOCKINET128],
       130: ['BSM_TOKEN_SOCKET_UNIX', BSM_TOKEN_SOCKET_UNIX]}
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(BsmParser, self).__init__(pre_obj, config)
+    super(BsmParser, self).__init__(pre_obj)
 
     # BSM can be in more than one OS: BSD, Solaris and Mac OS X.
     self.os = getattr(self._pre_obj, 'guessed_os', 'Unknown')
