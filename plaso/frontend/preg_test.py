@@ -22,7 +22,7 @@ import unittest
 
 from plaso.frontend import preg
 from plaso.frontend import test_lib
-from plaso.parsers.winreg_plugins import interface as winreg_interface
+from plaso.parsers import winreg as winreg_parser
 
 
 class StringIOOutputWriter(object):
@@ -52,7 +52,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     options = test_lib.Options()
     options.plugin_name = 'userassist'
     options.regfile = self._GetTestFilePath(['NTUSER.DAT'])
-    options.plugins = winreg_interface.GetRegistryPlugins()
+    options.plugins = winreg_parser.WinRegistryParser.GetRegistryPlugins()
     options.image = u''
     options.verbose = False
 
@@ -74,7 +74,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     options = test_lib.Options()
     options.key = u'\\Microsoft\\Windows NT\\CurrentVersion'
     options.regfile = self._GetTestFilePath(['SOFTWARE'])
-    options.plugins = winreg_interface.GetRegistryPlugins()
+    options.plugins = winreg_parser.WinRegistryParser.GetRegistryPlugins()
     options.image = u''
     options.verbose = False
 

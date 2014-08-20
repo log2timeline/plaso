@@ -26,11 +26,11 @@ import logging
 from binplist import binplist
 
 from plaso.lib import errors
-from plaso.lib import utils as lib_utils
+from plaso.lib import utils
 from plaso.parsers import interface
 # Register plist plugins.
 from plaso.parsers import plist_plugins  # pylint: disable=unused-import
-from plaso.parsers import utils
+from plaso.parsers import manager
 from plaso.parsers.plist_plugins import interface as plist_plugins_interface
 
 
@@ -59,9 +59,8 @@ class PlistParser(interface.BaseParser):
       config: configuration object.
     """
     super(PlistParser, self).__init__(pre_obj, config)
-    plugin_filter_string = getattr(self._config, 'parsers', None)
-    self._plugins = utils.GetRegisteredPlugins(
-        plist_plugins_interface.PlistPlugin, pre_obj, plugin_filter_string)
+    self._plugins = manager.ParsersManager.GetRegisteredPlugins(
+        parent_class=plist_plugins_interface.PlistPlugin, pre_obj=self._pre_obj)
 
   def GetTopLevel(self, file_object, file_name=''):
     """Returns the deserialized content of a plist as a dictionary object.
@@ -78,7 +77,7 @@ class PlistParser(interface.BaseParser):
     except binplist.FormatError as exception:
       raise errors.UnableToParseFile(
           u'[PLIST] File is not a plist file: {0:s}'.format(
-              lib_utils.GetUnicodeString(exception)))
+              utils.GetUnicodeString(exception)))
     except (
         LookupError, binascii.Error, ValueError, AttributeError) as exception:
       raise errors.UnableToParseFile(
@@ -92,7 +91,7 @@ class PlistParser(interface.BaseParser):
     if not top_level_object:
       raise errors.UnableToParseFile(
           u'[PLIST] File is not a plist: {0:s}'.format(
-              lib_utils.GetUnicodeString(file_name)))
+              utils.GetUnicodeString(file_name)))
 
     # Since we are using readPlist from binplist now instead of manually
     # opening up the BinarPlist file we loose this option. Keep it commented

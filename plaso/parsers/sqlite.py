@@ -25,7 +25,7 @@ from plaso.lib import errors
 from plaso.parsers import interface
 # Register sqlite plugins.
 from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
-from plaso.parsers import utils
+from plaso.parsers import manager
 from plaso.parsers.sqlite_plugins import interface as sqlite_plugins_interface
 
 
@@ -45,11 +45,9 @@ class SQLiteParser(interface.BaseParser):
     super(SQLiteParser, self).__init__(pre_obj, config)
     self._local_zone = False
     self.db = None
-    parser_filter_string = getattr(self._config, 'parsers', None)
-
-    self._plugins = utils.GetRegisteredPlugins(
-        sqlite_plugins_interface.SQLitePlugin, self._pre_obj,
-        parser_filter_string)
+    self._plugins = manager.ParsersManager.GetRegisteredPlugins(
+        parent_class=sqlite_plugins_interface.SQLitePlugin,
+        pre_obj=self._pre_obj)
 
   def Parse(self, file_entry):
     """Parses an SQLite database.

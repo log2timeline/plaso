@@ -31,7 +31,7 @@ from plaso.lib import errors
 # Register all bencode plugins.
 from plaso.parsers import bencode_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
-from plaso.parsers import utils
+from plaso.parsers import manager
 from plaso.parsers.bencode_plugins import interface as bencode_plugins_interface
 
 
@@ -63,15 +63,9 @@ class BencodeParser(interface.BaseParser):
       config: configuration object.
     """
     super(BencodeParser, self).__init__(pre_obj, config)
-    self._plugins = self._GetPlugins()
-
-  def _GetPlugins(self):
-    """Return a list of all available plugins."""
-    parser_filter_string = getattr(self._config, 'parsers', None)
-
-    return utils.GetRegisteredPlugins(
-        bencode_plugins_interface.BencodePlugin, self._pre_obj,
-        parser_filter_string)
+    self._plugins = manager.ParsersManager.GetRegisteredPlugins(
+        parent_class=bencode_plugins_interface.BencodePlugin,
+        pre_obj=self._pre_obj)
 
   def GetTopLevel(self, file_object):
     """Returns deserialized content of a bencoded file as a dictionary object.
