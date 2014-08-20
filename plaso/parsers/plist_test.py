@@ -34,7 +34,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     manager.ParsersManager.SetParserFilterString(parser_filter_string)
 
     pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj, None)
+    self._parser = plist.PlistParser(pre_obj)
 
   def testParse(self):
     """Tests the Parse function."""

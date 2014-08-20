@@ -142,9 +142,9 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       ('header_signature', HEADER_SIGNATURE),
   ]
 
-  def __init__(self, pre_obj, config=None):
+  def __init__(self, pre_obj):
     """XChatLog parser object constructor."""
-    super(XChatLogParser, self).__init__(pre_obj, config)
+    super(XChatLogParser, self).__init__(pre_obj)
     self.offset = 0
     self.local_zone = getattr(pre_obj, 'zone', pytz.utc)
     self.xchat_year = 0

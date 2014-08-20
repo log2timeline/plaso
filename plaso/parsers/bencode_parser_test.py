@@ -34,7 +34,7 @@ class BencodeTest(test_lib.ParserTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self.pre_obj = event.PreprocessObject()
-    self._parser = bencode_parser.BencodeParser(self.pre_obj, None)
+    self._parser = bencode_parser.BencodeParser(self.pre_obj)
 
   # TODO: Move this to bencode_plugins/tranmission_test.py
   def testTransmissionPlugin(self):

@@ -100,9 +100,9 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       ('logline', FIREWALL_LINE),
       ('repeated', REPEATED_LINE)]
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initialize the parser."""
-    super(MacAppFirewallParser, self).__init__(pre_obj, config)
+    super(MacAppFirewallParser, self).__init__(pre_obj)
     self._year_use = getattr(pre_obj, 'year', 0)
     self.local_zone = getattr(pre_obj, 'zone', pytz.utc)
     self._last_month = None

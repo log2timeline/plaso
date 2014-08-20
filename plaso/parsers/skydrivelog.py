@@ -101,14 +101,13 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
       ('no_header_single_line', SDL_NO_HEADER_SINGLE_LINE),
   ]
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(SkyDriveLogParser, self).__init__(pre_obj, config)
+    super(SkyDriveLogParser, self).__init__(pre_obj)
     self.offset = 0
     self.last_event = None
 

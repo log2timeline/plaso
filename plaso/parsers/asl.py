@@ -149,6 +149,8 @@ class AslParser(interface.BaseParser):
       construct.UBInt32('read_gid'),
       construct.UBInt64('ref_pid'))
 
+  ASL_RECORD_STRUCT_SIZE = ASL_RECORD_STRUCT.sizeof()
+
   # 8-byte fields, they can be:
   # - String: [Nibble = 1000 (8)][Nibble = Length][7 Bytes = String].
   # - Integer: integer that has the byte position in the file that points
@@ -187,16 +189,6 @@ class AslParser(interface.BaseParser):
       construct.PascalString(
           'value',
           length_field=construct.UBInt32('length')))
-
-  def __init__(self, pre_obj, config):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-      config: configuration object.
-    """
-    super(AslParser, self).__init__(pre_obj, config)
-    self._asl_record_struct_size = self.ASL_RECORD_STRUCT.sizeof()
 
   def Parse(self, file_entry):
     """Extract entries from an ASL file.
@@ -275,7 +267,7 @@ class AslParser(interface.BaseParser):
     # tam_entry = ([Record_Struct]-6)+[Dynamic_Fields]+[Pointer_Entry_Before]
     # [Dynamic_Fields] = tam_entry - [Record_Struct] + 6 - 8
     # [Dynamic_Fields] = tam_entry - [Record_Struct] - 2
-    tam_fields = record_header.tam_entry - self._asl_record_struct_size - 2
+    tam_fields = record_header.tam_entry - self.ASL_RECORD_STRUCT_SIZE - 2
 
     # Dynamic part of the entry that contains minimal four fields of 8 bytes
     # plus 2x[8bytes] fields for each extra ASL_Field.

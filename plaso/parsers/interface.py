@@ -39,19 +39,15 @@ class BaseParser(object):
 
   NAME = 'base_parser'
 
-  def __init__(self, pre_obj, config=None):
-    """Parser constructor.
+  def __init__(self, pre_obj):
+    """Initializes a base parser object.
 
     Args:
       pre_obj: A preprocess object that may contain information gathered
                from a preprocessing process (instance of PreprocessObject).
-      config: A configuration object, could be an instance of argparse but
-              mostly an object that supports getattr to get configuration
-              attributes, see a list of attributes here:
-              http://plaso.kiddaland.net/developer/libraries/engine
     """
+    super(BaseParser, self).__init__()
     self._pre_obj = pre_obj
-    self._config = config
 
   @property
   def parser_name(self):

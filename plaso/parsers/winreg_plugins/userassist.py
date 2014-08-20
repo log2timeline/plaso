@@ -156,7 +156,7 @@ class UserAssistPlugin(interface.KeyPlugin):
           # Check if we might need to substitute values.
           if '%' in value_name:
             value_name = environ_expand.ExpandWindowsEnvironmentVariables(
-                value_name, self._config)
+                value_name, self._pre_obj)
 
         if not value.DataIsBinaryData():
           pass

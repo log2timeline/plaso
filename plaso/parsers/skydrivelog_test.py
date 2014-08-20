@@ -38,7 +38,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     pre_obj = event.PreprocessObject()
     pre_obj.zone = pytz.timezone('UTC')
-    self._parser = skydrivelog_parser.SkyDriveLogParser(pre_obj, None)
+    self._parser = skydrivelog_parser.SkyDriveLogParser(pre_obj)
 
   def testParse(self):
     """Tests the Parse function."""

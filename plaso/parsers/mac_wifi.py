@@ -96,14 +96,13 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       ('logline', WIFI_LINE),
       ('header', WIFI_HEADER)]
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(MacWifiLogParser, self).__init__(pre_obj, config)
+    super(MacWifiLogParser, self).__init__(pre_obj)
     self._year_use = getattr(pre_obj, 'year', 0)
     self.local_zone = getattr(pre_obj, 'zone', pytz.utc)
     self._last_month = None

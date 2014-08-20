@@ -34,7 +34,8 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._plugin = safari.SafariHistoryPlugin(None)
-    self._parser = plist.PlistParser(event.PreprocessObject(), None)
+    pre_obj = event.PreprocessObject()
+    self._parser = plist.PlistParser(pre_obj)
 
   def testProcess(self):
     """Tests the Process function."""

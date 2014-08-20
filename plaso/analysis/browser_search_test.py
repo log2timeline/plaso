@@ -35,7 +35,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._pre_obj = event.PreprocessObject()
-    self._parser = sqlite.SQLiteParser(self._pre_obj, None)
+    self._parser = sqlite.SQLiteParser(self._pre_obj)
 
   def testAnalyzeFile(self):
     """Read a storage file that contains URL data and analyze it."""

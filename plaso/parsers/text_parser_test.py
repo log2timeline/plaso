@@ -128,7 +128,7 @@ class TextParserTest(unittest.TestCase):
 
   def setUp(self):
     pre_obj = event.PreprocessObject()
-    self._parser = TestTextParser(pre_obj, None)
+    self._parser = TestTextParser(pre_obj)
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""

@@ -121,7 +121,7 @@ class ParsersManager(object):
     return include, exclude
 
   @classmethod
-  def FindAllParsers(cls, pre_obj=None, config=None):
+  def FindAllParsers(cls, pre_obj=None):
     """Find all available parser objects.
 
     A parser is defined as an object that implements the BaseParser
@@ -135,7 +135,6 @@ class ParsersManager(object):
     Args:
       pre_obj: A preprocess object containing information collected from
                an image (instance of PreprocessObject).
-      config: A configuration object, could be an argparse object.
 
     Returns:
       A dict that contains a list of all detected parsers. The key values in
@@ -158,12 +157,12 @@ class ParsersManager(object):
     results['all'] = []
     # The pre_obj adds the value of the parser knowing time zone information,
     # and other values that the preprocssing object collects.
-    # TODO: remove pre_obj and config pass specific values e.g.
+    # TODO: remove pre_obj pass specific values e.g.
     # parser_expression. Also see if some of these values can be passed after
     # initialization.
     # pylint: disable=protected-access
     for parser_obj in putils._FindClasses(
-        interface.BaseParser, pre_obj, config):
+        interface.BaseParser, pre_obj):
       add = False
       if not (filter_exclude or filter_include):
         add = True
