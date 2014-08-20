@@ -20,6 +20,7 @@
 import unittest
 
 from plaso.lib import event
+from plaso.parsers import manager
 from plaso.parsers import sqlite
 
 
@@ -39,8 +40,10 @@ class SQLiteParserTest(unittest.TestCase):
     self._pre_obj = event.PreprocessObject()
     self._config = Configuration()
 
-  def testPluginList(self):
-    """Test the plugin list returns the right values."""
+  def testPlugins(self):
+    """Tests the _plugins attibute."""
+    # TODO: move these tests.
+
     # pylint: disable=protected-access
     self._parser = sqlite.SQLiteParser(self._pre_obj, self._config)
 
@@ -54,14 +57,16 @@ class SQLiteParserTest(unittest.TestCase):
     self.assertTrue('firefox_history' in all_plugin_names)
 
     # Change the calculations of the parsers.
-    self._config.parsers = 'chrome_history, firefox_history, -skype'
+    parser_filter_string = 'chrome_history, firefox_history, -skype'
+    manager.ParsersManager.SetParserFilterString(parser_filter_string)
     self._parser = sqlite.SQLiteParser(self._pre_obj, self._config)
     plugins = self._parser._plugins
 
     self.assertEquals(len(plugins), 2)
 
     # Test with a different plugin selection.
-    self._config.parsers = 'sqlite, -skype'
+    parser_filter_string = 'sqlite, -skype'
+    manager.ParsersManager.SetParserFilterString(parser_filter_string)
     self._parser = sqlite.SQLiteParser(self._pre_obj, self._config)
     plugins = self._parser._plugins
 

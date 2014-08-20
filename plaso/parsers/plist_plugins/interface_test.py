@@ -23,7 +23,7 @@ from plaso.events import plist_event
 from plaso.lib import errors
 # Register plist plugins.
 from plaso.parsers import plist  # pylint: disable=unused-import
-from plaso.parsers import utils
+from plaso.parsers import manager
 from plaso.parsers.plist_plugins import interface
 
 
@@ -54,7 +54,8 @@ class TestPlistPlugin(unittest.TestCase):
 
   def testGetRegisteredPlugins(self):
     """Tests the GetRegisteredPlugins function."""
-    plugins = utils.GetRegisteredPlugins(interface.PlistPlugin)
+    plugins = manager.ParsersManager.GetRegisteredPlugins(
+        parent_class=interface.PlistPlugin)
 
     self.assertNotEquals(plugins, {})
 

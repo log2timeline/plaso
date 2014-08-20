@@ -25,7 +25,7 @@ from plaso.lib import errors
 from plaso.parsers import interface
 # Register all OLECF plugins.
 from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
-from plaso.parsers import utils
+from plaso.parsers import manager
 from plaso.parsers.olecf_plugins import interface as olecf_plugins_interface
 
 
@@ -47,11 +47,8 @@ class OleCfParser(interface.BaseParser):
     """
     super(OleCfParser, self).__init__(pre_obj, config)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
-    parser_filter_string = getattr(self._config, 'parsers', None)
-
-    self._plugins = utils.GetRegisteredPlugins(
-        olecf_plugins_interface.OlecfPlugin, self._pre_obj,
-        parser_filter_string)
+    self._plugins = manager.ParsersManager.GetRegisteredPlugins(
+        parent_class=olecf_plugins_interface.OlecfPlugin, pre_obj=self._pre_obj)
 
   def Parse(self, file_entry):
     """Extracts data from an OLE Compound File (OLECF).

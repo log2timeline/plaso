@@ -28,7 +28,7 @@ import plaso
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
-from plaso.parsers import utils as parsers_utils
+from plaso.parsers import manager as parsers_manager
 
 import pytz
 
@@ -90,7 +90,8 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
         ('python', sys.version)]
 
     return_dict['Parsers'] = []
-    for parser in sorted(parsers_utils.FindAllParsers()['all']):
+    for parser in sorted(
+         parsers_manager.ParsersMananger.FindAllParsers()['all']):
       doc_string, _, _ = parser.__doc__.partition('\n')
       return_dict['Parsers'].append((parser.parser_name, doc_string))
 
