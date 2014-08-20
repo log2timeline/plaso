@@ -22,14 +22,12 @@ import os
 import pdb
 import threading
 
-from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import classifier
 from plaso.lib import errors
 from plaso.lib import queue
-from plaso.lib import utils
 from plaso.parsers import context as parsers_context
 
 
@@ -65,12 +63,11 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     """
     super(EventExtractionWorker, self).__init__(process_queue)
     self._debug_mode = False
-    self._filter_object = None
     self._identifier = identifier
     self._knowledge_base = knowledge_base
-    self._mount_path = None
     self._open_files = False
-    self._parser_context = parsers_context.ParserContext(knowledge_base)
+    self._parser_context = parsers_context.ParserContext(
+        storage_queue_producer, knowledge_base)
     self._parsers = parsers
     self._rpc_proxy = rpc_proxy
 
@@ -79,10 +76,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._resolver_context = context.Context()
     self._single_process_mode = False
     self._storage_queue_producer = storage_queue_producer
-    self._text_prepend = None
 
     # Few attributes that contain the current status of the worker.
-    self._counter_of_extracted_events = 0
     self._current_working_file = u''
     self._is_running = False
 
@@ -111,53 +106,17 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
             u'Unable to parse file: {0:s} with error: {1:s}'.format(
                 file_entry.path_spec.comparable, exception))
 
-  def _ParseEvent(self, event_object, file_entry, parser_name, stat_obj):
+  def _ParseEvent(self, event_object, file_entry, parser_name):
     """Adjust value of an extracted EventObject before storing it."""
     # TODO: Make some more adjustments to the event object.
     # Need to apply time skew, and other information extracted from
     # the configuration of the tool.
+    self._parser_context.ProcessEvent(
+        parser_name, event_object, file_entry=file_entry)
 
-    # TODO: deperecate text_prepend in favor of an event tag.
-    if self._text_prepend:
-      event_object.text_prepend = self._text_prepend
-
-    file_path = getattr(file_entry.path_spec, 'location', file_entry.name)
-    # If we are parsing a mount point we don't want to include the full
-    # path to file's location here, we are only interested in the relative
-    # path to the mount point.
-
-    # TODO: Solve this differently, quite possibly inside dfVFS using mount
-    # path spec.
-    type_indicator = file_entry.path_spec.type_indicator
-    if (type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS and
-        self._mount_path):
-      if self._mount_path:
-        _, _, file_path = file_path.partition(self._mount_path)
-
-    # TODO: dfVFS refactor: move display name to output since the path
-    # specification contains the full information.
-    event_object.display_name = u'{0:s}:{1:s}'.format(
-        file_entry.path_spec.type_indicator, file_path)
-
-    if not getattr(event_object, 'filename', None):
-      event_object.filename = file_path
-    event_object.pathspec = file_entry.path_spec
-    event_object.parser = parser_name
-
-    if self._knowledge_base.hostname:
-      event_object.hostname = self._knowledge_base.hostname
-    if not hasattr(event_object, 'inode') and hasattr(stat_obj, 'ino'):
-      event_object.inode = utils.GetInodeValue(stat_obj.ino)
-
-    # Set the username that is associated to the record.
-    user_sid = getattr(event_object, 'user_sid', None)
-    username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
-    if username:
-      event_object.username = username
-
-    if not self._filter_object or self._filter_object.Matches(event_object):
+    if not self._parser_context.MatchesFilter(event_object):
       self._storage_queue_producer.ProduceEventObject(event_object)
-      self._counter_of_extracted_events += 1
+      self._parser_context.number_of_produced_events += 1
 
   def ParseFile(self, file_entry):
     """Run through classifier and appropriate parsers.
@@ -178,19 +137,22 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # to a key in the self._parsers dict. If the results are
     # inconclusive the "all" key is used, or the key is not found.
     # key = self._parsers.get(classification, 'all')
-    stat_obj = file_entry.GetStat()
-
     for parser_object in self._parsers['all']:
       logging.debug(u'Checking [{0:s}] against: {1:s}'.format(
           file_entry.name, parser_object.parser_name))
       try:
-        for event_object in parser_object.Parse(
-            self._parser_context, file_entry):
-          if not event_object:
-            continue
+        event_object_generator = parser_object.Parse(
+            self._parser_context, file_entry)
 
-          self._ParseEvent(
-              event_object, file_entry, parser_object.parser_name, stat_obj)
+        # TODO: remove this once the yield-based parsers have been replaced
+        # by produce (or emit)-based variants.
+        if event_object_generator:
+          for event_object in event_object_generator:
+            if not event_object:
+              continue
+
+            self._ParseEvent(
+                event_object, file_entry, parser_object.parser_name)
 
       except errors.UnableToParseFile as exception:
         logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
@@ -229,7 +191,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         'is_running': self._is_running,
         'identifier': u'Worker_{0:d}'.format(self._identifier),
         'current_file': self._current_working_file,
-        'counter': self._counter_of_extracted_events}
+        'counter': self._parser_context.number_of_produced_events}
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
@@ -238,7 +200,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
         self._identifier, self.pid))
 
-    self._counter_of_extracted_events = 0
+    self._parser_context.number_of_produced_events = 0
     self._is_running = True
 
     if self._rpc_proxy:
@@ -288,7 +250,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     Args:
       filter_object: the filter object (instance of objectfilter.Filter).
     """
-    self._filter_object = filter_object
+    self._parser_context.SetFilterObject(filter_object)
 
   def SetMountPath(self, mount_path):
     """Sets the mount path.
@@ -296,12 +258,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     Args:
       mount_path: string containing the mount path.
     """
-    # Remove a trailing path separator from the mount path so the relative
-    # paths will start with a path separator.
-    if mount_path and mount_path.endswith(os.sep):
-      mount_path = mount_path[:-1]
-
-    self._mount_path = mount_path
+    self._parser_context.SetMountPath(mount_path)
 
   # TODO: rename this mode.
   def SetOpenFiles(self, open_files):
@@ -329,4 +286,4 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       text_prepend: string that contains the text to prepend to every
                     event object.
     """
-    self._text_prepend = text_prepend
+    self._parser_context.SetTextPrepend(text_prepend)

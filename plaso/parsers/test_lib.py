@@ -27,7 +27,25 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.artifacts import knowledge_base
 from plaso.lib import event
+from plaso.lib import queue
 from plaso.parsers import context
+
+
+class TestEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
+  """Class that implements a list event object queue consumer."""
+
+  def __init__(self, event_queue):
+    """Initializes the list event object queue consumer.
+
+    Args:
+      event_queue: the event object queue (instance of Queue).
+    """
+    super(TestEventObjectQueueConsumer, self).__init__(event_queue)
+    self.event_objects = []
+
+  def _ConsumeEventObject(self, event_object):
+    """Consumes an event object callback for ConsumeEventObjects."""
+    self.event_objects.append(event_object)
 
 
 class ParserTestCase(unittest.TestCase):
@@ -40,7 +58,7 @@ class ParserTestCase(unittest.TestCase):
   maxDiff = None
 
   def _GetEventObjects(self, event_generator):
-    """Retrieves the event objects from the event_generator.
+    """Retrieves the event objects from the event generator.
 
     This function will extract event objects from a generator.
 
@@ -53,6 +71,25 @@ class ParserTestCase(unittest.TestCase):
     event_objects = []
 
     for event_object in event_generator:
+      self.assertIsInstance(event_object, event.EventObject)
+      event_objects.append(event_object)
+
+    return event_objects
+
+  def _GetEventObjectsFromQueue(self, event_queue_consumer):
+    """Retrieves the event objects from the event queue consumer.
+
+    Args:
+      event_queue_consumer: the event object queue consumer object (instance of
+                            TestEventObjectQueueConsumer).
+
+    Returns:
+      A list of event objects (instances of EventObject).
+    """
+    event_queue_consumer.ConsumeEventObjects()
+
+    event_objects = []
+    for event_object in event_queue_consumer.event_objects:
       self.assertIsInstance(event_object, event.EventObject)
       event_objects.append(event_object)
 
@@ -88,6 +125,25 @@ class ParserTestCase(unittest.TestCase):
     return self._ParseFileByPathSpec(
         parser_object, path_spec, knowledge_base_values=knowledge_base_values)
 
+  def _ParseFileWithQueue(
+      self, parser_object, path, knowledge_base_values=None):
+    """Parses a file using the parser object.
+
+    Args:
+      parser_object: the parser object.
+      path: the path of the file to parse.
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
+
+    Returns:
+      An event object queue consumer object (instance of
+      TestEventObjectQueueConsumer).
+    """
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=path)
+    return self._ParseFileByPathSpecWithQueue(
+        parser_object, path_spec, knowledge_base_values=knowledge_base_values)
+
   def _ParseFileByPathSpec(
       self, parser_object, path_spec, knowledge_base_values=None):
     """Parses a file using the parser object.
@@ -101,17 +157,55 @@ class ParserTestCase(unittest.TestCase):
     Returns:
       A generator of event objects as returned by the parser.
     """
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in knowledge_base_values.iteritems():
         knowledge_base_object.SetValue(identifier, value)
 
-    parser_context = context.ParserContext(knowledge_base_object)
+    parser_context = context.ParserContext(
+        event_queue_producer, knowledge_base_object)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     event_generator = parser_object.Parse(parser_context, file_entry)
     self.assertNotEquals(event_generator, None)
 
     return event_generator
+
+  def _ParseFileByPathSpecWithQueue(
+      self, parser_object, path_spec, knowledge_base_values=None):
+    """Parses a file using the parser object.
+
+    Args:
+      parser_object: the parser object.
+      path_spec: the path specification of the file to parse.
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
+
+    Returns:
+      An event object queue consumer object (instance of
+      TestEventObjectQueueConsumer).
+    """
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_consumer = TestEventObjectQueueConsumer(event_queue)
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        knowledge_base_object.SetValue(identifier, value)
+
+    parser_context = context.ParserContext(
+        event_queue_producer, knowledge_base_object)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    event_generator = parser_object.Parse(parser_context, file_entry)
+
+    # TODO: remove this once the yield-based parsers have been replaced
+    # by produce (or emit)-based variants.
+    self.assertEquals(event_generator, None)
+
+    return event_queue_consumer
 
   def _TestGetMessageStrings(
       self, event_object, expected_message, expected_message_short):

@@ -22,6 +22,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.artifacts import knowledge_base
+from plaso.lib import queue
 from plaso.parsers import context
 from plaso.parsers import test_lib
 from plaso.winreg import winregistry
@@ -62,12 +63,16 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """
     self.assertNotEquals(winreg_key, None)
 
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in knowledge_base_values.iteritems():
         knowledge_base_object.SetValue(identifier, value)
 
-    parser_context = context.ParserContext(knowledge_base_object)
+    parser_context = context.ParserContext(
+        event_queue_producer, knowledge_base_object)
     event_generator = plugin_object.Process(parser_context, key=winreg_key)
     self.assertNotEquals(event_generator, None)
 
