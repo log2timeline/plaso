@@ -37,8 +37,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['example.lnk'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileWithQueue(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # Link information:
     # 	Creation time			: Jul 13, 2009 23:29:02.849131000 UTC
@@ -108,8 +108,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
     test_file = self._GetTestFilePath(['NeroInfoTool.lnk'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileWithQueue(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 18)
 

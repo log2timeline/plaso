@@ -23,6 +23,7 @@ from plaso.artifacts import knowledge_base
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
+from plaso.lib import queue
 from plaso.lib import timelib_test
 from plaso.parsers import context
 from plaso.parsers.winreg_plugins import services
@@ -97,8 +98,13 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
+    # TODO: refactor to use test_lib.
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_context = context.ParserContext(knowledge_base_object)
+    parser_context = context.ParserContext(
+        event_queue_producer, knowledge_base_object)
 
     test_file = self._GetTestFilePath(['SYSTEM'])
     key_path = u'\\ControlSet001\\services'
