@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import olecf as olecf_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.olecf_plugins import summary
@@ -33,9 +32,8 @@ class TestSummaryInfoPlugin(test_lib.OleCfPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._summary_plugin = summary.SummaryInfoPlugin(pre_obj)
-    self._document_summary_plugin = summary.DocumentSummaryPlugin(pre_obj)
+    self._summary_plugin = summary.SummaryInfoPlugin()
+    self._document_summary_plugin = summary.DocumentSummaryPlugin()
     self._test_file = self._GetTestFilePath(['Document.doc'])
 
   def testProcessSummaryInfo(self):

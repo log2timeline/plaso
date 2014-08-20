@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.lib import event
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import spotlight
 from plaso.parsers.plist_plugins import test_lib
@@ -32,9 +31,8 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = spotlight.SpotlightPlugin(None)
-    pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj)
+    self._plugin = spotlight.SpotlightPlugin()
+    self._parser = plist.PlistParser()
 
   def testProcess(self):
     """Tests the Process function."""

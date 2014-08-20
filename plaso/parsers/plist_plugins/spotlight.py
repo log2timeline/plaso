@@ -38,17 +38,19 @@ class SpotlightPlugin(interface.PlistPlugin):
   #   LAST_USED: last time when it was executed.
   #   DISPLAY_NAME: the display name of the program associated.
 
-  def GetEntries(self, match, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
     """Extracts relevant Spotlight entries.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
     """
     for search_text, data in match['UserShortcuts'].iteritems():
-      desc = u'Spotlight term searched "{}" associate to {} ({})'.format(
-          search_text, data['DISPLAY_NAME'], data['PATH'])
+      desc = (
+          u'Spotlight term searched "{0:s}" associate to {1:s} '
+          u'({2:s})').format(search_text, data['DISPLAY_NAME'], data['PATH'])
       yield plist_event.PlistEvent(
-        u'/UserShortcuts', search_text, data['LAST_USED'], desc)
+          u'/UserShortcuts', search_text, data['LAST_USED'], desc)

@@ -67,21 +67,18 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
       lexer.Token('INITIAL', '(.+)\n', 'ParseString', ''),
       ]
 
-  def __init__(self, pre_obj, local_zone=True):
+  def __init__(self, local_zone=True):
     """Constructor for the SlowLexicalTextParser.
 
     Args:
-      pre_obj: A preprocess object that may contain information gathered
-               from a preprocessing process (instance of PreprocessObject).
       local_zone: A boolean value that determines if the entries
                   in the log file are stored in the local time
                   zone of the computer that stored it or in a fixed
                   timezone, like UTC.
     """
     # TODO: remove the multiple inheritance.
-    self._pre_obj = pre_obj
     lexer.SelfFeederMixIn.__init__(self)
-    interface.BaseParser.__init__(self, pre_obj)
+    interface.BaseParser.__init__(self)
     self.line_ready = False
     self.attributes = {
         'body': '',
@@ -108,8 +105,12 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
       else:
         self.attributes[attr] = ''
 
-  def ParseIncomplete(self, match, **unused_kwargs):
-    """Indication that we've got a partial line to match against."""
+  def ParseIncomplete(self, match=None, **unused_kwargs):
+    """Indication that we've got a partial line to match against.
+
+    Args:
+      match: The regular expression match object.
+    """
     self.attributes['body'] += match.group(0)
     self.line_ready = True
 
@@ -117,58 +118,59 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     """Signal that a line is ready to be parsed."""
     self.line_ready = True
 
-  def SetMonth(self, match, **unused_kwargs):
+  def SetMonth(self, match=None, **unused_kwargs):
     """Parses the month.
 
        This is a callback function for the text parser (lexer) and is
        called by the corresponding lexer state.
 
     Args:
-      match: A regular expression match group that contains the match
-             by the lexer.
+      match: The regular expression match object.
     """
     self.attributes['imonth'] = int(
         timelib.MONTH_DICT.get(match.group(1).lower(), 1))
 
-  def SetDay(self, match, **unused_kwargs):
+  def SetDay(self, match=None, **unused_kwargs):
     """Parses the day of the month.
 
        This is a callback function for the text parser (lexer) and is
        called by the corresponding lexer state.
 
     Args:
-      match: A regular expression match group that contains the match
-             by the lexer.
+      match: The regular expression match object.
     """
     self.attributes['iday'] = int(match.group(1))
 
-  def SetTime(self, match, **unused_kwargs):
-    """Set the time attribute."""
+  def SetTime(self, match=None, **unused_kwargs):
+    """Set the time attribute.
+
+    Args:
+      match: The regular expression match object.
+    """
     self.attributes['time'] = match.group(1)
 
-  def SetYear(self, match, **unused_kwargs):
+  def SetYear(self, match=None, **unused_kwargs):
     """Parses the year.
 
        This is a callback function for the text parser (lexer) and is
        called by the corresponding lexer state.
 
     Args:
-      match: A regular expression match group that contains the match
-             by the lexer.
+      match: The regular expression match object.
     """
     self.attributes['iyear'] = int(match.group(1))
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a text file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
-      An event object (EventObject) that contains the parsed
-      attributes.
+      An event object (instance of EventObject).
     """
-    path_spec_printable = u'{:s}:{:s}'.format(
+    path_spec_printable = u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, file_entry.name)
     file_object = file_entry.GetFileObject()
 
@@ -209,7 +211,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 
       if self.line_ready:
         try:
-          yield self.ParseLine(self._pre_obj.zone)
+          yield self.ParseLine(parser_context)
           file_verified = True
 
         except errors.TimestampNotCorrectlyFormed as exception:
@@ -257,11 +259,11 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
               self.parser_name, path_spec_printable, file_offset))
     file_object.close()
 
-  def ParseString(self, match, **unused_kwargs):
+  def ParseString(self, match=None, **unused_kwargs):
     """Return a string with combined values from the lexer.
 
     Args:
-      match: The matching object.
+      match: The regular expression match object.
 
     Returns:
       A string that combines the values that are so far
@@ -308,8 +310,15 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 
     return line
 
-  def ParseLine(self, zone):
-    """Return an EventObject extracted from the current line."""
+  def ParseLine(self, parser_context):
+    """Return an event object extracted from the current line.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+
+    Returns:
+      An event object (instance of TextEvent).
+    """
     if not self.attributes['time']:
       raise errors.TimestampNotCorrectlyFormed(
           u'Unable to parse timestamp, time not set.')
@@ -320,9 +329,9 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 
     times = self.attributes['time'].split(':')
     if self.local_zone:
-      time_zone = zone
+      timezone = parser_context.timezone
     else:
-      time_zone = pytz.UTC
+      timezone = pytz.UTC
 
     if len(times) < 3:
       raise errors.TimestampNotCorrectlyFormed((
@@ -339,7 +348,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
       timestamp = timelib.Timestamp.FromTimeParts(
           int(self.attributes['iyear']), self.attributes['imonth'],
           self.attributes['iday'], int(times[0]), int(times[1]),
-          int(sec), microseconds=int(us), timezone=time_zone)
+          int(sec), microseconds=int(us), timezone=timezone)
 
     except ValueError as exception:
       raise errors.TimestampNotCorrectlyFormed(
@@ -363,7 +372,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
       attributes: A dict that contains the events attributes.
 
     Returns:
-      A text event (TextEvent).
+      An event object (instance of TextEvent).
     """
     event_object = event.TextEvent(timestamp, attributes)
     event_object.offset = offset
@@ -395,17 +404,25 @@ class TextCSVParser(interface.BaseParser):
   # file to see if it confirms to standards.
   MAGIC_TEST_STRING = 'RegnThvotturMeistarans'
 
-  @abc.abstractmethod
-  def VerifyRow(self, row):
-    """Return a bool indicating whether or not this is the correct parser."""
+  def VerifyRow(self, unused_parser_context, unused_row):
+    """Return a bool indicating whether or not this is the correct parser.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: A single row from the CSV file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     pass
 
-  def ParseRow(self, row):
+  def ParseRow(self, unused_parser_context, row):
     """Parse a line of the log file and yield extracted EventObject(s).
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: A dictionary containing all the fields as denoted in the
-      COLUMNS class list.
+           COLUMNS class list.
 
     Yields:
       An EventObject extracted from a single line from the log file.
@@ -414,15 +431,15 @@ class TextCSVParser(interface.BaseParser):
     event_object.row_dict = row
     yield event_object
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a CVS file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
-      An event object (EventObject) that contains the parsed
-      attributes.
+      An event object (instance of EventObject).
     """
     path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', u';')
     file_object = file_entry.GetFileObject()
@@ -462,18 +479,18 @@ class TextCSVParser(interface.BaseParser):
             u'[{0:s}] Unable to parse CSV file: {1:s}. Signature '
             u'mismatch.').format(self.parser_name, path_spec_printable))
 
-    if not self.VerifyRow(row):
+    if not self.VerifyRow(parser_context, row):
       raise errors.UnableToParseFile((
           u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
           u'failed.').format(self.parser_name, path_spec_printable))
 
-    for event_object in self.ParseRow(row):
+    for event_object in self.ParseRow(parser_context, row):
       if event_object:
         event_object.offset = text_file_object.tell()
         yield event_object
 
     for row in reader:
-      for event_object in self.ParseRow(row):
+      for event_object in self.ParseRow(parser_context, row):
         if event_object:
           event_object.offset = text_file_object.tell()
           yield event_object
@@ -540,7 +557,7 @@ def PyParseIntCast(unused_string, unused_location, tokens):
     try:
       tokens[index] = int(token)
     except ValueError:
-      logging.error(u'Unable to cast [{}] to an int, setting to 0'.format(
+      logging.error(u'Unable to cast [{0:s}] to an int, setting to 0'.format(
           token))
       tokens[index] = 0
 
@@ -549,8 +566,9 @@ def PyParseIntCast(unused_string, unused_location, tokens):
     try:
       tokens[key] = int(tokens[key], 10)
     except ValueError:
-      logging.error(u'Unable to cast [{} = {}] to an int, setting to 0'.format(
-          key, tokens[key]))
+      logging.error(
+          u'Unable to cast [{0:s} = {1:d}] to an int, setting to 0'.format(
+              key, tokens[key]))
       tokens[key] = 0
 
 
@@ -658,9 +676,9 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
   # attribute.
   ENCODING = ''
 
-  def __init__(self, pre_obj):
+  def __init__(self):
     """A constructor for the pyparsing assistant."""
-    super(PyparsingSingleLineTextParser, self).__init__(pre_obj)
+    super(PyparsingSingleLineTextParser, self).__init__()
     self.encoding = self.ENCODING
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
@@ -706,19 +724,19 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
       return decoded_line.strip()
     except UnicodeDecodeError:
       if not quiet:
-        logging.warning(u'Unable to decode line [{}...] using {}'.format(
+        logging.warning(u'Unable to decode line [{0:s}...] using {1:s}'.format(
             repr(line[1:30]), self.encoding))
       return line.strip()
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a text file using a pyparsing definition.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
-      An event object (EventObject) that contains the parsed
-      attributes.
+      An event object (instance of EventObject).
     """
     # TODO: find a more elegant way for this; currently the mac_wifi and
     # syslog parser seem to rely on this member.
@@ -743,13 +761,14 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
         line) == self.MAX_LINE_LENGTH - 1:
       logging.debug((
           u'Trying to read a line and reached the maximum allowed length of '
-          '{}. The last few bytes of the line are: {} [parser {}]').format(
+          u'{0:d}. The last few bytes of the line are: {1:s} [parser '
+          u'{2:s}]').format(
               self.MAX_LINE_LENGTH, repr(line[-10:]), self.parser_name))
 
     if not utils.IsText(line):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
-    if not self.VerifyStructure(line):
+    if not self.VerifyStructure(parser_context, line):
       raise errors.UnableToParseFile('Wrong file structure.')
 
     # Set the offset to the beginning of the file.
@@ -769,12 +788,13 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
           break
 
       if parsed_structure:
-        parsed_event = self.ParseRecord(use_key, parsed_structure)
+        parsed_event = self.ParseRecord(
+            parser_context, use_key, parsed_structure)
         if parsed_event:
           parsed_event.offset = self._current_offset
           yield parsed_event
       else:
-        logging.warning(u'Unable to parse log line: {}'.format(line))
+        logging.warning(u'Unable to parse log line: {0:s}'.format(line))
 
       self._current_offset = text_file_object.get_offset()
       line = self._ReadLine(text_file_object)
@@ -782,31 +802,32 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     file_object.close()
 
   @abc.abstractmethod
-  def ParseRecord(self, key, structure):
+  def ParseRecord(self, parser_context, key, structure):
     """Parse a single extracted pyparsing structure.
 
     This function takes as an input a parsed pyparsing structure
     and produces an EventObject if possible from that structure.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: An identification string indicating the name of the parsed
-      structure.
+           structure.
       structure: A pyparsing.ParseResults object from a line in the
-      log file.
+                 log file.
 
     Returns:
-      An EventObject if one can be extracted from the structure, otherwise
-      None.
+      An event object (instance of EventObject) or None.
     """
 
   @abc.abstractmethod
-  def VerifyStructure(self, line):
+  def VerifyStructure(self, parser_context, line):
     """Verify the structure of the file and return boolean based on that check.
 
     This function should read enough text from the text file to confirm
     that the file is the correct one for this particular parser.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       line: A single line from the text file.
 
     Returns:
@@ -821,9 +842,9 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
   BUFFER_SIZE = 2048
 
-  def __init__(self, pre_obj):
+  def __init__(self):
     """A constructor for the pyparsing assistant."""
-    super(PyparsingMultiLineTextParser, self).__init__(pre_obj)
+    super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer = ''
     self._buffer_size = self.BUFFER_SIZE
 
@@ -855,8 +876,16 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     self._FillBuffer(filehandle)
     return throw
 
-  def Parse(self, file_entry):
-    """Parse a text file using a pyparsing definition."""
+  def Parse(self, parser_context, file_entry):
+    """Parse a text file using a pyparsing definition.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Yields:
+      An event object (instance of EventObject).
+    """
     self.file_entry = file_entry
 
     file_object = file_entry.GetFileObject()
@@ -873,7 +902,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     if not utils.IsText(self._buffer):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
-    if not self.VerifyStructure(self._buffer):
+    if not self.VerifyStructure(parser_context, self._buffer):
       raise errors.UnableToParseFile('Wrong file structure.')
 
     # Set the offset to the beginning of the file.
@@ -907,7 +936,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           break
 
       if tokens and not start:
-        parsed_event = self.ParseRecord(structure_key, tokens)
+        parsed_event = self.ParseRecord(parser_context, structure_key, tokens)
         if parsed_event:
           parsed_event.offset = self._current_offset
           yield parsed_event
@@ -916,7 +945,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       else:
         old_line = self._NextLine(file_object)
         if old_line:
-          logging.warning(u'Unable to parse log line: {}'.format(
+          logging.warning(u'Unable to parse log line: {0:s}'.format(
               repr(old_line)))
 
       # Re-fill the buffer.

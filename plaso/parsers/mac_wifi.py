@@ -28,8 +28,6 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import text_parser
 
-import pytz
-
 
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
@@ -96,15 +94,10 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       ('logline', WIFI_LINE),
       ('header', WIFI_HEADER)]
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(MacWifiLogParser, self).__init__(pre_obj)
-    self._year_use = getattr(pre_obj, 'year', 0)
-    self.local_zone = getattr(pre_obj, 'zone', pytz.utc)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(MacWifiLogParser, self).__init__()
+    self._year_use = 0
     self._last_month = None
 
   def _GetAction(self, agent, function, text):
@@ -123,7 +116,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
     if 'airportdProcessDLILEvent' in function:
       interface = text.split()[0]
-      return u'Interface {} turn up.'.format(interface)
+      return u'Interface {0:s} turn up.'.format(interface)
 
     if 'doAutoJoin' in function:
       match = re.match(self.RE_CONNECTED, text)
@@ -131,7 +124,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
         ssid = match.group(1)[1:-1]
       else:
         ssid = 'Unknown'
-      return u'Wifi connected to SSID {}'.format(ssid)
+      return u'Wifi connected to SSID {0:s}'.format(ssid)
 
     if 'processSystemPSKAssoc' in function:
       wifi_parameters = self.RE_WIFI_PARAMETERS.search(text)
@@ -145,8 +138,9 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
           bssid = 'Unknown'
         if not security:
           security = 'Unknown'
-        return (u'New wifi configured. BSSID: {}, SSID: {}, '
-                u'Security: {}.'.format(bssid, ssid, security))
+        return (
+             u'New wifi configured. BSSID: {0:s}, SSID: {1:s}, '
+             u'Security: {2:s}.').format(bssid, ssid, security)
     return text
 
   def _GetTimestamp(self, day, month, year, time):
@@ -196,12 +190,25 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       return timelib.GetCurrentYear()
     return timestamp.year
 
-  def _ParseLogLine(self, structure):
-    """Parse a logline and store appropriate attributes."""
+  def _ParseLogLine(self, parser_context, structure):
+    """Parse a logline and store appropriate attributes.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     # TODO: improving this to get a valid year.
     if not self._year_use:
+      self._year_use = parser_context.year
+
+    if not self._year_use:
       # Get from the creation time of the file.
-      self._year_use = self._GetYear(self.file_entry.GetStat(), self.local_zone)
+      self._year_use = self._GetYear(
+          self.file_entry.GetStat(), parser_context.timezone)
       # If fail, get from the current time.
       if not self._year_use:
         self._year_use = timelib.GetCurrentYear()
@@ -218,7 +225,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
         self._year_use,
         structure.time)
     if not timestamp:
-      logging.debug(u'Invalid timestamp {}'.format(structure.timestamp))
+      logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
       return
     self._last_month = month
 
@@ -227,21 +234,39 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     # Due to the use of CharsNotIn pyparsing structure contains whitespaces
     # that need to be removed.
     function = structure.function.strip()
-    event_object = MacWifiLogEvent(
-        timestamp, structure.agent, function, text,
-        self._GetAction(structure.agent, function, text))
-    return event_object
+    action = self._GetAction(structure.agent, function, text)
+    return MacWifiLogEvent(
+        timestamp, structure.agent, function, text, action)
 
-  def ParseRecord(self, key, structure):
-    """Parse each record structure and return an EventObject if applicable."""
+  def ParseRecord(self, parser_context, key, structure):
+    """Parse each record structure and return an EventObject if applicable.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     if key == 'logline':
-      return self._ParseLogLine(structure)
+      return self._ParseLogLine(parser_context, structure)
     elif key != 'header':
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def VerifyStructure(self, line):
-    """Verify that this file is a Mac Wifi log file."""
+  def VerifyStructure(self, parser_context, line):
+    """Verify that this file is a Mac Wifi log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     try:
       _ = self.WIFI_HEADER.parseString(line)
     except pyparsing.ParseException:

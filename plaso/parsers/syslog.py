@@ -70,28 +70,18 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
       lexer.Token('S[.]+', '(.+)', 'ParseString', ''),
       ]
 
-  def __init__(self, pre_obj):
-    """Initializes the syslog parser.
-
-    Args:
-      pre_obj: Preprocessor object. If the year cannot be determined
-               from the input the current year is assumed. The year
-               can be set to a specific value by defining it in the
-               preprocessor object, e.g. pre_obj.year = 2012.
-    """
-    super(SyslogParser, self).__init__(pre_obj, True)
+  def __init__(self):
+    """Initializes a syslog parser object."""
+    super(SyslogParser, self).__init__(local_zone=True)
     # Set the initial year to 0 (fixed in the actual Parse method)
-    # TODO: this is a HACK to get the tests working let's discuss this
-    self._year_use = getattr(pre_obj, 'year', 0)
+    self._year_use = 0
     self._last_month = 0
-    # TODO: move to formatter.
-    self.source_long = 'Log File'
 
     # Set some additional attributes.
     self.attributes['reporter'] = ''
     self.attributes['pid'] = ''
 
-  def GetYear(self, stat, zone):
+  def _GetYear(self, stat, timezone):
     """Retrieves the year either from the input file or from the settings."""
     time = getattr(stat, 'crtime', 0)
     if not time:
@@ -105,7 +95,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
       return current_year
 
     try:
-      timestamp = datetime.datetime.fromtimestamp(time, zone)
+      timestamp = datetime.datetime.fromtimestamp(time, timezone)
     except ValueError as exception:
       current_year = timelib.GetCurrentYear()
       logging.error(
@@ -115,7 +105,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
 
     return timestamp.year
 
-  def ParseLine(self, zone):
+  def ParseLine(self, parser_context):
     """Parse a single line from the syslog file.
 
     This method extends the one from TextParser slightly, adding
@@ -123,16 +113,22 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     files.
 
     Args:
-      zone: The timezone of the host computer.
+      parser_context: A parser context object (instance of ParserContext).
 
     Returns:
-      An EventObject that is constructed from the syslog entry.
+      An event object (instance of TextEvent).
     """
+    # Note this an older comment applying to a similar approach previously
+    # the init function.
+    # TODO: this is a HACK to get the tests working let's discuss this.
+    if not self._year_use:
+      self._year_use = parser_context.year
+
     if not self._year_use:
       # TODO: Find a decent way to actually calculate the correct year
       # from the syslog file, instead of relying on stats object.
       stat = self.file_entry.GetStat()
-      self._year_use = self.GetYear(stat, zone)
+      self._year_use = self._GetYear(stat, parser_context.timezone)
 
       if not self._year_use:
         # TODO: Make this sensible, not have the year permanent.
@@ -146,29 +142,27 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
 
     self.attributes['iyear'] = self._year_use
 
-    return super(SyslogParser, self).ParseLine(zone)
+    return super(SyslogParser, self).ParseLine(parser_context)
 
-  def ParseHostname(self, match, **_):
+  def ParseHostname(self, match=None, **unused_kwargs):
     """Parses the hostname.
 
        This is a callback function for the text parser (lexer) and is
        called by the STRING_HOST lexer state.
 
     Args:
-      match: A regular expression match group that contains the match
-             by the lexer.
+      match: The regular expression match object.
     """
     self.attributes['hostname'] = match.group(1)
 
-  def ParsePid(self, match, **_):
+  def ParsePid(self, match=None, **unused_kwargs):
     """Parses the process identifier (PID).
 
        This is a callback function for the text parser (lexer) and is
        called by the STRING_PID lexer state.
 
     Args:
-      match: A regular expression match group that contains the match
-             by the lexer.
+      match: The regular expression match object.
     """
     # TODO: Change this logic and rather add more Tokens that
     # fully cover all variations of the various PID stages.
@@ -187,15 +181,14 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     else:
       self.attributes['reporter'] = line
 
-  def ParseString(self, match, **_):
+  def ParseString(self, match=None, **unused_kwargs):
     """Parses a (body text) string.
 
        This is a callback function for the text parser (lexer) and is
        called by the STRING lexer state.
 
     Args:
-      match: A regular expression match group that contains the match
-             by the lexer.
+      match: The regular expression match object.
     """
     self.attributes['body'] += utils.GetUnicodeString(match.group(1))
 

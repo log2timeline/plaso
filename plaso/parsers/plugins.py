@@ -63,16 +63,6 @@ class BasePlugin(object):
   # for all plugins/parsers, eg: 'Chrome', 'Safari', 'UserAssist', etc.
   NAME = 'base_plugin'
 
-  def __init__(self, pre_obj):
-    """Constructor for a plugin.
-
-    Args:
-      pre_obj: The preprocessing object that contains information gathered
-               during the preprocessing stage. This object contains useful
-               information that can be utilized by the plugin.
-    """
-    self._knowledge_base = pre_obj
-
   @property
   def plugin_name(self):
     """Return the name of the plugin."""
@@ -83,8 +73,8 @@ class BasePlugin(object):
 
     Args:
       kwargs: Depending on the plugin they may require different sets of
-      arguments to be able to evaluate whether or not this is the correct
-      plugin.
+              arguments to be able to evaluate whether or not this is
+              the correct plugin.
 
     Yields:
       EventObjects extracted from the data set.
@@ -95,7 +85,7 @@ class BasePlugin(object):
     if kwargs:
       raise ValueError(u'Unused keyword arguments.')
 
-  def Process(self, **kwargs):
+  def Process(self, unused_parser_context, **kwargs):
     """Evaluate if this is the correct plugin and return a generator.
 
     The purpose of the process function is to evaluate if this particular
@@ -105,9 +95,10 @@ class BasePlugin(object):
     that can be used to evaluate if the plugin should be run or not.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       kwargs: Depending on the plugin they may require different sets of
-      arguments to be able to evaluate whether or not this is the correct
-      plugin.
+              arguments to be able to evaluate whether or not this is
+              the correct plugin.
 
     Returns:
       A generator, self.GetEntries(), if the correct plugin, otherwise None.

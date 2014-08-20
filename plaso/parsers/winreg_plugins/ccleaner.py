@@ -21,8 +21,6 @@ from plaso.lib import event
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import interface
 
-import pytz
-
 
 __author__ = 'Marc Seguin (segumarc@gmail.com)'
 
@@ -36,10 +34,11 @@ class CCleanerPlugin(interface.KeyPlugin):
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'CCleaner Registry key'
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, parser_context, key=None, **unused_kwargs):
     """Extracts event objects from a CCleaner Registry key.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
@@ -54,11 +53,10 @@ class CCleanerPlugin(interface.KeyPlugin):
         continue
 
       if value.name == 'UpdateKey':
-        zone = getattr(self._pre_obj, 'timezone', pytz.utc)
         update_key = key.GetValue('UpdateKey')
         reg_evt = event.WinRegistryEvent(
-            key.path, text_dict,
-            timelib.Timestamp.FromTimeString(update_key.data, timezone=zone))
+            key.path, text_dict, timelib.Timestamp.FromTimeString(
+                update_key.data, timezone=parser_context.timezone))
       elif value.name == '0':
         reg_evt = event.WinRegistryEvent(
             key.path, text_dict, key.timestamp)

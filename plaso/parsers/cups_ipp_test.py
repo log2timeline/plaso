@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import cups_ipp as cups_ipp_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers import cups_ipp
@@ -33,8 +32,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = cups_ipp.CupsIppParser(pre_obj)
+    self._parser = cups_ipp.CupsIppParser()
 
   def testParse(self):
     """Tests the Parse function."""

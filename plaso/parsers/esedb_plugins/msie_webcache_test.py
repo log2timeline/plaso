@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import msie_webcache as msie_webcache_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.esedb_plugins import msie_webcache
@@ -33,8 +32,7 @@ class MsieWebCacheEseDbPluginTest(test_lib.EseDbPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = msie_webcache.MsieWebCacheEseDbPlugin(pre_obj)
+    self._plugin = msie_webcache.MsieWebCacheEseDbPlugin()
 
   def testProcess(self):
     """Tests the Process function."""

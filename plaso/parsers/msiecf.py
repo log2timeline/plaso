@@ -72,13 +72,13 @@ class MsiecfParser(interface.BaseParser):
 
   NAME = 'msiecf'
 
-  def _ParseUrl(self, pre_obj, msiecf_item, recovered=False):
+  def _ParseUrl(self, parser_context, msiecf_item, recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) URL item.
 
        Every item is stored as an event object, one for each timestamp.
 
     Args:
-      pre_obj: An instance of the preprocessor object.
+      parser_context: A parser context object (instance of ParserContext).
       msiecf_item: An item (pymsiecf.url).
       recovered: Boolean value to indicate the item was recovered, False
                  by default.
@@ -119,14 +119,14 @@ class MsiecfParser(interface.BaseParser):
         secondary_timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
         # The secondary_timestamp is in localtime normalize it to be in UTC.
         secondary_timestamp = timelib.Timestamp.LocaltimeToUTC(
-            secondary_timestamp, pre_obj.zone)
+            secondary_timestamp, parser_context.timezone)
 
       elif msiecf_item.type == u'history-weekly':
         primary_timestamp_desc = eventdata.EventTimestamp.CREATION_TIME
         secondary_timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
         # The secondary_timestamp is in localtime normalize it to be in UTC.
         secondary_timestamp = timelib.Timestamp.LocaltimeToUTC(
-            secondary_timestamp, pre_obj.zone)
+            secondary_timestamp, parser_context.timezone)
 
     yield MsiecfUrlEvent(
         primary_timestamp, primary_timestamp_desc, msiecf_item, recovered)
@@ -157,11 +157,12 @@ class MsiecfParser(interface.BaseParser):
           timelib.Timestamp.FromFatDateTime(last_checked_timestamp),
           eventdata.EventTimestamp.LAST_CHECKED_TIME, msiecf_item, recovered)
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a MSIE Cache File (MSIECF).
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (instance of MsiecfUrlEvent) that contains the parsed
@@ -169,7 +170,7 @@ class MsiecfParser(interface.BaseParser):
     """
     file_object = file_entry.GetFileObject()
     msiecf_file = pymsiecf.file()
-    msiecf_file.set_ascii_codepage(getattr(self._pre_obj, 'codepage', 'cp1252'))
+    msiecf_file.set_ascii_codepage(parser_context.codepage)
 
     try:
       msiecf_file.open_file_object(file_object)
@@ -184,7 +185,7 @@ class MsiecfParser(interface.BaseParser):
       try:
         msiecf_item = msiecf_file.get_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
-          for event_object in self._ParseUrl(self._pre_obj, msiecf_item):
+          for event_object in self._ParseUrl(parser_context, msiecf_item):
             yield event_object
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
@@ -198,7 +199,7 @@ class MsiecfParser(interface.BaseParser):
         msiecf_item = msiecf_file.get_recovered_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
           for event_object in self._ParseUrl(
-              self._pre_obj, msiecf_item, recovered=True):
+              parser_context, msiecf_item, recovered=True):
             yield event_object
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.

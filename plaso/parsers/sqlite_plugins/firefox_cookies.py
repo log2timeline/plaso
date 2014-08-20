@@ -21,9 +21,8 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
-
-# pylint: disable=unused-import
-from plaso.parsers import cookie_plugins
+# Register the cookie plugins.
+from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers.cookie_plugins import interface as cookie_interface
 from plaso.parsers.sqlite_plugins import interface
 
@@ -87,15 +86,16 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
       (u'https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/'
        u'cookie/nsCookie.h')]
 
-  def __init__(self, pre_obj):
-    """Initialize the plugin."""
-    super(FirefoxCookiePlugin, self).__init__(pre_obj)
-    self._cookie_plugins = cookie_interface.GetPlugins(pre_obj)
+  def __init__(self):
+    """Initializes a plugin object."""
+    super(FirefoxCookiePlugin, self).__init__()
+    self._cookie_plugins = cookie_interface.GetPlugins()
 
-  def ParseCookieRow(self, row, **unused_kwargs):
+  def ParseCookieRow(self, parser_context, row, **unused_kwargs):
     """Parses a cookie row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -136,7 +136,8 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
     for cookie_plugin in self._cookie_plugins:
       try:
         for event_object in cookie_plugin.Process(
-            cookie_name=row['name'], cookie_data=row['value'], url=url):
+            parser_context, cookie_name=row['name'], cookie_data=row['value'],
+            url=url):
           event_object.plugin = cookie_plugin.plugin_name
           yield event_object
       except errors.WrongPlugin:

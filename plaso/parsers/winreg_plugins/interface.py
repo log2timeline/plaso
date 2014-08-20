@@ -46,31 +46,33 @@ class RegistryPlugin(plugins.BasePlugin):
   # higher level of prioritization to Windows Registry plugins.
   WEIGHT = 3
 
-  def __init__(self, pre_obj=None, reg_cache=None):
+  def __init__(self, reg_cache=None):
     """Initializes Windows Registry plugin object.
 
     Args:
-      pre_obj: Optional preprocessing object that contains information gathered
-               during preprocessing of data. The default is None.
       reg_cache: Optional Windows Registry objects cache (instance of
                  WinRegistryCache). The default is None.
     """
-    super(RegistryPlugin, self).__init__(pre_obj)
-    self._pre_obj = pre_obj
-
+    super(RegistryPlugin, self).__init__()
     # TODO: Clean this up, this value is stored but not used.
     self._reg_cache = reg_cache
 
   @abc.abstractmethod
-  def GetEntries(self, key=None, codepage='cp1252', **kwargs):
-    """Extracts event objects from the Windows Registry key."""
+  def GetEntries(self, parser_context, key=None, codepage='cp1252', **kwargs):
+    """Extracts event objects from the Windows Registry key.
 
-  def Process(self, key=None, unused_codepage='cp1252', **kwargs):
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey).
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+    """
+
+  def Process(self, parser_context, key=None, **kwargs):
     """Processes a Windows Registry key or value.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: The Registry key (instance of winreg.WinRegKey).
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
 
     Raises:
       ValueError: If the key value is not set.
@@ -78,7 +80,10 @@ class RegistryPlugin(plugins.BasePlugin):
     if key is None:
       raise ValueError(u'Key is not set.')
 
-    super(RegistryPlugin, self).Process(**kwargs)
+    del kwargs['codepage']
+
+    # This will raise if unhandled keyword arguments are passed.
+    super(RegistryPlugin, self).Process(parser_context, **kwargs)
 
 
 class KeyPlugin(RegistryPlugin):
@@ -93,63 +98,80 @@ class KeyPlugin(RegistryPlugin):
 
   WEIGHT = 1
 
-  def __init__(self, pre_obj=None, reg_cache=None):
+  def __init__(self, reg_cache=None):
     """Initializes key-based Windows Registry plugin object.
 
     Args:
-      pre_obj: Optional preprocessing object that contains information gathered
-               during preprocessing of data. The default is None.
       reg_cache: Optional Windows Registry objects cache (instance of
                  WinRegistryCache). The default is None.
     """
-    super(KeyPlugin, self).__init__(pre_obj=pre_obj, reg_cache=reg_cache)
+    super(KeyPlugin, self).__init__(reg_cache=reg_cache)
     self._path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
-        pre_obj, reg_cache)
+        reg_cache=reg_cache)
+    self.expanded_keys = None
 
-    # Build a list of expanded keys this plugin supports.
-    self.expanded_keys = []
-    for registry_key in self.REG_KEYS:
-      key_fixed = u''
-      try:
-        key_fixed = self._path_expander.ExpandPath(registry_key)
-        self.expanded_keys.append(key_fixed)
-      except KeyError as exception:
-        logging.debug((
-            u'Unable to use registry key {0:s} for plugin {1:s}, error '
-            u'message: {1:s}').format(
-                registry_key, self.plugin_name, exception))
-        continue
-
-      if not key_fixed:
-        continue
-      # Special case of Wow6432 Windows Registry redirection.
-      # URL:  http://msdn.microsoft.com/en-us/library/windows/desktop/\
-      # ms724072%28v=vs.85%29.aspx
-      if key_fixed.startswith('\\Software'):
-        _, first, second = key_fixed.partition('\\Software')
-        self.expanded_keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(
-            first, second))
-      if self.REG_TYPE == 'SOFTWARE' or self.REG_TYPE == 'any':
-        self.expanded_keys.append(u'\\Wow6432Node{:s}'.format(key_fixed))
-
-  @abc.abstractmethod
-  def GetEntries(self, key=None, codepage='cp1252', **kwargs):
-    """Extracts event objects from the Windows Registry key."""
-
-  def Process(self, key=None, codepage='cp1252', **kwargs):
-    """Processes a Windows Registry key.
+  def ExpandKeys(self, parser_context):
+    """Builds a list of expanded keys this plugin supports.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
+    """
+    self.expanded_keys = []
+    for registry_key in self.REG_KEYS:
+      expanded_key = u''
+      try:
+        # TODO: deprecate direct use of pre_obj.
+        expanded_key = self._path_expander.ExpandPath(
+            registry_key, pre_obj=parser_context.knowledge_base.pre_obj)
+      except KeyError as exception:
+        logging.debug((
+            u'Unable to expand Registry key {0:s} for plugin {1:s} with '
+            u'error: {1:s}').format(registry_key, self.plugin_name, exception))
+        continue
+
+      if not expanded_key:
+        continue
+
+      self.expanded_keys.append(expanded_key)
+
+      # Special case of Wow6432 Windows Registry redirection.
+      # URL: http://msdn.microsoft.com/en-us/library/windows/desktop/\
+      # ms724072%28v=vs.85%29.aspx
+      if expanded_key.startswith('\\Software'):
+        _, first, second = expanded_key.partition('\\Software')
+        self.expanded_keys.append(u'{0:s}\\Wow6432Node{1:s}'.format(
+            first, second))
+
+      if self.REG_TYPE == 'SOFTWARE' or self.REG_TYPE == 'any':
+        self.expanded_keys.append(u'\\Wow6432Node{0:s}'.format(expanded_key))
+
+  @abc.abstractmethod
+  def GetEntries(self, parser_context, key=None, codepage='cp1252', **kwargs):
+    """Extracts event objects from the Windows Registry key.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: The Registry key (instance of winreg.WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    if not key:
-      return
 
-    super(KeyPlugin, self).Process(key=key, **kwargs)
+  def Process(self, parser_context, key=None, codepage='cp1252', **kwargs):
+    """Processes a Windows Registry key.
 
-    if key.path in self.expanded_keys:
-      return self.GetEntries(key=key, codepage=codepage)
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey).
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+    """
+    if self.expanded_keys is None:
+      self.ExpandKeys(parser_context)
+
+    super(KeyPlugin, self).Process(
+        parser_context, key=key, codepage=codepage, **kwargs)
+
+    if key and key.path in self.expanded_keys:
+      return self.GetEntries(
+          parser_context, key=key, codepage=codepage, **kwargs)
 
 
 class ValuePlugin(RegistryPlugin):
@@ -163,19 +185,28 @@ class ValuePlugin(RegistryPlugin):
   WEIGHT = 2
 
   @abc.abstractmethod
-  def GetEntries(self, key=None, codepage='cp1252', **kwargs):
-    """Extracts event objects from the Windows Registry key."""
+  def GetEntries(self, parser_context, key=None, codepage='cp1252', **kwargs):
+    """Extracts event objects from the Windows Registry key.
 
-  def Process(self, key=None, codepage='cp1252', **kwargs):
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey).
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+    """
+
+  def Process(self, parser_context, key=None, codepage='cp1252', **kwargs):
     """Processes a Windows Registry value.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: The Registry key (instance of winreg.WinRegKey) in which the value
            is stored.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    super(ValuePlugin, self).Process(key=key, **kwargs)
+    super(ValuePlugin, self).Process(
+        parser_context, key=key, codepage=codepage, **kwargs)
 
     values = frozenset([val.name for val in key.GetValues()])
     if self.REG_VALUES.issubset(values):
-      return self.GetEntries(key=key, codepage=codepage)
+      return self.GetEntries(
+          parser_context, key=key, codepage=codepage, **kwargs)

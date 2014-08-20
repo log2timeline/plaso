@@ -89,11 +89,12 @@ class OperaTypedHistoryParser(interface.BaseParser):
 
   NAME = 'opera_typed_history'
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from an Opera typed history file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (EventObject) that contains the parsed
@@ -255,11 +256,12 @@ class OperaGlobalHistoryParser(interface.BaseParser):
 
       yield title, url, timestamp, popularity_index
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from an Opera global history file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (EventObject) that contains the parsed

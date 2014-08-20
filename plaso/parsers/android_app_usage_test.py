@@ -22,7 +22,6 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import android_app_usage as android_app_usage_formatter
 from plaso.lib import eventdata
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers import android_app_usage
 from plaso.parsers import test_lib
@@ -33,8 +32,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = android_app_usage.AndroidAppUsageParser(pre_obj)
+    self._parser = android_app_usage.AndroidAppUsageParser()
 
   def testParse(self):
     """Tests the Parse function."""

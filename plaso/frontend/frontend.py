@@ -313,13 +313,12 @@ class ExtractionFrontend(Frontend):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
-  def _CreateExtractionWorker(self, worker_number, options, pre_obj):
+  def _CreateExtractionWorker(self, worker_number, options):
     """Creates an extraction worker object.
 
     Args:
       worker_number: number that identifies the worker.
       options: the command line arguments (instance of argparse.Namespace).
-      pre_obj: The preprocessing object (instance of PreprocessObject).
 
     Returns:
       An extraction worker (instance of worker.ExtractionWorker).
@@ -329,7 +328,7 @@ class ExtractionFrontend(Frontend):
     # number to zero and then adjust it later.
     proxy_server = rpc_proxy.StandardRpcProxyServer()
     extraction_worker = self._engine.CreateExtractionWorker(
-        worker_number, pre_obj, self._parsers, rpc_proxy=proxy_server)
+        worker_number, self._parsers, rpc_proxy=proxy_server)
 
     extraction_worker.SetDebugMode(self._debug_mode)
     extraction_worker.SetSingleProcessMode(self._single_process_mode)
@@ -879,8 +878,7 @@ class ExtractionFrontend(Frontend):
 
     parser_filter_string = getattr(options, 'parsers', '')
     parsers_manager.ParsersManager.SetParserFilterString(parser_filter_string)
-    self._parsers = parsers_manager.ParsersManager.FindAllParsers(
-        pre_obj=pre_obj)
+    self._parsers = parsers_manager.ParsersManager.FindAllParsers()
     self._parser_names = [parser.parser_name for parser in self._parsers['all']]
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
@@ -964,8 +962,7 @@ class ExtractionFrontend(Frontend):
     logging.info(u'Starting worker processes to extract events.')
 
     for worker_nr in range(self._number_of_worker_processes):
-      extraction_worker = self._CreateExtractionWorker(
-          worker_nr, options, pre_obj)
+      extraction_worker = self._CreateExtractionWorker(worker_nr, options)
 
       logging.debug(u'Starting worker: {0:d} process'.format(worker_nr))
       worker_name = u'Worker_{0:d}'.format(worker_nr)
@@ -1110,8 +1107,7 @@ class ExtractionFrontend(Frontend):
 
     parser_filter_string = getattr(options, 'parsers', '')
     parsers_manager.ParsersManager.SetParserFilterString(parser_filter_string)
-    self._parsers = parsers_manager.ParsersManager.FindAllParsers(
-        pre_obj=pre_obj)
+    self._parsers = parsers_manager.ParsersManager.FindAllParsers()
     self._parser_names = [parser.parser_name for parser in self._parsers['all']]
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
@@ -1141,7 +1137,7 @@ class ExtractionFrontend(Frontend):
     self._collector.Collect()
     logging.debug(u'Collection done.')
 
-    extraction_worker = self._CreateExtractionWorker(0, options, pre_obj)
+    extraction_worker = self._CreateExtractionWorker(0, options)
 
     logging.debug(u'Starting extraction worker.')
     extraction_worker.Run()
@@ -1350,7 +1346,7 @@ class ExtractionFrontend(Frontend):
       platform = getattr(options, 'os', None)
       try:
         self._engine.PreprocessSource(
-            pre_obj, platform, resolver_context=self._resolver_context)
+            platform, resolver_context=self._resolver_context)
       except IOError as exception:
         logging.error(u'Unable to preprocess with error: {0:s}'.format(
             exception))

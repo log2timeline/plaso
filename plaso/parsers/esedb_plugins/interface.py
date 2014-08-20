@@ -67,9 +67,9 @@ class EseDbPlugin(plugins.BasePlugin):
   REQUIRED_TABLES = {}
   OPTIONAL_TABLES = {}
 
-  def __init__(self, pre_obj):
+  def __init__(self):
     """Initializes the ESE database plugin."""
-    super(EseDbPlugin, self).__init__(pre_obj)
+    super(EseDbPlugin, self).__init__()
     self._required_tables = frozenset(self.REQUIRED_TABLES.keys())
     self._tables = {}
     self._tables.update(self.REQUIRED_TABLES)
@@ -220,10 +220,11 @@ class EseDbPlugin(plugins.BasePlugin):
 
     return table_names
 
-  def GetEntries(self, database=None, cache=None, **kwargs):
+  def GetEntries(self, parser_context, database=None, cache=None, **kwargs):
     """Extracts event objects from the database.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       database: Optional ESE database object (instance of pyesedb.file).
                 The default is None.
       cache: Optional cache object (instance of EseDbCache). The default is
@@ -261,17 +262,19 @@ class EseDbPlugin(plugins.BasePlugin):
       # that are assigned dynamically and cannot be defined by
       # the table name-callback mechanism.
       event_generator = callback(
-          database=database, table=esedb_table, cache=cache, **kwargs)
+          parser_context, database=database, table=esedb_table, cache=cache,
+          **kwargs)
       if not event_generator:
         continue
 
       for event_object in event_generator:
         yield event_object
 
-  def Process(self, database=None, cache=None, **kwargs):
+  def Process(self, parser_context, database=None, cache=None, **kwargs):
     """Determines if this is the appropriate plugin for the database.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       database: Optional ESE database object (instance of pyesedb.file).
                 The default is None.
       cache: Optional cache object (instance of EseDbCache). The default is
@@ -293,6 +296,8 @@ class EseDbPlugin(plugins.BasePlugin):
       raise errors.WrongPlugin(
           u'[{0:s}] required tables not found.'.format(self.plugin_name))
 
-    super(EseDbPlugin, self).Process(**kwargs)
+    # This will raise if unhandled keyword arguments are passed.
+    super(EseDbPlugin, self).Process(parser_context, **kwargs)
 
-    return self.GetEntries(database=database, cache=cache, **kwargs)
+    return self.GetEntries(
+        parser_context, database=database, cache=cache, **kwargs)

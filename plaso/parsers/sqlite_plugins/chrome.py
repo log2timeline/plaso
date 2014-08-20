@@ -172,10 +172,11 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
   CORE_MASK = 0xff
 
-  def ParseFileDownloadedRow(self, row, **unused_kwargs):
+  def ParseFileDownloadedRow(self, unused_parser_context, row, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -187,7 +188,8 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         timestamp, row['id'], row['url'], row['full_path'],
         row['received_bytes'], row['total_bytes'])
 
-  def ParseNewFileDownloadedRow(self, row, **unused_kwargs):
+  def ParseNewFileDownloadedRow(
+      self, unused_parser_context, row, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
@@ -202,10 +204,13 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         timestamp, row['id'], row['url'], row['target_path'],
         row['received_bytes'], row['total_bytes'])
 
-  def ParseLastVisitedRow(self, row, cache, database, **unused_kwargs):
+  def ParseLastVisitedRow(
+      self, unused_parser_context, row, cache=None, database=None,
+      **unused_kwargs):
     """Parses a last visited row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
       cache: A cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
@@ -307,4 +312,4 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     if not reference_url:
       return u''
 
-    return u'{} ({})'.format(reference_url, reference_title)
+    return u'{0:s} ({1:s})'.format(reference_url, reference_title)

@@ -51,12 +51,12 @@ class PfilterFakeParser(parsers_interface.BaseParser):
 
   DATA_TYPE = 'Weirdo:Made up Source:Last Written'
 
-  def Parse(self, unused_file_entry):
+  def Parse(self, unused_parser_context, unused_file_entry):
     """Extract data from a fake plist file for testing.
 
     Args:
-      unused_file_entry: A file entry object that is not used by
-                         the fake parser.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (instance of EventObject) that contains the parsed

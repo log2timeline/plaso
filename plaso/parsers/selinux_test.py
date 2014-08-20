@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import selinux as selinux_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers import selinux
 from plaso.parsers import test_lib
@@ -35,14 +34,14 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.year = 2013
-    self._parser = selinux.SELinuxParser(pre_obj)
+    self._parser = selinux.SELinuxParser()
 
   def testParse(self):
     """Tests the Parse function."""
+    knowledge_base_values = {'year': 2013}
     test_file = self._GetTestFilePath(['selinux.log'])
-    event_generator = self._ParseFile(self._parser, test_file)
+    event_generator = self._ParseFile(
+        self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjects(event_generator)
 
     self.assertEquals(len(event_objects), 5)

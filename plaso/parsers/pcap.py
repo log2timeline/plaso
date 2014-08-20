@@ -489,11 +489,12 @@ class PcapParser(interface.BaseParser):
 
   NAME = 'pcap'
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a pcap file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (instance of PcapEvent) that contains the parsed data.

@@ -116,17 +116,21 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       ('header', SDE_HEADER),
   ]
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(SkyDriveLogErrorParser, self).__init__(pre_obj)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(SkyDriveLogErrorParser, self).__init__()
     self.use_local_zone = False
 
-  def VerifyStructure(self, line):
-    """Verify that this file is a SkyDrive Error log file."""
+  def VerifyStructure(self, parser_context, line):
+    """Verify that this file is a SkyDrive Error log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     try:
       parsed_structure = self.SDE_HEADER.parseString(line)
     except pyparsing.ParseException:
@@ -135,13 +139,24 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     timestamp = self._GetTimestampFromHeader(parsed_structure.hdr_timestamp)
     if not timestamp:
       logging.debug(
-          u'Not a SkyDrive Error log file, invalid timestamp {0:d}'.format(
+          u'Not a SkyDrive Error log file, invalid timestamp {0:s}'.format(
               parsed_structure.timestamp))
       return False
     return True
 
-  def ParseRecord(self, key, structure):
-    """Parse each record structure and return an EventObject if applicable."""
+  def ParseRecord(self, parser_context, key, structure):
+    """Parse each record structure and return an EventObject if applicable.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     if key == 'logline':
       return self._ParseLine(structure)
     elif key == 'header':
@@ -154,7 +169,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     """Parse a logline and store appropriate attributes."""
     timestamp = self._GetTimestampFromLine(structure.timestamp)
     if not timestamp:
-      logging.debug(u'SkyDriveLogError invalid timestamp {0:d}'.format(
+      logging.debug(u'SkyDriveLogError invalid timestamp {0:s}'.format(
           structure.timestamp))
       return
     # Replace newlines with spaces in structure.detail to preserve output.

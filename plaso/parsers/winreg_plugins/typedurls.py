@@ -39,10 +39,11 @@ class TypedURLsPlugin(interface.KeyPlugin):
 
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Collect typed URLs values.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:

@@ -67,20 +67,12 @@ class WinLnkParser(interface.BaseParser):
 
   NAME = 'lnk'
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(WinLnkParser, self).__init__(pre_obj)
-    self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
-
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a Windows Shortcut (LNK) file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (instance of WinLnkLinkEvent) that contains the parsed
@@ -88,14 +80,14 @@ class WinLnkParser(interface.BaseParser):
     """
     file_object = file_entry.GetFileObject()
     lnk_file = pylnk.file()
-    lnk_file.set_ascii_codepage(self._codepage)
+    lnk_file.set_ascii_codepage(parser_context.codepage)
 
     try:
       lnk_file.open_file_object(file_object)
     except IOError as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-          self.parser_name, file_entry.name, exception))
+          u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
+              self.parser_name, file_entry.name, exception))
 
     yield WinLnkLinkEvent(
         lnk_file.get_file_access_time_as_integer(),
@@ -112,7 +104,8 @@ class WinLnkParser(interface.BaseParser):
     if lnk_file.link_target_identifier_data:
       shell_items_parser = shell_items.ShellItemsParser(file_entry.name)
       for event_object in shell_items_parser.Parse(
-          lnk_file.link_target_identifier_data, codepage=self._codepage):
+          lnk_file.link_target_identifier_data,
+          codepage=parser_context.codepage):
         yield event_object
 
     # TODO: add support for the distributed link tracker.

@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import android_calls as android_calls_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import test_lib
@@ -32,8 +31,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = android_calls.AndroidCallPlugin(pre_obj)
+    self._plugin = android_calls.AndroidCallPlugin()
 
   def testProcess(self):
     """Test the Process function on an Android contacts2.db file."""

@@ -70,17 +70,8 @@ class PreprocessPlugin(object):
   # Weight is an INT, with the value of 1-3.
   WEIGHT = 3
 
-  # Defines the preprocess attribute to be set.
+  # Defines the knowledge base attribute to be set.
   ATTRIBUTE = ''
-
-  def __init__(self, obj_store):
-    """Initializes the preprocess plugin object.
-
-    Args:
-      obj_store: the object store.
-    """
-    super(PreprocessPlugin, self).__init__()
-    self._obj_store = obj_store
 
   @property
   def plugin_name(self):
@@ -119,25 +110,33 @@ class PreprocessPlugin(object):
     return file_entry
 
   @abc.abstractmethod
-  def GetValue(self, searcher):
+  def GetValue(self, searcher, knowledge_base):
     """Return the value for the attribute.
 
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
     """
     raise NotImplementedError
 
-  def Run(self, searcher):
+  def Run(self, searcher, knowledge_base):
     """Set the attribute of the object store to the value from GetValue.
 
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
     """
-    setattr(self._obj_store, self.ATTRIBUTE, self.GetValue(searcher))
+    value = self.GetValue(searcher, knowledge_base)
+    knowledge_base.SetValue(self.ATTRIBUTE, value)
+    value = knowledge_base.GetValue(self.ATTRIBUTE, default_value=u'N/A')
     logging.info(u'[PreProcess] Set attribute: {0:s} to {1:s}'.format(
-        self.ATTRIBUTE, getattr(self._obj_store, self.ATTRIBUTE, u'N/A')))
+        self.ATTRIBUTE, value))
 
 
 class MacPlistPreprocess(PreprocessPlugin):
@@ -156,7 +155,7 @@ class MacPlistPreprocess(PreprocessPlugin):
   # others will be searched.
   PLIST_KEYS = ['']
 
-  def GetValue(self, searcher):
+  def GetValue(self, searcher, unused_knowledge_base):
     """Returns a value retrieved from keys within a plist file.
 
     Where the name of the keys are defined in PLIST_KEYS.
@@ -164,6 +163,9 @@ class MacPlistPreprocess(PreprocessPlugin):
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
 
     Returns:
       The value of the first key that is found.
@@ -329,31 +331,30 @@ class WindowsRegistryPreprocess(PreprocessPlugin):
   REG_PATH = '{sysregistry}'
   REG_FILE = 'SOFTWARE'
 
-  def __init__(self, obj_store):
-    """Initializes the Window Registry preprocess plugin object.
-
-    Args:
-      obj_store: the object store.
-    """
-    super(WindowsRegistryPreprocess, self).__init__(obj_store)
-    self._file_path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
-        obj_store, None)
-
+  def __init__(self):
+    """Initializes the Window Registry preprocess plugin object."""
+    super(WindowsRegistryPreprocess, self).__init__()
+    self._file_path_expander = winreg_path_expander.WinRegistryKeyPathExpander()
     self._key_path_expander = None
 
-  def GetValue(self, searcher):
+  def GetValue(self, searcher, knowledge_base):
     """Return the value gathered from a Registry key for preprocessing.
 
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
     # TODO: optimize this in one find.
     try:
-      path = self._file_path_expander.ExpandPath(self.REG_PATH)
+      # TODO: do not pass the full pre_obj here but just the necessary values.
+      path = self._file_path_expander.ExpandPath(
+          self.REG_PATH, pre_obj=knowledge_base.pre_obj)
     except KeyError:
       path = u''
 
@@ -420,13 +421,12 @@ class WindowsRegistryPreprocess(PreprocessPlugin):
           u'Unable to open file object: {0:s} with error: {1:s}'.format(
               file_location, exception))
 
-    codepage = getattr(self._obj_store, 'code_page', 'cp1252')
-
     win_registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)
 
     try:
-      winreg_file = win_registry.OpenFile(file_entry, codepage=codepage)
+      winreg_file = win_registry.OpenFile(
+          file_entry, codepage=knowledge_base.codepage)
     except IOError as exception:
       raise errors.PreProcessFail(
           u'Unable to open Registry file: {0:s} with error: {1:s}'.format(
@@ -441,10 +441,12 @@ class WindowsRegistryPreprocess(PreprocessPlugin):
       reg_cache = cache.WinRegistryCache()
       reg_cache.BuildCache(winreg_file, self.REG_FILE)
       self._key_path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
-          self._obj_store, reg_cache)
+          reg_cache=reg_cache)
 
     try:
-      key_path = self._key_path_expander.ExpandPath(self.REG_KEY)
+      # TODO: do not pass the full pre_obj here but just the necessary values.
+      key_path = self._key_path_expander.ExpandPath(
+          self.REG_KEY, pre_obj=knowledge_base.pre_obj)
     except KeyError:
       key_path = u''
 
@@ -478,12 +480,15 @@ class PreprocessGetPath(PreprocessPlugin):
   ATTRIBUTE = 'nopath'
   PATH = 'doesnotexist'
 
-  def GetValue(self, searcher):
+  def GetValue(self, searcher, unused_knowledge_base):
     """Returns the path as found by the searcher.
 
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
 
     Returns:
       The first path location string.

@@ -29,8 +29,9 @@ class AndroidCallEvent(event.EventObject):
   """Convenience class for an Android Call History event."""
 
   DATA_TYPE = 'android:event:call'
-  def __init__(self, timestamp, number, name, duration, call_type,
-          timestamp_desc):
+
+  def __init__(
+      self, timestamp, number, name, duration, call_type, timestamp_desc):
     """Initializes the event object.
     Args:
       timestamp: The timestamp time value. The timestamp contains the
@@ -64,16 +65,16 @@ class AndroidCallPlugin(interface.SQLitePlugin):
       3: 'MISSED'
     }
 
-  def ParseCallsRow(self, row, **unused_kwargs):
+  def ParseCallsRow(self, unused_parser_context, row, **unused_kwargs):
     """Parses a Call record row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
       An event object (AndroidCallEvent) containing the event data.
     """
-
     # Extract and lookup the call type.
     call_type = self.CALL_TYPE.get(row['type'], 'UNKNOWN')
 

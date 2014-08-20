@@ -23,7 +23,7 @@ from plaso.lib import errors
 from plaso.parsers import plugins
 
 
-def GetPlugins(pre_obj):
+def GetPlugins():
   """Returns a list of all cookie plugins."""
   plugins_list = []
   for plugin_cls in CookiePlugin.classes.itervalues():
@@ -32,7 +32,7 @@ def GetPlugins(pre_obj):
     if parent_name != 'cookie':
       continue
 
-    plugins_list.append(plugin_cls(pre_obj))
+    plugins_list.append(plugin_cls())
 
   return plugins_list
 
@@ -55,15 +55,18 @@ class CookiePlugin(plugins.BasePlugin):
   # to parse the browser cookie.
   COOKIE_NAME = u''
 
-  def __init__(self, pre_obj):
+  def __init__(self):
     """Initialize the browser cookie plugin."""
-    super(CookiePlugin, self).__init__(pre_obj)
+    super(CookiePlugin, self).__init__()
     self.cookie_data = ''
 
-  def Process(self, cookie_name=None, cookie_data=None, url=None, **kwargs):
+  def Process(
+      self, parser_context, cookie_name=None, cookie_data=None, url=None,
+      **kwargs):
     """Determine if this is the right plugin for this cookie.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       cookie_name: The name of the cookie value.
       cookie_data: The cookie data, as a byte string.
       url: The full URL or path where the cookie got set.
@@ -84,14 +87,16 @@ class CookiePlugin(plugins.BasePlugin):
           u'Not the correct cookie plugin for: {} [{}]'.format(
               cookie_name, self.plugin_name))
 
-    super(CookiePlugin, self).Process(**kwargs)
-    return self.GetEntries(cookie_data=cookie_data, url=url)
+    # This will raise if unhandled keyword arguments are passed.
+    super(CookiePlugin, self).Process(parser_context, **kwargs)
+    return self.GetEntries(parser_context, cookie_data=cookie_data, url=url)
 
   @abc.abstractmethod
-  def GetEntries(self, cookie_data=None, url=None, **kwargs):
+  def GetEntries(self, parser_context, cookie_data=None, url=None, **kwargs):
     """Extract and return EventObjects from the data structure.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       cookie_data: The cookie data, as a byte string.
       url: The full URL or path where the cookie got set.
 

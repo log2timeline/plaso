@@ -64,23 +64,21 @@ class AndroidSmsPlugin(interface.SQLitePlugin):
 
   SMS_TYPE = {
       1: 'RECEIVED',
-      2: 'SENT'
-    }
+      2: 'SENT'}
   SMS_READ = {
       0: 'UNREAD',
-      1: 'READ'
-    }
+      1: 'READ'}
 
-  def ParseSmsRow(self, row, **unused_kwargs):
+  def ParseSmsRow(self, unused_parser_context, row, **unused_kwargs):
     """Parses an SMS row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
       An event object (AndroidSmsEvent) containing the event data.
     """
-
     # Extract and lookup the SMS type and read status.
     sms_type = self.SMS_TYPE.get(row['type'], 'UNKNOWN')
     sms_read = self.SMS_READ.get(row['read'], 'UNKNOWN')

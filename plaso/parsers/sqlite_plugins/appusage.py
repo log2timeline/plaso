@@ -28,10 +28,12 @@ from plaso.parsers.sqlite_plugins import interface
 
 class MacOSXApplicationUsageEvent(event.EventObject):
   """Convenience class for a Mac OS X application usage event."""
+
   DATA_TYPE = 'macosx:application_usage'
 
-  def __init__(self, timestamp, usage, application_name, application_version,
-               bundle_id, number_of_times):
+  def __init__(
+      self, timestamp, usage, application_name, application_version,
+      bundle_id, number_of_times):
     """Initializes the event object.
 
     Args:
@@ -81,10 +83,12 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset(['application_usage'])
 
-  def ParseApplicationUsageRow(self, row, **unused_kwargs):
+  def ParseApplicationUsageRow(
+      self, unused_parser_context, row, **unused_kwargs):
     """Parses an application usage row.
 
-    Args:
+    Args: 
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -95,4 +99,3 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
         timelib.Timestamp.FromPosixTime(row['last_time']),
         u'Application {0:s}'.format(row['event']), row['app_path'],
         row['app_version'], row['bundle_id'], row['number_times'])
-

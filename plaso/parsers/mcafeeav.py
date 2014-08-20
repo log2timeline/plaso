@@ -55,13 +55,46 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   COLUMNS = ['date', 'time', 'status', 'username', 'filename',
              'trigger_location', 'rule', 'action']
 
-  def VerifyRow(self, row):
-    """Verify that this is a McAfee AV Access Protection Log file."""
+  def _GetTimestamp(self, date, time, timezone):
+    """Return a 64-bit signed timestamp in microseconds since Epoch.
 
+     The timestamp is made up of two strings, the date and the time, separated
+     by a tab. The time is in local time. The month and day can be either 1 or 2
+     characters long.  E.g.: 7/30/2013\t10:22:48 AM
+
+     Args:
+       date: The string representing the date.
+       time: The string representing the time.
+       timezone: The timezone object.
+
+     Returns:
+       A plaso timestamp value, microseconds since Epoch in UTC or None.
+    """
+
+    if not (date and time):
+      logging.warning('Unable to extract timestamp from McAfee AV logline.')
+      return
+
+    # TODO: Figure out how McAfee sets Day First and use that here.
+    # The in-file time format is '07/30/2013\t10:22:48 AM'.
+    return timelib.Timestamp.FromTimeString(
+        u'{0:s} {1:s}'.format(date, time), timezone=timezone)
+
+  def VerifyRow(self, parser_context, row):
+    """Verify that this is a McAfee AV Access Protection Log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: A single row from the CSV file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     if len(row) != 8:
       return False
 
-    # This file can have the UTF-8 marker at the beginning of the first row.
+    # This file can have a UTF-8 byte-order-marker at the beginning of
+    # the first row.
     # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
     if row['date'][0:3] == '\xef\xbb\xbf':
       row['date'] = row['date'][3:]
@@ -69,7 +102,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # Check the date format!
     # If it doesn't pass, then this isn't a McAfee AV Access Protection Log
     try:
-      self.GetTimestamp(row['date'], row['time'])
+      self._GetTimestamp(row['date'], row['time'], parser_context.timezone)
     except (TypeError, ValueError):
       return False
 
@@ -80,33 +113,17 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
 
     return True
 
-  def GetTimestamp(self, date, time):
-    """Return a 64-bit signed timestamp in microseconds since Epoch.
+  def ParseRow(self, parser_context, row):
+    """Parse a single row from the McAfee Access Protection Log file.
 
-     The timestamp is made up of two strings, the date and the time, separated
-     by a tab. The time is in local time. The month and day can be either 1 or 2
-     characters long.  E.g.: 7/30/2013\t10:22:48 AM
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: A dictionary containing all the fields as denoted in the
+           COLUMNS class list.
 
-     Args:
-       date: The string representing the date.
-       time: The string representing the time.
-
-     Returns:
-       A plaso timestamp value, microseconds since Epoch in UTC.
+    Yields:
+      An EventObject extracted from a single line from the log file.
     """
-
-    if not (date and time):
-      logging.warning('Unable to extract timestamp from McAfee AV logline.')
-      return
-
-    # TODO: Figure out how McAfee sets Day First and use that here.
-    # The in-file time format is '07/30/2013\t10:22:48 AM'.
-    timestamp = timelib.Timestamp.FromTimeString(
-        u'{0:s} {1:s}'.format(date, time), timezone=self._pre_obj.zone)
-    return timestamp
-
-  def ParseRow(self, row):
-    """Parse a single row from the McAfee Access Protection Log file."""
-
-    epoch = self.GetTimestamp(row['date'], row['time'])
-    yield McafeeAVEvent(epoch, row)
+    timestamp = self._GetTimestamp(
+        row['date'], row['time'], parser_context.timezone)
+    yield McafeeAVEvent(timestamp, row)

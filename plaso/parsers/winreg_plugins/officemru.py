@@ -55,8 +55,14 @@ class OfficeMRUPlugin(interface.KeyPlugin):
   # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Collect Values under Office 2010 MRUs and return events for each one."""
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Collect Values under Office 2010 MRUs and return events for each one.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: The Registry key (instance of winreg.WinRegKey) in which the value
+           is stored.
+    """
     # TODO: Test other Office versions to makesure this plugin is applicable.
     for value in key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.

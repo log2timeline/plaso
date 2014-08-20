@@ -22,7 +22,6 @@ import unittest
 
 from plaso.frontend import preg
 from plaso.frontend import test_lib
-from plaso.parsers import winreg as winreg_parser
 
 
 class StringIOOutputWriter(object):
@@ -50,36 +49,31 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     test_front_end = preg.PregFrontend(output_writer)
 
     options = test_lib.Options()
-    options.plugin_name = 'userassist'
     options.regfile = self._GetTestFilePath(['NTUSER.DAT'])
-    options.plugins = winreg_parser.WinRegistryParser.GetRegistryPlugins()
-    options.image = u''
     options.verbose = False
 
-    test_front_end.ParseOptions(options, '')
-    test_front_end.RunModeRegistryPlugin(options)
+    test_front_end.ParseOptions(options, u'')
+    test_front_end.RunModeRegistryPlugin(options, u'userassist')
 
     self.assertTrue((
         u'UEME_RUNPATH:C:\\Program Files\\Internet Explorer\\iexplore.exe : '
         u'[Count: 1]') in output_writer.GetValue())
 
-    # TODO: Add tests that parse a disk image. Test both registry key parsing
+    # TODO: Add tests that parse a disk image. Test both Registry key parsing
     # and plugin parsing.
 
   def testRunAgainstKey(self):
-    """Tests running the preg frontend against a registry key."""
+    """Tests running the preg frontend against a Registry key."""
     output_writer = StringIOOutputWriter()
     test_front_end = preg.PregFrontend(output_writer)
 
     options = test_lib.Options()
     options.key = u'\\Microsoft\\Windows NT\\CurrentVersion'
     options.regfile = self._GetTestFilePath(['SOFTWARE'])
-    options.plugins = winreg_parser.WinRegistryParser.GetRegistryPlugins()
-    options.image = u''
     options.verbose = False
 
-    test_front_end.ParseOptions(options, '')
-    test_front_end.RunModeRegistryKey(options)
+    test_front_end.ParseOptions(options, u'')
+    test_front_end.RunModeRegistryKey(options, u'')
 
     self.assertTrue(
         u'Product name : Windows 7 Ultimate' in output_writer.GetValue())
