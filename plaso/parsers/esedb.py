@@ -38,14 +38,13 @@ class EseDbParser(interface.BaseParser):
 
   NAME = 'esedb'
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(EseDbParser, self).__init__(pre_obj, config)
+    super(EseDbParser, self).__init__(pre_obj)
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
         parent_class=esedb_plugins_interface.EseDbPlugin,
         pre_obj=self._pre_obj)

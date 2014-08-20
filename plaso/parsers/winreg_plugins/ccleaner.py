@@ -54,7 +54,7 @@ class CCleanerPlugin(interface.KeyPlugin):
         continue
 
       if value.name == 'UpdateKey':
-        zone = getattr(self._config, 'timezone', pytz.utc)
+        zone = getattr(self._pre_obj, 'timezone', pytz.utc)
         update_key = key.GetValue('UpdateKey')
         reg_evt = event.WinRegistryEvent(
             key.path, text_dict,

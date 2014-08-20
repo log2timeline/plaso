@@ -116,14 +116,13 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       ('header', SDE_HEADER),
   ]
 
-  def __init__(self, pre_obj, config=None):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(SkyDriveLogErrorParser, self).__init__(pre_obj, config)
+    super(SkyDriveLogErrorParser, self).__init__(pre_obj)
     self.use_local_zone = False
 
   def VerifyStructure(self, line):

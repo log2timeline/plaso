@@ -37,7 +37,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     pre_obj = event.PreprocessObject()
     pre_obj.year = 2013
     pre_obj.zone = pytz.timezone('UTC')
-    self._parser = mac_wifi_parser.MacWifiLogParser(pre_obj, None)
+    self._parser = mac_wifi_parser.MacWifiLogParser(pre_obj)
 
   def testParse(self):
     """Tests the Parse function."""

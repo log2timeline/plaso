@@ -38,14 +38,13 @@ class OleCfParser(interface.BaseParser):
 
   NAME = 'olecf'
 
-  def __init__(self, pre_obj, config=None):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(OleCfParser, self).__init__(pre_obj, config)
+    super(OleCfParser, self).__init__(pre_obj)
     self._codepage = getattr(self._pre_obj, 'codepage', 'cp1252')
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
         parent_class=olecf_plugins_interface.OlecfPlugin, pre_obj=self._pre_obj)

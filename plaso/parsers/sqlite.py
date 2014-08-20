@@ -35,14 +35,13 @@ class SQLiteParser(interface.BaseParser):
   # Name of the parser, which enables all plugins by default.
   NAME = 'sqlite'
 
-  def __init__(self, pre_obj, config):
+  def __init__(self, pre_obj):
     """Initializes the parser.
 
     Args:
       pre_obj: pre-parsing object.
-      config: configuration object.
     """
-    super(SQLiteParser, self).__init__(pre_obj, config)
+    super(SQLiteParser, self).__init__(pre_obj)
     self._local_zone = False
     self.db = None
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(

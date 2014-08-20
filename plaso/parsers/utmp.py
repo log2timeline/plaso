@@ -93,6 +93,8 @@ class UtmpParser(interface.BaseParser):
       construct.ULInt32('address_d'),
       construct.Padding(20))
 
+  LINUX_UTMP_ENTRY_SIZE = LINUX_UTMP_ENTRY.sizeof()
+
   STATUS_TYPE = {
       0: 'EMPTY',
       1: 'RUN_LVL',
@@ -110,16 +112,6 @@ class UtmpParser(interface.BaseParser):
   # It is important that this value does show up in such fields, but otherwise
   # it can be a free flowing text field.
   _DEFAULT_TEST_VALUE = u'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
-
-  def __init__(self, pre_obj, config=None):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-      config: configuration object.
-    """
-    super(UtmpParser, self).__init__(pre_obj, config)
-    self._utmp_record_size = self.LINUX_UTMP_ENTRY.sizeof()
 
   def Parse(self, file_entry):
     """Extract data from an UTMP file.
@@ -203,8 +195,8 @@ class UtmpParser(interface.BaseParser):
       have reached the end of the file (or EOF).
     """
     offset = file_object.tell()
-    data = file_object.read(self._utmp_record_size)
-    if not data or len(data) != self._utmp_record_size:
+    data = file_object.read(self.LINUX_UTMP_ENTRY_SIZE)
+    if not data or len(data) != self.LINUX_UTMP_ENTRY_SIZE:
       return
     try:
       entry = self.LINUX_UTMP_ENTRY.parse(data)

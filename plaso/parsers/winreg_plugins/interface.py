@@ -56,7 +56,7 @@ class RegistryPlugin(plugins.BasePlugin):
                  WinRegistryCache). The default is None.
     """
     super(RegistryPlugin, self).__init__(pre_obj)
-    self._config = pre_obj
+    self._pre_obj = pre_obj
 
     # TODO: Clean this up, this value is stored but not used.
     self._reg_cache = reg_cache
