@@ -60,8 +60,8 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import winreg as winreg_parser
 from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
-from plaso.parsers.winreg_plugins import interface as winreg_interface
 from plaso.preprocessors import interface as preprocess_interface
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
@@ -520,7 +520,7 @@ def PluginCompleter(unused_self, event_object):
   if not '-h' in event_object.line:
     ret_list.append('-h')
 
-  plugin_obj = winreg_interface.GetRegistryPlugins()
+  plugin_obj = winreg_parser.WinRegistryParser.GetRegistryPlugins()
 
   for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
     plugin_obj = plugin_cls(
@@ -594,7 +594,7 @@ class MyMagics(magic.Magics):
     if not plugin_name.startswith('winreg'):
       plugin_name = u'winreg_{0:s}'.format(plugin_name)
 
-    plugin_obj = winreg_interface.GetRegistryPlugins()
+    plugin_obj = winreg_parser.WinRegistryParser.GetRegistryPlugins()
     plugin_found = False
     for plugin_cls in plugin_obj.GetKeyPlugins(RegCache.hive_type):
       plugin = plugin_cls(
@@ -1139,7 +1139,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
   RegCache.events_from_last_parse = []
 
   plugins = {}
-  regplugins = winreg_interface.GetRegistryPlugins()
+  regplugins = winreg_parser.WinRegistryParser.GetRegistryPlugins()
   # Compile a list of plugins we are about to use.
   for weight in regplugins.GetWeights():
     plugin_list = regplugins.GetWeightPlugins(weight, registry_type)
@@ -1486,7 +1486,7 @@ in a textual format.
   # Parse the command line arguments.
   options = arg_parser.parse_args()
 
-  options.plugins = winreg_interface.GetRegistryPlugins()
+  options.plugins = winreg_parser.WinRegistryParser.GetRegistryPlugins()
 
   # TODO: Move some of this logic to a separate function calls to make
   # GUI writing on top of this front-end simpler.

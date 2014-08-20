@@ -55,7 +55,7 @@ from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import event
 from plaso.lib import queue
-from plaso.parsers import utils as parsers_utils
+from plaso.parsers import manager as parsers_manager
 
 
 # TODO: Remove this after the dfVFS integration.
@@ -191,7 +191,8 @@ def ProcessFile(options):
   options.single_process = True
   options.debug = False
   options.text_prepend = u''
-  parsers = parsers_utils.FindAllParsers(pre_obj, options)
+  parsers = parsers_manager.ParsersManager.FindAllParsers(
+      pre_obj=pre_obj, config=options)
   my_worker = worker.EventExtractionWorker(
       '0', None, storage_queue_producer, pre_obj, parsers)
 

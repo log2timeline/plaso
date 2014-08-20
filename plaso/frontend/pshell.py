@@ -78,9 +78,9 @@ from plaso.lib import utils
 
 from plaso.output import helper as output_helper
 
+from plaso.parsers import manager as parsers_manager
 from plaso.parsers import plugins
 from plaso.parsers import text_parser
-from plaso.parsers import utils as parsers_utils
 from plaso.proto import plaso_storage_pb2
 
 from plaso.serializer import interface as serializer_interface
@@ -120,7 +120,7 @@ def FindAllOutputs():
 
 def FindAllParsers():
   """Finds all available parsers."""
-  return parsers_utils.FindAllParsers()
+  return parsers_manager.ParsersManager.FindAllParsers()
 
 
 def GetEventData(event_proto, before=0):
@@ -241,7 +241,7 @@ def ParseFile(file_entry):
   storage_queue = queue.SingleThreadedQueue()
   storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
   pre_obj = event.PreprocessObject()
-  all_parsers = parsers_utils.FindAllParsers(pre_obj)
+  all_parsers = parsers_manager.ParsersManager.FindAllParsers(pre_obj=pre_obj)
 
   # Create a worker.
   worker_object = worker.EventExtractionWorker(

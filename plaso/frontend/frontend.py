@@ -46,7 +46,7 @@ from plaso.lib import pfilter
 from plaso.lib import queue
 from plaso.lib import storage
 from plaso.lib import timelib
-from plaso.parsers import utils as parsers_utils
+from plaso.parsers import manager as parsers_manager
 
 import pytz
 
@@ -877,10 +877,10 @@ class ExtractionFrontend(Frontend):
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
 
-    # TODO: move FindAllParsers to engine as a class method?
-    filter_query = getattr(options, 'parsers', '')
-    self._parsers = parsers_utils.FindAllParsers(
-        pre_obj=pre_obj, config=options, parser_filter_string=filter_query)
+    parser_filter_string = getattr(options, 'parsers', '')
+    parsers_manager.ParsersManager.SetParserFilterString(parser_filter_string)
+    self._parsers = parsers_manager.ParsersManager.FindAllParsers(
+        pre_obj=pre_obj, config=options)
     self._parser_names = [parser.parser_name for parser in self._parsers['all']]
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
@@ -1108,10 +1108,10 @@ class ExtractionFrontend(Frontend):
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
 
-    # TODO: move FindAllParsers to engine as a class method?
-    filter_query = getattr(options, 'parsers', '')
-    self._parsers = parsers_utils.FindAllParsers(
-        pre_obj=pre_obj, config=options, parser_filter_string=filter_query)
+    parser_filter_string = getattr(options, 'parsers', '')
+    parsers_manager.ParsersManager.SetParserFilterString(parser_filter_string)
+    self._parsers = parsers_manager.ParsersManager.FindAllParsers(
+        pre_obj=pre_obj, config=options)
     self._parser_names = [parser.parser_name for parser in self._parsers['all']]
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
