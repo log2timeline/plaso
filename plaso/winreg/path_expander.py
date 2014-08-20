@@ -21,19 +21,16 @@
 class WinRegistryKeyPathExpander(object):
   """Class that implements the Windows Registry key path expander object."""
 
-  def __init__(self, pre_obj=None, reg_cache=None):
+  def __init__(self, reg_cache=None):
     """Initialize the path expander object.
 
     Args:
-      pre_obj: Optional preprocess object that contains stored values from
-               the image.
       reg_cache: Optional Registry objects cache (insance of WinRegistryCache).
     """
     super(WinRegistryKeyPathExpander, self).__init__()
-    self._pre_obj = pre_obj
     self._reg_cache = reg_cache
 
-  def ExpandPath(self, key_path):
+  def ExpandPath(self, key_path, pre_obj=None):
     """Expand a Registry key path based on attributes in pre calculated values.
 
        A Registry key path may contain paths that are attributes, based on
@@ -53,6 +50,8 @@ class WinRegistryKeyPathExpander(object):
 
     Args:
       key_path: The Registry key path before being expanded.
+      pre_obj: Optional preprocess object that contains stored values from
+               the image.
 
     Returns:
       A Registry key path that's expanded based on attribute values.
@@ -67,8 +66,8 @@ class WinRegistryKeyPathExpander(object):
     if self._reg_cache:
       key_dict.update(self._reg_cache.attributes.items())
 
-    if self._pre_obj:
-      key_dict.update(self._pre_obj.__dict__.items())
+    if pre_obj:
+      key_dict.update(pre_obj.__dict__.items())
 
     try:
       expanded_key_path = key_path.format(**key_dict)

@@ -41,7 +41,7 @@ def ParseChatData(data):
     if body.startswith('//') and '{' in body:
       body_dict = ExtractJQuery(body)
       title, _, _ = body.partition('{')
-      body = u'{} <{}>'.format(title[2:], DictToList(body_dict))
+      body = u'{0:s} <{1!s}>'.format(title[2:], DictToList(body_dict))
   else:
     body = 'No text.'
 
@@ -71,7 +71,7 @@ def DictToList(data_dict):
   for key, value in data_dict.items():
     if key in ('body', 'datetime', 'type', 'room', 'rooms', 'id'):
       continue
-    ret_list.append(u'{} = {}'.format(key, value))
+    ret_list.append(u'{0:s} = {1!s}'.format(key, value))
 
   return ret_list
 
@@ -153,8 +153,12 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       'cfurl_cache_blob_data', 'cfurl_cache_receiver_data',
       'cfurl_cache_response'])
 
-  def ParseReceiverData(self, row, **unused_kwargs):
-    """Parses a single row from the receiver and cache response table."""
+  def ParseReceiverData(self, unused_parser_context, row, **unused_kwargs):
+    """Parses a single row from the receiver and cache response table.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+    """
     data = {}
     key_url = row['request_key']
 

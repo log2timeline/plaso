@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import mcafeeav as mcafeeav_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.parsers import mcafeeav
 from plaso.parsers import test_lib
@@ -32,8 +31,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = mcafeeav.McafeeAccessProtectionParser(pre_obj)
+    self._parser = mcafeeav.McafeeAccessProtectionParser()
 
   def testParse(self):
     """Tests the Parse function."""

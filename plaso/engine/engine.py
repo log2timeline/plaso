@@ -24,6 +24,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso import preprocessors
+from plaso.artifacts import knowledge_base
 from plaso.engine import collector
 from plaso.engine import worker
 from plaso.lib import errors
@@ -46,6 +47,7 @@ class Engine(object):
     self._source_path_spec = None
     self._source_file_entry = None
     self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+    self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def CreateCollector(
       self, include_directory_stat, vss_stores=None, filter_find_specs=None,
@@ -84,13 +86,11 @@ class Engine(object):
 
     return collector_object
 
-  def CreateExtractionWorker(
-      self, worker_number, pre_obj, parsers, rpc_proxy=None):
+  def CreateExtractionWorker(self, worker_number, parsers, rpc_proxy=None):
     """Creates an extraction worker object.
 
     Args:
       worker_number: number that identifies the worker.
-      pre_obj: The preprocessing object (instance of PreprocessObject).
       parsers: A list of parser objects to use for processing.
       rpc_proxy: A proxy object (instance of proxy.ProxyServer) that can be
                  used to setup RPC functionality for the worker. This is
@@ -102,7 +102,7 @@ class Engine(object):
     """
     return worker.EventExtractionWorker(
         worker_number, self._collection_queue, self._storage_queue_producer,
-        pre_obj, parsers, rpc_proxy=rpc_proxy)
+        self.knowledge_base, parsers, rpc_proxy=rpc_proxy)
 
   def GetSourceFileSystemSearcher(self, resolver_context=None):
     """Retrieves the file system searcher of the source.
@@ -132,11 +132,10 @@ class Engine(object):
 
     return file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
-  def PreprocessSource(self, pre_obj, platform, resolver_context=None):
+  def PreprocessSource(self, platform, resolver_context=None):
     """Preprocesses the source and fills the preprocessing object.
 
     Args:
-      pre_obj: the preprocessing object (instance of PreprocessObject).
       platform: string that indicates the platform (operating system).
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None. Note that every thread or process
@@ -146,14 +145,13 @@ class Engine(object):
         resolver_context=resolver_context)
     if not platform:
       platform = preprocess_interface.GuessOS(searcher)
-    pre_obj.guessed_os = platform
+    self.knowledge_base.platform = platform
 
-    plugin_list = preprocessors.PreProcessList(pre_obj)
-
-    for weight in plugin_list.GetWeightList(platform):
-      for plugin in plugin_list.GetWeight(platform, weight):
+    for weight in preprocessors.PreProcessorsManager.GetWeightList(platform):
+      for plugin in preprocessors.PreProcessorsManager.GetWeight(
+          platform, weight):
         try:
-          plugin.Run(searcher)
+          plugin.Run(searcher, self.knowledge_base)
         except (IOError, errors.PreProcessFail) as exception:
           logging.warning((
               u'Unable to run preprocessor: {0:s} for attribute: {1:s} '

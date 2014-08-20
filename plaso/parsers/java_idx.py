@@ -119,7 +119,7 @@ class JavaIDXParser(interface.BaseParser):
       construct.PascalString(
           'string', length_field=construct.UBInt16('length')))
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a Java cache IDX file.
 
     This is the main parsing engine for the parser. It determines if
@@ -128,7 +128,8 @@ class JavaIDXParser(interface.BaseParser):
     data.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An EventObject (JavaIDXEvent) that contains the extracted attributes.

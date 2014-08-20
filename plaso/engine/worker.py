@@ -30,6 +30,7 @@ from plaso.engine import classifier
 from plaso.lib import errors
 from plaso.lib import queue
 from plaso.lib import utils
+from plaso.parsers import context as parsers_context
 
 
 class EventExtractionWorker(queue.PathSpecQueueConsumer):
@@ -44,7 +45,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
   """
 
   def __init__(
-      self, identifier, process_queue, storage_queue_producer, pre_obj,
+      self, identifier, process_queue, storage_queue_producer, knowledge_base,
       parsers, rpc_proxy=None):
     """Initializes the event extraction worker object.
 
@@ -53,8 +54,9 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       process_queue: the process queue (instance of Queue).
       storage_queue_producer: the storage queue producer (instance of
                               EventObjectQueueProducer).
-      pre_obj: A preprocess object containing information collected from
-               image (instance of PreprocessObject).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
       parsers: A list of parser objects to use for processing.
       rpc_proxy: A proxy object (instance of proxy.ProxyServer) that can be
                  used to setup RPC functionality for the worker. This is
@@ -65,10 +67,11 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._debug_mode = False
     self._filter_object = None
     self._identifier = identifier
+    self._knowledge_base = knowledge_base
     self._mount_path = None
     self._open_files = False
+    self._parser_context = parsers_context.ParserContext(knowledge_base)
     self._parsers = parsers
-    self._pre_obj = pre_obj
     self._rpc_proxy = rpc_proxy
 
     # We need a resolver context per process to prevent multi processing
@@ -82,11 +85,6 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._counter_of_extracted_events = 0
     self._current_working_file = u''
     self._is_running = False
-
-    if pre_obj:
-      self._user_mapping = pre_obj.GetUserMappings()
-    else:
-      self._user_mapping = {}
 
   def _ConsumePathSpec(self, path_spec):
     """Consumes a path specification callback for ConsumePathSpecs."""
@@ -146,16 +144,16 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     event_object.pathspec = file_entry.path_spec
     event_object.parser = parser_name
 
-    if hasattr(self._pre_obj, 'hostname'):
-      event_object.hostname = self._pre_obj.hostname
+    if self._knowledge_base.hostname:
+      event_object.hostname = self._knowledge_base.hostname
     if not hasattr(event_object, 'inode') and hasattr(stat_obj, 'ino'):
       event_object.inode = utils.GetInodeValue(stat_obj.ino)
 
     # Set the username that is associated to the record.
-    if getattr(event_object, 'user_sid', None) and self._user_mapping:
-      username = self._user_mapping.get(event_object.user_sid, None)
-      if username:
-        event_object.username = username
+    user_sid = getattr(event_object, 'user_sid', None)
+    username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
+    if username:
+      event_object.username = username
 
     if not self._filter_object or self._filter_object.Matches(event_object):
       self._storage_queue_producer.ProduceEventObject(event_object)
@@ -181,25 +179,27 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # inconclusive the "all" key is used, or the key is not found.
     # key = self._parsers.get(classification, 'all')
     stat_obj = file_entry.GetStat()
-    for parsing_object in self._parsers['all']:
+
+    for parser_object in self._parsers['all']:
       logging.debug(u'Checking [{0:s}] against: {1:s}'.format(
-          file_entry.name, parsing_object.parser_name))
+          file_entry.name, parser_object.parser_name))
       try:
-        for event_object in parsing_object.Parse(file_entry):
+        for event_object in parser_object.Parse(
+            self._parser_context, file_entry):
           if not event_object:
             continue
 
           self._ParseEvent(
-              event_object, file_entry, parsing_object.parser_name, stat_obj)
+              event_object, file_entry, parser_object.parser_name, stat_obj)
 
       except errors.UnableToParseFile as exception:
         logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
-            parsing_object.parser_name, file_entry.name, exception))
+            parser_object.parser_name, file_entry.name, exception))
 
       except IOError as exception:
         logging.debug(
             u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
-                parsing_object.parser_name, file_entry.path_spec.comparable,
+                parser_object.parser_name, file_entry.path_spec.comparable,
                 exception))
 
       # Casting a wide net, catching all exceptions. Done to keep the worker
@@ -208,7 +208,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       except Exception as exception:
         logging.warning(
             u'[{0:s}] Unable to process file: {1:s} with error: {2:s}.'.format(
-                parsing_object.parser_name, file_entry.path_spec.comparable,
+                parser_object.parser_name, file_entry.path_spec.comparable,
                 exception))
         logging.debug(
             u'The path specification that caused the error: {0:s}'.format(

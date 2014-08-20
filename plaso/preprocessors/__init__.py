@@ -17,51 +17,55 @@
 # limitations under the License.
 """This file contains an import statement for each plugin."""
 
-from plaso.lib import event
 from plaso.preprocessors import interface
 from plaso.preprocessors import linux
 from plaso.preprocessors import macosx
 from plaso.preprocessors import windows
 
 
-class PreProcessList(object):
-  """An object that displays all the available preprocessors."""
+class PreProcessorsManager(object):
+  """Class that implements the pre-processors manager."""
 
-  def __init__(self, pre_obj):
-    """Constructor for the PreProcessList object.
+  _list = interface.PreprocessPlugin.classes
+
+  @classmethod
+  def GetWeight(cls, platform, weight):
+    """Returns all preprocessors of certain weight for a particular OS.
 
     Args:
-      pre_obj: A preprocess object that contains the information
-               gathered from preprocessing modules so far (and the object that
-               stores future collections) (instance of PreprocessObject).
-      different types of sources (OS, TKS, etc.)
+      platform: A string containing the operating system name.
     """
-    self._list = interface.PreprocessPlugin.classes
-    self._pre = pre_obj
-
-  def GetWeight(self, os, weight):
-    """Return all preprocessors of certain weight for a particular OS."""
     ret_list = []
-    for cls_obj in self._list.values():
-      if os in cls_obj.SUPPORTED_OS and cls_obj.WEIGHT == weight:
-        ret_list.append(cls_obj(self._pre))
+    for cls_obj in cls._list.values():
+      if platform in cls_obj.SUPPORTED_OS and cls_obj.WEIGHT == weight:
+        ret_list.append(cls_obj())
 
     return ret_list
 
-  def GetWeightList(self, os):
-    """Return a list of all weights that are used by preprocessing plugins."""
+  @classmethod
+  def GetWeightList(cls, platform):
+    """Returns a list of all weights that are used by preprocessing plugins.
+
+    Args:
+      platform: A string containing the operating system name.
+    """
     values = {}
-    for cls_obj in self._list.values():
-      if os in cls_obj.SUPPORTED_OS:
+    for cls_obj in cls._list.values():
+      if platform in cls_obj.SUPPORTED_OS:
         values[cls_obj.WEIGHT] = 1
 
     return sorted(values.keys())
 
-  def GetOs(self, os):
-    """Return a list of all preprocessing plugins for a particular OS."""
+  @classmethod
+  def GetOs(cls, platform):
+    """Returns a list of all preprocessing plugins for a particular OS.
+
+    Args:
+      platform: A string containing the operating system name.
+    """
     ret_list = []
-    for cls_obj in self._list.values():
-      if os in cls_obj.SUPPORTED_OS:
-        ret_list.append(cls_obj(self._pre, self._col))
+    for cls_obj in cls._list.values():
+      if platform in cls_obj.SUPPORTED_OS:
+        ret_list.append(cls_obj())
 
     return ret_list

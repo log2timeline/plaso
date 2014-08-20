@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import symantec as symantec_formatter
-from plaso.lib import event
 from plaso.parsers import symantec
 from plaso.parsers import test_lib
 
@@ -31,8 +30,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = symantec.SymantecParser(pre_obj)
+    self._parser = symantec.SymantecParser()
 
   def testParse(self):
     """Tests the Parse function."""

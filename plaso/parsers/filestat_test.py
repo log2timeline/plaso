@@ -24,7 +24,6 @@ from dfvfs.path import factory as path_spec_factory
 
 # pylint: disable=unused-import
 from plaso.formatters import filestat as filestat_formatter
-from plaso.lib import event
 from plaso.parsers import filestat
 from plaso.parsers import test_lib
 
@@ -34,8 +33,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = filestat.FileStatParser(pre_obj)
+    self._parser = filestat.FileStatParser()
 
   def testTSKFile(self):
     """Read a file within an image file and make few tests."""

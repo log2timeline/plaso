@@ -41,8 +41,16 @@ class DefaultPlugin(interface.KeyPlugin):
   # tried and failed.
   WEIGHT = 3
 
-  def GetEntries(self, key, **unused_kwargs):
-    """Returns an event object based on a Registry key name and values."""
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+    """Returns an event object based on a Registry key name and values.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: A Windows Registry key (instance of WinRegKey).
+
+    Yields:
+      An event object (instance of EventObject) that contains a cached entry.
+    """
     text_dict = {}
 
     if key.number_of_values == 0:
@@ -85,7 +93,15 @@ class DefaultPlugin(interface.KeyPlugin):
   # overwrite the Process function to make sure it is called when no other
   # plugin is available.
 
-  def Process(self, key=None, **unused_kwargs):
-    """Process the key and return a generator to extract event objects."""
+  def Process(self, parser_context, key=None, **kwargs):
+    """Process the key and return a generator to extract event objects.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: A Windows Registry key (instance of WinRegKey).
+
+    Yields:
+      An event object (instance of EventObject) that contains a cached entry.
+    """
     # Note that we should NOT call the Process function of the KeyPlugin here.
-    return self.GetEntries(key=key)
+    return self.GetEntries(parser_context, key=key, **kwargs)

@@ -72,12 +72,15 @@ class MacOSXTimeZone(interface.PreprocessPlugin):
 
   ZONE_FILE_PATH = u'/private/etc/localtime'
 
-  def GetValue(self, searcher):
+  def GetValue(self, searcher, unused_knowledge_base):
     """Determines the local time zone settings.
 
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
 
     Returns:
       The local timezone settings.
@@ -147,12 +150,15 @@ class MacOSXUsers(interface.PreprocessPlugin):
 
     return top_level_object
 
-  def GetValue(self, searcher):
+  def GetValue(self, searcher, unused_knowledge_base):
     """Determines the user accounts.
 
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
 
     Returns:
       A list containing username information dicts.

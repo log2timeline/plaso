@@ -19,8 +19,8 @@
 
 import unittest
 
-from plaso.formatters import pls_recall
-from plaso.lib import event
+# pylint: disable=unused-import
+from plaso.formatters import pls_recall as pls_recall_formatter
 from plaso.lib import timelib_test
 from plaso.parsers import pls_recall
 from plaso.parsers import test_lib
@@ -31,8 +31,7 @@ class PlsRecallTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = pls_recall.PlsRecallParser(pre_obj)
+    self._parser = pls_recall.PlsRecallParser()
 
   def testParse(self):
     """Tests the Parse function."""

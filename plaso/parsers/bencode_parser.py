@@ -55,16 +55,11 @@ class BencodeParser(interface.BaseParser):
 
   NAME = 'bencode'
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(BencodeParser, self).__init__(pre_obj)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(BencodeParser, self).__init__()
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=bencode_plugins_interface.BencodePlugin,
-        pre_obj=self._pre_obj)
+        parent_class=bencode_plugins_interface.BencodePlugin)
 
   def GetTopLevel(self, file_object):
     """Returns deserialized content of a bencoded file as a dictionary object.
@@ -93,11 +88,12 @@ class BencodeParser(interface.BaseParser):
 
     return top_level_object
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Parse and extract values from a bencoded file.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event.BencodeEvent containing information extracted from a bencoded
@@ -114,7 +110,8 @@ class BencodeParser(interface.BaseParser):
 
     for bencode_plugin in self._plugins.itervalues():
       try:
-        for event_object in bencode_plugin.Process(top_level_object):
+        for event_object in bencode_plugin.Process(
+            parser_context, top_level=top_level_object):
           event_object.plugin = bencode_plugin.plugin_name
           yield event_object
 

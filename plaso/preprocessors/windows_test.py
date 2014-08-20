@@ -23,7 +23,7 @@ import unittest
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
-from plaso.lib import event
+from plaso.artifacts import knowledge_base
 from plaso.preprocessors import windows
 from plaso.preprocessors import test_lib
 
@@ -77,18 +77,17 @@ class WindowsCodepageTest(WindowsSystemRegistryTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
     # The plug-in needs to expand {sysregistry} so we need to run
     # the WindowsSystemRegistryPath plug-in first.
-    plugin = windows.WindowsSystemRegistryPath(pre_obj)
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRegistryPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin = windows.WindowsCodepage(pre_obj)
+    plugin = windows.WindowsCodepage()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin.Run(self._searcher)
-
-    codepage = getattr(pre_obj, 'code_page', None)
-    self.assertEquals(codepage, u'cp1252')
+    self.assertEquals(knowledge_base_object.codepage, u'cp1252')
 
 
 class WindowsHostnameTest(WindowsSystemRegistryTest):
@@ -96,18 +95,17 @@ class WindowsHostnameTest(WindowsSystemRegistryTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
     # The plug-in needs to expand {sysregistry} so we need to run
     # the WindowsSystemRegistryPath plug-in first.
-    plugin = windows.WindowsSystemRegistryPath(pre_obj)
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRegistryPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin = windows.WindowsHostname(pre_obj)
+    plugin = windows.WindowsHostname()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin.Run(self._searcher)
-
-    hostname = getattr(pre_obj, 'hostname', None)
-    self.assertEquals(hostname, u'WKS-WIN732BITA')
+    self.assertEquals(knowledge_base_object.hostname, u'WKS-WIN732BITA')
 
 
 class WindowsProgramFilesPath(WindowsSoftwareRegistryTest):
@@ -115,17 +113,17 @@ class WindowsProgramFilesPath(WindowsSoftwareRegistryTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
     # The plug-in needs to expand {sysregistry} so we need to run
     # the WindowsSystemRegistryPath plug-in first.
-    plugin = windows.WindowsSystemRegistryPath(pre_obj)
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRegistryPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin = windows.WindowsProgramFilesPath(pre_obj)
+    plugin = windows.WindowsProgramFilesPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin.Run(self._searcher)
-
-    path = getattr(pre_obj, 'programfiles', None)
+    path = knowledge_base_object.GetValue('programfiles')
     self.assertEquals(path, u'Program Files')
 
 
@@ -134,17 +132,18 @@ class WindowsProgramFilesX86Path(WindowsSoftwareRegistryTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
     # The plug-in needs to expand {sysregistry} so we need to run
     # the WindowsSystemRegistryPath plug-in first.
-    plugin = windows.WindowsSystemRegistryPath(pre_obj)
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRegistryPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin = windows.WindowsProgramFilesX86Path(pre_obj)
+    plugin = windows.WindowsProgramFilesX86Path()
 
-    plugin.Run(self._searcher)
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    path = getattr(pre_obj, 'programfilesx86', None)
+    path = knowledge_base_object.GetValue('programfilesx86')
     # The test SOFTWARE Registry file does not contain a value for
     # the Program Files X86 path.
     self.assertEquals(path, None)
@@ -166,12 +165,12 @@ class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = windows.WindowsSystemRegistryPath(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRegistryPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    path = getattr(pre_obj, 'sysregistry', None)
+    path = knowledge_base_object.GetValue('sysregistry')
     self.assertEquals(path, u'/Windows/System32/config')
 
 
@@ -191,12 +190,12 @@ class WindowsSystemRootPathTest(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = windows.WindowsSystemRootPath(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRootPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    path = getattr(pre_obj, 'systemroot', None)
+    path = knowledge_base_object.GetValue('systemroot')
     self.assertEquals(path, u'/Windows/System32')
 
 
@@ -205,18 +204,18 @@ class WindowsTimeZoneTest(WindowsSystemRegistryTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
     # The plug-in needs to expand {sysregistry} so we need to run
     # the WindowsSystemRegistryPath plug-in first.
-    plugin = windows.WindowsSystemRegistryPath(pre_obj)
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRegistryPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin = windows.WindowsTimeZone(pre_obj)
+    plugin = windows.WindowsTimeZone()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin.Run(self._searcher)
-
-    timezone = getattr(pre_obj, 'time_zone_str', None)
-    self.assertEquals(timezone, u'EST5EDT')
+    time_zone_str = knowledge_base_object.GetValue('time_zone_str')
+    self.assertEquals(time_zone_str, u'EST5EDT')
 
 
 class WindowsUsersTest(WindowsSoftwareRegistryTest):
@@ -224,17 +223,17 @@ class WindowsUsersTest(WindowsSoftwareRegistryTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
     # The plug-in needs to expand {sysregistry} so we need to run
     # the WindowsSystemRegistryPath plug-in first.
-    plugin = windows.WindowsSystemRegistryPath(pre_obj)
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRegistryPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin = windows.WindowsUsers(pre_obj)
+    plugin = windows.WindowsUsers()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin.Run(self._searcher)
-
-    users = getattr(pre_obj, 'users', None)
+    users = knowledge_base_object.GetValue('users')
     self.assertEquals(len(users), 11)
 
     expected_sid = u'S-1-5-21-2036804247-3058324640-2116585241-1114'
@@ -248,18 +247,18 @@ class WindowsVersionTest(WindowsSoftwareRegistryTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
     # The plug-in needs to expand {sysregistry} so we need to run
     # the WindowsSystemRegistryPath plug-in first.
-    plugin = windows.WindowsSystemRegistryPath(pre_obj)
-    plugin.Run(self._searcher)
+    plugin = windows.WindowsSystemRegistryPath()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin = windows.WindowsVersion(pre_obj)
+    plugin = windows.WindowsVersion()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    plugin.Run(self._searcher)
-
-    version = getattr(pre_obj, 'osversion', None)
-    self.assertEquals(version, u'Windows 7 Ultimate')
+    osversion = knowledge_base_object.GetValue('osversion')
+    self.assertEquals(osversion, u'Windows 7 Ultimate')
 
 
 if __name__ == '__main__':

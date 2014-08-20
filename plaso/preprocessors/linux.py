@@ -32,12 +32,15 @@ class LinuxHostname(interface.PreprocessPlugin):
   WEIGHT = 1
   ATTRIBUTE = 'hostname'
 
-  def GetValue(self, searcher):
+  def GetValue(self, searcher, unused_knowledge_base):
     """Determines the hostname based on the contents of /etc/hostname.
 
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
 
     Returns:
       The hostname.
@@ -66,12 +69,15 @@ class LinuxUsernames(interface.PreprocessPlugin):
   WEIGHT = 1
   ATTRIBUTE = 'users'
 
-  def GetValue(self, searcher):
+  def GetValue(self, searcher, unused_knowledge_base):
     """Determines the user information based on the contents of /etc/passwd.
 
     Args:
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
 
     Returns:
       A list containing username information dicts.

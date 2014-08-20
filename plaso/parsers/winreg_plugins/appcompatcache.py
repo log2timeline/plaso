@@ -32,8 +32,8 @@ class AppCompatCacheEvent(event.EventObject):
 
   DATA_TYPE = 'windows:registry:appcompatcache'
 
-  def __init__(self, key, entry_index, path, usage=None, timestamp=None,
-               offset=None):
+  def __init__(
+      self, key, entry_index, path, usage=None, timestamp=None, offset=None):
     """Initializes a Windows Registry event.
 
     Args:
@@ -542,10 +542,11 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     return cached_entry_object
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Extracts event objects from a Application Compatibility Cache key.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:

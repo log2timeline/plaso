@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import msiecf as msiecf_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers import msiecf
@@ -33,8 +32,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._parser = msiecf.MsiecfParser(pre_obj)
+    self._parser = msiecf.MsiecfParser()
 
   def testParse(self):
     """Tests the Parse function."""

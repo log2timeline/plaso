@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.lib import event
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import softwareupdate
 from plaso.parsers.plist_plugins import test_lib
@@ -32,9 +31,8 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = softwareupdate.SoftwareUpdatePlugin(None)
-    pre_obj = event.PreprocessObject()
-    self._parser = plist.PlistParser(pre_obj)
+    self._plugin = softwareupdate.SoftwareUpdatePlugin()
+    self._parser = plist.PlistParser()
 
   def testProcess(self):
     """Tests the Process function."""
@@ -57,8 +55,9 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     event_object = event_objects[1]
     self.assertEqual(event_object.key, u'')
     self.assertEqual(event_object.root, u'/')
-    expected_desc = (u'Last Mac OS 10.9.1 (13B42) partially '
-                     u'udpate, pending 1: RAWCameraUpdate5.03(031-2664).')
+    expected_desc = (
+        u'Last Mac OS 10.9.1 (13B42) partially '
+        u'update, pending 1: RAWCameraUpdate5.03(031-2664).')
     self.assertEqual(event_object.desc, expected_desc)
 
 

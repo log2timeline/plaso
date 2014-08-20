@@ -22,7 +22,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import firefox as firefox_formatter
-from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import firefox
@@ -35,8 +34,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = firefox.FirefoxHistoryPlugin(pre_obj)
+    self._plugin = firefox.FirefoxHistoryPlugin()
 
   def testProcessPriorTo24(self):
     """Tests the Process function on a Firefox History database file."""
@@ -238,8 +236,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    self._plugin = firefox.FirefoxDownloadsPlugin(pre_obj)
+    self._plugin = firefox.FirefoxDownloadsPlugin()
 
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox Downloads database file."""

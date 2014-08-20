@@ -138,26 +138,41 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
       ('logline', LOG_LINE_6_0)]
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(WinIISParser, self).__init__(pre_obj)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(WinIISParser, self).__init__()
     self.version = None
     self.software = None
 
-  def VerifyStructure(self, line):
-    """Verify that this file is an IIS log file."""
+  def VerifyStructure(self, unused_parser_context, line):
+    """Verify that this file is an IIS log file.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     # TODO: Examine other versions of the file format and if this parser should
     # support them. For now just checking if it contains the IIS header.
     if u'#Software: Microsoft Internet Information Services' in line:
       return True
     return False
 
-  def ParseRecord(self, key, structure):
-    """Parse each record structure and return an EventObject if applicable."""
+  def ParseRecord(self, unused_parser_context, key, structure):
+    """Parse each record structure and return an event object if applicable.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
     if key == 'comment':
       self._ParseCommentRecord(structure)
     elif key == 'logline':

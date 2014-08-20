@@ -81,8 +81,16 @@ class MactimeParser(text_parser.TextCSVParser):
       'mtime': eventdata.EventTimestamp.MODIFICATION_TIME,
   }
 
-  def VerifyRow(self, row):
-    """Verify we are dealing with a mactime bodyfile."""
+  def VerifyRow(self, unused_parser_context, row):
+    """Verify we are dealing with a mactime bodyfile.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: A single row from the CSV file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
     if not self.MD5_RE.match(row['md5']):
       return False
 
@@ -99,8 +107,17 @@ class MactimeParser(text_parser.TextCSVParser):
     # TODO: Add additional verification.
     return True
 
-  def ParseRow(self, row):
-    """Parse a single row and yield extracted EventObjects from it."""
+  def ParseRow(self, unused_parser_context, row):
+    """Parse a single row and yield extracted EventObjects from it.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      row: A dictionary containing all the fields as denoted in the
+           COLUMNS class list.
+
+    Yields:
+      An EventObject extracted from a single line from the log file.
+    """
     for key, value in row.iteritems():
       if isinstance(row[key], basestring):
         try:

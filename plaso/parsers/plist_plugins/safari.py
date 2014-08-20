@@ -56,17 +56,18 @@ class SafariHistoryPlugin(interface.PlistPlugin):
   PLIST_PATH = 'History.plist'
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
 
-  def GetEntries(self, match, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
     """Extracts Safari history items.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       match: A dictionary containing keys extracted from PLIST_KEYS.
 
     Yields:
       EventObject objects extracted from the plist.
     """
     if match.get('WebHistoryFileVersion', 0) != 1:
-      logging.warning(u'Unable to parse Safari version: {}'.format(
+      logging.warning(u'Unable to parse Safari version: {0:s}'.format(
           match.get('WebHistoryFileVersion', 0)))
       return
 
@@ -75,7 +76,7 @@ class SafariHistoryPlugin(interface.PlistPlugin):
         time = timelib.Timestamp.FromCocoaTime(float(
             history_entry.get('lastVisitedDate', 0)))
       except ValueError:
-        logging.warning(u'Unable to translate timestamp: {}'.format(
+        logging.warning(u'Unable to translate timestamp: {0:s}'.format(
             history_entry.get('lastVisitedDate', 0)))
         continue
 

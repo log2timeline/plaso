@@ -90,10 +90,11 @@ class TaskCachePlugin(interface.KeyPlugin):
       for value_key, id_value in self._GetIdValue(sub_key):
         yield value_key, id_value
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Parses a Task Cache Registry key.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:

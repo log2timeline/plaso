@@ -51,15 +51,11 @@ class PlistParser(interface.BaseParser):
 
   NAME = 'plist'
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(PlistParser, self).__init__(pre_obj)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(PlistParser, self).__init__()
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=plist_plugins_interface.PlistPlugin, pre_obj=self._pre_obj)
+        parent_class=plist_plugins_interface.PlistPlugin)
 
   def GetTopLevel(self, file_object, file_name=''):
     """Returns the deserialized content of a plist as a dictionary object.
@@ -103,11 +99,12 @@ class PlistParser(interface.BaseParser):
 
     return top_level_object
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Parse and extract values from a plist file.
 
     Args:
-      file_entry: the file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       A plist event object (instance of event.PlistEvent).
@@ -145,7 +142,8 @@ class PlistParser(interface.BaseParser):
 
     for plist_plugin in self._plugins.itervalues():
       try:
-        for event_object in plist_plugin.Process(plist_name, top_level_object):
+        for event_object in plist_plugin.Process(
+            parser_context, plist_name=plist_name, top_level=top_level_object):
           event_object.plugin = plist_plugin.plugin_name
           yield event_object
       except errors.WrongPlistPlugin as exception:

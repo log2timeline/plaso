@@ -38,22 +38,18 @@ class EseDbParser(interface.BaseParser):
 
   NAME = 'esedb'
 
-  def __init__(self, pre_obj):
-    """Initializes the parser.
-
-    Args:
-      pre_obj: pre-parsing object.
-    """
-    super(EseDbParser, self).__init__(pre_obj)
+  def __init__(self):
+    """Initializes a parser object."""
+    super(EseDbParser, self).__init__()
     self._plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=esedb_plugins_interface.EseDbPlugin,
-        pre_obj=self._pre_obj)
+        parent_class=esedb_plugins_interface.EseDbPlugin)
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extracts data from an ESE database File.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event event (instance of EventObject) that contains the parsed

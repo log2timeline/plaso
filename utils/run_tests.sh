@@ -42,7 +42,7 @@ then
 fi
 
 # Run the tests in a specific order.
-SUBDIRS="lib serializer winreg filters classifier engine events parsers output analysis frontend";
+SUBDIRS="lib serializer winreg filters classifier engine events preprocessors parsers output analysis frontend";
 
 for SUBDIR in ${SUBDIRS};
 do

@@ -26,8 +26,6 @@ import sqlite3
 from plaso.lib import errors
 from plaso.parsers import plugins
 
-import pytz
-
 
 class SQLiteCache(plugins.BasePluginCache):
   """A cache storing query results for SQLite plugins."""
@@ -101,12 +99,7 @@ class SQLitePlugin(plugins.BasePlugin):
   # List of tables that should be present in the database, for verification.
   REQUIRED_TABLES = frozenset([])
 
-  def __init__(self, pre_obj):
-    """Initialize the database plugin."""
-    super(SQLitePlugin, self).__init__(pre_obj)
-    self.zone = getattr(self._knowledge_base, 'zone', pytz.utc)
-
-  def Process(self, cache=None, database=None, **kwargs):
+  def Process(self, parser_context, cache=None, database=None, **kwargs):
     """Determine if this is the right plugin for this database.
 
     This function takes a SQLiteDatabase object and compares the list
@@ -117,6 +110,7 @@ class SQLitePlugin(plugins.BasePlugin):
     objects.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       cache: A SQLiteCache object.
       database: A database object (instance of SQLiteDatabase).
 
@@ -133,17 +127,19 @@ class SQLitePlugin(plugins.BasePlugin):
 
     if not frozenset(database.tables) >= self.REQUIRED_TABLES:
       raise errors.WrongPlugin(
-          u'Not the correct database tables for: {}'.format(
+          u'Not the correct database tables for: {0:s}'.format(
               self.plugin_name))
 
-    super(SQLitePlugin, self).Process(**kwargs)
+    # This will raise if unhandled keyword arguments are passed.
+    super(SQLitePlugin, self).Process(parser_context, **kwargs)
 
-    return self.GetEntries(cache=cache, database=database)
+    return self.GetEntries(parser_context, cache=cache, database=database)
 
-  def GetEntries(self, cache=None, database=None, **kwargs):
+  def GetEntries(self, parser_context, cache=None, database=None, **kwargs):
     """Yields EventObjects extracted from a SQLite database.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       cache: A SQLiteCache object.
       database: A database object (instance of SQLiteDatabase).
 
@@ -157,7 +153,8 @@ class SQLitePlugin(plugins.BasePlugin):
         sql_results = cursor.execute(query)
         row = sql_results.fetchone()
         while row:
-          event_generator = call_back(row=row, cache=cache, database=database)
+          event_generator = call_back(
+              parser_context, row, cache=cache, database=database)
           if event_generator:
             for event_object in event_generator:
               event_object.query = query
@@ -230,7 +227,7 @@ class SQLiteDatabase(object):
     if data != self.MAGIC:
       file_object.close()
       raise IOError(
-          u'File {} not a SQLite database. (invalid signature)'.format(
+          u'File {0:s} not a SQLite database. (invalid signature)'.format(
               self._file_entry.name))
 
     # TODO: Current design copies the entire file into a buffer

@@ -233,10 +233,12 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
       'moz_historyvisits h WHERE p.id = h.place_id')
 
-  def ParseBookmarkAnnotationRow(self, row, **unused_kwargs):
+  def ParseBookmarkAnnotationRow(
+      self, unused_parser_context, row, **unused_kwargs):
     """Parses a bookmark annotation row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -253,10 +255,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
           row['id'], row['title'], row['url'], row['content'])
 
-  def ParseBookmarkFolderRow(self, row, **unused_kwargs):
+  def ParseBookmarkFolderRow(self, unused_parser_context, row, **unused_kwargs):
     """Parses a bookmark folder row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -278,10 +281,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
           row['id'], title)
 
-  def ParseBookmarkRow(self, row, **unused_kwargs):
+  def ParseBookmarkRow(self, unused_parser_context, row, **unused_kwargs):
     """Parses a bookmark row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:
@@ -302,10 +306,13 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           row['places_title'], getattr(row, 'rev_host', 'N/A'),
           row['visit_count'])
 
-  def ParsePageVisitedRow(self, row, cache, database, **unused_kwargs):
+  def ParsePageVisitedRow(
+      self, unused_parser_context, row, cache=None, database=None,
+      **unused_kwargs):
     """Parses a page visited row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
       cache: A cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
@@ -398,10 +405,11 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset(['moz_downloads'])
 
-  def ParseDownloadsRow(self, row, **unused_kwargs):
+  def ParseDownloadsRow(self, unused_parser_context, row, **unused_kwargs):
     """Parses a downloads row.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
 
     Yields:

@@ -53,7 +53,7 @@ class BencodePlugin(plugins.BasePlugin):
   NAME = 'bencode'
 
   @abc.abstractmethod
-  def GetEntries(self, data=None, match=None, **kwargs):
+  def GetEntries(self, parser_context, data=None, match=None, **kwargs):
     """Yields BencodeEvents from the values of entries within a bencoded file.
 
     This is the main method that a bencode plugin needs to implement.
@@ -71,6 +71,7 @@ class BencodePlugin(plugins.BasePlugin):
       desc = Short description.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       data: Bencode data in dictionary form.
       match: A dictionary containing only the keys selected in the
              BENCODE_KEYS.
@@ -79,7 +80,7 @@ class BencodePlugin(plugins.BasePlugin):
       event.BencodeEvent(key) - An event from the bencoded file.
     """
 
-  def Process(self, top_level=None, **kwargs):
+  def Process(self, parser_context, top_level=None, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current bencode file being processed is a match for
@@ -92,6 +93,7 @@ class BencodePlugin(plugins.BasePlugin):
     the plugin.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       top_level: Bencode data in dictionary form.
 
     Raises:
@@ -107,12 +109,13 @@ class BencodePlugin(plugins.BasePlugin):
     if not set(top_level.keys()).issuperset(self.BENCODE_KEYS):
       raise errors.WrongBencodePlugin(self.plugin_name)
 
-    super(BencodePlugin, self).Process(**kwargs)
+    # This will raise if unhandled keyword arguments are passed.
+    super(BencodePlugin, self).Process(parser_context, **kwargs)
 
     logging.debug(u'Bencode Plugin Used: {}'.format(self.plugin_name))
     match = GetKeys(top_level, self.BENCODE_KEYS, 3)
 
-    return self.GetEntries(data=top_level, match=match)
+    return self.GetEntries(parser_context, data=top_level, match=match)
 
 
 def RecurseKey(recur_item, root='', depth=15):

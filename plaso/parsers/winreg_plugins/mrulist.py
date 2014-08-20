@@ -30,10 +30,11 @@ class MRUListPlugin(interface.ValuePlugin):
   REG_VALUES = frozenset(['MRUList', 'a'])
   URLS = [u'http://forensicartifacts.com/tag/mru/']
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
     """Extracts event objects from a MRU list.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
@@ -81,7 +82,7 @@ class MRUListPlugin(interface.ValuePlugin):
           mru_value_string = value.data
 
         entry_list.append(mru_value_string)
-        text_dict[u'Index: {} [MRU Value {}]'.format(
+        text_dict[u'Index: {0:d} [MRU Value {1:s}]'.format(
             entry_index + 1, mru_value_name)] = mru_value_string
 
       event_object = event.WinRegistryEvent(

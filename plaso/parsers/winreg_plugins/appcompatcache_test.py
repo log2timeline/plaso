@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import test_lib
@@ -32,17 +31,17 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    pre_obj = event.PreprocessObject()
-    pre_obj.current_control_set = 'ControlSet001'
-    self._plugin = appcompatcache.AppCompatCachePlugin(pre_obj=pre_obj)
+    self._plugin = appcompatcache.AppCompatCachePlugin()
 
   def testProcess(self):
     """Tests the Process function."""
+    knowledge_base_values = {'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath(['SYSTEM'])
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
 
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_generator = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjects(event_generator)
 
     self.assertEquals(len(event_objects), 330)

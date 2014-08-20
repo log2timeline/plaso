@@ -23,7 +23,7 @@ import unittest
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
-from plaso.lib import event
+from plaso.artifacts import knowledge_base
 from plaso.preprocessors import macosx
 from plaso.preprocessors import test_lib
 
@@ -62,12 +62,12 @@ class MacOSXBuildTest(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = macosx.MacOSXBuild(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = macosx.MacOSXBuild()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    build = getattr(pre_obj, 'build', None)
+    build = knowledge_base_object.GetValue('build')
     self.assertEquals(build, u'10.9.2')
 
 
@@ -114,13 +114,12 @@ class MacOSXHostname(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = macosx.MacOSXHostname(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = macosx.MacOSXHostname()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    hostname = getattr(pre_obj, 'hostname', None)
-    self.assertEquals(hostname, u'Plaso\'s Mac mini')
+    self.assertEquals(knowledge_base_object.hostname, u'Plaso\'s Mac mini')
 
 
 class MacOSXKeyboard(test_lib.PreprocessPluginTest):
@@ -143,12 +142,12 @@ class MacOSXKeyboard(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = macosx.MacOSXKeyboard(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = macosx.MacOSXKeyboard()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    keyboard_layout = getattr(pre_obj, 'keyboard_layout', None)
+    keyboard_layout = knowledge_base_object.GetValue('keyboard_layout')
     self.assertEquals(keyboard_layout, u'US')
 
 
@@ -166,12 +165,12 @@ class MacOSXTimezone(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = macosx.MacOSXTimeZone(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = macosx.MacOSXTimeZone()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    time_zone_str = getattr(pre_obj, 'time_zone_str', None)
+    time_zone_str = knowledge_base_object.GetValue('time_zone_str')
     self.assertEquals(time_zone_str, u'Europe/Amsterdam')
 
 
@@ -195,12 +194,12 @@ class MacOSXUsersTest(test_lib.PreprocessPluginTest):
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    pre_obj = event.PreprocessObject()
-    plugin = macosx.MacOSXUsers(pre_obj)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin.Run(self._searcher)
+    plugin = macosx.MacOSXUsers()
+    plugin.Run(self._searcher, knowledge_base_object)
 
-    users = getattr(pre_obj, 'users', None)
+    users = knowledge_base_object.GetValue('users')
     self.assertEquals(len(users), 1)
 
     # TODO: fix the parsing of the following values to match the behavior on

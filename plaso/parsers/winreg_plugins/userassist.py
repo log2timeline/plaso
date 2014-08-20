@@ -86,10 +86,11 @@ class UserAssistPlugin(interface.KeyPlugin):
       construct.ULInt64('timestamp'),
       construct.Padding(4))
 
-  def GetEntries(self, key, **unused_kwargs):
+  def GetEntries(self, parser_context, key=None, **unused_kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       key: A Windows Registry key (instance of WinRegKey).
 
     Yields:
@@ -155,8 +156,9 @@ class UserAssistPlugin(interface.KeyPlugin):
           value_name = u'\\'.join(path_segments)
           # Check if we might need to substitute values.
           if '%' in value_name:
+            # TODO: deprecate direct use of pre_obj.
             value_name = environ_expand.ExpandWindowsEnvironmentVariables(
-                value_name, self._pre_obj)
+                value_name, parser_context.knowledge_base.pre_obj)
 
         if not value.DataIsBinaryData():
           pass

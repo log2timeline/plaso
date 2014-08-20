@@ -64,11 +64,12 @@ class HachoirParser(interface.BaseParser):
 
   NAME = 'hachoir'
 
-  def Parse(self, file_entry):
+  def Parse(self, parser_context, file_entry):
     """Extract data from a file using Hachoir.
 
     Args:
-      file_entry: A file entry object.
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
 
     Yields:
       An event object (instance of EventObject) that contains the parsed
@@ -133,7 +134,7 @@ class HachoirParser(interface.BaseParser):
       key2, _, value2 = value.partition(': ')
       if key2 == 'LastPrinted' and value2 != 'False':
         date_object = timelib.StringToDatetime(
-            value2, timezone=self._pre_obj.zone)
+            value2, timezone=parser_context.timezone)
         if isinstance(date_object, datetime.datetime):
           extracted_events.append((date_object, key2))
 

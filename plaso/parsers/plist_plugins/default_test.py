@@ -20,8 +20,10 @@
 import datetime
 import unittest
 
+from plaso.artifacts import knowledge_base
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
+from plaso.parsers import context
 from plaso.parsers.plist_plugins import default
 from plaso.parsers.plist_plugins import test_lib
 
@@ -33,7 +35,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._plugin = default.DefaultPlugin(None)
+    self._plugin = default.DefaultPlugin()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    self._parser_context = context.ParserContext(knowledge_base_object)
 
   def testProcessSingle(self):
     """Tests Process on a plist containing a root, value and timestamp."""
@@ -43,7 +47,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
             datetime.datetime(
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.utc)}}
 
-    events = list(self._plugin.Process('single', top_level_dict_single))
+    events = list(self._plugin.Process(
+        self._parser_context, plist_name='single',
+        top_level=top_level_dict_single))
     event_objects = self._GetEventObjects(events)
 
     self.assertEquals(len(event_objects), 1)
@@ -88,7 +94,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 datetime.datetime(
                     2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.utc)}}}
 
-    events = list(self._plugin.Process('nested', top_level_dict_many_keys))
+    events = list(self._plugin.Process(
+        self._parser_context, plist_name='nested',
+        top_level=top_level_dict_many_keys))
     event_objects = self._GetEventObjects(events)
 
     self.assertEquals(len(event_objects), 5)

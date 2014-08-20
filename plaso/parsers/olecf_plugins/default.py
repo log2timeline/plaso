@@ -31,7 +31,7 @@ class OleCfItemEvent(time_events.FiletimeEvent):
     """Initializes the event.
 
     Args:
-      timetamp: The FILETIME timestamp value.
+      timestamp: The FILETIME timestamp value.
       usage: A string describing the timestamp value.
       olecf_item: The OLECF item (pyolecf.item).
     """
@@ -48,11 +48,12 @@ class OleCfItemEvent(time_events.FiletimeEvent):
 
 
 class DefaultOleCFPlugin(interface.OlecfPlugin):
-  """Class to define the default OLE CF file plugin."""
+  """Class to define the default OLECF file plugin."""
 
   NAME = 'olecf_default'
 
-  def Process(self, root_item=None, item_names=None, **kwargs):
+  def Process(
+      self, parser_context, root_item=None, item_names=None, **kwargs):
     """Determine if this is the right plugin for this OLECF file.
 
     This function takes a list of sub items found in the root of a
@@ -64,7 +65,8 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     will return back a generator that yields event objects.
 
     Args:
-      root_item: The root item of the OLECF file.
+      parser_context: A parser context object (instance of ParserContext).
+      root_item: The root OLECF item (an instance of pyolecf.item).
       item_names: A list of all items discovered in the root.
 
     Returns:
@@ -72,15 +74,20 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
 
     Raises:
       errors.WrongPlugin: If the set of required items is not a subset
-      of the available items.
+                          of the available items.
       ValueError: If the root_item or items are not set.
     """
     if root_item is None or item_names is None:
       raise ValueError(u'Root item or items are not set.')
 
-    return self.GetEntries(root_item=root_item)
+    return self.GetEntries(parser_context, root_item=root_item)
 
   def _ParseItem(self, olecf_item):
+    """Parses an OLECF item.
+
+    Args:
+      olecf_item: An OLECF item (instance of pyolecf.item).
+    """
     creation_time, modification_time = self.GetTimestamps(olecf_item)
 
     if creation_time:
@@ -96,8 +103,13 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
       for sub_event_object in self._ParseItem(sub_item):
         yield sub_event_object
 
-  def GetEntries(self, root_item, **unused_kwargs):
-    """Yields an event object for every entry."""
+  def GetEntries(self, unused_parser_context, root_item=None, **unused_kwargs):
+    """Yields an event object for every entry.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      root_item: The root OLECF item (an instance of pyolecf.item).
+    """
     record_yielded = False
     for event_object in self._ParseItem(root_item):
       yield event_object

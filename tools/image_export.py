@@ -29,11 +29,11 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso import preprocessors
+from plaso.artifacts import knowledge_base
 from plaso.engine import collector
 from plaso.engine import utils as engine_utils
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import queue
 from plaso.preprocessors import interface as preprocess_interface
 
@@ -47,7 +47,7 @@ class ImageExtractor(object):
     self._image_path = None
     self._image_offset = 0
     self._image_collector = None
-    self._pre_obj = None
+    self._knowledge_base = None
 
   def Open(self, image_path, sector_offset=0):
     """Opens the image.
@@ -85,12 +85,10 @@ class ImageExtractor(object):
       searcher: The file system searcher object (instance of
                 dfvfs.FileSystemSearcher).
     """
-    if self._pre_obj is not None:
+    if self._knowledge_base is not None:
       return
 
-    self._pre_obj = event.PreprocessObject()
-
-    plugin_list = preprocessors.PreProcessList(self._pre_obj)
+    self._knowledge_base = knowledge_base.KnowledgeBase()
 
     logging.info(u'Guessing OS')
 
@@ -98,10 +96,11 @@ class ImageExtractor(object):
     logging.info(u'OS: {0:s}'.format(guessed_os))
 
     logging.info(u'Running preprocess.')
-    for weight in plugin_list.GetWeightList(guessed_os):
-      for plugin in plugin_list.GetWeight(guessed_os, weight):
+    for weight in preprocessors.PreProcessorsManager.GetWeightList(guessed_os):
+      for plugin in preprocessors.PreProcessorsManager.GetWeight(
+          guessed_os, weight):
         try:
-          plugin.Run(searcher)
+          plugin.Run(searcher, self._knowledge_base)
         except errors.PreProcessFail as exception:
           logging.warning(
               u'Unable to run preprocessor: {0:s} with error: {1:s}'.format(
@@ -135,14 +134,14 @@ class ImageExtractor(object):
     searcher = file_system_searcher.FileSystemSearcher(
         file_system, volume_path_spec)
 
-    if self._pre_obj is None:
+    if self._knowledge_base is None:
       self._Preprocess(searcher)
 
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(
-        filter_file_path, pre_obj=self._pre_obj)
+        filter_file_path, pre_obj=self._knowledge_base.pre_obj)
 
     # Save the regular files.
     FileSaver.calc_md5 = remove_duplicates
