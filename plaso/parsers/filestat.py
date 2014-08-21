@@ -108,7 +108,8 @@ class StatEvents(object):
 
       timestamp = timelib.Timestamp.FromPosixTime(timestamp)
       if nano_time_value is not None:
-        timestamp += nano_time_value
+        # Note that the _nano values are in intervals of 100th nano seconds.
+        timestamp += nano_time_value / 10
 
       # TODO: this also ignores any timestamp that equals 0.
       # Is this the desired behavior?
