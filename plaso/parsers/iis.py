@@ -195,7 +195,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     # Check if there's a Fields line. If not, LOG_LINE defaults to IIS 6.0
     # common format.
     elif comment.startswith(u'Fields'):
-      log_line = ''
+      log_line = pyparsing.Empty()
       for member in comment[7:].split():
         log_line += self._LOG_LINE_STRUCTURES.get(member, self.URI)
       # TODO: self._line_structures is a work-around and this needs
