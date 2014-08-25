@@ -545,7 +545,7 @@ class DpkgBuildHelper(BuildHelper):
     if not self._BuildPrepare(source_directory):
       return False
 
-    command = u'dpkg-buildpackage -rfakeroot > {0:s} 2>&1'.format(
+    command = u'dpkg-buildpackage -uc -us -rfakeroot > {0:s} 2>&1'.format(
         os.path.join(u'..', self.LOG_FILENAME))
     exit_code = subprocess.call(
         u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
@@ -773,6 +773,7 @@ class DependencyBuilder(object):
           logging.info(u'Removing: {0:s}'.format(filename))
           shutil.rmtree(filename)
 
+      build_helper = None
       if self._build_target == 'dpkg':
         build_helper = PythonModuleDpkgBuildHelper()
         deb_filename = build_helper.GetOutputFilename(
@@ -824,7 +825,7 @@ class DependencyBuilder(object):
                     project_filename, build_helper.LOG_FILENAME))
             return False
 
-      if os.path.exists(build_helper.LOG_FILENAME):
+      if build_helper and os.path.exists(build_helper.LOG_FILENAME):
         logging.info(u'Removing: {0:s}'.format(build_helper.LOG_FILENAME))
         os.remove(build_helper.LOG_FILENAME)
 
@@ -902,6 +903,8 @@ def Main():
 
   # TODO: dependency sqlite-devel (rpm) or libsqlite3-dev (deb)
   # or download and build sqlite3 from source?
+
+  # TODO: on Ubuntu 14.04 libyaml seems to be libyaml-0-2.
 
   # TODO: integrate libyal-sync?
 
