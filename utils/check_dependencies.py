@@ -255,7 +255,7 @@ if __name__ == '__main__':
   if not CheckPythonModule('dpkt', '__version__', '1.8'):
     check_result = False
 
-  if not CheckPythonModule('pyparsing', '__version__', '1.5.6'):
+  if not CheckPythonModule('pyparsing', '__version__', '2.0.2'):
     check_result = False
 
   # TODO: determine the version of pytz.
@@ -267,7 +267,7 @@ if __name__ == '__main__':
   if not CheckPythonModule('google.protobuf', '', ''):
     check_result = False
 
-  if not CheckPythonModule('dfvfs', '__version__', '20140724'):
+  if not CheckPythonModule('dfvfs', '__version__', '20140824'):
     check_result = False
 
   if not CheckPythonModule('sqlite3', 'sqlite_version', '3.7.8'):
@@ -280,6 +280,7 @@ if __name__ == '__main__':
     check_result = False
 
   libyal_check_result = CheckLibyal([
+      ('pybde', 20140531),
       ('pyesedb', 20140301),
       ('pyevt', None),
       ('pyevtx', None),
@@ -291,6 +292,7 @@ if __name__ == '__main__':
       ('pyqcow', 20131204),
       ('pyregf', 20130716),
       ('pysmdev', 20140529),
+      ('pysmraw', 20140612),
       ('pyvhdi', 20131210),
       ('pyvmdk', 20140421),
       ('pyvshadow', 20131209),
