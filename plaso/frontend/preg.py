@@ -450,7 +450,7 @@ class PregFrontend(frontend.ExtractionFrontend):
         self.ScanSource(options)
       except errors.FileSystemScannerError as exception:
         raise errors.BadConfigOption((
-            u'Unable to scan for a supported filesystem with error: {0:s}.\n'
+            u'Unable to scan for a supported filesystem with error: {0:s}\n'
             u'Most likely the image format is not supported by the '
             u'tool.').format(exception))
 
