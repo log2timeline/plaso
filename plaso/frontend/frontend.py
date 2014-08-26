@@ -469,7 +469,7 @@ class ExtractionFrontend(Frontend):
             volume_location)
         if not volume_scan_node:
           raise RuntimeError(
-              u'Unable to retieve volume scan node by location: {0:s}'.format(
+              u'Unable to retrieve volume scan node by location: {0:s}'.format(
                   volume_location))
         return volume_scan_node
 
@@ -483,9 +483,9 @@ class ExtractionFrontend(Frontend):
           volume_scan_node = scan_context.last_scan_node.GetSubNodeByLocation(
               volume_location)
           if not volume_scan_node:
-            raise RuntimeError(
-                u'Unable to retieve volume scan node by location: {0:s}'.format(
-                    volume_location))
+            raise RuntimeError((
+                u'Unable to retrieve volume scan node by location: '
+                u'{0:s}').format(volume_location))
           return volume_scan_node
 
       logging.warning(
@@ -505,7 +505,7 @@ class ExtractionFrontend(Frontend):
       volume = volume_system.GetVolumeByIdentifier(selected_volume_identifier)
       if not volume:
         raise RuntimeError(
-            u'Unable to retieve volume by identifier: {0:s}'.format(
+            u'Unable to retrieve volume by identifier: {0:s}'.format(
                 selected_volume_identifier))
 
       volume_location = u'/{0:s}'.format(selected_volume_identifier)
@@ -514,7 +514,7 @@ class ExtractionFrontend(Frontend):
         volume_location)
     if not volume_scan_node:
       raise RuntimeError(
-          u'Unable to retieve volume scan node by location: {0:s}'.format(
+          u'Unable to retrieve volume scan node by location: {0:s}'.format(
               volume_location))
     return volume_scan_node
 
@@ -1418,7 +1418,7 @@ class ExtractionFrontend(Frontend):
     except errors.FileSystemScannerError as exception:
       # TODO: make this a processing error.
       raise errors.BadConfigOption((
-          u'Unable to scan for a supported filesystem with error: {0:s}.\n'
+          u'Unable to scan for a supported filesystem with error: {0:s}\n'
           u'Most likely the image format is not supported by the '
           u'tool.').format(exception))
 
@@ -1551,12 +1551,18 @@ class ExtractionFrontend(Frontend):
       # which partition needs to be processed.
       elif self._scan_context.last_scan_node.type_indicator in [
           dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
+
+        if scan_path_spec and scan_path_spec.type_indicator in [
+            dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
+          raise errors.FileSystemScannerError(u'File system not supported.')
+
         scan_node = self._GetVolumeTSKPartition(
             self._scan_context, partition_number=partition_number,
             partition_offset=partition_offset)
         if not scan_node:
           break
         self._scan_context.last_scan_node = scan_node
+        scan_path_spec = scan_node.path_spec
 
         self._partition_offset = getattr(scan_node.path_spec, 'start_offset', 0)
 
