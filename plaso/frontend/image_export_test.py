@@ -38,27 +38,50 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     """Cleans up the objects used throughout the test."""
     shutil.rmtree(self._temp_directory, True)
 
-  def testProcessSource(self):
-    """Tests the process source function."""
+  def testProcessSourceExtractWithExtensions(self):
+    """Tests extract with extensions process source functionality."""
     test_front_end = image_export.ImageExportFrontend()
 
     options = test_lib.Options()
-    options.image = self._GetTestFilePath(['image.qcow2'])
+    options.image = self._GetTestFilePath([u'image.qcow2'])
     options.path = self._temp_directory
-    options.extension_string = 'txt'
+    options.extension_string = u'txt'
 
     test_front_end.ParseOptions(options, source_option='image')
 
     test_front_end.ProcessSource(options)
 
-    expexted_text_files = sorted([
-      os.path.join(self._temp_directory, 'passwords.txt')])
+    expected_text_files = sorted([
+      os.path.join(self._temp_directory, u'passwords.txt')])
 
-    text_files = glob.glob(os.path.join(self._temp_directory, '*.txt'))
+    text_files = glob.glob(os.path.join(self._temp_directory, u'*'))
 
-    self.assertEquals(sorted(text_files), expexted_text_files)
+    self.assertEquals(sorted(text_files), expected_text_files)
 
-    # TODO: add more tests that cover more of the functionality of the frontend.
+  def testProcessSourceExtractWithFilter(self):
+    """Tests extract with filter process source functionality."""
+    test_front_end = image_export.ImageExportFrontend()
+
+    options = test_lib.Options()
+    options.image = self._GetTestFilePath([u'image.qcow2'])
+    options.path = self._temp_directory
+
+    options.filter = os.path.join(self._temp_directory, u'filter.txt')
+    with open(options.filter, 'wb') as file_object:
+      file_object.write('/a_directory/.+_file\n')
+
+    test_front_end.ParseOptions(options, source_option='image')
+
+    test_front_end.ProcessSource(options)
+
+    expected_text_files = sorted([
+      os.path.join(self._temp_directory, u'a_directory', u'another_file'),
+      os.path.join(self._temp_directory, u'a_directory', u'a_file')])
+
+    text_files = glob.glob(os.path.join(
+        self._temp_directory, u'a_directory', u'*'))
+
+    self.assertEquals(sorted(text_files), expected_text_files)
 
 
 if __name__ == '__main__':
