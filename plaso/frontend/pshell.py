@@ -318,7 +318,7 @@ def Main():
   front_end = PshellFrontend()
 
   try:
-    front_end.ParseOptions(options, 'filename')
+    front_end.ParseOptions(options, source_option='filename')
     front_end.SetStorageFile(options.output)
   except errors.BadConfigOption as exception:
     logging.error(u'{0:s}'.format(exception))

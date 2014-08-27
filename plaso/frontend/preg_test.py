@@ -52,7 +52,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     options.regfile = self._GetTestFilePath(['NTUSER.DAT'])
     options.verbose = False
 
-    test_front_end.ParseOptions(options, u'')
+    test_front_end.ParseOptions(options, source_option='image')
     test_front_end.RunModeRegistryPlugin(options, u'userassist')
 
     self.assertTrue((
@@ -72,7 +72,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     options.regfile = self._GetTestFilePath(['SOFTWARE'])
     options.verbose = False
 
-    test_front_end.ParseOptions(options, u'')
+    test_front_end.ParseOptions(options, source_option='image')
     test_front_end.RunModeRegistryKey(options, u'')
 
     self.assertTrue(

@@ -43,7 +43,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     options = test_lib.Options()
     options.source = test_file
 
-    test_front_end.ParseOptions(options, 'source')
+    test_front_end.ParseOptions(options)
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
@@ -66,7 +66,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     options = test_lib.Options()
     options.source = test_file
 
-    test_front_end.ParseOptions(options, 'source')
+    test_front_end.ParseOptions(options)
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
@@ -89,7 +89,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     options.source = test_file
     options.image_offset_bytes = 0x0002c000
 
-    test_front_end.ParseOptions(options, 'source')
+    test_front_end.ParseOptions(options)
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
@@ -104,7 +104,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     options.image_offset = 352
     options.bytes_per_sector = 512
 
-    test_front_end.ParseOptions(options, 'source')
+    test_front_end.ParseOptions(options)
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
@@ -118,7 +118,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     options.source = test_file
     options.partition_number = 2
 
-    test_front_end.ParseOptions(options, 'source')
+    test_front_end.ParseOptions(options)
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
@@ -141,7 +141,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     options.source = test_file
     options.vss_stores = '1,2'
 
-    test_front_end.ParseOptions(options, 'source')
+    test_front_end.ParseOptions(options)
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
@@ -156,7 +156,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     options.source = test_file
     options.vss_stores = '1'
 
-    test_front_end.ParseOptions(options, 'source')
+    test_front_end.ParseOptions(options)
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
@@ -180,11 +180,11 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     options = test_lib.Options()
 
     with self.assertRaises(errors.BadConfigOption):
-      test_front_end.ParseOptions(options, 'source')
+      test_front_end.ParseOptions(options)
 
     options.source = self._GetTestFilePath(['image.dd'])
 
-    test_front_end.ParseOptions(options, 'source')
+    test_front_end.ParseOptions(options)
 
   def testScanSource(self):
     """Tests the ScanSource function."""
