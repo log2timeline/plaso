@@ -70,7 +70,7 @@ class EseDbParser(interface.BaseParser):
     for esedb_plugin in self._plugins.itervalues():
       try:
         for event_object in esedb_plugin.Process(
-            database=esedb_file, cache=cache):
+            parser_context, database=esedb_file, cache=cache):
           event_object.plugin = esedb_plugin.plugin_name
           yield event_object
       except errors.WrongPlugin:
