@@ -145,14 +145,15 @@ class PregFrontend(frontend.ExtractionFrontend):
     self._verbose_output = False
     self.plugins = None
 
-  def ParseOptions(self, options, unused_source):
-    """Parses the options.
+  def ParseOptions(self, options, source_option='source'):
+    """Parses the options and initializes the front-end.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      source_option: optional name of the source option. The default is source.
 
     Raises:
-      BadConfigOption: if the option are invalid.
+      BadConfigOption: if the options are invalid.
     """
     if not options:
       raise errors.BadConfigOption(u'Missing options.')
@@ -448,7 +449,7 @@ class PregFrontend(frontend.ExtractionFrontend):
     if self._source_path:
       try:
         self.ScanSource(options)
-      except errors.FileSystemScannerError as exception:
+      except errors.SourceScannerError as exception:
         raise errors.BadConfigOption((
             u'Unable to scan for a supported filesystem with error: {0:s}\n'
             u'Most likely the image format is not supported by the '
@@ -1543,7 +1544,7 @@ in a textual format.
   options = arg_parser.parse_args()
 
   try:
-    front_end.ParseOptions(options, u'')
+    front_end.ParseOptions(options, source_option='image')
   except errors.BadConfigOption as exception:
     arg_parser.print_help()
     print u''

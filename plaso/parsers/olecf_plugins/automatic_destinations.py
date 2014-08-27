@@ -94,7 +94,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   _DEST_LIST_STREAM_HEADER_SIZE = _DEST_LIST_STREAM_HEADER.sizeof()
 
   # Using construct's utf-16 encoding here will create strings with their
-  # end-of-string characters exposed. Instead the strings are read read as
+  # end-of-string characters exposed. Instead the strings are read as
   # binary strings and converted using ReadUtf16().
   _DEST_LIST_STREAM_ENTRY = construct.Struct(
       'dest_list_stream_entry',
