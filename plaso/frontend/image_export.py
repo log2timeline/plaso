@@ -235,7 +235,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     for path_spec in searcher.Find(find_specs=find_specs):
       FileSaver.WriteFile(path_spec, destination_path)
 
-    if self._process_vss:
+    if self._process_vss and self._vss_stores:
       volume_path_spec = self._source_path_spec.parent
 
       logging.info(u'Extracting files from VSS.')
