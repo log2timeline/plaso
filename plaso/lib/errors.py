@@ -29,10 +29,6 @@ class CollectorError(Error):
   """Class that defines collector errors."""
 
 
-class FileSystemScannerError(Error):
-  """Class that defines file system scanner errors."""
-
-
 class NotAText(Error):
   """Raised when trying to read a text on a non-text sample."""
 
@@ -59,6 +55,10 @@ class QueueEmpty(Error):
 
 class SameFileType(Error):
   """Raised when a file is being evaluated against the same driver type."""
+
+
+class SourceScannerError(Error):
+  """Class that defines source scanner errors."""
 
 
 class TimestampNotCorrectlyFormed(Error):

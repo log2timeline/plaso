@@ -49,6 +49,7 @@ def GetTools():
   tools = []
 
   tool_filenames = frozenset([
+      u'export_image.py',
       u'log2timeline.py',
       u'pinfo.py',
       u'plasm.py',

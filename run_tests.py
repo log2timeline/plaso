@@ -65,7 +65,7 @@ def RunTests(debug_mode=False):
       else:
         tests.addTests(unittest.TestLoader().loadTestsFromName(library_name))
     except AttributeError as exception:
-      print u'Unable to run test: {} [{}] due to error: {}'.format(
+      print u'Unable to run test: {0:s} [{1:s}] due to error: {2:s}'.format(
           library_name, test_file, exception)
       if debug_mode:
         pdb.post_mortem()
@@ -79,7 +79,7 @@ def PrintResults(my_results):
   """Print the results from an aggregated test run."""
   errors = 0
   failures = 0
-  print 'Ran: {} tests.'.format(my_results.testsRun)
+  print 'Ran: {0:d} tests.'.format(my_results.testsRun)
   if my_results.wasSuccessful():
     print '--++'*20
     print 'Yeee you know what, all tests came out clean.'
@@ -90,7 +90,7 @@ def PrintResults(my_results):
 
     print my_results.printErrors()
     print FormatHeader('Tests failed.')
-    print '  {:>10s}: {}\n  {:>10s}: {}\n  {:>10s}: {}'.format(
+    print '  {:>10s}: {0:d}\n  {:>10s}: {1:d}\n  {:>10s}: {2:d}'.format(
         'Errors', errors, 'Failures', failures, 'Total',
         errors + failures)
     print '+='*40

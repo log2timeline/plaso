@@ -411,7 +411,7 @@ def Main():
     return False
 
   try:
-    front_end.ParseOptions(options, 'source')
+    front_end.ParseOptions(options)
     front_end.SetStorageFile(options.output)
   except errors.BadConfigOption as exception:
     arg_parser.print_help()
