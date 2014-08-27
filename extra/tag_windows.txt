@@ -15,10 +15,12 @@ Document Opened
 Logon
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 540
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4624
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 21
 
 Logoff
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 538
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4634
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 21
 
 Task Scheduled
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 602
