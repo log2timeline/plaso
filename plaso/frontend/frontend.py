@@ -1480,9 +1480,6 @@ class ExtractionFrontend(StorageMediaFrontend):
       except IOError:
         logging.warning(u'Storage file does not exist, running preprocess.')
 
-    if not pre_obj:
-      pre_obj = event.PreprocessObject()
-
     if self._preprocess and self._scan_context.source_type in [
         self._scan_context.SOURCE_TYPE_DIRECTORY,
         self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -1495,6 +1492,13 @@ class ExtractionFrontend(StorageMediaFrontend):
         logging.error(u'Unable to preprocess with error: {0:s}'.format(
             exception))
         return
+
+    # TODO: Remove the need for direct access to the pre_obj in favor
+    # of the knowledge base.
+    pre_obj = getattr(self._engine.knowledge_base, '_pre_obj', None)
+
+    if not pre_obj:
+      pre_obj = event.PreprocessObject()
 
     self._PreprocessSetTimezone(options, pre_obj)
     self._PreprocessSetParserFilter(options, pre_obj)
