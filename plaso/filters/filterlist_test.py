@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -15,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the PFilters filter."""
+
 import os
 import logging
 import tempfile
@@ -42,9 +44,9 @@ class ObjectFilterTest(test_helper.FilterTestHelper):
   def CreateFileAndTest(self, content):
     """Creates a file and then runs the test."""
     name = ''
-    with tempfile.NamedTemporaryFile(delete=False) as fh:
-      name = fh.name
-      fh.write(content)
+    with tempfile.NamedTemporaryFile(delete=False) as file_object:
+      name = file_object.name
+      file_object.write(content)
 
     self.TestTrue(name)
 
