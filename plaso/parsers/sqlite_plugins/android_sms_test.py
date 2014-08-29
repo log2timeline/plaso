@@ -37,8 +37,9 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""
     test_file = self._GetTestFilePath(['mmssms.db'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEquals(len(event_objects), 9)
@@ -50,7 +51,7 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-10-29 16:56:28.038000')
+        '2013-10-29 16:56:28.038')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_address = u'1 555-521-5554'

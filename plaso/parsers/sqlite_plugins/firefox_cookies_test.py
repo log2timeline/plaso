@@ -37,7 +37,9 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
     test_file = self._GetTestFilePath(['firefox_cookies.sqlite'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file)
+
     event_objects = []
     extra_objects = []
 
@@ -56,11 +58,13 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     #   5 Analytics Creation Time
     #
     # In total: 93 * 3 + 15 + 5 + 5 = 304 events.
-    for event_object in self._GetEventObjects(event_generator):
-      if hasattr(event_object, 'plugin'):
-        extra_objects.append(event_object)
-      else:
+    for event_object in self._GetEventObjectsFromQueue(event_queue_consumer):
+      # TODO: this approach is fragile fix this.
+      plugin = getattr(event_object, 'plugin', None)
+      if plugin == 'firefox_cookies':
         event_objects.append(event_object)
+      else:
+        extra_objects.append(event_object)
 
     self.assertEquals(len(event_objects), 90 * 3)
     self.assertGreaterEqual(len(extra_objects), 25)

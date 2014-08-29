@@ -84,95 +84,6 @@ class SQLiteCache(plugins.BasePluginCache):
       row = sql_results.fetchone()
 
 
-class SQLitePlugin(plugins.BasePlugin):
-  """A SQLite plugin for Plaso."""
-
-  __abstract = True
-
-  NAME = 'sqlite'
-
-  # Queries to be executed.
-  # Should be a list of tuples with two entries, SQLCommand and callback
-  # function name.
-  QUERIES = []
-
-  # List of tables that should be present in the database, for verification.
-  REQUIRED_TABLES = frozenset([])
-
-  def Process(self, parser_context, cache=None, database=None, **kwargs):
-    """Determine if this is the right plugin for this database.
-
-    This function takes a SQLiteDatabase object and compares the list
-    of required tables against the available tables in the database.
-    If all the tables defined in REQUIRED_TABLES are present in the
-    database then this plugin is considered to be the correct plugin
-    and the function will return back a generator that yields event
-    objects.
-
-    Args:
-      parser_context: A parser context object (instance of ParserContext).
-      cache: A SQLiteCache object.
-      database: A database object (instance of SQLiteDatabase).
-
-    Returns:
-      A generator that yields event objects.
-
-    Raises:
-      errors.WrongPlugin: If the database does not contain all the tables
-      defined in the REQUIRED_TABLES set.
-      ValueError: If the database attribute is not passed in.
-    """
-    if database is None:
-      raise ValueError(u'Database is not set.')
-
-    if not frozenset(database.tables) >= self.REQUIRED_TABLES:
-      raise errors.WrongPlugin(
-          u'Not the correct database tables for: {0:s}'.format(
-              self.plugin_name))
-
-    # This will raise if unhandled keyword arguments are passed.
-    super(SQLitePlugin, self).Process(parser_context, **kwargs)
-
-    return self.GetEntries(parser_context, cache=cache, database=database)
-
-  def GetEntries(self, parser_context, cache=None, database=None, **kwargs):
-    """Yields EventObjects extracted from a SQLite database.
-
-    Args:
-      parser_context: A parser context object (instance of ParserContext).
-      cache: A SQLiteCache object.
-      database: A database object (instance of SQLiteDatabase).
-
-    Yields:
-      EventObject extracted from the SQlite database.
-    """
-    for query, action in self.QUERIES:
-      try:
-        call_back = getattr(self, action, self.Default)
-        cursor = database.cursor
-        sql_results = cursor.execute(query)
-        row = sql_results.fetchone()
-        while row:
-          event_generator = call_back(
-              parser_context, row, cache=cache, database=database)
-          if event_generator:
-            for event_object in event_generator:
-              event_object.query = query
-              if not hasattr(event_object, 'offset'):
-                if 'id' in row.keys():
-                  event_object.offset = row['id']
-                else:
-                  event_object.offset = 0
-              yield event_object
-          row = sql_results.fetchone()
-      except sqlite3.DatabaseError as exception:
-        logging.debug(u'SQLite error occured: {0:s}'.format(exception))
-
-  def Default(self, unused_row, unused_cache):
-    """Default callback method for SQLite events, does nothing."""
-    logging.debug('Default handler: {0:s}'.format(unused_row))
-
-
 class SQLiteDatabase(object):
   """A simple wrapper for opening up a SQLite database."""
 
@@ -187,12 +98,28 @@ class SQLiteDatabase(object):
     Args:
       file_enty: the file entry object.
     """
-    self._file_entry = file_entry
-    self._temp_file_name = ''
-    self._open = False
-    self._database = None
     self._cursor = None
+    self._database = None
+    self._file_entry = file_entry
+    self._open = False
     self._tables = []
+    self._temp_file_name = ''
+
+  def __exit__(self, unused_type, unused_value, unused_traceback):
+    """Make usable with "with" statement."""
+    self.Close()
+
+  def __enter__(self):
+    """Make usable with "with" statement."""
+    return self
+
+  @property
+  def cursor(self):
+    """Returns a cursor object from the database."""
+    if not self._open:
+      self.Open()
+
+    return self._database.cursor()
 
   @property
   def tables(self):
@@ -202,13 +129,25 @@ class SQLiteDatabase(object):
 
     return self._tables
 
-  @property
-  def cursor(self):
-    """Returns a cursor object from the database."""
+  def Close(self):
+    """Close the database connection and clean up the temporary file."""
     if not self._open:
-      self.Open()
+      return
 
-    return self._database.cursor()
+    self._database.close()
+
+    try:
+      os.remove(self._temp_file_name)
+    except (OSError, IOError) as exception:
+      logging.warning((
+          u'Unable to remove temporary copy: {0:s} of SQLite database: {1:s} '
+          u'with error: {2:s}').format(
+              self._temp_file_name, self._file_entry.name, exception))
+
+    self._tables = []
+    self._database = None
+    self._temp_file_name = ''
+    self._open = False
 
   def Open(self):
     """Opens up a database connection and build a list of table names."""
@@ -279,30 +218,81 @@ class SQLiteDatabase(object):
 
     self._open = True
 
-  def Close(self):
-    """Close the database connection and clean up the temporary file."""
-    if not self._open:
-      return
 
-    self._database.close()
+class SQLitePlugin(plugins.BasePlugin):
+  """A SQLite plugin for Plaso."""
 
-    try:
-      os.remove(self._temp_file_name)
-    except (OSError, IOError) as exception:
-      logging.warning((
-          u'Unable to remove temporary copy: {0:s} of SQLite database: {1:s} '
-          u'with error: {2:s}').format(
-              self._temp_file_name, self._file_entry.name, exception))
+  __abstract = True
 
-    self._tables = []
-    self._database = None
-    self._temp_file_name = ''
-    self._open = False
+  NAME = 'sqlite'
 
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make usable with "with" statement."""
-    self.Close()
+  # Queries to be executed.
+  # Should be a list of tuples with two entries, SQLCommand and callback
+  # function name.
+  QUERIES = []
 
-  def __enter__(self):
-    """Make usable with "with" statement."""
-    return self
+  # List of tables that should be present in the database, for verification.
+  REQUIRED_TABLES = frozenset([])
+
+  def GetEntries(self, parser_context, cache=None, database=None, **kwargs):
+    """Extracts event objects from a SQLite database.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      cache: A SQLiteCache object.
+      database: A database object (instance of SQLiteDatabase).
+    """
+    for query, callback_method in self.QUERIES:
+      try:
+        callback = getattr(self, callback_method, None)
+        if callback is None:
+          logging.warning(
+              u'[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
+                  self.NAME, callback_method, query))
+          continue
+
+        cursor = database.cursor
+        sql_results = cursor.execute(query)
+        row = sql_results.fetchone()
+
+        while row:
+          callback(
+              parser_context, row, query=query, cache=cache, database=database)
+
+          row = sql_results.fetchone()
+
+      except sqlite3.DatabaseError as exception:
+        logging.debug(u'SQLite error occured: {0:s}'.format(exception))
+
+  def Process(self, parser_context, cache=None, database=None, **kwargs):
+    """Determine if this is the right plugin for this database.
+
+    This function takes a SQLiteDatabase object and compares the list
+    of required tables against the available tables in the database.
+    If all the tables defined in REQUIRED_TABLES are present in the
+    database then this plugin is considered to be the correct plugin
+    and the function will return back a generator that yields event
+    objects.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      cache: A SQLiteCache object.
+      database: A database object (instance of SQLiteDatabase).
+
+    Raises:
+      errors.WrongPlugin: If the database does not contain all the tables
+      defined in the REQUIRED_TABLES set.
+      ValueError: If the database attribute is not passed in.
+    """
+    if database is None:
+      raise ValueError(u'Database is not set.')
+
+    if not frozenset(database.tables) >= self.REQUIRED_TABLES:
+      raise errors.WrongPlugin(
+          u'Not the correct database tables for: {0:s}'.format(
+              self.plugin_name))
+
+    # This will raise if unhandled keyword arguments are passed.
+    super(SQLitePlugin, self).Process(parser_context, **kwargs)
+
+    self.GetEntries(parser_context, cache=cache, database=database)

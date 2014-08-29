@@ -56,12 +56,14 @@ class SkypeAccountEvent(time_events.PosixTimeEvent):
   DATA_TYPE = 'skype:event:account'
 
   def __init__(
-      self, timestamp, usage, full_name, display_name, email, country):
+      self, timestamp, usage, identifier, full_name, display_name, email,
+      country):
     """Initialize the event.
 
     Args:
       timestamp: The POSIX timestamp value.
       usage: A string containing the description string of the timestamp.
+      identifier: The row identifier.
       full_name: A string containing the full name of the Skype account holder.
       display_name: A string containing the chosen display name of the account
                     holder.
@@ -72,6 +74,7 @@ class SkypeAccountEvent(time_events.PosixTimeEvent):
     """
     super(SkypeAccountEvent, self).__init__(timestamp, usage)
 
+    self.offset = identifier
     self.username = u'{0:s} <{1:s}>'.format(full_name, display_name)
     self.display_name = display_name
     self.email = email
@@ -152,6 +155,7 @@ class SkypeTransferFileEvent(time_events.PosixTimeEvent):
     super(SkypeTransferFileEvent, self).__init__(
         timestamp, 'File transfer from Skype', self.DATA_TYPE)
 
+    self.offset = row['id']
     self.action_type = action_type
     self.source = source
     self.destination = destination
@@ -205,61 +209,69 @@ class SkypePlugin(interface.SQLitePlugin):
       'CallMembers', 'Calls'])
 
   def ParseAccountInformation(
-      self, unused_parser_context, row, **unused_kwargs):
+      self, parser_context, row, query=None, **unused_kwargs):
     """Parses the Accounts database.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (SkypeChatEvent) containing the event data.
+      query: Optional query string. The default is None.
     """
     if row['profile_timestamp']:
-      yield SkypeAccountEvent(
-          row['profile_timestamp'], 'Profile Changed',
+      event_object = SkypeAccountEvent(
+          row['profile_timestamp'], u'Profile Changed', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['authreq_timestamp']:
-      yield SkypeAccountEvent(
-          row['authreq_timestamp'], 'Authenticate Request',
+      event_object = SkypeAccountEvent(
+          row['authreq_timestamp'], u'Authenticate Request', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['lastonline_timestamp']:
-      yield SkypeAccountEvent(
-          row['lastonline_timestamp'], 'Last Online',
+      event_object = SkypeAccountEvent(
+          row['lastonline_timestamp'], u'Last Online', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['mood_timestamp']:
-      yield SkypeAccountEvent(
-          row['mood_timestamp'], 'Mood Event',
+      event_object = SkypeAccountEvent(
+          row['mood_timestamp'], u'Mood Event', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['sent_authrequest_time']:
-      yield SkypeAccountEvent(
-          row['sent_authrequest_time'], 'Auth Request Sent',
+      event_object = SkypeAccountEvent(
+          row['sent_authrequest_time'], u'Auth Request Sent', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['lastused_timestamp']:
-      yield SkypeAccountEvent(
-          row['lastused_timestamp'], 'Last Used',
+      event_object = SkypeAccountEvent(
+          row['lastused_timestamp'], u'Last Used', row['id'],
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
-  def ParseChat(self, unused_parser_context, row, **unused_kwargs):
+  def ParseChat(self, parser_context, row, query=None, **unused_kwargs):
     """Parses a chat message row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (SkypeChatEvent) containing the event data.
+      query: Optional query string. The default is None.
     """
     to_account = ''
     accounts = []
@@ -275,36 +287,31 @@ class SkypePlugin(interface.SQLitePlugin):
       else:
         to_account = u'Unknown User'
 
-    yield SkypeChatEvent(row, to_account)
+    event_object = SkypeChatEvent(row, to_account)
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
 
-  def ParseSMS(self, unused_parser_context, row, **unused_kwargs):
+  def ParseSMS(self, parser_context, row, query=None, **unused_kwargs):
     """Parse SMS.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (instance of SkypeSMSlEvent).
+      query: Optional query string. The default is None.
     """
     dst_number = row['dstnum_sms'].replace(' ', '')
 
-    yield SkypeSMSEvent(row, dst_number)
+    event_object = SkypeSMSEvent(row, dst_number)
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
 
-  def ParseCall(self, unused_parser_context, row, **unused_kwargs):
+  def ParseCall(self, parser_context, row, query=None, **unused_kwargs):
     """Parse the calls taking into accounts some rows.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event SkypeCallEvent if a call query were done it, but it was
-        not be answer, the status from this all is WAITING.
-      An event SkypeCallEvent if a call query when the call is accepted,
-        the status from this all is ACCEPTED.
-      An event SkypeCallEvent if a call query were the call finished,
-        the status from this all is FINISHED.
+      query: Optional query string. The default is None.
     """
     try:
       aux = row['guid']
@@ -336,43 +343,47 @@ class SkypePlugin(interface.SQLitePlugin):
     else:
       video_conference = False
 
-    yield SkypeCallEvent(row['try_call'], 'WAITING', user_start_call,
-                         source, destination, video_conference)
+    event_object = SkypeCallEvent(
+        row['try_call'], 'WAITING', user_start_call, source, destination,
+        video_conference)
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
+
     if row['accept_call']:
-      yield SkypeCallEvent(row['accept_call'], 'ACCEPTED', user_start_call,
-                           source, destination, video_conference)
+      event_object = SkypeCallEvent(
+          row['accept_call'], 'ACCEPTED', user_start_call, source, destination,
+          video_conference)
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
+
       if row['call_duration']:
         try:
           timestamp = int(row['accept_call']) + int(row['call_duration'])
-          yield SkypeCallEvent(timestamp, 'FINISHED', user_start_call,
-                               source, destination, video_conference)
+          event_object = SkypeCallEvent(
+              timestamp, 'FINISHED', user_start_call, source, destination,
+              video_conference)
+          parser_context.ProduceEvent(
+              event_object, plugin_name=self.NAME, query=query)
+
         except ValueError:
-          logging.debug(u'Unknown when the call {0:s} was'
-                        u'finished.'.format(row['id']))
+          logging.debug((
+              u'[{0:s}] Unable to determine when the call {0:s} was '
+              u'finished.').format(self.NAME, row['id']))
 
   def ParseFileTransfer(
-      self, unused_parser_context, row, cache=None, database=None,
+      self, parser_context, row, cache=None, database=None, query=None,
       **unused_kwargs):
     """Parse the transfer files.
+
+     There is no direct relationship between who sends the file and
+     who accepts the file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: the row with all information related with the file transfers.
+      query: Optional query string. The default is None.
       cache: a cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
-
-    Yields:
-      An event SkypeTransferFileEvent when the user gets a file solicitude.
-        The status from this event is GETSOLICITUDE
-      An event SkypeTransferFileEvent when the user accepts a file.
-        The status from this event is ACCEPTED.
-      An event SkypeTransferFileEvent when the transfer finish.
-        The status from this event is FINISHED.
-      An event SkypeTransferFileEvent when the user queries to send a file.
-        The status from this event is SENDSOLICITUDE.
-
-     Note: we don't have direct relationship between who sends
-           the file and who accepts the file. Only acctions.
     """
     source_dict = cache.GetResults('source')
     if not source_dict:
@@ -410,14 +421,26 @@ class SkypePlugin(interface.SQLitePlugin):
 
     if row['status'] == 8:
       if row['starttime']:
-        yield SkypeTransferFileEvent(
+        event_object = SkypeTransferFileEvent(
             row, row['starttime'], 'GETSOLICITUDE', source, destination)
+        parser_context.ProduceEvent(
+            event_object, plugin_name=self.NAME, query=query)
+
       if row['accepttime']:
-        yield SkypeTransferFileEvent(
+        event_object = SkypeTransferFileEvent(
             row, row['accepttime'], 'ACCEPTED', source, destination)
+        parser_context.ProduceEvent(
+            event_object, plugin_name=self.NAME, query=query)
+
       if row['finishtime']:
-        yield SkypeTransferFileEvent(
+        event_object = SkypeTransferFileEvent(
             row, row['finishtime'], 'FINISHED', source, destination)
+        parser_context.ProduceEvent(
+            event_object, plugin_name=self.NAME, query=query)
+
     elif row['status'] == 2 and row['starttime']:
-      yield SkypeTransferFileEvent(
+      event_object = SkypeTransferFileEvent(
           row, row['starttime'], 'SENDSOLICITUDE', source, destination)
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
+

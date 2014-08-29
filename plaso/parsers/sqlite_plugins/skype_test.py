@@ -52,9 +52,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     """
     test_file = self._GetTestFilePath(['skype_main.db'])
     cache = interface.SQLiteCache()
-    event_generator = self._ParseDatabaseFileWithPlugin(
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     calls = 0
     files = 0

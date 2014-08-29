@@ -36,105 +36,24 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
   _TITLE_RE = re.compile('<title>([^<]+)</title>')
   _WEB_STORE_URL = u'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
-  def __init__(self, pre_obj, incoming_queue, outgoing_queue):
+  def __init__(self, incoming_queue):
     """Initializes the Chrome extension analysis plugin.
 
     Args:
-      pre_obj: The preprocessing object that contains information gathered
-               during preprocessing of data.
       incoming_queue: A queue that is used to listen to incoming events.
-      outgoing_queue: The queue used to send back reports, tags and anomaly
-                      related events.
     """
-    super(AnalyzeChromeExtensionPlugin, self).__init__(
-        pre_obj, incoming_queue, outgoing_queue)
+    super(AnalyzeChromeExtensionPlugin, self).__init__(incoming_queue)
 
     self._results = {}
     self.plugin_type = self.TYPE_REPORT
+
+    # TODO: see if these can be moved to arguments passed to ExamineEvent
+    # or some kind of state object.
     self._sep = None
-    self._user_paths = {}
-    users = getattr(pre_obj, 'users', None)
+    self._user_paths = None
 
     # Saved list of already looked up extensions.
     self._extensions = {}
-
-    if users:
-      user_separator = None
-      for user in users:
-        name = user.get('name')
-        path = user.get('path')
-
-        if not path or not name:
-          continue
-
-        if not user_separator:
-          user_separator = self._GetSeparator(path)
-
-        if user_separator != u'/':
-          path = path.replace(user_separator, u'/').replace(u'//', u'/')
-
-        if path[1:].startswith(u':/'):
-          path = path[2:]
-
-        self._user_paths[name.lower()] = path.lower()
-
-  def _GetSeparator(self, path):
-    """Given a path give back the path separator as a best guess."""
-    if path.startswith(u'\\') or path[1:].startswith(u':\\'):
-      return u'\\'
-
-    if path.startswith(u'/'):
-      return u'/'
-
-    if u'/' and u'\\' in path:
-      # Let's count slashes and guess which one is the right one.
-      forward_count = len(path.split(u'/'))
-      backward_count = len(path.split(u'\\'))
-
-      if forward_count > backward_count:
-        return u'/'
-      else:
-        return u'\\'
-
-    # Now we are sure there is only one type of separators yet
-    # the path does not start with one.
-    if u'/' in path:
-      return u'/'
-    else:
-      return u'\\'
-
-  def _GetUserNameFromPath(self, file_path):
-    """Return a username based on gathered information in pre_obj and path.
-
-    During preprocessing the tool will gather file paths to where each user
-    profile is stored, and which user it belongs to. This function takes in
-    a path to a file and compares it to a list of all discovered usernames
-    and paths to their profiles in the system. If it finds that the file path
-    belongs to a user profile it will return the username that the profile
-    belongs to.
-
-    Args:
-      file_path: The full path to the file being anayzed.
-
-    Returns:
-      If possible the responsible username behind the file. Otherwise None.
-    """
-    if not self._user_paths:
-      return
-
-    if self._sep != u'/':
-      use_path = file_path.replace(self._sep, u'/')
-    else:
-      use_path = file_path
-
-    if use_path[1:].startswith(u':/'):
-      use_path = use_path[2:]
-
-    use_path = use_path.lower()
-
-    for user, path in self._user_paths.iteritems():
-      if use_path.startswith(path):
-        return user
 
   def _GetChromeWebStorePage(self, extension_id):
     """Retrieves the page for the extension from the Chrome store website.
@@ -191,57 +110,6 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
 
     self._extensions[extension_id] = u'Not Found'
 
-  def ExamineEvent(self, event_object):
-    """Take an EventObject and send it through analysis."""
-    # Only interested in filesystem events.
-    if event_object.data_type != 'fs:stat':
-      return
-
-    filename = getattr(event_object, 'filename', None)
-    if not filename:
-      return
-
-    # Determine if we have a Chrome extension ID.
-    if u'chrome' not in filename.lower():
-      return
-
-    if not self._sep:
-      self._sep = self._GetSeparator(filename)
-
-    if u'{0:s}Extensions{0:s}'.format(self._sep) not in filename:
-      return
-
-    # Now we have extension ID's, let's check if we've got the
-    # folder, nothing else.
-    paths = filename.split(self._sep)
-    if paths[-2] != u'Extensions':
-      return
-
-    extension_id = paths[-1]
-
-    if extension_id == u'Temp':
-      return
-
-    # Get the user and ID.
-    user = self._GetUserNameFromPath(filename)
-    # We still want this information in here, so that we can
-    # manually deduce the username.
-    if not user:
-      if len(filename) > 25:
-        user = u'Not found ({0:s}...)'.format(filename[0:25])
-      else:
-        user = u'Not found ({0:s})'.format(filename)
-
-    extension = self._GetTitleFromChromeWebStore(extension_id)
-
-    if not extension:
-      extension = extension_id
-
-    self._results.setdefault(user, [])
-    extension_string = extension.decode('utf-8', 'ignore')
-    if (extension_string, extension_id) not in self._results[user]:
-      self._results[user].append((extension_string, extension_id))
-
   def CompileReport(self):
     """Compiles a report of the analysis.
 
@@ -264,3 +132,62 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     report.SetText(lines_of_text)
 
     return report
+
+  def ExamineEvent(self, analysis_context, event_object, **unused_kwargs):
+    """Analyzes an event object.
+
+    Args:
+      analysis_context: An analysis context object (instance of AnalysisContext).
+      event_object: An event object (instance of EventObject).
+    """
+    # Only interested in filesystem events.
+    if event_object.data_type != 'fs:stat':
+      return
+
+    filename = getattr(event_object, 'filename', None)
+    if not filename:
+      return
+
+    # Determine if we have a Chrome extension ID.
+    if u'chrome' not in filename.lower():
+      return
+
+    if not self._sep:
+      self._sep = analysis_context.GetPathSegmentSeparator(filename)
+
+    if not self._user_paths:
+      self._user_paths = analysis_context.GetUserPaths(analysis_context.users)
+
+    if u'{0:s}Extensions{0:s}'.format(self._sep) not in filename:
+      return
+
+    # Now we have extension ID's, let's check if we've got the
+    # folder, nothing else.
+    paths = filename.split(self._sep)
+    if paths[-2] != u'Extensions':
+      return
+
+    extension_id = paths[-1]
+    if extension_id == u'Temp':
+      return
+
+    # Get the user and ID.
+    user = analysis_context.GetUsernameFromPath(
+        self._user_paths, filename, self._sep)
+
+    # We still want this information in here, so that we can
+    # manually deduce the username.
+    if not user:
+      if len(filename) > 25:
+        user = u'Not found ({0:s}...)'.format(filename[0:25])
+      else:
+        user = u'Not found ({0:s})'.format(filename)
+
+    extension = self._GetTitleFromChromeWebStore(extension_id)
+    if not extension:
+      extension = extension_id
+
+    self._results.setdefault(user, [])
+    extension_string = extension.decode('utf-8', 'ignore')
+    if (extension_string, extension_id) not in self._results[user]:
+      self._results[user].append((extension_string, extension_id))

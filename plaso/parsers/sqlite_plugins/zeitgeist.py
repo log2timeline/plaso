@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -19,26 +20,28 @@
    Zeitgeist is a service which logs the user activities and events, anywhere
    from files opened to websites visited and conversations.
 """
-from plaso.lib import event
-from plaso.lib import timelib
+
+from plaso.events import time_events
+from plaso.lib import eventdata
 from plaso.parsers.sqlite_plugins import interface
 
 
-class ZeitgeistEvent(event.EventObject):
+class ZeitgeistEvent(time_events.JavaTimeEvent):
   """Convenience class for a Zeitgeist event."""
+
   DATA_TYPE = 'zeitgeist:activity'
 
-  def __init__(self, timestamp, row_id, subject_uri):
+  def __init__(self, java_time, row_id, subject_uri):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of seconds since Jan 1, 1970 00:00:00 UTC.
+      java_time: The Java time value.
       row_id: The identifier of the corresponding row.
       subject_uri: The Zeitgeist event.
     """
-    super(ZeitgeistEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromJavaTime(timestamp)
+    super(ZeitgeistEvent, self).__init__(
+        java_time, eventdata.EventTimestamp.UNKNOWN)
+
     self.offset = row_id
     self.subject_uri = subject_uri
 
@@ -50,19 +53,21 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
 
   # TODO: Explore the database more and make this parser cover new findings.
 
-  QUERIES = [('SELECT id, timestamp, subj_uri FROM event_view',
-             'ParseZeitgeistEventRow')]
+  QUERIES = [
+      ('SELECT id, timestamp, subj_uri FROM event_view',
+       'ParseZeitgeistEventRow')]
+
   REQUIRED_TABLES = frozenset(['event', 'actor'])
 
-  def ParseZeitgeistEventRow(self, unused_parser_context, row, **unused_kwargs):
+  def ParseZeitgeistEventRow(
+      self, parser_context, row, query=None, **unused_kwargs):
     """Parses zeitgeist event row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (ZeitgeistEvent) containing the event
-      data.
+      query: Optional query string. The default is None.
     """
-    yield ZeitgeistEvent(row['timestamp'], row['id'], row['subj_uri'])
+    event_object = ZeitgeistEvent(row['timestamp'], row['id'], row['subj_uri'])
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)

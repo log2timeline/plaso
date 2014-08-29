@@ -24,12 +24,14 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.analysis import context
 from plaso.artifacts import knowledge_base
+from plaso.lib import event
 from plaso.lib import queue
-from plaso.parsers import context
+from plaso.parsers import context as parsers_context
 
 
-class TestAnalysisPluginConsumer(queue.AnalysisReportQueueConsumer):
+class TestAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
   """Class that implements a test analysis report queue consumer."""
 
   def __init__(self, queue_object):
@@ -38,7 +40,7 @@ class TestAnalysisPluginConsumer(queue.AnalysisReportQueueConsumer):
     Args:
       queue_object: the queue object (instance of Queue).
     """
-    super(TestAnalysisPluginConsumer, self).__init__(queue_object)
+    super(TestAnalysisReportQueueConsumer, self).__init__(queue_object)
     self.analysis_reports = []
 
   def _ConsumeAnalysisReport(self, analysis_report):
@@ -60,6 +62,26 @@ class AnalysisPluginTestCase(unittest.TestCase):
   # conventions.
   maxDiff = None
 
+  def _GetAnalysisReportsFromQueue(self, analysis_report_queue_consumer):
+    """Retrieves the analysis reports from the queue consumer.
+
+    Args:
+      analysis_report_queue_consumer: the analysis report queue consumer
+                                      object (instance of
+                                      TestAnalysisReportQueueConsumer).
+
+    Returns:
+      A list of analysis reports (instances of AnalysisReport).
+    """
+    analysis_report_queue_consumer.ConsumeAnalysisReports()
+
+    analysis_reports = []
+    for analysis_report in analysis_report_queue_consumer.analysis_reports:
+      self.assertIsInstance(analysis_report, event.AnalysisReport)
+      analysis_reports.append(analysis_report)
+
+    return analysis_reports
+
   def _GetTestFilePath(self, path_segments):
     """Retrieves the path of a test file relative to the test data directory.
 
@@ -73,34 +95,70 @@ class AnalysisPluginTestCase(unittest.TestCase):
     # and not a list.
     return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
-  def _ParseFile(
-      self, parser_object, path, knowledge_base_values=None):
+  def _ParseFile(self, parser_object, path, knowledge_base_object):
     """Parses a file using the parser object.
 
     Args:
       parser_object: the parser object.
       path: the path of the file to parse.
-      knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
+      knowledge_base_object: the knowledge base object (instance of
+                             KnowledgeBase).
 
     Returns:
-      A generator of event objects as returned by the parser.
+      An event object queue object (instance of Queue).
     """
     event_queue = queue.SingleThreadedQueue()
     event_queue_producer = queue.EventObjectQueueProducer(event_queue)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.iteritems():
-        knowledge_base_object.SetValue(identifier, value)
-
-    parser_context = context.ParserContext(
+    parser_context = parsers_context.ParserContext(
         event_queue_producer, knowledge_base_object)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-    event_generator = parser_object.Parse(parser_context, file_entry)
-    self.assertNotEquals(event_generator, None)
+    parser_object.Parse(parser_context, file_entry)
+    event_queue.SignalEndOfInput()
 
-    return event_generator
+    return event_queue
+
+  def _RunAnalysisPlugin(self, analysis_plugin, knowledge_base_object):
+    """Analyzes an event object queue using the plugin object.
+
+    Args:
+      analysis_plugin: the analysis plugin object (instance of AnalysisPlugin).
+      knowledge_base_object: the knowledge base object (instance of
+                             KnowledgeBase).
+
+    Returns:
+      An event object queue object (instance of Queue).
+    """
+    analysis_report_queue = queue.SingleThreadedQueue()
+    analysis_report_queue_consumer = TestAnalysisReportQueueConsumer(
+        analysis_report_queue)
+    analysis_report_queue_producer = queue.AnalysisReportQueueProducer(
+        analysis_report_queue)
+
+    analysis_context = context.AnalysisContext(
+        analysis_report_queue_producer, knowledge_base_object)
+
+    analysis_plugin.RunPlugin(analysis_context)
+    analysis_report_queue.SignalEndOfInput()
+
+    return analysis_report_queue_consumer
+
+  def _SetUpKnowledgeBase(self, knowledge_base_values=None):
+    """Sets up a knowledge base.
+
+    Args:
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
+
+    Returns:
+      An knowledge base object (instance of KnowledgeBase).
+    """
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        knowledge_base_object.SetValue(identifier, value)
+
+    return knowledge_base_object

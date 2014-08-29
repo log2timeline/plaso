@@ -68,15 +68,17 @@ class ChromeCookieEvent(time_events.WebKitTimeEvent):
 
     self.url = u'{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
 
+
 class ChromeCookiePlugin(interface.SQLitePlugin):
   """Parse Chrome Cookies file."""
 
   NAME = 'chrome_cookies'
 
   # Define the needed queries.
-  QUERIES = [(('SELECT creation_utc, host_key, name, value, path, expires_utc,'
-               'secure, httponly, last_access_utc, has_expires, persistent '
-               'FROM cookies'), 'ParseCookieRow')]
+  QUERIES = [
+      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
+        'secure, httponly, last_access_utc, has_expires, persistent '
+        'FROM cookies'), 'ParseCookieRow')]
 
   # The required tables common to Archived History and History.
   REQUIRED_TABLES = frozenset(['cookies', 'meta'])
@@ -102,46 +104,49 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
     super(ChromeCookiePlugin, self).__init__()
     self._cookie_plugins = cookie_interface.GetPlugins()
 
-  def ParseCookieRow(self, parser_context, row, **unused_kwargs):
+  def ParseCookieRow(self, parser_context, row, query=None, **unused_kwargs):
     """Parses a cookie row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (instance of ChromeCookieEvent) containing the event
-      data.
+      query: Optional query string. The default is None.
     """
-    yield ChromeCookieEvent(
+    event_object = ChromeCookieEvent(
         row['creation_utc'], eventdata.EventTimestamp.CREATION_TIME,
         row['host_key'], row['name'], row['value'], row['path'], row['secure'],
         row['httponly'], row['persistent'])
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
 
-    yield ChromeCookieEvent(
+    event_object = ChromeCookieEvent(
         row['last_access_utc'], eventdata.EventTimestamp.ACCESS_TIME,
         row['host_key'], row['name'], row['value'], row['path'], row['secure'],
         row['httponly'], row['persistent'])
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
 
     if row['has_expires']:
-      yield ChromeCookieEvent(
+      event_object = ChromeCookieEvent(
           row['expires_utc'], 'Cookie Expires',
           row['host_key'], row['name'], row['value'], row['path'],
           row['secure'], row['httponly'], row['persistent'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     # Go through all cookie plugins to see if there are is any specific parsing
     # needed.
     hostname = row['host_key']
     if hostname.startswith('.'):
       hostname = hostname[1:]
+
     url = u'http{0:s}://{1:s}{2:s}'.format(
         u's' if row['secure'] else u'', hostname, row['path'])
+
     for cookie_plugin in self._cookie_plugins:
       try:
-        for event_object in cookie_plugin.Process(
+        cookie_plugin.Process(
             parser_context, cookie_name=row['name'], cookie_data=row['value'],
-            url=url):
-          event_object.plugin = cookie_plugin.plugin_name
-          yield event_object
+            url=url)
       except errors.WrongPlugin:
         pass

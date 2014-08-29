@@ -1486,7 +1486,7 @@ class StorageFileWriter(queue.EventObjectQueueConsumer):
     self._pre_obj = pre_obj
     self._storage_file = None
 
-  def _ConsumeEventObject(self, event_object):
+  def _ConsumeEventObject(self, event_object, **unused_kwargs):
     """Consumes an event object callback for ConsumeEventObjects."""
     self._storage_file.AddEventObject(event_object)
 
@@ -1519,7 +1519,7 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
     self._pre_obj = pre_obj
     self._pre_obj.store_range = (1, 1)
 
-  def _ConsumeEventObject(self, event_object):
+  def _ConsumeEventObject(self, event_object, **unused_kwargs):
     """Consumes an event object callback for ConsumeEventObjects."""
     # Set the store number and index to default values since they are not used.
     event_object.store_number = 1

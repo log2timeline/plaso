@@ -37,8 +37,9 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a Mac OS X Document Versions file."""
     test_file = self._GetTestFilePath(['document_versions.sql'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 4)
 

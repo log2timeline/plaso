@@ -127,7 +127,7 @@ class OlecfPlugin(plugins.BasePlugin):
       if item:
         items.append(item)
 
-    return self.ParseItems(
+    self.ParseItems(
         parser_context, file_entry=file_entry, root_item=root_item, items=items)
 
 

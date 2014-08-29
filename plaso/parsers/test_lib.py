@@ -43,7 +43,7 @@ class TestEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     super(TestEventObjectQueueConsumer, self).__init__(event_queue)
     self.event_objects = []
 
-  def _ConsumeEventObject(self, event_object):
+  def _ConsumeEventObject(self, event_object, **unused_kwargs):
     """Consumes an event object callback for ConsumeEventObjects."""
     self.event_objects.append(event_object)
 
@@ -77,7 +77,7 @@ class ParserTestCase(unittest.TestCase):
     return event_objects
 
   def _GetEventObjectsFromQueue(self, event_queue_consumer):
-    """Retrieves the event objects from the event queue consumer.
+    """Retrieves the event objects from the queue consumer.
 
     Args:
       event_queue_consumer: the event object queue consumer object (instance of

@@ -25,6 +25,44 @@ from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import interface
 
 
+def DictToList(data_dict):
+  """Take a dict object and return a list of strings back."""
+  ret_list = []
+  for key, value in data_dict.iteritems():
+    if key in ('body', 'datetime', 'type', 'room', 'rooms', 'id'):
+      continue
+    ret_list.append(u'{0:s} = {1!s}'.format(key, value))
+
+  return ret_list
+
+
+def ExtractJQuery(jquery_raw):
+  """Extract and return the data inside a JQuery as a dict object."""
+  data_part = u''
+  if not jquery_raw:
+    return {}
+
+  if '[' in jquery_raw:
+    _, _, first_part = jquery_raw.partition('[')
+    data_part, _, _ = first_part.partition(']')
+  elif jquery_raw.startswith('//'):
+    _, _, first_part = jquery_raw.partition('{')
+    data_part = u'{{{0:s}'.format(first_part)
+  elif '({' in jquery_raw:
+    _, _, first_part = jquery_raw.partition('(')
+    data_part, _, _ = first_part.rpartition(')')
+
+  if not data_part:
+    return {}
+
+  try:
+    data_dict = json.loads(data_part)
+  except ValueError:
+    return {}
+
+  return data_dict
+
+
 def ParseChatData(data):
   """Parse a chat comment data dict and return a parsed one back.
 
@@ -65,55 +103,18 @@ def ParseChatData(data):
   return data_store
 
 
-def DictToList(data_dict):
-  """Take a dict object and return a list of strings back."""
-  ret_list = []
-  for key, value in data_dict.items():
-    if key in ('body', 'datetime', 'type', 'room', 'rooms', 'id'):
-      continue
-    ret_list.append(u'{0:s} = {1!s}'.format(key, value))
-
-  return ret_list
-
-
-def ExtractJQuery(jquery_raw):
-  """Extract and return the data inside a JQuery as a dict object."""
-  data_part = u''
-  if not jquery_raw:
-    return {}
-
-  if '[' in jquery_raw:
-    _, _, first_part = jquery_raw.partition('[')
-    data_part, _, _ = first_part.partition(']')
-  elif jquery_raw.startswith('//'):
-    _, _, first_part = jquery_raw.partition('{')
-    data_part = u'{{{0:s}'.format(first_part)
-  elif '({' in jquery_raw:
-    _, _, first_part = jquery_raw.partition('(')
-    data_part, _, _ = first_part.rpartition(')')
-
-  if not data_part:
-    return {}
-
-  try:
-    data_dict = json.loads(data_part)
-  except ValueError:
-    return {}
-
-  return data_dict
-
-
 class MacKeeperCacheEvent(event.EventObject):
   """Convenience class for a MacKeeper Cache event."""
   DATA_TYPE = 'mackeeper:cache'
 
-  def __init__(self, timestamp, description, url, data_dict):
+  def __init__(self, timestamp, description, identifier, url, data_dict):
     """Initializes the event object.
 
     Args:
       timestamp: A timestamp as a number of milliseconds since Epoch
-      or as a UTC string.
+                 or as a UTC string.
       description: The description of the cache entry.
+      identifier: The row identifier.
       url: The MacKeeper URL value that is stored in every event.
       data_dict: A dict object with the descriptive information.
     """
@@ -127,6 +128,7 @@ class MacKeeperCacheEvent(event.EventObject):
 
     self.timestamp_desc = eventdata.EventTimestamp.ADDED_TIME
     self.description = description
+    self.offset = identifier
     self.text = data_dict.get('text', None)
     self.user_sid = data_dict.get('sid', None)
     self.user_name = data_dict.get('user', None)
@@ -153,11 +155,13 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       'cfurl_cache_blob_data', 'cfurl_cache_receiver_data',
       'cfurl_cache_response'])
 
-  def ParseReceiverData(self, unused_parser_context, row, **unused_kwargs):
+  def ParseReceiverData(self, parser_context, row, query=None, **unused_kwargs):
     """Parses a single row from the receiver and cache response table.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      row: The row resulting from the query.
+      query: Optional query string. The default is None.
     """
     data = {}
     key_url = row['request_key']
@@ -207,4 +211,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         if not data['text']:
           data['text'] = 'No additional data.'
 
-    yield MacKeeperCacheEvent(row['time_string'], description, key_url, data)
+    event_object = MacKeeperCacheEvent(
+        row['time_string'], description, row['id'], key_url, data)
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
