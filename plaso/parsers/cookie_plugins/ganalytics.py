@@ -66,7 +66,7 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
        u'google-analytics-cookies-and-forensic-implications')]
 
   def GetEntries(
-      self, unused_parser_context, cookie_data=None, url=None, **unused_kwargs):
+      self, parser_context, cookie_data=None, url=None, **unused_kwargs):
     """Extracts event objects from the cookie.
 
     Args:
@@ -98,11 +98,12 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
 
       kwargs[key] = value_line
 
-    yield GoogleAnalyticsEvent(
+    event_object = GoogleAnalyticsEvent(
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
         url, 'utmz', self.COOKIE_NAME, domain_hash=domain_hash,
         sessions=int(sessions, 10), sources=int(sources, 10),
         **kwargs)
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
@@ -123,6 +124,8 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      cookie_data: Optional cookie data, as a byte string.
+      url: Optional URL or path where the cookie got set.
     """
     # Values has the structure of:
     # <domain hash>.<visitor ID>.<first visit>.<previous>.<last>.<# of
@@ -138,20 +141,23 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
 
     # TODO: Double check this time is stored in UTC and not local time.
     first_epoch = int(first_visit, 10)
-    yield GoogleAnalyticsEvent(
+    event_object = GoogleAnalyticsEvent(
         first_epoch, 'Analytics Creation Time', url, 'utma', self.COOKIE_NAME,
         domain_hash=domain_hash, visitor_id=visitor_id,
         sessions=int(sessions, 10))
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
-    yield GoogleAnalyticsEvent(
+    event_object = GoogleAnalyticsEvent(
         int(previous, 10), 'Analytics Previous Time', url, 'utma',
         self.COOKIE_NAME, domain_hash=domain_hash, visitor_id=visitor_id,
         sessions=int(sessions, 10))
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
-    yield GoogleAnalyticsEvent(
+    event_object = GoogleAnalyticsEvent(
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
         url, 'utma', self.COOKIE_NAME, domain_hash=domain_hash,
         visitor_id=visitor_id, sessions=int(sessions, 10))
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
@@ -167,11 +173,13 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
        u'google-analytics-cookies-and-forensic-implications')]
 
   def GetEntries(
-      self, unused_parser_context, cookie_data=None, url=None, **unused_kwargs):
+      self, parser_context, cookie_data=None, url=None, **unused_kwargs):
     """Extracts event objects from the cookie.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      cookie_data: Optional cookie data, as a byte string.
+      url: Optional URL or path where the cookie got set.
     """
     # Values has the structure of:
     #   <domain hash>.<pages viewed>.10.<last time>
@@ -184,7 +192,8 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
 
     domain_hash, pages_viewed, _, last = fields
 
-    yield GoogleAnalyticsEvent(
+    event_object = GoogleAnalyticsEvent(
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
         url, 'utmb', self.COOKIE_NAME, domain_hash=domain_hash,
         pages_viewed=int(pages_viewed, 10))
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

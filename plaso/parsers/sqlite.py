@@ -67,17 +67,11 @@ class SQLiteParser(interface.BaseParser):
 
       # Create a cache in which the resulting tables are cached.
       cache = sqlite_plugins_interface.SQLiteCache()
-      for plugin_obj in self._plugins.itervalues():
+      for plugin_object in self._plugins.itervalues():
         try:
-          for event_object in plugin_obj.Process(
-              parser_context, cache=cache, database=database):
-            # The plugin attribute may be set by the plugin already, in the case
-            # where there may be a sub-plugin.
-            event_object.plugin = getattr(
-                event_object, 'plugin', plugin_obj.plugin_name)
-            yield event_object
+          plugin_object.Process(parser_context, cache=cache, database=database)
+
         except errors.WrongPlugin:
           logging.debug(
               u'Plugin: {0:s} cannot parse database: {1:s}'.format(
-                  plugin_obj.plugin_name, file_entry.name))
-
+                  plugin_object.plugin_name, file_entry.name))

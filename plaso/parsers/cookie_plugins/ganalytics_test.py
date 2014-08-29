@@ -20,7 +20,7 @@
 import unittest
 
 # pylint: disable=unused-import
-from plaso.formatters import ganalytics
+from plaso.formatters import ganalytics as ganalytics_formatter
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.sqlite_plugins import chrome_cookies
@@ -34,12 +34,15 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
 
-  def _GetAnalyticsCookies(self, generator):
+  def _GetAnalyticsCookies(self, event_queue_consumer):
     """Return a list of analytics cookies."""
     cookies = []
-    for event_object in generator:
-      if not hasattr(event_object, 'plugin'):
+    for event_object in self._GetEventObjectsFromQueue(event_queue_consumer):
+      # TODO: this approach is fragile fix this.
+      plugin = getattr(event_object, 'plugin', None)
+      if plugin is None or not plugin.startswith('google_analytics_'):
         continue
+
       if event_object.plugin.startswith('google_analytics'):
         cookies.append(event_object)
 
@@ -49,8 +52,8 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Firefox 29 cookie database file."""
     plugin = firefox_cookies.FirefoxCookiePlugin()
     test_file = self._GetTestFilePath(['firefox_cookies.sqlite'])
-    event_generator = self._ParseDatabaseFileWithPlugin(plugin, test_file)
-    event_objects = self._GetAnalyticsCookies(event_generator)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(plugin, test_file)
+    event_objects = self._GetAnalyticsCookies(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 25)
 
@@ -79,8 +82,8 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
     """Test the process function on a Chrome cookie database."""
     plugin = chrome_cookies.ChromeCookiePlugin()
     test_file = self._GetTestFilePath(['cookies.db'])
-    event_generator = self._ParseDatabaseFileWithPlugin(plugin, test_file)
-    event_objects = self._GetAnalyticsCookies(event_generator)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(plugin, test_file)
+    event_objects = self._GetAnalyticsCookies(event_queue_consumer)
 
     # The cookie database contains 560 entries in total. Out of them
     # there are 75 events created by the Google Analytics plugin.

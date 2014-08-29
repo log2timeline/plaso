@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the browser_search analysis plugin."""
+"""Tests for the chrome extension analysis plugin."""
 
 import os
 import unittest
@@ -99,66 +99,31 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
     return event_object
 
-  def testSeparator(self):
-    """Test the separator detection."""
-    pre_obj = event.PreprocessObject()
-    analysis_plugin = chrome_extension.AnalyzeChromeExtensionPlugin(
-        pre_obj, None, None)
-
-    analysis_plugin._sep = u'/'
-    for path in self.MAC_PATHS:
-      self.assertEquals(analysis_plugin._GetSeparator(path), u'/')
-
-    analysis_plugin._sep = u'\\'
-    for path in self.WIN_PATHS:
-      self.assertEquals(analysis_plugin._GetSeparator(path), u'\\')
-
   def testMacAnalyzerPlugin(self):
     """Test the plugin against mock events."""
-    incoming_queue = queue.SingleThreadedQueue()
-    outgoing_queue = queue.SingleThreadedQueue()
-    pre_obj = event.PreprocessObject()
+    knowledge_base = self._SetUpKnowledgeBase(knowledge_base_values={
+        'users': self.MAC_USERS})
 
-    # Fill in the user section
-    pre_obj.users = self.MAC_USERS
-
-    # Initialize plugin.
-    analysis_plugin = AnalyzeChromeExtensionTestPlugin(
-        pre_obj, incoming_queue, outgoing_queue)
-
-    # Test the user creation.
-    user_paths = analysis_plugin._user_paths
-    self.assertEquals(
-        set(user_paths.keys()), set([u'frank', u'dude', u'hans', u'root']))
-    self.assertEquals(user_paths[u'frank'], u'/users/frank')
-    self.assertEquals(user_paths[u'dude'], u'/users/dude')
-    self.assertEquals(user_paths[u'hans'], u'/users/hans')
-    self.assertEquals(user_paths[u'root'], u'/var/root')
+    event_queue = queue.SingleThreadedQueue()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.AnalysisPluginProducer(incoming_queue)
+    test_queue_producer = queue.EventObjectQueueProducer(event_queue)
     test_queue_producer.ProduceEventObjects([
         self._CreateTestEventObject(path) for path in self.MAC_PATHS])
     test_queue_producer.SignalEndOfInput()
 
+    # Initialize plugin.
+    analysis_plugin = AnalyzeChromeExtensionTestPlugin(event_queue)
+
     # Run the analysis plugin.
-    analysis_plugin.RunPlugin()
+    analysis_report_queue_consumer = self._RunAnalysisPlugin(
+        analysis_plugin, knowledge_base)
+    analysis_reports = self._GetAnalysisReportsFromQueue(
+        analysis_report_queue_consumer)
 
-    outgoing_queue.SignalEndOfInput()
-    test_analysis_plugin_consumer = test_lib.TestAnalysisPluginConsumer(
-        outgoing_queue)
-    test_analysis_plugin_consumer.ConsumeAnalysisReports()
+    self.assertEquals(len(analysis_reports), 1)
 
-    self.assertEquals(
-        test_analysis_plugin_consumer.number_of_analysis_reports, 1)
-
-    analysis_report = test_analysis_plugin_consumer.analysis_reports[0]
-
-    # Test the username detection.
-    self.assertEquals(analysis_plugin._GetUserNameFromPath(
-        self.MAC_PATHS[0]), u'dude')
-    self.assertEquals(analysis_plugin._GetUserNameFromPath(
-        self.MAC_PATHS[4]), u'hans')
+    analysis_report = analysis_reports[0]
 
     self.assertEquals(analysis_plugin._sep, u'/')
 
@@ -181,47 +146,29 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   def testWinAnalyzePlugin(self):
     """Test the plugin against mock events."""
-    incoming_queue = queue.SingleThreadedQueue()
-    outgoing_queue = queue.SingleThreadedQueue()
-    pre_obj = event.PreprocessObject()
+    knowledge_base = self._SetUpKnowledgeBase(knowledge_base_values={
+        'users': self.WIN_USERS})
 
-    # Fill in the user section
-    pre_obj.users = self.WIN_USERS
-
-    # Initialize plugin.
-    analysis_plugin = AnalyzeChromeExtensionTestPlugin(
-        pre_obj, incoming_queue, outgoing_queue)
-
-    # Test the user creation.
-    user_paths = analysis_plugin._user_paths
-    self.assertEquals(set(user_paths.keys()), set([u'frank', u'dude']))
-    self.assertEquals(user_paths[u'frank'], u'/users/frank')
-    self.assertEquals(user_paths[u'dude'], u'/users/dude')
+    event_queue = queue.SingleThreadedQueue()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.AnalysisPluginProducer(incoming_queue)
+    test_queue_producer = queue.EventObjectQueueProducer(event_queue)
     test_queue_producer.ProduceEventObjects([
         self._CreateTestEventObject(path) for path in self.WIN_PATHS])
     test_queue_producer.SignalEndOfInput()
 
+    # Initialize plugin.
+    analysis_plugin = AnalyzeChromeExtensionTestPlugin(event_queue)
+
     # Run the analysis plugin.
-    analysis_plugin.RunPlugin()
+    analysis_report_queue_consumer = self._RunAnalysisPlugin(
+        analysis_plugin, knowledge_base)
+    analysis_reports = self._GetAnalysisReportsFromQueue(
+        analysis_report_queue_consumer)
 
-    outgoing_queue.SignalEndOfInput()
-    test_analysis_plugin_consumer = test_lib.TestAnalysisPluginConsumer(
-        outgoing_queue)
-    test_analysis_plugin_consumer.ConsumeAnalysisReports()
+    self.assertEquals(len(analysis_reports), 1)
 
-    self.assertEquals(
-        test_analysis_plugin_consumer.number_of_analysis_reports, 1)
-
-    analysis_report = test_analysis_plugin_consumer.analysis_reports[0]
-
-    # Test the username detection.
-    self.assertEquals(analysis_plugin._GetUserNameFromPath(
-        self.WIN_PATHS[0]), u'dude')
-    self.assertEquals(analysis_plugin._GetUserNameFromPath(
-        self.WIN_PATHS[2]), u'frank')
+    analysis_report = analysis_reports[0]
 
     self.assertEquals(analysis_plugin._sep, u'\\')
 

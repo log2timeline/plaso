@@ -160,10 +160,13 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
       ('url contains "duckduckgo.com"', 'DuckDuckGo')
   )
 
-  def __init__(self, pre_obj, incoming_queue, outgoing_queue):
-    """Constructor for the browser history plugin."""
-    super(AnalyzeBrowserSearchPlugin, self).__init__(
-        pre_obj, incoming_queue, outgoing_queue)
+  def __init__(self, incoming_queue):
+    """Initializes the browser search analysis plugin.
+
+    Args:
+      incoming_queue: A queue that is used to listen to incoming events.
+    """
+    super(AnalyzeBrowserSearchPlugin, self).__init__(incoming_queue)
     self._filter_dict = {}
     self._counter = collections.Counter()
 
@@ -176,37 +179,6 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
       call_back_obj = getattr(FilterClass, call_back, None)
       if filter_obj and call_back_obj:
         self._filter_dict[filter_obj] = (call_back, call_back_obj)
-
-  def ExamineEvent(self, event_object):
-    """Take an EventObject and send it through analysis."""
-    # This event requires an URL attribute.
-    url_attribute = getattr(event_object, 'url', None)
-
-    if not url_attribute:
-      return
-
-    # TODO: refactor this the source should be used in formatting only.
-    # Check if we are dealing with a web history event.
-    source, _ = formatters_manager.EventFormatterManager.GetSourceStrings(
-        event_object)
-
-    if source != 'WEBHIST':
-      return
-
-    for filter_obj, call_backs in self._filter_dict.items():
-      call_back_name, call_back_object = call_backs
-      if filter_obj.Match(event_object):
-        returned_line = ScrubLine(call_back_object(url_attribute))
-        if not returned_line:
-          continue
-        self._counter[u'{0:s}:{1:s}'.format(call_back_name, returned_line)] += 1
-
-        # Add the timeline format for each search term.
-        self._search_term_timeline.append(SEARCH_OBJECT(
-            getattr(event_object, 'timestamp', 0),
-            getattr(event_object, 'plugin', getattr(
-                event_object, 'parser', u'N/A')),
-            call_back_name, returned_line))
 
   def CompileReport(self):
     """Compiles a report of the analysis.
@@ -238,3 +210,40 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
     report.SetText(lines_of_text)
 
     return report
+
+  def ExamineEvent(
+      self, unused_analysis_context, event_object, **unused_kwargs):
+    """Analyzes an event object.
+
+    Args:
+      analysis_context: An analysis context object (instance of AnalysisContext).
+      event_object: An event object (instance of EventObject).
+    """
+    # This event requires an URL attribute.
+    url_attribute = getattr(event_object, 'url', None)
+
+    if not url_attribute:
+      return
+
+    # TODO: refactor this the source should be used in formatting only.
+    # Check if we are dealing with a web history event.
+    source, _ = formatters_manager.EventFormatterManager.GetSourceStrings(
+        event_object)
+
+    if source != 'WEBHIST':
+      return
+
+    for filter_obj, call_backs in self._filter_dict.items():
+      call_back_name, call_back_object = call_backs
+      if filter_obj.Match(event_object):
+        returned_line = ScrubLine(call_back_object(url_attribute))
+        if not returned_line:
+          continue
+        self._counter[u'{0:s}:{1:s}'.format(call_back_name, returned_line)] += 1
+
+        # Add the timeline format for each search term.
+        self._search_term_timeline.append(SEARCH_OBJECT(
+            getattr(event_object, 'timestamp', 0),
+            getattr(event_object, 'plugin', getattr(
+                event_object, 'parser', u'N/A')),
+            call_back_name, returned_line))

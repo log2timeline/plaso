@@ -38,7 +38,9 @@ from plaso import filters
 from plaso import formatters   # pylint: disable=unused-import
 from plaso import output   # pylint: disable=unused-import
 
+from plaso.analysis import context as analysis_context
 from plaso.analysis import interface as analysis_interface
+from plaso.artifacts import knowledge_base
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import bufferlib
@@ -103,7 +105,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
           u'Non-existing analysis plugins specified: {0:s}'.format(
               u' '.join(difference)))
 
-    plugins = analysis.LoadPlugins(plugins_to_load, None, None, None)
+    plugins = analysis.LoadPlugins(plugins_to_load, None)
     for plugin in plugins:
       if plugin.ARGUMENTS:
         for parameter, config in plugin.ARGUMENTS:
@@ -316,35 +318,43 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
         # Start queues and load up plugins.
         analysis_output_queue = queue.MultiThreadedQueue()
-        analysis_producers = []
-        analysis_queues = []
+        event_queue_producers = []
+        event_queues = []
         analysis_plugins_list = [
             x.strip() for x in options.analysis_plugins.split(',')]
+
         for _ in xrange(0, len(analysis_plugins_list)):
-          analysis_queues.append(queue.MultiThreadedQueue())
-          analysis_producers.append(
-              queue.AnalysisPluginProducer(analysis_queues[-1]))
+          event_queues.append(queue.MultiThreadedQueue())
+          event_queue_producers.append(
+              queue.EventObjectQueueProducer(event_queues[-1]))
+
+        knowledge_base_object = knowledge_base.KnowledgeBase()
 
         analysis_plugins = analysis.LoadPlugins(
-            analysis_plugins_list, pre_obj, analysis_queues,
-            analysis_output_queue)
+            analysis_plugins_list, event_queues)
 
         # Now we need to start all the plugins.
         for analysis_plugin in analysis_plugins:
-          self._analysis_processes.append(multiprocessing.Process(
+          analysis_report_queue_producer = queue.AnalysisReportQueueProducer(
+              analysis_output_queue)
+          analysis_context_object = analysis_context.AnalysisContext(
+              analysis_report_queue_producer, knowledge_base_object)
+          analysis_process = multiprocessing.Process(
               name='Analysis {0:s}'.format(analysis_plugin.plugin_name),
-              target=analysis_plugin.RunPlugin))
-          self._analysis_processes[-1].start()
+              target=analysis_plugin.RunPlugin, args=(analysis_context_object,))
+          self._analysis_processes.append(analysis_process)
+
+          analysis_process.start()
           logging.info(
               u'Plugin: [{0:s}] started.'.format(analysis_plugin.plugin_name))
       else:
-        analysis_producers = []
+        event_queue_producers = []
 
       output_buffer = output_lib.EventBuffer(output_module, options.dedup)
       with output_buffer:
         counter = ProcessOutput(
             output_buffer, output_module, self._filter_object,
-            self._filter_buffer, analysis_producers)
+            self._filter_buffer, event_queue_producers)
 
       for information in storage_file.GetStorageInformation():
         if hasattr(information, 'counter'):
@@ -356,8 +366,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
       # Get all reports and tags from analysis plugins.
       if options.analysis_plugins:
         logging.info(u'Processing data from analysis plugins.')
-        for analysis_producer in analysis_producers:
-          analysis_producer.SignalEndOfInput()
+        for event_queue_producer in event_queue_producers:
+          event_queue_producer.SignalEndOfInput()
 
         # Wait for all analysis plugins to complete.
         for number, analysis_process in enumerate(self._analysis_processes):
@@ -449,8 +459,15 @@ class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
           u'bug report https://code.google.com/p/plaso/issues/list')
 
 
-def _AppendEvent(event_object, output_buffer, analysis_queues):
-  """Appends an event object to an output buffer and queues."""
+def _AppendEvent(event_object, output_buffer, event_queues):
+  """Appends an event object to an output buffer and queues.
+
+  Args:
+    event_object: an event object (instance of EventObject).
+    output_buffer: the output buffer.
+    event_queues: a list of event queues that serve as input for
+                  the analysis plugins.
+  """
   output_buffer.Append(event_object)
 
   # Needed due to duplicate removals, if two events
@@ -465,8 +482,8 @@ def _AppendEvent(event_object, output_buffer, analysis_queues):
 
     event_object.inode = new_inode
 
-  for analysis_queue in analysis_queues:
-    analysis_queue.ProduceEventObject(event_object)
+  for event_queue in event_queues:
+    event_queue.ProduceEventObject(event_object)
 
 
 def ProcessOutput(
