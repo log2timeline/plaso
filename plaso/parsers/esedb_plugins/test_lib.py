@@ -61,9 +61,11 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
                              values. The default is None.
 
     Returns:
-      A generator of event objects as returned by the plugin.
+      An event object queue consumer object (instance of
+      TestEventObjectQueueConsumer).
     """
     event_queue = queue.SingleThreadedQueue()
+    event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
     event_queue_producer = queue.EventObjectQueueProducer(event_queue)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -74,9 +76,6 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
     parser_context = context.ParserContext(
         event_queue_producer, knowledge_base_object)
     esedb_file = self._OpenEseDbFile(path)
-    event_generator = plugin_object.Process(
-        parser_context, database=esedb_file)
+    plugin_object.Process(parser_context, database=esedb_file)
 
-    self.assertNotEquals(event_generator, None)
-
-    return event_generator
+    return event_queue_consumer
