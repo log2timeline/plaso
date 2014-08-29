@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -21,9 +22,7 @@ snapshot.db.
 """
 
 from plaso.events import time_events
-from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -39,23 +38,22 @@ class GoogleDriveSnapshotCloudEntryEvent(time_events.PosixTimeEvent):
   # The following definition for values can be found on Patrick Olson's blog:
   # http://www.sysforensics.org/2012/05/google-drive-forensics-notes.html
   _DOC_TYPES = {
-      0: 'FOLDER',
-      1: 'FILE',
-      2: 'PRESENTATION',
-      3: 'UNKNOWN',
-      4: 'SPREADSHEET',
-      5: 'DRAWING',
-      6: 'DOCUMENT',
-      7: 'TABLE',
+      0: u'FOLDER',
+      1: u'FILE',
+      2: u'PRESENTATION',
+      3: u'UNKNOWN',
+      4: u'SPREADSHEET',
+      5: u'DRAWING',
+      6: u'DOCUMENT',
+      7: u'TABLE',
   }
-  _DOC_TYPES.setdefault('UNKNOWN')
 
-  def __init__(self, timestamp, usage, url, path, size, doc_type, shared):
+  def __init__(self, posix_time, usage, url, path, size, doc_type, shared):
     """Initializes the event.
 
     Args:
-      timestamp: The POSIX timestamp value.
-      usage: The usage string of the timestamp.
+      posix_time: The POSIX time value.
+      usage: The description of the usage of the time value.
       url: The URL of the file as in the cloud.
       path: The path of the file.
       size: The size of the file.
@@ -63,33 +61,30 @@ class GoogleDriveSnapshotCloudEntryEvent(time_events.PosixTimeEvent):
       shared: A string indicating whether or not this is a shared document.
     """
     super(GoogleDriveSnapshotCloudEntryEvent, self).__init__(
-        timestamp, usage)
+        posix_time, usage)
 
     self.url = url
     self.path = path
     self.size = size
-    self.document_type = self._DOC_TYPES.get(doc_type, 'UNKNOWN')
+    self.document_type = self._DOC_TYPES.get(doc_type, u'UNKNOWN')
     self.shared = shared
 
 
-class GoogleDriveSnapshotLocalEntryEvent(event.EventObject):
+class GoogleDriveSnapshotLocalEntryEvent(time_events.PosixTimeEvent):
   """Convenience class for a Google Drive snapshot local entry event."""
 
   DATA_TYPE = 'gdrive:snapshot:local_entry'
 
-  def __init__(self, timestamp, local_path, size):
+  def __init__(self, posix_time, local_path, size):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of seconds since Jan 1, 1970 00:00:00 UTC.
+      posix_time: The POSIX time value.
       local_path: The local path of the file.
       size: The size of the file.
     """
-    super(GoogleDriveSnapshotLocalEntryEvent, self).__init__()
-
-    self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
-    self.timestamp_desc = eventdata.EventTimestamp.MODIFICATION_TIME
+    super(GoogleDriveSnapshotLocalEntryEvent, self).__init__(
+        posix_time, eventdata.EventTimestamp.MODIFICATION_TIME)
 
     self.path = local_path
     self.size = size
@@ -202,22 +197,19 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     # Paths are built top level to root so we need to reverse the list to
     # represent them in the traditional order.
     paths.reverse()
-    return u'/' + u'/'.join(paths) + u'/'
+    return u'/{0:s}/'.format(u'/'.join(paths))
 
   def ParseCloudEntryRow(
-      self, unused_parser_context, row, cache=None, database=None,
+      self, parser_context, row, query=None, cache=None, database=None,
       **unused_kwargs):
     """Parses a cloud entry row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      query: Optional query string. The default is None.
       cache: The local cache object.
       database: The database object.
-
-    Yields:
-      An event object (instance of GoogleDriveSnapshotCloudEntryEvent)
-      containing the event data.
     """
     cloud_path = self.GetCloudPath(row['parent_resource_id'], cache, database)
     cloud_filename = u'{0:s}{1:s}'.format(cloud_path, row['filename'])
@@ -227,31 +219,34 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     else:
       shared = 'Private'
 
-    yield GoogleDriveSnapshotCloudEntryEvent(
+    event_object = GoogleDriveSnapshotCloudEntryEvent(
         row['modified'], eventdata.EventTimestamp.MODIFICATION_TIME,
         row['url'], cloud_filename, row['size'], row['doc_type'], shared)
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
 
     if row['created']:
-      yield GoogleDriveSnapshotCloudEntryEvent(
+      event_object = GoogleDriveSnapshotCloudEntryEvent(
           row['created'], eventdata.EventTimestamp.CREATION_TIME,
           row['url'], cloud_filename, row['size'], row['doc_type'], shared)
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
   def ParseLocalEntryRow(
-      self, unused_parser_context, row, cache=None, database=None,
+      self, parser_context, row, query=None, cache=None, database=None,
       **unused_kwargs):
     """Parses a local entry row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      query: Optional query string. The default is None.
       cache: The local cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
-
-    Yields:
-      An event object (GoogleDriveSnapshotLocalEntryEvent) containing
-      the event data.
     """
     local_path = self.GetLocalPath(row['inode_number'], cache, database)
 
-    yield GoogleDriveSnapshotLocalEntryEvent(
+    event_object = GoogleDriveSnapshotLocalEntryEvent(
         row['modified'], local_path, row['size'])
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)

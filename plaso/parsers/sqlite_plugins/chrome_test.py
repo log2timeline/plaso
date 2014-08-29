@@ -39,9 +39,9 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Chrome History database file."""
     test_file = self._GetTestFilePath(['History'])
     cache = interface.SQLiteCache()
-    event_generator = self._ParseDatabaseFileWithPlugin(
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
     self.assertEquals(len(event_objects), 71)

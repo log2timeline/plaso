@@ -76,7 +76,7 @@ class PprofEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     self.parsers = []
     self.plugins = []
 
-  def _ConsumeEventObject(self, event_object):
+  def _ConsumeEventObject(self, event_object, **unused_kwargs):
     """Consumes an event object callback for ConsumeEventObject."""
     parser = getattr(event_object, 'parser', u'N/A')
     if parser not in self.parsers:

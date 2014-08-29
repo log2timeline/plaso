@@ -22,7 +22,6 @@ import abc
 from plaso.lib import queue
 from plaso.lib import registry
 from plaso.lib import timelib
-from plaso.serializer import json_serializer
 
 
 class AnalysisPlugin(queue.EventObjectQueueConsumer):
@@ -70,39 +69,29 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
   # into the argparse parser.
   ARGUMENTS = []
 
-  def __init__(self, pre_obj, incoming_queue, outgoing_queue):
+  def __init__(self, incoming_queue):
     """Initializes an analysis plugin.
 
     Args:
-      pre_obj: The preprocessing object that contains information gathered
-               during preprocessing of data.
       incoming_queue: A queue that is used to listen to incoming events.
-      outgoing_queue: The queue used to send back reports, tags and anomaly
-                      related events.
     """
     super(AnalysisPlugin, self).__init__(incoming_queue)
-    # TODO: pass the queue producer as an argument this makes the overall
-    # flow more clear regarding SignalEndOfInput.
-    self._analysis_report_queue_producer = queue.AnalysisReportQueueProducer(
-        outgoing_queue)
-    self._config = pre_obj
     self.plugin_type = self.TYPE_REPORT
-    # TODO: Remove this once we can stop using a serializer for the analysis
-    # queue for event objects.
-    self._serializer = json_serializer.JsonEventObjectSerializer
 
-  def _ConsumeEventObject(self, event_object):
-    """Consumes an event object callback for ConsumeEventObjects."""
-    self.ExamineEvent(event_object)
+  def _ConsumeEventObject(self, event_object, analysis_context=None, **kwargs):
+    """Consumes an event object callback for ConsumeEventObjects.
+
+    Args:
+      event_object: An event object (instance of EventObject).
+      analysis_context: Optional analysis context object (instance of
+                        AnalysisContext). The default is None.
+    """
+    self.ExamineEvent(analysis_context, event_object, **kwargs)
 
   @property
   def plugin_name(self):
     """Return the name of the plugin."""
     return self.NAME
-
-  @abc.abstractmethod
-  def ExamineEvent(self, event_object):
-    """Take an EventObject and send it through analysis."""
 
   @abc.abstractmethod
   def CompileReport(self):
@@ -116,15 +105,27 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
       The analysis report (instance of AnalysisReport).
     """
 
-  def RunPlugin(self):
-    """For each item in the queue send the read event to analysis."""
-    self.ConsumeEventObjects()
+  @abc.abstractmethod
+  def ExamineEvent(self, analysis_context, event_object, **kwargs):
+    """Analyzes an event object.
+
+    Args:
+      analysis_context: An analysis context object (instance of AnalysisContext).
+      event_object: An event object (instance of EventObject).
+    """
+
+  def RunPlugin(self, analysis_context):
+    """For each item in the queue send the read event to analysis.
+
+    Args:
+      analysis_context: An analysis context object (instance of AnalysisContext).
+    """
+    self.ConsumeEventObjects(analysis_context=analysis_context)
 
     analysis_report = self.CompileReport()
 
     if analysis_report:
-      analysis_report.plugin_name = self.plugin_name
+      # TODO: move this into the plugins?
       analysis_report.time_compiled = timelib.Timestamp.GetNow()
-
-      self._analysis_report_queue_producer.ProduceAnalysisReport(
-          analysis_report)
+      analysis_context.ProduceAnalysisReport(
+          analysis_report, plugin_name=self.plugin_name)

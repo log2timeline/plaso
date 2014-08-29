@@ -223,11 +223,17 @@ class EventObjectQueueConsumer(QueueConsumer):
   """
 
   @abc.abstractmethod
-  def _ConsumeEventObject(self, event_object):
+  def _ConsumeEventObject(self, event_object, **kwargs):
     """Consumes an event object callback for ConsumeEventObjects."""
 
-  def ConsumeEventObjects(self):
+  def ConsumeEventObjects(self, **kwargs):
     """Consumes the event object that are pushed on the queue.
+
+       This function will issue a callback to _ConsumeEventObject for every
+       event object (instance of EventObject) consumed from the queue.
+
+    Args:
+      kwargs: keyword arguments to pass to the _ConsumeEventObject callback.
 
     Raises:
       RuntimeError: when there is an unsupported object type on the queue.
@@ -244,7 +250,7 @@ class EventObjectQueueConsumer(QueueConsumer):
         self._queue.PushItem(item)
         break
 
-      self._ConsumeEventObject(item)
+      self._ConsumeEventObject(item, **kwargs)
 
 
 class EventObjectQueueProducer(QueueProducer):
@@ -262,9 +268,9 @@ class EventObjectQueueProducer(QueueProducer):
     try:
       self._queue.PushItem(event_object)
     except ValueError as exception:
-      logging.error(
-          u'Unable to produce a serialized event object, with error:{}'.format(
-              exception))
+      logging.error((
+          u'Unable to produce a serialized event object with '
+          u'error: {0:s}').format(exception))
 
   def ProduceEventObjects(self, event_objects):
     """Produces event objects onto the queue.
@@ -275,10 +281,6 @@ class EventObjectQueueProducer(QueueProducer):
     """
     for event_object in event_objects:
       self.ProduceEventObject(event_object)
-
-
-class AnalysisPluginProducer(EventObjectQueueProducer):
-  """Producer for Event Objects sent to analysis plugins."""
 
 
 class ItemQueueConsumer(QueueConsumer):

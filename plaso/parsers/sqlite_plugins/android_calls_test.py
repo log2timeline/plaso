@@ -36,8 +36,9 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Test the Process function on an Android contacts2.db file."""
     test_file = self._GetTestFilePath(['contacts2.db'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The contacts2 database file contains 5 events (MISSED/OUTGOING/INCOMING).
     self.assertEquals(len(event_objects), 5)
@@ -48,7 +49,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.timestamp_desc, u'Call Started')
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-06 21:17:16.690000')
+        '2013-11-06 21:17:16.690')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_number = u'5404561685'
@@ -72,17 +73,17 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     # Check the timestamp_desc of the last event.
     self.assertEquals(event_object_4.timestamp_desc, u'Call Ended')
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-07 00:03:36.690000')
-    self.assertEquals(event_object_3.timestamp, expected_timestamp)
+    expected_timestamp3 = timelib_test.CopyStringToTimestamp(
+        '2013-11-07 00:03:36.690')
+    self.assertEquals(event_object_3.timestamp, expected_timestamp3)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-07 00:14:15.690000')
-    self.assertEquals(event_object_4.timestamp, expected_timestamp)
+    expected_timestamp4 = timelib_test.CopyStringToTimestamp(
+        '2013-11-07 00:14:15.690')
+    self.assertEquals(event_object_4.timestamp, expected_timestamp4)
 
     # Ensure the difference in btw. events 3 and 4 equals the duration.
     expected_duration = (
-        (event_object_4.timestamp - event_object_3.timestamp) / 1000000)
+        (expected_timestamp4 - expected_timestamp3) / 1000000)
     self.assertEquals(event_object_4.duration, expected_duration)
 
 

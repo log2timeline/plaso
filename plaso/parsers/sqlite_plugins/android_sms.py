@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2013 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -19,31 +20,30 @@
 Android SMS messages are stored in SQLite database files named mmssms.dbs.
 """
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import interface
 
 
-class AndroidSmsEvent(event.EventObject):
+class AndroidSmsEvent(time_events.JavaTimeEvent):
   """Convenience class for an Android SMS event."""
 
   DATA_TYPE = 'android:messaging:sms'
 
-  def __init__(self, timestamp, address, sms_read, sms_type, body):
+  def __init__(self, java_time, identifier, address, sms_read, sms_type, body):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of milliseconds since Jan 1, 1970 00:00:00 UTC.
+      java_time: The Java time value.
+      identifier: The row identifier.
       address: The phone number associated to the sender/receiver.
       status:  Read or Unread.
       type: Sent or Received.
       body: Content of the SMS text message.
     """
-    super(AndroidSmsEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromJavaTime(timestamp)
-    self.timestamp_desc = eventdata.EventTimestamp.CREATION_TIME
+    super(AndroidSmsEvent, self).__init__(
+        java_time, eventdata.EventTimestamp.CREATION_TIME)
+    self.offset = identifier
     self.address = address
     self.sms_read = sms_read
     self.sms_type = sms_type
@@ -56,32 +56,33 @@ class AndroidSmsPlugin(interface.SQLitePlugin):
   NAME = 'android_sms'
 
   # Define the needed queries.
-  QUERIES = [((u'SELECT _id AS id, address, date, read, type, '
-               u'body FROM sms'), 'ParseSmsRow')]
+  QUERIES = [
+      ('SELECT _id AS id, address, date, read, type, body FROM sms',
+       'ParseSmsRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset(['sms'])
 
   SMS_TYPE = {
-      1: 'RECEIVED',
-      2: 'SENT'}
+      1: u'RECEIVED',
+      2: u'SENT'}
   SMS_READ = {
-      0: 'UNREAD',
-      1: 'READ'}
+      0: u'UNREAD',
+      1: u'READ'}
 
-  def ParseSmsRow(self, unused_parser_context, row, **unused_kwargs):
+  def ParseSmsRow(self, parser_context, row, query=None, **unused_kwargs):
     """Parses an SMS row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (AndroidSmsEvent) containing the event data.
+      query: Optional query string. The default is None.
     """
     # Extract and lookup the SMS type and read status.
-    sms_type = self.SMS_TYPE.get(row['type'], 'UNKNOWN')
-    sms_read = self.SMS_READ.get(row['read'], 'UNKNOWN')
+    sms_type = self.SMS_TYPE.get(row['type'], u'UNKNOWN')
+    sms_read = self.SMS_READ.get(row['read'], u'UNKNOWN')
 
-    yield AndroidSmsEvent(
-        row['date'], row['address'], sms_read, sms_type, row['body'])
+    event_object = AndroidSmsEvent(
+        row['date'], row['id'], row['address'], sms_read, sms_type, row['body'])
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)

@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the browser_search analysis plugin."""
+"""Tests for the browser search analysis plugin."""
 
 import unittest
 
@@ -34,35 +34,24 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._pre_obj = event.PreprocessObject()
     self._parser = sqlite.SQLiteParser()
 
   def testAnalyzeFile(self):
     """Read a storage file that contains URL data and analyze it."""
-    incoming_queue = queue.SingleThreadedQueue()
-    outgoing_queue = queue.SingleThreadedQueue()
-    analysis_plugin = browser_search.AnalyzeBrowserSearchPlugin(
-        self._pre_obj, incoming_queue, outgoing_queue)
+    knowledge_base = self._SetUpKnowledgeBase()
 
     test_file = self._GetTestFilePath(['History'])
-    event_generator = self._ParseFile(self._parser, test_file)
+    event_queue = self._ParseFile(self._parser, test_file, knowledge_base)
 
-    test_queue_producer = queue.AnalysisPluginProducer(incoming_queue)
-    test_queue_producer.ProduceEventObjects(event_generator)
-    test_queue_producer.SignalEndOfInput()
+    analysis_plugin = browser_search.AnalyzeBrowserSearchPlugin(event_queue)
+    analysis_report_queue_consumer = self._RunAnalysisPlugin(
+        analysis_plugin, knowledge_base)
+    analysis_reports = self._GetAnalysisReportsFromQueue(
+        analysis_report_queue_consumer)
 
-    analysis_plugin.RunPlugin()
+    self.assertEquals(len(analysis_reports), 1)
 
-    outgoing_queue.SignalEndOfInput()
-
-    test_analysis_plugin_consumer = test_lib.TestAnalysisPluginConsumer(
-        outgoing_queue)
-    test_analysis_plugin_consumer.ConsumeAnalysisReports()
-
-    self.assertEquals(
-        test_analysis_plugin_consumer.number_of_analysis_reports, 1)
-
-    analysis_report = test_analysis_plugin_consumer.analysis_reports[0]
+    analysis_report = analysis_reports[0]
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

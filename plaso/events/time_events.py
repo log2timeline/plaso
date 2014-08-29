@@ -41,6 +41,23 @@ class TimestampEvent(event.EventObject):
       self.data_type = data_type
 
 
+class CocoaTimeEvent(TimestampEvent):
+  """Convenience class for a Cocoa time-based event."""
+
+  def __init__(self, cocoa_time, usage, data_type=None):
+    """Initializes an event object.
+
+    Args:
+      cocoa_time: The Cocoa time value.
+      usage: The description of the usage of the time value.
+      data_type: Optional event data type. If not set data_type is
+                 derived from the DATA_TYPE attribute.
+    """
+    super(CocoaTimeEvent, self).__init__(
+        timelib.Timestamp.FromCocoaTime(cocoa_time), usage,
+        data_type=data_type)
+
+
 class FatDateTimeEvent(TimestampEvent):
   """Convenience class for a FAT date time-based event."""
 

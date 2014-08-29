@@ -41,9 +41,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # This is probably version 23 but potentially an older version.
     test_file = self._GetTestFilePath(['places.sqlite'])
     cache = interface.SQLiteCache()
-    event_generator = self._ParseDatabaseFileWithPlugin(
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The places.sqlite file contains 205 events (1 page visit,
     # 2 x 91 bookmark records, 2 x 3 bookmark annotations,
@@ -198,9 +198,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Firefox History database file v 25."""
     test_file = self._GetTestFilePath(['places_new.sqlite'])
     cache = interface.SQLiteCache()
-    event_generator = self._ParseDatabaseFileWithPlugin(
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The places.sqlite file contains 84 events:
     #     34 page visits.
@@ -242,11 +242,11 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Firefox Downloads database file."""
     test_file = self._GetTestFilePath(['downloads.sqlite'])
     cache = interface.SQLiteCache()
-    event_generator = self._ParseDatabaseFileWithPlugin(
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    # The downloads.sqlite file contains 2 events (1 download)
+    # The downloads.sqlite file contains 2 events (1 download).
     self.assertEquals(len(event_objects), 2)
 
     # Check the first page visited event.

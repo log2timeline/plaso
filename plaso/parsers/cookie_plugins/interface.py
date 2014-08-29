@@ -23,12 +23,12 @@ from plaso.lib import errors
 from plaso.parsers import plugins
 
 
+# TODO: move this into the parsers and plugins manager.
 def GetPlugins():
   """Returns a list of all cookie plugins."""
   plugins_list = []
   for plugin_cls in CookiePlugin.classes.itervalues():
     parent_name = getattr(plugin_cls, 'parent_class_name', 'NOTHERE')
-
     if parent_name != 'cookie':
       continue
 
@@ -41,9 +41,7 @@ class CookiePlugin(plugins.BasePlugin):
   """A browser cookie plugin for Plaso.
 
   This is a generic cookie parsing interface that can handle parsing
-  cookies from all browsers. It just needs the cookie name and the
-  cookie data to be able to evaluate and parse the cookie content and
-  yield back event objects.
+  cookies from all browsers.
   """
 
   __abstract = True
@@ -60,6 +58,16 @@ class CookiePlugin(plugins.BasePlugin):
     super(CookiePlugin, self).__init__()
     self.cookie_data = ''
 
+  @abc.abstractmethod
+  def GetEntries(self, parser_context, cookie_data=None, url=None, **kwargs):
+    """Extract and return EventObjects from the data structure.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      cookie_data: Optional cookie data, as a byte string.
+      url: Optional URL or path where the cookie got set.
+    """
+
   def Process(
       self, parser_context, cookie_name=None, cookie_data=None, url=None,
       **kwargs):
@@ -71,9 +79,6 @@ class CookiePlugin(plugins.BasePlugin):
       cookie_data: The cookie data, as a byte string.
       url: The full URL or path where the cookie got set.
 
-    Returns:
-      A generator that yields event objects.
-
     Raises:
       errors.WrongPlugin: If the cookie name differs from the one
       supplied in COOKIE_NAME.
@@ -84,22 +89,9 @@ class CookiePlugin(plugins.BasePlugin):
 
     if cookie_name != self.COOKIE_NAME:
       raise errors.WrongPlugin(
-          u'Not the correct cookie plugin for: {} [{}]'.format(
+          u'Not the correct cookie plugin for: {0:s} [{1:s}]'.format(
               cookie_name, self.plugin_name))
 
     # This will raise if unhandled keyword arguments are passed.
     super(CookiePlugin, self).Process(parser_context, **kwargs)
-    return self.GetEntries(parser_context, cookie_data=cookie_data, url=url)
-
-  @abc.abstractmethod
-  def GetEntries(self, parser_context, cookie_data=None, url=None, **kwargs):
-    """Extract and return EventObjects from the data structure.
-
-    Args:
-      parser_context: A parser context object (instance of ParserContext).
-      cookie_data: The cookie data, as a byte string.
-      url: The full URL or path where the cookie got set.
-
-    Yields:
-      An EventObject extracted from the cookie data.
-    """
+    self.GetEntries(parser_context, cookie_data=cookie_data, url=url)

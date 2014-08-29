@@ -39,9 +39,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Google Drive database file."""
     test_file = self._GetTestFilePath(['snapshot.db'])
     cache = interface.SQLiteCache()
-    event_generator = self._ParseDatabaseFileWithPlugin(
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache=cache)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 30)
 

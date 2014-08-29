@@ -234,37 +234,36 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       'moz_historyvisits h WHERE p.id = h.place_id')
 
   def ParseBookmarkAnnotationRow(
-      self, unused_parser_context, row, **unused_kwargs):
+      self, parser_context, row, query=None, **unused_kwargs):
     """Parses a bookmark annotation row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (instance of FirefoxPlacesBookmarkAnnotation) containing
-      the event data.
+      query: Optional query string. The default is None.
     """
     if row['dateAdded']:
-      yield FirefoxPlacesBookmarkAnnotation(
+      event_object = FirefoxPlacesBookmarkAnnotation(
           row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
           row['id'], row['title'], row['url'], row['content'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['lastModified']:
-      yield FirefoxPlacesBookmarkAnnotation(
+      event_object = FirefoxPlacesBookmarkAnnotation(
           row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
           row['id'], row['title'], row['url'], row['content'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
-  def ParseBookmarkFolderRow(self, unused_parser_context, row, **unused_kwargs):
+  def ParseBookmarkFolderRow(
+      self, parser_context, row, query=None, **unused_kwargs):
     """Parses a bookmark folder row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (instance of FirefoxPlacesBookmarkFolder) containing the
-      event data.
+      query: Optional query string. The default is None.
     """
     if not row['title']:
       title = 'N/A'
@@ -272,53 +271,56 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       title = row['title']
 
     if row['dateAdded']:
-      yield FirefoxPlacesBookmarkFolder(
+      event_object = FirefoxPlacesBookmarkFolder(
           row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
           row['id'], title)
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['lastModified']:
-      yield FirefoxPlacesBookmarkFolder(
+      event_object = FirefoxPlacesBookmarkFolder(
           row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
           row['id'], title)
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
-  def ParseBookmarkRow(self, unused_parser_context, row, **unused_kwargs):
+  def ParseBookmarkRow(self, parser_context, row, query=None, **unused_kwargs):
     """Parses a bookmark row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (instance of FirefoxPlacesBookmark) containing the event
-      data.
+      query: Optional query string. The default is None.
     """
     if row['dateAdded']:
-      yield FirefoxPlacesBookmark(
+      event_object = FirefoxPlacesBookmark(
           row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
           row['id'], row['type'], row['bookmark_title'], row['url'],
           row['places_title'], getattr(row, 'rev_host', 'N/A'),
           row['visit_count'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['lastModified']:
-      yield FirefoxPlacesBookmark(
+      event_object = FirefoxPlacesBookmark(
           row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
           row['id'], row['type'], row['bookmark_title'], row['url'],
           row['places_title'], getattr(row, 'rev_host', 'N/A'),
           row['visit_count'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
   def ParsePageVisitedRow(
-      self, unused_parser_context, row, cache=None, database=None,
+      self, parser_context, row, query=None, cache=None, database=None,
       **unused_kwargs):
     """Parses a page visited row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      query: Optional query string. The default is None.
       cache: A cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
-
-    Yields:
-      An event object (FirefoxPlacesPageVisitedEvent) containing the event data.
     """
     # TODO: make extra conditional formatting.
     extras = []
@@ -335,10 +337,12 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       extras.append('(URL not typed directly)')
 
     if row['visit_date']:
-      yield FirefoxPlacesPageVisitedEvent(
+      event_object = FirefoxPlacesPageVisitedEvent(
           row['visit_date'], row['id'], row['url'], row['title'],
           self._ReverseHostname(row['rev_host']), row['visit_count'],
           row['visit_type'], extras)
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
   def _ReverseHostname(self, hostname):
     """Reverses the hostname and strips the leading dot.
@@ -405,24 +409,26 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset(['moz_downloads'])
 
-  def ParseDownloadsRow(self, unused_parser_context, row, **unused_kwargs):
+  def ParseDownloadsRow(self, parser_context, row, query=None, **unused_kwargs):
     """Parses a downloads row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (instance of FirefoxDownload) containing the event data.
+      query: Optional query string. The default is None.
     """
     if row['startTime']:
-      yield FirefoxDownload(
+      event_object = FirefoxDownload(
           row['startTime'], eventdata.EventTimestamp.START_TIME,
           row['id'], row['name'], row['source'], row['referrer'], row['target'],
           row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['endTime']:
-      yield FirefoxDownload(
+      event_object = FirefoxDownload(
           row['endTime'], eventdata.EventTimestamp.END_TIME,
           row['id'], row['name'], row['source'], row['referrer'], row['target'],
           row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)

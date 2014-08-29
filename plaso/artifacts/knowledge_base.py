@@ -55,7 +55,7 @@ class KnowledgeBase(object):
   @property
   def hostname(self):
     """The hostname."""
-    return getattr(self._pre_obj, 'hostname', None)
+    return getattr(self._pre_obj, 'hostname', u'')
 
   @property
   def platform(self):
@@ -71,6 +71,11 @@ class KnowledgeBase(object):
   def timezone(self):
     """The timezone object."""
     return getattr(self._pre_obj, 'zone', self._default_timezone)
+
+  @property
+  def users(self):
+    """The list of users."""
+    return getattr(self._pre_obj, 'users', [])
 
   @property
   def year(self):

@@ -36,8 +36,9 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a LS Quarantine database file."""
     test_file = self._GetTestFilePath(['quarantine.db'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The quarantine database contains 14 event_objects.
     self.assertEquals(len(event_objects), 14)
