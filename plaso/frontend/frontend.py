@@ -219,6 +219,52 @@ class StorageMediaFrontend(Frontend):
     # TODO: turn into a process pool.
     self._worker_processes = {}
 
+  def _GetPartionIdentifierFromUser(self, volume_system, volume_identifiers):
+    """Asks the user to provide the partitioned volume identifier.
+
+    Args:
+      volume_system: The volume system (instance of dfvfs.TSKVolumeSystem).
+      volume_identifiers: List of allowed volume identifiers.
+
+    Raises:
+      FileSystemScannerError: if the source cannot be processed.
+    """
+    self._output_writer.Write(
+        u'The following partitions were found:\n'
+        u'Identifier\tOffset (in bytes)\tSize (in bytes)\n')
+
+    for volume_identifier in volume_identifiers:
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      if not volume:
+        raise errors.FileSystemScannerError(
+            u'Volume missing for identifier: {0:s}.'.format(volume_identifier))
+
+      volume_extent = volume.extents[0]
+      self._output_writer.Write(
+          u'{0:s}\t\t{1:d} (0x{1:08x})\t{2:d}\n'.format(
+              volume.identifier, volume_extent.offset, volume_extent.size))
+
+    self._output_writer.Write(u'\n')
+
+    while True:
+      self._output_writer.Write(
+          u'Please specify the identifier of the partition that should '
+          u'be processed:\nNote that you can abort with Ctrl^C.\n')
+
+      selected_volume_identifier = self._input_reader.Read()
+      selected_volume_identifier = selected_volume_identifier.strip()
+
+      if selected_volume_identifier in volume_identifiers:
+        break
+
+      self._output_writer.Write(
+          u'\n'
+          u'Unsupported partition identifier, please try again or abort '
+          u'with Ctrl^C.\n'
+          u'\n')
+
+    return selected_volume_identifier
+
   def _GetVolumeTSKPartition(
       self, scan_context, partition_number=None, partition_offset=None):
     """Determines the volume path specification.
