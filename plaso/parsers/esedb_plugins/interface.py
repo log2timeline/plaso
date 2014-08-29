@@ -230,9 +230,6 @@ class EseDbPlugin(plugins.BasePlugin):
       cache: Optional cache object (instance of EseDbCache). The default is
              None.
 
-    Yields:
-      An event object.
-
     Raises:
       ValueError: If the database attribute is not valid.
     """
@@ -261,14 +258,9 @@ class EseDbPlugin(plugins.BasePlugin):
       # The database is passed in case the database contains table names
       # that are assigned dynamically and cannot be defined by
       # the table name-callback mechanism.
-      event_generator = callback(
+      callback(
           parser_context, database=database, table=esedb_table, cache=cache,
           **kwargs)
-      if not event_generator:
-        continue
-
-      for event_object in event_generator:
-        yield event_object
 
   def Process(self, parser_context, database=None, cache=None, **kwargs):
     """Determines if this is the appropriate plugin for the database.
@@ -279,9 +271,6 @@ class EseDbPlugin(plugins.BasePlugin):
                 The default is None.
       cache: Optional cache object (instance of EseDbCache). The default is
              None.
-
-    Returns:
-      A generator that yields event object.
 
     Raises:
       errors.WrongPlugin: If the database does not contain all the tables
@@ -299,5 +288,5 @@ class EseDbPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(EseDbPlugin, self).Process(parser_context, **kwargs)
 
-    return self.GetEntries(
+    self.GetEntries(
         parser_context, database=database, cache=cache, **kwargs)
