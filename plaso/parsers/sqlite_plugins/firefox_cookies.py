@@ -33,13 +33,14 @@ class FirefoxCookieEvent(time_events.TimestampEvent):
   DATA_TYPE = 'firefox:cookie:entry'
 
   def __init__(
-      self, timestamp, usage, hostname, cookie_name, value, path, secure,
-      httponly):
+      self, timestamp, usage, identifier, hostname, cookie_name, value, path,
+      secure, httponly):
     """Initializes the event.
 
     Args:
       timestamp: The timestamp value in WebKit format..
       usage: Timestamp description string.
+      identifier: The row identifier.
       hostname: The hostname of host that set the cookie value.
       cookie_name: The name field of the cookie.
       value: The value of the cookie.
@@ -53,6 +54,7 @@ class FirefoxCookieEvent(time_events.TimestampEvent):
     if hostname.startswith('.'):
       hostname = hostname[1:]
 
+    self.offset = identifier
     self.host = hostname
     self.cookie_name = cookie_name
     self.data = value
@@ -74,9 +76,10 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
   NAME = 'firefox_cookies'
 
   # Define the needed queries.
-  QUERIES = [((
-      'SELECT id, baseDomain, name, value, host, path, expiry, lastAccessed, '
-      'creationTime, isSecure, isHttpOnly FROM moz_cookies'), 'ParseCookieRow')]
+  QUERIES = [
+      (('SELECT id, baseDomain, name, value, host, path, expiry, lastAccessed, '
+        'creationTime, isSecure, isHttpOnly FROM moz_cookies'),
+       'ParseCookieRow')]
 
   # The required tables common to Archived History and History.
   REQUIRED_TABLES = frozenset(['moz_cookies'])
@@ -91,28 +94,29 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
     super(FirefoxCookiePlugin, self).__init__()
     self._cookie_plugins = cookie_interface.GetPlugins()
 
-  def ParseCookieRow(self, parser_context, row, **unused_kwargs):
+  def ParseCookieRow(self, parser_context, row, query=None, **unused_kwargs):
     """Parses a cookie row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (instance of FirefoxCookieEvent) containing the event
-      data.
+      query: Optional query string. The default is None.
     """
     if row['creationTime']:
-      yield FirefoxCookieEvent(
+      event_object = FirefoxCookieEvent(
           row['creationTime'], eventdata.EventTimestamp.CREATION_TIME,
-          row['host'], row['name'], row['value'], row['path'], row['isSecure'],
-          row['isHttpOnly'])
+          row['id'], row['host'], row['name'], row['value'], row['path'],
+          row['isSecure'], row['isHttpOnly'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['lastAccessed']:
-      yield FirefoxCookieEvent(
-          row['lastAccessed'], eventdata.EventTimestamp.ACCESS_TIME,
+      event_object = FirefoxCookieEvent(
+          row['lastAccessed'], eventdata.EventTimestamp.ACCESS_TIME, row['id'],
           row['host'], row['name'], row['value'], row['path'], row['isSecure'],
           row['isHttpOnly'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     if row['expiry']:
       # Expiry time (nsCookieService::GetExpiry in
@@ -122,9 +126,11 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
       # client time. This localizes the client time regardless of whether or not
       # the TZ environment variable was set on the client.
       timestamp = timelib.Timestamp.FromPosixTime(row['expiry'])
-      yield FirefoxCookieEvent(
-          timestamp, u'Cookie Expires', row['host'], row['name'], row['value'],
-          row['path'], row['isSecure'], row['isHttpOnly'])
+      event_object = FirefoxCookieEvent(
+          timestamp, u'Cookie Expires', row['id'], row['host'], row['name'],
+          row['value'], row['path'], row['isSecure'], row['isHttpOnly'])
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)
 
     # Go through all cookie plugins to see if there are is any specific parsing
     # needed.
@@ -133,12 +139,11 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
       hostname = hostname[1:]
     url = u'http{0:s}://{1:s}{2:s}'.format(
         u's' if row['isSecure'] else u'', hostname, row['path'])
+
     for cookie_plugin in self._cookie_plugins:
       try:
-        for event_object in cookie_plugin.Process(
+        cookie_plugin.Process(
             parser_context, cookie_name=row['name'], cookie_data=row['value'],
-            url=url):
-          event_object.plugin = cookie_plugin.plugin_name
-          yield event_object
+            url=url)
       except errors.WrongPlugin:
         pass

@@ -132,7 +132,8 @@ class ParserContext(object):
     return self._filter_object and self._filter_object.Matches(event_object)
 
   def ProcessEvent(
-      self, event_object, parser_name=None, plugin_name=None, file_entry=None):
+      self, event_object, parser_name=None, plugin_name=None, file_entry=None,
+      query=None):
     """Processes an event before it is emitted to the event queue.
 
     Args:
@@ -141,6 +142,7 @@ class ParserContext(object):
       plugin_name: Optional name of the plugin. The default is None.
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      query: Optional query string. The default is None.
     """
     if not getattr(event_object, 'parser', None) and parser_name:
       event_object.parser = parser_name
@@ -182,9 +184,13 @@ class ParserContext(object):
       if username:
         event_object.username = username
 
+    if not getattr(event_object, 'query', None) and query:
+      event_object.query = query
+
   def ProduceEvent(
-      self, event_object, parser_name=None, plugin_name=None, file_entry=None):
-    """Produces an event onto the event queue.
+      self, event_object, parser_name=None, plugin_name=None, file_entry=None,
+      query=None):
+    """Produces an event onto the queue.
 
     Args:
       event_object: the event object (instance of EventObject).
@@ -192,10 +198,11 @@ class ParserContext(object):
       plugin_name: Optional name of the plugin. The default is None.
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      query: Optional query string. The default is None.
     """
     self.ProcessEvent(
         event_object, parser_name=parser_name, plugin_name=plugin_name,
-        file_entry=file_entry)
+        file_entry=file_entry, query=query)
 
     if self.MatchesFilter(event_object):
       return
@@ -204,21 +211,23 @@ class ParserContext(object):
     self.number_of_produced_events += 1
 
   def ProduceEvents(
-      self, event_objects, parser_name=None, plugin_name=None, file_entry=None):
-    """Produces events onto the event queue.
+      self, event_objects, parser_name=None, plugin_name=None, file_entry=None,
+      query=None):
+    """Produces events onto the queue.
 
     Args:
       event_objects: a list or generator of event objects (instances of
                      EventObject).
       parser_name: Optional name of the parser. The default is None.
       plugin_name: Optional name of the plugin. The default is None.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      query: Optional query string. The default is None.
     """
     for event_object in event_objects:
       self.ProduceEvent(
           event_object, parser_name=parser_name, plugin_name=plugin_name,
-          file_entry=file_entry)
+          file_entry=file_entry, query=query)
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.

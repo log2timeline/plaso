@@ -20,30 +20,29 @@
 Android Call History is stored in SQLite database files named contacts2.db.
 """
 
-from plaso.lib import event
-from plaso.lib import timelib
+from plaso.events import time_events
 from plaso.parsers.sqlite_plugins import interface
 
 
-class AndroidCallEvent(event.EventObject):
+class AndroidCallEvent(time_events.JavaTimeEvent):
   """Convenience class for an Android Call History event."""
 
   DATA_TYPE = 'android:event:call'
 
   def __init__(
-      self, timestamp, number, name, duration, call_type, timestamp_desc):
+      self, java_time, usage, identifier, number, name, duration, call_type):
     """Initializes the event object.
+
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of milliseconds since Jan 1, 1970 00:00:00 UTC.
-      timestamp_desc: Call Started, Call Ended.
+      java_time: The Java time value.
+      usage: The description of the usage of the time value.
+      identifier: The row identifier.
       number: The phone number associated to the remote party.
       duration: The number of seconds the call lasted.
       call_type: Incoming, Outgoing, or Missed.
     """
-    super(AndroidCallEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.FromJavaTime(timestamp)
-    self.timestamp_desc = timestamp_desc
+    super(AndroidCallEvent, self).__init__(java_time, usage)
+    self.offset = identifier
     self.number = number
     self.name = name
     self.duration = duration
@@ -56,31 +55,31 @@ class AndroidCallPlugin(interface.SQLitePlugin):
   NAME = 'android_calls'
 
   # Define the needed queries.
-  QUERIES = [((u'SELECT _id AS id, date, number, name, duration, type '
-               u'FROM calls'), 'ParseCallsRow')]
+  QUERIES = [
+      ('SELECT _id AS id, date, number, name, duration, type FROM calls',
+       'ParseCallsRow')]
 
   CALL_TYPE = {
-      1: 'INCOMING',
-      2: 'OUTGOING',
-      3: 'MISSED'
-    }
+      1: u'INCOMING',
+      2: u'OUTGOING',
+      3: u'MISSED'}
 
-  def ParseCallsRow(self, unused_parser_context, row, **unused_kwargs):
+  def ParseCallsRow(self, parser_context, row, query=None, **unused_kwargs):
     """Parses a Call record row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (AndroidCallEvent) containing the event data.
+      query: Optional query string. The default is None.
     """
     # Extract and lookup the call type.
-    call_type = self.CALL_TYPE.get(row['type'], 'UNKNOWN')
+    call_type = self.CALL_TYPE.get(row['type'], u'UNKNOWN')
 
-    yield AndroidCallEvent(
-        row['date'], row['number'], row['name'], row['duration'], call_type,
-        'Call Started')
+    event_object = AndroidCallEvent(
+        row['date'], u'Call Started', row['id'], row['number'], row['name'],
+        row['duration'], call_type)
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
 
     duration = row['duration']
     if isinstance(duration, basestring):
@@ -90,6 +89,10 @@ class AndroidCallPlugin(interface.SQLitePlugin):
         duration = 0
 
     if duration:
-      yield AndroidCallEvent(
-          row['date'] + duration * 1000, row['number'], row['name'],
-          row['duration'], call_type, 'Call Ended')
+      # The duration is in seconds and the date value in milli seconds.
+      duration *= 1000
+      event_object = AndroidCallEvent(
+          row['date'] + duration, u'Call Ended', row['id'], row['number'],
+          row['name'], row['duration'], call_type)
+      parser_context.ProduceEvent(
+          event_object, plugin_name=self.NAME, query=query)

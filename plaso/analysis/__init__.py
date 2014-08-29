@@ -25,6 +25,7 @@ from plaso.analysis import browser_search
 from plaso.analysis import chrome_extension
 
 
+# TODO: move these functions to a manager class.
 def ListAllPluginNames(show_all=True):
   """Return a list of all available plugin names and it's doc string."""
   results = []
@@ -37,11 +38,10 @@ def ListAllPluginNames(show_all=True):
     elif show_all:
       results.append((obj.plugin_name, doc_string, obj.plugin_type))
 
-
   return sorted(results)
 
 
-def LoadPlugins(plugin_names, pre_obj, incoming_queues, outgoing_queue):
+def LoadPlugins(plugin_names, incoming_queues):
   """Yield analysis plugins for a given list of plugin names.
 
   Given a list of plugin names this method finds the analysis
@@ -50,11 +50,8 @@ def LoadPlugins(plugin_names, pre_obj, incoming_queues, outgoing_queue):
   Args:
     plugin_names: A list of plugin names that should be loaded up. This
                   shold be a list of strings.
-    pre_obj: The preprocessing object.
     incoming_queues: A list of queues (QueueInterface object) that the plugin
                      uses to read in incoming events to analyse.
-    outgoing_queue: The queue that is used by all plugins to send in compiled
-                    data, including reports, tags and anamolies.
 
   Yields:
     A list of initialized analysis plugin objects.
@@ -68,11 +65,15 @@ def LoadPlugins(plugin_names, pre_obj, incoming_queues, outgoing_queue):
   except AttributeError:
     raise errors.BadConfigOption(u'Plugin names should be a list of strings.')
 
-  for obj in interface.AnalysisPlugin.classes.itervalues():
-    if obj.NAME.lower() in plugin_names_lower:
-      queue_index = plugin_names_lower.index(obj.NAME.lower())
+  for plugin_object in interface.AnalysisPlugin.classes.itervalues():
+    plugin_name = plugin_object.NAME.lower()
+
+    if plugin_name in plugin_names_lower:
+      queue_index = plugin_names_lower.index(plugin_name)
+
       try:
         incoming_queue = incoming_queues[queue_index]
       except (TypeError, IndexError):
         incoming_queue = None
-      yield obj(pre_obj, incoming_queue, outgoing_queue)
+
+      yield plugin_object(incoming_queue)

@@ -36,8 +36,9 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a MacKeeper Cache database file."""
     test_file = self._GetTestFilePath(['mackeeper_cache.db'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The cache file contains 198 entries.
     self.assertEquals(len(event_objects), 198)

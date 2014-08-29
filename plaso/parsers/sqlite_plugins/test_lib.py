@@ -33,7 +33,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
 
   def _ParseDatabaseFileWithPlugin(
       self, plugin_object, path, cache=None, knowledge_base_values=None):
-    """Parses a file as a SQLite database and returns an event generator.
+    """Parses a file as a SQLite database with a specific plugin.
 
     Args:
       plugin_object: The plugin object that is used to extract an event
@@ -44,9 +44,11 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
                              values. The default is None.
 
     Returns:
-      A generator of event objects as returned by the plugin.
+      An event object queue consumer object (instance of
+      TestEventObjectQueueConsumer).
     """
     event_queue = queue.SingleThreadedQueue()
+    event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
     event_queue_producer = queue.EventObjectQueueProducer(event_queue)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -61,9 +63,6 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
     with sqlite_interface.SQLiteDatabase(file_entry) as database:
-      event_generator = plugin_object.Process(
-          parser_context, cache=cache, database=database)
+      plugin_object.Process(parser_context, cache=cache, database=database)
 
-    self.assertNotEquals(event_generator, None)
-
-    return event_generator
+    return event_queue_consumer

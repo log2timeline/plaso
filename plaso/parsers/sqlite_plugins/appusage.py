@@ -21,36 +21,29 @@
    /var/db/application_usage.sqlite
 """
 
-from plaso.lib import event
-from plaso.lib import timelib
+from plaso.events import time_events
 from plaso.parsers.sqlite_plugins import interface
 
 
-class MacOSXApplicationUsageEvent(event.EventObject):
+class MacOSXApplicationUsageEvent(time_events.PosixTimeEvent):
   """Convenience class for a Mac OS X application usage event."""
 
   DATA_TYPE = 'macosx:application_usage'
 
   def __init__(
-      self, timestamp, usage, application_name, application_version,
+      self, posix_time, usage, application_name, application_version,
       bundle_id, number_of_times):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
+      posix_time: The POSIX time value.
       usage: The description of the usage of the time value.
       application_name: The name of the application.
       application_version: The version of the application.
       bundle_id: The bundle identifier of the application.
       number_of_times: TODO: number of times what?
     """
-    super(MacOSXApplicationUsageEvent, self).__init__()
-
-    self.timestamp = timestamp
-    # TODO: replace usage by definition(s) in eventdata. Not sure which values
-    # it will hold here.
-    self.timestamp_desc = usage
+    super(MacOSXApplicationUsageEvent, self).__init__(posix_time, usage)
 
     self.application = application_name
     self.app_version = application_version
@@ -76,26 +69,29 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   NAME = 'appusage'
 
   # Define the needed queries.
-  QUERIES = [(('SELECT last_time, event, bundle_id, app_version, app_path,'
-               'number_times FROM application_usage ORDER BY last_time'),
-              'ParseApplicationUsageRow')]
+  QUERIES = [
+      (('SELECT last_time, event, bundle_id, app_version, app_path, '
+        'number_times FROM application_usage ORDER BY last_time'),
+       'ParseApplicationUsageRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset(['application_usage'])
 
   def ParseApplicationUsageRow(
-      self, unused_parser_context, row, **unused_kwargs):
+      self, parser_context, row, query=None, **unused_kwargs):
     """Parses an application usage row.
 
     Args: 
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (MacOSXApplicationUsageEvent) containing the event
-      data.
+      query: Optional query string. The default is None.
     """
-    yield MacOSXApplicationUsageEvent(
-        timelib.Timestamp.FromPosixTime(row['last_time']),
-        u'Application {0:s}'.format(row['event']), row['app_path'],
-        row['app_version'], row['bundle_id'], row['number_times'])
+    # TODO: replace usage by definition(s) in eventdata. Not sure which values
+    # it will hold here.
+    usage = u'Application {0:s}'.format(row['event'])
+
+    event_object = MacOSXApplicationUsageEvent(
+        row['last_time'], usage, row['app_path'], row['app_version'],
+        row['bundle_id'], row['number_times'])
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)

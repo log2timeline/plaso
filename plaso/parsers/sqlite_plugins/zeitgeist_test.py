@@ -36,8 +36,9 @@ class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     test_file = self._GetTestFilePath(['activity.sqlite'])
-    event_generator = self._ParseDatabaseFileWithPlugin(self._plugin, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
+        self._plugin, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The sqlite database contains 44 events.
     self.assertEquals(len(event_objects), 44)

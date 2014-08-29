@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -16,31 +17,27 @@
 # limitations under the License.
 """Plugin for the Mac OS X launch services quarantine events."""
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import interface
 
 
-class LsQuarantineEvent(event.EventObject):
+class LsQuarantineEvent(time_events.CocoaTimeEvent):
   """Convenience class for a Mac OS X launch services quarantine event."""
   DATA_TYPE = 'macosx:lsquarantine'
 
   # TODO: describe more clearly what the data value contains.
-  def __init__(self, timestamp, url, user_agent, data):
+  def __init__(self, cocoa_time, url, user_agent, data):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of seconds since Jan 1, 1970 00:00:00 UTC.
+      cocoa_time: The Cocoa time value.
       url: The original URL of the file.
       user_agent: The user agent that was used to download the file.
       data: The data.
     """
-    super(LsQuarantineEvent, self).__init__()
-
-    self.timestamp = timelib.Timestamp.FromCocoaTime(timestamp)
-    self.timestamp_desc = eventdata.EventTimestamp.FILE_DOWNLOADED
+    super(LsQuarantineEvent, self).__init__(
+        cocoa_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
 
     self.url = url
     self.agent = user_agent
@@ -58,23 +55,25 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
   NAME = 'ls_quarantine'
 
   # Define the needed queries.
-  QUERIES = [(('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
-               'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
-               'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
-               'ORDER BY Time'), 'ParseLSQuarantineRow')]
+  QUERIES = [
+      (('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
+        'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
+        'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
+        'ORDER BY Time'), 'ParseLSQuarantineRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
 
-  def ParseLSQuarantineRow(self, unused_parser_context, row, **unused_kwargs):
+  def ParseLSQuarantineRow(
+      self, parser_context, row, query=None, **unused_kwargs):
     """Parses a launch services quarantine event row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
-
-    Yields:
-      An event object (LsQuarantineEvent) containing the event data.
+      query: Optional query string. The default is None.
     """
-    yield LsQuarantineEvent(
+    event_object = LsQuarantineEvent(
         row['Time'], row['URL'], row['Agent'], row['Data'])
+    parser_context.ProduceEvent(
+        event_object, plugin_name=self.NAME, query=query)
