@@ -148,16 +148,14 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       'RequestHeaders': '_ConvertValueBinaryDataToStringAscii',
       'ResponseHeaders': '_ConvertValueBinaryDataToStringAscii'}
 
-  def _ParseContainerTable(self, table, container_name):
+  def _ParseContainerTable(self, parser_context, table, container_name):
     """Parses a Container_# table.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
       table: The table object (instance of pyesedb.table).
       container_name: String that contains the container name.
                       The container name indicates the table type.
-
-    Yields:
-      An event object (instance of EventObject).
     """
     if table is None:
       logging.warning(u'[{0:s}] invalid Container_# table'.format(self.NAME))
@@ -179,38 +177,44 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
           container_name.startswith(u'MSHist')):
         timestamp = record_values.get(u'SyncTime', 0)
         if timestamp:
-          yield MsieWebCacheContainerEventObject(
+          event_object = MsieWebCacheContainerEventObject(
               timestamp, u'Synchronization time', record_values)
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
         timestamp = record_values.get(u'CreationTime', 0)
         if timestamp:
-          yield MsieWebCacheContainerEventObject(
+          event_object = MsieWebCacheContainerEventObject(
               timestamp, eventdata.EventTimestamp.CREATION_TIME, record_values)
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
         timestamp = record_values.get(u'ExpiryTime', 0)
         if timestamp:
-          yield MsieWebCacheContainerEventObject(
+          event_object = MsieWebCacheContainerEventObject(
               timestamp, eventdata.EventTimestamp.EXPIRATION_TIME,
               record_values)
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
         timestamp = record_values.get(u'ModifiedTime', 0)
         if timestamp:
-          yield MsieWebCacheContainerEventObject(
+          event_object = MsieWebCacheContainerEventObject(
               timestamp, eventdata.EventTimestamp.MODIFICATION_TIME,
               record_values)
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
         timestamp = record_values.get(u'AccessedTime', 0)
         if timestamp:
-          yield MsieWebCacheContainerEventObject(
+          event_object = MsieWebCacheContainerEventObject(
               timestamp, eventdata.EventTimestamp.ACCESS_TIME, record_values)
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
         timestamp = record_values.get(u'PostCheckTime', 0)
         if timestamp:
-          yield MsieWebCacheContainerEventObject(
+          event_object = MsieWebCacheContainerEventObject(
               timestamp, u'Post check time', record_values)
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
   def ParseContainersTable(
-      self, unused_parser_context, database=None, table=None, **unused_kwargs):
+      self, parser_context, database=None, table=None, **unused_kwargs):
     """Parses the Containers table.
 
     Args:
@@ -219,9 +223,6 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
                 The default is None.
       table: Optional table object (instance of pyesedb.table).
              The default is None.
-
-    Yields:
-      An event object (instance of EventObject).
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -236,13 +237,15 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
 
       timestamp = record_values.get(u'LastScavengeTime', 0)
       if timestamp:
-        yield MsieWebCacheContainersEventObject(
+        event_object = MsieWebCacheContainersEventObject(
             timestamp, u'Last Scavenge Time', record_values)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       timestamp = record_values.get(u'LastAccessTime', 0)
       if timestamp:
-        yield MsieWebCacheContainersEventObject(
+        event_object = MsieWebCacheContainersEventObject(
             timestamp, eventdata.EventTimestamp.ACCESS_TIME, record_values)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       container_identifier = record_values.get(u'ContainerId', None)
       container_name = record_values.get(u'Name', None)
@@ -257,12 +260,10 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
             u'[{0:s}] missing table: {1:s}'.format(self.NAME, table_name))
         continue
 
-      for event_object in self._ParseContainerTable(
-          esedb_table, container_name):
-        yield event_object
+      self._ParseContainerTable(parser_context, esedb_table, container_name)
 
   def ParseLeakFilesTable(
-      self, unused_parser_context, database=None, table=None, **unused_kwargs):
+      self, parser_context, database=None, table=None, **unused_kwargs):
     """Parses the LeakFiles table.
 
     Args:
@@ -271,9 +272,6 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
                 The default is None.
       table: Optional table object (instance of pyesedb.table).
              The default is None.
-
-    Yields:
-      An event object (instance of EventObject).
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -288,11 +286,12 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
 
       timestamp = record_values.get(u'CreationTime', 0)
       if timestamp:
-        yield MsieWebCacheLeakFilesEventObject(
+        event_object = MsieWebCacheLeakFilesEventObject(
             timestamp, eventdata.EventTimestamp.CREATION_TIME, record_values)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
   def ParsePartitionsTable(
-      self, unused_parser_context, database=None, table=None, **unused_kwargs):
+      self, parser_context, database=None, table=None, **unused_kwargs):
     """Parses the Partitions table.
 
     Args:
@@ -301,9 +300,6 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
                 The default is None.
       table: Optional table object (instance of pyesedb.table).
              The default is None.
-
-    Yields:
-      An event object (instance of EventObject).
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -318,5 +314,6 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
 
       timestamp = record_values.get(u'LastScavengeTime', 0)
       if timestamp:
-        yield MsieWebCachePartitionsEventObject(
+        event_object = MsieWebCachePartitionsEventObject(
             timestamp, u'Last Scavenge Time', record_values)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
