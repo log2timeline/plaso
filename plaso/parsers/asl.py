@@ -360,7 +360,7 @@ class AslParser(interface.BaseParser):
     # Read the last 8 bytes of the record that points to the previous entry.
     _ = file_object.read(8)
 
-    # Parsed section, we translate the read data to an appropiate format.
+    # Parsed section, we translate the read data to an appropriate format.
     microsecond = record_header.nanosec // 1000
     timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
         record_header.timestamp, microsecond)

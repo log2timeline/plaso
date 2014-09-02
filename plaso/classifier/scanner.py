@@ -686,8 +686,6 @@ class OffsetBoundScanner(ScanTreeScannerBase):
             data_size - data_offset, file_offset + data_offset,
             total_data_size=file_size)
 
-      file_offset += data_size
-
     self.StopScan(scan_state)
 
     return self.GetScanResults(scan_state)

@@ -185,7 +185,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     """Strips decorators from text and gets <nickname> if available.
 
     This method implements the XChat strip_color2 and fe_print_text
-    functions, slighty modified to get pure text. From the parsing point
+    functions, slightly modified to get pure text. From the parsing point
     of view, after having stripped, the code takes everything as is,
     simply replacing tabs with spaces (as the original XChat code).
     So the VerifyStructure plays an important role in checking if

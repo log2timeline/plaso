@@ -207,7 +207,7 @@ class EventBuffer(object):
   MERGE_ATTRIBUTES = ['inode', 'filename', 'display_name']
 
   def __init__(self, formatter, check_dedups=True):
-    """Initalizes the EventBuffer.
+    """Initialize the EventBuffer.
 
     This class is used for buffering up events for duplicate removals
     and for other post-processing/analysis of events before being presented

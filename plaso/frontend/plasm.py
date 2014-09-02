@@ -382,7 +382,7 @@ class ClusteringEngine(object):
     Args:
       target_filename: filename for a Plaso storage file to be clustered.
       threshold: support threshold for pruning attributes and event types.
-      closeness: number of miliseconds to cut off the closeness function.
+      closeness: number of milliseconds to cut off the closeness function.
     """
     self.target_filename = target_filename
     self.threshold = threshold
@@ -483,10 +483,10 @@ class ClusteringEngine(object):
       attribute = getattr(event_object, field_name)
       if hasattr(attribute, '__iter__'):
         if isinstance(attribute, dict):
-          indeces = sorted(attribute.keys())
+          indices = sorted(attribute.keys())
         else:
-          indeces = range(len(attribute))
-        for index in indeces:
+          indices = range(len(attribute))
+        for index in indices:
           # quick fix to ignore list order.
           index_identifier = index if isinstance(attribute, dict) else ''
           subfield_name = ':plasm-sub:'.join(
@@ -664,7 +664,7 @@ class ClusteringEngine(object):
       sys.stdout.write(u'Using previously calculated results.\n')
       x = open(eventtype_filename, 'rb')
       evttypes = pickle.load(x)
-      evttype_indeces = pickle.load(x)
+      evttype_indices = pickle.load(x)
       x.close()
     else:
       evttype_candidates = {}
@@ -680,20 +680,20 @@ class ClusteringEngine(object):
       sys.stdout.write(u'Pruning event type candidates...')
       sys.stdout.flush()
       evttypes = []
-      evttype_indeces = {}
+      evttype_indices = {}
       for candidate, score in evttype_candidates.iteritems():
         if score < threshold:
-          evttype_indeces[candidate] = len(evttypes)
+          evttype_indices[candidate] = len(evttypes)
           evttypes.append(candidate)
       del evttype_candidates
 
       # write everything out
       x = open(eventtype_filename, 'wb')
       pickle.dump(evttypes, x)
-      pickle.dump(evttype_indeces, x)
+      pickle.dump(evttype_indices, x)
       x.close()
       sys.stdout.write(u'\n')
-    return (evttypes, evttype_indeces)
+    return (evttypes, evttype_indices)
 
   def Run(self):
     """Iterates through a tagged Plaso Store file, attempting to cluster events
@@ -707,7 +707,7 @@ class ClusteringEngine(object):
         self.nodup_filename, self.vector_size)
     self.frequent_words = self.FindFrequentWords(
         self.nodup_filename, self.threshold, self.vector)
-    (self.event_types, self.event_type_indeces) = self.BuildEventTypes(
+    (self.event_types, self.event_type_indices) = self.BuildEventTypes(
         self.nodup_filename, self.threshold, self.frequent_words)
     # Next step, clustering the event types
 

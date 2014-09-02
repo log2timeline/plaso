@@ -31,7 +31,7 @@ class TestBuffer(unittest.TestCase):
 
     self.assertEquals(len(circular_buffer), 10)
     self.assertEquals(circular_buffer.size, 10)
-    self.assertTrue(circular_buffer.GetCurrent() == None)
+    self.assertTrue(circular_buffer.GetCurrent() is None)
 
     for item in items:
       circular_buffer.Append(item)

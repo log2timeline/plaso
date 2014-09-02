@@ -70,7 +70,7 @@ def GetEventObjects():
 
   event_c = event.WinRegistryEvent(
       u'//HKCU/Secret/EvilEmpire/Malicious_key',
-      {u'Value': u'REGALERT: send all the exes to the other world'},
+      {u'Value': u'send all the exes to the other world'},
       timestamp=1334966206929596)
   event_c.hostname = hostname
   event_objects.append(event_c)

@@ -1062,8 +1062,8 @@ class ExtractionFrontend(StorageMediaFrontend):
       # up:
       #   + A collector process.
       #   + A storage process.
-      # If we want to utilize all CPU's on the system we therefore need to start
-      # up workers that amounts to the total number of CPU's - 3 (these two plus
+      # If we want to utilize all CPUs on the system we therefore need to start
+      # up workers that amounts to the total number of CPUs - 3 (these two plus
       # the main process). Thus the number three.
       cpus = multiprocessing.cpu_count() - 3
 

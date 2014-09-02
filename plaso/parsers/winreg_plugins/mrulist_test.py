@@ -63,14 +63,6 @@ class MRUListRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEquals(event_object.timestamp, 1346145829002031)
 
-    # TODO: Remove RegAlert completely
-    # expected_msg = (
-        # u'[{0:s}] '
-        # u'Index: 1 [MRU Value a]: Some random text here '
-        # u'Index: 2 [MRU Value c]: C:/looks_legit.exe '
-        # u'Index: 3 [MRU Value b]: REGALERT: Unsupported MRU value: b data '
-        # u'type.').format(key_path)
-
     expected_msg = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value a]: Some random text here '

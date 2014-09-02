@@ -260,7 +260,7 @@ class TimeLibUnitTest(unittest.TestCase):
     self.assertEquals(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid day of month.
-    fat_date_time = (0xa8d03d0c & ~(0x1f)) | (32 & 0x1f)
+    fat_date_time = (0xa8d03d0c & ~0x1f) | (32 & 0x1f)
     self.assertEquals(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
 
     # Invalid month.
