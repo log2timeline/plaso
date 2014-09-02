@@ -40,8 +40,8 @@ class WinIISUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['iis.log'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 11)
 
@@ -66,7 +66,6 @@ class WinIISUnitTest(test_lib.ParserTestCase):
          u'[ 10.10.10.100 > 10.10.10.100 : 80 ]')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
-
 
     event_object = event_objects[5]
 

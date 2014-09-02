@@ -119,28 +119,33 @@ class UtmpParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Returns:
-      An UtmpEvent for each entry.
     """
-
     file_object = file_entry.GetFileObject()
     try:
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse UTMP Header with error: {0:s}'.format(exception))
+
     if structure.type not in self.STATUS_TYPE:
+      file_object.close()
       raise errors.UnableToParseFile((
           u'Not an UTMP file, unknown type '
-          u'[{}].').format(structure.type))
+          u'[{0:s}].').format(structure.type))
+
     if not self._VerifyTextField(structure.terminal):
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown terminal.')
+
     if not self._VerifyTextField(structure.username):
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown username.')
+
     if not self._VerifyTextField(structure.hostname):
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown hostname.')
 
@@ -166,7 +171,9 @@ class UtmpParser(interface.BaseParser):
     event_object = self._ReadUtmpEvent(file_object)
     while event_object:
       event_object.offset = file_object.tell()
-      yield event_object
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
+
       event_object = self._ReadUtmpEvent(file_object)
 
     file_object.close()

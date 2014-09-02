@@ -36,13 +36,12 @@ from plaso.parsers.bencode_plugins import interface as bencode_plugins_interface
 
 
 class BencodeParser(interface.BaseParser):
-  """Deserializes bencoded file; yields dictionary containing bencoded data.
+  """Deserializes bencoded file; produces a dictionary containing bencoded data.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
   Parse() has GetTopLevel() which deserializes bencoded files using the
   BitTorrent-bencode library and calls plugins (BencodePlugin) registered
-  through the interface by their Process() to yield BencodeEvent
-  objects back to the engine.
+  through the interface by their Process() to produce event objects.
 
   Plugins are how this parser understands the content inside a bencoded file,
   each plugin holds logic specific to a particular bencoded file. See the
@@ -94,10 +93,6 @@ class BencodeParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event.BencodeEvent containing information extracted from a bencoded
-      file.
     """
     file_object = file_entry.GetFileObject()
     top_level_object = self.GetTopLevel(file_object)
@@ -112,8 +107,12 @@ class BencodeParser(interface.BaseParser):
       try:
         for event_object in bencode_plugin.Process(
             parser_context, top_level=top_level_object):
-          event_object.plugin = bencode_plugin.plugin_name
-          yield event_object
+
+          # TODO: remove this once the yield-based parsers have been replaced
+          # by produce (or emit)-based variants.
+          parser_context.ProduceEvent(
+              event_object, parser_name=self.NAME,
+              plugin_name=bencode_plugin.plugin_name, file_entry=file_entry)
 
       except errors.WrongBencodePlugin as exception:
         logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(

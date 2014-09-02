@@ -38,8 +38,8 @@ class BencodeTest(test_lib.ParserTestCase):
   def testTransmissionPlugin(self):
     """Read Transmission activity files and make few tests."""
     test_file = self._GetTestFilePath(['bencode_transmission'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 3)
 
@@ -72,8 +72,8 @@ class BencodeTest(test_lib.ParserTestCase):
   def testUTorrentPlugin(self):
     """Parse a uTorrent resume.dat file and make a few tests."""
     test_file = self._GetTestFilePath(['bencode_utorrent'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 4)
 

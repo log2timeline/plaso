@@ -118,62 +118,15 @@ class ParserTestCase(unittest.TestCase):
                              values. The default is None.
 
     Returns:
-      A generator of event objects as returned by the parser.
+      An event object queue consumer object (instance of
+      TestEventObjectQueueConsumer).
     """
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(
         parser_object, path_spec, knowledge_base_values=knowledge_base_values)
 
-  def _ParseFileWithQueue(
-      self, parser_object, path, knowledge_base_values=None):
-    """Parses a file using the parser object.
-
-    Args:
-      parser_object: the parser object.
-      path: the path of the file to parse.
-      knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
-
-    Returns:
-      An event object queue consumer object (instance of
-      TestEventObjectQueueConsumer).
-    """
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=path)
-    return self._ParseFileByPathSpecWithQueue(
-        parser_object, path_spec, knowledge_base_values=knowledge_base_values)
-
   def _ParseFileByPathSpec(
-      self, parser_object, path_spec, knowledge_base_values=None):
-    """Parses a file using the parser object.
-
-    Args:
-      parser_object: the parser object.
-      path_spec: the path specification of the file to parse.
-      knowledge_base_values: optional dict containing the knowledge base
-                             values. The default is None.
-
-    Returns:
-      A generator of event objects as returned by the parser.
-    """
-    event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.iteritems():
-        knowledge_base_object.SetValue(identifier, value)
-
-    parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    event_generator = parser_object.Parse(parser_context, file_entry)
-    self.assertNotEquals(event_generator, None)
-
-    return event_generator
-
-  def _ParseFileByPathSpecWithQueue(
       self, parser_object, path_spec, knowledge_base_values=None):
     """Parses a file using the parser object.
 
@@ -199,11 +152,7 @@ class ParserTestCase(unittest.TestCase):
     parser_context = context.ParserContext(
         event_queue_producer, knowledge_base_object)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    event_generator = parser_object.Parse(parser_context, file_entry)
-
-    # TODO: remove this once the yield-based parsers have been replaced
-    # by produce (or emit)-based variants.
-    self.assertEquals(event_generator, None)
+    parser_object.Parse(parser_context, file_entry)
 
     return event_queue_consumer
 

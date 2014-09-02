@@ -66,10 +66,10 @@ class StatEvents(object):
 
   @classmethod
   def GetEventsFromStat(cls, stat_object, file_system_type):
-    """Yield event objects from a file stat object.
+    """Generates an event objects from a file stat object.
 
-    This method takes a stat object and yields an EventObject,
-    instance of FileStatEvent, that contains all extracted
+    This method takes a stat object and produces an event object,
+    (instance of FileStatEvent), that contains all extracted
     timestamps from the stat object.
 
     The constraints are that the stat object implements an iterator
@@ -154,13 +154,12 @@ class FileStatParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of FileStatEvent) that contains the parsed
-      attributes.
     """
     stat_object = file_entry.GetStat()
 
     if stat_object:
-      return StatEvents.GetEventsFromStat(
+      event_object_generator = StatEvents.GetEventsFromStat(
           stat_object, StatEvents.GetFileSystemTypeFromFileEntry(file_entry))
+      for event_object in event_object_generator:
+        parser_context.ProduceEvent(
+            event_object, parser_name=self.NAME, file_entry=file_entry)

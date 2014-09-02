@@ -28,6 +28,7 @@ Error handling. The following tests are performed for error handling:
 
 import unittest
 
+from plaso.events import text_events
 from plaso.lib import event
 
 
@@ -109,7 +110,8 @@ def GetEventObjects():
       u'since this log line exceeds the accepted 80 chars it will be '
       u'shortened.'), 'hostname': u'nomachine', 'username': u'johndoe'}
 
-  event_h = event.TextEvent(1338934459000000, text_dict)
+  # TODO: move this to a TextEvent unit test.
+  event_h = text_events.TextEvent(1338934459000000, 12, text_dict)
   event_h.text = event_h.body
   event_h.hostname = hostname
   event_h.filename = filename

@@ -226,14 +226,16 @@ class WinJobParser(interface.BaseParser):
 
     # Create two timeline events, one for created date and the other for last
     # run.
-    yield WinJobEvent(
-        last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, data.app_name,
-        data.parameter, data.working_dir, data.username, trigger_type,
-        data.comment)
-
-    yield WinJobEvent(
-        scheduled_date, u'Scheduled To Start', data.app_name, data.parameter,
-        data.working_dir, data.username, trigger_type, data.comment)
+    parser_context.ProduceEvents(
+        [WinJobEvent(
+            last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, data.app_name,
+            data.parameter, data.working_dir, data.username, trigger_type,
+            data.comment),
+        WinJobEvent(
+            scheduled_date, u'Scheduled To Start', data.app_name,
+            data.parameter, data.working_dir, data.username, trigger_type,
+            data.comment)],
+        parser_name=self.NAME, file_entry=file_entry)
 
     # A scheduled end date is optional.
     if data.sched_end_year:
@@ -246,8 +248,10 @@ class WinJobParser(interface.BaseParser):
           0,  # Seconds are not stored.
           timezone=parser_context.timezone)
 
-      yield WinJobEvent(
+      event_object = WinJobEvent(
           scheduled_end_date, 'Scheduled To End', data.app_name, data.parameter,
           data.working_dir, data.username, trigger_type, data.comment)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()

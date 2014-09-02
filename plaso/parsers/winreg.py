@@ -68,9 +68,6 @@ class WinRegistryParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of EventObject).
     """
     # TODO: Remove this magic reads when the classifier has been
     # implemented, until then we need to make sure we are dealing with
@@ -168,8 +165,9 @@ class WinRegistryParser(interface.BaseParser):
               if urls:
                 event_object.url = u' - '.join(urls)
 
-              event_object.plugin = plugin.plugin_name
-              yield event_object
+              parser_context.ProduceEvent(
+                  event_object, parser_name=self.NAME,
+                  plugin_name=plugin.plugin_name, file_entry=file_entry)
 
             parsed = True
             break

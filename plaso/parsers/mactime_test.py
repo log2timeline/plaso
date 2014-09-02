@@ -37,8 +37,8 @@ class MactimeUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['mactime.body'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The file contains 12 lines x 4 timestamps per line, which should be
     # 48 events in total. However several of these events have an empty

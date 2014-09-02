@@ -130,9 +130,6 @@ class JavaIDXParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An EventObject (JavaIDXEvent) that contains the extracted attributes.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -204,19 +201,25 @@ class JavaIDXParser(interface.BaseParser):
     last_modified_timestamp = timelib.Timestamp.FromJavaTime(
         last_modified_date)
     # TODO: Move the timestamp description fields into eventdata.
-    yield JavaIDXEvent(
+    event_object = JavaIDXEvent(
         last_modified_timestamp, 'File Hosted Date', magic.idx_version, url,
         ip_address)
+    parser_context.ProduceEvent(
+        event_object, parser_name=self.NAME, file_entry=file_entry)
 
     if section_one:
       expiration_date = section_one.get('expiration_date', None)
       if expiration_date:
         expiration_timestamp = timelib.Timestamp.FromJavaTime(expiration_date)
-        yield JavaIDXEvent(
+        event_object = JavaIDXEvent(
             expiration_timestamp, 'File Expiration Date', magic.idx_version,
             url, ip_address)
+        parser_context.ProduceEvent(
+            event_object, parser_name=self.NAME, file_entry=file_entry)
 
     if download_date:
-      yield JavaIDXEvent(
+      event_object = JavaIDXEvent(
           download_date, eventdata.EventTimestamp.FILE_DOWNLOADED,
           magic.idx_version, url, ip_address)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
