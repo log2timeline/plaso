@@ -196,19 +196,19 @@ class AslParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An ASL event for each entry in the file.
     """
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
+
     try:
       header = self.ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse ASL Header with error: {0:s}.'.format(exception))
 
     if header.magic != self.ASL_MAGIC:
+      file_object.close()
       raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
 
     # Get the first and the last entry.
@@ -220,11 +220,12 @@ class AslParser(interface.BaseParser):
     if offset:
       event_object, offset = self.ReadAslEvent(file_object, offset)
       while event_object:
-        yield event_object
+        parser_context.ProduceEvent(
+            event_object, parser_name=self.NAME, file_entry=file_entry)
 
-        # TODO: an anomaly object must be yielded once that is implemented.
-        # Anti-Forensics check, the last read element must be the same as
-        # the headers said.
+        # TODO: an anomaly object must be emitted once that is implemented.
+        # Sanity check, the last read element must be the same as
+        # indicated by the header.
         if offset == 0 and old_offset != last_offset_header:
           logging.warning(u'Parsing ended before the header ends.')
         old_offset = offset

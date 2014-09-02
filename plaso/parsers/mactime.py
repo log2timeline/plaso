@@ -33,15 +33,17 @@ class MactimeEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = 'fs:mactime:line'
 
-  def __init__(self, posix_time, usage, data):
+  def __init__(self, posix_time, usage, row_offset, data):
     """Initializes a mactime-based event object.
 
     Args:
       posix_time: The POSIX time value.
       usage: The description of the usage of the time value.
+      row_offset: The offset of the row.
       data: A dict object containing extracted data from the body file.
     """
     super(MactimeEvent, self).__init__(posix_time, usage)
+    self.offset = row_offset
     self.user_sid = unicode(data.get('uid', u''))
     self.user_gid = data.get('gid', None)
     self.md5 = data.get('md5', None)
@@ -107,16 +109,16 @@ class MactimeParser(text_parser.TextCSVParser):
     # TODO: Add additional verification.
     return True
 
-  def ParseRow(self, unused_parser_context, row):
-    """Parse a single row and yield extracted EventObjects from it.
+  def ParseRow(self, parser_context, row_offset, row, file_entry=None):
+    """Parses a row and extract event objects.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-
-    Yields:
-      An EventObject extracted from a single line from the log file.
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
     """
     for key, value in row.iteritems():
       if isinstance(row[key], basestring):
@@ -129,5 +131,7 @@ class MactimeParser(text_parser.TextCSVParser):
       value = row.get(key, None)
       if not value:
         continue
-      yield MactimeEvent(
-          value, timestamp_description, row)
+      event_object = MactimeEvent(
+          value, timestamp_description, row_offset, row)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)

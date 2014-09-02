@@ -40,9 +40,9 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     knowledge_base_values = {'year': 2013}
     test_file = self._GetTestFilePath(['selinux.log'])
-    event_generator = self._ParseFile(
+    event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 5)
 

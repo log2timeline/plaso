@@ -95,7 +95,7 @@ class FirefoxCacheParser(interface.BaseParser):
       u'GET', 'HEAD', 'POST', 'PUT', 'DELETE',
       u'TRACE', 'OPTIONS', 'CONNECT', 'PATCH']
 
-  def __GetFirefoxConfig(self, file_entry):
+  def _GetFirefoxConfig(self, file_entry):
     """Determine cache file block size. Raises exception if not found."""
 
     if file_entry.name[0:9] != '_CACHE_00':
@@ -210,11 +210,8 @@ class FirefoxCacheParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of EventObject).
     """
-    firefox_config = self.__GetFirefoxConfig(file_entry)
+    firefox_config = self._GetFirefoxConfig(file_entry)
 
     file_object = file_entry.GetFileObject()
 
@@ -222,9 +219,15 @@ class FirefoxCacheParser(interface.BaseParser):
 
     while file_object.get_offset() < file_object.get_size():
       try:
-        yield self.__NextRecord(file_entry.name, file_object,
-            firefox_config.block_size)
+        event_object = self.__NextRecord(
+            file_entry.name, file_object, firefox_config.block_size)
+
+        parser_context.ProduceEvent(
+            event_object, parser_name=self.NAME, file_entry=file_entry)
+
       except IOError:
         logging.debug(u'[{0:s}] {1:s}:{2:d}: Invalid cache record.'.format(
             self.NAME, file_entry.name,
             file_object.get_offset() - self.MIN_BLOCK_SIZE))
+
+    file_object.close()

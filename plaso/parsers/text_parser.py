@@ -30,6 +30,7 @@ import os
 from dfvfs.helpers import text_file
 import pyparsing
 
+from plaso.events import text_events
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import lexer
@@ -211,7 +212,10 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 
       if self.line_ready:
         try:
-          yield self.ParseLine(parser_context)
+          event_object = self.ParseLine(parser_context)
+          parser_context.ProduceEvent(
+              event_object, parser_name=self.NAME, file_entry=file_entry)
+
           file_verified = True
 
         except errors.TimestampNotCorrectlyFormed as exception:
@@ -374,9 +378,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     Returns:
       An event object (instance of TextEvent).
     """
-    event_object = event.TextEvent(timestamp, attributes)
-    event_object.offset = offset
-    return event_object
+    return text_events.TextEvent(timestamp, offset, attributes)
 
 
 class TextCSVParser(interface.BaseParser):
@@ -416,20 +418,23 @@ class TextCSVParser(interface.BaseParser):
     """
     pass
 
-  def ParseRow(self, unused_parser_context, row):
-    """Parse a line of the log file and yield extracted EventObject(s).
+  def ParseRow(self, parser_context, row_offset, row, file_entry=None):
+    """Parse a line of the log file and extract event objects.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-
-    Yields:
-      An EventObject extracted from a single line from the log file.
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
     """
     event_object = event.EventObject()
+    if row_offset is not None:
+      event_object.offset = row_offset
     event_object.row_dict = row
-    yield event_object
+    parser_context.ProduceEvent(
+        event_object, parser_name=self.NAME, file_entry=file_entry)
 
   def Parse(self, parser_context, file_entry):
     """Extract data from a CVS file.
@@ -437,9 +442,6 @@ class TextCSVParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of EventObject).
     """
     path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', u';')
     file_object = file_entry.GetFileObject()
@@ -459,6 +461,7 @@ class TextCSVParser(interface.BaseParser):
     try:
       row = reader.next()
     except csv.Error:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] Unable to parse CSV file: {1:s}.'.format(
               self.parser_name, path_spec_printable))
@@ -467,6 +470,7 @@ class TextCSVParser(interface.BaseParser):
     number_of_records = len(row)
 
     if number_of_records != number_of_columns:
+      file_object.close()
       raise errors.UnableToParseFile((
           u'[{0:s}] Unable to parse CSV file: {1:s}. Wrong number of '
           u'records (expected: {2:d}, got: {3:d})').format(
@@ -475,25 +479,23 @@ class TextCSVParser(interface.BaseParser):
 
     for key, value in row.items():
       if key == self.MAGIC_TEST_STRING or value == self.MAGIC_TEST_STRING:
+        file_object.close()
         raise errors.UnableToParseFile((
             u'[{0:s}] Unable to parse CSV file: {1:s}. Signature '
             u'mismatch.').format(self.parser_name, path_spec_printable))
 
     if not self.VerifyRow(parser_context, row):
+      file_object.close()
       raise errors.UnableToParseFile((
           u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
           u'failed.').format(self.parser_name, path_spec_printable))
 
-    for event_object in self.ParseRow(parser_context, row):
-      if event_object:
-        event_object.offset = text_file_object.tell()
-        yield event_object
+    self.ParseRow(
+        parser_context, text_file_object.tell(), row, file_entry=file_entry)
 
     for row in reader:
-      for event_object in self.ParseRow(parser_context, row):
-        if event_object:
-          event_object.offset = text_file_object.tell()
-          yield event_object
+      self.ParseRow(
+          parser_context, text_file_object.tell(), row, file_entry=file_entry)
 
     file_object.close()
 
@@ -792,7 +794,8 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
             parser_context, use_key, parsed_structure)
         if parsed_event:
           parsed_event.offset = self._current_offset
-          yield parsed_event
+          parser_context.ProduceEvent(
+              parsed_event, parser_name=self.NAME, file_entry=file_entry)
       else:
         logging.warning(u'Unable to parse log line: {0:s}'.format(line))
 
@@ -939,7 +942,9 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         parsed_event = self.ParseRecord(parser_context, structure_key, tokens)
         if parsed_event:
           parsed_event.offset = self._current_offset
-          yield parsed_event
+          parser_context.ProduceEvent(
+              parsed_event, parser_name=self.NAME, file_entry=file_entry)
+
         self._current_offset += end
         self._buffer = self._buffer[end:]
       else:

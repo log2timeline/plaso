@@ -84,9 +84,6 @@ class WinRecycleBinParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -110,7 +107,9 @@ class WinRecycleBinParser(interface.BaseParser):
     filename_utf = binary.ReadUtf16Stream(file_object)
 
     file_object.close()
-    yield WinRecycleEvent('', filename_utf, record, 0)
+    event_object = WinRecycleEvent(u'', filename_utf, record, 0)
+    parser_context.ProduceEvent(
+        event_object, parser_name=self.NAME, file_entry=file_entry)
 
 
 class WinRecycleInfo2Parser(interface.BaseParser):
@@ -147,9 +146,6 @@ class WinRecycleInfo2Parser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -198,8 +194,10 @@ class WinRecycleInfo2Parser(interface.BaseParser):
       else:
         filename_utf = u''
 
-      yield WinRecycleEvent(
+      event_object = WinRecycleEvent(
           filename_ascii, filename_utf, record_information, record_size)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
       data = file_object.read(record_size)
 

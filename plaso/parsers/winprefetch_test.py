@@ -37,8 +37,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
     test_file = self._GetTestFilePath(['CMD.EXE-087B4001.pf'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 2)
 
@@ -120,8 +120,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
     test_file = self._GetTestFilePath(['PING.EXE-B29F6629.pf'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 2)
 
@@ -167,8 +167,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse23MultiVolume(self):
     """Tests the Parse function on a mulit volume version 23 Prefetch file."""
     test_file = self._GetTestFilePath(['WUAUCLT.EXE-830BCC14.pf'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 6)
 
@@ -233,8 +233,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
     test_file = self._GetTestFilePath(['TASKHOST.EXE-3AE259FC.pf'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 5)
 

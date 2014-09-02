@@ -104,6 +104,7 @@ class WinLnkParser(interface.BaseParser):
     try:
       lnk_file.open_file_object(file_object)
     except IOError as exception:
+      lnk_file.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.NAME, display_name, exception))
@@ -135,3 +136,4 @@ class WinLnkParser(interface.BaseParser):
         parser_name=self.NAME, file_entry=file_entry)
 
     # TODO: add support for the distributed link tracker.
+    lnk_file.close()

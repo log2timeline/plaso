@@ -37,8 +37,8 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['$II3DF3L.zip'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1)
 
@@ -72,8 +72,8 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
     test_file = self._GetTestFilePath(['INFO2'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 4)
 

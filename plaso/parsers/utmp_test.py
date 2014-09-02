@@ -37,7 +37,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     """Tests the Parse function for an UTMP file."""
     test_file = self._GetTestFilePath(['utmp'])
     events = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(events)
+    event_objects = self._GetEventObjectsFromQueue(events)
     self.assertEqual(len(event_objects), 14)
     event_object = event_objects[0]
     self.assertEqual(event_object.terminal, u'system boot')
@@ -101,7 +101,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     """Tests the Parse function for an WTMP file."""
     test_file = self._GetTestFilePath(['wtmp.1'])
     events = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(events)
+    event_objects = self._GetEventObjectsFromQueue(events)
     self.assertEqual(len(event_objects), 4)
 
     event_object = event_objects[0]

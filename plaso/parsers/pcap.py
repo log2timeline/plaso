@@ -495,9 +495,6 @@ class PcapParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of PcapEvent) that contains the parsed data.
     """
     file_object = file_entry.GetFileObject()
 
@@ -509,10 +506,12 @@ class PcapParser(interface.BaseParser):
     try:
       pcap_reader = dpkt.pcap.Reader(file_object)
     except ValueError as exception:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.parser_name, file_entry.name, exception))
     except dpkt.NeedData as exception:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.parser_name, file_entry.name, exception))
@@ -538,17 +537,18 @@ class PcapParser(interface.BaseParser):
       if ip_data.p == dpkt.ip.IP_PROTO_TCP:
         tcp = ip_data.data
         try:
-          new_stream = ('tcp', socket.inet_ntoa(ip_data.src), tcp.sport,
-                        socket.inet_ntoa(ip_data.dst), tcp.dport)
+          new_stream = (
+              'tcp', socket.inet_ntoa(ip_data.src), tcp.sport,
+              socket.inet_ntoa(ip_data.dst), tcp.dport)
         except AttributeError:
           trunc_list.append(ip_packet)
           continue
         if new_stream in connections:
           connections[new_stream].AddPacket(ip_packet, tcp)
         else:
-          connections[new_stream] = Stream(ip_packet, tcp,
-                                           socket.inet_ntoa(ip_data.src),
-                                           socket.inet_ntoa(ip_data.dst), 'TCP')
+          connections[new_stream] = Stream(
+              ip_packet, tcp, socket.inet_ntoa(ip_data.src),
+              socket.inet_ntoa(ip_data.dst), 'TCP')
       elif ip_data.p == dpkt.ip.IP_PROTO_UDP:
         udp = ip_data.data
         try:
@@ -557,23 +557,27 @@ class PcapParser(interface.BaseParser):
         except AttributeError:
           trunc_list.append(ip_packet)
           continue
+
         if new_stream in connections:
           connections[new_stream].AddPacket(ip_packet, udp)
         else:
-          connections[new_stream] = Stream(ip_packet, udp,
-                                           socket.inet_ntoa(ip_data.src),
-                                           socket.inet_ntoa(ip_data.dst), 'UDP')
+          connections[new_stream] = Stream(
+              ip_packet, udp, socket.inet_ntoa(ip_data.src),
+              socket.inet_ntoa(ip_data.dst), 'UDP')
+
       elif ip_data.p == dpkt.ip.IP_PROTO_ICMP:
         icmp = ip_data.data
-        new_stream = ('icmp', socket.inet_ntoa(ip_data.src), ip_packet[1],
-                      socket.inet_ntoa(ip_data.dst), ip_packet[1])
+        new_stream = (
+            'icmp', socket.inet_ntoa(ip_data.src), ip_packet[1],
+            socket.inet_ntoa(ip_data.dst), ip_packet[1])
+
         if new_stream in connections:
           connections[new_stream].AddPacket(ip_packet, icmp)
         else:
-          connections[new_stream] = Stream(ip_packet, icmp,
-                                           socket.inet_ntoa(ip_data.src),
-                                           socket.inet_ntoa(ip_data.dst),
-                                           'ICMP')
+          connections[new_stream] = Stream(
+              ip_packet, icmp, socket.inet_ntoa(ip_data.src),
+              socket.inet_ntoa(ip_data.dst), 'ICMP')
+
     other_streams = self.OtherStream(other_list, trunc_list)
 
     sorted_list = sorted(
@@ -582,20 +586,25 @@ class PcapParser(interface.BaseParser):
     for entry in sorted_list:
       if not entry.protocol == 'ICMP':
         entry.Clean()
-      yield PcapEvent(
-          min(entry.time_stamps), eventdata.EventTimestamp.START_TIME, entry)
-
-      yield PcapEvent(
-          max(entry.time_stamps), eventdata.EventTimestamp.END_TIME, entry)
+      parser_context.ProduceEvents(
+          [PcapEvent(
+              min(entry.time_stamps), eventdata.EventTimestamp.START_TIME,
+              entry),
+          PcapEvent(
+              max(entry.time_stamps), eventdata.EventTimestamp.END_TIME,
+              entry)],
+          parser_name=self.NAME, file_entry=file_entry)
 
     for other_stream in other_streams:
-      yield PcapEvent(
-          min(other_stream.time_stamps), eventdata.EventTimestamp.START_TIME,
-          other_stream)
+      parser_context.ProduceEvents(
+          [PcapEvent(
+              min(other_stream.time_stamps),
+              eventdata.EventTimestamp.START_TIME, other_stream),
+          PcapEvent(
+              max(other_stream.time_stamps), eventdata.EventTimestamp.END_TIME,
+              other_stream)],
+          parser_name=self.NAME, file_entry=file_entry)
 
-      yield PcapEvent(
-          max(other_stream.time_stamps), eventdata.EventTimestamp.END_TIME,
-          other_stream)
     file_object.close()
 
   def OtherStream(self, other_list, trunc_list):

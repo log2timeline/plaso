@@ -331,15 +331,13 @@ class ChromeCacheParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of ChromeCacheEntryEvent).
     """
     file_object = file_entry.GetFileObject()
     index_file = IndexFile()
     try:
       index_file.Open(file_object)
     except IOError as exception:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
               self.parser_name, file_entry.name, exception))
@@ -410,7 +408,9 @@ class ChromeCacheParser(interface.BaseParser):
                   exception))
           break
 
-        yield ChromeCacheEntryEvent(cache_entry)
+        event_object = ChromeCacheEntryEvent(cache_entry)
+        parser_context.ProduceEvent(
+            event_object, parser_name=self.NAME, file_entry=file_entry)
 
         cache_address = cache_entry.next
         cache_address_chain_length += 1
