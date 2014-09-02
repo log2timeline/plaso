@@ -44,8 +44,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
-    # TODO: Remove RegAlert completely
-    # self.assertEquals(len(event_objects), 15)
     self.assertEquals(len(event_objects), 14)
 
     event_object = event_objects[0]
@@ -75,8 +73,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjects(event_generator)
 
-    # TODO: Remove RegAlert completely
-    # self.assertEquals(len(event_objects), 63)
     self.assertEquals(len(event_objects), 62)
 
     event_object = event_objects[0]

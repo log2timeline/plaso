@@ -193,7 +193,7 @@ def RecurseKey(recur_item, root='', depth=15):
 
   The hierarchy of a plist file is a series of nested dictionaries and lists.
   This is a helper function helps plugins navigate the structure without
-  having to reimplent their own recsurive methods.
+  having to reimplement their own recursive methods.
 
   This method implements an overridable depth limit to prevent processing
   extremely deeply nested plists. If the limit is reached a debug message is

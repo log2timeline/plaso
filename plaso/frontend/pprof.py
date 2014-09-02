@@ -337,7 +337,7 @@ def Main():
     return False
 
   PrintHeader(options)
-  # Stats attribute used for console sesssions.
+  # Stats attribute used for console sessions.
   # pylint: disable=unused-variable
   if options.storage:
     stats = ProcessStorage(options)

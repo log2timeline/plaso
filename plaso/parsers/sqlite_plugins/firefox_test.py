@@ -149,7 +149,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         u'2011-07-01 11:13:59.267605+00:00')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
-    expected_url = (u'place:sort=14&type=6&maxResults=10&queryType=1')
+    expected_url = u'place:sort=14&type=6&maxResults=10&queryType=1'
     self.assertEquals(event_object.url, expected_url)
 
     expected_title = u'Recent Tags'

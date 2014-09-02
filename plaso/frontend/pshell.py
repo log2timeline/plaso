@@ -459,7 +459,7 @@ def Main():
   ipshell.confirm_exit = False
   # Set autocall to two, making parenthesis not necessary when calling
   # function names (although they can be used and are necessary sometimes,
-  # like in variable assignements, etc).
+  # like in variable assignments, etc).
   ipshell.autocall = 2
   ipshell()
 

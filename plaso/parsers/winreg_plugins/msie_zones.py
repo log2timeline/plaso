@@ -204,9 +204,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       logging.info('No subkeys for Internet Settings/Zones')
 
       text_dict = {}
-      # TODO: Remove RegAlert completely
-      # text_dict['Zone Subkeys'] = (
-          # u'REGALERT No Zones set for Internet Settings')
+      logging.errors(u'No Zones set for Internet Settings')
 
       yield event.WinRegistryEvent(
           key.path, text_dict, timestamp=key.last_written_timestamp,

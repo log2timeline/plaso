@@ -201,7 +201,7 @@ class ProcessInfo(object):
     # Psutil will return different memory information depending on what is
     # available in that platform.
     # TODO: Not be as strict in what gets returned, have this object more
-    # flexible so that the memory information returned reflects the avilable
+    # flexible so that the memory information returned reflects the available
     # information in the platform.
     return self._MEMORY_INFORMATION(
         getattr(external_information, 'rss', 0),

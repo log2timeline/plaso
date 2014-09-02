@@ -181,7 +181,7 @@ class BsmParser(interface.BaseParser):
           default=IPV4_STRUCT))
 
   # Initial fields structure used by header structures.
-  # length: integer, the lenght of the entry, equal to trailer (doc: length).
+  # length: integer, the length of the entry, equal to trailer (doc: length).
   # version: integer, version of BSM (AUDIT_HEADER_VERSION).
   # event_type: integer, the type of event (/etc/security/audit_event).
   # modifier: integer, unknown, need research (It is always 0).

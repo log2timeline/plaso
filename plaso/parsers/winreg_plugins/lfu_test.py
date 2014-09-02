@@ -129,18 +129,12 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
 
     # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT
     self.assertEquals(event_object.timestamp, 1346445929000000)
-    # TODO: Remove RegAlert completely
-    # self.assertTrue(event_object.regalert)
 
     expected_msg = (
         u'[{0:s}] '
-        # u'BootVerification: REGALERT '
         u'ImagePath: C:\\WINDOWS\\system32\\googleupdater.exe').format(
             key_path)
 
-    # TODO: Remove RegAlert completely
-    # expected_msg_short = (
-        # u'[{0:s}] BootVerification: REGALERT I...').format(key_path)
     expected_msg_short = (
         u'[{0:s}] ImagePath: C:\\WINDOWS\\system...').format(key_path)
 

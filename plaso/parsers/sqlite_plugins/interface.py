@@ -183,7 +183,7 @@ class SQLiteDatabase(object):
     # Until then, just copy the file into a tempfile and parse it.
 
     # Note that data is filled here with the file header data and
-    # that with will explicityly close the temporary files and thus
+    # that with will explicitly close the temporary files and thus
     # making sure it is available for sqlite3.connect().
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       self._temp_file_name = temp_file.name

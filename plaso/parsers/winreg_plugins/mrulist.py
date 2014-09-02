@@ -17,6 +17,8 @@
 # limitations under the License.
 """This file contains a MRUList Registry plugin."""
 
+import logging
+
 from plaso.lib import event
 from plaso.parsers.winreg_plugins import interface
 
@@ -44,8 +46,7 @@ class MRUListPlugin(interface.ValuePlugin):
 
     if not mru_list_value:
       text_dict = {}
-      # TODO: Remove RegAlert completely
-      # text_dict['MRUList'] = 'REGALERT: Internal error missing MRUList value.'
+      logging.error(u'missing MRUList value.')
 
       yield event.WinRegistryEvent(
           key.path, text_dict, timestamp=key.last_written_timestamp)
@@ -59,24 +60,19 @@ class MRUListPlugin(interface.ValuePlugin):
         value = key.GetValue(mru_value_name)
         if value:
           mru_value_string = value.data
-          # TODO: Remove RegAlert completely
         if not value:
           mru_value_string = u''
-          # mru_value_string = 'REGALERT: No such MRU value: {0}.'.format(
-              # mru_value_name)
+          logging.error(u'No such MRU value: {0}.'.format(mru_value_name))
 
         # Ignore any value that is empty.
         elif not value.data:
-          pass
-          # mru_value_string = 'REGALERT: Missing MRU value: {0} data.'.format(
-              # mru_value_name)
+          logging.error(u'Missing MRU value: {0} data.'.format(mru_value_name))
 
         # TODO: add support for shell item based MRU value data.
         elif not value.DataIsString():
           mru_value_string = u''
-          # mru_value_string = (
-              # 'REGALERT: Unsupported MRU value: {0} data type.').format(
-              # mru_value_name)
+          logging.error(u'Unsupported MRU value: {0} data type.'.format(
+              mru_value_name))
 
         else:
           mru_value_string = value.data
