@@ -63,10 +63,6 @@ class AndroidAppUsageParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (EventObject) that contains the parsed
-      attributes.
     """
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
@@ -111,6 +107,9 @@ class AndroidAppUsageParser(interface.BaseParser):
           except ValueError:
             continue
 
-          yield AndroidAppUsageEvent(last_resume_time, package, component)
+          event_object = AndroidAppUsageEvent(
+              last_resume_time, package, component)
+          parser_context.ProduceEvent(
+              event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()

@@ -415,33 +415,6 @@ class WinRegistryEvent(EventObject):
       self.source_append = source_append
 
 
-class TextEvent(EventObject):
-  """Convenience class for a text log file-based event."""
-
-  # TODO: move this class to parsers/text.py
-  DATA_TYPE = 'text:entry'
-
-  def __init__(self, timestamp, attributes):
-    """Initializes a text event.
-
-    Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      attributes: A dict that contains the events attributes.
-    """
-    super(TextEvent, self).__init__()
-    self.timestamp = timestamp
-
-    self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
-
-    for name, value in attributes.iteritems():
-      # TODO: Revisit this constraints and see if we can implement
-      # it using a more sane solution.
-      if isinstance(value, basestring) and not value:
-        continue
-      setattr(self, name, value)
-
-
 class PreprocessObject(object):
   """Object used to store all information gained from preprocessing."""
 

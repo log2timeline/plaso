@@ -192,9 +192,6 @@ class CupsIppParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An CUPS IPP event for each time in the file.
     """
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
@@ -202,14 +199,17 @@ class CupsIppParser(interface.BaseParser):
     try:
       header = self.CUPS_IPP_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse CUPS IPP Header with error: {0:s}'.format(
               exception))
 
     if (header.major_version != self.IPP_MAJOR_VERSION or
         header.minor_version != self.IPP_MINOR_VERSION):
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not a valid CUPS IPP Header, wrong version number.')
+
     if header.operation_id != self.IPP_OP_ID:
       # Warn if the operation ID differs from the standard one. We should be
       # able to parse the file nonetheless.
@@ -226,20 +226,28 @@ class CupsIppParser(interface.BaseParser):
 
     # Yield the events.
     if u'time-at-creation' in data_dict:
-      yield CupsIppEvent(
+      event_object = CupsIppEvent(
           data_dict['time-at-creation'][0],
           eventdata.EventTimestamp.CREATION_TIME,
           data_dict)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
+
     if u'time-at-processing' in data_dict:
-      yield CupsIppEvent(
+      event_object = CupsIppEvent(
           data_dict['time-at-processing'][0],
           eventdata.EventTimestamp.START_TIME,
           data_dict)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
+
     if u'time-at-completed' in data_dict:
-      yield CupsIppEvent(
+      event_object = CupsIppEvent(
           data_dict['time-at-completed'][0],
           eventdata.EventTimestamp.END_TIME,
           data_dict)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()
 
@@ -294,4 +302,3 @@ class CupsIppParser(interface.BaseParser):
       logging.warning(u'Unknown Value in CUPS IPP')
       return None, None
     return name, value
-

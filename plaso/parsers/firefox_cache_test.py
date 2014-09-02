@@ -47,18 +47,16 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     test_file = self._GetTestFilePath(['firefox_cache', 'invalid_file'])
 
-    event_generator = self._ParseFile(self._parser, test_file)
-
-    self.assertRaises(errors.UnableToParseFile,
-        self._GetEventObjects, (event_generator))
+    with self.assertRaises(errors.UnableToParseFile):
+      _ = self._ParseFile(self._parser, test_file)
 
   def testParseCache_001(self):
     """Test Firefox 28 cache file _CACHE_001_ parsing."""
 
     test_file = self._GetTestFilePath(['firefox_cache', 'firefox28',
         '_CACHE_001_'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(574, len(event_objects))
     self.assertEquals(event_objects[1].url,
@@ -85,8 +83,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     test_file = self._GetTestFilePath(['firefox_cache', 'firefox28',
         '_CACHE_002_'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(58, len(event_objects))
     self.assertEquals(event_objects[2].url,
@@ -109,8 +107,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     test_file = self._GetTestFilePath(['firefox_cache', 'firefox28',
         '_CACHE_003_'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(4, len(event_objects))
 
@@ -127,8 +125,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     test_file = self._GetTestFilePath(['firefox_cache', 'firefox28',
         'E8D65m01'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(4, len(event_objects))
 
@@ -137,8 +135,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     test_file = self._GetTestFilePath(['firefox_cache', 'firefox3',
         '_CACHE_001_'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(25, len(event_objects))
 
@@ -161,8 +159,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     test_file = self._GetTestFilePath(['firefox_cache', 'firefox3',
         '_CACHE_002_'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(3, len(event_objects))
 
@@ -174,13 +172,14 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     test_file = self._GetTestFilePath(['firefox_cache', 'firefox3',
         '_CACHE_003_'])
-    event_generator = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(2, len(event_objects))
 
     self.assertEquals(event_objects[1].timestamp,
         timelib_test.CopyStringToTimestamp('2014-05-02 14:15:07'))
+
 
 if __name__ == '__main__':
   unittest.main()

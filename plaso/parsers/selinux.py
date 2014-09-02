@@ -43,8 +43,8 @@
 import logging
 import re
 
+from plaso.events import text_events
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import lexer
 from plaso.lib import timelib
 from plaso.parsers import text_parser
@@ -53,22 +53,9 @@ from plaso.parsers import text_parser
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class SELinuxLineEvent(event.TextEvent):
+class SELinuxLineEvent(text_events.TextEvent):
   """Convenience class for a SELinux log line event."""
-
   DATA_TYPE = 'selinux:line'
-
-  def __init__(self, timestamp, offset, attributes):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      offset: The offset of the event.
-      attributes: A dict that contains the events attributes
-    """
-    super(SELinuxLineEvent, self).__init__(timestamp, attributes)
-    self.offset = offset
 
 
 class SELinuxParser(text_parser.SlowLexicalTextParser):

@@ -17,7 +17,7 @@
 # limitations under the License.
 """This file contains a Symantec parser in plaso."""
 
-from plaso.lib import event
+from plaso.events import text_events
 from plaso.lib import timelib
 from plaso.parsers import text_parser
 
@@ -25,7 +25,7 @@ from plaso.parsers import text_parser
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class SymantecEvent(event.TextEvent):
+class SymantecEvent(text_events.TextEvent):
   """Convenience class for a Symantec line event."""
   DATA_TYPE = 'av:symantec:scanlog'
 
@@ -122,17 +122,20 @@ class SymantecParser(text_parser.TextCSVParser):
 
     return True
 
-  def ParseRow(self, parser_context, row):
-    """Parse a single line from the symantec log file.
+  def ParseRow(self, parser_context, row_offset, row, file_entry=None):
+    """Parses a row and extract event objects.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-
-    Yields:
-      An EventObject extracted from a single line from the log file.
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
     """
-    epoch = self._GetTimestamp(row['time'], parser_context.timezone)
+    timestamp = self._GetTimestamp(row['time'], parser_context.timezone)
+
     # TODO: Create new dict object that only contains valuable attributes.
-    yield SymantecEvent(epoch, row)
+    event_object = SymantecEvent(timestamp, row_offset, row)
+    parser_context.ProduceEvent(
+        event_object, parser_name=self.NAME, file_entry=file_entry)

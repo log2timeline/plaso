@@ -17,27 +17,22 @@
 # limitations under the License.
 """This file contains the tests for the generic text parser."""
 
-import os
 import unittest
 
-from dfvfs.lib import definitions
-from dfvfs.path import factory as path_spec_factory
-from dfvfs.resolver import resolver as path_spec_resolver
 import pyparsing
 
-from plaso.artifacts import knowledge_base
+from plaso.events import text_events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.lib import lexer
-from plaso.lib import queue
-from plaso.parsers import context
+from plaso.lib import timelib_test
 from plaso.parsers import interface
+from plaso.parsers import test_lib
 from plaso.parsers import text_parser
 
 
-class TestTextEvent(event.TextEvent):
+class TestTextEvent(text_events.TextEvent):
   """Test text event."""
   DATA_TYPE = 'test:parser:text'
 
@@ -81,12 +76,12 @@ class TestTextParser(text_parser.SlowLexicalTextParser):
     pass
 
   def CreateEvent(self, timestamp, offset, attributes):
-    event_object = TestTextEvent(timestamp, attributes)
+    event_object = TestTextEvent(timestamp, 0, attributes)
     event_object.offset = offset
     return event_object
 
 
-class BaseParserTest(unittest.TestCase):
+class BaseParserTest(test_lib.ParserTestCase):
   """An unit test for the plaso parser library."""
 
   def testParserNotImplemented(self):
@@ -94,96 +89,63 @@ class BaseParserTest(unittest.TestCase):
     self.assertRaises(TypeError, interface.BaseParser)
 
 
-class TextParserTest(unittest.TestCase):
+class TextParserTest(test_lib.ParserTestCase):
   """An unit test for the plaso parser library."""
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
-
-  def _GetTestFileEntry(self, path):
-    """Retrieves the test file entry.
-
-    Args:
-      path: the path of the test file.
-
-    Returns:
-      The test file entry (instance of dfvfs.FileEntry).
-    """
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=path)
-    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
   def setUp(self):
+    """Sets up the needed objects used throughout the test."""
     self._parser = TestTextParser()
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
-    # TODO: refactor to use test_lib.
-    event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
     test_file = self._GetTestFilePath(['text_parser', 'test1.txt'])
-    file_entry = self._GetTestFileEntry(test_file)
-    text_generator = self._parser.Parse(parser_context, file_entry)
 
-    self.assertRaises(errors.UnableToParseFile, list, text_generator)
+    with self.assertRaises(errors.UnableToParseFile):
+      _ = self._ParseFile(self._parser, test_file)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
-    # TODO: refactor to use test_lib.
-    event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
     test_file = self._GetTestFilePath(['text_parser', 'test2.txt'])
-    file_entry = self._GetTestFileEntry(test_file)
-    text_generator = self._parser.Parse(parser_context, file_entry)
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    first_entry = text_generator.next()
-    second_entry = text_generator.next()
+    event_object = event_objects[0]
 
-    # TODO: refactor this to use the parsers test_lib.
     msg1, _ = formatters_manager.EventFormatterManager.GetMessageStrings(
-        first_entry)
-    # TODO: refactor this to use timelib_test.
-    self.assertEquals(first_entry.timestamp, 1293859395000000)
+        event_object)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-01-01 05:23:15')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+
     self.assertEquals(msg1, 'first line.')
-    self.assertEquals(first_entry.hostname, 'myhost')
-    self.assertEquals(first_entry.username, 'myuser')
+    self.assertEquals(event_object.hostname, 'myhost')
+    self.assertEquals(event_object.username, 'myuser')
 
-    # TODO: refactor this to use the parsers test_lib.
+    event_object = event_objects[1]
+
     msg2, _ = formatters_manager.EventFormatterManager.GetMessageStrings(
-        second_entry)
-    # TODO: refactor this to use timelib_test.
-    self.assertEquals(second_entry.timestamp, 693604686000000)
+        event_object)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '1991-12-24 19:58:06')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+
     self.assertEquals(msg2, 'second line.')
-    self.assertEquals(second_entry.hostname, 'myhost')
-    self.assertEquals(second_entry.username, 'myuser')
+    self.assertEquals(event_object.hostname, 'myhost')
+    self.assertEquals(event_object.username, 'myuser')
 
 
-class PyParserTest(unittest.TestCase):
+class PyParserTest(test_lib.ParserTestCase):
   """Few unit tests for the pyparsing unit."""
+
+  def _CheckIPv4(self, ip_address):
+    # TODO: Add a similar IPv6 check.
+    try:
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(ip_address)
+      return True
+    except pyparsing.ParseException:
+      return False
 
   def testPyConstantIPv4(self):
     """Run few tests to make sure the constants are working."""
@@ -222,14 +184,6 @@ class PyParserTest(unittest.TestCase):
         line)
     self.assertEquals(parsed_line[-1], 'This is a comment.')
     self.assertEquals(len(parsed_line), 2)
-
-  def _CheckIPv4(self, ip_address):
-    # TODO: Add a similar IPv6 check.
-    try:
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(ip_address)
-      return True
-    except pyparsing.ParseException:
-      return False
 
 
 if __name__ == '__main__':

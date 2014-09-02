@@ -89,10 +89,6 @@ class OpenXMLParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (EventObject) that contains the parsed
-      attributes.
     """
     file_object = file_entry.GetFileObject()
 
@@ -146,16 +142,22 @@ class OpenXMLParser(interface.BaseParser):
               metadata[tag_name] = element.text
 
     if timestamps.get('created', None):
-      yield OpenXMLParserEvent(
+      event_object = OpenXMLParserEvent(
           timestamps.get('created'), eventdata.EventTimestamp.CREATION_TIME,
           metadata)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
     if timestamps.get('modified', None):
-      yield OpenXMLParserEvent(
+      event_object = OpenXMLParserEvent(
           timestamps.get('modified'),
           eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
     if timestamps.get('lastPrinted', None):
-      yield OpenXMLParserEvent(
+      event_object = OpenXMLParserEvent(
           timestamps.get('lastPrinted'), eventdata.EventTimestamp.LAST_PRINTED,
           metadata)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)

@@ -95,10 +95,6 @@ class OperaTypedHistoryParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (EventObject) that contains the parsed
-      attributes.
     """
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
@@ -110,6 +106,7 @@ class OperaTypedHistoryParser(interface.BaseParser):
     first_line = text_file_object.readline(90)
 
     if not first_line.startswith('<?xml version="1.0'):
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [not a XML]')
 
@@ -120,6 +117,7 @@ class OperaTypedHistoryParser(interface.BaseParser):
     second_line = text_file_object.readline(50).strip()
 
     if second_line != '<typed_history>':
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [wrong XML root key]')
 
@@ -134,7 +132,9 @@ class OperaTypedHistoryParser(interface.BaseParser):
       last_typed = history_item.get('last_typed', '')
       entry_type = history_item.get('type', '')
 
-      yield OperaTypedHistoryEvent(last_typed, content, entry_type)
+      event_object = OperaTypedHistoryEvent(last_typed, content, entry_type)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()
 
@@ -262,10 +262,6 @@ class OperaGlobalHistoryParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (EventObject) that contains the parsed
-      attributes.
     """
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
@@ -276,26 +272,36 @@ class OperaGlobalHistoryParser(interface.BaseParser):
       title, url, timestamp, popularity_index = self._ReadRecord(
           text_file_object, 400)
     except errors.NotAText:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a text file].')
 
     if not title:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [no title present].')
 
     if not self._IsValidUrl(url):
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a valid URL].')
 
     if not timestamp:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [timestamp does not exist].')
 
-    yield OperaGlobalHistoryEvent(timestamp, url, title, popularity_index)
+    event_object = OperaGlobalHistoryEvent(
+        timestamp, url, title, popularity_index)
+    parser_context.ProduceEvent(
+        event_object, parser_name=self.NAME, file_entry=file_entry)
 
     # Read in the rest of the history file.
     for title, url, timestamp, popularity_index in self._ReadRecords(
         text_file_object):
-      yield OperaGlobalHistoryEvent(timestamp, url, title, popularity_index)
+      event_object = OperaGlobalHistoryEvent(
+          timestamp, url, title, popularity_index)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()

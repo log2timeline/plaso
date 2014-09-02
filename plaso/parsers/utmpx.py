@@ -178,20 +178,19 @@ class UtmpxParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Returns:
-      An event object (instance of UtmpxMacOsXEvent) for each logon/logoff
-      event.
     """
     file_object = file_entry.GetFileObject()
     if not self._VerifyStructure(file_object):
+      file_object.close()
       raise errors.UnableToParseFile(
           u'The file is not an UTMPX file.')
 
     event_object = self._ReadEntry(file_object)
     while event_object:
       event_object.offset = file_object.tell()
-      yield event_object
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
+
       event_object = self._ReadEntry(file_object)
 
     file_object.close()

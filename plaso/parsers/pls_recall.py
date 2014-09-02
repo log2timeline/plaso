@@ -82,20 +82,19 @@ class PlsRecallParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An pls_recall event for each entry in the file.
     """
     file_object = file_entry.GetFileObject()
 
     try:
       is_pls = self.VerifyFile(file_object)
     except (IOError, construct.FieldError) as exception:
+      file_object.close()
       raise errors.UnableToParseFile((
           u'Not a PLSrecall File, unable to parse.'
           u'with error: {0:s}').format(exception))
 
     if not is_pls:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not a PLSRecall File, unable to parse.')
 
@@ -103,10 +102,12 @@ class PlsRecallParser(interface.BaseParser):
     pls_record = self.PLS_STRUCT.parse_stream(file_object)
 
     while pls_record:
-      yield PlsRecallEvent(
+      event_object = PlsRecallEvent(
         timelib.Timestamp.FromDelphiTime(pls_record.TimeStamp),
         pls_record.Sequence, pls_record.Username,
         pls_record.Database, pls_record.Query)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
       try:
         pls_record = self.PLS_STRUCT.parse_stream(file_object)

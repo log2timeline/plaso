@@ -39,7 +39,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # TODO: only tested against Mac OS X Cups IPP (Version 2.0)
     test_file = self._GetTestFilePath(['mac_cups_ipp'])
     events = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjects(events)
+    event_objects = self._GetEventObjectsFromQueue(events)
 
     self.assertEqual(len(event_objects), 3)
     event_object = event_objects[0]
