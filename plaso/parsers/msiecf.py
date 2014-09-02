@@ -72,7 +72,8 @@ class MsiecfParser(interface.BaseParser):
 
   NAME = 'msiecf'
 
-  def _ParseUrl(self, parser_context, msiecf_item, recovered=False):
+  def _ParseUrl(
+      self, parser_context, msiecf_item, file_entry=None, recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) URL item.
 
        Every item is stored as an event object, one for each timestamp.
@@ -80,12 +81,10 @@ class MsiecfParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       msiecf_item: An item (pymsiecf.url).
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
       recovered: Boolean value to indicate the item was recovered, False
                  by default.
-
-    Yields:
-      An event object (an instance of MsiecfUrlEvent) that contains the parsed
-      data.
     """
     # The secondary timestamp can be stored in either UTC or local time
     # this is dependent on what the index.dat file is used for.
@@ -128,13 +127,17 @@ class MsiecfParser(interface.BaseParser):
         secondary_timestamp = timelib.Timestamp.LocaltimeToUTC(
             secondary_timestamp, parser_context.timezone)
 
-    yield MsiecfUrlEvent(
+    event_object = MsiecfUrlEvent(
         primary_timestamp, primary_timestamp_desc, msiecf_item, recovered)
+    parser_context.ProduceEvent(
+        event_object, parser_name=self.NAME, file_entry=file_entry)
 
     if secondary_timestamp > 0:
-      yield MsiecfUrlEvent(
+      event_object = MsiecfUrlEvent(
           secondary_timestamp, secondary_timestamp_desc, msiecf_item,
           recovered)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
     expiration_timestamp = msiecf_item.get_expiration_time_as_integer()
     if expiration_timestamp > 0:
@@ -143,19 +146,24 @@ class MsiecfParser(interface.BaseParser):
       # Since the as_integer function returns the raw integer value we need to
       # apply the right conversion here.
       if self.version == u'4.7':
-        yield MsiecfUrlEvent(
+        event_object = MsiecfUrlEvent(
             timelib.Timestamp.FromFiletime(expiration_timestamp),
             eventdata.EventTimestamp.EXPIRATION_TIME, msiecf_item, recovered)
       else:
-        yield MsiecfUrlEvent(
+        event_object = MsiecfUrlEvent(
             timelib.Timestamp.FromFatDateTime(expiration_timestamp),
             eventdata.EventTimestamp.EXPIRATION_TIME, msiecf_item, recovered)
 
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
+
     last_checked_timestamp = msiecf_item.get_last_checked_time_as_integer()
     if last_checked_timestamp > 0:
-      yield MsiecfUrlEvent(
+      event_object = MsiecfUrlEvent(
           timelib.Timestamp.FromFatDateTime(last_checked_timestamp),
           eventdata.EventTimestamp.LAST_CHECKED_TIME, msiecf_item, recovered)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
   def Parse(self, parser_context, file_entry):
     """Extract data from a MSIE Cache File (MSIECF).
@@ -163,10 +171,6 @@ class MsiecfParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of MsiecfUrlEvent) that contains the parsed
-      data.
     """
     file_object = file_entry.GetFileObject()
     msiecf_file = pymsiecf.file()
@@ -185,8 +189,8 @@ class MsiecfParser(interface.BaseParser):
       try:
         msiecf_item = msiecf_file.get_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
-          for event_object in self._ParseUrl(parser_context, msiecf_item):
-            yield event_object
+          self._ParseUrl(parser_context, msiecf_item, file_entry=file_entry)
+
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
       except IOError as exception:
@@ -198,9 +202,10 @@ class MsiecfParser(interface.BaseParser):
       try:
         msiecf_item = msiecf_file.get_recovered_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
-          for event_object in self._ParseUrl(
-              parser_context, msiecf_item, recovered=True):
-            yield event_object
+          self._ParseUrl(
+              parser_context, msiecf_item, file_entry=file_entry,
+              recovered=True)
+
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
       except IOError as exception:

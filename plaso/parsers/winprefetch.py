@@ -420,9 +420,11 @@ class WinPrefetchParser(interface.BaseParser):
 
       timestamp = volume_information.get('creation_time', 0)
       if timestamp:
-        yield windows_events.WindowsVolumeCreationEvent(
+        event_object = windows_events.WindowsVolumeCreationEvent(
             timestamp, volume_device_path, volume_serial_number,
             file_entry.name)
+        parser_context.ProduceEvent(
+            event_object, parser_name=self.NAME, file_entry=file_entry)
 
       for filename in filename_strings.itervalues():
         if (filename.startswith(volume_device_path) and
@@ -453,10 +455,12 @@ class WinPrefetchParser(interface.BaseParser):
 
     timestamp = file_information.get('last_run_time', 0)
     if timestamp:
-      yield WinPrefetchExecutionEvent(
+      event_object = WinPrefetchExecutionEvent(
           timestamp, eventdata.EventTimestamp.LAST_RUNTIME, file_header,
           file_information, mapped_files, path, volume_serial_numbers,
           volume_device_paths)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
     # Check for the 7 older last run time values available in v26.
     if format_version == 26:
@@ -466,10 +470,12 @@ class WinPrefetchParser(interface.BaseParser):
 
         timestamp = file_information.get(last_run_time_identifier, 0)
         if timestamp:
-          yield WinPrefetchExecutionEvent(
+          event_object = WinPrefetchExecutionEvent(
               timestamp,
               u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME),
               file_header, file_information, mapped_files, path,
               volume_serial_numbers, volume_device_paths)
+          parser_context.ProduceEvent(
+              event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()

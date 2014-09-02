@@ -30,14 +30,18 @@ class WinRegTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     self._parser = winreg.WinRegistryParser()
 
-  def _GetPlugins(self, event_generator):
-    """Return a dict with a plugin count given an event generator."""
+  def _GetPlugins(self, event_objects):
+    """Return a dict with a plugin count given a list of event objects."""
     plugins = {}
-    for event_object in event_generator:
-      if event_object.plugin in plugins:
-        plugins[event_object.plugin] += 1
+    for event_object in event_objects:
+      plugin = getattr(event_object, 'plugin', None)
+      if not plugin:
+        continue
+
+      if plugin in plugins:
+        plugins[plugin] += 1
       else:
-        plugins[event_object.plugin] = 1
+        plugins[plugin] = 1
 
     return plugins
 
@@ -45,12 +49,11 @@ class WinRegTest(test_lib.ParserTestCase):
     """Parse a NTUSER.dat file and check few items."""
     knowledge_base_values = {'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath(['NTUSER.DAT'])
-    event_generator = self._ParseFile(
+    event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    # TODO: this will break once the yield-based parsers have been replaced
-    # by produce (or emit)-based variants.
-    plugins = self._GetPlugins(event_generator)
+    plugins = self._GetPlugins(event_objects)
 
     # The _registry_type member is created dynamically by invoking
     # the _GetPlugins function.
@@ -67,12 +70,11 @@ class WinRegTest(test_lib.ParserTestCase):
     """Parse a SYSTEM hive an run few tests."""
     knowledge_base_values = {'current_control_set': u'ControlSet001'}
     test_file = self._GetTestFilePath(['SYSTEM'])
-    event_generator = self._ParseFile(
+    event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    # TODO: this will break once the yield-based parsers have been replaced
-    # by produce (or emit)-based variants.
-    plugins = self._GetPlugins(event_generator)
+    plugins = self._GetPlugins(event_objects)
 
     # The _registry_type member is created dynamically by invoking
     # the _GetPlugins function.

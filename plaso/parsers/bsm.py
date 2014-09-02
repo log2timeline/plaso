@@ -559,9 +559,6 @@ class BsmParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An BSM event for each entry in the file.
     """
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
@@ -569,16 +566,20 @@ class BsmParser(interface.BaseParser):
     try:
       is_bsm = self.VerifyFile(parser_context, file_object)
     except (IOError, construct.FieldError) as exception:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse BSM file with error: {0:s}'.format(exception))
 
     if not is_bsm:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'Not a BSM File, unable to parse.')
 
     event_object = self.ReadBSMEvent(parser_context, file_object)
     while event_object:
-      yield event_object
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
+
       event_object = self.ReadBSMEvent(parser_context, file_object)
 
     file_object.close()
@@ -919,8 +920,8 @@ class BsmParser(interface.BaseParser):
       return u'[{0}: {1}]'.format(bsm_type, token.record_length)
 
     elif bsm_type == 'BSM_TOKEN_FILE':
-      # TODO: if this timestamp is usefull, it must be yield as a separate
-      #       event.
+      # TODO: if this timestamp is usefull, it must be extracted as a separate
+      #       event object.
       timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
           token.timestamp, token.microsecond)
       date_time = timelib.Timestamp.CopyToDatetime(timestamp, pytz.utc)

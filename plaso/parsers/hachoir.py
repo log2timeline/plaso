@@ -70,10 +70,6 @@ class HachoirParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (instance of EventObject) that contains the parsed
-      attributes.
     """
     file_object = file_entry.GetFileObject()
 
@@ -160,4 +156,6 @@ class HachoirParser(interface.BaseParser):
               self.parser_name, file_entry.name, 'No events discovered'))
 
     for date, key in extracted_events:
-      yield HachoirEvent(date, key, attributes)
+      event_object = HachoirEvent(date, key, attributes)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)

@@ -89,9 +89,6 @@ class WinEvtxParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      An event object (WinEvtxRecordEvent) that contains the parsed data.
     """
     file_object = file_entry.GetFileObject()
     evtx_file = pyevtx.file()
@@ -100,6 +97,8 @@ class WinEvtxParser(interface.BaseParser):
     try:
       evtx_file.open_file_object(file_object)
     except IOError as exception:
+      evtx_file.close()
+      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.parser_name, file_entry.name, exception))
@@ -107,7 +106,9 @@ class WinEvtxParser(interface.BaseParser):
     for record_index in range(0, evtx_file.number_of_records):
       try:
         evtx_record = evtx_file.get_record(record_index)
-        yield WinEvtxRecordEvent(evtx_record)
+        event_object = WinEvtxRecordEvent(evtx_record)
+        parser_context.ProduceEvent(
+            event_object, parser_name=self.NAME, file_entry=file_entry)
       except IOError as exception:
         logging.warning((
             u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
@@ -117,11 +118,14 @@ class WinEvtxParser(interface.BaseParser):
     for record_index in range(0, evtx_file.number_of_recovered_records):
       try:
         evtx_record = evtx_file.get_recovered_record(record_index)
-        yield WinEvtxRecordEvent(evtx_record, recovered=True)
+        event_object = WinEvtxRecordEvent(evtx_record, recovered=True)
+        parser_context.ProduceEvent(
+            event_object, parser_name=self.NAME, file_entry=file_entry)
       except IOError as exception:
         logging.debug((
             u'[{0:s}] unable to parse recovered event record: {1:d} in file: '
             u'{2:s} with error: {3:s}').format(
                 self.parser_name, record_index, file_entry.name, exception))
 
+    evtx_file.close()
     file_object.close()

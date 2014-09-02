@@ -44,8 +44,9 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_TSK, inode=15, location=u'/passwords.txt',
         parent=os_path_spec)
 
-    event_generator = self._ParseFileByPathSpec(self._parser, tsk_path_spec)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, tsk_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The TSK file entry has 3 event objects.
     self.assertEquals(len(event_objects), 3)
@@ -59,8 +60,9 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_ZIP, location=u'/syslog',
         parent=os_path_spec)
 
-    event_generator = self._ParseFileByPathSpec(self._parser, zip_path_spec)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, zip_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The ZIP file has 1 event object.
     self.assertEquals(len(event_objects), 1)
@@ -73,8 +75,9 @@ class FileStatTest(test_lib.ParserTestCase):
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
 
-    event_generator = self._ParseFileByPathSpec(self._parser, gzip_path_spec)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, gzip_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The gzip file has 1 event object.
     self.assertEquals(len(event_objects), 1)
@@ -88,8 +91,9 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
         parent=os_path_spec)
 
-    event_generator = self._ParseFileByPathSpec(self._parser, tar_path_spec)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, tar_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The tar file has 1 event object.
     self.assertEquals(len(event_objects), 1)
@@ -105,8 +109,9 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
         parent=gzip_path_spec)
 
-    event_generator = self._ParseFileByPathSpec(self._parser, tar_path_spec)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, tar_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The tar file has 1 event object.
     self.assertEquals(len(event_objects), 1)
@@ -117,8 +122,9 @@ class FileStatTest(test_lib.ParserTestCase):
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
 
-    event_generator = self._ParseFileByPathSpec(self._parser, gzip_path_spec)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, gzip_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The gzip file has 1 event object.
     self.assertEquals(len(event_objects), 1)
@@ -135,8 +141,9 @@ class FileStatTest(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_ZIP, location=u'/syslog',
         parent=tsk_path_spec)
 
-    event_generator = self._ParseFileByPathSpec(self._parser, zip_path_spec)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseFileByPathSpec(
+        self._parser, zip_path_spec)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The ZIP file has 1 event objects.
     self.assertEquals(len(event_objects), 1)

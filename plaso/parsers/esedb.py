@@ -61,6 +61,7 @@ class EseDbParser(interface.BaseParser):
     try:
       esedb_file.open_file_object(file_object)
     except IOError as exception:
+      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.parser_name, file_entry.name, exception))
@@ -69,10 +70,9 @@ class EseDbParser(interface.BaseParser):
     cache = esedb_plugins_interface.EseDbCache()
     for esedb_plugin in self._plugins.itervalues():
       try:
-        for event_object in esedb_plugin.Process(
-            parser_context, database=esedb_file, cache=cache):
-          event_object.plugin = esedb_plugin.plugin_name
-          yield event_object
+        esedb_plugin.Process(
+            parser_context, database=esedb_file, cache=cache)
+
       except errors.WrongPlugin:
         logging.debug((
             u'[{0:s}] plugin: {1:s} cannot parse the ESE database: '

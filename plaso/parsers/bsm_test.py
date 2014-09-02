@@ -37,9 +37,9 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a Mac OS X BSM file."""
     knowledge_base_values = {'guessed_os': 'MacOSX'}
     test_file = self._GetTestFilePath(['apple.bsm'])
-    event_generator = self._ParseFile(
+    event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 54)
 
@@ -144,9 +144,9 @@ class OpenBsmParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a "generic" BSM file."""
     knowledge_base_values = {'guessed_os': 'openbsm'}
     test_file = self._GetTestFilePath(['openbsm.bsm'])
-    event_generator = self._ParseFile(
+    event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 50)
 

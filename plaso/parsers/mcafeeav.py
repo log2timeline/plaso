@@ -22,26 +22,27 @@ updated, and when files match the virus database."""
 
 import logging
 
-from plaso.lib import event
+from plaso.events import text_events
 from plaso.lib import timelib
 from plaso.parsers import text_parser
 
 
-class McafeeAVEvent(event.TextEvent):
+class McafeeAVEvent(text_events.TextEvent):
   """Convenience class for McAfee AV Log events """
   DATA_TYPE = 'av:mcafee:accessprotectionlog'
 
-  def __init__(self, timestamp, attributes):
+  def __init__(self, timestamp, offset, attributes):
     """Initializes a McAfee AV Log Event.
 
     Args:
       timestamp: The timestamp time value. The timestamp contains the
                  number of seconds since Jan 1, 1970 00:00:00 UTC.
+      offset: The offset of the attributes.
       attributes: Dict of elements from the AV log line.
     """
     del attributes['time']
     del attributes['date']
-    super(McafeeAVEvent, self).__init__(timestamp, attributes)
+    super(McafeeAVEvent, self).__init__(timestamp, offset, attributes)
     self.full_path = attributes['filename']
 
 
@@ -113,17 +114,19 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
 
     return True
 
-  def ParseRow(self, parser_context, row):
-    """Parse a single row from the McAfee Access Protection Log file.
+  def ParseRow(self, parser_context, row_offset, row, file_entry=None):
+    """Parses a row and extract event objects.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-
-    Yields:
-      An EventObject extracted from a single line from the log file.
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
     """
     timestamp = self._GetTimestamp(
         row['date'], row['time'], parser_context.timezone)
-    yield McafeeAVEvent(timestamp, row)
+    event_object = McafeeAVEvent(timestamp, row_offset, row)
+    parser_context.ProduceEvent(
+        event_object, parser_name=self.NAME, file_entry=file_entry)

@@ -40,7 +40,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
     test_file = self._GetTestFilePath(['security.log'])
     events = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjects(events)
+    event_objects = self._GetEventObjectsFromQueue(events)
 
     self.assertEqual(len(event_objects), 9)
 

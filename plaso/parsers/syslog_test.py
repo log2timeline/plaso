@@ -37,9 +37,9 @@ class SyslogUnitTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     knowledge_base_values = {'year': 2012}
     test_file = self._GetTestFilePath(['syslog'])
-    event_generator = self._ParseFile(
+    event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 13)
 

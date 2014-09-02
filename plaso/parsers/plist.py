@@ -40,8 +40,7 @@ class PlistParser(interface.BaseParser):
   The Plaso engine calls parsers by their Parse() method. This parser's
   Parse() has GetTopLevel() which deserializes plist files using the binplist
   library and calls plugins (PlistPlugin) registered through the
-  interface by their Process() to yield EventObject objects back
-  to the engine.
+  interface by their Process() to produce event objects.
 
   Plugins are how this parser understands the content inside a plist file,
   each plugin holds logic specific to a particular plist file. See the
@@ -71,22 +70,22 @@ class PlistParser(interface.BaseParser):
       top_level_object = binplist.readPlist(file_object)
     except binplist.FormatError as exception:
       raise errors.UnableToParseFile(
-          u'[PLIST] File is not a plist file: {0:s}'.format(
-              utils.GetUnicodeString(exception)))
+          u'[{0:s}] File is not a plist file: {1:s}'.format(
+              self.NAME, utils.GetUnicodeString(exception)))
     except (
         LookupError, binascii.Error, ValueError, AttributeError) as exception:
       raise errors.UnableToParseFile(
-          u'[PLIST] Unable to parse XML file, reason: {0:s}'.format(
-              exception))
+          u'[{0:s}] Unable to parse XML file, reason: {1:s}'.format(
+              self.NAME, exception))
     except OverflowError as exception:
       raise errors.UnableToParseFile(
-          u'[PLIST] Unable to parse: {0:s} with error: {1:s}'.format(
-              file_name, exception))
+          u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
+              self.NAME, file_name, exception))
 
     if not top_level_object:
       raise errors.UnableToParseFile(
-          u'[PLIST] File is not a plist: {0:s}'.format(
-              utils.GetUnicodeString(file_name)))
+          u'[{0:s}] File is not a plist: {1:s}'.format(
+              self.NAME, utils.GetUnicodeString(file_name)))
 
     # Since we are using readPlist from binplist now instead of manually
     # opening up the BinarPlist file we loose this option. Keep it commented
@@ -94,8 +93,8 @@ class PlistParser(interface.BaseParser):
     # TODO: Re-evaluate if we can delete this or still require it.
     #if bpl.is_corrupt:
     #  logging.warning(
-    #      u'[PLIST] corruption detected in binary plist: {0:s}'.format(
-    #          file_name))
+    #      u'[{0:s}] corruption detected in binary plist: {1:s}'.format(
+    #          self.NAME, file_name))
 
     return top_level_object
 
@@ -105,9 +104,6 @@ class PlistParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-
-    Yields:
-      A plist event object (instance of event.PlistEvent).
     """
     # TODO: Should we rather query the stats object to get the size here?
     file_object = file_entry.GetFileObject()
@@ -116,14 +112,15 @@ class PlistParser(interface.BaseParser):
     if file_size <= 0:
       file_object.close()
       raise errors.UnableToParseFile(
-          u'[PLIST] file size: {0:d} bytes is less equal 0.'.format(file_size))
+          u'[{0:s}] file size: {1:d} bytes is less equal 0.'.format(
+              self.NAME, file_size))
 
     # 50MB is 10x larger than any plist seen to date.
     if file_size > 50000000:
       file_object.close()
       raise errors.UnableToParseFile(
-          u'[PLIST] file size: {0:d} bytes is larger than 50 MB.'.format(
-              file_size))
+          u'[{0:s}] file size: {1:d} bytes is larger than 50 MB.'.format(
+              self.NAME, file_size))
 
     top_level_object = None
     try:
@@ -135,19 +132,26 @@ class PlistParser(interface.BaseParser):
     if not top_level_object:
       file_object.close()
       raise errors.UnableToParseFile(
-          u'[PLIST] unable to parse: {0:s} skipping.'.format(file_entry.name))
+          u'[{0:s}] unable to parse: {1:s} skipping.'.format(
+              self.NAME, file_entry.name))
 
     file_system = file_entry.GetFileSystem()
     plist_name = file_system.BasenamePath(file_entry.name)
 
     for plist_plugin in self._plugins.itervalues():
       try:
-        for event_object in plist_plugin.Process(
-            parser_context, plist_name=plist_name, top_level=top_level_object):
-          event_object.plugin = plist_plugin.plugin_name
-          yield event_object
+        event_object_generator = plist_plugin.Process(
+            parser_context, plist_name=plist_name, top_level=top_level_object)
+
+        # TODO: remove this once the yield-based parsers have been replaced
+        # by produce (or emit)-based variants.
+        for event_object in event_object_generator:
+          parser_context.ProduceEvent(
+              event_object, parser_name=self.NAME,
+              plugin_name=plist_plugin.plugin_name, file_entry=file_entry)
+
       except errors.WrongPlistPlugin as exception:
-        logging.debug(u'[PLIST] Wrong plugin: {0:s} for: {1:s}'.format(
-            exception[0], exception[1]))
+        logging.debug(u'[{0:s}] Wrong plugin: {1:s} for: {2:s}'.format(
+            self.NAME, exception[0], exception[1]))
 
     file_object.close()

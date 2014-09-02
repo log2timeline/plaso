@@ -20,28 +20,16 @@
 import datetime
 import logging
 
-from plaso.lib import event
+from plaso.events import text_events
 from plaso.lib import lexer
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.parsers import text_parser
 
 
-class SyslogLineEvent(event.TextEvent):
+class SyslogLineEvent(text_events.TextEvent):
   """Convenience class for a syslog line event."""
   DATA_TYPE = 'syslog:line'
-
-  def __init__(self, timestamp, offset, attributes):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      offset: The offset of the event.
-      attributes: A dict that contains the events attributes
-    """
-    super(SyslogLineEvent, self).__init__(timestamp, attributes)
-    self.offset = offset
 
 
 class SyslogParser(text_parser.SlowLexicalTextParser):

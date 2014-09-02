@@ -23,6 +23,7 @@ import shutil
 import unittest
 import zipfile
 
+from plaso.events import text_events
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -113,7 +114,7 @@ class StorageFileTest(unittest.TestCase):
         'This is a line by someone not reading the log line properly. And '
         'since this log line exceeds the accepted 80 chars it will be '
         'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
-    event_4 = event.TextEvent(12389344590000000, text_dict)
+    event_4 = text_events.TextEvent(12389344590000000, 12, text_dict)
     event_4.parser = 'UNKNOWN'
 
     self._event_objects.append(event_1)
