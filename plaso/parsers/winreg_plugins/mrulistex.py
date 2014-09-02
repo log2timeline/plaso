@@ -181,7 +181,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
       key: A Windows Registry key (instance of WinRegKey).
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    # Prevent this pluging triggering on sub paths of non-string MRUListEx
+    # Prevent this plugin triggering on sub paths of non-string MRUListEx
     # values.
     if (u'BagMRU' in key.path or u'Explorer\\StreamMRU' in key.path or
         u'\\Explorer\\ComDlg32\\OpenSavePidlMRU' in key.path):

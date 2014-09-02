@@ -78,7 +78,7 @@ class EventFormatterUnitTest(unittest.TestCase):
 
     self.assertIn(
         (u'1334966206929596,REG,UNKNOWN key,[//HKCU/Secret/EvilEmpire/'
-         u'Malicious_key] Value: REGALERT: send all the exes to the other '
+         u'Malicious_key] Value: send all the exes to the other '
          u'world'), events)
     self.assertIn((u'1334940286000000,REG,UNKNOWN key,[//HKCU/Windows'
                    u'/Normal] Value: run all the benign stuff'), events)

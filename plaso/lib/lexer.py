@@ -186,7 +186,7 @@ class SelfFeederMixIn(Lexer):
   Note that self.file_object must be the file object we read from.
   """
 
-  # TODO: fix this, file object eiter needs to be set or not passed here.
+  # TODO: fix this, file object either needs to be set or not passed here.
   def __init__(self, file_object=None):
     """Initializes the lexer feeder min object.
 
@@ -198,7 +198,7 @@ class SelfFeederMixIn(Lexer):
 
   def NextToken(self):
     """Return the next token."""
-    # If we dont have enough data - feed ourselves: We assume
+    # If we don't have enough data - feed ourselves: We assume
     # that we must have at least one sector in our buffer.
     if len(self.buffer) < 512:
       if self.Feed() == 0 and not self.buffer:

@@ -44,8 +44,6 @@ class BootVerificationPlugin(interface.KeyPlugin):
       Extracted event objects from the boot verify key.
     """
     text_dict = {}
-    # TODO: Remove RegAlert completely
-    # text_dict['BootVerification'] = u'REGALERT'
     for value in key.GetValues():
       text_dict[value.name] = value.data
     yield event.WinRegistryEvent(
@@ -88,14 +86,10 @@ class BootExecutePlugin(interface.KeyPlugin):
           value_string = value.data
         else:
           value_string = (
-             u'unuspported value data type: {0:s}.').format(
+             u'unsupported value data type: {0:s}.').format(
              value.data_type_string)
 
-        boot_dict = {}
-        if value_string != u'autocheck autochk *':
-          boot_dict['BootExecute'] = u'REGALERT: {0:s}'.format(value_string)
-        else:
-          boot_dict['BootExecute'] = value_string
+        boot_dict = {'BootExecute': value_string}
 
         yield event.WinRegistryEvent(
             key.path, boot_dict,

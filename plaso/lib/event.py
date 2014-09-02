@@ -401,12 +401,7 @@ class WinRegistryEvent(EventObject):
     if key:
       self.keyname = key
 
-    # TODO: why is regalert handled in this way? See if this can be
-    # changed in a better solution.
     self.regvalue = value_dict
-    for value in value_dict.itervalues():
-      if isinstance(value, basestring) and value.startswith('REGALERT'):
-        self.regalert = True
 
     if offset or type(offset) in [int, long]:
       self.offset = offset
