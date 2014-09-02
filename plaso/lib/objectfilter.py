@@ -632,7 +632,7 @@ class ContextExpression(lexer.Expression):
 
 
 class BinaryExpression(lexer.BinaryExpression):
-  def Compile(self, filter_implemention):
+  def Compile(self, filter_implementation):
     """Compile the binary expression into a filter object."""
     operator = self.operator.lower()
     if operator == 'and' or operator == '&&':
@@ -642,8 +642,8 @@ class BinaryExpression(lexer.BinaryExpression):
     else:
       raise ParseError(u'Invalid binary operator {0:s}.'.format(operator))
 
-    args = [x.Compile(filter_implemention) for x in self.args]
-    return filter_implemention.FILTERS[method](arguments=args)
+    args = [x.Compile(filter_implementation) for x in self.args]
+    return filter_implementation.FILTERS[method](arguments=args)
 
 
 class Parser(lexer.SearchParser):

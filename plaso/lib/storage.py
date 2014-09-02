@@ -1105,8 +1105,8 @@ class StorageFile(object):
     Yields:
       A protobuf object from the protobuf file.
     """
-    # TODO: Change this function, don't accespt a store number and implement the
-    # MergeSort functionailty of the psort file in here. This will then always
+    # TODO: Change this function, don't accept a store number and implement the
+    # MergeSort functionality of the psort file in here. This will then always
     # return the sorted entries from the storage file, implementing the second
     # stage of the sort/merge algorithm.
     while True:
@@ -1298,13 +1298,13 @@ class StorageFile(object):
       [description] - More detailed description of the event.
       [category] - If this group of events falls into a specific category.
       [color] - To highlight this particular group with a HTML color tag.
-      [first_timestamp] - The first timestamp if applicaple of the group.
-      [last_timestamp] - The last timestamp if applicaple of the group.
+      [first_timestamp] - The first timestamp if applicable of the group.
+      [last_timestamp] - The last timestamp if applicable of the group.
       events - A list of tuples (store_number and store_index of the
       EventObject protobuf that belongs to this group of events).
 
     Args:
-      rows: An object that contains the necessary fields to contruct
+      rows: An object that contains the necessary fields to construct
       an EventGroup. Has to be a generator object or an object that implements
       an iterator.
     """
