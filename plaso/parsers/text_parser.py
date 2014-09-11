@@ -460,7 +460,7 @@ class TextCSVParser(interface.BaseParser):
 
     try:
       row = reader.next()
-    except csv.Error:
+    except (csv.Error, StopIteration):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] Unable to parse CSV file: {1:s}.'.format(
