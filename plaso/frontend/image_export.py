@@ -18,6 +18,7 @@
 """The image export front-end."""
 
 import argparse
+import collections
 import hashlib
 import logging
 import os
@@ -35,6 +36,7 @@ from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
+from plaso.lib import timelib
 from plaso.lib import queue
 from plaso.preprocessors import interface as preprocess_interface
 
@@ -52,43 +54,200 @@ def CalculateHash(file_object):
   return md5.hexdigest()
 
 
-class ImageExtractorQueueConsumer(queue.PathSpecQueueConsumer):
-  """Class that implements an image extractor queue consumer."""
+class DateFilter(object):
+  """Class that implements a date filter for file entries."""
 
-  def __init__(self, process_queue, extensions, destination_path):
-    """Initializes the image extractor queue consumer.
+  DATE_FILTER_INSTANCE = collections.namedtuple(
+      'date_filter_instance', 'type start end')
+
+  DATE_FILTER_TYPES = frozenset([
+      u'atime', u'bkup', u'ctime', u'crtime', u'dtime', u'mtime'])
+
+  def __init__(self):
+    """Initialize the date filter object."""
+    super(DateFilter, self).__init__()
+    self._filters = []
+
+  @property
+  def number_of_filters(self):
+    """Return back the filter count."""
+    return len(self._filters)
+
+  def Add(self, filter_type, filter_start=None, filter_end=None):
+    """Add a date filter.
 
     Args:
-      process_queue: the process queue (instance of Queue).
-      extensions: a list of extensions.
-      destination_path: the path where the extracted files should be stored.
+      filter_type: String that defines what timestamp is affected by the
+                    date filter, valid values are atime, ctime, crtime,
+                    dtime, bkup and mtime.
+      filter_start: Optional start date of the filter. This is a string
+                    in the form of "YYYY-MM-DD HH:MM:SS", or "YYYY-MM-DD".
+                    If not supplied there will be no limitation to the initial
+                    timeframe.
+      filter_end: Optional end date of the filter. This is a string
+                  in the form of "YYYY-MM-DD HH:MM:SS", or "YYYY-MM-DD".
+                  If not supplied there will be no limitation to the initial
+                  timeframe.
+
+    Raises:
+      errors.WrongFilterOption: If the filter is badly formed.
     """
-    super(ImageExtractorQueueConsumer, self).__init__(process_queue)
-    self._destination_path = destination_path
-    self._extensions = extensions
+    if not isinstance(filter_type, basestring):
+      raise errors.WrongFilterOption(u'Filter type must be a string.')
 
-  def _ConsumePathSpec(self, path_spec):
-    """Consumes a path specification callback for ConsumePathSpecs."""
-    # TODO: move this into a function of path spec e.g. GetExtension().
-    location = getattr(path_spec, 'location', None)
-    if not location:
-      location = path_spec.file_path
-    _, _, extension = location.rpartition('.')
-    if extension.lower() in self._extensions:
-      vss_store_number = getattr(path_spec, 'vss_store_number', None)
-      if vss_store_number is not None:
-        filename_prefix = 'vss_{0:d}'.format(vss_store_number + 1)
+    if filter_start is None and filter_end is None:
+      raise errors.WrongFilterOption(
+          u'A date filter has to have either a start or an end date.')
+
+    filter_type_lower = filter_type.lower()
+    if filter_type_lower not in self.DATE_FILTER_TYPES:
+      raise errors.WrongFilterOption(u'Unknown filter type: {0:s}.'.format(
+          filter_type))
+
+    date_filter_type = filter_type_lower
+    date_filter_start = None
+    date_filter_end = None
+
+    if filter_start is not None:
+      # If the date string is invalid the timestamp will be set to zero,
+      # which is also a valid date. Thus all invalid timestamp strings
+      # will be set to filter from the POSIX epoch time.
+      # Thus the actual value of the filter is printed out so that the user
+      # may catch this potentially unwanted behavior.
+      date_filter_start = timelib.Timestamp.FromTimeString(filter_start)
+      logging.info(
+          u'Date filter for start date configured: [{0:s}] {1:s}'.format(
+              date_filter_type,
+              timelib.Timestamp.CopyToIsoFormat(date_filter_start)))
+
+    if filter_end is not None:
+      date_filter_end = timelib.Timestamp.FromTimeString(filter_end)
+      logging.info(
+          u'Date filter for end date configured: [{0:s}] {1:s}'.format(
+              date_filter_type,
+              timelib.Timestamp.CopyToIsoFormat(date_filter_end)))
+
+      # Make sure that the end timestamp occurs after the beginning.
+      # If not then we need to reverse the time range.
+      if (date_filter_start is not None and
+          date_filter_start > date_filter_end):
+        temporary_placeholder = date_filter_end
+        date_filter_end = date_filter_start
+        date_filter_start = temporary_placeholder
+
+    self._filters.append(self.DATE_FILTER_INSTANCE(
+        date_filter_type, date_filter_start, date_filter_end))
+
+  def CompareFileEntry(self, file_entry):
+    """Compare the set date filters against timestamps of a file entry.
+
+    Args:
+      file_entry: The file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      True, if there are no date filters set. Otherwise the date filters are
+      compared and True only returned if the timestamps are outside of the time
+      range.
+
+    Raises:
+        errros.WrongFilterOption: If an attempt is made to filter against
+                                  a date type that is not stored in the stat
+                                  object.
+    """
+    if not self._filters:
+      return True
+
+    # Compare timestamps of the file entry.
+    stat = file_entry.GetStat()
+
+    # Go over each filter.
+    for date_filter in self._filters:
+      posix_time = getattr(stat, date_filter.type, None)
+
+      if posix_time is None:
+        # Trying to filter against a date type that is not saved in the stat
+        # object.
+        raise errors.WrongFilterOption(
+            u'Date type: {0:s} is not stored in the file entry'.format(
+                date_filter.type))
+
+      timestamp = timelib.Timestamp.FromPosixTime(posix_time)
+
+      if date_filter.start is not None and (timestamp < date_filter.start):
+        logging.debug((
+            u'[skipping] Not saving file: {0:s}, timestamp out of '
+            u'range.').format(file_entry.path_spec.location))
+        return False
+
+      if date_filter.end is not None and (timestamp > date_filter.end):
+        logging.debug((
+            u'[skipping] Not saving file: {0:s}, timestamp out of '
+            u'range.').format(file_entry.path_spec.location))
+        return False
+
+    return True
+
+  def Remove(self, filter_type, filter_start=None, filter_end=None):
+    """Remove a date filter from the set of defined date filters.
+
+    Args:
+      filter_type: String that defines what timestamp is affected by the
+                    date filter, valid values are atime, ctime, crtime,
+                    dtime, bkup and mtime.
+      filter_start: Optional start date of the filter. This is a string
+                    in the form of "YYYY-MM-DD HH:MM:SS", or "YYYY-MM-DD".
+                    If not supplied there will be no limitation to the initial
+                    timeframe.
+      filter_end: Optional end date of the filter. This is a string
+                  in the form of "YYYY-MM-DD HH:MM:SS", or "YYYY-MM-DD".
+                  If not supplied there will be no limitation to the initial
+                  timeframe.
+    """
+    if not self._filters:
+      return
+
+    # TODO: Instead of doing it this way calculate a hash for every filter
+    # that is stored and use that for removals.
+    for date_filter_index, date_filter in enumerate(self._filters):
+      if filter_start is None:
+        date_filter_start = filter_start
       else:
-        filename_prefix = ''
+        date_filter_start = timelib.Timestamp.FromTimeString(filter_start)
+      if filter_end is None:
+        date_filter_end = filter_end
+      else:
+        date_filter_end = timelib.Timestamp.FromTimeString(filter_end)
 
-      FileSaver.WriteFile(
-          path_spec, self._destination_path, filename_prefix=filename_prefix)
+      if (date_filter.type == filter_type and
+          date_filter.start == date_filter_start and
+          date_filter.end == date_filter_end):
+        del self._filters[date_filter_index]
+        return
+
+  def Reset(self):
+    """Resets the date filter."""
+    self._filters = []
 
 
 class FileSaver(object):
   """A simple class that is used to save files."""
+
   md5_dict = {}
   calc_md5 = False
+  # TODO: Move this functionality into the frontend as a state attribute.
+  _date_filter = None
+
+  @classmethod
+  def SetDateFilter(cls, date_filter):
+    """Set a date filter for the file saver.
+
+    If a date filter is set files will not be saved unless they are within
+    the time boundaries.
+
+    Args:
+      date_filter: A date filter object (instance of DateFilter).
+    """
+    cls._date_filter = date_filter
 
   @classmethod
   def WriteFile(cls, source_path_spec, destination_path, filename_prefix=''):
@@ -131,7 +290,6 @@ class FileSaver(object):
     else:
       directory = destination_path
 
-    save_file = True
     if cls.calc_md5:
       stat = file_entry.GetStat()
       inode = getattr(stat, 'ino', 0)
@@ -139,21 +297,56 @@ class FileSaver(object):
       md5sum = CalculateHash(file_object)
       if inode in cls.md5_dict:
         if md5sum in cls.md5_dict[inode]:
-          save_file = False
-        else:
-          cls.md5_dict[inode].append(md5sum)
+          return
+        cls.md5_dict[inode].append(md5sum)
       else:
         cls.md5_dict[inode] = [md5sum]
 
-    if save_file:
-      try:
-        file_object = file_entry.GetFileObject()
-        frontend_utils.OutputWriter.WriteFile(
-            file_object, os.path.join(directory, extracted_filename))
-      except IOError as exception:
-        logging.error(
-            u'[skipping] unable to save file: {0:s} with error: {1:s}'.format(
-                filename, exception))
+    # Check if we do not want to save the file.
+    if cls._date_filter and not cls._date_filter.CompareFileEntry(file_entry):
+      return
+
+    try:
+      file_object = file_entry.GetFileObject()
+      frontend_utils.OutputWriter.WriteFile(
+          file_object, os.path.join(directory, extracted_filename))
+    except IOError as exception:
+      logging.error(
+          u'[skipping] unable to save file: {0:s} with error: {1:s}'.format(
+              filename, exception))
+
+
+class ImageExtractorQueueConsumer(queue.PathSpecQueueConsumer):
+  """Class that implements an image extractor queue consumer."""
+
+  def __init__(self, process_queue, extensions, destination_path):
+    """Initializes the image extractor queue consumer.
+
+    Args:
+      process_queue: the process queue (instance of Queue).
+      extensions: a list of extensions.
+      destination_path: the path where the extracted files should be stored.
+    """
+    super(ImageExtractorQueueConsumer, self).__init__(process_queue)
+    self._destination_path = destination_path
+    self._extensions = extensions
+
+  def _ConsumePathSpec(self, path_spec):
+    """Consumes a path specification callback for ConsumePathSpecs."""
+    # TODO: move this into a function of path spec e.g. GetExtension().
+    location = getattr(path_spec, 'location', None)
+    if not location:
+      location = path_spec.file_path
+    _, _, extension = location.rpartition('.')
+    if extension.lower() in self._extensions:
+      vss_store_number = getattr(path_spec, 'vss_store_number', None)
+      if vss_store_number is not None:
+        filename_prefix = 'vss_{0:d}'.format(vss_store_number + 1)
+      else:
+        filename_prefix = ''
+
+      FileSaver.WriteFile(
+          path_spec, self._destination_path, filename_prefix=filename_prefix)
 
 
 class ImageExportFrontend(frontend.StorageMediaFrontend):
@@ -359,6 +552,25 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         getattr(options, 'include_duplicates', False)):
       self._remove_duplicates = False
 
+    # Process date filter.
+    date_filters = getattr(options, 'date_filters', [])
+    if date_filters:
+      date_filter_object = DateFilter()
+
+      for date_filter in date_filters:
+        date_filter_pieces = date_filter.split(',')
+        if len(date_filter_pieces) != 3:
+          raise errors.BadConfigOption(
+              u'Date filter badly formed: {0:s}'.format(date_filter))
+
+        filter_type, filter_start, filter_end = date_filter_pieces
+        date_filter_object.Add(
+            filter_type=filter_type.strip(), filter_start=filter_start.strip(),
+            filter_end=filter_end.strip())
+
+      # TODO: Move the date filter to the front-end as an attribute.
+      FileSaver.SetDateFilter(date_filter_object)
+
   def ProcessSource(self, options):
     """Processes the source.
 
@@ -395,6 +607,10 @@ def Main():
       epilog='And that\'s how you export files, plaso style.')
 
   arg_parser.add_argument(
+      '-d', '--debug', dest='debug', action='store_true', default=False,
+      help='Turn on debugging information.')
+
+  arg_parser.add_argument(
       '-w', '--write', dest='path', action='store', default='.', type=str,
       help='The directory in which extracted files should be stored in.')
 
@@ -411,6 +627,21 @@ def Main():
           'Full path to the file that contains the collection filter, '
           'the file can use variables that are defined in preprocesing, '
           'just like any other log2timeline/plaso collection filter.'))
+
+  arg_parser.add_argument(
+      '--date-filter', '--date_filter', action='append', type=str,
+      dest='date_filters', metavar="TYPE_START_END", default=None, help=(
+          'Add a date based filter to the export criteria. If a date based '
+          'filter is set no file is saved unless it\'s within the date '
+          'boundary. This parameter should be in the form of "TYPE,START,END" '
+          'where TYPE defines which timestamp this date filter affects, eg: '
+          'atime, ctime, crtime, bkup, etc. START defines the start date and '
+          'time of the boundary and END defines the end time. Both timestamps '
+          'are optional and should be set as - if not needed. The correct form '
+          'of the timestamp value is in the form of "YYYY-MM-DD HH:MM:SS" or '
+          '"YYYY-MM-DD". Examples are "atime, 2013-01-01 23:12:14, 2013-02-23" '
+          'This parameter can be repeated as needed to add additional date '
+          'date boundaries, eg: once for atime, once for crtime, etc.'))
 
   arg_parser.add_argument(
       '--include_duplicates', dest='include_duplicates', action='store_true',
@@ -432,8 +663,11 @@ def Main():
 
   options = arg_parser.parse_args()
 
-  format_str = '[%(levelname)s] %(message)s'
-  logging.basicConfig(level=logging.INFO, format=format_str)
+  format_str = u'%(asctime)s [%(levelname)s] %(message)s'
+  if options.debug:
+    logging.basicConfig(level=logging.DEBUG, format=format_str)
+  else:
+    logging.basicConfig(level=logging.INFO, format=format_str)
 
   try:
     front_end.ParseOptions(options, source_option='image')
