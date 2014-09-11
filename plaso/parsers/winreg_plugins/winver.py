@@ -79,7 +79,7 @@ class WinVerPlugin(interface.KeyPlugin):
       install = 0
 
     event_object = event.WinRegistryEvent(
-        key.path, text_dict,
+        key.path, text_dict, usage='OS Install Time',
         timestamp=timelib.Timestamp.FromPosixTime(install))
     event_object.prodname = text_dict[u'Product name']
     event_object.source_long = 'SOFTWARE WinVersion key'
