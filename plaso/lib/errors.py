@@ -81,6 +81,10 @@ class WrongBencodePlugin(Error):
   """Error reporting wrong bencode plugin used."""
 
 
+class WrongFilterOption(Error):
+  """Raised when the filter option is badly formed."""
+
+
 class WrongFormatter(Error):
   """Raised when the formatter is not applicable for a particular event."""
 

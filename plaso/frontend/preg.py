@@ -80,6 +80,7 @@ class RegCache(object):
   hive = None
   hive_type = 'UNKNOWN'
   knowledge_base_object = knowledge_base.KnowledgeBase()
+  parser_context = None
   path_expander = None
   reg_cache = None
   file_entry = None
@@ -168,7 +169,7 @@ class PregFrontend(frontend.ExtractionFrontend):
       self._source_path = image
 
     if regfile:
-      if not os.path.isfile(regfile):
+      if not image and not os.path.isfile(regfile):
         raise errors.BadConfigOption(
             u'Registry file: {0:s} does not exist.'.format(regfile))
       self._registry_file = regfile
@@ -456,7 +457,7 @@ class PregFrontend(frontend.ExtractionFrontend):
             u'tool.').format(exception))
 
       searchers = self._GetSearchersForImage(
-          self._source_path_spec.parent, options)
+          self.GetSourcePathSpec().parent, options)
       _, searcher = searchers[0]
 
       # Run preprocessing on image.
@@ -538,6 +539,7 @@ class PregFrontend(frontend.ExtractionFrontend):
     event_queue_producer = queue.EventObjectQueueProducer(event_queue)
     parser_context = parsers_context.ParserContext(
         event_queue_producer, RegCache.knowledge_base_object)
+    RegCache.parser_context = parser_context
 
     # Get all the appropriate keys from these plugins.
     key_paths = self.plugins.GetExpandedKeyPaths(
@@ -695,6 +697,9 @@ class MyMagics(magic.Magics):
       for registry_key in plugin.expanded_keys:
         print frontend_utils.FormatOutputString('Registry Key', registry_key)
       return
+
+    if not plugin.expanded_keys:
+      plugin.ExpandKeys(RegCache.parser_context)
 
     for registry_key in plugin.expanded_keys:
       key = RegCache.hive.GetKeyByPath(registry_key)
@@ -1236,6 +1241,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
   event_queue_producer = queue.EventObjectQueueProducer(event_queue)
   parser_context = parsers_context.ParserContext(
       event_queue_producer, RegCache.knowledge_base_object)
+  RegCache.parser_context = parser_context
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:
@@ -1311,6 +1317,13 @@ def RunModeConsole(front_end, options):
     options: the command line arguments (instance of argparse.Namespace).
   """
   namespace = {}
+
+  event_queue = queue.SingleThreadedQueue()
+  event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+  parser_context = parsers_context.ParserContext(
+      event_queue_producer, RegCache.knowledge_base_object)
+  RegCache.parser_context = parser_context
+
   hives, hive_collectors = front_end.GetHivesAndCollectors(
       options, options.plugin_name)
 
