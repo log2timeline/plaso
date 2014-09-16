@@ -132,7 +132,7 @@ class UtmpParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile((
           u'Not an UTMP file, unknown type '
-          u'[{0:s}].').format(structure.type))
+          u'[{0:d}].').format(structure.type))
 
     if not self._VerifyTextField(structure.terminal):
       file_object.close()
