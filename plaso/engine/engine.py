@@ -35,18 +35,21 @@ from plaso.preprocessors import interface as preprocess_interface
 class Engine(object):
   """Class that defines the processing engine."""
 
-  def __init__(self, collection_queue, storage_queue):
+  def __init__(self, collection_queue, storage_queue, parse_error_queue):
     """Initialize the engine object.
 
     Args:
       collection_queue: the collection queue object (instance of Queue).
       storage_queue: the storage queue object (instance of Queue).
+      parse_error_queue: the parser error queue object (instance of Queue).
     """
     self._collection_queue = collection_queue
     self._source = None
     self._source_path_spec = None
     self._source_file_entry = None
-    self._storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+    self._event_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+    self._parse_error_queue_producer = queue.ParseErrorQueueProducer(
+        parse_error_queue)
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def CreateCollector(
@@ -73,7 +76,7 @@ class Engine(object):
       raise RuntimeError(u'Missing source.')
 
     collector_object = collector.Collector(
-        self._collection_queue, self._storage_queue_producer, self._source,
+        self._collection_queue, self._event_queue_producer, self._source,
         self._source_path_spec, resolver_context=resolver_context)
 
     collector_object.collect_directory_metadata = include_directory_stat
@@ -101,8 +104,9 @@ class Engine(object):
       An extraction worker (instance of worker.ExtractionWorker).
     """
     return worker.EventExtractionWorker(
-        worker_number, self._collection_queue, self._storage_queue_producer,
-        self.knowledge_base, parsers, rpc_proxy=rpc_proxy)
+        worker_number, self._collection_queue, self._event_queue_producer,
+        self._parse_error_queue_producer, self.knowledge_base, parsers,
+        rpc_proxy=rpc_proxy)
 
   def GetSourceFileSystemSearcher(self, resolver_context=None):
     """Retrieves the file system searcher of the source.
@@ -209,7 +213,7 @@ class Engine(object):
 
   def SignalEndOfInputStorageQueue(self):
     """Signals the storage queue no input remains."""
-    self._storage_queue_producer.SignalEndOfInput()
+    self._event_queue_producer.SignalEndOfInput()
 
   def SourceIsDirectory(self):
     """Determines if the source is a directory.

@@ -110,8 +110,10 @@ class AnalysisPluginTestCase(unittest.TestCase):
     event_queue = queue.SingleThreadedQueue()
     event_queue_producer = queue.EventObjectQueueProducer(event_queue)
 
+    parse_error_queue = queue.SingleThreadedQueue()
+
     parser_context = parsers_context.ParserContext(
-        event_queue_producer, knowledge_base_object)
+        event_queue_producer, parse_error_queue, knowledge_base_object)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)

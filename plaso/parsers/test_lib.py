@@ -95,6 +95,32 @@ class ParserTestCase(unittest.TestCase):
 
     return event_objects
 
+  def _GetParserContext(
+     self, event_queue, parse_error_queue, knowledge_base_values=None):
+    """Retrieves a parser context object.
+
+    Args:
+      event_queue: the event queue (instance of Queue).
+      parse_error_queue: the parse error queue (instance of Queue).
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
+
+    Returns:
+      A parser context object (instance of ParserContext).
+    """
+    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+    parse_error_queue_producer = queue.ParseErrorQueueProducer(
+        parse_error_queue)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    if knowledge_base_values:
+      for identifier, value in knowledge_base_values.iteritems():
+        knowledge_base_object.SetValue(identifier, value)
+
+    return context.ParserContext(
+        event_queue_producer, parse_error_queue_producer,
+        knowledge_base_object)
+
   def _GetTestFilePath(self, path_segments):
     """Retrieves the path of a test file relative to the test data directory.
 
@@ -142,15 +168,12 @@ class ParserTestCase(unittest.TestCase):
     """
     event_queue = queue.SingleThreadedQueue()
     event_queue_consumer = TestEventObjectQueueConsumer(event_queue)
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.iteritems():
-        knowledge_base_object.SetValue(identifier, value)
+    parse_error_queue = queue.SingleThreadedQueue()
 
-    parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
+    parser_context = self._GetParserContext(
+        event_queue, parse_error_queue,
+        knowledge_base_values=knowledge_base_values)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_object.Parse(parser_context, file_entry)
 

@@ -22,6 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import eventdata
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import lfu
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import cache
@@ -61,8 +62,8 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     values.append(winreg_test_lib.TestRegValue(
         'NumberOfInitialSessions', '2'.encode('utf_16_le'), 1, 243))
 
-    winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346445929000000, values, 153)
+    timestamp = timelib_test.CopyStringToTimestamp('2012-08-31 20:45:29')
+    winreg_key = winreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -71,8 +72,9 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT
-    self.assertEquals(event_object.timestamp, 1346445929000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-31 20:45:29')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_string = (
         u'[{0:s}] BootExecute: autocheck autochk *').format(key_path)
@@ -117,8 +119,8 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
         'C:\\WINDOWS\\system32\\googleupdater.exe'.encode('utf_16_le'), 1,
         123))
 
-    winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346445929000000, values, 153)
+    timestamp = timelib_test.CopyStringToTimestamp('2012-08-31 20:45:29')
+    winreg_key = winreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -127,8 +129,9 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    # Timestamp is: Fri, 31 Aug 2012 20:45:29 GMT
-    self.assertEquals(event_object.timestamp, 1346445929000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-31 20:45:29')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '

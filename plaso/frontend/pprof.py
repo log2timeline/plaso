@@ -186,14 +186,19 @@ def ProcessFile(options):
   storage_queue = queue.SingleThreadedQueue()
   storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
 
+  parse_error_queue = queue.SingleThreadedQueue()
+  parse_error_queue_producer = queue.ParseErrorQueueProducer(parse_error_queue)
+
   # Set few options the engine expects to be there.
   # TODO: Can we rather set this directly in argparse?
   options.single_process = True
   options.debug = False
   options.text_prepend = u''
   parsers = parsers_manager.ParsersManager.FindAllParsers()
+  # TODO: use engine instead of invoking the worker object directly.
   my_worker = worker.EventExtractionWorker(
-      '0', None, storage_queue_producer, knowledge_base_object, parsers)
+      '0', None, storage_queue_producer, parse_error_queue_producer,
+      knowledge_base_object, parsers)
 
   if options.verbose:
     profiler = cProfile.Profile()

@@ -1079,7 +1079,9 @@ class ExtractionFrontend(StorageMediaFrontend):
 
     collection_queue = queue.MultiThreadedQueue()
     storage_queue = queue.MultiThreadedQueue()
-    self._engine = engine.Engine(collection_queue, storage_queue)
+    parse_error_queue = queue.MultiThreadedQueue()
+    self._engine = engine.Engine(
+        collection_queue, storage_queue, parse_error_queue)
 
     # TODO: add support to handle multiple partitions.
     self._engine.SetSource(
@@ -1308,7 +1310,9 @@ class ExtractionFrontend(StorageMediaFrontend):
     """
     collection_queue = queue.SingleThreadedQueue()
     storage_queue = queue.SingleThreadedQueue()
-    self._engine = engine.Engine(collection_queue, storage_queue)
+    parse_error_queue = queue.SingleThreadedQueue()
+    self._engine = engine.Engine(
+        collection_queue, storage_queue, parse_error_queue)
 
     # TODO: add support to handle multiple partitions.
     self._engine.SetSource(
