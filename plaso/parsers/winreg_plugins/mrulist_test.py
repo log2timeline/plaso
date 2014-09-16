@@ -21,6 +21,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import mrulist
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -51,8 +52,9 @@ class MRUListRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'c', 'C:/looks_legit.exe'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1001))
 
+    timestamp = timelib_test.CopyStringToTimestamp('2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346145829002031, values, 1456)
+        key_path, timestamp, values, 1456)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -61,14 +63,15 @@ class MRUListRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.timestamp, 1346145829002031)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-28 09:23:49.002031')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value a]: Some random text here '
         u'Index: 2 [MRU Value c]: C:/looks_legit.exe '
         u'Index: 3 [MRU Value b]: ').format(key_path)
-
 
     expected_msg_short = (
         u'[{0:s}] Index: 1 [MRU Value a]: Some ran...').format(key_path)

@@ -310,6 +310,55 @@ class ItemQueueConsumer(QueueConsumer):
       self._ConsumeItem(item)
 
 
+class ParseErrorQueueConsumer(QueueConsumer):
+  """Class that implements the parser error queue consumer.
+
+     The consumer subscribes to updates on the queue.
+  """
+
+  @abc.abstractmethod
+  def _ConsumeParseError(self, path_spec):
+    """Consumes a parser error callback for ConsumeParseErrors."""
+
+  def ConsumeParseErrors(self):
+    """Consumes the parser errors that are pushed on the queue.
+
+    Raises:
+      RuntimeError: when there is an unsupported object type on the queue.
+    """
+    while True:
+      try:
+        item = self._queue.PopItem()
+      except errors.QueueEmpty:
+        break
+
+      if isinstance(item, QueueEndOfInput):
+        # Push the item back onto the queue to make sure all
+        # queue consumers are stopped.
+        self._queue.PushItem(item)
+        break
+
+      if not isinstance(item, event.ParseError):
+        raise RuntimeError(u'Unsupported item type on queue.')
+
+      self._ConsumeParseError(item)
+
+
+class ParseErrorQueueProducer(QueueProducer):
+  """Class that implements the parser error queue producer.
+
+     The producer generates updates on the queue.
+  """
+
+  def ProduceParseError(self, path_spec):
+    """Produces a parser error onto the queue.
+
+    Args:
+      path_spec: the parser error object (instance of ParseError).
+    """
+    self._queue.PushItem(path_spec)
+
+
 class PathSpecQueueConsumer(QueueConsumer):
   """Class that implements the path specification queue consumer.
 

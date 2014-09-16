@@ -17,8 +17,6 @@
 # limitations under the License.
 """This file contains a MRUList Registry plugin."""
 
-import logging
-
 from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
@@ -33,59 +31,58 @@ class MRUListPlugin(interface.ValuePlugin):
   URLS = [u'http://forensicartifacts.com/tag/mru/']
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, file_entry=None, key=None, registry_type=None,
+      **unused_kwargs):
     """Extracts event objects from a MRU list.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
     """
     mru_list_value = key.GetValue('MRUList')
-
     if not mru_list_value:
-      text_dict = {}
-      logging.error(u'missing MRUList value.')
+      error_string = u'Key: {0:s}, value: MRUList missing.'.format(key.path)
+      parser_context.ProduceParseError(
+          self.NAME, error_string, file_entry=file_entry)
+      return
 
-      event_object = windows_events.WindowsRegistryEvent(
-          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type, urls=self.URLS)
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    timestamp = key.last_written_timestamp
 
-    else:
-      timestamp = key.last_written_timestamp
+    entry_list = []
+    text_dict = {}
+    for entry_index, mru_value_name in enumerate(mru_list_value.data):
+      value = key.GetValue(mru_value_name)
+      if not value:
+        error_string = u'Key: {0:s}, value: {1:s} missing.'.format(
+            key.path, mru_value_name)
+        parser_context.ProduceParseError(
+            self.NAME, error_string, file_entry=file_entry)
+        continue
 
-      entry_list = []
-      text_dict = {}
-      for entry_index, mru_value_name in enumerate(mru_list_value.data):
-        value = key.GetValue(mru_value_name)
-        if value:
-          mru_value_string = value.data
-        if not value:
-          mru_value_string = u''
-          logging.error(u'No such MRU value: {0}.'.format(mru_value_name))
+      if not value.data:
+        error_string = u'Key: {0:s}, value: {1:s} data missing.'.format(
+            key.path, mru_value_name)
+        parser_context.ProduceParseError(
+            self.NAME, error_string, file_entry=file_entry)
+        continue
 
-        # Ignore any value that is empty.
-        elif not value.data:
-          logging.error(u'Missing MRU value: {0} data.'.format(mru_value_name))
-
+      if not value.DataIsString():
         # TODO: add support for shell item based MRU value data.
-        elif not value.DataIsString():
-          mru_value_string = u''
-          logging.error(u'Unsupported MRU value: {0} data type.'.format(
-              mru_value_name))
+        mru_value_string = u''
+      else:
+        mru_value_string = value.data
 
-        else:
-          mru_value_string = value.data
+      entry_list.append(mru_value_string)
+      text_dict[u'Index: {0:d} [MRU Value {1:s}]'.format(
+          entry_index + 1, mru_value_name)] = mru_value_string
 
-        entry_list.append(mru_value_string)
-        text_dict[u'Index: {0:d} [MRU Value {1:s}]'.format(
-            entry_index + 1, mru_value_name)] = mru_value_string
-
-      event_object = windows_events.WindowsRegistryEvent(
-          timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type, urls=self.URLS,
-          source_append=': MRU List')
-      event_object.mru_list = entry_list
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    event_object = windows_events.WindowsRegistryEvent(
+        timestamp, key.path, text_dict, offset=key.offset,
+        registry_type=registry_type, urls=self.URLS,
+        source_append=': MRU List')
+    event_object.mru_list = entry_list
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

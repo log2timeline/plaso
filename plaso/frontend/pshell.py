@@ -243,12 +243,17 @@ def ParseFile(file_entry):
   proc_queue = queue.SingleThreadedQueue()
   storage_queue = queue.SingleThreadedQueue()
   storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
+
+  parse_error_queue = queue.SingleThreadedQueue()
+  parse_error_queue_producer = queue.ParseErrorQueueProducer(parse_error_queue)
+
   parsers_list = parsers_manager.ParsersManager.FindAllParsers()
 
   # Create a worker.
+  # TODO: use engine instead of invoking the worker object directly.
   worker_object = worker.EventExtractionWorker(
-      'my_worker', proc_queue, storage_queue_producer, knowledge_base_object,
-      parsers_list)
+      'my_worker', proc_queue, storage_queue_producer,
+      parse_error_queue_producer, knowledge_base_object, parsers_list)
 
   # Parse the file.
   worker_object.ParseFile(file_entry)

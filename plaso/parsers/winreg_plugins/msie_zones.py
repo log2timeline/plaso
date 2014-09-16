@@ -17,8 +17,6 @@
 # limitations under the License.
 """This file contains the MSIE zone settings plugin."""
 
-import logging
-
 from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
@@ -157,7 +155,8 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
   }
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, file_entry=None, key=None, registry_type=None,
+      **unused_kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
@@ -166,6 +165,8 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
@@ -173,7 +174,9 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
     text_dict = {}
 
     if key.number_of_values == 0:
-      text_dict[u'Value'] = u'No values stored in key'
+      error_string = u'Key: {0:s} missing values.'.format(key.path)
+      parser_context.ProduceParseError(
+          self.NAME, error_string, file_entry=file_entry)
 
     else:
       for value in key.GetValues():
@@ -196,75 +199,69 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
         text_dict[value_name] = value_string
 
+    # Generate at least one event object for the key.
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict, offset=key.offset,
         registry_type=registry_type, urls=self.URLS)
     parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     if key.number_of_subkeys == 0:
-      logging.info('No subkeys for Internet Settings/Zones')
+      error_string = u'Key: {0:s} missing subkeys.'.format(key.path)
+      parser_context.ProduceParseError(
+          self.NAME, error_string, file_entry=file_entry)
+      return
+
+    for zone_key in key.GetSubkeys():
+      # TODO: these values are stored in the Description value of the
+      # zone key. This solution will break on zone values that are larger
+      # than 5.
+      path = u'{0:s}\\{1:s}'.format(key.path, self.ZONE_NAMES[zone_key.name])
 
       text_dict = {}
-      logging.errors(u'No Zones set for Internet Settings')
+
+      # TODO: this plugin currently just dumps the values and does not
+      # distinguish between what is a feature control or not.
+      for value in zone_key.GetValues():
+        # Ignore the default value.
+        if not value.name:
+          continue
+
+        if value.DataIsString():
+          value_string = value.data
+
+        elif value.DataIsInteger():
+          if value.name in self.KNOWN_PERMISSIONS_VALUE_NAMES:
+            value_string = self.CONTROL_VALUES_PERMISSIONS[value.data]
+          elif value.name == '1A00':
+            value_string = self.CONTROL_VALUES_1A00[value.data]
+          elif value.name == '1C00':
+            value_string = self.CONTROL_VALUES_1C00[value.data]
+          elif value.name == '1E05':
+            value_string = self.CONTROL_VALUES_SAFETY[value.data]
+          else:
+            value_string = u'{0:d}'.format(value.data)
+
+        else:
+          value_string = u'[{0:s}]'.format(value.data_type_string)
+
+        if len(value.name) == 4 and value.name != 'Icon':
+          value_description = self.FEATURE_CONTROLS.get(value.name, 'UNKNOWN')
+        else:
+          value_description = self.FEATURE_CONTROLS.get(value.name, '')
+
+        if value_description:
+          feature_control = u'[{0:s}] {1:s}'.format(
+              value.name, value_description)
+        else:
+          feature_control = u'[{0:s}]'.format(value.name)
+
+        text_dict[feature_control] = value_string
 
       event_object = windows_events.WindowsRegistryEvent(
-          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
-          registry_type=registry_type, urls=self.URLS)
+          zone_key.last_written_timestamp, path, text_dict, 
+          offset=zone_key.offset, registry_type=registry_type,
+          urls=self.URLS)
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
-
-    else:
-      for zone_key in key.GetSubkeys():
-        # TODO: these values are stored in the Description value of the
-        # zone key. This solution will break on zone values that are larger
-        # than 5.
-        path = u'{0:s}\\{1:s}'.format(
-            key.path, self.ZONE_NAMES[zone_key.name])
-
-        text_dict = {}
-
-        # TODO: this plugin currently just dumps the values and does not
-        # distinguish between what is a feature control or not.
-        for value in zone_key.GetValues():
-          # Ignore the default value.
-          if not value.name:
-            continue
-
-          if value.DataIsString():
-            value_string = value.data
-
-          elif value.DataIsInteger():
-            if value.name in self.KNOWN_PERMISSIONS_VALUE_NAMES:
-              value_string = self.CONTROL_VALUES_PERMISSIONS[value.data]
-            elif value.name == '1A00':
-              value_string = self.CONTROL_VALUES_1A00[value.data]
-            elif value.name == '1C00':
-              value_string = self.CONTROL_VALUES_1C00[value.data]
-            elif value.name == '1E05':
-              value_string = self.CONTROL_VALUES_SAFETY[value.data]
-            else:
-              value_string = u'{0:d}'.format(value.data)
-
-          else:
-            value_string = u'[{0:s}]'.format(value.data_type_string)
-
-          if len(value.name) == 4 and value.name != 'Icon':
-            value_description = self.FEATURE_CONTROLS.get(value.name, 'UNKNOWN')
-          else:
-            value_description = self.FEATURE_CONTROLS.get(value.name, '')
-
-          if value_description:
-            feature_control = u'[{0:s}] {1:s}'.format(
-                value.name, value_description)
-          else:
-            feature_control = u'[{0:s}]'.format(value.name)
-
-          text_dict[feature_control] = value_string
-
-        event_object = windows_events.WindowsRegistryEvent(
-            zone_key.last_written_timestamp, path, text_dict, 
-            offset=zone_key.offset, registry_type=registry_type,
-            urls=self.URLS)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):

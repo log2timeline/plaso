@@ -43,15 +43,17 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
   """
 
   def __init__(
-      self, identifier, process_queue, storage_queue_producer, knowledge_base,
-      parsers, rpc_proxy=None):
+      self, identifier, process_queue, event_queue_producer,
+      parse_error_queue_producer, knowledge_base, parsers, rpc_proxy=None):
     """Initializes the event extraction worker object.
 
     Args:
       identifier: A thread identifier, usually an incrementing integer.
       process_queue: the process queue (instance of Queue).
-      storage_queue_producer: the storage queue producer (instance of
-                              EventObjectQueueProducer).
+      event_queue_producer: the event object queue producer (instance of
+                            EventObjectQueueProducer).
+      parse_error_queue_producer: the parse error queue producer (instance of
+                            ParseErrorQueueProducer).
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
@@ -67,7 +69,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._knowledge_base = knowledge_base
     self._open_files = False
     self._parser_context = parsers_context.ParserContext(
-        storage_queue_producer, knowledge_base)
+        event_queue_producer, parse_error_queue_producer, knowledge_base)
     self._parsers = parsers
     self._rpc_proxy = rpc_proxy
 
@@ -75,7 +77,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     # issues with file objects stored in images.
     self._resolver_context = context.Context()
     self._single_process_mode = False
-    self._storage_queue_producer = storage_queue_producer
+    self._event_queue_producer = event_queue_producer
+    self._parse_error_queue_producer =  parse_error_queue_producer
 
     # Few attributes that contain the current status of the worker.
     self._current_working_file = u''
@@ -115,8 +118,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         event_object, parser_name=parser_name, file_entry=file_entry)
 
     if not self._parser_context.MatchesFilter(event_object):
-      self._storage_queue_producer.ProduceEventObject(event_object)
-      self._parser_context.number_of_produced_events += 1
+      self._event_queue_producer.ProduceEventObject(event_object)
+      self._parser_context.number_of_events += 1
 
   def ParseFile(self, file_entry):
     """Run through classifier and appropriate parsers.
@@ -191,7 +194,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         'is_running': self._is_running,
         'identifier': u'Worker_{0:d}'.format(self._identifier),
         'current_file': self._current_working_file,
-        'counter': self._parser_context.number_of_produced_events}
+        'counter': self._parser_context.number_of_events}
 
   def Run(self):
     """Start the worker, monitor the queue and parse files."""
@@ -200,7 +203,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
         self._identifier, self.pid))
 
-    self._parser_context.number_of_produced_events = 0
+    self._parser_context.ResetCounters()
     self._is_running = True
 
     if self._rpc_proxy:

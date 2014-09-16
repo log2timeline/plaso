@@ -40,8 +40,11 @@ class EngineTest(unittest.TestCase):
     """Test the engine functionality."""
     collection_queue = queue.SingleThreadedQueue()
     storage_queue = queue.SingleThreadedQueue()
+    parse_error_queue = queue.SingleThreadedQueue()
+
     resolver_context = context.Context()
-    test_engine = engine.Engine(collection_queue, storage_queue)
+    test_engine = engine.Engine(
+        collection_queue, storage_queue, parse_error_queue)
 
     self.assertNotEquals(test_engine, None)
 

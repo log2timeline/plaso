@@ -19,15 +19,14 @@
 
 import unittest
 
-from plaso.artifacts import knowledge_base
 from plaso.events import plist_event
 from plaso.lib import errors
 from plaso.lib import queue
-from plaso.parsers import context
 # Register plist plugins.
 from plaso.parsers import plist  # pylint: disable=unused-import
 from plaso.parsers import manager
 from plaso.parsers.plist_plugins import interface
+from plaso.parsers.plist_plugins import test_lib
 
 
 class MockPlugin(interface.PlistPlugin):
@@ -41,18 +40,16 @@ class MockPlugin(interface.PlistPlugin):
         1351827808261762)
 
 
-class TestPlistPlugin(unittest.TestCase):
+class TestPlistPlugin(test_lib.PlistPluginTestCase):
   """Tests for the plist plugin interface."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    # TODO: refactor to use test_lib.
     event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+    parse_error_queue = queue.SingleThreadedQueue()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    self._parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
+    self._parser_context = self._GetParserContext(
+        event_queue, parse_error_queue)
 
     self._top_level_dict = {
         'DeviceCache': {

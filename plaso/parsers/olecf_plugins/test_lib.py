@@ -21,12 +21,10 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.artifacts import knowledge_base
-from plaso.lib import queue
-from plaso.parsers import context
-from plaso.parsers import test_lib
-
 import pyolecf
+
+from plaso.lib import queue
+from plaso.parsers import test_lib
 
 
 class OleCfPluginTestCase(test_lib.ParserTestCase):
@@ -68,15 +66,12 @@ class OleCfPluginTestCase(test_lib.ParserTestCase):
     """
     event_queue = queue.SingleThreadedQueue()
     event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.iteritems():
-        knowledge_base_object.SetValue(identifier, value)
+    parse_error_queue = queue.SingleThreadedQueue()
 
-    parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
+    parser_context = self._GetParserContext(
+        event_queue, parse_error_queue,
+        knowledge_base_values=knowledge_base_values)
     olecf_file = self._OpenOleCfFile(path)
 
     # Get a list of all root items from the OLE CF file.
