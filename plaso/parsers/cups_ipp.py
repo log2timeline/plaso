@@ -15,7 +15,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The CUPS IPP Control Files Parser."""
+"""The CUPS IPP Control Files Parser.
+
+CUPS IPP version 1.0:
+* http://tools.ietf.org/html/rfc2565
+* http://tools.ietf.org/html/rfc2566
+* http://tools.ietf.org/html/rfc2567
+* http://tools.ietf.org/html/rfc2568
+* http://tools.ietf.org/html/rfc2569
+* http://tools.ietf.org/html/rfc2639
+
+CUPS IPP version 1.1:
+* http://tools.ietf.org/html/rfc2910
+* http://tools.ietf.org/html/rfc2911
+* http://tools.ietf.org/html/rfc3196
+* http://tools.ietf.org/html/rfc3510
+
+CUPS IPP version 2.0:
+* N/A
+"""
 
 import construct
 import logging
@@ -31,7 +49,6 @@ from plaso.parsers import interface
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-# INFO: http://tools.ietf.org/html/rfc291 (IPP 1.1, 2.0 not available)
 # TODO: RFC Pendings types: resolution, dateTime, rangeOfInteger.
 #       "dateTime" is not used by Mac OS, instead it uses integer types.
 # TODO: Only tested against CUPS IPP Mac OS X.
@@ -59,7 +76,7 @@ class CupsIppEvent(event.EventObject):
         job_name: String with the job name.
         copies: Integer with the number of copies.
         application: String with the application that prints the document.
-        doc_type: String with the type of document.
+        doc_usingtype: String with the type of document.
         data_dict: Dictionary with all the parsed data comming from the file.
     """
     super(CupsIppEvent, self).__init__()
@@ -99,7 +116,7 @@ class CupsIppEvent(event.EventObject):
 
     for index, value in enumerate(values):
       if ',' in value:
-        values[index] = u'"{}"'.format(value)
+        values[index] = u'"{0:s}"'.format(value)
 
     return u', '.join(values)
 
@@ -208,57 +225,59 @@ class CupsIppParser(interface.BaseParser):
         header.minor_version != self.IPP_MINOR_VERSION):
       file_object.close()
       raise errors.UnableToParseFile(
-          u'Not a valid CUPS IPP Header, wrong version number.')
+          u'[{0:s}] Unsupported version number.'.format(self.NAME))
 
     if header.operation_id != self.IPP_OP_ID:
       # Warn if the operation ID differs from the standard one. We should be
       # able to parse the file nonetheless.
-      logging.debug(u'Unknown Cups IPP Operation ID.')
+      logging.debug(
+          u'[{0:s}] Unsupported operation identifier in file: {1:s}.'.format(
+              self.NAME, parser_context.GetDisplayName(file_entry)))
 
     # Read the pairs extracting the name and the value.
     data_dict = {}
-    name, value = self.ReadPair(file_object)
+    name, value = self.ReadPair(parser_context, file_entry, file_object)
     while name or value:
       # Translate the known "name" CUPS IPP to a generic name value.
       pretty_name = self.NAME_PAIR_TRANSLATION.get(name, name)
       data_dict.setdefault(pretty_name, []).append(value)
-      name, value = self.ReadPair(file_object)
+      name, value = self.ReadPair(parser_context, file_entry, file_object)
 
     # Yield the events.
     if u'time-at-creation' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-creation'][0],
-          eventdata.EventTimestamp.CREATION_TIME,
-          data_dict)
+          eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
 
     if u'time-at-processing' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-processing'][0],
-          eventdata.EventTimestamp.START_TIME,
-          data_dict)
+          eventdata.EventTimestamp.START_TIME, data_dict)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
 
     if u'time-at-completed' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-completed'][0],
-          eventdata.EventTimestamp.END_TIME,
-          data_dict)
+          eventdata.EventTimestamp.END_TIME, data_dict)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()
 
-  def ReadPair(self, file_object):
-    """Read and return back an attribute name and value from a CUPS IPP event.
+  def ReadPair(self, parser_context, file_entry, file_object):
+    """Reads an attribute name and value pair from a CUPS IPP event.
 
     Args:
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
       file_object: a file-like object that points to a file.
 
     Returns:
-      A list of name and value.
+      A list of name and value. If name and value cannot be read both are
+      set to None.
     """
     # Pair = Type ID + Name + Value.
     try:
@@ -268,37 +287,49 @@ class CupsIppParser(interface.BaseParser):
       type_id = self.INTEGER_8.parse_stream(file_object)
       if type_id == self.GROUP_END:
         return None, None
+
       elif type_id in self.GROUP_LIST:
         # If it is a group ID we must read the next byte that contains
         # the first TagID.
         type_id = self.INTEGER_8.parse_stream(file_object)
+
       # 0x00 separator character.
       _ = self.INTEGER_8.parse_stream(file_object)
+
     except (IOError, construct.FieldError):
-      logging.warning(u'Unknown ID in CUPS IPP')
+      logging.warning(
+          u'[{0:s}] Unsupported identifier in file: {1:s}.'.format(
+              self.NAME, parser_context.GetDisplayName(file_entry)))
       return None, None
 
     # Name = Length name + name + 0x00
     try:
       name = self.PAIR_NAME.parse_stream(file_object).text
     except (IOError, construct.FieldError):
-      logging.warning(u'Unknown Name in CUPS IPP')
+      logging.warning(
+          u'[{0:s}] Unsupported name in file: {1:s}.'.format(
+              self.NAME, parser_context.GetDisplayName(file_entry)))
       return None, None
 
     # Value: can be integer, boolean or text select by Type ID.
     try:
-      if (type_id == self.TYPE_GENERAL_INTEGER or
-          type_id == self.TYPE_INTEGER or
-          type_id == self.TYPE_ENUMERATION):
+      if type_id in [
+          self.TYPE_GENERAL_INTEGER, self.TYPE_INTEGER, self.TYPE_ENUMERATION]:
         value = self.INTEGER.parse_stream(file_object).integer
+
       elif type_id == self.TYPE_BOOL:
         if self.BOOLEAN.parse_stream(file_object).integer == 0:
           value = False
         else:
           value = True
+
       else:
         value = self.TEXT.parse_stream(file_object)
+
     except (IOError, construct.FieldError):
-      logging.warning(u'Unknown Value in CUPS IPP')
+      logging.warning(
+          u'[{0:s}] Unsupported value in file: {1:s}.'.format(
+              self.NAME, parser_context.GetDisplayName(file_entry)))
       return None, None
+
     return name, value
