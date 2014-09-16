@@ -22,7 +22,6 @@ import logging
 import uuid
 
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.lib import utils
 
@@ -374,40 +373,6 @@ class EventTag(object):
       return True
 
     return False
-
-
-class WinRegistryEvent(EventObject):
-  """Convenience class for a Windows Registry-based event."""
-
-  DATA_TYPE = 'windows:registry:key_value'
-
-  def __init__(self, key, value_dict, timestamp=None, usage=None, offset=None,
-               source_append=None):
-    """Initializes a Windows registry event.
-
-    Args:
-      key: Name of the registry key being parsed.
-      value_dict: The interpreted value of the key, stored as a dictionary.
-      timestamp: Optional timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      usage: The description of the usage of the time value.
-      offset: The (data) offset of the Registry key or value.
-      source_append: To append values to the source_long of an event.
-    """
-    super(WinRegistryEvent, self).__init__()
-    self.timestamp = timestamp
-    self.timestamp_desc = usage or eventdata.EventTimestamp.WRITTEN_TIME
-
-    if key:
-      self.keyname = key
-
-    self.regvalue = value_dict
-
-    if offset or type(offset) in [int, long]:
-      self.offset = offset
-
-    if source_append:
-      self.source_append = source_append
 
 
 class PreprocessObject(object):

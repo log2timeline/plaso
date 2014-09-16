@@ -72,6 +72,23 @@ from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
 
 
+class PregEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
+  """Class that implements a list event object queue consumer."""
+
+  def __init__(self, event_queue):
+    """Initializes the list event object queue consumer.
+
+    Args:
+      event_queue: the event object queue (instance of Queue).
+    """
+    super(PregEventObjectQueueConsumer, self).__init__(event_queue)
+    self.event_objects = []
+
+  def _ConsumeEventObject(self, event_object, **unused_kwargs):
+    """Consumes an event object callback for ConsumeEventObjects."""
+    self.event_objects.append(event_object)
+
+
 class RegCache(object):
   """Cache for current hive and Registry key."""
 
@@ -1144,7 +1161,7 @@ def ParseHive(
   print_strings = []
   for name, hive_collector in hive_collectors:
     # Printing '*' 80 times.
-    print_strings.append(u'*'*80)
+    print_strings.append(u'*' * 80)
     print_strings.append(
         u'{0:>15} : {1:s}{2:s}'.format(u'Hive File', hive_path, name))
     if hive_path_spec:
@@ -1238,6 +1255,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
         plugins[weight].append(plugin(reg_cache=RegCache.reg_cache))
 
   event_queue = queue.SingleThreadedQueue()
+  event_queue_consumer = PregEventObjectQueueConsumer(event_queue)
   event_queue_producer = queue.EventObjectQueueProducer(event_queue)
   parser_context = parsers_context.ParserContext(
       event_queue_producer, RegCache.knowledge_base_object)
@@ -1246,8 +1264,10 @@ def ParseKey(key, verbose=False, use_plugins=None):
   # Run all the plugins in the correct order of weight.
   for weight in plugins:
     for plugin in plugins[weight]:
-      event_objects_generator = plugin.Process(parser_context, key=key)
-      if not event_objects_generator:
+      plugin.Process(parser_context, key=key)
+
+      event_queue_consumer.ConsumeEventObjects()
+      if not event_queue_consumer.event_objects:
         continue
 
       print_strings.append(u'')
@@ -1265,11 +1285,18 @@ def ParseKey(key, verbose=False, use_plugins=None):
           print_strings.append(u'{0:>17s} {1:s}'.format(u'URL :', url))
         print_strings.append(u'')
 
+      # TODO: move into the event queue consumer.
       event_objects_and_timestamps = {}
-      for event_object in event_objects_generator:
+      event_object = event_queue_consumer.event_objects.pop(0)
+      while event_object:
         RegCache.events_from_last_parse.append(event_object)
         event_objects_and_timestamps.setdefault(
             event_object.timestamp, []).append(event_object)
+
+        if event_queue_consumer.event_objects:
+          event_object = event_queue_consumer.event_objects.pop(0)
+        else:
+          event_object = None
 
       if not event_objects_and_timestamps:
         continue

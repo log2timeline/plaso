@@ -19,7 +19,7 @@
 
 import logging
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -32,15 +32,15 @@ class MRUListPlugin(interface.ValuePlugin):
   REG_VALUES = frozenset(['MRUList', 'a'])
   URLS = [u'http://forensicartifacts.com/tag/mru/']
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Extracts event objects from a MRU list.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      An event object (instance of EventObject) that contains a MRU list.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     mru_list_value = key.GetValue('MRUList')
 
@@ -48,8 +48,10 @@ class MRUListPlugin(interface.ValuePlugin):
       text_dict = {}
       logging.error(u'missing MRUList value.')
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp)
+      event_object = windows_events.WindowsRegistryEvent(
+          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type, urls=self.URLS)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     else:
       timestamp = key.last_written_timestamp
@@ -81,8 +83,9 @@ class MRUListPlugin(interface.ValuePlugin):
         text_dict[u'Index: {0:d} [MRU Value {1:s}]'.format(
             entry_index + 1, mru_value_name)] = mru_value_string
 
-      event_object = event.WinRegistryEvent(
-          key.path, text_dict, timestamp=timestamp,
+      event_object = windows_events.WindowsRegistryEvent(
+          timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type, urls=self.URLS,
           source_append=': MRU List')
       event_object.mru_list = entry_list
-      yield event_object
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

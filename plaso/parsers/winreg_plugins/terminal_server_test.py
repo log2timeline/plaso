@@ -54,8 +54,8 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, expected_timestamp, None, offset=865, subkeys=[server_key])
 
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1)
 
@@ -94,8 +94,8 @@ class DefaulTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, expected_timestamp, values, 1456)
 
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 2)
 

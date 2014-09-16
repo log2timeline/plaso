@@ -22,8 +22,8 @@ import logging
 
 import construct
 
+from plaso.events import windows_events
 from plaso.lib import binary
-from plaso.lib import event
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
 
@@ -76,12 +76,14 @@ class MRUListExPluginMixin(object):
 
     return enumerate(mru_list)
 
-  def _ParseMRUListExKey(self, parser_context, key, codepage='cp1252'):
+  def _ParseMRUListExKey(
+      self, parser_context, key, registry_type=None, codepage='cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey).
+      registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
@@ -95,8 +97,9 @@ class MRUListExPluginMixin(object):
           parser_context, key, index, entry_number, text_dict,
           codepage=codepage)
 
-    event_object = event.WinRegistryEvent(
-        key.path, text_dict, timestamp=key.last_written_timestamp,
+    event_object = windows_events.WindowsRegistryEvent(
+        key.last_written_timestamp, key.path, text_dict,
+        offset=key.offset, registry_type=registry_type,
         source_append=': MRUListEx')
     parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
@@ -119,7 +122,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
           lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)))
 
   def _ParseMRUListExEntryValue(
-      self, unused_parser_context, key, entry_index, entry_number, text_dict,
+      self, parser_context, key, entry_index, entry_number, text_dict,
       **unused_kwargs):
     """Parses the MRUListEx entry value.
 
@@ -163,15 +166,19 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
     text_dict[value_text] = value_string
 
   def GetEntries(
-     self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    self._ParseMRUListExKey(parser_context, key, codepage=codepage)
+    self._ParseMRUListExKey(
+        parser_context, key, registry_type=registry_type, codepage=codepage)
 
   def Process(self, parser_context, key=None, codepage='cp1252', **kwargs):
     """Determine if we can process this Registry key or not.
@@ -243,22 +250,28 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
     text_dict[value_text] = value_string
 
   def GetEntries(
-      self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     if key.name != u'OpenSavePidlMRU':
-      self._ParseMRUListExKey(parser_context, key, codepage=codepage)
+      self._ParseMRUListExKey(
+          parser_context, key, registry_type=registry_type, codepage=codepage)
 
     if key.name == u'OpenSavePidlMRU':
       # For the OpenSavePidlMRU MRUListEx we also need to parse its subkeys
       # since the Registry key path does not support wildcards yet.
       for subkey in key.GetSubkeys():
-        self._ParseMRUListExKey(parser_context, subkey, codepage=codepage)
+        self._ParseMRUListExKey(
+            parser_context, subkey, registry_type=registry_type,
+            codepage=codepage)
 
 
 class MRUListExStringAndShellItemPlugin(
@@ -340,21 +353,27 @@ class MRUListExStringAndShellItemPlugin(
     text_dict[value_text] = value_string
 
   def GetEntries(
-      self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    self._ParseMRUListExKey(parser_context, key, codepage=codepage)
+    self._ParseMRUListExKey(
+        parser_context, key, registry_type=registry_type, codepage=codepage)
 
     if key.name == u'RecentDocs':
       # For the RecentDocs MRUListEx we also need to parse its subkeys
       # since the Registry key path does not support wildcards yet.
       for subkey in key.GetSubkeys():
-        self._ParseMRUListExKey(parser_context, subkey, codepage=codepage)
+        self._ParseMRUListExKey(
+            parser_context, subkey, registry_type=registry_type,
+            codepage=codepage)
 
 
 class MRUListExStringAndShellItemListPlugin(
@@ -437,12 +456,16 @@ class MRUListExStringAndShellItemListPlugin(
     text_dict[value_text] = value_string
 
   def GetEntries(
-      self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    self._ParseMRUListExKey(parser_context, key, codepage=codepage)
+    self._ParseMRUListExKey(
+        parser_context, key, registry_type=registry_type, codepage=codepage)

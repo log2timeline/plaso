@@ -46,8 +46,8 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, 1346145829002031, values, 1456)
 
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     expected_msg = (
         u'[{0:s}] '

@@ -18,7 +18,7 @@
 
 import re
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -39,15 +39,15 @@ class TypedURLsPlugin(interface.KeyPlugin):
 
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Collect typed URLs values.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      An event object for every typed URL.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     for value in key.GetValues():
       # Ignore any value not in the form: 'url[0-9]+'.
@@ -68,6 +68,8 @@ class TypedURLsPlugin(interface.KeyPlugin):
       text_dict = {}
       text_dict[value.name] = value.data
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=timestamp,
+      event_object = windows_events.WindowsRegistryEvent(
+          timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type,
           source_append=u': {0:s}'.format(self.DESCRIPTION))
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

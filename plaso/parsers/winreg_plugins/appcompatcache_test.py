@@ -40,9 +40,9 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
 
-    event_generator = self._ParseKeyWithPlugin(
+    event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 330)
 
@@ -61,6 +61,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'Path: \\??\\C:\\Windows\\PSEXESVC.EXE')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -19,7 +19,7 @@
 
 import re
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -42,13 +42,15 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
 
   _RE_VALUE_NAME = re.compile(r'^[0-9]+$', re.I)
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Collect values under WinRAR ArcHistory and return event for each one.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The Registry key (instance of winreg.WinRegKey) in which the value
-           is stored.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     for value in key.GetValues():
       # Ignore any value not in the form: '[0-9]+'.
@@ -69,6 +71,8 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
 
       # TODO: shouldn't this behavior be, put all the values
       # into a single event object with the last written time of the key?
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=timestamp,
+      event_object = windows_events.WindowsRegistryEvent(
+          timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type,
           source_append=': {0:s}'.format(self.DESCRIPTION))
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
