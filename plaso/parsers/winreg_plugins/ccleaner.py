@@ -17,7 +17,7 @@
 # limitations under the License.
 """Parser for the CCleaner Registry key."""
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import interface
 
@@ -34,12 +34,15 @@ class CCleanerPlugin(interface.KeyPlugin):
   REG_TYPE = 'NTUSER'
   DESCRIPTION = 'CCleaner Registry key'
 
-  def GetEntries(self, parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Extracts event objects from a CCleaner Registry key.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     for value in key.GetValues():
       if not value.name or not value.data:
@@ -51,14 +54,20 @@ class CCleanerPlugin(interface.KeyPlugin):
       if value.name == u'UpdateKey':
         timestamp = timelib.Timestamp.FromTimeString(
             value.data, timezone=parser_context.timezone)
-        event_object = event.WinRegistryEvent(key.path, text_dict, timestamp)
+        event_object = windows_events.WindowsRegistryEvent(
+            timestamp, key.path, text_dict, offset=key.offset,
+            registry_type=registry_type)
 
       elif value.name == '0':
-        event_object = event.WinRegistryEvent(
-            key.path, text_dict, key.timestamp)
+        event_object = windows_events.WindowsRegistryEvent(
+            key.timestamp, key.path, text_dict, offset=key.offset,
+            registry_type=registry_type)
 
       else:
-        event_object = event.WinRegistryEvent(key.path, text_dict, 0)
+        # TODO: change this event not to set a timestamp of 0.
+        event_object = windows_events.WindowsRegistryEvent(
+            0, key.path, text_dict, offset=key.offset,
+            registry_type=registry_type)
 
       event_object.source_append = u': {0:s}'.format(self.DESCRIPTION)
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

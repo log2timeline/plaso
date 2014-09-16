@@ -21,7 +21,7 @@ import logging
 
 import construct
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import environ_expand
@@ -86,16 +86,15 @@ class UserAssistPlugin(interface.KeyPlugin):
       construct.ULInt64('timestamp'),
       construct.Padding(4))
 
-  def GetEntries(self, parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      An event object (instance of EventObject) that contains an user assist
-      entry.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     version_value = key.GetValue('Version')
     count_subkey = key.GetSubkey('Count')
@@ -167,10 +166,10 @@ class UserAssistPlugin(interface.KeyPlugin):
 
             text_dict = {}
             text_dict[value_name] = u'[Count: {0:d}]'.format(count)
-            yield event.WinRegistryEvent(
-                count_subkey.path, text_dict,
-                timestamp=timelib.Timestamp.FromFiletime(filetime),
-                offset=value.offset)
+            event_object = windows_events.WindowsRegistryEvent(
+                timelib.Timestamp.FromFiletime(filetime), count_subkey.path,
+                text_dict, offset=value.offset, registry_type=registry_type)
+            parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
         elif version_value.data == 5:
           if len(value.data) != self.USERASSIST_V5_STRUCT.sizeof():
@@ -191,6 +190,8 @@ class UserAssistPlugin(interface.KeyPlugin):
               u'Application focus count: {2:d}, Focus duration: {3:d}]').format(
               userassist_entry_index, count, app_focus_count, focus_duration)
 
-          yield event.WinRegistryEvent(
-              count_subkey.path, text_dict,
-              timestamp=timelib.Timestamp.FromFiletime(timestamp))
+          event_object = windows_events.WindowsRegistryEvent(
+              timelib.Timestamp.FromFiletime(timestamp), count_subkey.path,
+              text_dict, offset=count_subkey.offset,
+              registry_type=registry_type)
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

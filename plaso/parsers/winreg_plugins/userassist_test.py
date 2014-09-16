@@ -41,8 +41,8 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         u'\\{75048700-EF1F-11D0-9888-006097DEACF9}')
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 14)
 
@@ -70,8 +70,8 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         u'\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 62)
 

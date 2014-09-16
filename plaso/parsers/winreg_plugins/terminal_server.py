@@ -17,7 +17,7 @@
 # limitations under the License.
 """This file contains the Terminal Server Registry plugins."""
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -35,13 +35,15 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Servers',
       u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Collect Values in Servers and return event for each one.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The Registry key (instance of winreg.WinRegKey) in which the value
-           is stored.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     for subkey in key.GetSubkeys():
       username_value = subkey.GetValue('UsernameHint')
@@ -55,9 +57,11 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       text_dict = {}
       text_dict['UsernameHint'] = username
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp,
+      event_object = windows_events.WindowsRegistryEvent(
+          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type,
           source_append=': {0:s}'.format(self.DESCRIPTION))
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class TerminalServerClientMRUPlugin(interface.KeyPlugin):
@@ -72,13 +76,15 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Default',
       u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Collect MRU Values and return event for each one.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The Registry key (instance of winreg.WinRegKey) in which the value
-           is stored.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     for value in key.GetValues():
       # TODO: add a check for the value naming scheme.
@@ -98,6 +104,8 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       else:
         timestamp = 0
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=timestamp,
+      event_object = windows_events.WindowsRegistryEvent(
+          timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type,
           source_append=u': {0:s}'.format(self.DESCRIPTION))
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

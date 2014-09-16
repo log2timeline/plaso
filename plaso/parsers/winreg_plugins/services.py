@@ -17,7 +17,7 @@
 # limitations under the License.
 """Plug-in to format the Services and Drivers key with Start and Type values."""
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -166,7 +166,8 @@ class ServicesPlugin(interface.ValuePlugin):
     else:
       return None
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Create one event for each subkey under Services that has Type and Start.
 
     Adds descriptions of the ErrorControl, Type and Start Values.
@@ -175,10 +176,9 @@ class ServicesPlugin(interface.ValuePlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      Event objects extracted from the Windows service values.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     text_dict = {}
 
@@ -232,6 +232,7 @@ class ServicesPlugin(interface.ValuePlugin):
           elif value.DataIsMultiString():
             text_dict[value.name] = u', '.join(value.data)
 
-      event_object = event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp)
-      yield event_object
+      event_object = windows_events.WindowsRegistryEvent(
+          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type, urls=self.URLS)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

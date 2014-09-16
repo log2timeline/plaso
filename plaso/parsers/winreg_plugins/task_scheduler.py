@@ -21,9 +21,8 @@ import logging
 
 import construct
 
+from plaso.events import windows_events
 from plaso.events import time_events
-from plaso.lib import event
-from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -66,8 +65,8 @@ class TaskCachePlugin(interface.KeyPlugin):
   _DYNAMIC_INFO_STRUCT = construct.Struct(
       'dynamic_info_record',
       construct.ULInt32('version'),
-      construct.ULInt64('filetime1'),
-      construct.ULInt64('filetime2'),
+      construct.ULInt64('last_registered_time'),
+      construct.ULInt64('launch_time'),
       construct.Padding(8))
 
   _DYNAMIC_INFO_STRUCT_SIZE = _DYNAMIC_INFO_STRUCT.sizeof()
@@ -90,16 +89,15 @@ class TaskCachePlugin(interface.KeyPlugin):
       for value_key, id_value in self._GetIdValue(sub_key):
         yield value_key, id_value
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Parses a Task Cache Registry key.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      An event object (instance of EventObject) that contains a Task Cache
-      entry.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     tasks_key = key.GetSubkey(u'Tasks')
     tree_key = key.GetSubkey(u'Tree')
@@ -138,19 +136,23 @@ class TaskCachePlugin(interface.KeyPlugin):
       text_dict = {}
       text_dict[u'Task: {0:s}'.format(name)] = u'[ID: {0:s}]'.format(
           sub_key.name)
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp)
+      event_object = windows_events.WindowsRegistryEvent(
+          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
-      if dynamic_info.filetime1:
-        # TODO: Determine what meaning this timestamp has.
-        yield TaskCacheEvent(
-            dynamic_info.filetime1, eventdata.EventTimestamp.UNKNOWN,
-            name, sub_key.name)
+      if dynamic_info.last_registered_time:
+        # Note this is likely either the last registered time or
+        # the update time.
+        event_object = TaskCacheEvent(
+            dynamic_info.last_registered_time, u'Last registered time', name,
+            sub_key.name)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
-      if dynamic_info.filetime2:
-        # TODO: Determine what meaning this timestamp has.
-        yield TaskCacheEvent(
-            dynamic_info.filetime2, eventdata.EventTimestamp.UNKNOWN,
-            name, sub_key.name)
+      if dynamic_info.launch_time:
+        # Note this is likely the launch time.
+        event_object = TaskCacheEvent(
+            dynamic_info.launch_time, u'Launch time', name, sub_key.name)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     # TODO: Add support for the Triggers value.
