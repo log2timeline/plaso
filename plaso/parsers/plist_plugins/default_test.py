@@ -20,11 +20,10 @@
 import datetime
 import unittest
 
-from plaso.artifacts import knowledge_base
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
 from plaso.lib import queue
-from plaso.parsers import context
+from plaso.lib import timelib_test
 from plaso.parsers.plist_plugins import default
 from plaso.parsers.plist_plugins import test_lib
 
@@ -38,13 +37,11 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = default.DefaultPlugin()
 
-    # TODO: refactor to use test_lib.
     event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+    parse_error_queue = queue.SingleThreadedQueue()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    self._parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
+    self._parser_context = self._GetParserContext(
+        event_queue, parse_error_queue)
 
   def testProcessSingle(self):
     """Tests Process on a plist containing a root, value and timestamp."""
@@ -54,17 +51,17 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
             datetime.datetime(
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.utc)}}
 
-    events = list(self._plugin.Process(
-        self._parser_context, plist_name='single',
-        top_level=top_level_dict_single))
-    event_objects = self._GetEventObjects(events)
+    event_object_generator = self._ParsePlistWithPlugin(
+        self._plugin, self._parser_context, 'single', top_level_dict_single)
+    event_objects = self._GetEventObjects(event_object_generator)
 
     self.assertEquals(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    # Fri Nov  2 02:21:38.997672 CET 2012
-    self.assertEquals(event_object.timestamp, 1351819298997672)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-11-02 01:21:38.997672')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.root, u'/DE-00-AD-00-BE-EF')
     self.assertEquals(event_object.key, u'LastUsed')
 
@@ -101,17 +98,17 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 datetime.datetime(
                     2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.utc)}}}
 
-    events = list(self._plugin.Process(
-        self._parser_context, plist_name='nested',
-        top_level=top_level_dict_many_keys))
-    event_objects = self._GetEventObjects(events)
+    event_object_generator = self._ParsePlistWithPlugin(
+        self._plugin, self._parser_context, 'nested', top_level_dict_many_keys)
+    event_objects = self._GetEventObjects(event_object_generator)
 
     self.assertEquals(len(event_objects), 5)
 
     event_object = event_objects[0]
 
-    # Thu Apr  7 19:56:53.524275 CEST 2011
-    self.assertEquals(event_object.timestamp, 1302199013524275)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-04-07 17:56:53.524275')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
     self.assertEquals(event_object.key, u'LastNameUpdate')
 

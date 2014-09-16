@@ -21,18 +21,22 @@ import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
+from plaso.lib import event
 from plaso.lib import utils
 
 
 class ParserContext(object):
   """Class that implements the parser context."""
 
-  def __init__(self, event_queue_producer, knowledge_base):
+  def __init__(
+      self, event_queue_producer, parse_error_queue_producer, knowledge_base):
     """Initializes a parser context object.
 
     Args:
-      event_queue_producer: the event object producer (instance of
+      event_queue_producer: the event object queue producer (instance of
                             EventObjectQueueProducer).
+      parse_error_queue_producer: the parse error queue producer (instance of
+                            ParseErrorQueueProducer).
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
@@ -42,9 +46,11 @@ class ParserContext(object):
     self._filter_object = None
     self._knowledge_base = knowledge_base
     self._mount_path = None
+    self._parse_error_queue_producer = parse_error_queue_producer
     self._text_prepend = None
 
-    self.number_of_produced_events = 0
+    self.number_of_events = 0
+    self.number_of_parse_errors = 0
 
   @property
   def codepage(self):
@@ -208,7 +214,7 @@ class ParserContext(object):
       return
 
     self._event_queue_producer.ProduceEventObject(event_object)
-    self.number_of_produced_events += 1
+    self.number_of_events += 1
 
   def ProduceEvents(
       self, event_objects, parser_name=None, plugin_name=None, file_entry=None,
@@ -228,6 +234,26 @@ class ParserContext(object):
       self.ProduceEvent(
           event_object, parser_name=parser_name, plugin_name=plugin_name,
           file_entry=file_entry, query=query)
+
+  def ProduceParseError(self, name, description, file_entry=None):
+    """Produces a parse error.
+
+    Args:
+      name: The parser or plugin name.
+      description: The description of the error.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+    """
+    if self._parse_error_queue_producer:
+      path_spec = getattr(file_entry, 'path_spec', None)
+      parse_error = event.ParseError(name, description, path_spec=path_spec)
+      self._parse_error_queue_producer.ProduceParseError(parse_error)
+      self.number_of_parse_errors += 1
+
+  def ResetCounters(self):
+    """Resets the counters."""
+    self.number_of_events = 0
+    self.number_of_parse_errors = 0
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.

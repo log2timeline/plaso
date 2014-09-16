@@ -147,7 +147,8 @@ class WinRegistryParser(interface.BaseParser):
         # to the next key.
         for plugin in plugins[weight]:
           plugin.Process(
-              parser_context, key=key, registry_type=self._registry_type,
+              parser_context, file_entry=file_entry, key=key,
+              registry_type=self._registry_type,
               codepage=parser_context.codepage)
 
     winreg_file.Close()

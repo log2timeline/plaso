@@ -21,9 +21,7 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.artifacts import knowledge_base
 from plaso.lib import queue
-from plaso.parsers import context
 from plaso.parsers import test_lib
 
 
@@ -47,15 +45,12 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
       A generator of event objects as returned by the plugin.
     """
     event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.iteritems():
-        knowledge_base_object.SetValue(identifier, value)
+    parse_error_queue = queue.SingleThreadedQueue()
 
-    parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
+    parser_context = self._GetParserContext(
+        event_queue, parse_error_queue,
+        knowledge_base_values=knowledge_base_values)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
@@ -64,6 +59,22 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     top_level_object = parser_object.GetTopLevel(file_object)
     self.assertNotEquals(top_level_object, None)
 
+    return self._ParsePlistWithPlugin(
+        plugin_object, parser_context, plist_name, top_level_object)
+
+  def _ParsePlistWithPlugin(
+      self, plugin_object, parser_context, plist_name, top_level_object):
+    """Parses a plist using the plugin object.
+
+    Args:
+      plugin_object: the plugin object.
+      parser_context: A parser context object (instance of ParserContext).
+      plist_name: the name of the plist to parse.
+      top_level_object: the top-level plist object.
+
+    Returns:
+      A generator of event objects as returned by the plugin.
+    """
     event_generator = plugin_object.Process(
         parser_context, plist_name=plist_name, top_level=top_level_object)
     self.assertNotEquals(event_generator, None)

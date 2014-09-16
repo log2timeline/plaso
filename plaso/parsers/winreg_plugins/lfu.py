@@ -63,13 +63,16 @@ class BootExecutePlugin(interface.KeyPlugin):
   URLS = ['http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, file_entry=None, key=None, registry_type=None,
+      **unused_kwargs):
     """Gather the BootExecute Value, compare to default, return event.
 
     The rest of the values in the Session Manager key are in a separate event.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
@@ -87,14 +90,17 @@ class BootExecutePlugin(interface.KeyPlugin):
         elif value.DataIsBinaryData():
           value_string = value.data
         else:
-          value_string = (
-             u'unsupported value data type: {0:s}.').format(
-             value.data_type_string)
+          value_string = u''
+          error_string = (
+              u'Key: {0:s}, value: {1:s}: unuspported value data type: '
+              u'{2:s}.').format(key.path, value.name, value.data_type_string)
+          parser_context.ProduceParseError(
+              self.NAME, error_string, file_entry=file_entry)
 
-        boot_dict = {'BootExecute': value_string}
-
+        # TODO: why does this have a separate event object? Remove this.
+        value_dict = {'BootExecute': value_string}
         event_object = windows_events.WindowsRegistryEvent(
-            key.last_written_timestamp, key.path, boot_dict, offset=key.offset,
+            key.last_written_timestamp, key.path, value_dict, offset=key.offset,
             registry_type=registry_type, urls=self.URLS)
         parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
