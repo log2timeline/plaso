@@ -19,17 +19,12 @@
 
 import unittest
 
-from plaso.artifacts import knowledge_base
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
-from plaso.lib import queue
 from plaso.lib import timelib_test
-from plaso.parsers import context
 from plaso.parsers.winreg_plugins import services
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
-from plaso.winreg import winregistry
 
 
 class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
@@ -61,18 +56,22 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     values.append(winreg_test_lib.TestRegValue(
         'ImagePath', 'C:\\Dell\\testdriver.sys'.encode('utf_16_le'), 1, 200))
 
+    timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
-        key_path, 1346145829002031, values, 1456)
+        key_path, timestamp, values, 1456)
 
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    # Timestamp is: Tue, 28 Aug 2012 09:23:49 GMT.
-    self.assertEquals(event_object.timestamp, 1346145829002031)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-08-28 09:23:49.002031')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+
     # TODO: Remove RegAlert completely
     # self.assertTrue(event_object.regalert)
 
@@ -95,17 +94,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
-    # TODO: refactor to use test_lib.
-    event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_context = context.ParserContext(
-        event_queue_producer, knowledge_base_object)
-
     test_file = self._GetTestFilePath(['SYSTEM'])
     key_path = u'\\ControlSet001\\services'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
@@ -118,18 +108,18 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     rdp_video_miniport_event_objects = None
 
     for winreg_subkey in winreg_key.GetSubkeys():
-      event_generator = self._plugin.Process(
-          parser_context, key=winreg_subkey)
-      if event_generator:
-        sub_event_objects = self._GetEventObjects(event_generator)
-        event_objects.extend(sub_event_objects)
+      event_queue_consumer = self._ParseKeyWithPlugin(
+          self._plugin, winreg_subkey)
+      sub_event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-        if winreg_subkey.name == 'BITS':
-          bits_event_objects = sub_event_objects
-        elif winreg_subkey.name == 'McTaskManager':
-          mc_task_manager_event_objects = sub_event_objects
-        elif winreg_subkey.name == 'RdpVideoMiniport':
-          rdp_video_miniport_event_objects = sub_event_objects
+      event_objects.extend(sub_event_objects)
+
+      if winreg_subkey.name == 'BITS':
+        bits_event_objects = sub_event_objects
+      elif winreg_subkey.name == 'McTaskManager':
+        mc_task_manager_event_objects = sub_event_objects
+      elif winreg_subkey.name == 'RdpVideoMiniport':
+        rdp_video_miniport_event_objects = sub_event_objects
 
     self.assertEquals(len(event_objects), 416)
 
@@ -164,8 +154,9 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = rdp_video_miniport_event_objects[0]
 
-    # '2011-09-17T13:37:59.347157.
-    self.assertEquals(event_object.timestamp, 1316266679347157)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2011-09-17 13:37:59.347157')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'Start', u'Manual (3)')
     expected_value = u'System32\\drivers\\rdpvideominiport.sys'

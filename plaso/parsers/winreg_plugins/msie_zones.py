@@ -19,7 +19,7 @@
 
 import logging
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -156,7 +156,8 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
   }
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
@@ -165,10 +166,9 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      An event object of the an individual Internet Setting Registry key.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     text_dict = {}
 
@@ -196,9 +196,10 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
         text_dict[value_name] = value_string
 
-    yield event.WinRegistryEvent(
-        key.path, text_dict, timestamp=key.last_written_timestamp,
-        offset=key.offset)
+    event_object = windows_events.WindowsRegistryEvent(
+        key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+        registry_type=registry_type, urls=self.URLS)
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     if key.number_of_subkeys == 0:
       logging.info('No subkeys for Internet Settings/Zones')
@@ -206,9 +207,10 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       text_dict = {}
       logging.errors(u'No Zones set for Internet Settings')
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp,
-          offset=key.offset)
+      event_object = windows_events.WindowsRegistryEvent(
+          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type, urls=self.URLS)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     else:
       for zone_key in key.GetSubkeys():
@@ -258,8 +260,11 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
           text_dict[feature_control] = value_string
 
-        yield event.WinRegistryEvent(
-            path, text_dict, timestamp=zone_key.last_written_timestamp)
+        event_object = windows_events.WindowsRegistryEvent(
+            zone_key.last_written_timestamp, path, text_dict, 
+            offset=zone_key.offset, registry_type=registry_type,
+            urls=self.URLS)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):

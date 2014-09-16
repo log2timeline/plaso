@@ -18,7 +18,7 @@
 
 import logging
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.lib import eventdata
 from plaso.parsers.winreg_plugins import interface
 
@@ -35,23 +35,27 @@ class USBStorPlugin(interface.KeyPlugin):
   REG_TYPE = 'SYSTEM'
   DESCRIPTION = 'USBStor Entries'
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Collect Values under USBStor and return an event object for each one.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The Registry key (instance of winreg.WinRegKey) in which the value
-           is stored.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     for subkey in key.GetSubkeys():
       text_dict = {}
       text_dict['subkey_name'] = subkey.name
 
       # Time last USB device of this class was first inserted.
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=subkey.last_written_timestamp,
-          usage=eventdata.EventTimestamp.FIRST_CONNECTED,
+      event_object = windows_events.WindowsRegistryEvent(
+          subkey.last_written_timestamp, key.path, text_dict,
+          usage=eventdata.EventTimestamp.FIRST_CONNECTED, offset=key.offset,
+          registry_type=registry_type,
           source_append=': {0:s}'.format(self.DESCRIPTION))
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       # TODO: Determine if these 4 fields always exist.
       try:
@@ -84,11 +88,12 @@ class USBStorPlugin(interface.KeyPlugin):
 
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
-        yield event.WinRegistryEvent(
-            key.path, text_dict,
-            timestamp=devicekey.last_written_timestamp,
-            usage=eventdata.EventTimestamp.LAST_CONNECTED,
+        event_object = windows_events.WindowsRegistryEvent(
+            devicekey.last_written_timestamp, key.path, text_dict,
+            usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
+            registry_type=registry_type,
             source_append=': {0:s}'.format(self.DESCRIPTION))
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
         # Build list of first Insertion times.
         first_insert = []
@@ -108,7 +113,9 @@ class USBStorPlugin(interface.KeyPlugin):
 
         # Add first Insertion times.
         for timestamp in first_insert:
-          yield event.WinRegistryEvent(
-              key.path, text_dict, timestamp=timestamp,
-              usage=eventdata.EventTimestamp.LAST_CONNECTED,
+          event_object = windows_events.WindowsRegistryEvent(
+              timestamp, key.path, text_dict,
+              usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
+              registry_type=registry_type,
               source_append=': {0:s}'.format(self.DESCRIPTION))
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

@@ -27,7 +27,7 @@ import pytz
 
 
 def CopyStringToTimestamp(time_string):
-  """Copies a string containing a date and time value to string.
+  """Copies a string containing a date and time value to a timestamp.
 
   Test function that does not rely on dateutil parser.
 

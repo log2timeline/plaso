@@ -40,8 +40,8 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the Process function."""
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones'
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 6)
 
@@ -163,8 +163,8 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Lockdown_Zones')
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 6)
 
@@ -291,8 +291,8 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Zones')
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 6)
 
@@ -333,8 +333,8 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Lockdown_Zones')
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 6)
 

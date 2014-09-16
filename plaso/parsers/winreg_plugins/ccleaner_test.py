@@ -42,8 +42,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath(['NTUSER-CCLEANER.DAT'])
     key_path = u'\\Software\\Piriform\\CCleaner'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPluginAndQueue(
-        self._plugin, winreg_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 17)

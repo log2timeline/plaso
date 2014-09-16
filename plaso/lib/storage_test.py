@@ -24,6 +24,7 @@ import unittest
 import zipfile
 
 from plaso.events import text_events
+from plaso.events import windows_events
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import eventdata
@@ -94,20 +95,19 @@ class StorageFileTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     self._event_objects = []
 
-    event_1 = event.WinRegistryEvent(
-        u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'},
-        timestamp=13349615269295969)
+    # TODO: replace hardcoded timestamps by timelib_test.CopyStringToTimestamp.
+    event_1 = windows_events.WindowsRegistryEvent(
+        13349615269295969, u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'})
     event_1.parser = 'UNKNOWN'
 
-    event_2 = event.WinRegistryEvent(
-        u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
-        {u'Value': u'send all the exes to the other world'},
-        timestamp=13359662069295961)
+    event_2 = windows_events.WindowsRegistryEvent(
+        13359662069295961, u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
+        {u'Value': u'send all the exes to the other world'})
     event_2.parser = 'UNKNOWN'
 
-    event_3 = event.WinRegistryEvent(
-        u'\\HKCU\\Windows\\Normal', {u'Value': u'run all the benign stuff'},
-        timestamp=13349402860000000)
+    event_3 = windows_events.WindowsRegistryEvent(
+        13349402860000000, u'\\HKCU\\Windows\\Normal',
+        {u'Value': u'run all the benign stuff'})
     event_3.parser = 'UNKNOWN'
 
     text_dict = {'text': (

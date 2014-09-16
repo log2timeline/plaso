@@ -51,8 +51,8 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, 1346445929000000, values, 153)
 
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1)
 

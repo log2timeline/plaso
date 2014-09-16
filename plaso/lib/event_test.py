@@ -29,7 +29,9 @@ Error handling. The following tests are performed for error handling:
 import unittest
 
 from plaso.events import text_events
+from plaso.events import windows_events
 from plaso.lib import event
+from plaso.lib import timelib_test
 
 
 class TestEvent1(event.EventObject):
@@ -62,43 +64,54 @@ def GetEventObjects():
   event_a.timestamp = 0
   event_a.data_type = data_type
 
-  event_b = event.WinRegistryEvent(
-      u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'},
-      timestamp=1334961526929596)
+  # TODO: move this to a WindowRegistrysEvent unit test.
+  timestamp = timelib_test.CopyStringToTimestamp(
+      '2012-04-20 22:38:46.929596')
+  event_b = windows_events.WindowsRegistryEvent(
+      timestamp, u'MY AutoRun key', {u'Run': u'c:/Temp/evil.exe'})
   event_b.hostname = hostname
   event_objects.append(event_b)
 
-  event_c = event.WinRegistryEvent(
-      u'//HKCU/Secret/EvilEmpire/Malicious_key',
-      {u'Value': u'send all the exes to the other world'},
-      timestamp=1334966206929596)
+  timestamp = timelib_test.CopyStringToTimestamp(
+      '2012-04-20 23:56:46.929596')
+  event_c = windows_events.WindowsRegistryEvent(
+      timestamp, u'//HKCU/Secret/EvilEmpire/Malicious_key',
+      {u'Value': u'send all the exes to the other world'})
   event_c.hostname = hostname
   event_objects.append(event_c)
 
-  event_d = event.WinRegistryEvent(
-      u'//HKCU/Windows/Normal', {u'Value': u'run all the benign stuff'},
-      timestamp=1334940286000000)
+  timestamp = timelib_test.CopyStringToTimestamp(
+      '2012-04-20 16:44:46.000000')
+  event_d = windows_events.WindowsRegistryEvent(
+      timestamp, u'//HKCU/Windows/Normal',
+      {u'Value': u'run all the benign stuff'})
   event_d.hostname = hostname
   event_objects.append(event_d)
 
   event_objects.append(event_a)
 
+  timestamp = timelib_test.CopyStringToTimestamp(
+      '2012-04-30 10:29:47.929596')
   filename = 'c:/Temp/evil.exe'
-  event_e = TestEvent1(1335781787929596, {
+  event_e = TestEvent1(timestamp, {
       'text': 'This log line reads ohh so much.'})
   event_e.filename = filename
   event_e.hostname = hostname
 
   event_objects.append(event_e)
 
-  event_f = TestEvent1(1335781787929596, {
+  timestamp = timelib_test.CopyStringToTimestamp(
+      '2012-04-30 10:29:47.929596')
+  event_f = TestEvent1(timestamp, {
       'text': 'Nothing of interest here, move on.'})
   event_f.filename = filename
   event_f.hostname = hostname
 
   event_objects.append(event_f)
 
-  event_g = TestEvent1(1335791207939596, {
+  timestamp = timelib_test.CopyStringToTimestamp(
+      '2012-04-30 13:06:47.939596')
+  event_g = TestEvent1(timestamp, {
       'text': 'Mr. Evil just logged into the machine and got root.'})
   event_g.filename = filename
   event_g.hostname = hostname
@@ -111,7 +124,9 @@ def GetEventObjects():
       u'shortened.'), 'hostname': u'nomachine', 'username': u'johndoe'}
 
   # TODO: move this to a TextEvent unit test.
-  event_h = text_events.TextEvent(1338934459000000, 12, text_dict)
+  timestamp = timelib_test.CopyStringToTimestamp(
+      '2012-06-05 22:14:19.000000')
+  event_h = text_events.TextEvent(timestamp, 12, text_dict)
   event_h.text = event_h.body
   event_h.hostname = hostname
   event_h.filename = filename

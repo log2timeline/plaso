@@ -17,7 +17,7 @@
 # limitations under the License.
 """This file contains the Run/RunOnce Key plugins for Plaso."""
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -35,14 +35,15 @@ class RunUserPlugin(interface.KeyPlugin):
   URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
   DESCRIPTION = 'Run Key'
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Collect the Values under the Run Key and return an event for each one.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The Registry key (instance of winreg.WinRegKey) in which the value
-           is stored.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     for value in key.GetValues():
       # Ignore the default value.
@@ -56,9 +57,11 @@ class RunUserPlugin(interface.KeyPlugin):
       text_dict = {}
       text_dict[value.name] = value.data
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=key.last_written_timestamp,
+      event_object = windows_events.WindowsRegistryEvent(
+          key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+          urls=self.URLS, registry_type=registry_type,
           source_append=': {0:s}'.format(self.DESCRIPTION))
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class RunSoftwarePlugin(RunUserPlugin):

@@ -142,34 +142,12 @@ class WinRegistryParser(interface.BaseParser):
     root_key = winreg_file.GetKeyByPath(u'\\')
 
     for key in self._RecurseKey(root_key):
-      # TODO: the parsed flag approach is broken, a key/value can be
-      # parsed without it returning event objects. Fix this with the 
-      # yield-based parsers refactor.
-      parsed = False
       for weight in plugins.iterkeys():
-        if parsed:
-          break
-
+        # TODO: determine if the plugin matches the key and continue
+        # to the next key.
         for plugin in plugins[weight]:
-          event_object_generator = plugin.Process(
-              parser_context, key=key, codepage=parser_context.codepage)
-
-          # TODO: remove this once the yield-based parsers have been replaced
-          # by produce (or emit)-based variants.
-          if event_object_generator:
-            for event_object in event_object_generator:
-              event_object.offset = getattr(event_object, 'offset', key.offset)
-              event_object.registry_type = self._registry_type
-
-              urls = getattr(plugin, 'URLS', None)
-              if urls:
-                event_object.url = u' - '.join(urls)
-
-              parser_context.ProduceEvent(
-                  event_object, parser_name=self.NAME,
-                  plugin_name=plugin.plugin_name, file_entry=file_entry)
-
-            parsed = True
-            break
+          plugin.Process(
+              parser_context, key=key, registry_type=self._registry_type,
+              codepage=parser_context.codepage)
 
     winreg_file.Close()

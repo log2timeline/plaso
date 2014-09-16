@@ -17,7 +17,7 @@
 # limitations under the License.
 """Plug-in to collect the Less Frequently Used Keys."""
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -31,23 +31,25 @@ class BootVerificationPlugin(interface.KeyPlugin):
 
   URLS = ['http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Gather the BootVerification key values and return one event for all.
 
     This key is rare, so its presence is suspect.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The extracted registry key.
-
-    Yields:
-      Extracted event objects from the boot verify key.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     text_dict = {}
     for value in key.GetValues():
       text_dict[value.name] = value.data
-    yield event.WinRegistryEvent(
-        key.path, text_dict, timestamp=key.last_written_timestamp)
+    event_object = windows_events.WindowsRegistryEvent(
+        key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+        registry_type=registry_type, urls=self.URLS)
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class BootExecutePlugin(interface.KeyPlugin):
@@ -60,17 +62,17 @@ class BootExecutePlugin(interface.KeyPlugin):
 
   URLS = ['http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Gather the BootExecute Value, compare to default, return event.
 
     The rest of the values in the Session Manager key are in a separate event.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The extracted registry key.
-
-    Yields:
-      Extracted event objects from the boot verify key.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     text_dict = {}
 
@@ -91,12 +93,15 @@ class BootExecutePlugin(interface.KeyPlugin):
 
         boot_dict = {'BootExecute': value_string}
 
-        yield event.WinRegistryEvent(
-            key.path, boot_dict,
-            timestamp=key.last_written_timestamp)
+        event_object = windows_events.WindowsRegistryEvent(
+            key.last_written_timestamp, key.path, boot_dict, offset=key.offset,
+            registry_type=registry_type, urls=self.URLS)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       else:
         text_dict[value.name] = value.data
 
-    yield event.WinRegistryEvent(
-        key.path, text_dict, timestamp=key.last_written_timestamp)
+    event_object = windows_events.WindowsRegistryEvent(
+        key.last_written_timestamp, key.path, text_dict, offset=key.offset,
+        registry_type=registry_type, urls=self.URLS)
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

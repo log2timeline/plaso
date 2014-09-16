@@ -17,7 +17,7 @@
 # limitations under the License.
 """This file contains the MountPoints2 plugin."""
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -34,15 +34,15 @@ class MountPoints2Plugin(interface.KeyPlugin):
 
   URLS = [u'http://support.microsoft.com/kb/932463']
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Retrieves information from the MountPoints2 registry key.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      An event object of with the extracted data.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     for subkey in key.GetSubkeys():
       name = subkey.name
@@ -71,6 +71,7 @@ class MountPoints2Plugin(interface.KeyPlugin):
       else:
         text_dict[u'Type'] = u'Drive'
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=subkey.last_written_timestamp,
-          offset=subkey.offset)
+      event_object = windows_events.WindowsRegistryEvent(
+          subkey.last_written_timestamp, key.path, text_dict,
+          offset=subkey.offset, registry_type=registry_type, urls=self.URLS)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

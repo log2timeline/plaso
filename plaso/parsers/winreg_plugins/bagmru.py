@@ -21,7 +21,7 @@ import logging
 
 import construct
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
 
@@ -119,13 +119,15 @@ class BagMRUPlugin(interface.KeyPlugin):
     return enumerate(mru_list)
 
   def _ParseSubKey(
-      self, parser_context, key, parent_value_string, codepage='cp1252'):
+      self, parser_context, key, parent_value_string, registry_type=None,
+      codepage='cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: the Registry key (instance of winreg.WinRegKey).
       parent_value_string: string containing the parent value string.
+      registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
@@ -140,8 +142,9 @@ class BagMRUPlugin(interface.KeyPlugin):
           parser_context, key, index, entry_number, text_dict, value_strings,
           parent_value_string, codepage=codepage)
 
-    event_object = event.WinRegistryEvent(
-        key.path, text_dict, timestamp=key.last_written_timestamp,
+    event_object = windows_events.WindowsRegistryEvent(
+        key.last_written_timestamp, key.path, text_dict,
+        offset=key.offset, registry_type=registry_type, urls=self.URLS,
         source_append=': BagMRU')
     parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
@@ -163,12 +166,17 @@ class BagMRUPlugin(interface.KeyPlugin):
           parser_context, sub_key, value_string, codepage=codepage)
 
   def GetEntries(
-      self, parser_context, key=None, codepage='cp1252', **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: the Registry key (instance of winreg.WinRegKey).
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    self._ParseSubKey(parser_context, key, u'', codepage=codepage)
+    self._ParseSubKey(
+        parser_context, key, u'', registry_type=registry_type,
+        codepage=codepage)

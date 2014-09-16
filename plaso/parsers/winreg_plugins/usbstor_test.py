@@ -39,9 +39,9 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath(['SYSTEM'])
     key_path = u'\\ControlSet001\\Enum\\USBSTOR'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(
+    event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjects(event_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 3)
 

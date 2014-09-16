@@ -38,8 +38,8 @@ class RunNtuserPlugintest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath(['NTUSER-RunTests.DAT'])
     key_path = u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1)
 
@@ -69,8 +69,8 @@ class RunOnceNtuserPlugintest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath(['NTUSER-RunTests.DAT'])
     key_path = u'\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1)
 
@@ -100,8 +100,8 @@ class RunSoftwarePluginTest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath(['SOFTWARE-RunTests'])
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\Run'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 3)
 
@@ -133,8 +133,8 @@ class RunOnceSoftwarePluginTest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath(['SOFTWARE-RunTests'])
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1)
 
