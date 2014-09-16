@@ -554,13 +554,18 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     event_queue = queue.SingleThreadedQueue()
     event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-    parser_context = parsers_context.ParserContext(
-        event_queue_producer, RegCache.knowledge_base_object)
-    RegCache.parser_context = parser_context
+
+    parse_error_queue = queue.SingleThreadedQueue()
+    parse_error_queue_producer = queue.ParseErrorQueueProducer(
+        parse_error_queue)
+
+    RegCache.parser_context = parsers_context.ParserContext(
+        event_queue_producer, parse_error_queue_producer,
+        RegCache.knowledge_base_object)
 
     # Get all the appropriate keys from these plugins.
     key_paths = self.plugins.GetExpandedKeyPaths(
-        parser_context, reg_cache=RegCache.reg_cache)
+        RegCache.parser_context, reg_cache=RegCache.reg_cache)
 
     for hive in hives:
       output_string = ParseHive(
@@ -1257,14 +1262,19 @@ def ParseKey(key, verbose=False, use_plugins=None):
   event_queue = queue.SingleThreadedQueue()
   event_queue_consumer = PregEventObjectQueueConsumer(event_queue)
   event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-  parser_context = parsers_context.ParserContext(
-      event_queue_producer, RegCache.knowledge_base_object)
-  RegCache.parser_context = parser_context
+
+  parse_error_queue = queue.SingleThreadedQueue()
+  parse_error_queue_producer = queue.ParseErrorQueueProducer(
+      parse_error_queue)
+
+  RegCache.parser_context = parsers_context.ParserContext(
+      event_queue_producer, parse_error_queue_producer,
+      RegCache.knowledge_base_object)
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:
     for plugin in plugins[weight]:
-      plugin.Process(parser_context, key=key)
+      plugin.Process(RegCache.parser_context, key=key)
 
       event_queue_consumer.ConsumeEventObjects()
       if not event_queue_consumer.event_objects:
@@ -1347,9 +1357,8 @@ def RunModeConsole(front_end, options):
 
   event_queue = queue.SingleThreadedQueue()
   event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-  parser_context = parsers_context.ParserContext(
+  RegCache.parser_context = parsers_context.ParserContext(
       event_queue_producer, RegCache.knowledge_base_object)
-  RegCache.parser_context = parser_context
 
   hives, hive_collectors = front_end.GetHivesAndCollectors(
       options, options.plugin_name)
