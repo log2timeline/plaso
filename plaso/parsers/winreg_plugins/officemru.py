@@ -20,7 +20,7 @@
 import logging
 import re
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import interface
 
@@ -55,13 +55,15 @@ class OfficeMRUPlugin(interface.KeyPlugin):
   # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Collect Values under Office 2010 MRUs and return events for each one.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The Registry key (instance of winreg.WinRegKey) in which the value
-           is stored.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     # TODO: Test other Office versions to makesure this plugin is applicable.
     for value in key.GetValues():
@@ -97,6 +99,8 @@ class OfficeMRUPlugin(interface.KeyPlugin):
       text_dict = {}
       text_dict[value.name] = value.data
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=timestamp,
+      event_object = windows_events.WindowsRegistryEvent(
+          timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type,
           source_append=': {0:s}'.format(self.DESCRIPTION))
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

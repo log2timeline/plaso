@@ -542,15 +542,13 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     return cached_entry_object
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(self, parser_context, key=None, **unused_kwargs):
     """Extracts event objects from a Application Compatibility Cache key.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
-
-    Yields:
-      An event object (instance of EventObject) that contains a cached entry.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
     """
     value = key.GetValue('AppCompatCache')
     if not value:
@@ -593,20 +591,24 @@ class AppCompatCachePlugin(interface.KeyPlugin):
           format_type, value_data, cached_entry_offset, cached_entry_size)
 
       if cached_entry_object.last_modification_time is not None:
-        yield AppCompatCacheEvent(
+        # TODO: refactor to file modification event.
+        event_object = AppCompatCacheEvent(
             key.path, cached_entry_index + 1, cached_entry_object.path,
             timestamp=timelib.Timestamp.FromFiletime(
                 cached_entry_object.last_modification_time),
             offset=cached_entry_offset,
             usage=u'File Last Modification Time')
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       if cached_entry_object.last_update_time is not None:
-        yield AppCompatCacheEvent(
+        # TODO: refactor to process run event.
+        event_object = AppCompatCacheEvent(
             key.path, cached_entry_index + 1, cached_entry_object.path,
             timestamp=timelib.Timestamp.FromFiletime(
                 cached_entry_object.last_update_time),
             offset=cached_entry_offset,
             usage=eventdata.EventTimestamp.LAST_RUNTIME)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       cached_entry_offset += cached_entry_object.cached_entry_size
       cached_entry_index += 1

@@ -19,7 +19,7 @@
 
 import construct
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import interface
 
@@ -55,14 +55,15 @@ class WinVerPlugin(interface.KeyPlugin):
       return ''
     return value.data
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Gather minimal information about system install and return an event.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The Registry key (instance of winreg.WinRegKey) in which the value
-           is stored.
-      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     text_dict = {}
     text_dict[u'Owner'] = self.GetValueString(key, 'RegisteredOwner')
@@ -78,11 +79,13 @@ class WinVerPlugin(interface.KeyPlugin):
     except construct.FieldError:
       install = 0
 
-    event_object = event.WinRegistryEvent(
-        key.path, text_dict, usage='OS Install Time',
-        timestamp=timelib.Timestamp.FromPosixTime(install))
+    event_object = windows_events.WindowsRegistryEvent(
+        timelib.Timestamp.FromPosixTime(install), key.path, text_dict,
+        usage='OS Install Time', offset=key.offset,
+        registry_type=registry_type, urls=self.URLS)
+
     event_object.prodname = text_dict[u'Product name']
     event_object.source_long = 'SOFTWARE WinVersion key'
     if text_dict[u'Owner']:
       event_object.owner = text_dict[u'Owner']
-    yield event_object
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

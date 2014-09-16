@@ -17,7 +17,7 @@
 # limitations under the License.
 """This file contains an Outlook Registry parser."""
 
-from plaso.lib import event
+from plaso.events import windows_events
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -49,12 +49,14 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
 
   REG_TYPE = 'NTUSER'
 
-  def GetEntries(self, unused_parser_context, key=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, key=None, registry_type=None, **unused_kwargs):
     """Collect the values under Outlook and return event for each one.
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: The Registry key (instance of winreg.WinRegKey) in which the value
-           is stored.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
     """
     value_index = 0
     for value in key.GetValues():
@@ -76,8 +78,10 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
       else:
         timestamp = 0
 
-      yield event.WinRegistryEvent(
-          key.path, text_dict, timestamp=timestamp,
+      event_object = windows_events.WindowsRegistryEvent(
+          timestamp, key.path, text_dict, offset=key.offset,
+          registry_type=registry_type,
           source_append=': {0:s}'.format(self.DESCRIPTION))
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       value_index += 1

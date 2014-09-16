@@ -41,8 +41,8 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
     key_path = u'\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU'
     winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_generator = self._ParseKeyWithPlugin(self._plugin, winreg_key)
-    event_objects = self._GetEventObjects(event_generator)
+    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 5)
 
