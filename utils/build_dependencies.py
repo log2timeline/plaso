@@ -22,6 +22,7 @@ import argparse
 import glob
 import logging
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -37,7 +38,7 @@ class DownloadHelper(object):
   """Class that helps in downloading a project."""
 
   def __init__(self):
-    """Initializes the build helper."""
+    """Initializes the download helper."""
     super(DownloadHelper, self).__init__()
     self._cached_url = u''
     self._cached_page_content = ''
@@ -121,6 +122,17 @@ class DownloadHelper(object):
 
     Returns:
       The download URL of the project or None on error.
+    """
+
+  @abc.abstractmethod
+  def GetProjectIdentifier(self, project_name):
+    """Retrieves the project identifier for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The project identifier or None on error.
     """
 
 
@@ -230,6 +242,17 @@ class GoogleCodeDownloadHelper(DownloadHelper):
 
     return u'https://googledrive.com{0:s}'.format(matches[0])
 
+  def GetProjectIdentifier(self, project_name):
+    """Retrieves the project identifier for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The project identifier or None on error.
+    """
+    return u'com.google.code.p.{0:s}'.format(project_name)
+
 
 class GoogleCodeWikiDownloadHelper(DownloadHelper):
   """Class that helps in downloading a wiki-based Google code project."""
@@ -282,6 +305,17 @@ class GoogleCodeWikiDownloadHelper(DownloadHelper):
     return (
         u'https://{0:s}.googlecode.com/files/{0:s}-{1:s}.tar.gz').format(
             project_name, project_version)
+
+  def GetProjectIdentifier(self, project_name):
+    """Retrieves the project identifier for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The project identifier or None on error.
+    """
+    return u'com.google.code.p.{0:s}'.format(project_name)
 
 
 class PyPiDownloadHelper(DownloadHelper):
@@ -337,6 +371,17 @@ class PyPiDownloadHelper(DownloadHelper):
         u'{1:s}-{2:s}.tar.gz').format(
             project_name[0], project_name, project_version)
 
+  def GetProjectIdentifier(self, project_name):
+    """Retrieves the project identifier for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The project identifier or None on error.
+    """
+    return u'org.python.pypi.{0:s}'.format(project_name)
+
 
 class SourceForgeDownloadHelper(DownloadHelper):
   """Class that helps in downloading a Source Forge project."""
@@ -387,15 +432,22 @@ class SourceForgeDownloadHelper(DownloadHelper):
 
     return self.DownloadFile(download_url)
 
+  def GetProjectIdentifier(self, project_name):
+    """Retrieves the project identifier for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The project identifier or None on error.
+    """
+    return u'net.sourceforge.projects.{0:s}'.format(project_name)
+
 
 class BuildHelper(object):
   """Base class that helps in building."""
 
   LOG_FILENAME = u'build.log'
-
-  def __init__(self):
-    """Initializes the build helper."""
-    super(BuildHelper, self).__init__()
 
   def Extract(self, source_filename):
     """Extracts the given source filename.
@@ -448,10 +500,6 @@ class BuildHelper(object):
 class DpkgBuildHelper(BuildHelper):
   """Class that helps in building dpkg packages (.deb)."""
 
-  def __init__(self):
-    """Initializes the build helper."""
-    super(DpkgBuildHelper, self).__init__()
-
   def _BuildPrepare(self, source_directory):
     """Make the necassary preperations before building the dpkg packages.
 
@@ -481,8 +529,8 @@ class DpkgBuildHelper(BuildHelper):
     Returns:
       True if the finalizations were successful, False otherwise.
     """
-    # Script to run after building, e.g. to automatically upload the dpkg
-    # package files to an apt repository.
+    # Script to run after building, e.g. to automatically upload
+    # the dpkg package files to an apt repository.
     if os.path.exists(u'post-dpkg.sh'):
       command = u'sh ../post-dpkg.sh'
       exit_code = subprocess.call(
@@ -492,6 +540,149 @@ class DpkgBuildHelper(BuildHelper):
         return False
 
     return True
+
+
+class LibyalDpkgBuildHelper(DpkgBuildHelper):
+  """Class that helps in building libyal dpkg packages (.deb)."""
+
+  # TODO: determine BUILD_DEPENDENCIES from spec files?
+  BUILD_DEPENDENCIES = frozenset([
+      'build-essential',
+      'autoconf',
+      'automake',
+      'autopoint',
+      'libtool',
+      'gettext',
+      'debhelper',
+      'fakeroot',
+      'quilt',
+      'autotools-dev',
+      'zlib1g-dev',
+      'libssl-dev',
+      'libfuse-dev',
+      'python-dev',
+      'python-setuptools',
+  ])
+
+  def __init__(self):
+    """Initializes the build helper."""
+    super(LibyalDpkgBuildHelper, self).__init__()
+    self.architecture = platform.machine()
+
+    if self.architecture == 'i686':
+      self.architecture = 'i386'
+    elif self.architecture == 'x86_64':
+      self.architecture = 'amd64'
+
+  def Build(self, source_filename):
+    """Builds the dpkg packages.
+
+    Args:
+      source_filename: the name of the source package file.
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    source_directory = self.Extract(source_filename)
+    if not source_directory:
+      logging.error(
+          u'Extraction of source package: {0:s} failed'.format(source_filename))
+      return False
+
+    dpkg_directory = os.path.join(source_directory, u'dpkg')
+    if not os.path.exists(dpkg_directory):
+      dpkg_directory = os.path.join(source_directory, u'config', u'dpkg')
+
+    if not os.path.exists(dpkg_directory):
+      logging.error(u'Missing dpkg sub directory in: {0:s}'.format(
+          source_directory))
+      return False
+
+    debian_directory = os.path.join(source_directory, u'debian')
+
+    # If there is a debian directory remove it and recreate it from
+    # the dpkg directory.
+    if os.path.exists(debian_directory):
+      logging.info(u'Removing: {0:s}'.format(debian_directory))
+      shutil.rmtree(debian_directory)
+    shutil.copytree(dpkg_directory, debian_directory)
+
+    if not self._BuildPrepare(source_directory):
+      return False
+
+    command = u'dpkg-buildpackage -uc -us -rfakeroot > {0:s} 2>&1'.format(
+        os.path.join(u'..', self.LOG_FILENAME))
+    exit_code = subprocess.call(
+        u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
+    if exit_code != 0:
+      logging.error(u'Running: "{0:s}" failed.'.format(command))
+      return False
+
+    if not self._BuildFinalize(source_directory):
+      return False
+
+    return True
+
+  def CheckBuildEnvironment(self):
+    """Checks if the build environment is sane."""
+    # TODO: allow to pass additional dependencies or determine them
+    # from the dpkg files.
+
+    # TODO: check if build environment has all the dependencies.
+    # sudo dpkg -l <package>
+
+  def Clean(self, library_name, library_version):
+    """Cleans the dpkg packages in the current directory.
+
+    Args:
+      library_name: the name of the library.
+      library_version: the version of the library.
+    """
+    filenames_to_ignore = re.compile(
+        u'^{0:s}[-_].*{1!s}'.format(library_name, library_version))
+
+    # Remove files of previous versions in the format:
+    # library[-_]version-1_architecture.*
+    filenames = glob.glob(
+        u'{0:s}[-_]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-1_'
+        u'{1:s}.*'.format(library_name, self.architecture))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+    # Remove files of previous versions in the format:
+    # library[-_]*version-1.*
+    filenames = glob.glob(
+        u'{0:s}[-_]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-1.*'.format(
+            library_name))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+  def GetOutputFilename(self, library_name, library_version):
+    """Retrieves the filename of one of the resulting files.
+
+    Args:
+      library_name: the name of the library.
+      library_version: the version of the library.
+
+    Returns:
+      A filename of one of the resulting dpkg packages.
+    """
+    return u'{0:s}_{1!s}-1_{2:s}.deb'.format(
+        library_name, library_version, self.architecture)
+
+
+class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
+  """Class that helps in building python module dpkg packages (.deb)."""
+
+  _PACKAGE_NAMES = {
+      u'pytz': u'tz',
+  }
 
   def Build(self, source_filename, project_name, project_version):
     """Builds the dpkg packages.
@@ -558,14 +749,6 @@ class DpkgBuildHelper(BuildHelper):
 
     return True
 
-
-class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
-  """Class that helps in building python module dpkg packages (.deb)."""
-
-  def __init__(self):
-    """Initializes the build helper."""
-    super(PythonModuleDpkgBuildHelper, self).__init__()
-
   def Clean(self, project_name, project_version):
     """Cleans the dpkg packages in the current directory.
 
@@ -574,13 +757,12 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
       project_version: the version of the project.
     """
     filenames_to_ignore = re.compile(
-        u'^python-{0:s}[-_].*{1:s}'.format(project_name, project_version))
+        u'^python-{0:s}[-_].*{1!s}'.format(project_name, project_version))
 
     # Remove files of previous versions in the format:
     # python-{project name}[-_]{project version}-1_architecture.*
     filenames = glob.glob(
-        u'python-{0:s}[-_]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-1_'
-        u'all.*'.format(project_name))
+        u'python-{0:s}[-_]*-1_all.*'.format(project_name))
 
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -590,8 +772,7 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
     # Remove files of previous versions in the format:
     # python-{project name}[-_]*version-1.*
     filenames = glob.glob(
-        u'python-{0:s}[-_]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-1.*'.format(
-            project_name))
+        u'python-{0:s}[-_]*-1.*'.format(project_name))
 
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -608,9 +789,9 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
     Returns:
       A filename of one of the resulting dpkg packages.
     """
-    # TODO: handle the conversion of some of the project names e.g.
-    # pytz => python-tz
-    return u'python-{0:s}_{1:s}-1_all.deb'.format(project_name, project_version)
+    project_name = self._PACKAGE_NAMES.get(project_name, project_name)
+
+    return u'python-{0:s}_{1!s}-1_all.deb'.format(project_name, project_version)
 
 
 class MsiBuildHelper(BuildHelper):
@@ -619,8 +800,263 @@ class MsiBuildHelper(BuildHelper):
 
 
 class PkgBuildHelper(BuildHelper):
-  """Class that helps in building PackageMaker packages (.pkg)."""
-  # TODO: implement.
+  """Class that helps in building MacOS-X packages (.pkg)."""
+
+  def __init__(self):
+    """Initializes the build helper."""
+    super(PkgBuildHelper, self).__init__()
+    self._pkgbuild = os.path.join(u'/', u'usr', u'bin', u'pkgbuild')
+
+  def _BuildDmg(self, pkg_filename, dmg_filename):
+    """Builds the distributable disk image (.dmg) from the pkg.
+
+    Args:
+      pkg_filename: the name of the pkg file (which is technically
+                    a directory).
+      dmg_filename: the name of the dmg file.
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    command = (
+        u'hdiutil create {0:s} -srcfolder {1:s} -fs HFS+').format(
+            dmg_filename, pkg_filename)
+    exit_code = subprocess.call(command, shell=True)
+    if exit_code != 0:
+      logging.error(u'Running: "{0:s}" failed.'.format(command))
+      return False
+
+    return True
+
+  def _BuildPkg(
+      self, source_directory, project_identifier, project_version,
+      pkg_filename):
+    """Builds the distributable disk image (.dmg) from the pkg.
+
+    Args:
+      source_directory: the name of the source directory.
+      project_identifier: the project identifier.
+      project_version: the version of the project.
+      pkg_filename: the name of the pkg file (which is technically
+                    a directory).
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    command = (
+        u'{0:s} --root {1:s}/tmp/ --identifier {2:s} '
+        u'--version {3!s} --ownership recommended {4:s}').format(
+            self._pkgbuild, source_directory, project_identifier,
+            project_version, pkg_filename)
+    exit_code = subprocess.call(command, shell=True)
+    if exit_code != 0:
+      logging.error(u'Running: "{0:s}" failed.'.format(command))
+      return False
+
+    return True
+
+  def Clean(self, project_name, project_version):
+    """Cleans the MacOS-X packages in the current directory.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+    """
+    filenames_to_ignore = re.compile(
+        u'^{0:s}-.*{1!s}'.format(project_name, project_version))
+
+    # Remove files of previous versions in the format:
+    # project-*version.dmg
+    filenames = glob.glob(u'{0:s}-*.dmg'.format(project_name))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+    # Remove files of previous versions in the format:
+    # project-*version.pkg
+    filenames = glob.glob(u'{0:s}-*.pkg'.format(project_name))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        shutil.rmtree(filename)
+
+  def GetOutputFilename(self, project_name, project_version):
+    """Retrieves the filename of one of the resulting files.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+
+    Returns:
+      A filename of one of the resulting rpms.
+    """
+    return u'{0:s}-{1!s}.dmg'.format(project_name, project_version)
+
+
+class LibyalPkgBuildHelper(PkgBuildHelper):
+  """Class that helps in building MacOS-X packages (.pkg)."""
+
+  def Build(self, source_filename, library_name, library_version):
+    """Builds the pkg package and distributable disk image (.dmg).
+
+    Args:
+      source_filename: the name of the source package file.
+      library_name: the name of the library.
+      library_version: the version of the library.
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    source_directory = self.Extract(source_filename)
+    if not source_directory:
+      logging.error(
+          u'Extraction of source package: {0:s} failed'.format(source_filename))
+      return False
+
+    dmg_filename = u'{0:s}.dmg'.format(source_directory)
+    pkg_filename = u'{0:s}.pkg'.format(source_directory)
+    log_filename = os.path.join(u'..', self.LOG_FILENAME)
+
+    sdks_path = os.path.join(
+        u'/', u'Applications', u'Xcode.app', u'Contents', u'Developer',
+        u'Platforms', u'MacOSX.platform', u'Developer', u'SDKs')
+
+    for sub_path in [u'MacOSX10.7.sdk', u'MacOSX10.8.sdk', u'MacOSX10.9.sdk']:
+      sdk_path = os.path.join(sdks_path, sub_path)
+      if os.path.isdir(sub_path):
+        break
+
+    if sdk_path:
+      cflags = u'CFLAGS="-isysroot {0:s}"'.format(sdk_path)
+      ldflags = u'LDFLAGS="-Wl,-syslibroot,{0:s}"'.format(sdk_path)
+    else:
+      cflags = u''
+      ldflags = u''
+
+    if not os.path.exists(pkg_filename):
+      if cflags and ldflags:
+        command = (
+            u'{0:s} {1:s} ./configure --prefix=/usr --enable-python '
+            u'--with-pyprefix --disable-dependency-tracking > {2:s} '
+            u'2>&1').format(cflags, ldflags, log_filename)
+      else:
+        command = (
+            u'./configure --prefix=/usr --enable-python --with-pyprefix '
+            u'> {0:s} 2>&1').format(log_filename)
+
+      exit_code = subprocess.call(
+          u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
+      if exit_code != 0:
+        logging.error(u'Running: "{0:s}" failed.'.format(command))
+        return False
+
+      command = u'make >> {0:s} 2>&1'.format(log_filename)
+      exit_code = subprocess.call(
+          u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
+      if exit_code != 0:
+        logging.error(u'Running: "{0:s}" failed.'.format(command))
+        return False
+
+      command = u'make install DESTDIR={0:s}/tmp >> {1:s} 2>&1'.format(
+          os.path.abspath(source_directory), log_filename)
+      exit_code = subprocess.call(
+          u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
+      if exit_code != 0:
+        logging.error(u'Running: "{0:s}" failed.'.format(command))
+        return False
+
+      share_doc_path = os.path.join(
+          source_directory, u'tmp', u'usr', u'share', u'doc', library_name)
+      if not os.path.exists(share_doc_path):
+        os.makedirs(share_doc_path)
+
+      shutil.copy(os.path.join(source_directory, u'AUTHORS'), share_doc_path)
+      shutil.copy(os.path.join(source_directory, u'COPYING'), share_doc_path)
+      shutil.copy(os.path.join(source_directory, u'NEWS'), share_doc_path)
+      shutil.copy(os.path.join(source_directory, u'README'), share_doc_path)
+
+      project_identifier = u'com.google.code.p.{0:s}'.format(library_name)
+      if not self._BuildPkg(
+          source_directory, project_identifier, library_version, pkg_filename):
+        return False
+
+    if not self._BuildDmg(pkg_filename, dmg_filename):
+      return False
+
+    return True
+
+
+class PythonModulePkgBuildHelper(PkgBuildHelper):
+  """Class that helps in building MacOS-X packages (.pkg)."""
+
+  def Build(
+      self, source_filename, unused_project_name, project_version,
+      project_identifier):
+    """Builds the pkg.
+
+    Args:
+      source_filename: the name of the source package file.
+      project_name: the name of the project.
+      project_version: the version of the project.
+      project_identifier: the project identifier.
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    source_directory = self.Extract(source_filename)
+    if not source_directory:
+      logging.error(
+          u'Extraction of source package: {0:s} failed'.format(source_filename))
+      return False
+
+    dmg_filename = u'{0:s}.dmg'.format(source_directory)
+    pkg_filename = u'{0:s}.pkg'.format(source_directory)
+
+    if not os.path.exists(pkg_filename):
+      command = u'python setup.py build > {0:s} 2>&1'.format(
+          os.path.join(u'..', self.LOG_FILENAME))
+      exit_code = subprocess.call(
+          u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
+      if exit_code != 0:
+        logging.error(u'Running: "{0:s}" failed.'.format(command))
+        return False
+
+      command = u'python setup.py install --root={0:s}/tmp > {1:s} 2>&1'.format(
+          os.path.abspath(source_directory),
+          os.path.join(u'..', self.LOG_FILENAME))
+      exit_code = subprocess.call(
+          u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
+      if exit_code != 0:
+        logging.error(u'Running: "{0:s}" failed.'.format(command))
+        return False
+
+      # Copy the license file to the egg-info sub directory.
+      for license_file in [
+          u'COPYING', u'LICENSE', u'LICENSE.TXT', u'LICENSE.txt']:
+        if not os.path.exists(os.path.join(source_directory, license_file)):
+          continue
+
+        command = (
+            u'find ./tmp -type d -name \\*.egg-info -exec cp {0:s} {{}} '
+            u'\\;').format(license_file)
+        exit_code = subprocess.call(
+            u'(cd {0:s} && {1:s})'.format(source_directory, command),
+            shell=True)
+        if exit_code != 0:
+          logging.error(u'Running: "{0:s}" failed.'.format(command))
+          return False
+
+      if not self._BuildPkg(
+          source_directory, project_identifier, project_version, pkg_filename):
+        return False
+
+    if not self._BuildDmg(pkg_filename, dmg_filename):
+      return False
+
+    return True
 
 
 class RpmBuildHelper(BuildHelper):
@@ -629,15 +1065,201 @@ class RpmBuildHelper(BuildHelper):
   def __init__(self):
     """Initializes the build helper."""
     super(RpmBuildHelper, self).__init__()
+    self.architecture = platform.machine()
+
+    self.rpmbuild_path = os.path.join(u'~', u'rpmbuild')
+    self.rpmbuild_path = os.path.expanduser(self.rpmbuild_path)
+
+    self._rpmbuild_rpms_path = os.path.join(
+        self.rpmbuild_path, u'RPMS', self.architecture)
+    self._rpmbuild_sources_path = os.path.join(self.rpmbuild_path, u'SOURCES')
+    self._rpmbuild_specs_path = os.path.join(self.rpmbuild_path, u'SPECS')
+
+  def _BuildFromSpecFile(self, spec_filename):
+    """Builds the rpms directly from a spec file.
+
+    Args:
+      spec_filename: the name of the spec file as stored in the rpmbuild
+                     SPECS sub directory.
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    current_path = os.getcwd()
+    os.chdir(self.rpmbuild_path)
+
+    command = u'rpmbuild -ba {0:s} > {1:s} 2>&1'.format(
+        os.path.join(u'SPECS', spec_filename), self.LOG_FILENAME)
+    exit_code = subprocess.call(command, shell=True)
+    if exit_code != 0:
+      logging.error(u'Running: "{0:s}" failed.'.format(command))
+
+    os.chdir(current_path)
+
+    return exit_code == 0
+
+  def _BuildFromSourcePackage(self, source_filename):
+    """Builds the rpms directly from the source package file.
+
+    For this to work the source package needs to contain a valid rpm .spec file.
+
+    Args:
+      source_filename: the name of the source package file.
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    command = u'rpmbuild -ta {0:s} > {1:s} 2>&1'.format(
+        source_filename, self.LOG_FILENAME)
+    exit_code = subprocess.call(command, shell=True)
+    if exit_code != 0:
+      logging.error(u'Running: "{0:s}" failed.'.format(command))
+      return False
+
+    return True
+
+  def _CreateRpmbuildDirectories(self):
+    """Creates the rpmbuild and sub directories."""
+    if not os.path.exists(self.rpmbuild_path):
+      os.mkdir(self.rpmbuild_path)
+
+    if not os.path.exists(self._rpmbuild_sources_path):
+      os.mkdir(self._rpmbuild_sources_path)
+
+    if not os.path.exists(self._rpmbuild_specs_path):
+      os.mkdir(self._rpmbuild_specs_path)
+
+  def _CreateSpecFile(self, project_name, spec_file_data):
+    """Creates a spec file in the rpmbuild directory.
+
+    Args:
+      project_name: the name of the project.
+      spec_file_data: the spec file data.
+    """
+    spec_filename = os.path.join(
+        self._rpmbuild_specs_path, u'{0:s}.spec'.format(project_name))
+
+    spec_file = open(spec_filename, 'w')
+    spec_file.write(spec_file_data)
+    spec_file.close()
+
+  def _CopySourceFile(self, source_filename):
+    """Copies the source file to the rpmbuild directory.
+
+    Args:
+      source_filename: the name of the source package file.
+    """
+    shutil.copy(source_filename, self._rpmbuild_sources_path)
+
+  def _MoveRpms(self, project_name, project_version):
+    """Moves the rpms from the rpmbuild directory into to current directory.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+    """
+    filenames = glob.glob(os.path.join(
+        self._rpmbuild_rpms_path, u'{0:s}-*{1!s}-1.{2:s}.rpm'.format(
+            project_name, project_version, self.architecture)))
+    for filename in filenames:
+      logging.info(u'Moving: {0:s}'.format(filename))
+      shutil.move(filename, '.')
+
+  def Clean(self, project_name, project_version):
+    """Cleans the rpmbuild directory.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+    """
+    # Remove previous versions build directories.
+    filenames_to_ignore = re.compile(
+        u'{0:s}-{1!s}'.format(project_name, project_version))
+
+    filenames = glob.glob(os.path.join(
+        self.rpmbuild_path, u'BUILD', u'{0:s}-*'.format(project_name)))
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        shutil.rmtree(filename)
+
+    # Remove previous versions of rpms.
+    filenames_to_ignore = re.compile(
+        u'{0:s}-.*{1!s}-1.{2:s}.rpm'.format(
+            project_name, project_version, self.architecture))
+
+    rpm_filenames_glob = u'{0:s}-*-1.{1:s}.rpm'.format(
+        project_name, self.architecture)
+
+    filenames = glob.glob(rpm_filenames_glob)
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+    filenames = glob.glob(os.path.join(
+        self.rpmbuild_path, u'RPMS', self.architecture, rpm_filenames_glob))
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+    # Remove previous versions of source rpms.
+    filenames_to_ignore = re.compile(
+        u'{0:s}-.*{1!s}-1.src.rpm'.format(project_name, project_version))
+
+    filenames = glob.glob(os.path.join(
+        self.rpmbuild_path, u'SRPMS',
+        u'{0:s}-*-1.src.rpm'.format(project_name)))
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+  def GetOutputFilename(self, project_name, project_version):
+    """Retrieves the filename of one of the resulting files.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+
+    Returns:
+      A filename of one of the resulting rpms.
+    """
+    return u'{0:s}-{1!s}-1.{2:s}.rpm'.format(
+        project_name, project_version, self.architecture)
+
+
+class LibyalRpmBuildHelper(RpmBuildHelper):
+  """Class that helps in building libyal rpm packages (.rpm)."""
+
+  def Build(self, source_filename, library_name, library_version):
+    """Builds the rpms.
+
+    Args:
+      source_filename: the name of the source package file.
+      library_name: the name of the library.
+      library_version: the version of the library.
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    if not self._BuildFromSourcePackage(source_filename):
+      return False
+
+    # Move the rpms to the build directory.
+    self._MoveRpms(library_name, library_version)
+
+    return True
 
 
 class PythonModuleRpmBuildHelper(RpmBuildHelper):
   """Class that helps in building rpm packages (.rpm)."""
-  # TODO: move common rpm build helper code into RpmBuildHelper.
 
   def __init__(self):
     """Initializes the build helper."""
     super(PythonModuleRpmBuildHelper, self).__init__()
+    self.architecture = 'noarch'
 
   def Build(self, source_filename, project_name, project_version):
     """Builds the rpms.
@@ -666,8 +1288,8 @@ class PythonModuleRpmBuildHelper(RpmBuildHelper):
 
     # Move the rpms to the build directory.
     filenames = glob.glob(os.path.join(
-        source_directory, u'dist', u'{0:s}-{1:s}-1.noarch.rpm'.format(
-            project_name, project_version)))
+        source_directory, u'dist', u'{0:s}-{1:s}-1.{2:s}.rpm'.format(
+            project_name, project_version, self.architecture)))
     for filename in filenames:
       logging.info(u'Moving: {0:s}'.format(filename))
       shutil.move(filename, '.')
@@ -688,10 +1310,11 @@ class PythonModuleRpmBuildHelper(RpmBuildHelper):
         shutil.rmtree(filename, True)
 
     # Remove previous versions of rpms.
-    filenames_to_ignore = re.compile(
-        u'{0:s}-.*{1:s}-1.noarch.rpm'.format(project_name, project_version))
+    filenames_to_ignore = re.compile(u'{0:s}-.*{1:s}-1.{2:s}.rpm'.format(
+            project_name, project_version, self.architecture))
 
-    rpm_filenames_glob = u'{0:s}-*-1.noarch.rpm'.format(project_name)
+    rpm_filenames_glob = u'{0:s}-*-1.{1:s}.rpm'.format(
+        project_name, self.architecture)
 
     filenames = glob.glob(rpm_filenames_glob)
     for filename in filenames:
@@ -699,25 +1322,22 @@ class PythonModuleRpmBuildHelper(RpmBuildHelper):
         logging.info(u'Removing: {0:s}'.format(filename))
         os.remove(filename)
 
-  def GetOutputFilename(self, project_name, project_version):
-    """Retrieves the filename of one of the resulting files.
-
-    Args:
-      project_name: the name of the project.
-      project_version: the version of the project.
-
-    Returns:
-      A filename of one of the resulting rpms.
-    """
-    return u'{0:s}-{1:s}-1.noarch.rpm'.format(project_name, project_version)
-
 
 class DependencyBuilder(object):
   """Class that helps in building dependencies."""
 
+  _LIBYAL_LIBRARIES = frozenset([
+      'libbde', 'libesedb', 'libevt', 'libevtx', 'libewf', 'libfwsi', 'liblnk',
+      'libmsiecf', 'libolecf', 'libqcow', 'libregf', 'libsmdev', 'libsmraw',
+      'libvhdi', 'libvmdk', 'libvshadow'])
+
   _PATCHES_URL = (
     u'https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/'
     u'3rd%20party/patches')
+
+  _PYTHON_MODULES = frozenset([
+    'bencode', 'binplist', 'construct', 'dfvfs', 'dpkt', 'pyparsing',
+    'pysqlite', 'pytz', 'PyYAML', 'six'])
 
   PROJECT_TYPE_GOOGLE_CODE = 1
   PROJECT_TYPE_GOOGLE_CODE_WIKI = 2
@@ -733,8 +1353,8 @@ class DependencyBuilder(object):
     super(DependencyBuilder, self).__init__()
     self._build_target = build_target
 
-  def _BuildPythonModule(self, download_helper, project_name):
-    """Builds a Python module dependency.
+  def _BuildDependency(self, download_helper, project_name):
+    """Builds a dependency.
 
     Args:
       download_helper: the download helper (instance of DownloadHelper).
@@ -749,9 +1369,8 @@ class DependencyBuilder(object):
           u'Unable to determine latest version of: {0:s}'.format(project_name))
       return False
 
-    project_filename = download_helper.Download(project_name, project_version)
-
-    if project_filename:
+    source_filename = download_helper.Download(project_name, project_version)
+    if source_filename:
       filenames_to_ignore = re.compile(u'^{0:s}-.*{1:s}'.format(
           project_name, project_version))
 
@@ -765,35 +1384,16 @@ class DependencyBuilder(object):
 
       # Remove directories of previous versions in the format:
       # {project name}-{version}
-      filenames = glob.glob(
-          u'{0:s}-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'.format(
-              project_name))
+      filenames = glob.glob(u'{0:s}-*'.format(project_name))
       for filename in filenames:
         if not filenames_to_ignore.match(filename):
           logging.info(u'Removing: {0:s}'.format(filename))
           shutil.rmtree(filename)
 
-      build_helper = None
-      if self._build_target == 'dpkg':
-        build_helper = PythonModuleDpkgBuildHelper()
-        deb_filename = build_helper.GetOutputFilename(
-            project_name, project_version)
-
-        build_helper.Clean(project_name, project_version)
-
-        if not os.path.exists(deb_filename):
-          logging.info(u'Building deb of: {0:s}'.format(project_filename))
-          if not build_helper.Build(
-              project_filename, project_name, project_version):
-            logging.info(
-                u'Build of: {0:s} failed for more info check {1:s}'.format(
-                    project_filename, build_helper.LOG_FILENAME))
-            return False
-
-      elif self._build_target == 'download':
+      if self._build_target == 'download':
         # If available run the script post-download.sh after download.
         if os.path.exists(u'post-download.sh'):
-          command = u'sh ./post-download.sh {0:s}'.format(project_filename)
+          command = u'sh ./post-download.sh {0:s}'.format(source_filename)
           exit_code = subprocess.call(command, shell=True)
           if exit_code != 0:
             logging.error(u'Running: "{0:s}" failed.'.format(command))
@@ -803,31 +1403,171 @@ class DependencyBuilder(object):
         logging.info(u'Not implemented yet.')
         return False
 
-      elif self._build_target == 'pkg':
-        logging.info(u'Not implemented yet.')
-        return False
+      elif project_name in self._LIBYAL_LIBRARIES:
+        if not self._BuildLibyalLibrary(
+            source_filename, project_name, project_version):
+          return False
 
-      elif self._build_target == 'rpm':
-        build_helper = PythonModuleRpmBuildHelper()
-        rpm_filename = build_helper.GetOutputFilename(
+      elif project_name in self._PYTHON_MODULES:
+        if not self._BuildPythonModule(
+            download_helper, source_filename, project_name, project_version):
+          return False
+
+    return True
+
+  def _BuildLibyalLibrary(
+      self, source_filename, project_name, project_version):
+    """Builds a libyal library and its Python module dependency.
+
+    Args:
+      source_filename: the name of the source package file.
+      project_name: the name of the project
+      project_version: the version of the project.
+
+    Returns:
+      True if the build is successful or False on error.
+    """
+    build_helper = None
+    if self._build_target == 'dpkg':
+      build_helper = LibyalDpkgBuildHelper()
+      deb_filename = build_helper.GetOutputFilename(
+          project_name, project_version)
+
+      build_helper.Clean(project_name, project_version)
+
+      if not os.path.exists(deb_filename):
+        # TODO: add call to CheckBuildEnvironment or only do this once?
+
+        logging.info(u'Building deb of: {0:s}'.format(source_filename))
+        if not build_helper.Build(source_filename):
+          logging.ingo(
+              u'Build of: {0:s} failed for more info check {1:s}'.format(
+                  source_filename, build_helper.LOG_FILENAME))
+          return False
+
+    elif self._build_target == 'pkg':
+      build_helper = LibyalPkgBuildHelper()
+      dmg_filename = build_helper.GetOutputFilename(
+          project_name, project_version)
+
+      build_helper.Clean(project_name, project_version)
+
+      if not os.path.exists(dmg_filename):
+        logging.info(u'Building pkg of: {0:s}'.format(source_filename))
+        if not build_helper.Build(
+            source_filename, project_name, project_version):
+          logging.info(
+              u'Build of: {0:s} failed for more info check {1:s}'.format(
+                  source_filename, build_helper.LOG_FILENAME))
+          return False
+
+    elif self._build_target == 'rpm':
+      build_helper = LibyalRpmBuildHelper()
+      rpm_filename = build_helper.GetOutputFilename(
+          project_name, project_version)
+
+      build_helper.Clean(project_name, project_version)
+
+      if not os.path.exists(rpm_filename):
+        # TODO: move the rename into the builder class?
+
+        # rpmbuild wants the library filename without the status indication.
+        rpm_source_filename = u'{0:s}-{1!s}.tar.gz'.format(
             project_name, project_version)
+        os.rename(source_filename, rpm_source_filename)
 
-        build_helper.Clean(project_name, project_version)
+        logging.info(u'Building rpm of: {0:s}'.format(source_filename))
+        build_successful = build_helper.Build(
+            rpm_source_filename, project_name, project_version)
 
-        if not os.path.exists(rpm_filename):
-          logging.info(u'Building rpm of: {0:s}'.format(project_filename))
-          build_successful = build_helper.Build(
-              project_filename, project_name, project_version)
+        # Change the library filename back to the original.
+        os.rename(rpm_source_filename, source_filename)
 
-          if not build_successful:
-            logging.info(
-                u'Build of: {0:s} failed for more info check {1:s}'.format(
-                    project_filename, build_helper.LOG_FILENAME))
-            return False
+        if not build_successful:
+          logging.info(
+              u'Build of: {0:s} failed for more info check {1:s}'.format(
+                  source_filename, build_helper.LOG_FILENAME))
+          return False
 
-      if build_helper and os.path.exists(build_helper.LOG_FILENAME):
-        logging.info(u'Removing: {0:s}'.format(build_helper.LOG_FILENAME))
-        os.remove(build_helper.LOG_FILENAME)
+    if build_helper and os.path.exists(build_helper.LOG_FILENAME):
+      logging.info(u'Removing: {0:s}'.format(build_helper.LOG_FILENAME))
+      os.remove(build_helper.LOG_FILENAME)
+
+    return True
+
+  def _BuildPythonModule(
+      self, download_helper, source_filename, project_name, project_version):
+    """Builds a Python module dependency.
+
+    Args:
+      download_helper: the download helper (instance of DownloadHelper).
+      source_filename: the name of the source package file.
+      project_name: the name of the project
+      project_version: the version of the project.
+
+    Returns:
+      True if the build is successful or False on error.
+    """
+    build_helper = None
+    if self._build_target == 'dpkg':
+      build_helper = PythonModuleDpkgBuildHelper()
+      deb_filename = build_helper.GetOutputFilename(
+          project_name, project_version)
+
+      build_helper.Clean(project_name, project_version)
+
+      if not os.path.exists(deb_filename):
+        logging.info(u'Building deb of: {0:s}'.format(source_filename))
+        if not build_helper.Build(
+            source_filename, project_name, project_version):
+          logging.info(
+              u'Build of: {0:s} failed for more info check {1:s}'.format(
+                  source_filename, build_helper.LOG_FILENAME))
+          return False
+
+    elif self._build_target == 'pkg':
+      build_helper = PythonModulePkgBuildHelper()
+      pkg_filename = build_helper.GetOutputFilename(
+          project_name, project_version)
+
+      build_helper.Clean(project_name, project_version)
+
+      if not os.path.exists(pkg_filename):
+        project_identifier = download_helper.GetProjectIdentifier(
+            project_name)
+
+        logging.info(u'Building pkg of: {0:s}'.format(source_filename))
+        build_successful = build_helper.Build(
+            source_filename, project_name, project_version,
+            project_identifier)
+
+        if not build_successful:
+          logging.info(
+              u'Build of: {0:s} failed for more info check {1:s}'.format(
+                  source_filename, build_helper.LOG_FILENAME))
+          return False
+
+    elif self._build_target == 'rpm':
+      build_helper = PythonModuleRpmBuildHelper()
+      rpm_filename = build_helper.GetOutputFilename(
+          project_name, project_version)
+
+      build_helper.Clean(project_name, project_version)
+
+      if not os.path.exists(rpm_filename):
+        logging.info(u'Building rpm of: {0:s}'.format(source_filename))
+        build_successful = build_helper.Build(
+            source_filename, project_name, project_version)
+
+        if not build_successful:
+          logging.info(
+              u'Build of: {0:s} failed for more info check {1:s}'.format(
+                  source_filename, build_helper.LOG_FILENAME))
+          return False
+
+    if build_helper and os.path.exists(build_helper.LOG_FILENAME):
+      logging.info(u'Removing: {0:s}'.format(build_helper.LOG_FILENAME))
+      os.remove(build_helper.LOG_FILENAME)
 
     return True
 
@@ -855,7 +1595,7 @@ class DependencyBuilder(object):
     else:
       raise ValueError(u'Unsupported project type.')
 
-    return self._BuildPythonModule(download_helper, project_name)
+    return self._BuildDependency(download_helper, project_name)
 
 
 def Main():
@@ -895,8 +1635,20 @@ def Main():
   # TODO: use patches to provide missing packaging files, e.g. dpkg.
 
   # TODO:
-  # protobuf
   # ipython
+
+  # TODO:
+  # (u'protobuf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI),
+  # ./configure
+  # make
+  # cd python
+  # python setup.py build
+  # python setup.py install --root $PWD/tmp
+  #
+  # Build of rpm fails:
+  # python setup.py bdist_rpm
+  #
+  # Solution: use protobuf-python.spec to build
 
   # TODO: rpm build of psutil is broken, fix upstream or add patching.
   # (u'psutil', DependencyBuilder.PROJECT_TYPE_PYPI),
@@ -904,9 +1656,8 @@ def Main():
   # TODO: dependency sqlite-devel (rpm) or libsqlite3-dev (deb)
   # or download and build sqlite3 from source?
 
-  # TODO: on Ubuntu 14.04 libyaml seems to be libyaml-0-2.
-
-  # TODO: integrate libyal-sync?
+  # TODO: generate dpkg files instead of downloading them or
+  # download and override version information.
 
   builds = [
     (u'bencode', DependencyBuilder.PROJECT_TYPE_PYPI),
@@ -914,6 +1665,22 @@ def Main():
     (u'construct', DependencyBuilder.PROJECT_TYPE_PYPI),
     (u'dfvfs', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
     (u'dpkt', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI),
+    (u'libbde', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libesedb', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libevt', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libevtx', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libewf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libfwsi', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'liblnk', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libmsiecf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libolecf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libqcow', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libregf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libsmdev', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libsmraw', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libvhdi', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libvmdk', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libvshadow', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
     (u'pyparsing', DependencyBuilder.PROJECT_TYPE_SOURCE_FORGE),
     (u'pysqlite', DependencyBuilder.PROJECT_TYPE_PYPI),
     (u'pytz', DependencyBuilder.PROJECT_TYPE_PYPI),

@@ -205,7 +205,8 @@ def Main():
       logging.error(u'CPU architecture: {0:s} not supported.'.format(
           cpu_architecture))
 
-    sub_directory = u'macosx 10.9'
+    # Note that the sub directory should be URL encoded.
+    sub_directory = u'macosx%2010.9'
     noarch_sub_directory = None
 
   elif operating_system == u'Linux':
@@ -291,9 +292,9 @@ def Main():
       version, _, _ = version.partition(u'-')
 
     elif package_filename.endswith(u'.dmg'):
-      # TODO: implement.
-      print u'Not implemented yet.'
-      continue
+      name, _, version = package_filename.partition(u'-')
+      version, _, _ = version.partition(u'.dmg')
+      package_prefix = name
 
     elif package_filename.endswith(u'.msi'):
       name, _, version = package_filename.partition(u'-')
@@ -326,11 +327,11 @@ def Main():
       version.extend(last_part.split(u'-'))
 
     if name not in package_versions:
-      result = 1
+      compare_result = 1
     else:
-      result = CompareVersions(version, package_versions[name])
+      compare_result = CompareVersions(version, package_versions[name])
 
-    if result > 0:
+    if compare_result > 0:
       package_filenames[name] = package_filename
       package_versions[name] = version
 
@@ -345,7 +346,139 @@ def Main():
 
   os.chdir(u'..')
 
-  if operating_system == u'Windows':
+  if operating_system == u'Darwin':
+    result = True
+
+    command = u'/usr/sbin/pkgutil --packages'
+    print 'Running: "{0:s}"'.format(command)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    if process.returncode is None:
+      packages, _ = process.communicate()
+    else:
+      packages = ''
+
+    if process.returncode != 0:
+      logging.error(u'Running: "{0:s}" failed.'.format(command))
+      return False
+
+    for package_name in packages.split('\n'):
+      if not package_name:
+        continue
+
+      if (package_name.startswith(u'com.google.code.p.') or
+          package_name.startswith(u'org.python.pypi.') or
+          package_name.startswith(u'net.sourceforge.projects.')):
+
+        if package_name.startswith(u'com.google.code.p.'):
+          name = package_name[18:]
+
+        elif package_name.startswith(u'org.python.pypi.'):
+          name = package_name[16:]
+
+        elif package_name.startswith(u'net.sourceforge.projects.'):
+          name = package_name[25:]
+
+        # Detect the PackageMaker naming convention.
+        if name.endswith(u'.pkg'):
+          _, _, sub_name = name[:-4].rpartition(u'.')
+          is_package_maker_pkg = True
+        else:
+          is_package_maker_pkg = False
+        name, _, _ = name.partition(u'.')
+
+        if name in package_versions:
+          # Determine the package version.
+          command = u'/usr/sbin/pkgutil --pkg-info {0:s}'.format(package_name)
+          print 'Running: "{0:s}"'.format(command)
+          process = subprocess.Popen(
+              command, stdout=subprocess.PIPE, shell=True)
+          if process.returncode is None:
+            package_info, _ = process.communicate()
+          else:
+            package_info = ''
+
+          if process.returncode != 0:
+            logging.error(u'Running: "{0:s}" failed.'.format(command))
+            result = False
+            continue
+
+          location = None
+          version = None
+          volume = None
+          for attribute in package_info.split('\n'):
+            if attribute.startswith(u'location: '):
+              _, _, location = attribute.rpartition(u'location: ')
+
+            elif attribute.startswith(u'version: '):
+              _, _, version = attribute.rpartition(u'version: ')
+
+            elif attribute.startswith(u'volume: '):
+              _, _, volume = attribute.rpartition(u'volume: ')
+
+          version = version.split(u'.')
+          if name not in package_versions:
+            compare_result = 1
+          # TODO: handle pytsk.
+          else:
+            compare_result = CompareVersions(version, package_versions[name])
+            if compare_result >= 0:
+              # The latest or newer version is already installed.
+              del package_versions[name]
+
+          if compare_result < 0:
+            # Determine the files in the package.
+            command = u'/usr/sbin/pkgutil --files {0:s}'.format(package_name)
+            print 'Running: "{0:s}"'.format(command)
+            process = subprocess.Popen(
+                command, stdout=subprocess.PIPE, shell=True)
+            if process.returncode is None:
+              package_files, _ = process.communicate()
+            else:
+              package_files = ''
+
+            if process.returncode != 0:
+              logging.error(u'Running: "{0:s}" failed.'.format(command))
+              result = False
+              continue
+
+            directories = []
+            files = []
+            for filename in package_files.split('\n'):
+              if is_package_maker_pkg:
+                filename = u'{0:s}{1:s}/{2:s}/{3:s}'.format(
+                    volume, location, sub_name, filename)
+              else:
+                filename = u'{0:s}{1:s}'.format(location, filename)
+
+              if os.path.isdir(filename):
+                directories.append(filename)
+              else:
+                files.append(filename)
+
+            print 'Removing: {0:s} {1:s}'.format(name, version)
+            for filename in files:
+              if os.path.exists(filename):
+                os.remove(filename)
+
+            for filename in directories:
+              if os.path.exists(filename):
+                try:
+                  os.rmdir(filename)
+                except OSError:
+                  # Ignore directories that are not empty.
+                  pass
+
+            command = u'/usr/sbin/pkgutil --forget {0:s}'.format(
+                package_name)
+            exit_code = subprocess.call(command, shell=True)
+            if exit_code != 0:
+              logging.error(u'Running: "{0:s}" failed.'.format(command))
+              result = False
+
+    if not result:
+      return False
+
+  elif operating_system == u'Windows':
     connection = wmi.WMI()
 
     query = u'SELECT Name FROM Win32_Product'
@@ -361,27 +494,62 @@ def Main():
 
         version = version.split(u'.')
         if name not in package_versions:
-          result = 1
+          compare_result = 1
         elif name == u'pytsk':
           # We cannot really tell by the version number that pytsk needs to
           # be update. Just update it any way.
-          result = -1
+          compare_result = -1
         else:
-          result = CompareVersions(version, package_versions[name])
+          compare_result = CompareVersions(version, package_versions[name])
+          if compare_result >= 0:
+            # The latest or newer version is already installed.
+            del package_versions[name]
 
-        if result < 0:
+        if compare_result < 0:
           print 'Removing: {0:s} {1:s}'.format(name, u'.'.join(version))
           product.Uninstall()
-
-        elif result == 0:
-          del package_versions[name]
 
   result = True
 
   if operating_system == u'Darwin':
-    # TODO: implement.
-    print u'Not implemented yet.'
-    result = False
+    for name, version in package_versions.iteritems():
+      package_filename = package_filenames[name]
+
+      command = u'sudo /usr/bin/hdiutil attach {0:s}'.format(
+          os.path.join(dependencies_directory, package_filename))
+      print 'Running: "{0:s}"'.format(command)
+      exit_code = subprocess.call(command, shell=True)
+      if exit_code != 0:
+        logging.error(u'Running: "{0:s}" failed.'.format(command))
+        result = False
+        continue
+
+      volume_path = u'/Volumes/{0:s}.pkg'.format(package_filename[:-4])
+      if not os.path.exists(volume_path):
+        logging.error(u'Missing volume: {0:s}.'.format(volume_path))
+        result = False
+        continue
+
+      pkg_file = u'{0:s}/{1:s}.pkg'.format(volume_path, package_filename[:-4])
+      if not os.path.exists(pkg_file):
+        logging.error(u'Missing pkg file: {0:s}.'.format(pkg_file))
+        result = False
+        continue
+
+      command = u'sudo /usr/sbin/installer -target / -pkg {0:s}'.format(
+          pkg_file)
+      print 'Running: "{0:s}"'.format(command)
+      exit_code = subprocess.call(command, shell=True)
+      if exit_code != 0:
+        logging.error(u'Running: "{0:s}" failed.'.format(command))
+        result = False
+
+      command = u'sudo /usr/bin/hdiutil detach {0:s}'.format(volume_path)
+      print 'Running: "{0:s}"'.format(command)
+      exit_code = subprocess.call(command, shell=True)
+      if exit_code != 0:
+        logging.error(u'Running: "{0:s}" failed.'.format(command))
+        result = False
 
   elif operating_system == u'Linux':
     if linux_name == u'Fedora':
@@ -444,8 +612,9 @@ def Main():
   elif operating_system == u'Windows':
     for name, version in package_versions.iteritems():
       # TODO: add RunAs ?
+      package_filename = package_filenames[name]
       command = u'msiexec.exe /i {0:s} /q'.format(os.path.join(
-          dependencies_directory, package_filenames[name]))
+          dependencies_directory, package_filename))
       print 'Installing: {0:s} {1:s}'.format(name, u'.'.join(version))
       exit_code = subprocess.call(command, shell=False)
       if exit_code != 0:
