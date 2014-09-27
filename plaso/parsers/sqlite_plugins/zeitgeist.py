@@ -51,6 +51,7 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
   """SQLite plugin for Zeitgeist activity database."""
 
   NAME = 'zeitgeist'
+  DESCRIPTION = u'Parser for Zeitgeist activity SQLite database files.'
 
   # TODO: Explore the database more and make this parser cover new findings.
 

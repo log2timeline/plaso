@@ -29,6 +29,7 @@ class InstallHistoryPlugin(interface.PlistPlugin):
   """Plist plugin that extracts the installation history."""
 
   NAME = 'plist_install_history'
+  DESCRIPTION = u'Parser for installation history plist files.'
 
   PLIST_PATH = 'InstallHistory.plist'
   PLIST_KEYS = frozenset([

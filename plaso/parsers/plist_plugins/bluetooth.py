@@ -23,9 +23,10 @@ from plaso.parsers.plist_plugins import interface
 
 
 class BluetoothPlugin(interface.PlistPlugin):
-  """Basic plugin to extract interesting bluetooth related keys."""
+  """Basic plugin to extract interesting Bluetooth related keys."""
 
   NAME = 'plist_bluetooth'
+  DESCRIPTION = u'Parser for Bluetooth plist files.'
 
   PLIST_PATH = 'com.apple.bluetooth.plist'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])

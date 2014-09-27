@@ -26,6 +26,7 @@ class ServicesPlugin(interface.ValuePlugin):
   """Plug-in to format the Services and Drivers keys having Type and Start."""
 
   NAME = 'winreg_services'
+  DESCRIPTION = u'Parser for services and drivers Registry data.'
 
   REG_VALUES = frozenset(['Type', 'Start'])
   REG_TYPE = 'SYSTEM'

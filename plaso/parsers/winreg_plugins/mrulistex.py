@@ -109,6 +109,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
   """Windows Registry plugin to parse a string MRUListEx."""
 
   NAME = 'winreg_mrulistex_string'
+  DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
   REG_TYPE = 'any'
   REG_VALUES = frozenset(['MRUListEx', '0'])
@@ -203,6 +204,7 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
   """Windows Registry plugin to parse a shell item list MRUListEx."""
 
   NAME = 'winreg_mrulistex_shell_item_list'
+  DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
   REG_TYPE = 'any'
   REG_KEYS = frozenset([
@@ -280,6 +282,7 @@ class MRUListExStringAndShellItemPlugin(
   """Windows Registry plugin to parse a string and shell item MRUListEx."""
 
   NAME = 'winreg_mrulistex_string_and_shell_item'
+  DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
   REG_TYPE = 'any'
   REG_KEYS = frozenset([
@@ -382,6 +385,7 @@ class MRUListExStringAndShellItemListPlugin(
   """Windows Registry plugin to parse a string and shell item list MRUListEx."""
 
   NAME = 'winreg_mrulistex_string_and_shell_item_list'
+  DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
   REG_TYPE = 'any'
   REG_KEYS = frozenset([
@@ -472,7 +476,6 @@ class MRUListExStringAndShellItemListPlugin(
         parser_context, key, registry_type=registry_type, codepage=codepage)
 
 
-winreg.WinRegistryParser.RegisterPlugin(MRUListExStringPlugin)
-winreg.WinRegistryParser.RegisterPlugin(MRUListExShellItemListPlugin)
-winreg.WinRegistryParser.RegisterPlugin(MRUListExStringAndShellItemPlugin)
-winreg.WinRegistryParser.RegisterPlugin(MRUListExStringAndShellItemListPlugin)
+winreg.WinRegistryParser.RegisterPlugins([
+    MRUListExStringPlugin, MRUListExShellItemListPlugin,
+    MRUListExStringAndShellItemPlugin, MRUListExStringAndShellItemListPlugin])

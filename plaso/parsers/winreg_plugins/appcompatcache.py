@@ -79,15 +79,15 @@ class AppCompatCacheCachedEntry(object):
 
 
 class AppCompatCachePlugin(interface.KeyPlugin):
-  """Class that parses the Application Compatibility Cache Registry key."""
+  """Class that parses the Application Compatibility Cache Registry data."""
 
   NAME = 'winreg_appcompatcache'
+  DESCRIPTION = u'Parser for Application Compatibility Cache Registry data.'
 
   REG_KEYS = [
       u'\\{current_control_set}\\Control\\Session Manager\\AppCompatibility',
       u'\\{current_control_set}\\Control\\Session Manager\\AppCompatCache']
   REG_TYPE = 'SYSTEM'
-  DESCRIPTION = 'Application Compatibility Cache Registry key'
   URL = [
       (u'https://code.google.com/p/winreg-kb/wiki/'
        u'ApplicationCompatibilityCacheKey')]

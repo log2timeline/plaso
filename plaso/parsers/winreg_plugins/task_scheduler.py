@@ -53,8 +53,7 @@ class TaskCachePlugin(interface.KeyPlugin):
   """Plugin that parses a Task Cache key."""
 
   NAME = 'winreg_task_cache'
-
-  DESCRIPTION = 'TaskCachePlugin'
+  DESCRIPTION = u'Parser for Task Scheduler cache Registry data.'
 
   REG_TYPE = 'SOFTWARE'
   REG_KEYS = [

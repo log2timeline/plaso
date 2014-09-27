@@ -31,6 +31,7 @@ class TimeMachinePlugin(interface.PlistPlugin):
   """Basic plugin to extract time machine hardisk and the backups."""
 
   NAME = 'plist_timemachine'
+  DESCRIPTION = u'Parser for TimeMachine plist files.'
 
   PLIST_PATH = 'com.apple.TimeMachine.plist'
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])

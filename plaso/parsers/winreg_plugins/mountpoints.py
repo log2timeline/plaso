@@ -26,6 +26,7 @@ class MountPoints2Plugin(interface.KeyPlugin):
   """Windows Registry plugin for parsing the MountPoints2 key."""
 
   NAME = 'winreg_mountpoints2'
+  DESCRIPTION = u'Parser for mount points Registry data.'
 
   REG_TYPE = 'NTUSER'
 

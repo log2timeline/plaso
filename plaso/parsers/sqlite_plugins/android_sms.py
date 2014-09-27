@@ -55,6 +55,7 @@ class AndroidSmsPlugin(interface.SQLitePlugin):
   """Parse Android SMS database."""
 
   NAME = 'android_sms'
+  DESCRIPTION = u'Parser for Android text messages SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [

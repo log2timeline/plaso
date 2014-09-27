@@ -92,9 +92,10 @@ class GoogleDriveSnapshotLocalEntryEvent(time_events.PosixTimeEvent):
 
 
 class GoogleDrivePlugin(interface.SQLitePlugin):
-  """SQLite lugin for Google Drive snapshot.db files."""
+  """SQLite plugin for Google Drive snapshot.db files."""
 
   NAME = 'google_drive'
+  DESCRIPTION = u'Parser for Google Drive SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [

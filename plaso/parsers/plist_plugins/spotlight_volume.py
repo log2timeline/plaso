@@ -29,6 +29,7 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
   """Basic plugin to extract the Spotlight Volume Configuration."""
 
   NAME = 'plist_spotlight_volume'
+  DESCRIPTION = u'Parser for Spotlight volume configuration plist files.'
 
   PLIST_PATH = 'VolumeConfiguration.plist'
   PLIST_KEYS = frozenset(['Stores'])
