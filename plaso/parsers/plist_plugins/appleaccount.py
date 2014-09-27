@@ -41,17 +41,14 @@ class AppleAccountPlugin(interface.PlistPlugin):
       parser_context: A parser context object (instance of ParserContext).
       plist_name: name of the plist file.
       top_level: dictionary with the plist file parsed.
-
-    Returns:
-      A generator, self.GetEntries(), if the correct plugin, otherwise None.
     """
     if not plist_name.startswith(self.PLIST_PATH):
       raise errors.WrongPlistPlugin(self.NAME, plist_name)
-    return super(AppleAccountPlugin, self).Process(
+    super(AppleAccountPlugin, self).Process(
         parser_context, plist_name=self.PLIST_PATH, top_level=top_level,
         **kwargs)
 
-  # Yield Events
+  # Generated events:
   # Accounts: account name.
   # FirstName: first name associated with the account.
   # LastName: family name associate with the account.
@@ -59,15 +56,13 @@ class AppleAccountPlugin(interface.PlistPlugin):
   # LastSuccessfulConnect: last time when the account was connected.
   # ValidationDate: last time when the account was validated.
 
-  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
+  def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts relevant Apple Account entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      match: A dictionary containing keys extracted from PLIST_KEYS.
-
-    Yields:
-      EventObject objects extracted from the plist.
+      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+             The default is None.
     """
     root = '/Accounts'
 
@@ -78,20 +73,23 @@ class AppleAccountPlugin(interface.PlistPlugin):
       key = name_account
       description = u'Configured Apple account {0:s}'.format(
           general_description)
-      yield plist_event.PlistEvent(
+      event_object = plist_event.PlistEvent(
           root, key, account['CreationDate'], description)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       if 'LastSuccessfulConnect' in account:
         description = u'Connected Apple account {0:s}'.format(
             general_description)
-        yield plist_event.PlistEvent(
+        event_object = plist_event.PlistEvent(
             root, key, account['LastSuccessfulConnect'], description)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       if 'ValidationDate' in account:
         description = u'Last validation Apple account {0:s}'.format(
             general_description)
-        yield plist_event.PlistEvent(
+        event_object = plist_event.PlistEvent(
             root, key, account['ValidationDate'], description)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 plist.PlistParser.RegisterPlugin(AppleAccountPlugin)

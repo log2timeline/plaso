@@ -31,18 +31,16 @@ class InstallHistoryPlugin(interface.PlistPlugin):
   NAME = 'plist_install_history'
 
   PLIST_PATH = 'InstallHistory.plist'
-  PLIST_KEYS = frozenset(
-      ['date', 'displayName', 'displayVersion',
-       'processName', 'packageIdentifiers'])
+  PLIST_KEYS = frozenset([
+      'date', 'displayName', 'displayVersion',
+      'processName', 'packageIdentifiers'])
 
-  def GetEntries(self, unused_parser_context, top_level=None, **unused_kwargs):
+  def GetEntries(self, parser_context, top_level=None, **unused_kwargs):
     """Extracts relevant install history entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-
-    Yields:
-      EventObject objects extracted from the plist.
+      top_level: Optional plist in dictionary form. The default is None.
     """
     for entry in top_level:
       packages = []
@@ -53,8 +51,9 @@ class InstallHistoryPlugin(interface.PlistPlugin):
           u'Packages: {3:s}.').format(
               entry.get('displayName'), entry.get('displayVersion'),
               entry.get('processName'), u', '.join(packages))
-      yield plist_event.PlistEvent(
+      event_object = plist_event.PlistEvent(
           u'/item', u'', entry.get('date'), description)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 plist.PlistParser.RegisterPlugin(InstallHistoryPlugin)

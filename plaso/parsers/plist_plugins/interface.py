@@ -25,6 +25,7 @@ PlistPlugin defines the attributes neccessary for registration, discovery
 and operation of plugins for plist files which will be used by PlistParser.
 """
 
+import abc
 import logging
 
 from plaso.lib import errors
@@ -73,67 +74,10 @@ class PlistPlugin(plugins.BasePlugin):
   # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
   URLS = []
 
-  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
-    """Determine if this is the correct plugin; if so proceed with processing.
-
-    Process() checks if the current plist being processed is a match for a
-    plugin by comparing the PATH and KEY requirements defined by a plugin.  If
-    both match processing continues; else raise WrongPlistPlugin.
-
-    This function also extracts the required keys as defined in self.PLIST_KEYS
-    from the plist and stores the result in self.match[key] and calls
-    self.GetEntries() which holds the processing logic implemented by the
-    plugin.
-
-    Args:
-      parser_context: A parser context object (instance of ParserContext).
-      plist_name: Name of the plist file.
-      top_level: Plist in dictionary form.
-
-    Raises:
-      WrongPlistPlugin: If this plugin is not able to process the given file.
-      ValueError: If top_level or plist_name are not set.
-
-    Returns:
-      A generator of events processed by the plugin.
-    """
-    if plist_name is None or top_level is None:
-      raise ValueError(u'Top level or plist name are not set.')
-
-    if plist_name.lower() != self.PLIST_PATH.lower():
-      raise errors.WrongPlistPlugin(self.NAME, plist_name)
-
-    if isinstance(top_level, dict):
-      if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
-        raise errors.WrongPlistPlugin(self.NAME, plist_name)
-    else:
-      # Make sure we are getting back an object that has an iterator.
-      if not hasattr(top_level, '__iter__'):
-        raise errors.WrongPlistPlugin(self.NAME, plist_name)
-
-      # This is a list and we need to just look at the first level
-      # of keys there.
-      keys = []
-      for top_level_entry in top_level:
-        if isinstance(top_level_entry, dict):
-          keys.extend(top_level_entry.keys())
-
-      # Compare this is a set, which removes possible duplicate entries
-      # in the list.
-      if not set(keys).issuperset(self.PLIST_KEYS):
-        raise errors.WrongPlistPlugin(self.NAME, plist_name)
-
-    # This will raise if unhandled keyword arguments are passed.
-    super(PlistPlugin, self).Process(parser_context, **kwargs)
-
-    logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
-        self.NAME, plist_name))
-    match = GetKeys(top_level, self.PLIST_KEYS)
-    return self.GetEntries(parser_context, top_level=top_level, match=match)
-
+  @abc.abstractmethod
   def GetEntries(
-      self, unused_parser_context, top_level=None, match=None, **unused_kwargs):
-    """Yields PlistEvents from the values of entries within a plist.
+      self, parser_context, top_level=None, match=None, **unused_kwargs):
+    """Extracts event objects from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
 
@@ -168,12 +112,66 @@ class PlistPlugin(plugins.BasePlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      top_level: Plist in dictionary form.
-      match: A dictionary containing extracted keys from PLIST_KEYS.
-
-    Yields:
-      event.PlistEvent(root, key, time, desc) - An event from the plist.
+      top_level: Optional plist in dictionary form. The default is None.
+      match: Optional dictionary containing extracted keys from PLIST_KEYS.
+             The default is None.
     """
+
+  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
+    """Determine if this is the correct plugin; if so proceed with processing.
+
+    Process() checks if the current plist being processed is a match for a
+    plugin by comparing the PATH and KEY requirements defined by a plugin.  If
+    both match processing continues; else raise WrongPlistPlugin.
+
+    This function also extracts the required keys as defined in self.PLIST_KEYS
+    from the plist and stores the result in self.match[key] and calls
+    self.GetEntries() which holds the processing logic implemented by the
+    plugin.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      plist_name: Name of the plist file.
+      top_level: Plist in dictionary form.
+
+    Raises:
+      WrongPlistPlugin: If this plugin is not able to process the given file.
+      ValueError: If top_level or plist_name are not set.
+    """
+    if plist_name is None or top_level is None:
+      raise ValueError(u'Top level or plist name are not set.')
+
+    if plist_name.lower() != self.PLIST_PATH.lower():
+      raise errors.WrongPlistPlugin(self.NAME, plist_name)
+
+    if isinstance(top_level, dict):
+      if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
+        raise errors.WrongPlistPlugin(self.NAME, plist_name)
+
+    else:
+      # Make sure we are getting back an object that has an iterator.
+      if not hasattr(top_level, '__iter__'):
+        raise errors.WrongPlistPlugin(self.NAME, plist_name)
+
+      # This is a list and we need to just look at the first level
+      # of keys there.
+      keys = []
+      for top_level_entry in top_level:
+        if isinstance(top_level_entry, dict):
+          keys.extend(top_level_entry.keys())
+
+      # Compare this is a set, which removes possible duplicate entries
+      # in the list.
+      if not set(keys).issuperset(self.PLIST_KEYS):
+        raise errors.WrongPlistPlugin(self.NAME, plist_name)
+
+    # This will raise if unhandled keyword arguments are passed.
+    super(PlistPlugin, self).Process(parser_context, **kwargs)
+
+    logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
+        self.NAME, plist_name))
+    match = GetKeys(top_level, self.PLIST_KEYS)
+    self.GetEntries(parser_context, top_level=top_level, match=match)
 
 
 def RecurseKey(recur_item, root='', depth=15):

@@ -20,36 +20,33 @@
 import construct
 import logging
 
+from plaso.events import time_events
 from plaso.lib import binary
-from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class AppCompatCacheEvent(event.EventObject):
+class AppCompatCacheEvent(time_events.FiletimeEvent):
   """Class that contains the event object for AppCompatCache entries."""
 
   DATA_TYPE = 'windows:registry:appcompatcache'
 
   def __init__(
-      self, key, entry_index, path, usage=None, timestamp=None, offset=None):
+      self, filetime, usage, key, entry_index, path, offset):
     """Initializes a Windows Registry event.
 
     Args:
+      filetime: The FILETIME timestamp value.
+      usage: The description of the usage of the time value.
       key: Name of the Registry key being parsed.
       entry_index: The cache entry index number for the record.
       path: The full path to the executable.
-      timestamp: Optional timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      usage: The description of the usage of the time value.
       offset: The (data) offset of the Registry key or value.
     """
-    super(AppCompatCacheEvent, self).__init__()
-    self.timestamp = timestamp
+    super(AppCompatCacheEvent, self).__init__(filetime, usage)
+
     self.keyname = key
-    self.timestamp_desc = usage or eventdata.EventTimestamp.WRITTEN_TIME
     self.offset = offset
     self.entry_index = entry_index
     self.path = path
@@ -594,21 +591,19 @@ class AppCompatCachePlugin(interface.KeyPlugin):
       if cached_entry_object.last_modification_time is not None:
         # TODO: refactor to file modification event.
         event_object = AppCompatCacheEvent(
-            key.path, cached_entry_index + 1, cached_entry_object.path,
-            timestamp=timelib.Timestamp.FromFiletime(
-                cached_entry_object.last_modification_time),
-            offset=cached_entry_offset,
-            usage=u'File Last Modification Time')
+            cached_entry_object.last_modification_time,
+            u'File Last Modification Time', key.path,
+            cached_entry_index + 1, cached_entry_object.path,
+            cached_entry_offset)
         parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       if cached_entry_object.last_update_time is not None:
         # TODO: refactor to process run event.
         event_object = AppCompatCacheEvent(
-            key.path, cached_entry_index + 1, cached_entry_object.path,
-            timestamp=timelib.Timestamp.FromFiletime(
-                cached_entry_object.last_update_time),
-            offset=cached_entry_offset,
-            usage=eventdata.EventTimestamp.LAST_RUNTIME)
+            cached_entry_object.last_update_time,
+            eventdata.EventTimestamp.LAST_RUNTIME, key.path,
+            cached_entry_index + 1, cached_entry_object.path,
+            cached_entry_offset)
         parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       cached_entry_offset += cached_entry_object.cached_entry_size

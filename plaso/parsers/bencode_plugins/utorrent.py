@@ -55,7 +55,7 @@ class UTorrentPlugin(interface.BencodePlugin):
   # returned for analysis.
   BENCODE_KEYS = frozenset(['.fileguard'])
 
-  def GetEntries(self, unused_parser_context, data=None, **unused_kwargs):
+  def GetEntries(self, parser_context, data=None, **unused_kwargs):
     """Extracts uTorrent active torrents.
 
     This is the main parsing engine for the plugin. It determines if
@@ -78,9 +78,6 @@ class UTorrentPlugin(interface.BencodePlugin):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       data: Bencode data in dictionary form.
-
-    Yields:
-      An EventObject (UTorrentEvent) that contains the extracted attributes.
     """
     # Walk through one of the torrent keys to ensure it's from a valid file.
     for key, value in data.iteritems():
@@ -102,23 +99,29 @@ class UTorrentPlugin(interface.BencodePlugin):
       seedtime = value.get('seedtime', None)
 
       # Create timeline events based on extracted values.
-      for eventkey, eventvalue in value.iteritems():
-        if eventkey == 'added_on':
-          yield UTorrentEvent(
-              eventvalue, eventdata.EventTimestamp.ADDED_TIME,
+      for event_key, event_value in value.iteritems():
+        if event_key == 'added_on':
+          event_object = UTorrentEvent(
+              event_value, eventdata.EventTimestamp.ADDED_TIME,
               path, caption, seedtime)
-        elif eventkey == 'completed_on':
-          yield UTorrentEvent(
-              eventvalue, eventdata.EventTimestamp.FILE_DOWNLOADED,
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+        elif event_key == 'completed_on':
+          event_object = UTorrentEvent(
+              event_value, eventdata.EventTimestamp.FILE_DOWNLOADED,
               path, caption, seedtime)
-        elif eventkey == 'modtimes':
-          for modtime in eventvalue:
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+        elif event_key == 'modtimes':
+          for modtime in event_value:
             # Some values are stored as 0, skip those.
             if not modtime:
               continue
-            yield UTorrentEvent(
+
+            event_object = UTorrentEvent(
                 modtime, eventdata.EventTimestamp.MODIFICATION_TIME,
                 path, caption, seedtime)
+            parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 bencode_parser.BencodeParser.RegisterPlugin(UTorrentPlugin)

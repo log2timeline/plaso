@@ -42,15 +42,9 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
                              values. The default is None.
 
     Returns:
-      A generator of event objects as returned by the plugin.
+      An event object queue consumer object (instance of
+      TestEventObjectQueueConsumer).
     """
-    event_queue = queue.SingleThreadedQueue()
-
-    parse_error_queue = queue.SingleThreadedQueue()
-
-    parser_context = self._GetParserContext(
-        event_queue, parse_error_queue,
-        knowledge_base_values=knowledge_base_values)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
@@ -60,23 +54,34 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     self.assertNotEquals(top_level_object, None)
 
     return self._ParsePlistWithPlugin(
-        plugin_object, parser_context, plist_name, top_level_object)
+        plugin_object, plist_name, top_level_object,
+        knowledge_base_values=knowledge_base_values)
 
   def _ParsePlistWithPlugin(
-      self, plugin_object, parser_context, plist_name, top_level_object):
+      self, plugin_object, plist_name, top_level_object,
+      knowledge_base_values=None):
     """Parses a plist using the plugin object.
 
     Args:
       plugin_object: the plugin object.
-      parser_context: A parser context object (instance of ParserContext).
       plist_name: the name of the plist to parse.
       top_level_object: the top-level plist object.
+      knowledge_base_values: optional dict containing the knowledge base
+                             values. The default is None.
 
     Returns:
-      A generator of event objects as returned by the plugin.
+      An event object queue consumer object (instance of
+      TestEventObjectQueueConsumer).
     """
-    event_generator = plugin_object.Process(
-        parser_context, plist_name=plist_name, top_level=top_level_object)
-    self.assertNotEquals(event_generator, None)
+    event_queue = queue.SingleThreadedQueue()
+    event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
 
-    return event_generator
+    parse_error_queue = queue.SingleThreadedQueue()
+
+    parser_context = self._GetParserContext(
+        event_queue, parse_error_queue,
+        knowledge_base_values=knowledge_base_values)
+    plugin_object.Process(
+        parser_context, plist_name=plist_name, top_level=top_level_object)
+
+    return event_queue_consumer

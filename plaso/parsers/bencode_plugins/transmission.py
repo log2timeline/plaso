@@ -52,7 +52,7 @@ class TransmissionPlugin(interface.BencodePlugin):
       'activity-date', 'done-date', 'added-date', 'destination',
       'seeding-time-seconds'])
 
-  def GetEntries(self, unused_parser_context, data=None, **unused_kwargs):
+  def GetEntries(self, parser_context, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 
     This is the main parsing engine for the parser. It determines if
@@ -65,10 +65,6 @@ class TransmissionPlugin(interface.BencodePlugin):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       data: Bencode data in dictionary form.
-
-    Yields:
-      An EventObject (TransmissionEvent) that contains the extracted
-      attributes.
     """
     # Place the obtained values into the event.
     destination = data.get('destination', None)
@@ -76,19 +72,22 @@ class TransmissionPlugin(interface.BencodePlugin):
 
     # Create timeline events based on extracted values.
     if data.get('added-date', 0):
-      yield TransmissionEvent(
+      event_object = TransmissionEvent(
           data.get('added-date'), eventdata.EventTimestamp.ADDED_TIME,
           destination, seeding_time)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     if data.get('done-date', 0):
-      yield TransmissionEvent(
+      event_object = TransmissionEvent(
           data.get('done-date'), eventdata.EventTimestamp.FILE_DOWNLOADED,
           destination, seeding_time)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     if data.get('activity-date', None):
-      yield TransmissionEvent(
+      event_object = TransmissionEvent(
           data.get('activity-date'), eventdata.EventTimestamp.ACCESS_TIME,
           destination, seeding_time)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 bencode_parser.BencodeParser.RegisterPlugin(TransmissionPlugin)

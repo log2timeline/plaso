@@ -38,9 +38,9 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     test_file = self._GetTestFilePath(['com.apple.spotlight.plist'])
     plist_name = 'com.apple.spotlight.plist'
-    events = self._ParsePlistFileWithPlugin(
+    event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, test_file, plist_name)
-    event_objects = self._GetEventObjects(events)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 9)
 
