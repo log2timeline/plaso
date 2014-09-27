@@ -30,10 +30,10 @@ class CCleanerPlugin(interface.KeyPlugin):
   """Gathers the CCleaner Keys for NTUSER hive."""
 
   NAME = 'winreg_ccleaner'
+  DESCRIPTION = u'Parser for CCleaner Registry data.'
 
   REG_KEYS = [u'\\Software\\Piriform\\CCleaner']
   REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'CCleaner Registry key'
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, **unused_kwargs):
@@ -70,7 +70,7 @@ class CCleanerPlugin(interface.KeyPlugin):
             0, key.path, text_dict, offset=key.offset,
             registry_type=registry_type)
 
-      event_object.source_append = u': {0:s}'.format(self.DESCRIPTION)
+      event_object.source_append = u': CCleaner Registry key'
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 

@@ -26,6 +26,7 @@ class MRUListPlugin(interface.ValuePlugin):
   """A Registry plugin for keys that contain a MRUList value."""
 
   NAME = 'winreg_mrulist'
+  DESCRIPTION = u'Parser for Most Recently Used (MRU) Registry data.'
 
   REG_TYPE = 'any'
   REG_VALUES = frozenset(['MRUList', 'a'])

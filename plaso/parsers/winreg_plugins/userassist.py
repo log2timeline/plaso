@@ -33,8 +33,7 @@ class UserAssistPlugin(interface.KeyPlugin):
   """Plugin that parses an UserAssist key."""
 
   NAME = 'winreg_userassist'
-
-  DESCRIPTION = 'UserAssistPlugin'
+  DESCRIPTION = u'Parser for User Assist Registry data.'
 
   REG_TYPE = 'NTUSER'
   REG_KEYS = [

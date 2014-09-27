@@ -31,10 +31,10 @@ class USBStorPlugin(interface.KeyPlugin):
   """USBStor key plugin."""
 
   NAME = 'winreg_usbstor'
+  DESCRIPTION = u'Parser for USB storage Registry data.'
 
   REG_KEYS = [u'\\{current_control_set}\\Enum\\USBSTOR']
   REG_TYPE = 'SYSTEM'
-  DESCRIPTION = 'USBStor Entries'
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, **unused_kwargs):
@@ -55,7 +55,7 @@ class USBStorPlugin(interface.KeyPlugin):
           subkey.last_written_timestamp, key.path, text_dict,
           usage=eventdata.EventTimestamp.FIRST_CONNECTED, offset=key.offset,
           registry_type=registry_type,
-          source_append=': {0:s}'.format(self.DESCRIPTION))
+          source_append=': USBStor Entries')
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       # TODO: Determine if these 4 fields always exist.
@@ -93,7 +93,7 @@ class USBStorPlugin(interface.KeyPlugin):
             devicekey.last_written_timestamp, key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
             registry_type=registry_type,
-            source_append=': {0:s}'.format(self.DESCRIPTION))
+            source_append=': USBStor Entries')
         parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
         # Build list of first Insertion times.
@@ -118,7 +118,7 @@ class USBStorPlugin(interface.KeyPlugin):
               timestamp, key.path, text_dict,
               usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
               registry_type=registry_type,
-              source_append=': {0:s}'.format(self.DESCRIPTION))
+              source_append=': USBStor Entries')
           parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 

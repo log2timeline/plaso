@@ -54,6 +54,7 @@ class AndroidCallPlugin(interface.SQLitePlugin):
   """Parse Android contacts2 database."""
 
   NAME = 'android_calls'
+  DESCRIPTION = u'Parser for Android calls SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [

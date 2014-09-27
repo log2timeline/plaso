@@ -30,8 +30,7 @@ class TypedURLsPlugin(interface.KeyPlugin):
   """A Windows Registry plugin for typed URLs history."""
 
   NAME = 'winreg_typed_urls'
-
-  DESCRIPTION = 'Typed URLs'
+  DESCRIPTION = u'Parser for Internet Explorer typed URLs Registry data.'
 
   REG_TYPE = 'NTUSER'
   REG_KEYS = [
@@ -72,7 +71,7 @@ class TypedURLsPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=u': {0:s}'.format(self.DESCRIPTION))
+          source_append=u': Typed URLs')
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 

@@ -33,9 +33,9 @@ class OfficeMRUPlugin(interface.KeyPlugin):
   """Plugin that parses Microsoft Office MRU keys."""
 
   NAME = 'winreg_office_mru'
+  DESCRIPTION = u'Parser for Microsoft Office MRU Registry data.'
 
   REG_TYPE = 'NTUSER'
-  DESCRIPTION = 'Microsoft Office MRU'
 
   REG_KEYS = [
       u'\\Software\\Microsoft\\Office\\14.0\\Word\\Place MRU',
@@ -103,7 +103,7 @@ class OfficeMRUPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=': {0:s}'.format(self.DESCRIPTION))
+          source_append=': Microsoft Office MRU')
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 

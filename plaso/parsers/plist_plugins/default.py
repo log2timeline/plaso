@@ -29,6 +29,7 @@ class DefaultPlugin(interface.PlistPlugin):
   """Basic plugin to extract keys with timestamps as values from plists."""
 
   NAME = 'plist_default'
+  DESCRIPTION = u'Parser for plist files.'
 
   def GetEntries(self, parser_context, top_level=None, **unused_kwargs):
     """Simple method to exact date values from a Plist.
