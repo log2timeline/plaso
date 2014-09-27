@@ -31,6 +31,7 @@ class BagMRUPlugin(interface.KeyPlugin):
   """Class that defines a BagMRU Windows Registry plugin."""
 
   NAME = 'winreg_bagmru'
+  DESCRIPTION = u'Parser for BagMRU Registry data.'
 
   # TODO: remove REG_TYPE and use HKEY_CURRENT_USER instead.
   REG_TYPE = 'any'

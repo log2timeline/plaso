@@ -68,11 +68,12 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   """
 
   NAME = 'appusage'
+  DESCRIPTION = u'Parser for Mac OS X application usage SQLite database files.'
 
   # Define the needed queries.
-  QUERIES = [
-      (('SELECT last_time, event, bundle_id, app_version, app_path, '
-        'number_times FROM application_usage ORDER BY last_time'),
+  QUERIES = [(
+      ('SELECT last_time, event, bundle_id, app_version, app_path, '
+       'number_times FROM application_usage ORDER BY last_time'),
        'ParseApplicationUsageRow')]
 
   # The required tables.

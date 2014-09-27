@@ -137,7 +137,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
   """Parses a MSIE WebCache ESE database file."""
 
   NAME = 'msie_webcache'
-  DESCRIPTION = u'Parses MSIE WebCache ESE database files.'
+  DESCRIPTION = u'Parser for MSIE WebCache ESE database files.'
 
   # TODO: add support for AppCache_#, AppCacheEntry_#, DependencyEntry_#
 

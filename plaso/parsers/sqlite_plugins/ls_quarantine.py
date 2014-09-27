@@ -54,6 +54,7 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
   """
 
   NAME = 'ls_quarantine'
+  DESCRIPTION = u'Parser for LS quarantine events SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [

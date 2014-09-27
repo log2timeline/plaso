@@ -29,7 +29,7 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
   """Windows Registry plugin for Terminal Server Client Connection keys."""
 
   NAME = 'winreg_rdp'
-  DESCRIPTION = 'RDP Connection'
+  DESCRIPTION = u'Parser for Terminal Server Client Connection Registry data.'
 
   REG_TYPE = 'NTUSER'
   REG_KEYS = [
@@ -61,7 +61,7 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=': {0:s}'.format(self.DESCRIPTION))
+          source_append=': RDP Connection')
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
@@ -69,8 +69,7 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
   """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
 
   NAME = 'winreg_rdp_mru'
-
-  DESCRIPTION = 'RDP Connection'
+  DESCRIPTION = u'Parser for Terminal Server Client MRU Registry data.'
 
   REG_TYPE = 'NTUSER'
   REG_KEYS = [
@@ -108,9 +107,9 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=u': {0:s}'.format(self.DESCRIPTION))
+          source_append=u': RDP Connection')
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
-winreg.WinRegistryParser.RegisterPlugin(TerminalServerClientPlugin)
-winreg.WinRegistryParser.RegisterPlugin(TerminalServerClientMRUPlugin)
+winreg.WinRegistryParser.RegisterPlugins([
+    TerminalServerClientPlugin, TerminalServerClientMRUPlugin])

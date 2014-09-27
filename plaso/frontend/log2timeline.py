@@ -83,7 +83,6 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
     from plaso import output as _
     from plaso.frontend import presets
     from plaso.lib import output
-    from plaso.parsers import plugins
 
     return_dict['Versions'] = [
         ('plaso engine', plaso.GetVersion()),
@@ -103,10 +102,11 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
       return_dict['Output Modules'].append((name, description))
 
     return_dict['Plugins'] = []
-
-    for plugin, obj in sorted(plugins.BasePlugin.classes.iteritems()):
-      doc_string, _, _ = obj.__doc__.partition('\n')
-      return_dict['Plugins'].append((plugin, doc_string))
+    for _, parser_class in parsers_manager.ParsersManager.GetParsers():
+      if parser_class.SupportsPlugins():
+        for _, plugin_class in parser_class.GetPlugins():
+          description = getattr(plugin_class, 'DESCRIPTION', u'')
+          return_dict['Plugins'].append((plugin_class.NAME, description))
 
     return_dict['Filters'] = []
     for filter_obj in sorted(filters.ListFilters()):

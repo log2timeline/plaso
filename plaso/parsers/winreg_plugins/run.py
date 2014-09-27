@@ -26,6 +26,7 @@ class RunUserPlugin(interface.KeyPlugin):
   """Windows Registry plugin for parsing user specific auto runs."""
 
   NAME = 'winreg_run'
+  DESCRIPTION = u'Parser for run and run once Registry data.'
 
   REG_TYPE = 'NTUSER'
 
@@ -34,7 +35,6 @@ class RunUserPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce']
 
   URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
-  DESCRIPTION = 'Run Key'
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, **unused_kwargs):
@@ -61,7 +61,7 @@ class RunUserPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
           urls=self.URLS, registry_type=registry_type,
-          source_append=': {0:s}'.format(self.DESCRIPTION))
+          source_append=': Run Key')
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
@@ -80,5 +80,5 @@ class RunSoftwarePlugin(RunUserPlugin):
       u'\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce']
 
 
-winreg.WinRegistryParser.RegisterPlugin(RunUserPlugin)
-winreg.WinRegistryParser.RegisterPlugin(RunSoftwarePlugin)
+winreg.WinRegistryParser.RegisterPlugins([
+    RunUserPlugin, RunSoftwarePlugin])

@@ -33,6 +33,7 @@ class DefaultPlugin(interface.KeyPlugin):
   """
 
   NAME = 'winreg_default'
+  DESCRIPTION = u'Parser for Registry data.'
 
   REG_TYPE = 'any'
   REG_KEYS = []

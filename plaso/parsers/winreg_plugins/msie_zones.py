@@ -29,6 +29,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
   """Windows Registry plugin for parsing the MSIE Zones settings."""
 
   NAME = 'winreg_msie_zone'
+  DESCRIPTION = u'Parser for Internet Explorer zone settings Registry data.'
 
   REG_TYPE = 'NTUSER'
 
@@ -281,5 +282,5 @@ class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):
        u'\\Lockdown_Zones')]
 
 
-winreg.WinRegistryParser.RegisterPlugin(MsieZoneSettingsPlugin)
-winreg.WinRegistryParser.RegisterPlugin(MsieZoneSettingsSoftwareZonesPlugin)
+winreg.WinRegistryParser.RegisterPlugins([
+    MsieZoneSettingsPlugin, MsieZoneSettingsSoftwareZonesPlugin])

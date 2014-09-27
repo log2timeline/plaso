@@ -29,6 +29,7 @@ class SpotlightPlugin(interface.PlistPlugin):
   """Basic plugin to extract Spotlight."""
 
   NAME = 'plist_spotlight'
+  DESCRIPTION = u'Parser for Spotlight plist files.'
 
   PLIST_PATH = 'com.apple.spotlight.plist'
   PLIST_KEYS = frozenset(['UserShortcuts'])

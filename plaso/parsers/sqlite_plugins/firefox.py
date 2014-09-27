@@ -196,6 +196,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
   """
 
   NAME = 'firefox_history'
+  DESCRIPTION = u'Parser for Firefox history SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
@@ -396,6 +397,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   """
 
   NAME = 'firefox_downloads'
+  DESCRIPTION = u'Parser for Firefox downloads SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [

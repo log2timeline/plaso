@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a default plist plugin in Plaso."""
+"""This file contains the Mac OS X user plist plugin."""
 
 # TODO: Only plists from Mac OS X 10.8 and 10.9 were tested. Look at other
 #       versions as well.
@@ -41,6 +41,7 @@ class MacUserPlugin(interface.PlistPlugin):
   """Basic plugin to extract timestamp Mac user information."""
 
   NAME = 'plist_macuser'
+  DESCRIPTION = u'Parser for Mac OS X user plist files.'
 
   # The PLIST_PATH is dynamic, "user".plist is the name of the
   # Mac OS X user.

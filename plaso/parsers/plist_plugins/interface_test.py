@@ -28,7 +28,9 @@ from plaso.parsers.plist_plugins import test_lib
 
 class MockPlugin(interface.PlistPlugin):
   """Mock plugin."""
+
   NAME = 'mock_plist_plugin'
+  DESCRIPTION = u'Parser for testing parsing plist files.'
 
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])

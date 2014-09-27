@@ -51,7 +51,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
   NAME = 'mcafee_protection'
-  DESCRIPTION = u'Parses McAfee AV Access Protection Log files.'
+  DESCRIPTION = u'Parser for McAfee AV Access Protection log files.'
 
   VALUE_SEPARATOR = '\t'
   # Define the columns of the McAfee AV Access Protection Log.

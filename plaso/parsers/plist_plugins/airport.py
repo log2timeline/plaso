@@ -29,6 +29,7 @@ class AirportPlugin(interface.PlistPlugin):
   """Plist plugin that extracts WiFi information."""
 
   NAME = 'plist_airport'
+  DESCRIPTION = u'Parser for Airport plist files.'
 
   PLIST_PATH = 'com.apple.airport.preferences.plist'
   PLIST_KEYS = frozenset(['RememberedNetworks'])

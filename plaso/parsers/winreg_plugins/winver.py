@@ -29,6 +29,7 @@ class WinVerPlugin(interface.KeyPlugin):
   """Plug-in to collect information about the Windows version."""
 
   NAME = 'winreg_winver'
+  DESCRIPTION = u'Parser for Windows version Registry data.'
 
   REG_KEYS = [u'\\Microsoft\\Windows NT\\CurrentVersion']
   REG_TYPE = 'SOFTWARE'

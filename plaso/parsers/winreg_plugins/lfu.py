@@ -26,6 +26,7 @@ class BootVerificationPlugin(interface.KeyPlugin):
   """Plug-in to collect the Boot Verification Key."""
 
   NAME = 'winreg_boot_verify'
+  DESCRIPTION = u'Parser for Boot Verification Registry data.'
 
   REG_TYPE = 'SYSTEM'
   REG_KEYS = [u'\\{current_control_set}\\Control\\BootVerificationProgram']
@@ -57,6 +58,7 @@ class BootExecutePlugin(interface.KeyPlugin):
   """Plug-in to collect the BootExecute Value from the Session Manager key."""
 
   NAME = 'winreg_boot_execute'
+  DESCRIPTION = u'Parser for Boot Execution Registry data.'
 
   REG_TYPE = 'SYSTEM'
   REG_KEYS = [u'\\{current_control_set}\\Control\\Session Manager']
@@ -114,5 +116,5 @@ class BootExecutePlugin(interface.KeyPlugin):
     parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
-winreg.WinRegistryParser.RegisterPlugin(BootVerificationPlugin)
-winreg.WinRegistryParser.RegisterPlugin(BootExecutePlugin)
+winreg.WinRegistryParser.RegisterPlugins([
+    BootVerificationPlugin, BootExecutePlugin])

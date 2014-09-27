@@ -30,6 +30,7 @@ class RegistryPlugin(plugins.BasePlugin):
   __abstract = True
 
   NAME = 'winreg'
+  DESCRIPTION = u'Parser for Registry data.'
 
   # Indicate the type of hive this plugin belongs to (eg. NTUSER, SOFTWARE).
   REG_TYPE = 'any'
