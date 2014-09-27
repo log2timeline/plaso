@@ -104,14 +104,7 @@ class BencodeParser(interface.BasePluginsParser):
 
     for plugin_object in self._plugins:
       try:
-        for event_object in plugin_object.Process(
-            parser_context, top_level=top_level_object):
-
-          # TODO: remove this once the yield-based parsers have been replaced
-          # by produce (or emit)-based variants.
-          parser_context.ProduceEvent(
-              event_object, parser_name=self.NAME,
-              plugin_name=plugin_object.NAME, file_entry=file_entry)
+        plugin_object.Process(parser_context, top_level=top_level_object)
 
       except errors.WrongBencodePlugin as exception:
         logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(

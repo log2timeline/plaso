@@ -21,9 +21,7 @@ import unittest
 
 from plaso.events import plist_event
 from plaso.lib import errors
-from plaso.lib import queue
-# Register plugins.
-from plaso.parsers import plist  # pylint: disable=unused-import
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 from plaso.parsers.plist_plugins import test_lib
 
@@ -35,10 +33,11 @@ class MockPlugin(interface.PlistPlugin):
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
-  def GetEntries(self, unused_parser_context, **unused_kwargs):
-    yield plist_event.PlistEvent(
+  def GetEntries(self, parser_context, **unused_kwargs):
+    event_object = plist_event.PlistEvent(
         u'/DeviceCache/44-00-00-00-00-00', u'LastInquiryUpdate',
         1351827808261762)
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 class TestPlistPlugin(test_lib.PlistPluginTestCase):
@@ -46,12 +45,6 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    event_queue = queue.SingleThreadedQueue()
-    parse_error_queue = queue.SingleThreadedQueue()
-
-    self._parser_context = self._GetParserContext(
-        event_queue, parse_error_queue)
-
     self._top_level_dict = {
         'DeviceCache': {
             '44-00-00-00-00-04': {
@@ -72,29 +65,35 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     # Ensure the plugin only processes if both filename and keys exist.
-    mock_plugin = MockPlugin()
+    plugin_object = MockPlugin()
 
     # Test correct filename and keys.
-    self.assertTrue(mock_plugin.Process(
-        self._parser_context, plist_name='plist_binary', top_level={
-        'DeviceCache': 1, 'PairedDevices': 1}))
+    top_level = {'DeviceCache': 1, 'PairedDevices': 1}
+    event_object_generator = self._ParsePlistWithPlugin(
+        plugin_object, 'plist_binary', top_level)
+    event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
-    # Correct filename with odd filename cAsinG.  Adding an extra useless key.
-    self.assertTrue(mock_plugin.Process(
-        self._parser_context, plist_name='pLiSt_BinAry', top_level={
-        'DeviceCache': 1, 'PairedDevices': 1, 'R@ndomExtraKey': 1}))
+    self.assertEquals(len(event_objects), 1)
+
+    # Correct filename with odd filename cAsinG. Adding an extra useless key.
+    top_level = {'DeviceCache': 1, 'PairedDevices': 1, 'R@ndomExtraKey': 1}
+    event_object_generator = self._ParsePlistWithPlugin(
+        plugin_object, 'pLiSt_BinAry', top_level)
+    event_objects = self._GetEventObjectsFromQueue(event_object_generator)
+
+    self.assertEquals(len(event_objects), 1)
 
     # Test wrong filename.
+    top_level = {'DeviceCache': 1, 'PairedDevices': 1}
     with self.assertRaises(errors.WrongPlistPlugin):
-      mock_plugin.Process(
-        self._parser_context, plist_name='wrong_file.plist', top_level={
-          'DeviceCache': 1, 'PairedDevices': 1})
+      _ = self._ParsePlistWithPlugin(
+          plugin_object, 'wrong_file.plist', top_level)
 
     # Test not enough required keys.
+    top_level = {'Useless_Key': 0, 'PairedDevices': 1}
     with self.assertRaises(errors.WrongPlistPlugin):
-      mock_plugin.Process(
-        self._parser_context, plist_name='plist_binary', top_level={
-          'Useless_Key': 0, 'PairedDevices': 1})
+      _ = self._ParsePlistWithPlugin(
+          plugin_object, 'plist_binary.plist', top_level)
 
   def testRecurseKey(self):
     """Tests the RecurseKey function."""

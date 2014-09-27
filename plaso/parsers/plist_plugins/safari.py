@@ -19,14 +19,14 @@
 
 import logging
 
-from plaso.lib import event
+from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-class SafariHistoryEvent(event.EventObject):
+class SafariHistoryEvent(time_events.TimestampEvent):
   """An EventObject for Safari history entries."""
 
   def __init__(self, timestamp, history_entry):
@@ -36,10 +36,9 @@ class SafariHistoryEvent(event.EventObject):
       timestamp: The timestamp of the Event, in microseconds since Unix Epoch.
       history_entry: A dict object read from the Safari history plist.
     """
-    super(SafariHistoryEvent, self).__init__()
+    super(SafariHistoryEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.LAST_VISITED_TIME)
     self.data_type = 'safari:history:visit'
-    self.timestamp = timestamp
-    self.timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
     self.url = history_entry.get('', None)
     self.title = history_entry.get('title', None)
     display_title = history_entry.get('displayTitle', None)
@@ -57,15 +56,13 @@ class SafariHistoryPlugin(interface.PlistPlugin):
   PLIST_PATH = 'History.plist'
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
 
-  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
+  def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts Safari history items.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      match: A dictionary containing keys extracted from PLIST_KEYS.
-
-    Yields:
-      EventObject objects extracted from the plist.
+      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+             The default is None.
     """
     if match.get('WebHistoryFileVersion', 0) != 1:
       logging.warning(u'Unable to parse Safari version: {0:s}'.format(
@@ -85,7 +82,8 @@ class SafariHistoryPlugin(interface.PlistPlugin):
         logging.debug('No timestamp set, skipping record.')
         continue
 
-      yield SafariHistoryEvent(time, history_entry)
+      event_object = SafariHistoryEvent(time, history_entry)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 plist.PlistParser.RegisterPlugin(SafariHistoryPlugin)

@@ -30,6 +30,22 @@ class DefaultPlugin(interface.PlistPlugin):
 
   NAME = 'plist_default'
 
+  def GetEntries(self, parser_context, top_level=None, **unused_kwargs):
+    """Simple method to exact date values from a Plist.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      top_level: Plist in dictionary form.
+    """
+    for root, key, value in interface.RecurseKey(top_level):
+      if isinstance(value, datetime.datetime):
+        event_object = plist_event.PlistEvent(root, key, value)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+      # TODO: Binplist keeps a list of offsets but not mapped to a key.
+      # adjust code when there is a way to map keys to offsets.
+
+  # TODO: move this into the parser as with the olecf plugins.
   def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
     """Overwrite the default Process function so it always triggers.
 
@@ -45,29 +61,10 @@ class DefaultPlugin(interface.PlistPlugin):
       parser_context: A parser context object (instance of ParserContext).
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
-
-    Returns:
-      A generator of events processed by the plugin.
     """
     logging.debug(u'Plist {0:s} plugin used for: {1:s}'.format(
         self.NAME, plist_name))
-    return self.GetEntries(parser_context, top_level=top_level, **kwargs)
-
-  def GetEntries(self, unused_parser_context, top_level=None, **unused_kwargs):
-    """Simple method to exact date values from a Plist.
-
-    Args:
-      parser_context: A parser context object (instance of ParserContext).
-      top_level: Plist in dictionary form.
-
-    Yields:
-      An EventObject from Plists values that are date objects.
-    """
-    for root, key, value in interface.RecurseKey(top_level):
-      if isinstance(value, datetime.datetime):
-        yield plist_event.PlistEvent(root, key, value)
-      # TODO: Binplist keeps a list of offsets but not mapped to a key.
-      # adjust code when there is a way to map keys to offsets.
+    self.GetEntries(parser_context, top_level=top_level, **kwargs)
 
 
 plist.PlistParser.RegisterPlugin(DefaultPlugin)
