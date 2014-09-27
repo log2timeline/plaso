@@ -29,45 +29,14 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.lib import errors
 from plaso.lib import queue
-from plaso.lib import utils
-from plaso.parsers import filestat
-
-
-# TODO: refactor.
-def _SendContainerToStorage(file_entry, storage_queue_producer):
-  """Read events from a event container and send them to storage.
-
-  Args:
-    file_entry: The file entry object (instance of dfvfs.FileEntry).
-    storage_queue_producer: the storage queue producer (instance of
-                            EventObjectQueueProducer).
-  """
-  stat_object = file_entry.GetStat()
-
-  fs_type = filestat.StatEvents.GetFileSystemTypeFromFileEntry(file_entry)
-
-  for event_object in filestat.StatEvents.GetEventsFromStat(
-      stat_object, fs_type):
-    # TODO: dfVFS refactor: move display name to output since the path
-    # specification contains the full information.
-    event_object.display_name = u'{0:s}:{1:s}'.format(
-        file_entry.path_spec.type_indicator, file_entry.name)
-
-    event_object.filename = file_entry.name
-    event_object.pathspec = file_entry.path_spec
-    event_object.parser = u'filestat'
-    # TODO: clean up the GetInodeValue function.
-    event_object.inode = utils.GetInodeValue(stat_object.ino)
-
-    storage_queue_producer.ProduceEventObject(event_object)
 
 
 class Collector(queue.PathSpecQueueProducer):
   """Class that implements a collector object."""
 
   def __init__(
-      self, process_queue, storage_queue_producer, source_path,
-      source_path_spec, resolver_context=None):
+      self, process_queue, source_path, source_path_spec,
+      resolver_context=None):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -76,8 +45,6 @@ class Collector(queue.PathSpecQueueProducer):
 
     Args:
       process_queue: The files processing queue (instance of Queue).
-      storage_queue_producer: the storage queue producer (instance of
-                              EventObjectQueueProducer).
       source_path: Path of the source file or directory.
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
@@ -87,8 +54,7 @@ class Collector(queue.PathSpecQueueProducer):
     """
     super(Collector, self).__init__(process_queue)
     self._filter_find_specs = None
-    self._fs_collector = FileSystemCollector(
-        process_queue, storage_queue_producer)
+    self._fs_collector = FileSystemCollector(process_queue)
     self._resolver_context = resolver_context
     self._rpc_proxy = None
     # TODO: remove the need to pass source_path
@@ -268,6 +234,15 @@ class Collector(queue.PathSpecQueueProducer):
 
     self.SignalEndOfInput()
 
+  def SetCollectDirectoryMetadata(self, collect_directory_metadata):
+    """Sets the collect directory metadata flag.
+
+    Args:
+      collect_directory_metadata: Boolean value to indicate to collect
+                                  directory metadata.
+    """
+    self._fs_collector.SetCollectDirectoryMetadata(collect_directory_metadata)
+
   def SetFilter(self, filter_find_specs):
     """Sets the collection filter find specifications.
 
@@ -300,7 +275,7 @@ class Collector(queue.PathSpecQueueProducer):
 class FileSystemCollector(queue.PathSpecQueueProducer):
   """Class that implements a file system collector object."""
 
-  def __init__(self, process_queue, storage_queue_producer):
+  def __init__(self, process_queue):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
@@ -309,14 +284,11 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
 
     Args:
       process_queue: The files processing queue (instance of Queue).
-      storage_queue_producer: the storage queue producer (instance of
-                              EventObjectQueueProducer).
     """
     super(FileSystemCollector, self).__init__(process_queue)
+    self._collect_directory_metadata = True
     self._duplicate_file_check = False
     self._hashlist = {}
-    self._storage_queue_producer = storage_queue_producer
-    self.collect_directory_metadata = True
 
   def __enter__(self):
     """Enters a with statement."""
@@ -339,19 +311,19 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
     stat_object = file_entry.GetStat()
     ret_hash = hashlib.md5()
 
-    ret_hash.update('atime:{0}.{1}'.format(
+    ret_hash.update('atime:{0:d}.{1:d}'.format(
         getattr(stat_object, 'atime', 0),
         getattr(stat_object, 'atime_nano', 0)))
 
-    ret_hash.update('crtime:{0}.{1}'.format(
+    ret_hash.update('crtime:{0:d}.{1:d}'.format(
         getattr(stat_object, 'crtime', 0),
         getattr(stat_object, 'crtime_nano', 0)))
 
-    ret_hash.update('mtime:{0}.{1}'.format(
+    ret_hash.update('mtime:{0:d}.{1:d}'.format(
         getattr(stat_object, 'mtime', 0),
         getattr(stat_object, 'mtime_nano', 0)))
 
-    ret_hash.update('ctime:{0}.{1}'.format(
+    ret_hash.update('ctime:{0:d}.{1:d}'.format(
         getattr(stat_object, 'ctime', 0),
         getattr(stat_object, 'ctime_nano', 0)))
 
@@ -381,11 +353,10 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
           continue
 
       if sub_file_entry.IsDirectory():
-        if self.collect_directory_metadata:
-          # TODO: solve this differently by putting the path specification
-          # on the queue and have the filestat parser just extract the metadata.
-          # self.ProducePathSpec(sub_file_entry.path_spec)
-          _SendContainerToStorage(file_entry, self._storage_queue_producer)
+        # This check is here to improve performance by not producing
+        # path specifications that don't get processed.
+        if self._collect_directory_metadata:
+          self.ProducePathSpec(sub_file_entry.path_spec)
 
         sub_directories.append(sub_file_entry)
 
@@ -431,3 +402,12 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
       file_entry = file_system.GetFileEntryByPathSpec(path_spec)
 
       self._ProcessDirectory(file_entry)
+
+  def SetCollectDirectoryMetadata(self, collect_directory_metadata):
+    """Sets the collect directory metadata flag.
+
+    Args:
+      collect_directory_metadata: Boolean value to indicate to collect
+                                  directory metadata.
+    """
+    self._collect_directory_metadata = collect_directory_metadata

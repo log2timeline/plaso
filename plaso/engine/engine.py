@@ -76,10 +76,10 @@ class Engine(object):
       raise RuntimeError(u'Missing source.')
 
     collector_object = collector.Collector(
-        self._collection_queue, self._event_queue_producer, self._source,
-        self._source_path_spec, resolver_context=resolver_context)
+        self._collection_queue, self._source, self._source_path_spec,
+        resolver_context=resolver_context)
 
-    collector_object.collect_directory_metadata = include_directory_stat
+    collector_object.SetCollectDirectoryMetadata(include_directory_stat)
 
     if vss_stores:
       collector_object.SetVssInformation(vss_stores)
