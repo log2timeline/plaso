@@ -38,9 +38,9 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     test_file = self._GetTestFilePath(['InstallHistory.plist'])
     plist_name = 'InstallHistory.plist'
-    events = self._ParsePlistFileWithPlugin(
+    event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, test_file, plist_name)
-    event_objects = self._GetEventObjects(events)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 7)
 

@@ -31,24 +31,22 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
   NAME = 'plist_softwareupdate'
 
   PLIST_PATH = 'com.apple.SoftwareUpdate.plist'
-  PLIST_KEYS = frozenset(
-      ['LastFullSuccessfulDate', 'LastSuccessfulDate',
-       'LastAttemptSystemVersion', 'LastUpdatesAvailable',
-       'LastRecommendedUpdatesAvailable', 'RecommendedUpdates'])
+  PLIST_KEYS = frozenset([
+      'LastFullSuccessfulDate', 'LastSuccessfulDate',
+      'LastAttemptSystemVersion', 'LastUpdatesAvailable',
+      'LastRecommendedUpdatesAvailable', 'RecommendedUpdates'])
 
-  # Yield Events
+  # Generated events:
   # LastFullSuccessfulDate: timestamp when Mac OS X was full udpate.
   # LastSuccessfulDate: tiemstamp when Mac OS X was partially udpate.
 
-  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
+  def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts relevant Mac OS X update entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      match: A dictionary containing keys extracted from PLIST_KEYS.
-
-    Yields:
-      EventObject objects extracted from the plist.
+      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+             The default is None.
     """
     root = '/'
     key = ''
@@ -56,8 +54,9 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
     pending = match['LastUpdatesAvailable']
 
     description = u'Last Mac OS X {0:s} full update.'.format(version)
-    yield plist_event.PlistEvent(
+    event_object = plist_event.PlistEvent(
         root, key, match['LastFullSuccessfulDate'], description)
+    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     if pending:
       software = []
@@ -67,8 +66,9 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
       description = (
           u'Last Mac OS {0!s} partially update, pending {1!s}: {2:s}.').format(
               version, pending, u','.join(software))
-      yield plist_event.PlistEvent(
+      event_object = plist_event.PlistEvent(
           root, key, match['LastSuccessfulDate'], description)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 plist.PlistParser.RegisterPlugin(SoftwareUpdatePlugin)

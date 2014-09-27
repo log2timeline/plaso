@@ -49,9 +49,87 @@ class BencodePlugin(plugins.BasePlugin):
 
   NAME = 'bencode'
 
+  def _GetKeys(self, top_level, keys, depth=1):
+    """Helper function to return keys nested in a bencode dict.
+
+    By default this function will return the values for the named keys requested
+    by a plugin in match{}. The default setting is to look a single layer down
+    from the root (same as the check for plugin applicability). This level is
+    suitable for most cases.
+
+    For cases where there is varability in the name at the first level
+    (e.g. it is the MAC addresses of a device, or a UUID) it is possible to
+    override the depth limit and use _GetKeys to fetch from a deeper level.
+
+    Args:
+      top_level: bencode data in dictionary form.
+      keys: A list of keys that should be returned.
+      depth: Defines how many levels deep to check for a match.
+
+    Returns:
+      A dictionary with just the keys requested.
+    """
+    keys = set(keys)
+    match = {}
+
+    if depth == 1:
+      for key in keys:
+        match[key] = top_level[key]
+    else:
+      for _, parsed_key, parsed_value in self._RecurseKey(
+          top_level, depth=depth):
+        if parsed_key in keys:
+          match[parsed_key] = parsed_value
+          if set(match.keys()) == keys:
+            return match
+    return match
+
+  def _RecurseKey(self, recur_item, root='', depth=15):
+    """Flattens nested dictionaries and lists by yielding it's values.
+
+    The hierarchy of a bencode file is a series of nested dictionaries and
+    lists. This is a helper function helps plugins navigate the structure
+    without having to reimplent their own recsurive methods.
+
+    This method implements an overridable depth limit to prevent processing
+    extremely deeply nested dictionaries. If the limit is reached a debug
+    message is logged indicating which key processing stopped on.
+
+    Args:
+      recur_item: An object to be checked for additional nested items.
+      root: The pathname of the current working key.
+      depth: A counter to ensure we stop at the maximum recursion depth.
+
+    Yields:
+      A tuple of the root, key, and value from a bencoded file.
+    """
+    if depth < 1:
+      logging.debug(u'Recursion limit hit for key: {0:s}'.format(root))
+      return
+
+    if type(recur_item) in (list, tuple):
+      for recur in recur_item:
+        for key in self._RecurseKey(recur, root, depth):
+          yield key
+      return
+
+    if not hasattr(recur_item, 'iteritems'):
+      return
+
+    for key, value in recur_item.iteritems():
+      yield root, key, value
+      if isinstance(value, dict):
+        value = [value]
+      if isinstance(value, list):
+        for item in value:
+          if isinstance(item, dict):
+            for keyval in self._RecurseKey(
+                item, root=root + u'/' + key, depth=depth - 1):
+              yield keyval
+
   @abc.abstractmethod
   def GetEntries(self, parser_context, data=None, match=None, **kwargs):
-    """Yields BencodeEvents from the values of entries within a bencoded file.
+    """Extracts event object from the values of entries within a bencoded file.
 
     This is the main method that a bencode plugin needs to implement.
 
@@ -72,9 +150,6 @@ class BencodePlugin(plugins.BasePlugin):
       data: Bencode data in dictionary form.
       match: A dictionary containing only the keys selected in the
              BENCODE_KEYS.
-
-    Yields:
-      event.BencodeEvent(key) - An event from the bencoded file.
     """
 
   def Process(self, parser_context, top_level=None, **kwargs):
@@ -96,9 +171,6 @@ class BencodePlugin(plugins.BasePlugin):
     Raises:
       WrongBencodePlugin: If this plugin is not able to process the given file.
       ValueError: If top level is not set.
-
-    Returns:
-      A generator of events processed by the plugin.
     """
     if top_level is None:
       raise ValueError(u'Top level is not set.')
@@ -110,85 +182,6 @@ class BencodePlugin(plugins.BasePlugin):
     super(BencodePlugin, self).Process(parser_context, **kwargs)
 
     logging.debug(u'Bencode Plugin Used: {0:s}'.format(self.NAME))
-    match = GetKeys(top_level, self.BENCODE_KEYS, 3)
+    match = self._GetKeys(top_level, self.BENCODE_KEYS, 3)
 
-    return self.GetEntries(parser_context, data=top_level, match=match)
-
-
-def RecurseKey(recur_item, root='', depth=15):
-  """Flattens nested dictionaries and lists by yielding it's values.
-
-  The hierarchy of a bencode file is a series of nested dictionaries and lists.
-  This is a helper function helps plugins navigate the structure without
-  having to reimplent their own recsurive methods.
-
-  This method implements an overridable depth limit to prevent processing
-  extremely deeply nested dictionaries. If the limit is reached a debug message
-  is logged indicating which key processing stopped on.
-
-  Args:
-    recur_item: An object to be checked for additional nested items.
-    root: The pathname of the current working key.
-    depth: A counter to ensure we stop at the maximum recursion depth.
-
-  Yields:
-    A tuple of the root, key, and value from a bencoded file.
-  """
-  if depth < 1:
-    logging.debug(u'Recursion limit hit for key: {0:s}'.format(root))
-    return
-
-  if type(recur_item) in (list, tuple):
-    for recur in recur_item:
-      for key in RecurseKey(recur, root, depth):
-        yield key
-    return
-
-  if not hasattr(recur_item, 'iteritems'):
-    return
-
-  for key, value in recur_item.iteritems():
-    yield root, key, value
-    if isinstance(value, dict):
-      value = [value]
-    if isinstance(value, list):
-      for item in value:
-        if isinstance(item, dict):
-          for keyval in RecurseKey(
-              item, root=root + u'/' + key, depth=depth - 1):
-            yield keyval
-
-
-def GetKeys(top_level, keys, depth=1):
-  """Helper function to return keys nested in a bencode dict.
-
-  By default this function will return the values for the named keys requested
-  by a plugin in match{}. The default setting is to look a single layer down
-  from the root (same as the check for plugin applicability). This level is
-  suitable for most cases.
-
-  For cases where there is varability in the name at the first level
-  (e.g. it is the MAC addresses of a device, or a UUID) it is possible to
-  override the depth limit and use GetKeys to fetch from a deeper level.
-
-  Args:
-    top_level: bencode data in dictionary form.
-    keys: A list of keys that should be returned.
-    depth: Defines how many levels deep to check for a match.
-
-  Returns:
-    A dictionary with just the keys requested.
-  """
-  keys = set(keys)
-  match = {}
-
-  if depth == 1:
-    for key in keys:
-      match[key] = top_level[key]
-  else:
-    for _, parsed_key, parsed_value in RecurseKey(top_level, depth=depth):
-      if parsed_key in keys:
-        match[parsed_key] = parsed_value
-        if set(match.keys()) == keys:
-          return match
-  return match
+    self.GetEntries(parser_context, data=top_level, match=match)
