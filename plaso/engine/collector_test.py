@@ -125,10 +125,9 @@ class CollectorTest(CollectorTestCase):
           dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
 
       test_collection_queue = queue.SingleThreadedQueue()
-      test_store = queue.SingleThreadedQueue()
       resolver_context = context.Context()
       test_collector = collector.Collector(
-          test_collection_queue, test_store, dirname, path_spec,
+          test_collection_queue, dirname, path_spec,
           resolver_context=resolver_context)
       test_collector.Collect()
 
@@ -153,10 +152,9 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
 
     test_collection_queue = queue.SingleThreadedQueue()
-    test_store = queue.SingleThreadedQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_collection_queue, test_store, dirname, path_spec,
+        test_collection_queue, dirname, path_spec,
         resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
@@ -228,20 +226,17 @@ class CollectorTest(CollectorTestCase):
         parent=volume_path_spec)
 
     test_collection_queue = queue.SingleThreadedQueue()
-    test_storage_queue = queue.SingleThreadedQueue()
-    test_storage_queue_producer = queue.EventObjectQueueProducer(
-        test_storage_queue)
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_collection_queue, test_storage_queue_producer, test_file,
-        path_spec, resolver_context=resolver_context)
+        test_collection_queue, test_file, path_spec,
+        resolver_context=resolver_context)
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
           test_collection_queue)
     test_collector_queue_consumer.ConsumePathSpecs()
 
-    self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 2)
+    self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 3)
 
   def testImageWithFilterCollection(self):
     """Test collection on a storage media image file with a filter."""
@@ -261,13 +256,10 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/passwords.txt\n')
 
     test_collection_queue = queue.SingleThreadedQueue()
-    test_storage_queue = queue.SingleThreadedQueue()
-    test_storage_queue_producer = queue.EventObjectQueueProducer(
-        test_storage_queue)
     resolver_context = context.Context()
     test_collector = collector.Collector(
-        test_collection_queue, test_storage_queue_producer, test_file,
-        path_spec, resolver_context=resolver_context)
+        test_collection_queue, test_file, path_spec,
+        resolver_context=resolver_context)
 
     find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
     test_collector.SetFilter(find_specs)

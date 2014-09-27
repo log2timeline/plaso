@@ -377,15 +377,12 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
       os.makedirs(destination_path)
 
     input_queue = queue.SingleThreadedQueue()
-    output_queue = queue.SingleThreadedQueue()
-    output_producer = queue.EventObjectQueueProducer(output_queue)
 
     # TODO: add support to handle multiple partitions.
     self._source_path_spec = self.GetSourcePathSpec()
 
     image_collector = collector.Collector(
-        input_queue, output_producer, self._source_path,
-        self._source_path_spec)
+        input_queue, self._source_path, self._source_path_spec)
 
     image_collector.Collect()
 
