@@ -33,24 +33,21 @@ class AirportPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.airport.preferences.plist'
   PLIST_KEYS = frozenset(['RememberedNetworks'])
 
-  def GetEntries(
-      self, unused_parser_context, match=None, **unused_kwargs):
+  def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts relevant Airport entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      match: A dictionary containing keys extracted from PLIST_KEYS.
-
-    Yields:
-      EventObject objects extracted from the plist.
+      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+             The default is None.
     """
     for wifi in match['RememberedNetworks']:
       description = (
-          u'[WiFi] Connected to network: <{0:s}> '
-          u'using security {1:s}').format(
+          u'[WiFi] Connected to network: <{0:s}> using security {1:s}').format(
               wifi['SSIDString'], wifi['SecurityType'])
-      yield plist_event.PlistEvent(
+      event_object = plist_event.PlistEvent(
           u'/RememberedNetworks', u'item', wifi['LastConnected'], description)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 plist.PlistParser.RegisterPlugin(AirportPlugin)

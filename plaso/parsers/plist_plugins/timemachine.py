@@ -35,31 +35,29 @@ class TimeMachinePlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.TimeMachine.plist'
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
 
-  # Yield Events
-  #
+  # Generated events:
   # DestinationID: remote UUID hard disk where the backup is done.
   # BackupAlias: structure that contains the extra information from the
   #              destinationID.
   # SnapshotDates: list of the backup dates.
 
   TM_BACKUP_ALIAS = construct.Struct(
-   'tm_backup_alias',
+    'tm_backup_alias',
     construct.Padding(10),
     construct.PascalString(
     'value', length_field = construct.UBInt8('length')))
 
-  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
+  def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts relevant TimeMachine entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      match: A dictionary containing keys extracted from PLIST_KEYS.
-
-    Yields:
-      EventObject objects extracted from the plist.
+      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+             The default is None.
     """
     root = '/Destinations'
     key = 'item/SnapshotDates'
+
     # For each TimeMachine devices.
     for destination in match['Destinations']:
       hd_uuid = destination['DestinationID']
@@ -74,7 +72,8 @@ class TimeMachinePlugin(interface.PlistPlugin):
       for timestamp in destination['SnapshotDates']:
         description = u'TimeMachine Backup in {0:s} ({1:s})'.format(
             alias, hd_uuid)
-        yield plist_event.PlistEvent(root, key, timestamp, description)
+        event_object = plist_event.PlistEvent(root, key, timestamp, description)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 plist.PlistParser.RegisterPlugin(TimeMachinePlugin)

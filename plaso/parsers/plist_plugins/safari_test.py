@@ -39,9 +39,9 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     test_file = self._GetTestFilePath(['History.plist'])
     plist_name = 'History.plist'
-    events = self._ParsePlistFileWithPlugin(
+    event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, test_file, plist_name)
-    event_objects = self._GetEventObjects(events)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # 18 entries in timeline.
     self.assertEquals(len(event_objects), 18)

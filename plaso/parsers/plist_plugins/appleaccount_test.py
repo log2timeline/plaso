@@ -40,9 +40,9 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
                   u'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist')
     test_file = self._GetTestFilePath([plist_file])
     plist_name = plist_file
-    events = self._ParsePlistFileWithPlugin(
+    event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, test_file, plist_name)
-    event_objects = self._GetEventObjects(events)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 3)
 

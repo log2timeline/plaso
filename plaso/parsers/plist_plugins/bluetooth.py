@@ -40,14 +40,13 @@ class BluetoothPlugin(interface.PlistPlugin):
   # LastServicesUpdate = Time set when device was polled to determine what it
   #   is.  Usually done at setup or manually requested via advanced menu.
 
-  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
+  def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts relevant BT entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-
-    Yields:
-      EventObject objects extracted from the plist.
+      match: Optional dictionary containing extracted keys from PLIST_KEYS.
+             The default is None.
     """
     root = '/DeviceCache'
 
@@ -60,26 +59,30 @@ class BluetoothPlugin(interface.PlistPlugin):
         desc = 'Paired:True {0:s}'.format(name)
         key = device
         if 'LastInquiryUpdate' in value:
-          yield plist_event.PlistEvent(
+          event_object = plist_event.PlistEvent(
               root, key, value['LastInquiryUpdate'], desc)
+          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       if value.get('LastInquiryUpdate'):
         desc = u' '.join(filter(None, ('Bluetooth Discovery', name)))
         key = u''.join((device, '/LastInquiryUpdate'))
-        yield plist_event.PlistEvent(
+        event_object = plist_event.PlistEvent(
             root, key, value['LastInquiryUpdate'], desc)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       if value.get('LastNameUpdate'):
         desc = u' '.join(filter(None, ('Device Name Set', name)))
         key = u''.join((device, '/LastNameUpdate'))
-        yield plist_event.PlistEvent(
+        event_object = plist_event.PlistEvent(
             root, key, value['LastNameUpdate'], desc)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       if value.get('LastServicesUpdate'):
         desc = desc = u' '.join(filter(None, ('Services Updated', name)))
         key = ''.join((device, '/LastServicesUpdate'))
-        yield plist_event.PlistEvent(
+        event_object = plist_event.PlistEvent(
             root, key, value['LastServicesUpdate'], desc)
+        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 plist.PlistParser.RegisterPlugin(BluetoothPlugin)

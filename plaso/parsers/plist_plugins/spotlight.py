@@ -33,28 +33,27 @@ class SpotlightPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.spotlight.plist'
   PLIST_KEYS = frozenset(['UserShortcuts'])
 
-  # Yield Events
+  # Generated events:
   # name of the item: searched term.
   #   PATH: path of the program associated to the term.
   #   LAST_USED: last time when it was executed.
   #   DISPLAY_NAME: the display name of the program associated.
 
-  def GetEntries(self, unused_parser_context, match=None, **unused_kwargs):
+  def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts relevant Spotlight entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      match: A dictionary containing keys extracted from PLIST_KEYS.
-
-    Yields:
-      EventObject objects extracted from the plist.
+      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+             The default is None.
     """
     for search_text, data in match['UserShortcuts'].iteritems():
-      desc = (
+      description = (
           u'Spotlight term searched "{0:s}" associate to {1:s} '
           u'({2:s})').format(search_text, data['DISPLAY_NAME'], data['PATH'])
-      yield plist_event.PlistEvent(
-          u'/UserShortcuts', search_text, data['LAST_USED'], desc)
+      event_object = plist_event.PlistEvent(
+          u'/UserShortcuts', search_text, data['LAST_USED'], description)
+      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 
 plist.PlistParser.RegisterPlugin(SpotlightPlugin)

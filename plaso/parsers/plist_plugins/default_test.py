@@ -22,7 +22,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.lib import queue
 from plaso.lib import timelib_test
 from plaso.parsers.plist_plugins import default
 from plaso.parsers.plist_plugins import test_lib
@@ -37,12 +36,6 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     self._plugin = default.DefaultPlugin()
 
-    event_queue = queue.SingleThreadedQueue()
-    parse_error_queue = queue.SingleThreadedQueue()
-
-    self._parser_context = self._GetParserContext(
-        event_queue, parse_error_queue)
-
   def testProcessSingle(self):
     """Tests Process on a plist containing a root, value and timestamp."""
     top_level_dict_single = {
@@ -52,8 +45,8 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.utc)}}
 
     event_object_generator = self._ParsePlistWithPlugin(
-        self._plugin, self._parser_context, 'single', top_level_dict_single)
-    event_objects = self._GetEventObjects(event_object_generator)
+        self._plugin, 'single', top_level_dict_single)
+    event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
     self.assertEquals(len(event_objects), 1)
 
@@ -98,9 +91,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 datetime.datetime(
                     2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.utc)}}}
 
-    event_object_generator = self._ParsePlistWithPlugin(
-        self._plugin, self._parser_context, 'nested', top_level_dict_many_keys)
-    event_objects = self._GetEventObjects(event_object_generator)
+    event_queue_consumer = self._ParsePlistWithPlugin(
+        self._plugin, 'nested', top_level_dict_many_keys)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 5)
 

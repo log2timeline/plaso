@@ -40,7 +40,7 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
     plist_name = 'com.apple.timemachine.plist'
     event_object_generator = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, test_file, plist_name)
-    event_objects = self._GetEventObjects(event_object_generator)
+    event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
     self.assertEquals(len(event_objects), 13)
 

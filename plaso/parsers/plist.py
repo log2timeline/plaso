@@ -139,15 +139,8 @@ class PlistParser(interface.BasePluginsParser):
 
     for plugin_object in self._plugins:
       try:
-        event_object_generator = plugin_object.Process(
+        plugin_object.Process(
             parser_context, plist_name=plist_name, top_level=top_level_object)
-
-        # TODO: remove this once the yield-based parsers have been replaced
-        # by produce (or emit)-based variants.
-        for event_object in event_object_generator:
-          parser_context.ProduceEvent(
-              event_object, parser_name=self.NAME,
-              plugin_name=plugin_object.NAME, file_entry=file_entry)
 
       except errors.WrongPlistPlugin as exception:
         logging.debug(u'[{0:s}] Wrong plugin: {1:s} for: {2:s}'.format(
