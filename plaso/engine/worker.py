@@ -70,6 +70,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._open_files = False
     self._parser_context = parsers_context.ParserContext(
         event_queue_producer, parse_error_queue_producer, knowledge_base)
+    self._filestat_parser_object = None
     self._parser_objects = None
     self._rpc_proxy = rpc_proxy
 
@@ -146,11 +147,54 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._parser_objects = parsers_manager.ParsersManager.GetParserObjects(
         parser_filter_string=parser_filter_string)
 
+    for parser_object in self._parser_objects:
+      if parser_object.NAME == 'filestat':
+        self._filestat_parser_object = parser_object
+        break
+
+  def _ParseFileEntryWithParser(self, parser_object, file_entry):
+    """Parses a file entry with a specific parser.
+
+    Args:
+      parser_object: A parser object (instance of BaseParser).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+    """
+    try:
+      parser_object.Parse(self._parser_context, file_entry)
+
+    except errors.UnableToParseFile as exception:
+      logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
+          parser_object.NAME, file_entry.name, exception))
+
+    except IOError as exception:
+      logging.debug(
+          u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
+              parser_object.NAME, file_entry.path_spec.comparable,
+              exception))
+
+    # Casting a wide net, catching all exceptions. Done to keep the worker
+    # running, despite the parser hitting errors, so the worker doesn't die
+    # if a single file is corrupted or there is a bug in a parser.
+    except Exception as exception:
+      logging.warning(
+          u'[{0:s}] Unable to process file: {1:s} with error: {2:s}.'.format(
+              parser_object.NAME, file_entry.path_spec.comparable,
+              exception))
+      logging.debug(
+          u'The path specification that caused the error: {0:s}'.format(
+              file_entry.path_spec.comparable))
+      logging.exception(exception)
+
+      # Check for debug mode and single process mode, then we would like
+      # to debug this problem.
+      if self._single_process_mode and self._debug_mode:
+        pdb.post_mortem()
+
   def ParseFileEntry(self, file_entry):
     """Parses a file entry.
 
     Args:
-      file_entry: A file entry object.
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
     """
     logging.debug(u'[ParseFileEntry] Parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
@@ -158,54 +202,18 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._current_working_file = getattr(
         file_entry.path_spec, u'location', file_entry.name)
 
-    # TODO: Not go through all parsers, just the ones
-    # that the classifier classifies the file as.
+    if file_entry.IsDirectory() and self._filestat_parser_object:
+      self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
 
-    for parser_object in self._parser_objects:
-      logging.debug(u'Trying to parse: {0:s} with parser: {1:s}'.format(
-          file_entry.name, parser_object.NAME))
+    elif file_entry.IsFile():
+      # TODO: Not go through all parsers, just the ones
+      # that the classifier classifies the file as.
 
-      try:
-        event_object_generator = parser_object.Parse(
-            self._parser_context, file_entry)
+      for parser_object in self._parser_objects:
+        logging.debug(u'Trying to parse: {0:s} with parser: {1:s}'.format(
+            file_entry.name, parser_object.NAME))
 
-        # TODO: remove this once the yield-based parsers have been replaced
-        # by produce (or emit)-based variants.
-        if event_object_generator:
-          for event_object in event_object_generator:
-            if not event_object:
-              continue
-
-            self._ParseEvent(
-                event_object, file_entry, parser_object.NAME)
-
-      except errors.UnableToParseFile as exception:
-        logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
-            parser_object.NAME, file_entry.name, exception))
-
-      except IOError as exception:
-        logging.debug(
-            u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
-                parser_object.NAME, file_entry.path_spec.comparable,
-                exception))
-
-      # Casting a wide net, catching all exceptions. Done to keep the worker
-      # running, despite the parser hitting errors, so the worker doesn't die
-      # if a single file is corrupted or there is a bug in a parser.
-      except Exception as exception:
-        logging.warning(
-            u'[{0:s}] Unable to process file: {1:s} with error: {2:s}.'.format(
-                parser_object.NAME, file_entry.path_spec.comparable,
-                exception))
-        logging.debug(
-            u'The path specification that caused the error: {0:s}'.format(
-                file_entry.path_spec.comparable))
-        logging.exception(exception)
-
-        # Check for debug mode and single process mode, then we would like
-        # to debug this problem.
-        if self._single_process_mode and self._debug_mode:
-          pdb.post_mortem()
+        self._ParseFileEntryWithParser(parser_object, file_entry)
 
     logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
