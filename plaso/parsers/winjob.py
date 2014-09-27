@@ -25,6 +25,7 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'Brian Baskin (brian@thebaskins.com)'
@@ -63,6 +64,7 @@ class WinJobParser(interface.BaseParser):
   """Parse Windows Scheduled Task files for job events."""
 
   NAME = 'winjob'
+  DESCRIPTION = u'Parser for Windows Scheduled Task job (or At-job) files.'
 
   PRODUCT_VERSIONS = {
       0x0400:'Windows NT 4.0',
@@ -255,3 +257,6 @@ class WinJobParser(interface.BaseParser):
           event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(WinJobParser)

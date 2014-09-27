@@ -27,7 +27,6 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import lexer
 from plaso.lib import timelib_test
-from plaso.parsers import interface
 from plaso.parsers import test_lib
 from plaso.parsers import text_parser
 
@@ -79,14 +78,6 @@ class TestTextParser(text_parser.SlowLexicalTextParser):
     event_object = TestTextEvent(timestamp, 0, attributes)
     event_object.offset = offset
     return event_object
-
-
-class BaseParserTest(test_lib.ParserTestCase):
-  """An unit test for the plaso parser library."""
-
-  def testParserNotImplemented(self):
-    """Test the base class Parse function."""
-    self.assertRaises(TypeError, interface.BaseParser)
 
 
 class TextParserTest(test_lib.ParserTestCase):

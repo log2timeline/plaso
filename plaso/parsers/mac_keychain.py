@@ -39,6 +39,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -90,11 +91,11 @@ class KeychainApplicationRecordEvent(event.EventObject):
 
     Args:
       timestamp: Description of the timestamp value.
-      timestamp_desc: timelib type of the timestamp.
+      timestamp_desc: Timelib type of the timestamp.
       entry_name: Name of the entry.
       account_name: Name of the account.
       text_description: Short description about the entry.
-      comments: string that contains the comments added by the user.
+      comments: String that contains the comments added by the user.
       ssgp_hash: String with hexadecimal values from the password / cert hash.
     """
     super(KeychainApplicationRecordEvent, self).__init__()
@@ -111,6 +112,7 @@ class KeychainParser(interface.BaseParser):
   """Parser for Keychain files."""
 
   NAME = 'mac_keychain'
+  DESCRIPTION = u'Parser for Mac OS X Keychain files.'
 
   KEYCHAIN_MAGIC_HEADER = 'kych'
   KEYCHAIN_MAJOR_VERSION = 1
@@ -230,8 +232,8 @@ class KeychainParser(interface.BaseParser):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      file_object: keychain file object.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+      file_object: A file-like object that points to an Keychain file.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
     """
     offset = file_object.tell()
@@ -272,18 +274,18 @@ class KeychainParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-      file_object: keychain file object.
-      record: structure with the header of the record.
-      offset: first byte of the record.
+      file_object: A file-like object that points to an Keychain file.
+      record: Structure with the header of the record.
+      offset: First byte of the record.
 
     Returns:
       A list of:
-        ssgp_hash: hash of the encrypted data (passwd, cert, note).
-        creation_time: when the entry was created.
-        last_mod_time: last time the entry was updated.
-        text_description: a brief description of the entry.
-        entry_name: name of the entry
-        account_name: name of the account.
+        ssgp_hash: Hash of the encrypted data (passwd, cert, note).
+        creation_time: When the entry was created.
+        last_mod_time: Last time the entry was updated.
+        text_description: A brief description of the entry.
+        entry_name: Name of the entry
+        account_name: Name of the account.
     """
     # Info: The hash header always start with the string ssgp follow by
     #       the hash. Furthermore The fields are always a multiple of four.
@@ -335,8 +337,8 @@ class KeychainParser(interface.BaseParser):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      file_object: keychain file object.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+      file_object: A file-like object that points to an Keychain file.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
     """
     offset = file_object.tell()
@@ -398,7 +400,7 @@ class KeychainParser(interface.BaseParser):
     """Verify that we are dealing with an Keychain entry.
 
     Args:
-      file_object: a file-like object that points to an Keychain file.
+      file_object: A file-like object that points to an Keychain file.
 
     Returns:
       A list of table positions if it is a keychain, None otherwise.
@@ -474,3 +476,6 @@ class KeychainParser(interface.BaseParser):
               parser_context, file_object, file_entry=file_entry)
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(KeychainParser)

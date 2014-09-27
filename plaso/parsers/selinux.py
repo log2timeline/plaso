@@ -47,6 +47,7 @@ from plaso.events import text_events
 from plaso.lib import errors
 from plaso.lib import lexer
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -62,6 +63,7 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
   """Parse SELinux audit log files."""
 
   NAME = 'selinux'
+  DESCRIPTION = u'Parser for SELinux audit log files.'
 
   PID_RE = re.compile(r'pid=([0-9]+)[\s]+', re.DOTALL)
 
@@ -166,3 +168,6 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     event_object = SELinuxLineEvent(self.timestamp, offset, self.attributes)
     self.timestamp = 0
     return event_object
+
+
+manager.ParsersManager.RegisterParser(SELinuxParser)

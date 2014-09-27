@@ -25,6 +25,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class WinEvtRecordEvent(time_events.PosixTimeEvent):
@@ -75,6 +76,7 @@ class WinEvtParser(interface.BaseParser):
   """Parses Windows EventLog (EVT) files."""
 
   NAME = 'winevt'
+  DESCRIPTION = u'Parser for Windows EventLog (EVT) files.'
 
   def _ParseRecord(
       self, parser_context, evt_record, file_entry=None, recovered=False):
@@ -140,7 +142,7 @@ class WinEvtParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     for record_index in range(0, evt_file.number_of_records):
       try:
@@ -150,7 +152,7 @@ class WinEvtParser(interface.BaseParser):
         logging.warning((
             u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
             u'with error: {3:s}').format(
-                self.parser_name, record_index, file_entry.name, exception))
+                self.NAME, record_index, file_entry.name, exception))
 
     for record_index in range(0, evt_file.number_of_recovered_records):
       try:
@@ -161,7 +163,10 @@ class WinEvtParser(interface.BaseParser):
         logging.info((
             u'[{0:s}] unable to parse recovered event record: {1:d} in file: '
             u'{2:s} with error: {3:s}').format(
-                self.parser_name, record_index, file_entry.name, exception))
+                self.NAME, record_index, file_entry.name, exception))
 
     evt_file.close()
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(WinEvtParser)

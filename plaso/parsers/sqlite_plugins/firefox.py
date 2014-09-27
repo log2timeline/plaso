@@ -22,6 +22,7 @@ import sqlite3
 from plaso.events import time_events
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -432,3 +433,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
           row['tempPath'], row['currBytes'], row['maxBytes'], row['mimeType'])
       parser_context.ProduceEvent(
           event_object, plugin_name=self.NAME, query=query)
+
+
+sqlite.SQLiteParser.RegisterPlugin(FirefoxHistoryPlugin)
+sqlite.SQLiteParser.RegisterPlugin(FirefoxDownloadsPlugin)

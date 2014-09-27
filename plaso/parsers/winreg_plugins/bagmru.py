@@ -23,6 +23,7 @@ import construct
 
 from plaso.events import windows_events
 from plaso.parsers.shared import shell_items
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -180,3 +181,6 @@ class BagMRUPlugin(interface.KeyPlugin):
     self._ParseSubKey(
         parser_context, key, u'', registry_type=registry_type,
         codepage=codepage)
+
+
+winreg.WinRegistryParser.RegisterPlugin(BagMRUPlugin)

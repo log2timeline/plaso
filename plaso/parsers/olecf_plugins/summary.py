@@ -19,6 +19,7 @@
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
 
@@ -337,9 +338,10 @@ class OleCfDocumentSummaryInfoEvent(time_events.FiletimeEvent):
 
 
 class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
-  """Plugin that parses DocumentSummary information from an OLECF file."""
+  """Plugin that parses DocumentSummaryInformation item from an OLECF file."""
 
   NAME = 'olecf_document_summary'
+  DESCRIPTION = u'Parser for a DocumentSummaryInformation OLECF stream.'
 
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset([u'\005DocumentSummaryInformation'])
@@ -373,6 +375,7 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
   """Plugin that parses the SummaryInformation item from an OLECF file."""
 
   NAME = 'olecf_summary'
+  DESCRIPTION = u'Parser for a SummaryInformation OLECF stream.'
 
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset([u'\005SummaryInformation'])
@@ -409,3 +412,7 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
             root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             summary_information_object.attributes)
         parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+olecf.OleCfParser.RegisterPlugin(DocumentSummaryOlecfPlugin)
+olecf.OleCfParser.RegisterPlugin(SummaryInfoOlecfPlugin)

@@ -18,6 +18,7 @@
 """This file contains a default plist plugin in Plaso."""
 
 from plaso.events import plist_event
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -79,3 +80,6 @@ class BluetoothPlugin(interface.PlistPlugin):
         key = ''.join((device, '/LastServicesUpdate'))
         yield plist_event.PlistEvent(
             root, key, value['LastServicesUpdate'], desc)
+
+
+plist.PlistParser.RegisterPlugin(BluetoothPlugin)

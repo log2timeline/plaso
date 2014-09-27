@@ -18,6 +18,7 @@
 """This file contains the install history plist plugin in Plaso."""
 
 from plaso.events import plist_event
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -54,3 +55,6 @@ class InstallHistoryPlugin(interface.PlistPlugin):
               entry.get('processName'), u', '.join(packages))
       yield plist_event.PlistEvent(
           u'/item', u'', entry.get('date'), description)
+
+
+plist.PlistParser.RegisterPlugin(InstallHistoryPlugin)

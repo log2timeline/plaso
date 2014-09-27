@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
 # Copyright 2012 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
@@ -67,7 +68,7 @@ class MetaclassRegistry(abc.ABCMeta):
       cls_name = getattr(cls, 'NAME', cls.__name__)
 
       if cls_name in cls.classes:
-        raise KeyError(u'Class: {} already registered. [{}]'.format(
+        raise KeyError(u'Class: {0:s} already registered. [{1:s}]'.format(
             cls_name, repr(cls)))
 
       cls.classes[cls_name] = cls

@@ -27,7 +27,7 @@ from plaso.parsers import test_lib
 from plaso.parsers import chrome_cache
 
 
-class WinEvtParserTest(test_lib.ParserTestCase):
+class ChromeCacheParserTest(test_lib.ParserTestCase):
   """Tests for the Chrome Cache files parser."""
 
   def setUp(self):

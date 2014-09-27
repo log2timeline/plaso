@@ -25,6 +25,7 @@ from plaso.lib import event
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class PlsRecallEvent(event.EventObject):
@@ -67,6 +68,7 @@ class PlsRecallParser(interface.BaseParser):
   """
 
   NAME = 'pls_recall'
+  DESCRIPTION = u'Parser for PL-SQL Recall files.'
 
   PLS_STRUCT = construct.Struct(
     'PL-SQL_Recall',
@@ -160,3 +162,6 @@ class PlsRecallParser(interface.BaseParser):
       return False
 
     return True
+
+
+manager.ParsersManager.RegisterParser(PlsRecallParser)

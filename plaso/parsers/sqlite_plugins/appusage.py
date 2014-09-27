@@ -22,6 +22,7 @@
 """
 
 from plaso.events import time_events
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -95,3 +96,6 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
         row['bundle_id'], row['number_times'])
     parser_context.ProduceEvent(
         event_object, plugin_name=self.NAME, query=query)
+
+
+sqlite.SQLiteParser.RegisterPlugin(ApplicationUsagePlugin)

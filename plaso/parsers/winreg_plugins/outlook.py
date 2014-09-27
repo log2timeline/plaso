@@ -18,6 +18,7 @@
 """This file contains an Outlook Registry parser."""
 
 from plaso.events import windows_events
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -85,3 +86,6 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
       value_index += 1
+
+
+winreg.WinRegistryParser.RegisterPlugin(OutlookSearchMRUPlugin)

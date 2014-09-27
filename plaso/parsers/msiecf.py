@@ -26,6 +26,7 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 if pymsiecf.get_version() < '20130317':
@@ -71,6 +72,7 @@ class MsiecfParser(interface.BaseParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
   NAME = 'msiecf'
+  DESCRIPTION = u'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
 
   def _ParseUrl(
       self, parser_context, msiecf_item, file_entry=None, recovered=False):
@@ -183,7 +185,7 @@ class MsiecfParser(interface.BaseParser):
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     for item_index in range(0, msiecf_file.number_of_items):
       try:
@@ -196,7 +198,7 @@ class MsiecfParser(interface.BaseParser):
       except IOError as exception:
         logging.warning(
             u'[{0:s}] unable to parse item: {1:d} in file: {2:s}: {3:s}'.format(
-                self.parser_name, item_index, file_entry.name, exception))
+                self.NAME, item_index, file_entry.name, exception))
 
     for item_index in range(0, msiecf_file.number_of_recovered_items):
       try:
@@ -212,6 +214,9 @@ class MsiecfParser(interface.BaseParser):
         logging.info((
             u'[{0:s}] unable to parse recovered item: {1:d} in file: {2:s}: '
             u'{3:s}').format(
-                self.parser_name, item_index, file_entry.name, exception))
+                self.NAME, item_index, file_entry.name, exception))
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(MsiecfParser)

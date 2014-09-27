@@ -24,6 +24,7 @@ import construct
 
 from plaso.events import windows_events
 from plaso.lib import binary
+from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
 
@@ -469,3 +470,9 @@ class MRUListExStringAndShellItemListPlugin(
     """
     self._ParseMRUListExKey(
         parser_context, key, registry_type=registry_type, codepage=codepage)
+
+
+winreg.WinRegistryParser.RegisterPlugin(MRUListExStringPlugin)
+winreg.WinRegistryParser.RegisterPlugin(MRUListExShellItemListPlugin)
+winreg.WinRegistryParser.RegisterPlugin(MRUListExStringAndShellItemPlugin)
+winreg.WinRegistryParser.RegisterPlugin(MRUListExStringAndShellItemListPlugin)

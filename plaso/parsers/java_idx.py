@@ -29,6 +29,7 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class JavaIDXEvent(time_events.TimestampEvent):
@@ -67,6 +68,7 @@ class JavaIDXParser(interface.BaseParser):
   """
 
   NAME = 'java_idx'
+  DESCRIPTION = u'Parser for Java IDX files.'
 
   IDX_SHORT_STRUCT = construct.Struct(
       'magic',
@@ -223,3 +225,6 @@ class JavaIDXParser(interface.BaseParser):
           magic.idx_version, url, ip_address)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
+
+
+manager.ParsersManager.RegisterParser(JavaIDXParser)

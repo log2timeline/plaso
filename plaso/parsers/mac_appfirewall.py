@@ -25,6 +25,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -60,7 +61,9 @@ class MacAppFirewallLogEvent(time_events.TimestampEvent):
 
 class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on appfirewall.log file."""
+
   NAME = 'mac_appfirewall_log'
+  DESCRIPTION = u'Parser for appfirewall.log files.'
 
   ENCODING = u'utf-8'
 
@@ -250,3 +253,5 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       return timelib.GetCurrentYear()
     return timestamp.year
 
+
+manager.ParsersManager.RegisterParser(MacAppFirewallParser)

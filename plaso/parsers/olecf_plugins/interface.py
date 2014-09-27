@@ -27,8 +27,6 @@ from plaso.parsers import plugins
 class OlecfPlugin(plugins.BasePlugin):
   """An OLECF plugin for Plaso."""
 
-  __abstract = True
-
   NAME = 'olecf'
 
   # List of tables that should be present in the database, for verification.
@@ -115,7 +113,7 @@ class OlecfPlugin(plugins.BasePlugin):
 
     if not frozenset(item_names) >= self.REQUIRED_ITEMS:
       raise errors.WrongPlugin(
-          u'Not the correct items for: {0:s}'.format(self.plugin_name))
+          u'Not the correct items for: {0:s}'.format(self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.
     super(OlecfPlugin, self).Process(parser_context, **kwargs)

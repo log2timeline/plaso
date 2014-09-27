@@ -23,8 +23,8 @@ import unittest
 from plaso.formatters import xchatlog as xchatlog_formatter
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
-from plaso.parsers import xchatlog
 from plaso.parsers import test_lib
+from plaso.parsers import xchatlog
 
 import pytz
 

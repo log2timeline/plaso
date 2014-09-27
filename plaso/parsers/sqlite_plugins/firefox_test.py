@@ -24,8 +24,8 @@ import unittest
 from plaso.formatters import firefox as firefox_formatter
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import firefox
-from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
 
 
@@ -40,7 +40,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Firefox History database file."""
     # This is probably version 23 but potentially an older version.
     test_file = self._GetTestFilePath(['places.sqlite'])
-    cache = interface.SQLiteCache()
+    cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -197,7 +197,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
     test_file = self._GetTestFilePath(['places_new.sqlite'])
-    cache = interface.SQLiteCache()
+    cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -241,7 +241,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox Downloads database file."""
     test_file = self._GetTestFilePath(['downloads.sqlite'])
-    cache = interface.SQLiteCache()
+    cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

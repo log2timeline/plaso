@@ -18,6 +18,7 @@
 """This file contains the Spotlight searched terms plugin in Plaso."""
 
 from plaso.events import plist_event
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -54,3 +55,6 @@ class SpotlightPlugin(interface.PlistPlugin):
           u'({2:s})').format(search_text, data['DISPLAY_NAME'], data['PATH'])
       yield plist_event.PlistEvent(
           u'/UserShortcuts', search_text, data['LAST_USED'], desc)
+
+
+plist.PlistParser.RegisterPlugin(SpotlightPlugin)

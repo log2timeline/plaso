@@ -89,12 +89,11 @@ class Engine(object):
 
     return collector_object
 
-  def CreateExtractionWorker(self, worker_number, parsers, rpc_proxy=None):
+  def CreateExtractionWorker(self, worker_number, rpc_proxy=None):
     """Creates an extraction worker object.
 
     Args:
-      worker_number: number that identifies the worker.
-      parsers: A list of parser objects to use for processing.
+      worker_number: A number that identifies the worker.
       rpc_proxy: A proxy object (instance of proxy.ProxyServer) that can be
                  used to setup RPC functionality for the worker. This is
                  optional and if not provided the worker will not listen to RPC
@@ -105,7 +104,7 @@ class Engine(object):
     """
     return worker.EventExtractionWorker(
         worker_number, self._collection_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, self.knowledge_base, parsers,
+        self._parse_error_queue_producer, self.knowledge_base,
         rpc_proxy=rpc_proxy)
 
   def GetSourceFileSystemSearcher(self, resolver_context=None):

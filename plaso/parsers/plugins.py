@@ -24,8 +24,6 @@ This is provided as a separate file to make it easier to inherit in other
 projects that may want to use the Plaso plugin system.
 """
 
-from plaso.lib import registry
-
 
 class BasePlugin(object):
   """A plugin is a lightweight parser that makes use of a common data structure.
@@ -47,8 +45,11 @@ class BasePlugin(object):
   it to a list of available plugins to see if it can be parsed.
   """
 
-  __metaclass__ = registry.MetaclassRegistry
-  __abstract = True
+  # The name of the plugin. This is the name that is used in the registration
+  # and used for parser/plugin selection, so this needs to be concise and unique
+  # for all plugins/parsers, eg: 'Chrome', 'Safari', 'UserAssist', etc.
+  NAME = 'base_plugin'
+  DESCRIPTION = u''
 
   # The URLS should contain a list of URL's with additional information about
   # the plugin, for instance some additional reading material. That can be
@@ -58,11 +59,7 @@ class BasePlugin(object):
   # the plugin.
   URLS = []
 
-  # The name of the plugin. This is the name that is used in the registration
-  # and used for parser/plugin selection, so this needs to be concise and unique
-  # for all plugins/parsers, eg: 'Chrome', 'Safari', 'UserAssist', etc.
-  NAME = 'base_plugin'
-
+  # TODO: remove.
   @property
   def plugin_name(self):
     """Return the name of the plugin."""

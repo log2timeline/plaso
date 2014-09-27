@@ -29,6 +29,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class CacheAddress(object):
@@ -324,6 +325,7 @@ class ChromeCacheParser(interface.BaseParser):
   """Parses Chrome Cache files."""
 
   NAME = 'chrome_cache'
+  DESCRIPTION = u'Parser for Chrome Cache files.'
 
   def Parse(self, parser_context, file_entry):
     """Extract event objects from Chrome Cache files.
@@ -340,7 +342,7 @@ class ChromeCacheParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     # Build a lookup table for the data block files.
     file_system = file_entry.GetFileSystem()
@@ -420,3 +422,6 @@ class ChromeCacheParser(interface.BaseParser):
         data_block_file.Close()
 
     index_file.Close()
+
+
+manager.ParsersManager.RegisterParser(ChromeCacheParser)

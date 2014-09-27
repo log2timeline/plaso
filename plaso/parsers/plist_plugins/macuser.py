@@ -30,6 +30,7 @@ from xml.etree import ElementTree
 
 from plaso.events import plist_event
 from plaso.lib import timelib
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -153,3 +154,6 @@ class MacUserPlugin(interface.PlistPlugin):
         if timestamp > cocoa_zero:
           yield plist_event.PlistTimeEvent(
               self._ROOT, u'failedLoginTimestamp', timestamp, description)
+
+
+plist.PlistParser.RegisterPlugin(MacUserPlugin)

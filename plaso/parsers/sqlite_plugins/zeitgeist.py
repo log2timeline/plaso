@@ -23,6 +23,7 @@
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -71,3 +72,6 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
     event_object = ZeitgeistEvent(row['timestamp'], row['id'], row['subj_uri'])
     parser_context.ProduceEvent(
         event_object, plugin_name=self.NAME, query=query)
+
+
+sqlite.SQLiteParser.RegisterPlugin(ZeitgeistPlugin)

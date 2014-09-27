@@ -24,6 +24,7 @@ import logging
 
 from plaso.events import text_events
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -50,6 +51,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
   NAME = 'mcafee_protection'
+  DESCRIPTION = u'Parses McAfee AV Access Protection Log files.'
 
   VALUE_SEPARATOR = '\t'
   # Define the columns of the McAfee AV Access Protection Log.
@@ -130,3 +132,6 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     event_object = McafeeAVEvent(timestamp, row_offset, row)
     parser_context.ProduceEvent(
         event_object, parser_name=self.NAME, file_entry=file_entry)
+
+
+manager.ParsersManager.RegisterParser(McafeeAccessProtectionParser)

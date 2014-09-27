@@ -25,6 +25,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class WinEvtxRecordEvent(time_events.FiletimeEvent):
@@ -82,6 +83,7 @@ class WinEvtxParser(interface.BaseParser):
   """Parses Windows XML EventLog (EVTX) files."""
 
   NAME = 'winevtx'
+  DESCRIPTION = u'Parser for Windows XML EventLog (EVTX) files.'
 
   def Parse(self, parser_context, file_entry):
     """Extract data from a Windows XML EventLog (EVTX) file.
@@ -101,7 +103,7 @@ class WinEvtxParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     for record_index in range(0, evtx_file.number_of_records):
       try:
@@ -113,7 +115,7 @@ class WinEvtxParser(interface.BaseParser):
         logging.warning((
             u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
             u'with error: {3:s}').format(
-                self.parser_name, record_index, file_entry.name, exception))
+                self.NAME, record_index, file_entry.name, exception))
 
     for record_index in range(0, evtx_file.number_of_recovered_records):
       try:
@@ -125,7 +127,10 @@ class WinEvtxParser(interface.BaseParser):
         logging.debug((
             u'[{0:s}] unable to parse recovered event record: {1:d} in file: '
             u'{2:s} with error: {3:s}').format(
-                self.parser_name, record_index, file_entry.name, exception))
+                self.NAME, record_index, file_entry.name, exception))
 
     evtx_file.close()
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(WinEvtxParser)
