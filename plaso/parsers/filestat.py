@@ -17,108 +17,12 @@
 # limitations under the License.
 """File system stat object parser."""
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.events import time_events
 from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
-
-
-# TODO: move this function to lib or equiv since it is used from the collector
-# as well.
-class StatEvents(object):
-  """Class that extracts event objects from a stat object."""
-
-  TIME_ATTRIBUTES = frozenset([
-      'atime', 'bkup_time', 'ctime', 'crtime', 'dtime', 'mtime'])
-
-  # A copy of the collected file system type.
-  _file_system_type = u''
-
-  @classmethod
-  def GetFileSystemTypeFromFileEntry(cls, file_entry):
-    """Return a filesystem type string from a file entry object.
-
-    Args:
-      file_entry: A file entry object (instance of vfs.file_entry.FileEntry).
-
-    Returns:
-      A string indicating the file system type.
-    """
-    if cls._file_system_type:
-      return cls._file_system_type
-
-    file_system = file_entry.GetFileSystem()
-    file_system_indicator = file_system.type_indicator
-
-    if file_system_indicator == definitions.TYPE_INDICATOR_TSK:
-      # TODO: Implement fs_type in dfVFS and remove this implementation
-      # once that is in place.
-      fs_info = file_system.GetFsInfo()
-      if fs_info.info:
-        type_string = unicode(fs_info.info.ftype)
-        if type_string.startswith('TSK_FS_TYPE'):
-          cls._file_system_type = type_string[12:]
-          return cls._file_system_type
-
-    cls._file_system_type = file_system_indicator
-    return cls._file_system_type
-
-  @classmethod
-  def GetEventsFromStat(cls, stat_object, file_system_type):
-    """Generates an event objects from a file stat object.
-
-    This method takes a stat object and produces an event object,
-    (instance of FileStatEvent), that contains all extracted
-    timestamps from the stat object.
-
-    The constraints are that the stat object implements an iterator
-    that returns back values all timestamp based values have the
-    attribute name 'time' in them. All timestamps also need to be
-    stored as a Posix timestamps.
-
-    Args:
-      stat_object: A stat object (instance of dfvfs.VFSStat).
-      file_system_type: A string that denotes the file system type,
-                        eg: OS, NTFS, EXT3, etc.
-
-    Yields:
-      An event object for each extracted timestamp contained in the stat
-      object.
-    """
-    time_values = []
-    for attribute_name in cls.TIME_ATTRIBUTES:
-      if hasattr(stat_object, attribute_name):
-        time_values.append(attribute_name)
-
-    if not time_values:
-      return
-
-    is_allocated = getattr(stat_object, 'allocated', True)
-
-    file_size = getattr(stat_object, 'size', None),
-
-    for time_value in time_values:
-      timestamp = getattr(stat_object, time_value, None)
-      if timestamp is None:
-        continue
-
-      nano_time_value = u'{0:s}_nano'.format(time_value)
-      nano_time_value = getattr(stat_object, nano_time_value, None)
-
-      timestamp = timelib.Timestamp.FromPosixTime(timestamp)
-      if nano_time_value is not None:
-        # Note that the _nano values are in intervals of 100th nano seconds.
-        timestamp += nano_time_value / 10
-
-      # TODO: this also ignores any timestamp that equals 0.
-      # Is this the desired behavior?
-      if not timestamp:
-        continue
-
-      yield FileStatEvent(
-          timestamp, time_value, is_allocated, file_size, file_system_type)
 
 
 class FileStatEvent(time_events.TimestampEvent):
@@ -150,21 +54,70 @@ class FileStatParser(interface.BaseParser):
   NAME = 'filestat'
   DESCRIPTION = u'Parser for file system stat information.'
 
+  _TIME_ATTRIBUTES = frozenset([
+      'atime', 'bkup_time', 'ctime', 'crtime', 'dtime', 'mtime'])
+
+  def _GetFileSystemTypeFromFileEntry(self, file_entry):
+    """Return a filesystem type string from a file entry object.
+
+    Args:
+      file_entry: A file entry object (instance of vfs.file_entry.FileEntry).
+
+    Returns:
+      A string indicating the file system type.
+    """
+    file_system = file_entry.GetFileSystem()
+    type_indicator = file_system.type_indicator
+
+    if type_indicator != dfvfs_definitions.TYPE_INDICATOR_TSK:
+      return type_indicator
+
+    # TODO: Implement fs_type in dfVFS and remove this implementation
+    # once that is in place.
+    fs_info = file_system.GetFsInfo()
+    if fs_info.info:
+      type_string = unicode(fs_info.info.ftype)
+      if type_string.startswith('TSK_FS_TYPE'):
+        return type_string[12:]
+
   def Parse(self, parser_context, file_entry):
-    """Extract data from a file system stat entry.
+    """Extracts event objects from a file system stat entry.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
     """
     stat_object = file_entry.GetStat()
+    if not stat_object:
+      return
 
-    if stat_object:
-      event_object_generator = StatEvents.GetEventsFromStat(
-          stat_object, StatEvents.GetFileSystemTypeFromFileEntry(file_entry))
-      for event_object in event_object_generator:
-        parser_context.ProduceEvent(
-            event_object, parser_name=self.NAME, file_entry=file_entry)
+    file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
+
+    is_allocated = getattr(stat_object, 'allocated', True)
+    file_size = getattr(stat_object, 'size', None),
+
+    for time_attribute in self._TIME_ATTRIBUTES:
+      timestamp = getattr(stat_object, time_attribute, None)
+      if timestamp is None:
+        continue
+
+      nano_time_attribute = u'{0:s}_nano'.format(time_attribute)
+      nano_time_attribute = getattr(stat_object, nano_time_attribute, None)
+
+      timestamp = timelib.Timestamp.FromPosixTime(timestamp)
+      if nano_time_attribute is not None:
+        # Note that the _nano values are in intervals of 100th nano seconds.
+        timestamp += nano_time_attribute / 10
+
+      # TODO: this also ignores any timestamp that equals 0.
+      # Is this the desired behavior?
+      if not timestamp:
+        continue
+
+      event_object = FileStatEvent(
+          timestamp, time_attribute, is_allocated, file_size, file_system_type)
+      parser_context.ProduceEvent(
+          event_object, parser_name=self.NAME, file_entry=file_entry)
 
 
 manager.ParsersManager.RegisterParser(FileStatParser)
