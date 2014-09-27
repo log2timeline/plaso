@@ -23,6 +23,7 @@ snapshot.db.
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -250,3 +251,6 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
         row['modified'], local_path, row['size'])
     parser_context.ProduceEvent(
         event_object, plugin_name=self.NAME, query=query)
+
+
+sqlite.SQLiteParser.RegisterPlugin(GoogleDrivePlugin)

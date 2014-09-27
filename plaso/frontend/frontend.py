@@ -794,7 +794,7 @@ class ExtractionFrontend(StorageMediaFrontend):
     self._filter_expression = None
     self._filter_object = None
     self._number_of_worker_processes = 0
-    self._parsers = None
+    self._parser_names = None
     self._preprocess = False
     self._run_foreman = True
     self._single_process_mode = False
@@ -848,7 +848,7 @@ class ExtractionFrontend(StorageMediaFrontend):
     # number to zero and then adjust it later.
     proxy_server = rpc_proxy.StandardRpcProxyServer()
     extraction_worker = self._engine.CreateExtractionWorker(
-        worker_number, self._parsers, rpc_proxy=proxy_server)
+        worker_number, rpc_proxy=proxy_server)
 
     extraction_worker.SetDebugMode(self._debug_mode)
     extraction_worker.SetSingleProcessMode(self._single_process_mode)
@@ -1090,13 +1090,6 @@ class ExtractionFrontend(StorageMediaFrontend):
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
 
-    parser_filter_string = getattr(options, 'parsers', '')
-    parsers_manager.ParsersManager.SetParserFilterString(parser_filter_string)
-    self._parsers = parsers_manager.ParsersManager.FindAllParsers()
-    self._parser_names = [parser.parser_name for parser in self._parsers['all']]
-
-    self._PreprocessSetCollectionInformation(options, pre_obj)
-
     output_module = getattr(options, 'output_module', None)
     if output_module:
       storage_writer = storage.BypassStorageWriter(
@@ -1107,6 +1100,16 @@ class ExtractionFrontend(StorageMediaFrontend):
           storage_queue, self._storage_file_path, self._buffer_size, pre_obj)
 
     logging.debug(u'Preprocessing done.')
+
+    # TODO: make sure parsers option is not set by preprocessing.
+    parser_filter_string = getattr(options, 'parsers', '')
+
+    self._parser_names = []
+    for _, parser_class in parsers_manager.ParsersManager.GetParsers(
+        parser_filter_string=parser_filter_string):
+      self._parser_names.append(parser_class.NAME)
+
+    self._PreprocessSetCollectionInformation(options, pre_obj)
 
     if 'filestat' in self._parser_names:
       include_directory_stat = True
@@ -1182,7 +1185,8 @@ class ExtractionFrontend(StorageMediaFrontend):
       worker_name = u'Worker_{0:d}'.format(worker_nr)
       # TODO: Test to see if a process pool can be a better choice.
       self._worker_processes[worker_name] = multiprocessing.Process(
-          name=worker_name, target=extraction_worker.Run)
+          name=worker_name, target=extraction_worker.Run,
+          kwargs={'parser_filter_string': parser_filter_string})
 
       self._worker_processes[worker_name].start()
       pid = self._worker_processes[worker_name].pid
@@ -1321,14 +1325,17 @@ class ExtractionFrontend(StorageMediaFrontend):
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
 
+    logging.debug(u'Preprocessing done.')
+
+    # TODO: make sure parsers option is not set by preprocessing.
     parser_filter_string = getattr(options, 'parsers', '')
-    parsers_manager.ParsersManager.SetParserFilterString(parser_filter_string)
-    self._parsers = parsers_manager.ParsersManager.FindAllParsers()
-    self._parser_names = [parser.parser_name for parser in self._parsers['all']]
+
+    self._parser_names = []
+    for _, parser_class in parsers_manager.ParsersManager.GetParsers(
+        parser_filter_string=parser_filter_string):
+      self._parser_names.append(parser_class.NAME)
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
-
-    logging.debug(u'Preprocessing done.')
 
     if 'filestat' in self._parser_names:
       include_directory_stat = True
@@ -1356,7 +1363,7 @@ class ExtractionFrontend(StorageMediaFrontend):
     extraction_worker = self._CreateExtractionWorker(0, options)
 
     logging.debug(u'Starting extraction worker.')
-    extraction_worker.Run()
+    extraction_worker.Run(parser_filter_string=parser_filter_string)
     logging.debug(u'Extraction worker done.')
 
     self._engine.SignalEndOfInputStorageQueue()

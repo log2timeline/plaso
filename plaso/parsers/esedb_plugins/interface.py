@@ -26,14 +26,8 @@ from plaso.lib import errors
 from plaso.parsers import plugins
 
 
-class EseDbCache(plugins.BasePluginCache):
-  """A cache storing query results for ESEDB plugins."""
-
-
 class EseDbPlugin(plugins.BasePlugin):
   """The ESE database plugin interface."""
-
-  __abstract = True
 
   NAME = 'esedb'
 
@@ -283,7 +277,7 @@ class EseDbPlugin(plugins.BasePlugin):
     table_names = frozenset(self._GetTableNames(database))
     if self._required_tables.difference(table_names):
       raise errors.WrongPlugin(
-          u'[{0:s}] required tables not found.'.format(self.plugin_name))
+          u'[{0:s}] required tables not found.'.format(self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.
     super(EseDbPlugin, self).Process(parser_context, **kwargs)

@@ -18,6 +18,7 @@
 """This file contains a MRUList Registry plugin."""
 
 from plaso.events import windows_events
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -86,3 +87,6 @@ class MRUListPlugin(interface.ValuePlugin):
         source_append=': MRU List')
     event_object.mru_list = entry_list
     parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+winreg.WinRegistryParser.RegisterPlugin(MRUListPlugin)

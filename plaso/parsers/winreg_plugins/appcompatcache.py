@@ -24,6 +24,7 @@ from plaso.lib import binary
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -616,3 +617,6 @@ class AppCompatCachePlugin(interface.KeyPlugin):
       if (header_object.number_of_cached_entries != 0 and
           cached_entry_index >= header_object.number_of_cached_entries):
         break
+
+
+winreg.WinRegistryParser.RegisterPlugin(AppCompatCachePlugin)

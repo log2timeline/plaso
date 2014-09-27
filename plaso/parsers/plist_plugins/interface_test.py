@@ -22,15 +22,16 @@ import unittest
 from plaso.events import plist_event
 from plaso.lib import errors
 from plaso.lib import queue
-# Register plist plugins.
+# Register plugins.
 from plaso.parsers import plist  # pylint: disable=unused-import
-from plaso.parsers import manager
 from plaso.parsers.plist_plugins import interface
 from plaso.parsers.plist_plugins import test_lib
 
 
 class MockPlugin(interface.PlistPlugin):
   """Mock plugin."""
+  NAME = 'mock_plist_plugin'
+
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
@@ -60,14 +61,13 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
                 'Name': 'test-macpro', 'ClockOffset': 28180,
                 'PageScanPeriod': 2, 'PageScanRepetitionMode': 1}}}
 
-  def testGetRegisteredPlugins(self):
-    """Tests the GetRegisteredPlugins function."""
-    plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=interface.PlistPlugin)
+  def testGetPluginNames(self):
+    """Tests the GetPluginNames function."""
+    plugin_names = plist.PlistParser.GetPluginNames()
 
-    self.assertNotEquals(plugins, {})
+    self.assertNotEquals(plugin_names, [])
 
-    self.assertTrue('plist_default' in plugins.keys())
+    self.assertTrue('plist_default' in plugin_names)
 
   def testProcess(self):
     """Tests the Process function."""

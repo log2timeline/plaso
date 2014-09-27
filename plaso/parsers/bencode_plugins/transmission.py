@@ -19,6 +19,7 @@
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import bencode_parser
 from plaso.parsers.bencode_plugins import interface
 
 
@@ -45,10 +46,11 @@ class TransmissionPlugin(interface.BencodePlugin):
   """Parse Transmission BitTorrent activity file for current torrents."""
 
   NAME = 'bencode_transmission'
+  DESCRIPTION = u'Parser for Transmission bencoded files.'
 
-  BENCODE_KEYS = frozenset(
-      ['activity-date', 'done-date', 'added-date', 'destination',
-       'seeding-time-seconds'])
+  BENCODE_KEYS = frozenset([
+      'activity-date', 'done-date', 'added-date', 'destination',
+      'seeding-time-seconds'])
 
   def GetEntries(self, unused_parser_context, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
@@ -87,3 +89,6 @@ class TransmissionPlugin(interface.BencodePlugin):
       yield TransmissionEvent(
           data.get('activity-date'), eventdata.EventTimestamp.ACCESS_TIME,
           destination, seeding_time)
+
+
+bencode_parser.BencodeParser.RegisterPlugin(TransmissionPlugin)

@@ -50,12 +50,10 @@ import pymsiecf
 import pyregf
 
 import plaso
-from plaso.artifacts import knowledge_base
-from plaso.engine import worker
+from plaso.engine import engine
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import queue
-from plaso.parsers import manager as parsers_manager
 
 
 # TODO: Remove this after the dfVFS integration.
@@ -182,37 +180,37 @@ def ProcessFile(options):
     logging.error(u'Unable to open file: {0:s}'.format(options.file_to_parse))
     sys.exit(1)
 
-  knowledge_base_object = knowledge_base.KnowledgeBase()
-  storage_queue = queue.SingleThreadedQueue()
-  storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
-
-  parse_error_queue = queue.SingleThreadedQueue()
-  parse_error_queue_producer = queue.ParseErrorQueueProducer(parse_error_queue)
-
   # Set few options the engine expects to be there.
   # TODO: Can we rather set this directly in argparse?
   options.single_process = True
   options.debug = False
   options.text_prepend = u''
-  parsers = parsers_manager.ParsersManager.FindAllParsers()
-  # TODO: use engine instead of invoking the worker object directly.
-  my_worker = worker.EventExtractionWorker(
-      '0', None, storage_queue_producer, parse_error_queue_producer,
-      knowledge_base_object, parsers)
+
+  # Set up the engine.
+  collection_queue = queue.SingleThreadedQueue()
+  storage_queue = queue.SingleThreadedQueue()
+  parse_error_queue = queue.SingleThreadedQueue()
+  engine_object = engine.Engine(
+      collection_queue, storage_queue, parse_error_queue)
+
+  # Create a worker.
+  worker_object = engine_object.CreateExtractionWorker('0')
+  # TODO: add support for parser_filter_string.
+  worker_object.InitalizeParserObjects()
 
   if options.verbose:
     profiler = cProfile.Profile()
     profiler.enable()
   else:
     time_start = time.time()
-  my_worker.ParseFile(file_entry)
+  worker_object.ParseFileEntry(file_entry)
 
   if options.verbose:
     profiler.disable()
   else:
     time_end = time.time()
 
-  storage_queue_producer.SignalEndOfInput()
+  engine_object.SignalEndOfInputStorageQueue()
 
   event_object_consumer = PprofEventObjectQueueConsumer(storage_queue)
   event_object_consumer.ConsumeEventObjects()
@@ -225,9 +223,9 @@ def ProcessFile(options):
   # Accessing protected member.
   # pylint: disable=protected-access
   plugins = []
-  for parser in sorted(my_worker._parsers['all']):
-    print frontend_utils.FormatOutputString('', parser.parser_name)
-    parser_plugins = getattr(parser, '_plugins', [])
+  for parser_object in sorted(worker_object._parser_objects):
+    print frontend_utils.FormatOutputString('', parser_object.NAME)
+    parser_plugins = getattr(parser_object, '_plugins', [])
     plugins.extend(parser_plugins)
 
   print frontend_utils.FormatHeader('Plugins Loaded')

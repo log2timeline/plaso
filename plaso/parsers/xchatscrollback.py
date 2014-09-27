@@ -56,6 +56,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -86,6 +87,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat scrollback log files."""
 
   NAME = 'xchatscrollback'
+  DESCRIPTION = u'Parser for XChat scrollback log files.'
 
   ENCODING = 'UTF-8'
 
@@ -204,3 +206,6 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     structure = self.MSG_ENTRY.parseString(stripped)
     text = structure.text.replace(u'\t', u' ')
     return structure.nickname, text
+
+
+manager.ParsersManager.RegisterParser(XChatScrollbackParser)

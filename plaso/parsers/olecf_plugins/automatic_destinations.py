@@ -26,6 +26,7 @@ from plaso.events import time_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.parsers import olecf
 from plaso.parsers import winlnk
 from plaso.parsers.olecf_plugins import interface
 
@@ -71,6 +72,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   """Plugin that parses an .automaticDestinations-ms OLECF file."""
 
   NAME = 'olecf_automatic_destinations'
+  DESCRIPTION = u'Parser for *.automaticDestinations-ms OLECF files.'
 
   REQUIRED_ITEMS = frozenset([u'DestList'])
 
@@ -179,3 +181,6 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
         self._WINLNK_PARSER.ParseFileObject(
             parser_context, item, display_name=display_name)
+
+
+olecf.OleCfParser.RegisterPlugin(AutomaticDestinationsOlecfPlugin)

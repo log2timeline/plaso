@@ -19,6 +19,7 @@
 
 from plaso.events import windows_events
 from plaso.lib import utils
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -107,3 +108,6 @@ class DefaultPlugin(interface.KeyPlugin):
     # Note that we should NOT call the Process function of the KeyPlugin here.
     self.GetEntries(
         parser_context, key=key, registry_type=registry_type, **kwargs)
+
+
+winreg.WinRegistryParser.RegisterPlugin(DefaultPlugin)

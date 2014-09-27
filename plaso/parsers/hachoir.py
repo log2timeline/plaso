@@ -36,6 +36,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -63,6 +64,7 @@ class HachoirParser(interface.BaseParser):
   """Parse meta data from files."""
 
   NAME = 'hachoir'
+  DESCRIPTION = u'Parser that wraps Hachoir.'
 
   def Parse(self, parser_context, file_entry):
     """Extract data from a file using Hachoir.
@@ -78,43 +80,43 @@ class HachoirParser(interface.BaseParser):
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     if not fstream:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, 'Not fstream'))
+              self.NAME, file_entry.name, 'Not fstream'))
 
     try:
       doc_parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     if not doc_parser:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, 'Not parser'))
+              self.NAME, file_entry.name, 'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(doc_parser)
     except (AssertionError, AttributeError) as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     try:
       metatext = metadata.exportPlaintext(human=False)
     except AttributeError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     if not metatext:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: No metadata'.format(
-              self.parser_name, file_entry.name))
+              self.NAME, file_entry.name))
 
     attributes = {}
     extracted_events = []
@@ -153,9 +155,12 @@ class HachoirParser(interface.BaseParser):
     if not extracted_events:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, 'No events discovered'))
+              self.NAME, file_entry.name, 'No events discovered'))
 
     for date, key in extracted_events:
       event_object = HachoirEvent(date, key, attributes)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
+
+
+manager.ParsersManager.RegisterParser(HachoirParser)

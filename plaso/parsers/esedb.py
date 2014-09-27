@@ -15,34 +15,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parser for Extensible Storage Engine (ESE) database Files (EDB)."""
+"""Parser for Extensible Storage Engine (ESE) database files (EDB)."""
 
 import logging
 
 import pyesedb
 
 from plaso.lib import errors
-# Register all ESEDB plugins.
-from plaso.parsers import esedb_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
 from plaso.parsers import manager
-from plaso.parsers.esedb_plugins import interface as esedb_plugins_interface
+from plaso.parsers import plugins
 
 
 if pyesedb.get_version() < '20140301':
   raise ImportWarning(u'EseDbParser requires at least pyesedb 20140301.')
 
 
-class EseDbParser(interface.BaseParser):
-  """Parses Extensible Storage Engine (ESE) database Files (EDB)."""
+class EseDbCache(plugins.BasePluginCache):
+  """A cache storing query results for ESEDB plugins."""
+
+
+class EseDbParser(interface.BasePluginsParser):
+  """Parses Extensible Storage Engine (ESE) database files (EDB)."""
 
   NAME = 'esedb'
+  DESCRIPTION = u'Parser for Extensible Storage Engine (ESE) database files.'
+
+  _plugin_classes = {}
 
   def __init__(self):
     """Initializes a parser object."""
     super(EseDbParser, self).__init__()
-    self._plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=esedb_plugins_interface.EseDbPlugin)
+    self._plugins = EseDbParser.GetPluginObjects()
 
   def Parse(self, parser_context, file_entry):
     """Extracts data from an ESE database File.
@@ -64,21 +68,25 @@ class EseDbParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     # Compare the list of available plugins.
-    cache = esedb_plugins_interface.EseDbCache()
-    for esedb_plugin in self._plugins.itervalues():
+    cache = EseDbCache()
+    for plugin_object in self._plugins:
       try:
-        esedb_plugin.Process(
+        plugin_object.Process(
             parser_context, database=esedb_file, cache=cache)
 
       except errors.WrongPlugin:
         logging.debug((
             u'[{0:s}] plugin: {1:s} cannot parse the ESE database: '
             u'{2:s}').format(
-                self.parser_name, esedb_plugin.plugin_name, file_entry.name))
+                self.NAME, plugin_object.NAME, file_entry.name))
 
     # TODO: explicitly clean up cache.
 
+    esedb_file.close()
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(EseDbParser)

@@ -23,6 +23,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import interface
+from plaso.parsers import manager
 from plaso.parsers.shared import shell_items
 
 
@@ -70,6 +71,7 @@ class WinLnkParser(interface.BaseParser):
   """Parses Windows Shortcut (LNK) files."""
 
   NAME = 'lnk'
+  DESCRIPTION = u'Parser for Windows Shortcut (LNK) files.'
 
   def Parse(self, parser_context, file_entry):
     """Extract data from a Windows Shortcut (LNK) file.
@@ -137,3 +139,6 @@ class WinLnkParser(interface.BaseParser):
 
     # TODO: add support for the distributed link tracker.
     lnk_file.close()
+
+
+manager.ParsersManager.RegisterParser(WinLnkParser)

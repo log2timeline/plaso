@@ -27,6 +27,7 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import utils
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class WinRecycleEvent(time_events.FiletimeEvent):
@@ -64,9 +65,10 @@ class WinRecycleEvent(time_events.FiletimeEvent):
 
 
 class WinRecycleBinParser(interface.BaseParser):
-  """Parses the Windows $I recycle files."""
+  """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = 'recycle_bin'
+  DESCRIPTION = u'Parser for Windows $Recycle.Bin $I files.'
 
   # Define a list of all structs needed.
   # Struct read from:
@@ -113,9 +115,10 @@ class WinRecycleBinParser(interface.BaseParser):
 
 
 class WinRecycleInfo2Parser(interface.BaseParser):
-  """Parses the Windows INFO2 recycle bin file."""
+  """Parses the Windows Recycler INFO2 file."""
 
   NAME = 'recycle_bin_info2'
+  DESCRIPTION = u'Parser for Windows Recycler INFO2 files.'
 
   # Define a list of all structs used.
   INT32_LE = construct.ULInt32('my_int')
@@ -202,3 +205,6 @@ class WinRecycleInfo2Parser(interface.BaseParser):
       data = file_object.read(record_size)
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(WinRecycleBinParser)

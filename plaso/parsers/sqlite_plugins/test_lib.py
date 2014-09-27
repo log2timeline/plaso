@@ -22,8 +22,8 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.lib import queue
+from plaso.parsers import sqlite
 from plaso.parsers import test_lib
-from plaso.parsers.sqlite_plugins import interface as sqlite_interface
 
 
 class SQLitePluginTestCase(test_lib.ParserTestCase):
@@ -57,7 +57,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-    with sqlite_interface.SQLiteDatabase(file_entry) as database:
+    with sqlite.SQLiteDatabase(file_entry) as database:
       plugin_object.Process(parser_context, cache=cache, database=database)
 
     return event_queue_consumer

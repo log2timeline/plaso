@@ -28,7 +28,6 @@ and operation of plugins for plist files which will be used by PlistParser.
 import logging
 
 from plaso.lib import errors
-from plaso.lib import registry
 from plaso.parsers import plugins
 
 
@@ -54,20 +53,9 @@ class PlistPlugin(plugins.BasePlugin):
 
   Methods:
   GetEntries() - extract and format info from keys and yields event.PlistEvent.
-
-  Quick note regarding the following __metaclass__ = registry.MetaclassRegistry.
-  MetaclassRegisty is used to dynamically register plugins so that they are
-  discoverable by the Plaso processing engine without additional code
-  modifications.
-
-  Plaso's implementation is identical and resides in lib/registry.py.
   """
 
-  __metaclass__ = registry.MetaclassRegistry
-  # __abstract prevents the interface itself from being registered as a plugin.
-  __abstract = True
-
-  NAME = 'plist'
+  NAME = 'plist_plugin'
 
   # PLIST_PATH is a string for the filename this parser is designed to process.
   # This is expected to be overriden by the processing plugin.
@@ -113,15 +101,15 @@ class PlistPlugin(plugins.BasePlugin):
       raise ValueError(u'Top level or plist name are not set.')
 
     if plist_name.lower() != self.PLIST_PATH.lower():
-      raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+      raise errors.WrongPlistPlugin(self.NAME, plist_name)
 
     if isinstance(top_level, dict):
       if not set(top_level.keys()).issuperset(self.PLIST_KEYS):
-        raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+        raise errors.WrongPlistPlugin(self.NAME, plist_name)
     else:
       # Make sure we are getting back an object that has an iterator.
       if not hasattr(top_level, '__iter__'):
-        raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+        raise errors.WrongPlistPlugin(self.NAME, plist_name)
 
       # This is a list and we need to just look at the first level
       # of keys there.
@@ -133,13 +121,13 @@ class PlistPlugin(plugins.BasePlugin):
       # Compare this is a set, which removes possible duplicate entries
       # in the list.
       if not set(keys).issuperset(self.PLIST_KEYS):
-        raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+        raise errors.WrongPlistPlugin(self.NAME, plist_name)
 
     # This will raise if unhandled keyword arguments are passed.
     super(PlistPlugin, self).Process(parser_context, **kwargs)
 
     logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
-        self.plugin_name, plist_name))
+        self.NAME, plist_name))
     match = GetKeys(top_level, self.PLIST_KEYS)
     return self.GetEntries(parser_context, top_level=top_level, match=match)
 

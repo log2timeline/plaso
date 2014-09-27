@@ -21,6 +21,7 @@ import datetime
 import logging
 
 from plaso.events import plist_event
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -49,7 +50,7 @@ class DefaultPlugin(interface.PlistPlugin):
       A generator of events processed by the plugin.
     """
     logging.debug(u'Plist {0:s} plugin used for: {1:s}'.format(
-        self.plugin_name, plist_name))
+        self.NAME, plist_name))
     return self.GetEntries(parser_context, top_level=top_level, **kwargs)
 
   def GetEntries(self, unused_parser_context, top_level=None, **unused_kwargs):
@@ -67,3 +68,6 @@ class DefaultPlugin(interface.PlistPlugin):
         yield plist_event.PlistEvent(root, key, value)
       # TODO: Binplist keeps a list of offsets but not mapped to a key.
       # adjust code when there is a way to map keys to offsets.
+
+
+plist.PlistParser.RegisterPlugin(DefaultPlugin)

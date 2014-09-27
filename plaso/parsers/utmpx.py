@@ -28,6 +28,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -57,9 +58,10 @@ class UtmpxMacOsXEvent(event.EventObject):
 
 
 class UtmpxParser(interface.BaseParser):
-  """Parser for UTMPX files. """
+  """Parser for UTMPX files."""
 
   NAME = 'utmpx'
+  DESCRIPTION = u'Parser for UTMPX files.'
 
   # INFO: Type is suppose to be a short (2 bytes),
   # however if we analyze the file it is always
@@ -194,3 +196,6 @@ class UtmpxParser(interface.BaseParser):
       event_object = self._ReadEntry(file_object)
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(UtmpxParser)

@@ -20,6 +20,7 @@
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.parsers import bencode_parser
 from plaso.parsers.bencode_plugins import interface
 
 
@@ -47,6 +48,7 @@ class UTorrentPlugin(interface.BencodePlugin):
   """Plugin to extract uTorrent active torrent events."""
 
   NAME = 'bencode_utorrent'
+  DESCRIPTION = u'Parser for uTorrent bencoded files.'
 
   # The following set is used to determine if the bencoded data is appropriate
   # for this plugin. If there's a match, the entire bencoded data block is
@@ -89,7 +91,7 @@ class UTorrentPlugin(interface.BencodePlugin):
       path = value.get('path')
       seedtime = value.get('seedtime')
       if not caption or not path or seedtime < 0:
-        raise errors.WrongBencodePlugin(self.plugin_name)
+        raise errors.WrongBencodePlugin(self.NAME)
 
     for torrent, value in data.iteritems():
       if not u'.torrent' in torrent:
@@ -117,3 +119,6 @@ class UTorrentPlugin(interface.BencodePlugin):
             yield UTorrentEvent(
                 modtime, eventdata.EventTimestamp.MODIFICATION_TIME,
                 path, caption, seedtime)
+
+
+bencode_parser.BencodeParser.RegisterPlugin(UTorrentPlugin)

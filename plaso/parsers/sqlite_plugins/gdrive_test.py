@@ -23,8 +23,8 @@ import unittest
 from plaso.formatters import gdrive as gdrive_formatter
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import gdrive
-from plaso.parsers.sqlite_plugins import interface
 from plaso.parsers.sqlite_plugins import test_lib
 
 
@@ -38,7 +38,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a Google Drive database file."""
     test_file = self._GetTestFilePath(['snapshot.db'])
-    cache = interface.SQLiteCache()
+    cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache=cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

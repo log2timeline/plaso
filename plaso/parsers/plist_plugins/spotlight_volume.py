@@ -18,6 +18,7 @@
 """This file contains the Spotlight Volume Configuration plist in Plaso."""
 
 from plaso.events import plist_event
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -47,3 +48,6 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
           volume_name, volume['PartialPath'])
       yield plist_event.PlistEvent(
           u'/Stores', '', volume['CreationDate'], description)
+
+
+plist.PlistParser.RegisterPlugin(SpotlightVolumePlugin)

@@ -19,6 +19,7 @@
 
 from plaso.events import windows_events
 from plaso.lib import timelib
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -71,3 +72,6 @@ class CCleanerPlugin(interface.KeyPlugin):
 
       event_object.source_append = u': {0:s}'.format(self.DESCRIPTION)
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+winreg.WinRegistryParser.RegisterPlugin(CCleanerPlugin)

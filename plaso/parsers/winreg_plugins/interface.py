@@ -135,7 +135,7 @@ class KeyPlugin(RegistryPlugin):
       except KeyError as exception:
         logging.debug((
             u'Unable to expand Registry key {0:s} for plugin {1:s} with '
-            u'error: {1:s}').format(registry_key, self.plugin_name, exception))
+            u'error: {1:s}').format(registry_key, self.NAME, exception))
         continue
 
       if not expanded_key:

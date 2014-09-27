@@ -22,8 +22,8 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import xchatscrollback as xchatscrollback_formatter
 from plaso.lib import eventdata
-from plaso.parsers import xchatscrollback as xchatscrollback_parser
 from plaso.parsers import test_lib
+from plaso.parsers import xchatscrollback
 
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
@@ -34,7 +34,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._parser = xchatscrollback_parser.XChatScrollbackParser()
+    self._parser = xchatscrollback.XChatScrollbackParser()
 
   def testParse(self):
     """Tests the Parse function."""

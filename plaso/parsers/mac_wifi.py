@@ -26,6 +26,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -61,6 +62,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on wifi.log file."""
 
   NAME = 'macwifi'
+  DESCRIPTION = u'Parses Mac OS X wifi.log files.'
 
   ENCODING = u'utf-8'
 
@@ -273,3 +275,6 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       logging.debug(u'Not a Mac Wifi log file')
       return False
     return True
+
+
+manager.ParsersManager.RegisterParser(MacWifiLogParser)

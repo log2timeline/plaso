@@ -22,6 +22,7 @@ import json
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -215,3 +216,6 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         row['time_string'], description, row['id'], key_url, data)
     parser_context.ProduceEvent(
         event_object, plugin_name=self.NAME, query=query)
+
+
+sqlite.SQLiteParser.RegisterPlugin(MacKeeperCachePlugin)
