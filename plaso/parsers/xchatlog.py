@@ -74,6 +74,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -102,6 +103,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat log files."""
 
   NAME = 'xchatlog'
+  DESCRIPTION = u'Parser for XChat log files.'
 
   ENCODING = 'UTF-8'
 
@@ -256,3 +258,6 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+
+manager.ParsersManager.RegisterParser(XChatLogParser)

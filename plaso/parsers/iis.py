@@ -30,6 +30,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -67,9 +68,10 @@ class IISEventObject(time_events.TimestampEvent):
 
 
 class WinIISParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses the Windows IIS Log file."""
+  """Parses a Microsoft IIS log file."""
 
   NAME = 'winiis'
+  DESCRIPTION = u'Parser for Microsoft IIS log files.'
 
   # Common Fields (6.0: date time s-sitename s-ip cs-method cs-uri-stem
   # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
@@ -223,3 +225,6 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     return IISEventObject(timestamp, structure)
+
+
+manager.ParsersManager.RegisterParser(WinIISParser)

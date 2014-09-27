@@ -19,24 +19,19 @@
 
 import unittest
 
-from plaso.parsers import manager
 from plaso.parsers import sqlite
+# Register plugins.
+from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
 
 
 class SQLiteParserTest(unittest.TestCase):
   """Tests for the SQLite database parser."""
 
-  def testPlugins(self):
-    """Tests the _plugins attibute."""
-    # TODO: move these tests.
+  def testGetPluginNames(self):
+    """Tests the GetPluginNames function."""
+    all_plugin_names = sqlite.SQLiteParser.GetPluginNames()
 
-    # pylint: disable=protected-access
-    self._parser = sqlite.SQLiteParser()
-
-    all_plugins = self._parser._plugins
-    self.assertGreaterEqual(len(all_plugins), 10)
-
-    all_plugin_names = all_plugins.keys()
+    self.assertNotEquals(all_plugin_names, [])
 
     self.assertTrue('skype' in all_plugin_names)
     self.assertTrue('chrome_history' in all_plugin_names)
@@ -44,20 +39,24 @@ class SQLiteParserTest(unittest.TestCase):
 
     # Change the calculations of the parsers.
     parser_filter_string = 'chrome_history, firefox_history, -skype'
-    manager.ParsersManager.SetParserFilterString(parser_filter_string)
-    self._parser = sqlite.SQLiteParser()
-    plugins = self._parser._plugins
+    plugin_names = sqlite.SQLiteParser.GetPluginNames(
+        parser_filter_string=parser_filter_string)
 
-    self.assertEquals(len(plugins), 2)
+    self.assertEquals(len(plugin_names), 2)
+    self.assertFalse('skype' in plugin_names)
+    self.assertTrue('chrome_history' in plugin_names)
+    self.assertTrue('firefox_history' in plugin_names)
 
     # Test with a different plugin selection.
     parser_filter_string = 'sqlite, -skype'
-    manager.ParsersManager.SetParserFilterString(parser_filter_string)
-    self._parser = sqlite.SQLiteParser()
-    plugins = self._parser._plugins
+    plugin_names = sqlite.SQLiteParser.GetPluginNames(
+        parser_filter_string=parser_filter_string)
 
     # This should result in all plugins EXCEPT the skype one.
-    self.assertEquals(len(plugins), len(all_plugins) - 1)
+    self.assertEquals(len(plugin_names), len(all_plugin_names) - 1)
+    self.assertFalse('skype' in plugin_names)
+    self.assertTrue('chrome_history' in plugin_names)
+    self.assertTrue('firefox_history' in plugin_names)
 
 
 if __name__ == '__main__':

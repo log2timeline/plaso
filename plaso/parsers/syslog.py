@@ -24,6 +24,7 @@ from plaso.events import text_events
 from plaso.lib import lexer
 from plaso.lib import timelib
 from plaso.lib import utils
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -36,6 +37,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
   """Parse text based syslog files."""
 
   NAME = 'syslog'
+  DESCRIPTION = u'Parser for syslog files.'
 
   # TODO: can we change this similar to SQLite where create an
   # event specific object for different lines using a callback function.
@@ -203,3 +205,5 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     """
     return SyslogLineEvent(timestamp, offset, attributes)
 
+
+manager.ParsersManager.RegisterParser(SyslogParser)

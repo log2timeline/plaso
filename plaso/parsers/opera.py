@@ -31,6 +31,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class OperaTypedHistoryEvent(event.EventObject):
@@ -88,6 +89,7 @@ class OperaTypedHistoryParser(interface.BaseParser):
   """Parses the Opera typed_history.xml file."""
 
   NAME = 'opera_typed_history'
+  DESCRIPTION = u'Parser for Opera typed_history.xml files.'
 
   def Parse(self, parser_context, file_entry):
     """Extract data from an Opera typed history file.
@@ -143,6 +145,7 @@ class OperaGlobalHistoryParser(interface.BaseParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = 'opera_global'
+  DESCRIPTION = u'Parser for Opera global_history.dat files.'
 
   _SUPPORTED_URL_SCHEMES = frozenset(['file', 'http', 'https', 'ftp'])
 
@@ -305,3 +308,7 @@ class OperaGlobalHistoryParser(interface.BaseParser):
           event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(OperaTypedHistoryParser)
+manager.ParsersManager.RegisterParser(OperaGlobalHistoryParser)

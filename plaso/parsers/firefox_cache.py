@@ -28,6 +28,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
@@ -61,6 +62,7 @@ class FirefoxCacheParser(interface.BaseParser):
   """Extract cached records from Firefox."""
 
   NAME = 'firefox_cache'
+  DESCRIPTION = u'Parser for Firefox Cache files.'
 
   # Number of bytes allocated to a cache record metadata.
   RECORD_HEADER_SIZE = 36
@@ -231,3 +233,6 @@ class FirefoxCacheParser(interface.BaseParser):
             file_object.get_offset() - self.MIN_BLOCK_SIZE))
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(FirefoxCacheParser)

@@ -18,6 +18,7 @@
 """Plug-in to collect the Less Frequently Used Keys."""
 
 from plaso.events import windows_events
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -111,3 +112,7 @@ class BootExecutePlugin(interface.KeyPlugin):
         key.last_written_timestamp, key.path, text_dict, offset=key.offset,
         registry_type=registry_type, urls=self.URLS)
     parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+winreg.WinRegistryParser.RegisterPlugin(BootVerificationPlugin)
+winreg.WinRegistryParser.RegisterPlugin(BootExecutePlugin)

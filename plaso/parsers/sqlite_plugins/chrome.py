@@ -25,6 +25,7 @@
 from plaso.events import time_events
 from plaso.lib import timelib
 from plaso.lib import eventdata
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -312,3 +313,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
         visit_source)
     parser_context.ProduceEvent(
         event_object, plugin_name=self.NAME, query=query)
+
+
+sqlite.SQLiteParser.RegisterPlugin(ChromeHistoryPlugin)

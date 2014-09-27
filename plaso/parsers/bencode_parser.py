@@ -28,14 +28,11 @@ import os
 import bencode
 
 from plaso.lib import errors
-# Register all bencode plugins.
-from plaso.parsers import bencode_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
 from plaso.parsers import manager
-from plaso.parsers.bencode_plugins import interface as bencode_plugins_interface
 
 
-class BencodeParser(interface.BaseParser):
+class BencodeParser(interface.BasePluginsParser):
   """Deserializes bencoded file; produces a dictionary containing bencoded data.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
@@ -53,12 +50,14 @@ class BencodeParser(interface.BaseParser):
   BENCODE_RE = re.compile('d[0-9]')
 
   NAME = 'bencode'
+  DESCRIPTION = u'Parser for bencoded files.'
+
+  _plugin_classes = {}
 
   def __init__(self):
     """Initializes a parser object."""
     super(BencodeParser, self).__init__()
-    self._plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=bencode_plugins_interface.BencodePlugin)
+    self._plugins = BencodeParser.GetPluginObjects()
 
   def GetTopLevel(self, file_object):
     """Returns deserialized content of a bencoded file as a dictionary object.
@@ -103,19 +102,22 @@ class BencodeParser(interface.BaseParser):
           u'[{0:s}] unable to parse: {1:s}. Skipping.'.format(
               self.NAME, file_entry.name))
 
-    for bencode_plugin in self._plugins.itervalues():
+    for plugin_object in self._plugins:
       try:
-        for event_object in bencode_plugin.Process(
+        for event_object in plugin_object.Process(
             parser_context, top_level=top_level_object):
 
           # TODO: remove this once the yield-based parsers have been replaced
           # by produce (or emit)-based variants.
           parser_context.ProduceEvent(
               event_object, parser_name=self.NAME,
-              plugin_name=bencode_plugin.plugin_name, file_entry=file_entry)
+              plugin_name=plugin_object.NAME, file_entry=file_entry)
 
       except errors.WrongBencodePlugin as exception:
         logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
             self.NAME, exception))
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(BencodeParser)

@@ -44,6 +44,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -103,16 +104,17 @@ class CupsIppEvent(event.EventObject):
     the entire field is surrounded with double quotes.
 
     Args:
-      values: A list containing strings.
+      values: A list or tuple containing the values.
 
     Returns:
-      A string containing all the values joined using comma as a delimiter.
+      A string containing all the values joined using comma as a delimiter
+      or None.
     """
     if values is None:
-      return None
+      return
 
     if type(values) not in (list, tuple):
-      return None
+      return
 
     for index, value in enumerate(values):
       if ',' in value:
@@ -125,6 +127,7 @@ class CupsIppParser(interface.BaseParser):
   """Parser for CUPS IPP files. """
 
   NAME = 'cups_ipp'
+  DESCRIPTION = u'Parser for CUPS IPP files.'
 
   # INFO:
   # For each file, we have only one document with three different timestamps:
@@ -318,10 +321,7 @@ class CupsIppParser(interface.BaseParser):
         value = self.INTEGER.parse_stream(file_object).integer
 
       elif type_id == self.TYPE_BOOL:
-        if self.BOOLEAN.parse_stream(file_object).integer == 0:
-          value = False
-        else:
-          value = True
+        value = bool(self.BOOLEAN.parse_stream(file_object).integer)
 
       else:
         value = self.TEXT.parse_stream(file_object)
@@ -333,3 +333,6 @@ class CupsIppParser(interface.BaseParser):
       return None, None
 
     return name, value
+
+
+manager.ParsersManager.RegisterParser(CupsIppParser)

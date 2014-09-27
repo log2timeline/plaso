@@ -27,6 +27,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
@@ -488,6 +489,7 @@ class PcapParser(interface.BaseParser):
   """Parses PCAP files."""
 
   NAME = 'pcap'
+  DESCRIPTION = u'Parser for PCAP files.'
 
   def Parse(self, parser_context, file_entry):
     """Extract data from a pcap file.
@@ -509,12 +511,12 @@ class PcapParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
     except dpkt.NeedData as exception:
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     packet_id = 0
     ip_list = []
@@ -735,3 +737,6 @@ class PcapParser(interface.BaseParser):
       other_streams.append(this_stream)
 
     return other_streams
+
+
+manager.ParsersManager.RegisterParser(PcapParser)

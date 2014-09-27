@@ -22,7 +22,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import skype as skype_formatter
 from plaso.lib import timelib_test
-from plaso.parsers.sqlite_plugins import interface
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -51,7 +51,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         id = 14 -> ChatRoom
     """
     test_file = self._GetTestFilePath(['skype_main.db'])
-    cache = interface.SQLiteCache()
+    cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)

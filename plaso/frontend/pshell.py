@@ -47,11 +47,10 @@ from plaso import output
 from plaso import parsers
 from plaso import preprocessors
 
-from plaso.artifacts import knowledge_base
 from plaso.engine import collector
 from plaso.engine import scanner
 from plaso.engine import utils as engine_utils
-from plaso.engine import worker
+from plaso.engine import engine
 
 from plaso.frontend import frontend
 from plaso.frontend import rpc_proxy
@@ -121,6 +120,8 @@ def FindAllOutputs():
 
 def FindAllParsers():
   """Finds all available parsers."""
+  # TODO: refactor this function in a function that returns the identifiers
+  # of available parsers and one that can retrieve parser objects.
   return parsers_manager.ParsersManager.FindAllParsers()
 
 
@@ -237,29 +238,21 @@ def ParseFile(file_entry):
   if isinstance(file_entry, basestring):
     file_entry = OpenOSFile(file_entry)
 
-  # Create the necessary items.
-  knowledge_base_object = knowledge_base.KnowledgeBase()
-
-  proc_queue = queue.SingleThreadedQueue()
+  # Set up the engine.
+  collection_queue = queue.SingleThreadedQueue()
   storage_queue = queue.SingleThreadedQueue()
-  storage_queue_producer = queue.EventObjectQueueProducer(storage_queue)
-
   parse_error_queue = queue.SingleThreadedQueue()
-  parse_error_queue_producer = queue.ParseErrorQueueProducer(parse_error_queue)
-
-  parsers_list = parsers_manager.ParsersManager.FindAllParsers()
+  engine_object = engine.Engine(
+      collection_queue, storage_queue, parse_error_queue)
 
   # Create a worker.
-  # TODO: use engine instead of invoking the worker object directly.
-  worker_object = worker.EventExtractionWorker(
-      'my_worker', proc_queue, storage_queue_producer,
-      parse_error_queue_producer, knowledge_base_object, parsers_list)
+  worker_object = engine_object.CreateExtractionWorker('0')
+  # TODO: add support for parser_filter_string.
+  worker_object.InitalizeParserObjects()
+  worker_object.ParseFileEntry(file_entry)
 
-  # Parse the file.
-  worker_object.ParseFile(file_entry)
-
-  storage_queue.SignalEndOfInput()
-  proc_queue.SignalEndOfInput()
+  collection_queue.SignalEndOfInput()
+  engine_object.SignalEndOfInputStorageQueue()
 
   results = []
   while True:
@@ -342,9 +335,13 @@ def Main():
 
   namespace.update(globals())
   namespace.update({
-      'frontend': front_end, 'pre_obj': pre_obj, 'options': options,
-      'find_all_output': FindAllOutputs, 'find_all_parsers': FindAllParsers,
-      'parse_file': ParseFile, 'timestamp_from_event': PrintTimestampFromEvent,
+      'frontend': front_end,
+      'pre_obj': pre_obj,
+      'options': options,
+      'find_all_output': FindAllOutputs,
+      'find_all_parsers': FindAllParsers,
+      'parse_file': ParseFile,
+      'timestamp_from_event': PrintTimestampFromEvent,
       'message': formatters.manager.EventFormatterManager.GetMessageStrings})
 
   # Include few random phrases that get thrown in once the user exists the

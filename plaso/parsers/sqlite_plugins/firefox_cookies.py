@@ -23,6 +23,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 # Register the cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
+from plaso.parsers import sqlite
 from plaso.parsers.cookie_plugins import interface as cookie_interface
 from plaso.parsers.sqlite_plugins import interface
 
@@ -147,3 +148,6 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
             url=url)
       except errors.WrongPlugin:
         pass
+
+
+sqlite.SQLiteParser.RegisterPlugin(FirefoxCookiePlugin)

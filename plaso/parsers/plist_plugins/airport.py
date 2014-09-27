@@ -18,6 +18,7 @@
 """This file contains the airport plist plugin in Plaso."""
 
 from plaso.events import plist_event
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -50,3 +51,6 @@ class AirportPlugin(interface.PlistPlugin):
               wifi['SSIDString'], wifi['SecurityType'])
       yield plist_event.PlistEvent(
           u'/RememberedNetworks', u'item', wifi['LastConnected'], description)
+
+
+plist.PlistParser.RegisterPlugin(AirportPlugin)

@@ -25,6 +25,7 @@ import logging
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
 
@@ -136,6 +137,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
   """Parses a MSIE WebCache ESE database file."""
 
   NAME = 'msie_webcache'
+  DESCRIPTION = u'Parses MSIE WebCache ESE database files.'
 
   # TODO: add support for AppCache_#, AppCacheEntry_#, DependencyEntry_#
 
@@ -317,3 +319,6 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
         event_object = MsieWebCachePartitionsEventObject(
             timestamp, u'Last Scavenge Time', record_values)
         parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+esedb.EseDbParser.RegisterPlugin(MsieWebCacheEseDbPlugin)

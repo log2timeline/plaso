@@ -18,6 +18,7 @@
 """This file contains the MSIE zone settings plugin."""
 
 from plaso.events import windows_events
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -278,3 +279,7 @@ class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):
        u'\\Zones'),
       (u'\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
        u'\\Lockdown_Zones')]
+
+
+winreg.WinRegistryParser.RegisterPlugin(MsieZoneSettingsPlugin)
+winreg.WinRegistryParser.RegisterPlugin(MsieZoneSettingsSoftwareZonesPlugin)

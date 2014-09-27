@@ -23,6 +23,7 @@ import construct
 
 from plaso.events import windows_events
 from plaso.lib import timelib
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import environ_expand
 from plaso.winnt import known_folder_ids
@@ -195,3 +196,6 @@ class UserAssistPlugin(interface.KeyPlugin):
               text_dict, offset=count_subkey.offset,
               registry_type=registry_type)
           parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+winreg.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

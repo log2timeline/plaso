@@ -29,6 +29,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.unix import bsmtoken
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 import pytz
 
@@ -122,6 +123,7 @@ class BsmParser(interface.BaseParser):
   """Parser for BSM files."""
 
   NAME = 'bsm_log'
+  DESCRIPTION = u'Parser for BSM log files.'
 
   # BSM supported version (0x0b = 11).
   AUDIT_HEADER_VERSION = 11
@@ -1125,3 +1127,6 @@ class BsmParser(interface.BaseParser):
 
     string, _, _ = string.partition('\x00')
     return string
+
+
+manager.ParsersManager.RegisterParser(BsmParser)

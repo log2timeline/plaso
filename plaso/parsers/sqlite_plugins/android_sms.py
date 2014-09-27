@@ -22,6 +22,7 @@ Android SMS messages are stored in SQLite database files named mmssms.dbs.
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -86,3 +87,6 @@ class AndroidSmsPlugin(interface.SQLitePlugin):
         row['date'], row['id'], row['address'], sms_read, sms_type, row['body'])
     parser_context.ProduceEvent(
         event_object, plugin_name=self.NAME, query=query)
+
+
+sqlite.SQLiteParser.RegisterPlugin(AndroidSmsPlugin)

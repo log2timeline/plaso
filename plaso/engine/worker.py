@@ -29,6 +29,7 @@ from plaso.engine import classifier
 from plaso.lib import errors
 from plaso.lib import queue
 from plaso.parsers import context as parsers_context
+from plaso.parsers import manager as parsers_manager
 
 
 class EventExtractionWorker(queue.PathSpecQueueConsumer):
@@ -44,7 +45,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
   def __init__(
       self, identifier, process_queue, event_queue_producer,
-      parse_error_queue_producer, knowledge_base, parsers, rpc_proxy=None):
+      parse_error_queue_producer, knowledge_base, rpc_proxy=None):
     """Initializes the event extraction worker object.
 
     Args:
@@ -57,7 +58,6 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
-      parsers: A list of parser objects to use for processing.
       rpc_proxy: A proxy object (instance of proxy.ProxyServer) that can be
                  used to setup RPC functionality for the worker. This is
                  optional and if not provided the worker will not listen to RPC
@@ -70,7 +70,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._open_files = False
     self._parser_context = parsers_context.ParserContext(
         event_queue_producer, parse_error_queue_producer, knowledge_base)
-    self._parsers = parsers
+    self._parser_objects = None
     self._rpc_proxy = rpc_proxy
 
     # We need a resolver context per process to prevent multi processing
@@ -95,7 +95,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       return
 
     try:
-      self.ParseFile(file_entry)
+      self.ParseFileEntry(file_entry)
     except IOError as exception:
       logging.warning(u'Unable to parse file: {0:s} with error: {1:s}'.format(
           path_spec.comparable, exception))
@@ -103,7 +103,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     if self._open_files:
       try:
         for sub_file_entry in classifier.Classifier.SmartOpenFiles(file_entry):
-          self.ParseFile(sub_file_entry)
+          self.ParseFileEntry(sub_file_entry)
       except IOError as exception:
         logging.warning(
             u'Unable to parse file: {0:s} with error: {1:s}'.format(
@@ -121,13 +121,38 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       self._event_queue_producer.ProduceEventObject(event_object)
       self._parser_context.number_of_events += 1
 
-  def ParseFile(self, file_entry):
-    """Run through classifier and appropriate parsers.
+  def GetStatus(self):
+    """Returns a status dictionary for the worker process."""
+    return {
+        'is_running': self._is_running,
+        'identifier': u'Worker_{0:d}'.format(self._identifier),
+        'current_file': self._current_working_file,
+        'counter': self._parser_context.number_of_events}
+
+  def InitalizeParserObjects(self, parser_filter_string=None):
+    """Initializes the parser objects.
+
+    The parser_filter_string is a simple comma separated value string that
+    denotes a list of parser names to include and/or exclude. Each entry
+    can have the value of:
+      + Exact match of a list of parsers, or a preset (see
+        plaso/frontend/presets.py for a full list of available presets).
+      + A name of a single parser (case insensitive), eg. msiecfparser.
+      + A glob name for a single parser, eg: '*msie*' (case insensitive).
+
+    Args:
+      parser_filter_string: Optional parser filter string. The default is None.
+    """
+    self._parser_objects = parsers_manager.ParsersManager.GetParserObjects(
+        parser_filter_string=parser_filter_string)
+
+  def ParseFileEntry(self, file_entry):
+    """Parses a file entry.
 
     Args:
       file_entry: A file entry object.
     """
-    logging.debug(u'[ParseFile] Parsing: {0:s}'.format(
+    logging.debug(u'[ParseFileEntry] Parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
 
     self._current_working_file = getattr(
@@ -135,14 +160,11 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
     # TODO: Not go through all parsers, just the ones
     # that the classifier classifies the file as.
-    # Do this when classifier is ready.
-    # The classifier will return a "type" back, which refers
-    # to a key in the self._parsers dict. If the results are
-    # inconclusive the "all" key is used, or the key is not found.
-    # key = self._parsers.get(classification, 'all')
-    for parser_object in self._parsers['all']:
-      logging.debug(u'Checking [{0:s}] against: {1:s}'.format(
-          file_entry.name, parser_object.parser_name))
+
+    for parser_object in self._parser_objects:
+      logging.debug(u'Trying to parse: {0:s} with parser: {1:s}'.format(
+          file_entry.name, parser_object.NAME))
+
       try:
         event_object_generator = parser_object.Parse(
             self._parser_context, file_entry)
@@ -155,16 +177,16 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
               continue
 
             self._ParseEvent(
-                event_object, file_entry, parser_object.parser_name)
+                event_object, file_entry, parser_object.NAME)
 
       except errors.UnableToParseFile as exception:
         logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
-            parser_object.parser_name, file_entry.name, exception))
+            parser_object.NAME, file_entry.name, exception))
 
       except IOError as exception:
         logging.debug(
             u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
-                parser_object.parser_name, file_entry.path_spec.comparable,
+                parser_object.NAME, file_entry.path_spec.comparable,
                 exception))
 
       # Casting a wide net, catching all exceptions. Done to keep the worker
@@ -173,7 +195,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       except Exception as exception:
         logging.warning(
             u'[{0:s}] Unable to process file: {1:s} with error: {2:s}.'.format(
-                parser_object.parser_name, file_entry.path_spec.comparable,
+                parser_object.NAME, file_entry.path_spec.comparable,
                 exception))
         logging.debug(
             u'The path specification that caused the error: {0:s}'.format(
@@ -185,25 +207,24 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
         if self._single_process_mode and self._debug_mode:
           pdb.post_mortem()
 
-    logging.debug(u'Done parsing: {0:s}'.format(
+    logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
 
-  def GetStatus(self):
-    """Returns a status dictionary for the worker process."""
-    return {
-        'is_running': self._is_running,
-        'identifier': u'Worker_{0:d}'.format(self._identifier),
-        'current_file': self._current_working_file,
-        'counter': self._parser_context.number_of_events}
+  def Run(self, parser_filter_string=None):
+    """Start the worker, monitor the queue and parse files.
 
-  def Run(self):
-    """Start the worker, monitor the queue and parse files."""
+    Args:
+      parser_filter_string: Optional parser filter string. The default is None.
+    """
     self.pid = os.getpid()
     logging.info(
         u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
         self._identifier, self.pid))
 
+    self.InitalizeParserObjects(parser_filter_string=parser_filter_string)
+
     self._parser_context.ResetCounters()
+
     self._is_running = True
 
     if self._rpc_proxy:

@@ -22,12 +22,14 @@ import re
 import struct
 import zipfile
 
+from xml.etree import ElementTree
+
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
-from xml.etree import ElementTree
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -56,8 +58,7 @@ class OpenXMLParser(interface.BaseParser):
   """Parse metadata from OXML files."""
 
   NAME = 'openxml'
-
-  DATA_TYPE = 'metadata:openxml'
+  DESCRIPTION = u'Parser for OpenXML (OXML) files.'
 
   _METAKEY_TRANSLATE = {
     'creator': 'author',
@@ -95,21 +96,21 @@ class OpenXMLParser(interface.BaseParser):
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, 'Not a Zip file.'))
+              self.NAME, file_entry.name, 'Not a Zip file.'))
 
     try:
       zip_container = zipfile.ZipFile(file_object, 'r')
     except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, 'Bad Zip file.'))
+              self.NAME, file_entry.name, 'Bad Zip file.'))
 
     zip_name_list = set(zip_container.namelist())
 
     if not self._FILES_REQUIRED.issubset(zip_name_list):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.parser_name, file_entry.name, 'OXML element(s) missing.'))
+              self.NAME, file_entry.name, 'OXML element(s) missing.'))
     metadata = {}
     timestamps = {}
 
@@ -124,7 +125,7 @@ class OpenXMLParser(interface.BaseParser):
         except (OverflowError, IndexError, KeyError, ValueError) as exception:
           logging.warning(
             u'[{0:s}] unable to read property with error: {1:s}.'.format(
-                self.parser_name, exception))
+                self.NAME, exception))
           continue
 
         for element in root.iter():
@@ -161,3 +162,6 @@ class OpenXMLParser(interface.BaseParser):
           metadata)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
+
+
+manager.ParsersManager.RegisterParser(OpenXMLParser)

@@ -19,6 +19,7 @@
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
 
@@ -51,6 +52,7 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
   """Class to define the default OLECF file plugin."""
 
   NAME = 'olecf_default'
+  DESCRIPTION = u'Parser for a generic OLECF item.'
 
   def _ParseItem(self, parser_context, olecf_item):
     """Parses an OLECF item.
@@ -125,3 +127,6 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
       raise ValueError(u'Root item or items are not set.')
 
     self.ParseItems(parser_context, root_item=root_item)
+
+
+olecf.OleCfParser.RegisterPlugin(DefaultOleCFPlugin)

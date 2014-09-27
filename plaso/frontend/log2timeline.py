@@ -90,10 +90,9 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
         ('python', sys.version)]
 
     return_dict['Parsers'] = []
-    parsers_list = parsers_manager.ParsersManager.FindAllParsers()
-    for parser in sorted(parsers_list['all']):
-      doc_string, _, _ = parser.__doc__.partition('\n')
-      return_dict['Parsers'].append((parser.parser_name, doc_string))
+    for _, parser_class in parsers_manager.ParsersManager.GetParsers():
+      description = getattr(parser_class, 'DESCRIPTION', u'')
+      return_dict['Parsers'].append((parser_class.NAME, description))
 
     return_dict['Parser Lists'] = []
     for category, parsers in sorted(presets.categories.items()):

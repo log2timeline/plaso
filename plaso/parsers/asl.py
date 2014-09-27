@@ -26,6 +26,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -80,9 +81,10 @@ class AslEvent(event.EventObject):
 
 
 class AslParser(interface.BaseParser):
-  """Parser for ASL files. """
+  """Parser for ASL log files."""
 
   NAME = 'asl_log'
+  DESCRIPTION = u'Parser for ASL log files.'
 
   ASL_MAGIC = 'ASL DB\x00\x00\x00\x00\x00\x00'
 
@@ -398,3 +400,6 @@ class AslParser(interface.BaseParser):
     return AslEvent(timestamp, record_position, message_id,
         level, record_header, read_uid, read_gid, computer_name,
         sender, facility, message, extra_information), record_header.next_offset
+
+
+manager.ParsersManager.RegisterParser(AslParser)

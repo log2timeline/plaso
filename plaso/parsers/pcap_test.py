@@ -25,7 +25,7 @@ from plaso.parsers import pcap
 from plaso.parsers import test_lib
 
 
-class PCAPParserTest(test_lib.ParserTestCase):
+class PcapParserTest(test_lib.ParserTestCase):
   """Tests for the PCAP parser."""
 
   def setUp(self):
@@ -114,4 +114,3 @@ class PCAPParserTest(test_lib.ParserTestCase):
 
 if __name__ == '__main__':
   unittest.main()
-
