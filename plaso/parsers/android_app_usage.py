@@ -27,6 +27,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class AndroidAppUsageEvent(event.EventObject):
@@ -56,6 +57,7 @@ class AndroidAppUsageParser(interface.BaseParser):
   """Parses the Android usage-history.xml file."""
 
   NAME = 'android_app_usage'
+  DESCRIPTION = u'Parser for the Android usage-history.xml file.'
 
   def Parse(self, parser_context, file_entry):
     """Extract the Android usage-history file.
@@ -113,3 +115,6 @@ class AndroidAppUsageParser(interface.BaseParser):
               event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(AndroidAppUsageParser)

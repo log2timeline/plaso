@@ -22,6 +22,7 @@ import logging
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -85,3 +86,6 @@ class SafariHistoryPlugin(interface.PlistPlugin):
         continue
 
       yield SafariHistoryEvent(time, history_entry)
+
+
+plist.PlistParser.RegisterPlugin(SafariHistoryPlugin)

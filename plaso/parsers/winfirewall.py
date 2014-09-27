@@ -24,6 +24,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 import pytz
@@ -37,6 +38,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   """
 
   NAME = 'winfirewall'
+  DESCRIPTION = u'Parser for Windows Firewall Log files.'
 
   # TODO: Add support for custom field names. Currently this parser only
   # supports the default fields, which are:
@@ -168,6 +170,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     if not timestamp:
       return
 
+    # TODO: refactor this into a WinFirewall specific event object.
     event_object = time_events.TimestampEvent(
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME, self.DATA_TYPE)
 
@@ -189,3 +192,6 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
         setattr(event_object, key, save_value)
 
     return event_object
+
+
+manager.ParsersManager.RegisterParser(WinFirewallParser)

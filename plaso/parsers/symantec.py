@@ -19,6 +19,7 @@
 
 from plaso.events import text_events
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -34,6 +35,7 @@ class SymantecParser(text_parser.TextCSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
   NAME = 'symantec_scanlog'
+  DESCRIPTION = u'Parser for Symantec Anti-Virus log files.'
 
   # Define the columns that make up the structure of a Symantec log file.
   # http://www.symantec.com/docs/TECH100099
@@ -139,3 +141,6 @@ class SymantecParser(text_parser.TextCSVParser):
     event_object = SymantecEvent(timestamp, row_offset, row)
     parser_context.ProduceEvent(
         event_object, parser_name=self.NAME, file_entry=file_entry)
+
+
+manager.ParsersManager.RegisterParser(SymantecParser)

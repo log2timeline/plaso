@@ -21,6 +21,7 @@ import construct
 
 from plaso.events import windows_events
 from plaso.lib import timelib
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -89,3 +90,6 @@ class WinVerPlugin(interface.KeyPlugin):
     if text_dict[u'Owner']:
       event_object.owner = text_dict[u'Owner']
     parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+winreg.WinRegistryParser.RegisterPlugin(WinVerPlugin)

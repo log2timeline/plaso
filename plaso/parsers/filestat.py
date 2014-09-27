@@ -22,6 +22,7 @@ from dfvfs.lib import definitions
 from plaso.events import time_events
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 # TODO: move this function to lib or equiv since it is used from the collector
@@ -147,6 +148,7 @@ class FileStatParser(interface.BaseParser):
   """Class that defines a file system stat object parser."""
 
   NAME = 'filestat'
+  DESCRIPTION = u'Parser for file system stat information.'
 
   def Parse(self, parser_context, file_entry):
     """Extract data from a file system stat entry.
@@ -163,3 +165,6 @@ class FileStatParser(interface.BaseParser):
       for event_object in event_object_generator:
         parser_context.ProduceEvent(
             event_object, parser_name=self.NAME, file_entry=file_entry)
+
+
+manager.ParsersManager.RegisterParser(FileStatParser)

@@ -20,15 +20,13 @@
 import logging
 
 from plaso.frontend import presets
-from plaso.lib import putils
-from plaso.parsers import interface
 from plaso.parsers import plugins
-from plaso.parsers.winreg_plugins import interface as winreg_plugins_interface
-from plaso.parsers.winreg_plugins import plugins_list as winreg_plugins_list
 
 
 class ParsersManager(object):
   """Class that implements the parsers manager."""
+
+  _parser_classes = {}
 
   _parser_filter_string = u''
 
@@ -84,50 +82,122 @@ class ParsersManager(object):
     return parser_list
 
   @classmethod
-  def _GetParserListsFromString(cls, parser_string):
-    """Return a list of parsers to include and exclude from a string.
+  def DeregisterParser(cls, parser_class):
+    """Deregisters a parser class.
+
+    The parser classes are identified based on their lower case name.
+
+    Args:
+      parser_class: the class object of the parser.
+
+    Raises:
+      KeyError: if parser class is not set for the corresponding name.
+    """
+    parser_name = parser_class.NAME.lower()
+    if parser_name not in cls._parser_classes:
+      raise KeyError(
+          u'Parser class not set for name: {0:s}.'.format(
+              parser_class.NAME))
+
+    del cls._parser_classes[parser_name]
+
+  @classmethod
+  def GetFilterListsFromString(cls, parser_filter_string):
+    """Determines an include and exclude list of parser and plugin names.
 
     Takes a comma separated string and splits it up into two lists,
     of parsers or plugins to include and to exclude from selection.
     If a particular filter is prepended with a minus sign it will
-    be included int he exclude section, otherwise in the include.
+    be included in the exclude section, otherwise in the include.
 
     Args:
-      parser_string: The comma separated string.
+      parser_filter_string: The parser filter string.
 
     Returns:
       A tuple of two lists, include and exclude.
     """
-    include = []
-    exclude = []
+    includes = []
+    excludes = []
 
     preset_categories = presets.categories.keys()
 
-    for filter_string in parser_string.split(','):
+    for filter_string in parser_filter_string.split(','):
       filter_string = filter_string.strip()
       if not filter_string:
         continue
+
       if filter_string.startswith('-'):
-        filter_strings_use = exclude
+        active_list = excludes
         filter_string = filter_string[1:]
       else:
-        filter_strings_use = include
+        active_list = includes
 
-      filter_string_lower = filter_string.lower()
-      if filter_string_lower in preset_categories:
-        filter_strings_use.extend(
-            presets.GetParsersFromCategory(filter_string_lower))
+      filter_string = filter_string.lower()
+      if filter_string in cls._parser_classes:
+        parser_class = cls._parser_classes[filter_string]
+        active_list.append(filter_string)
+        active_list.extend(parser_class.GetPluginNames())
+
+      elif filter_string in preset_categories:
+        active_list.extend(
+            presets.GetParsersFromCategory(filter_string))
+
       else:
-        filter_strings_use.append(filter_string_lower)
+        active_list.append(filter_string)
 
-    return include, exclude
+    return includes, excludes
 
+  @classmethod
+  def GetParserObjects(cls, parser_filter_string=None):
+    """Retrieves the parser objects.
+
+    Args:
+      parser_filter_string: Optional parser filter string. The default is None.
+
+    Returns:
+      A list of parser objects (instances of BaseParser).
+    """
+    parser_objects = []
+
+    for _, parser_class in cls.GetParsers(
+        parser_filter_string=parser_filter_string):
+      parser_object = parser_class()
+      parser_objects.append(parser_object)
+
+    return parser_objects
+
+  @classmethod
+  def GetParsers(cls, parser_filter_string=None):
+    """Retrieves the registered parsers.
+
+    Args:
+      parser_filter_string: Optional parser filter string. The default is None.
+
+    Yields:
+      A tuple that contains the uniquely identifying name of the parser
+      and the parser class (subclass of BaseParser).
+    """
+    if parser_filter_string:
+      includes, excludes = cls.GetFilterListsFromString(parser_filter_string)
+    else:
+      includes = None
+      excludes = None
+
+    for parser_name, parser_class in cls._parser_classes.iteritems():
+      if excludes and parser_name in excludes:
+        continue
+
+      if includes and parser_name not in includes:
+        continue
+
+      yield parser_name, parser_class
+
+  # TODO: remove once no longer used in pshell.
   @classmethod
   def FindAllParsers(cls):
     """Find all available parser objects.
 
-    A parser is defined as an object that implements the BaseParser
-    class and does not have the __abstract attribute set.
+    A parser is defined as an object that implements the BaseParser class.
 
     Each entry in the list can be prepended with a minus sign to signify a
     negative match against a parser, eg: 'winxp,-*lnk*' would select all the
@@ -141,121 +211,71 @@ class ParsersManager(object):
       'sqlite' will contain parsers capable of parsing SQLite databases.
     """
     # Process the filter string.
-    filter_include, filter_exclude = cls._GetParserListsFromString(
+    filter_include, filter_exclude = cls.GetFilterListsFromString(
         cls._parser_filter_string)
 
     # Extend the include using potential plugin names.
-    filter_include.extend(
-        cls._GetParsersFromPlugins(filter_include, filter_exclude))
+    # filter_include.extend(
+    #     cls._GetParsersFromPlugins(filter_include, filter_exclude))
 
     results = {}
     results['all'] = []
-    # pylint: disable=protected-access
-    for parser_obj in putils._FindClasses(interface.BaseParser):
-      add = False
+
+    for parser_name, parser_class in cls._parser_classes.iteritems():
       if not (filter_exclude or filter_include):
         add = True
+
+      elif parser_name in filter_include:
+        add = True
+
+      # If a parser is specifically excluded it trumps include rules.
+      # TODO: what if a parser is defined in both the include and
+      # exclude filters?
+      elif parser_name in filter_exclude:
+        add = False
+
       else:
-        parser_name = parser_obj.parser_name.lower()
-
-        if parser_name in filter_include:
-          add = True
-
-        # If a parser is specifically excluded it trumps include rules.
-        if parser_name in filter_exclude:
-          add = False
+        add = False
 
       if add:
-        results['all'].append(parser_obj)
+        results['all'].append(parser_class)
         # TODO: Find a way to reintroduce PARSER_TYPE using other mechanism to
         # group parsers together.
 
     return results
 
   @classmethod
-  def GetRegisteredPlugins(cls, parent_class=plugins.BasePlugin):
-    """Build a list of all available plugins and return them.
-
-    This method uses the class registration library to find all classes that
-    have implemented the plugin class.
-
-    This should mostly be used by parsers or other assistant methods that
-    know the parent class of the plugin (something like the base class for
-    all Windows registry plugins, etc).
-
-    Args:
-      parent_class: Optional top level class of the specific plugin to query.
-                    The default is plugins.BasePlugin.
-
-    Returns:
-      A dict with keys being the plugin names and values the plugin class.
-
-    Raises:
-      ValueError: If two plugins have the same name.
-    """
-    if cls._parser_filter_string:
-      parser_include, parser_exclude = cls._GetParserListsFromString(
-          cls._parser_filter_string)
-
-    results = {}
-    all_plugins = {}
-
-    for plugin_name, plugin_cls in parent_class.classes.iteritems():
-      # Go through the entire chain of parents to see if we have a match.
-      # We need to do that in case some plugins inherit from other plugins
-      # to add minor enhancements and need to be included in the list of
-      # plugins. This is common behavior with registry plugins for instance.
-      plugin_parent = plugin_cls
-      plugin_match = False
-      while plugin_parent != object:
-        parent_name = getattr(plugin_parent, 'parent_class_name', 'NOTHERE')
-
-        if parent_name == parent_class.NAME:
-          plugin_match = True
-          break
-        plugin_parent = getattr(plugin_parent, 'parent_class', object)
-
-      if not plugin_match:
-        continue
-
-      if plugin_name in all_plugins:
-        raise ValueError(
-            u'The plugin "{0:s}" appears twice in the plugin list.'.format(
-                plugin_name))
-
-      if not cls._parser_filter_string:
-        all_plugins[plugin_name] = plugin_cls()
-      else:
-        if plugin_name in parser_include and plugin_name not in parser_exclude:
-          results[plugin_name] = plugin_cls()
-        if plugin_name not in parser_exclude:
-          all_plugins[plugin_name] = plugin_cls()
-
-    if cls._parser_filter_string and results:
-      return results
-
-    return all_plugins
-
-  @classmethod
   def GetWindowsRegistryPlugins(cls):
     """Build a list of all available Windows Registry plugins.
-
-       This function uses the class registry library to find all classes that
-       are inherited from the RegistryPlugin class.
 
     Returns:
       A plugins list (instance of PluginList).
     """
-    registered_plugins = cls.GetRegisteredPlugins(
-        parent_class=winreg_plugins_interface.RegistryPlugin)
+    parser_class = cls._parser_classes.get('winreg', None)
+    if not parser_class:
+      return
 
-    plugins_list = winreg_plugins_list.PluginList()
-    for plugin_cls in registered_plugins.itervalues():
-      plugin_type = plugin_cls.REG_TYPE
-      plugins_list.AddPlugin(
-          plugin_type, plugin_cls.classes.get(plugin_cls.plugin_name))
+    return parser_class.GetPluginList()
 
-    return plugins_list
+  @classmethod
+  def RegisterParser(cls, parser_class):
+    """Registers a parser class.
+
+    The parser classes are identified based on their lower case name.
+
+    Args:
+      parser_class: the class object of the parser.
+
+    Raises:
+      KeyError: if parser class is already set for the corresponding name.
+    """
+    parser_name = parser_class.NAME.lower()
+    if parser_name in cls._parser_classes:
+      raise KeyError((
+          u'Parser class already set for name: {0:s}.').format(
+              parser_class.NAME))
+
+    cls._parser_classes[parser_name] = parser_class
 
   @classmethod
   def SetParserFilterString(cls, parser_filter_string):

@@ -25,6 +25,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -73,6 +74,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses the securityd file that contains logs from the security daemon."""
 
   NAME = 'mac_securityd'
+  DESCRIPTION = u'Parser for Mac OS X securityd log files.'
 
   ENCODING = u'utf-8'
 
@@ -269,3 +271,6 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       return current_year
 
     return timestamp.year
+
+
+manager.ParsersManager.RegisterParser(MacSecuritydLogParser)

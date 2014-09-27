@@ -18,6 +18,7 @@
 """Plug-in to format the Services and Drivers key with Start and Type values."""
 
 from plaso.events import windows_events
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -236,3 +237,6 @@ class ServicesPlugin(interface.ValuePlugin):
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type, urls=self.URLS)
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+winreg.WinRegistryParser.RegisterPlugin(ServicesPlugin)

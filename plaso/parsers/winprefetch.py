@@ -28,6 +28,7 @@ from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
@@ -73,6 +74,7 @@ class WinPrefetchParser(interface.BaseParser):
   """A parser for Windows Prefetch files."""
 
   NAME = 'prefetch'
+  DESCRIPTION = u'Parser for Windows Prefetch files.'
 
   FILE_SIGNATURE = 'SCCA'
 
@@ -479,3 +481,6 @@ class WinPrefetchParser(interface.BaseParser):
               event_object, parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(WinPrefetchParser)

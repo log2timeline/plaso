@@ -27,6 +27,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
@@ -70,9 +71,10 @@ class UtmpEvent(event.EventObject):
 
 
 class UtmpParser(interface.BaseParser):
-  """Parser for Linux UTMP files."""
+  """Parser for Linux/Unix UTMP files."""
 
   NAME = 'utmp'
+  DESCRIPTION = u'Parser for Linux/Unix UTMP files.'
 
   LINUX_UTMP_ENTRY = construct.Struct(
       'utmp_linux',
@@ -259,3 +261,6 @@ class UtmpParser(interface.BaseParser):
     if not text:
       return default_string
     return text
+
+
+manager.ParsersManager.RegisterParser(UtmpParser)

@@ -57,7 +57,6 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
   list of tokens that define the structure of the log file that the
   parser is designed for.
   """
-  __abstract = True
 
   # Define the max number of lines before we determine this is
   # not the correct parser.
@@ -208,7 +207,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
         file_object.close()
         raise errors.UnableToParseFile(
             u'[{0:s}] unsupported file: {1:s}.'.format(
-                self.parser_name, path_spec_printable))
+                self.NAME, path_spec_printable))
 
       if self.line_ready:
         try:
@@ -226,7 +225,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
                     path_spec_printable, error_count, self.error))
             logging.warning(
                 u'[{0:s}] Unable to parse timestamp with error: {1:s}'.format(
-                    self.parser_name, exception))
+                    self.NAME, exception))
 
           else:
             logging.debug((
@@ -237,7 +236,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
               file_object.close()
               raise errors.UnableToParseFile(
                   u'[{0:s}] unsupported file: {1:s}.'.format(
-                      self.parser_name, path_spec_printable))
+                      self.NAME, path_spec_printable))
 
         finally:
           self.ClearValues()
@@ -253,14 +252,14 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parser file: {1:s}.'.format(
-              self.parser_name, path_spec_printable))
+              self.NAME, path_spec_printable))
 
     file_offset = file_object.get_offset()
     if file_offset < file_object.get_size():
       logging.error((
           u'{0:s} prematurely terminated parsing: {1:s} at offset: '
           u'0x{2:08x}.').format(
-              self.parser_name, path_spec_printable, file_offset))
+              self.NAME, path_spec_printable, file_offset))
     file_object.close()
 
   def ParseString(self, match=None, **unused_kwargs):
@@ -384,8 +383,6 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 class TextCSVParser(interface.BaseParser):
   """An implementation of a simple CSV line-per-entry log files."""
 
-  __abstract = True
-
   # A list that contains the names of all the fields in the log file.
   COLUMNS = []
 
@@ -464,7 +461,7 @@ class TextCSVParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] Unable to parse CSV file: {1:s}.'.format(
-              self.parser_name, path_spec_printable))
+              self.NAME, path_spec_printable))
 
     number_of_columns = len(self.COLUMNS)
     number_of_records = len(row)
@@ -474,7 +471,7 @@ class TextCSVParser(interface.BaseParser):
       raise errors.UnableToParseFile((
           u'[{0:s}] Unable to parse CSV file: {1:s}. Wrong number of '
           u'records (expected: {2:d}, got: {3:d})').format(
-              self.parser_name, path_spec_printable, number_of_columns,
+              self.NAME, path_spec_printable, number_of_columns,
               number_of_records))
 
     for key, value in row.items():
@@ -482,13 +479,13 @@ class TextCSVParser(interface.BaseParser):
         file_object.close()
         raise errors.UnableToParseFile((
             u'[{0:s}] Unable to parse CSV file: {1:s}. Signature '
-            u'mismatch.').format(self.parser_name, path_spec_printable))
+            u'mismatch.').format(self.NAME, path_spec_printable))
 
     if not self.VerifyRow(parser_context, row):
       file_object.close()
       raise errors.UnableToParseFile((
           u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
-          u'failed.').format(self.parser_name, path_spec_printable))
+          u'failed.').format(self.NAME, path_spec_printable))
 
     self.ParseRow(
         parser_context, text_file_object.tell(), row, file_entry=file_entry)
@@ -648,7 +645,6 @@ class PyparsingConstants(object):
 
 class PyparsingSingleLineTextParser(interface.BaseParser):
   """Single line text parser based on the pyparsing library."""
-  __abstract = True
 
   # The actual structure, this needs to be defined by each parser.
   # This is defined as a list of tuples so that more then a single line
@@ -736,7 +732,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
             u'Unable to decode line [{0:s}...] with encoding: {1:s} in '
             u'file: {2:s}').format(
                 repr(line[1:30]), self.encoding,
-                 parser_context.GetDisplayName(file_entry)))
+                parser_context.GetDisplayName(file_entry)))
       return line.strip()
 
   def Parse(self, parser_context, file_entry):
@@ -776,7 +772,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
           u'Trying to read a line and reached the maximum allowed length of '
           u'{0:d}. The last few bytes of the line are: {1:s} [parser '
           u'{2:s}]').format(
-              self.MAX_LINE_LENGTH, repr(line[-10:]), self.parser_name))
+              self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
 
     if not utils.IsText(line):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
@@ -851,8 +847,6 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
 
 class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
   """Multi line text parser based on the pyparsing library."""
-
-  __abstract = True
 
   BUFFER_SIZE = 2048
 

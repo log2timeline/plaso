@@ -24,6 +24,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -56,6 +57,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
   """Parse SkyDrive error log files."""
 
   NAME = 'skydrive_log_error'
+  DESCRIPTION = u'Parser for OneDrive (or SkyDrive) error log files.'
 
   ENCODING = 'utf-8'
 
@@ -247,3 +249,6 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
 
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, microseconds=microsecond)
+
+
+manager.ParsersManager.RegisterParser(SkyDriveLogErrorParser)

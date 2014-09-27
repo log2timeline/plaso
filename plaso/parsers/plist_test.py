@@ -21,6 +21,8 @@ import unittest
 
 from plaso.parsers import manager
 from plaso.parsers import plist
+# Register all plugins.
+from plaso.parsers import plist_plugins  # pylint: disable=unused-import
 from plaso.parsers import test_lib
 
 

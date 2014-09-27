@@ -19,6 +19,7 @@
 
 from plaso.events import plist_event
 from plaso.lib import errors
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -45,7 +46,7 @@ class AppleAccountPlugin(interface.PlistPlugin):
       A generator, self.GetEntries(), if the correct plugin, otherwise None.
     """
     if not plist_name.startswith(self.PLIST_PATH):
-      raise errors.WrongPlistPlugin(self.plugin_name, plist_name)
+      raise errors.WrongPlistPlugin(self.NAME, plist_name)
     return super(AppleAccountPlugin, self).Process(
         parser_context, plist_name=self.PLIST_PATH, top_level=top_level,
         **kwargs)
@@ -91,3 +92,6 @@ class AppleAccountPlugin(interface.PlistPlugin):
             general_description)
         yield plist_event.PlistEvent(
             root, key, account['ValidationDate'], description)
+
+
+plist.PlistParser.RegisterPlugin(AppleAccountPlugin)

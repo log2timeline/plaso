@@ -19,6 +19,7 @@
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -77,3 +78,6 @@ class IPodPlugin(interface.PlistPlugin):
       if 'Connected' not in device_info:
         continue
       yield IPodPlistEvent(device_info.get('Connected'), device, device_info)
+
+
+plist.PlistParser.RegisterPlugin(IPodPlugin)

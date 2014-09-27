@@ -24,29 +24,18 @@ parser.
 
 import abc
 
-from plaso.lib import registry
+from plaso.parsers import manager
 
 
 class BaseParser(object):
-  """A parent class defining a typical log parser.
-
-  This parent class gets inherited from other classes that are parsing
-  log files.
-
-  """
-  __metaclass__ = registry.MetaclassRegistry
-  __abstract = True
+  """Class that implements the parser object interface."""
 
   NAME = 'base_parser'
-
-  @property
-  def parser_name(self):
-    """Return the name of the parser."""
-    return self.NAME
+  DESCRIPTION = u''
 
   @abc.abstractmethod
   def Parse(self, parser_context, file_entry):
-    """Verifies and parses the log file and returns EventObjects.
+    """Parsers the file entry and extracts event objects.
 
     This is the main function of the class, the one that actually
     goes through the log file and parses each line of it to
@@ -68,3 +57,145 @@ class BaseParser(object):
       NotImplementedError when not implemented.
     """
     raise NotImplementedError
+
+
+class BasePluginsParser(BaseParser):
+  """Class that implements the parser with plugins object interface."""
+
+  NAME = 'base_plugin_parser'
+  DESCRIPTION = u''
+
+  # Every child class should define its own _plugin_classes dict.
+  # We don't define it here to make sure the plugins of different
+  # classes don't end up in the same dict.
+  # _plugin_classes = {}
+  _plugin_classes = None
+
+  @classmethod
+  def DeregisterPlugin(cls, plugin_class):
+    """Deregisters a plugin class.
+
+    The plugin classes are identified based on their lower case name.
+
+    Args:
+      plugin_class: the class object of the plugin.
+
+    Raises:
+      KeyError: if plugin class is not set for the corresponding name.
+    """
+    plugin_name = plugin_class.NAME.lower()
+    if plugin_name not in cls._plugin_classes:
+      raise KeyError(
+          u'Plugin class not set for name: {0:s}.'.format(
+              plugin_class.NAME))
+
+    del cls._plugin_classes[plugin_name]
+
+  @classmethod
+  def GetPluginNames(cls, parser_filter_string=None):
+    """Retrieves the plugin names.
+
+    Args:
+      parser_filter_string: Optional parser filter string. The default is None.
+
+    Returns:
+      A list of plugin names.
+    """
+    plugin_names = []
+
+    for plugin_name, _ in cls.GetPlugins(
+        parser_filter_string=parser_filter_string):
+      plugin_names.append(plugin_name)
+
+    return plugin_names
+
+  @classmethod
+  def GetPluginObjects(cls, parser_filter_string=None):
+    """Retrieves the plugin objects.
+
+    Args:
+      parser_filter_string: Optional parser filter string. The default is None.
+
+    Returns:
+      A list of plugin objects (instances of BasePlugin).
+    """
+    plugin_objects = []
+
+    for _, plugin_class in cls.GetPlugins(
+        parser_filter_string=parser_filter_string):
+      plugin_object = plugin_class()
+      plugin_objects.append(plugin_object)
+
+    return plugin_objects
+
+  @classmethod
+  def GetPlugins(cls, parser_filter_string=None):
+    """Retrieves the registered plugins.
+
+    Args:
+      parser_filter_string: Optional parser filter string. The default is None.
+
+    Yields:
+      A tuple that contains the uniquely identifying name of the plugin
+      and the plugin class (subclass of BasePlugin).
+    """
+    if parser_filter_string:
+      includes, excludes = manager.ParsersManager.GetFilterListsFromString(
+          parser_filter_string)
+    else:
+      includes = None
+      excludes = None
+
+    for plugin_name, plugin_class in cls._plugin_classes.iteritems():
+      if excludes and plugin_name in excludes:
+        continue
+
+      if includes and plugin_name not in includes:
+        continue
+
+      yield plugin_name, plugin_class
+
+  @abc.abstractmethod
+  def Parse(self, parser_context, file_entry):
+    """Parsers the file entry and extracts event objects.
+
+    This is the main function of the class, the one that actually
+    goes through the log file and parses each line of it to
+    produce a parsed line and a timestamp.
+
+    It also tries to verify the file structure and see if the class is capable
+    of parsing the file passed to the module. It will do so with series of tests
+    that should determine if the file is of the correct structure.
+
+    If the class is not capable of parsing the file passed to it an exception
+    should be raised, an exception of the type UnableToParseFile that indicates
+    the reason why the class does not parse it.
+
+    Args:
+      parser_context: A parser context object (instance of ParserContext).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Raises:
+      NotImplementedError when not implemented.
+    """
+    raise NotImplementedError
+
+  @classmethod
+  def RegisterPlugin(cls, plugin_class):
+    """Registers a plugin class.
+
+    The plugin classes are identified based on their lower case name.
+
+    Args:
+      plugin_class: the class object of the plugin.
+
+    Raises:
+      KeyError: if plugin class is already set for the corresponding name.
+    """
+    plugin_name = plugin_class.NAME.lower()
+    if plugin_name in cls._plugin_classes:
+      raise KeyError((
+          u'Plugin class already set for name: {0:s}.').format(
+              plugin_class.NAME))
+
+    cls._plugin_classes[plugin_name] = plugin_class

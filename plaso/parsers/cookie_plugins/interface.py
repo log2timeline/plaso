@@ -20,6 +20,7 @@
 import abc
 
 from plaso.lib import errors
+from plaso.lib import registry
 from plaso.parsers import plugins
 
 
@@ -43,7 +44,7 @@ class CookiePlugin(plugins.BasePlugin):
   This is a generic cookie parsing interface that can handle parsing
   cookies from all browsers.
   """
-
+  __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
   NAME = 'cookie'
@@ -90,7 +91,7 @@ class CookiePlugin(plugins.BasePlugin):
     if cookie_name != self.COOKIE_NAME:
       raise errors.WrongPlugin(
           u'Not the correct cookie plugin for: {0:s} [{1:s}]'.format(
-              cookie_name, self.plugin_name))
+              cookie_name, self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.
     super(CookiePlugin, self).Process(parser_context, **kwargs)

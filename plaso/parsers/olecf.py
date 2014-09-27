@@ -23,27 +23,30 @@ import pyolecf
 
 from plaso.lib import errors
 from plaso.parsers import interface
-# Register all OLECF plugins.
-from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
 from plaso.parsers import manager
-from plaso.parsers.olecf_plugins import interface as olecf_plugins_interface
 
 
 if pyolecf.get_version() < '20131012':
   raise ImportWarning('OleCfParser requires at least pyolecf 20131012.')
 
 
-class OleCfParser(interface.BaseParser):
+class OleCfParser(interface.BasePluginsParser):
   """Parses OLE Compound Files (OLECF)."""
 
   NAME = 'olecf'
+  DESCRIPTION = u'Parser for OLE Compound Files (OLECF).'
+
+  _plugin_classes = {}
 
   def __init__(self):
     """Initializes a parser object."""
     super(OleCfParser, self).__init__()
-    self._plugins = manager.ParsersManager.GetRegisteredPlugins(
-        parent_class=olecf_plugins_interface.OlecfPlugin)
-    self._default_plugin = self._plugins.get('olecf_default', None)
+    self._plugins = OleCfParser.GetPluginObjects()
+
+    for list_index, plugin_object in enumerate(self._plugins):
+      if plugin_object.NAME == 'olecf_default':
+        self._default_plugin = self._plugins.pop(list_index)
+        break
 
   def Parse(self, parser_context, file_entry):
     """Extracts data from an OLE Compound File (OLECF).
@@ -65,7 +68,7 @@ class OleCfParser(interface.BaseParser):
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.parser_name, file_entry.name, exception))
+              self.NAME, file_entry.name, exception))
 
     # Get a list of all root items from the OLE CF file.
     root_item = olecf_file.root_item
@@ -76,20 +79,16 @@ class OleCfParser(interface.BaseParser):
     # the default plugin) and run it. Only if none of the plugins
     # works will we use the default plugin.
     parsed = False
-    for olecf_name, olecf_plugin in self._plugins.iteritems():
-      # Skip the default plugin.
-      if olecf_name == 'olecf_default':
-        continue
-
+    for plugin_object in self._plugins:
       try:
-        olecf_plugin.Process(
+        plugin_object.Process(
             parser_context, file_entry=file_entry, root_item=root_item,
             item_names=item_names)
 
       except errors.WrongPlugin:
         logging.debug(
             u'[{0:s}] plugin: {1:s} cannot parse the OLECF file: {2:s}'.format(
-                self.parser_name, olecf_plugin.plugin_name, file_entry.name))
+                self.NAME, plugin_object.NAME, file_entry.name))
 
     # Check if we still haven't parsed the file, and if so we will use
     # the default OLECF plugin.
@@ -100,3 +99,6 @@ class OleCfParser(interface.BaseParser):
 
     olecf_file.close()
     file_object.close()
+
+
+manager.ParsersManager.RegisterParser(OleCfParser)

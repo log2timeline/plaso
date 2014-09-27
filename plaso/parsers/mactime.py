@@ -25,6 +25,7 @@ import re
 
 from plaso.events import time_events
 from plaso.lib import eventdata
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -65,9 +66,10 @@ class MactimeEvent(time_events.PosixTimeEvent):
 
 
 class MactimeParser(text_parser.TextCSVParser):
-  """Parses TSK's mactime bodyfiles."""
+  """Parses SleuthKit's mactime bodyfiles."""
 
   NAME = 'mactime'
+  DESCRIPTION = u'Parser for SleuthKit\'s mactime bodyfiles.'
 
   COLUMNS = [
       'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',
@@ -135,3 +137,6 @@ class MactimeParser(text_parser.TextCSVParser):
           value, timestamp_description, row_offset, row)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
+
+
+manager.ParsersManager.RegisterParser(MactimeParser)

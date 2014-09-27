@@ -20,6 +20,7 @@
 import construct
 
 from plaso.events import plist_event
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -74,3 +75,6 @@ class TimeMachinePlugin(interface.PlistPlugin):
         description = u'TimeMachine Backup in {0:s} ({1:s})'.format(
             alias, hd_uuid)
         yield plist_event.PlistEvent(root, key, timestamp, description)
+
+
+plist.PlistParser.RegisterPlugin(TimeMachinePlugin)

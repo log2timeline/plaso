@@ -23,6 +23,7 @@ import construct
 
 from plaso.events import windows_events
 from plaso.events import time_events
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -156,3 +157,6 @@ class TaskCachePlugin(interface.KeyPlugin):
         parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
     # TODO: Add support for the Triggers value.
+
+
+winreg.WinRegistryParser.RegisterPlugin(TaskCachePlugin)

@@ -36,9 +36,6 @@ from plaso.parsers import plugins
 class BencodePlugin(plugins.BasePlugin):
   """This is an abstract class from which plugins should be based."""
 
-  # __abstract prevents the interface itself from being registered as a plugin.
-  __abstract = True
-
   # BENCODE_KEYS is a list of keys required by a plugin.
   # This is expected to be overriden by the processing plugin.
   # Ex. frozenset(['activity-date', 'done-date'])
@@ -107,12 +104,12 @@ class BencodePlugin(plugins.BasePlugin):
       raise ValueError(u'Top level is not set.')
 
     if not set(top_level.keys()).issuperset(self.BENCODE_KEYS):
-      raise errors.WrongBencodePlugin(self.plugin_name)
+      raise errors.WrongBencodePlugin(self.NAME)
 
     # This will raise if unhandled keyword arguments are passed.
     super(BencodePlugin, self).Process(parser_context, **kwargs)
 
-    logging.debug(u'Bencode Plugin Used: {}'.format(self.plugin_name))
+    logging.debug(u'Bencode Plugin Used: {0:s}'.format(self.NAME))
     match = GetKeys(top_level, self.BENCODE_KEYS, 3)
 
     return self.GetEntries(parser_context, data=top_level, match=match)

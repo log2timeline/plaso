@@ -18,6 +18,7 @@
 """This file contains the Run/RunOnce Key plugins for Plaso."""
 
 from plaso.events import windows_events
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -77,3 +78,7 @@ class RunSoftwarePlugin(RunUserPlugin):
       u'\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\Setup',
       u'\\Microsoft\\Windows\\CurrentVersion\\RunServices',
       u'\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce']
+
+
+winreg.WinRegistryParser.RegisterPlugin(RunUserPlugin)
+winreg.WinRegistryParser.RegisterPlugin(RunSoftwarePlugin)

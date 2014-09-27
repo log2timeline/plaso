@@ -18,6 +18,7 @@
 """This file contains a default plist plugin in Plaso."""
 
 from plaso.events import plist_event
+from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
@@ -68,3 +69,6 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
               version, pending, u','.join(software))
       yield plist_event.PlistEvent(
           root, key, match['LastSuccessfulDate'], description)
+
+
+plist.PlistParser.RegisterPlugin(SoftwareUpdatePlugin)

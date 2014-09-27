@@ -20,6 +20,7 @@ import logging
 
 from plaso.events import windows_events
 from plaso.lib import eventdata
+from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -119,3 +120,6 @@ class USBStorPlugin(interface.KeyPlugin):
               registry_type=registry_type,
               source_append=': {0:s}'.format(self.DESCRIPTION))
           parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+
+winreg.WinRegistryParser.RegisterPlugin(USBStorPlugin)

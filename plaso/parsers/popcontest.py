@@ -103,6 +103,7 @@ import pyparsing
 from plaso.events import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -160,6 +161,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   """Parse popularity contest log files."""
 
   NAME = 'popularity_contest'
+  DESCRIPTION = u'Parser for popularity contest log files.'
 
   EPOCH = text_parser.PyparsingConstants.INTEGER.setResultsName('epoch')
   PACKAGE = pyparsing.Word(pyparsing.printables).setResultsName('package')
@@ -268,3 +270,6 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     return PopularityContestEvent(
         structure.atime, structure.ctime, structure.package, structure.mru,
         structure.tag)
+
+
+manager.ParsersManager.RegisterParser(PopularityContestParser)
