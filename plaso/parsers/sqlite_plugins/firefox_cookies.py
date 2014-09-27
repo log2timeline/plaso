@@ -75,6 +75,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
   """Parse Firefox Cookies file."""
 
   NAME = 'firefox_cookies'
+  DESCRIPTION = u'Parser for Firefox cookies SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [

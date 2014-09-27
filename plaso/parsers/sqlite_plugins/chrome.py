@@ -94,6 +94,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   """Parse Chrome Archived History and History files."""
 
   NAME = 'chrome_history'
+  DESCRIPTION = u'Parser for Chrome history SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [

@@ -52,6 +52,7 @@ class SafariHistoryPlugin(interface.PlistPlugin):
   """Plugin to extract Safari history timestamps."""
 
   NAME = 'safari_history'
+  DESCRIPTION = u'Parser for Safari history plist files.'
 
   PLIST_PATH = 'History.plist'
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])

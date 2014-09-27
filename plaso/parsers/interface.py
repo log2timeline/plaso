@@ -58,6 +58,15 @@ class BaseParser(object):
     """
     raise NotImplementedError
 
+  @classmethod
+  def SupportsPlugins(cls):
+    """Determines if a parser supports plugins.
+
+    Returns:
+      A boolean value indicating whether the parser supports plugins.
+    """
+    return False
+
 
 class BasePluginsParser(BaseParser):
   """Class that implements the parser with plugins object interface."""
@@ -199,3 +208,25 @@ class BasePluginsParser(BaseParser):
               plugin_class.NAME))
 
     cls._plugin_classes[plugin_name] = plugin_class
+
+  @classmethod
+  def RegisterPlugins(cls, plugin_classes):
+    """Registers a plugin classes.
+
+    Args:
+      plugin_classes: a list of class objects of the plugins.
+
+    Raises:
+      KeyError: if plugin class is already set for the corresponding name.
+    """
+    for plugin_class in plugin_classes:
+      cls.RegisterPlugin(plugin_class)
+
+  @classmethod
+  def SupportsPlugins(cls):
+    """Determines if a parser supports plugins.
+
+    Returns:
+      A boolean value indicating whether the parser supports plugins.
+    """
+    return True

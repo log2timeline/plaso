@@ -29,6 +29,7 @@ class SQLitePlugin(plugins.BasePlugin):
   """A SQLite plugin for Plaso."""
 
   NAME = 'sqlite'
+  DESCRIPTION = u'Parser for SQLite database files.'
 
   # Queries to be executed.
   # Should be a list of tuples with two entries, SQLCommand and callback

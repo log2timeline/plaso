@@ -32,8 +32,7 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
   # TODO: Create NTUSER.DAT test file with WinRAR data.
 
   NAME = 'winreg_winrar'
-
-  DESCRIPTION = 'WinRAR History'
+  DESCRIPTION = u'Parser for WinRAR History Registry data.'
 
   REG_TYPE = 'NTUSER'
   REG_KEYS = [
@@ -75,7 +74,7 @@ class WinRarHistoryPlugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
-          source_append=': {0:s}'.format(self.DESCRIPTION))
+          source_append=': WinRAR History')
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
 
 

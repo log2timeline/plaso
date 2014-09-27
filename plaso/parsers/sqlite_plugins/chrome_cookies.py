@@ -74,6 +74,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
   """Parse Chrome Cookies file."""
 
   NAME = 'chrome_cookies'
+  DESCRIPTION = u'Parser for Chrome cookies SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [

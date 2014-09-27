@@ -57,6 +57,7 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   """Parse the Mac OS X Document Versions SQLite database.."""
 
   NAME = 'mac_document_versions'
+  DESCRIPTION = u'Parser for document revisions SQLite database files.'
 
   # Define the needed queries.
   # name: name from the original file.

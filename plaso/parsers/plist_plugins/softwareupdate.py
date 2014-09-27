@@ -29,6 +29,7 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
   """Basic plugin to extract the Mac OS X update status."""
 
   NAME = 'plist_softwareupdate'
+  DESCRIPTION = u'Parser for Mac OS X software update plist files.'
 
   PLIST_PATH = 'com.apple.SoftwareUpdate.plist'
   PLIST_KEYS = frozenset([

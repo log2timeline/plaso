@@ -30,6 +30,7 @@ class AppleAccountPlugin(interface.PlistPlugin):
   """Basic plugin to extract the apple account information."""
 
   NAME = 'plist_appleaccount'
+  DESCRIPTION = u'Parser for Apple account information plist files.'
 
   PLIST_PATH = u'com.apple.coreservices.appleidauthenticationinfo'
   PLIST_KEYS = frozenset(['AuthCertificates', 'AccessorVersions', 'Accounts'])

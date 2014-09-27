@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the bluetooth plist plugin."""
+"""Tests for the Bluetooth plist plugin."""
 
 import unittest
 
@@ -27,7 +27,7 @@ from plaso.parsers.plist_plugins import test_lib
 
 
 class TestBtPlugin(test_lib.PlistPluginTestCase):
-  """Tests for the bluetooth plist plugin."""
+  """Tests for the Bluetooth plist plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""

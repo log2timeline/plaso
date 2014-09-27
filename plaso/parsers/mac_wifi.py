@@ -62,7 +62,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on wifi.log file."""
 
   NAME = 'macwifi'
-  DESCRIPTION = u'Parses Mac OS X wifi.log files.'
+  DESCRIPTION = u'Parser for Mac OS X wifi.log files.'
 
   ENCODING = u'utf-8'
 

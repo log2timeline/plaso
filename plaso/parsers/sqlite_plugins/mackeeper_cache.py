@@ -143,6 +143,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
   """Plugin for the MacKeeper Cache database file."""
 
   NAME = 'mackeeper_cache'
+  DESCRIPTION = u'Parser for MacKeeper Cache SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [((

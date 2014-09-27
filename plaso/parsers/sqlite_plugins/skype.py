@@ -174,6 +174,7 @@ class SkypePlugin(interface.SQLitePlugin):
   """SQLite plugin for Skype main.db SQlite database file."""
 
   NAME = 'skype'
+  DESCRIPTION = u'Parser for Skype SQLite database files.'
 
   # Queries for building cache.
   QUERY_DEST_FROM_TRANSFER = (

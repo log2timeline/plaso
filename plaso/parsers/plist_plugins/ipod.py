@@ -53,6 +53,7 @@ class IPodPlugin(interface.PlistPlugin):
   """Plugin to extract iPod/iPad/iPhone device information."""
 
   NAME = 'ipod_device'
+  DESCRIPTION = u'Parser for iPod, iPad and iPhone plist files.'
 
   PLIST_PATH = 'com.apple.iPod.plist'
   PLIST_KEYS = frozenset(['Devices'])

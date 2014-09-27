@@ -118,13 +118,6 @@ def FindAllOutputs():
   return putils.FindAllOutputs()
 
 
-def FindAllParsers():
-  """Finds all available parsers."""
-  # TODO: refactor this function in a function that returns the identifiers
-  # of available parsers and one that can retrieve parser objects.
-  return parsers_manager.ParsersManager.FindAllParsers()
-
-
 def GetEventData(event_proto, before=0):
   """Prints a hexdump of the event data."""
   return frontend_utils.OutputWriter.GetEventDataHexDump(event_proto, before)
@@ -146,6 +139,32 @@ def GetFileEntryFromEventObject(event_object):
     return
 
   return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+
+def GetParserNames(parser_filter_string=None):
+  """Retrieves the parser names.
+
+  Args:
+    parser_filter_string: Optional parser filter string. The default is None.
+
+  Returns:
+    A list of parser names.
+  """
+  return parsers_manager.ParsersManager.GetParserNames(
+      parser_filter_string=parser_filter_string)
+
+
+def GetParserObjects(parser_filter_string=None):
+  """Retrieves the parser objects.
+
+  Args:
+    parser_filter_string: Optional parser filter string. The default is None.
+
+  Returns:
+    A list of parser objects (instances of BaseParser).
+  """
+  return parsers_manager.ParsersManager.GetParserObjects(
+      parser_filter_string=parser_filter_string)
 
 
 def OpenOSFile(path):
@@ -339,7 +358,6 @@ def Main():
       'pre_obj': pre_obj,
       'options': options,
       'find_all_output': FindAllOutputs,
-      'find_all_parsers': FindAllParsers,
       'parse_file': ParseFile,
       'timestamp_from_event': PrintTimestampFromEvent,
       'message': formatters.manager.EventFormatterManager.GetMessageStrings})
@@ -411,9 +429,10 @@ def Main():
       namespace.update({'store': store})
 
   functions = [
-      FindAllOutputs, FindAllParsers, GetEventData, OpenOSFile, OpenStorageFile,
-      OpenTskFile, OpenVssFile, ParseFile, Pfile2File, PrintTimestamp,
-      PrintTimestampFromEvent]
+      FindAllOutputs, GetEventData, GetParserNames, GetParserObjects,
+      OpenOSFile, OpenStorageFile, OpenTskFile, OpenVssFile,
+      ParseFile, Pfile2File,
+      PrintTimestamp, PrintTimestampFromEvent]
 
   functions_strings = []
   for function in functions:
