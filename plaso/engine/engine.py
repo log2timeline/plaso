@@ -23,13 +23,13 @@ from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso import preprocessors
 from plaso.artifacts import knowledge_base
 from plaso.engine import collector
 from plaso.engine import worker
 from plaso.lib import errors
 from plaso.lib import queue
 from plaso.preprocessors import interface as preprocess_interface
+from plaso.preprocessors import manager as preprocess_manager
 
 
 class Engine(object):
@@ -150,16 +150,8 @@ class Engine(object):
       platform = preprocess_interface.GuessOS(searcher)
     self.knowledge_base.platform = platform
 
-    for weight in preprocessors.PreProcessorsManager.GetWeightList(platform):
-      for plugin in preprocessors.PreProcessorsManager.GetWeight(
-          platform, weight):
-        try:
-          plugin.Run(searcher, self.knowledge_base)
-        except (IOError, errors.PreProcessFail) as exception:
-          logging.warning((
-              u'Unable to run preprocessor: {0:s} for attribute: {1:s} '
-              u'with error: {2:s}').format(
-                  plugin.plugin_name, plugin.ATTRIBUTE, exception))
+    preprocess_manager.PreprocessPluginsManager.RunPlugins(
+        platform, searcher, self.knowledge_base)
 
   def SetSource(self, source_path_spec, resolver_context=None):
     """Sets the source.

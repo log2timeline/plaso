@@ -23,6 +23,7 @@ from dfvfs.helpers import text_file
 
 from plaso.lib import errors
 from plaso.preprocessors import interface
+from plaso.preprocessors import manager
 
 
 class LinuxHostname(interface.PreprocessPlugin):
@@ -111,3 +112,7 @@ class LinuxUsernames(interface.PreprocessPlugin):
 
     file_object.close()
     return users
+
+
+manager.PreprocessPluginsManager.RegisterPlugins([
+    LinuxHostname, LinuxUsernames])
