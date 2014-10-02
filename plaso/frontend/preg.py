@@ -47,7 +47,6 @@ except ImportError:
 
 from IPython.core import magic
 
-from plaso import preprocessors
 from plaso.artifacts import knowledge_base
 
 # Import the winreg formatter to register it, adding the option
@@ -67,6 +66,7 @@ from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg as winreg_parser
 from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
 from plaso.preprocessors import interface as preprocess_interface
+from plaso.preprocessors import manager as preprocess_manager
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
@@ -479,15 +479,9 @@ class PregFrontend(frontend.ExtractionFrontend):
 
       # Run preprocessing on image.
       platform = preprocess_interface.GuessOS(searcher)
-      for weight in preprocessors.PreProcessorsManager.GetWeightList(platform):
-        for plugin in preprocessors.PreProcessorsManager.GetWeight(
-            platform, weight):
-          try:
-            plugin.Run(searcher, RegCache.knowledge_base_object)
-          except (IOError, errors.PreProcessFail) as exception:
-            logging.warning(
-                u'Unable to run plugin: {0:s} with error: {1:s}'.format(
-                    plugin.plugin_name, exception))
+
+      preprocess_manager.PreprocessPluginsManager.RunPlugins(
+          platform, searcher, RegCache.knowledge_base_object)
 
       # Find all the Registry paths we need to check.
       if self._registry_file:

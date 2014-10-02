@@ -196,7 +196,7 @@ class WindowsSystemRootPathTest(test_lib.PreprocessPluginTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     path = knowledge_base_object.GetValue('systemroot')
-    self.assertEquals(path, u'/Windows/System32')
+    self.assertEquals(path, u'/Windows')
 
 
 class WindowsTimeZoneTest(WindowsSystemRegistryTest):
