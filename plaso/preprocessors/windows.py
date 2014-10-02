@@ -17,13 +17,179 @@
 # limitations under the  License.
 """This file contains preprocessors for Windows."""
 
+import abc
 import logging
 
+from dfvfs.helpers import file_system_searcher
+
+from plaso.lib import errors
 from plaso.preprocessors import interface
+from plaso.preprocessors import manager
+from plaso.winreg import cache
+from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import utils
+from plaso.winreg import winregistry
 
 
-class WindowsCodepage(interface.WindowsRegistryPreprocess):
+class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
+  """Class that defines the Windows Registry preprocess plugin object.
+
+  By default registry needs information about system paths, which excludes
+  them to run in priority 1, in some cases they may need to run in priority
+  3, for instance if the Registry key is dependent on which version of Windows
+  is running, information that is collected during priority 2.
+  """
+  __abstract = True
+
+  SUPPORTED_OS = ['Windows']
+  WEIGHT = 2
+
+  REG_KEY = '\\'
+  REG_PATH = '{sysregistry}'
+  REG_FILE = 'SOFTWARE'
+
+  def __init__(self):
+    """Initializes the Window Registry preprocess plugin object."""
+    super(WindowsRegistryPreprocessPlugin, self).__init__()
+    self._file_path_expander = winreg_path_expander.WinRegistryKeyPathExpander()
+    self._key_path_expander = None
+
+  def GetValue(self, searcher, knowledge_base):
+    """Returns a value gathered from a Registry key for preprocessing.
+
+    Args:
+      searcher: The file system searcher object (instance of
+                dfvfs.FileSystemSearcher).
+      knowledge_base: A knowledge base object (instance of KnowledgeBase),
+                      which contains information from the source data needed
+                      for parsing.
+
+    Raises:
+      errors.PreProcessFail: If the preprocessing fails.
+    """
+    # TODO: optimize this in one find.
+    try:
+      # TODO: do not pass the full pre_obj here but just the necessary values.
+      path = self._file_path_expander.ExpandPath(
+          self.REG_PATH, pre_obj=knowledge_base.pre_obj)
+    except KeyError:
+      path = u''
+
+    if not path:
+      raise errors.PreProcessFail(
+          u'Unable to expand path: {0:s}'.format(self.REG_PATH))
+
+    find_spec = file_system_searcher.FindSpec(
+        location=path, case_sensitive=False)
+    path_specs = list(searcher.Find(find_specs=[find_spec]))
+
+    if not path_specs or len(path_specs) != 1:
+      raise errors.PreProcessFail(
+          u'Unable to find directory: {0:s}'.format(self.REG_PATH))
+
+    directory_location = searcher.GetRelativePath(path_specs[0])
+    if not directory_location:
+      raise errors.PreProcessFail(
+          u'Missing directory location for: {0:s}'.format(self.REG_PATH))
+
+    # The path is split in segments to make it path segement separator
+    # independent (and thus platform independent).
+    path_segments = searcher.SplitPath(directory_location)
+    path_segments.append(self.REG_FILE)
+
+    find_spec = file_system_searcher.FindSpec(
+        location=path_segments, case_sensitive=False)
+    path_specs = list(searcher.Find(find_specs=[find_spec]))
+
+    if not path_specs:
+      raise errors.PreProcessFail(
+          u'Unable to find file: {0:s} in directory: {1:s}'.format(
+              self.REG_FILE, directory_location))
+
+    if len(path_specs) != 1:
+      raise errors.PreProcessFail((
+          u'Find for file: {1:s} in directory: {0:s} returned {2:d} '
+          u'results.').format(
+              self.REG_FILE, directory_location, len(path_specs)))
+
+    file_location = getattr(path_specs[0], 'location', None)
+    if not directory_location:
+      raise errors.PreProcessFail(
+          u'Missing file location for: {0:s} in directory: {1:s}'.format(
+              self.REG_FILE, directory_location))
+
+    try:
+      file_entry = searcher.GetFileEntryByPathSpec(path_specs[0])
+    except IOError as exception:
+      raise errors.PreProcessFail(
+          u'Unable to open file entry: {0:s} with error: {1:s}'.format(
+              file_location, exception))
+
+    if not file_entry:
+      raise errors.PreProcessFail(
+          u'Unable to open file entry: {0:s}'.format(file_location))
+
+    # TODO: remove this check win_registry.OpenFile doesn't fail instead?
+    try:
+      file_object = file_entry.GetFileObject()
+      file_object.close()
+    except IOError as exception:
+      raise errors.PreProcessFail(
+          u'Unable to open file object: {0:s} with error: {1:s}'.format(
+              file_location, exception))
+
+    win_registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
+    try:
+      winreg_file = win_registry.OpenFile(
+          file_entry, codepage=knowledge_base.codepage)
+    except IOError as exception:
+      raise errors.PreProcessFail(
+          u'Unable to open Registry file: {0:s} with error: {1:s}'.format(
+              file_location, exception))
+
+    self.winreg_file = winreg_file
+
+    if not self._key_path_expander:
+      # TODO: it is more efficient to have one cache that is passed to every
+      # plugin, or maybe one path expander. Or replace the path expander by
+      # dfvfs WindowsPathResolver?
+      reg_cache = cache.WinRegistryCache()
+      reg_cache.BuildCache(winreg_file, self.REG_FILE)
+      self._key_path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
+          reg_cache=reg_cache)
+
+    try:
+      # TODO: do not pass the full pre_obj here but just the necessary values.
+      key_path = self._key_path_expander.ExpandPath(
+          self.REG_KEY, pre_obj=knowledge_base.pre_obj)
+    except KeyError:
+      key_path = u''
+
+    if not key_path:
+      raise errors.PreProcessFail(
+          u'Unable to expand path: {0:s}'.format(self.REG_KEY))
+
+    try:
+      key = winreg_file.GetKeyByPath(key_path)
+    except IOError as exception:
+      raise errors.PreProcessFail(
+          u'Unable to fetch Registry key: {0:s} with error: {1:s}'.format(
+              key_path, exception))
+
+    if not key:
+      raise errors.PreProcessFail(
+          u'Registry key {0:s} does not exist.'.format(self.REG_KEY))
+
+    return self.ParseKey(key)
+
+  @abc.abstractmethod
+  def ParseKey(self, key):
+    """Extract information from a Registry key and save in storage."""
+
+
+class WindowsCodepage(WindowsRegistryPreprocessPlugin):
   """A preprocessing class that fetches codepage information."""
 
   # Defines the preprocess attribute to be set.
@@ -47,7 +213,7 @@ class WindowsCodepage(interface.WindowsRegistryPreprocess):
     return u'cp1252'
 
 
-class WindowsHostname(interface.WindowsRegistryPreprocess):
+class WindowsHostname(WindowsRegistryPreprocessPlugin):
   """A preprocessing class that fetches the hostname information."""
 
   ATTRIBUTE = 'hostname'
@@ -65,7 +231,7 @@ class WindowsHostname(interface.WindowsRegistryPreprocess):
       return value.data
 
 
-class WindowsProgramFilesPath(interface.WindowsRegistryPreprocess):
+class WindowsProgramFilesPath(WindowsRegistryPreprocessPlugin):
   """Fetch about the location for the Program Files directory."""
 
   ATTRIBUTE = 'programfiles'
@@ -81,7 +247,7 @@ class WindowsProgramFilesPath(interface.WindowsRegistryPreprocess):
       return u'{0:s}'.format(value.data.partition('\\')[2])
 
 
-class WindowsProgramFilesX86Path(interface.WindowsRegistryPreprocess):
+class WindowsProgramFilesX86Path(WindowsRegistryPreprocessPlugin):
   """Fetch about the location for the Program Files directory."""
 
   ATTRIBUTE = 'programfilesx86'
@@ -97,22 +263,21 @@ class WindowsProgramFilesX86Path(interface.WindowsRegistryPreprocess):
       return u'{0:s}'.format(value.data.partition('\\')[2])
 
 
-class WindowsSystemRegistryPath(interface.PreprocessGetPath):
+class WindowsSystemRegistryPath(interface.PathPreprocessPlugin):
   """Get the system registry path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'sysregistry'
   PATH = '/(Windows|WinNT|WINNT35|WTSRV)/System32/config'
 
 
-class WindowsSystemRootPath(interface.PreprocessGetPath):
+class WindowsSystemRootPath(interface.PathPreprocessPlugin):
   """Get the system root path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'systemroot'
-  # TODO: %SystemRoot% should correspond to C:\Windows not C:\Windows\System32.
-  PATH = '/(Windows|WinNT|WINNT35|WTSRV)/System32'
+  PATH = '/(Windows|WinNT|WINNT35|WTSRV)'
 
 
-class WindowsTimeZone(interface.WindowsRegistryPreprocess):
+class WindowsTimeZone(WindowsRegistryPreprocessPlugin):
   """A preprocessing class that fetches timezone information."""
 
   # Defines the preprocess attribute to be set.
@@ -336,7 +501,7 @@ class WindowsTimeZone(interface.WindowsRegistryPreprocess):
       return self.ZONE_LIST.get(value.data.replace(' ', ''), value.data)
 
 
-class WindowsUsers(interface.WindowsRegistryPreprocess):
+class WindowsUsers(WindowsRegistryPreprocessPlugin):
   """Fetch information about user profiles."""
 
   ATTRIBUTE = 'users'
@@ -362,7 +527,7 @@ class WindowsUsers(interface.WindowsRegistryPreprocess):
     return users
 
 
-class WindowsVersion(interface.WindowsRegistryPreprocess):
+class WindowsVersion(WindowsRegistryPreprocessPlugin):
   """Fetch information about the current Windows version."""
 
   ATTRIBUTE = 'osversion'
@@ -377,8 +542,15 @@ class WindowsVersion(interface.WindowsRegistryPreprocess):
       return u'{0:s}'.format(value.data)
 
 
-class WindowsWinDirPath(interface.PreprocessGetPath):
+class WindowsWinDirPath(interface.PathPreprocessPlugin):
   """Get the system path."""
   SUPPORTED_OS = ['Windows']
   ATTRIBUTE = 'windir'
   PATH = '/(Windows|WinNT|WINNT35|WTSRV)'
+
+
+manager.PreprocessPluginsManager.RegisterPlugins([
+    WindowsCodepage, WindowsHostname, WindowsProgramFilesPath,
+    WindowsProgramFilesX86Path, WindowsSystemRegistryPath,
+    WindowsSystemRootPath, WindowsTimeZone, WindowsUsers, WindowsVersion,
+    WindowsWinDirPath])

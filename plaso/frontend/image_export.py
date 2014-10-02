@@ -29,7 +29,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso import preprocessors
 from plaso.artifacts import knowledge_base
 from plaso.engine import collector
 from plaso.engine import utils as engine_utils
@@ -39,6 +38,7 @@ from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.lib import queue
 from plaso.preprocessors import interface as preprocess_interface
+from plaso.preprocessors import manager as preprocess_manager
 
 
 def CalculateHash(file_object):
@@ -506,19 +506,13 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     logging.info(u'Guessing OS')
 
-    guessed_os = preprocess_interface.GuessOS(searcher)
-    logging.info(u'OS: {0:s}'.format(guessed_os))
+    platform = preprocess_interface.GuessOS(searcher)
+    logging.info(u'OS: {0:s}'.format(platform))
 
     logging.info(u'Running preprocess.')
-    for weight in preprocessors.PreProcessorsManager.GetWeightList(guessed_os):
-      for plugin in preprocessors.PreProcessorsManager.GetWeight(
-          guessed_os, weight):
-        try:
-          plugin.Run(searcher, self._knowledge_base)
-        except errors.PreProcessFail as exception:
-          logging.warning(
-              u'Unable to run preprocessor: {0:s} with error: {1:s}'.format(
-                  plugin.__class__.__name__, exception))
+
+    preprocess_manager.PreprocessPluginsManager.RunPlugins(
+        platform, searcher, self._knowledge_base)
 
     logging.info(u'Preprocess done, saving files from image.')
 
