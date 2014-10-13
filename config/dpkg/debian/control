@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Log2Timeline <log2timeline-dev@googlegroups.com>
 Build-Depends: debhelper (>= 7.0.0), python, python-setuptools
 Standards-Version: 3.9.2
-Homepage: http://code.google.com/p/plaso/
+Homepage: https://github.com/log2timeline/plaso/
 
 Package: python-plaso
 Architecture: any
