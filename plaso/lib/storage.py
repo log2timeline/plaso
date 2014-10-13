@@ -1066,12 +1066,13 @@ class StorageFile(object):
       entry_index: Read a specific entry in the file, otherwise the next one.
 
     Returns:
-      An event object (EventObject) entry read from the file.
+      An event object (instance of EventObject) entry read from the file or
+      None if not able to read in a new event.
     """
     event_object_data, entry_index = self._GetEventObjectProtobufString(
         stream_number, entry_index)
     if not event_object_data:
-      return None
+      return
 
     event_object = self._event_object_serializer.ReadSerialized(
         event_object_data)
