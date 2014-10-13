@@ -1,4 +1,4 @@
-include ACKNOWLEDGEMENTS AUTHORS LICENSE.TXT
+include ACKNOWLEDGEMENTS AUTHORS LICENSE README
 include run_tests.py
 include utils/check_dependencies.py
 exclude .gitignore

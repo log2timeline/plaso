@@ -116,7 +116,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
 
   URLS = [
       u'http://forensicartifacts.com/2011/02/recentdocs/',
-      u'https://code.google.com/p/winreg-kb/wiki/MRUKeys']
+      u'https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
   _STRING_STRUCT = construct.Struct(
       'string_and_shell_item',

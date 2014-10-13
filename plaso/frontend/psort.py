@@ -456,7 +456,7 @@ class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
           u'Unable to print report due to an unicode decode error. '
           u'The report is stored inside the storage file and can be '
           u'viewed using pinfo [if unable to view please submit a '
-          u'bug report https://code.google.com/p/plaso/issues/list')
+          u'bug report https://github.com/log2timeline/plaso/issues')
 
 
 def _AppendEvent(event_object, output_buffer, event_queues):

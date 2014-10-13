@@ -8,7 +8,8 @@ mkdir dist\plaso\licenses
 
 xcopy /q /y ACKNOWLEDGEMENTS dist\plaso
 xcopy /q /y AUTHORS dist\plaso
-xcopy /q /y LICENSE.TXT dist\plaso
+xcopy /q /y LICENSE dist\plaso
+xcopy /q /y README dist\plaso
 xcopy /q /y config\licenses\* dist\plaso\licenses
 
 xcopy /q /y /s dist\image_export\* dist\plaso
