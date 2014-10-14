@@ -20,6 +20,8 @@
 import abc
 import argparse
 import glob
+import io
+import json
 import logging
 import os
 import platform
@@ -29,6 +31,11 @@ import subprocess
 import sys
 import tarfile
 import urllib2
+
+try:
+  import ConfigParser as configparser
+except ImportError:
+  import configparser
 
 
 # TODO: look into merging functionality with update dependencies script.
@@ -158,102 +165,6 @@ class BuildFilesDownloadHelper(DownloadHelper):
     return u'/'.join([self._BASE_URL, filename])
 
 
-class GoogleCodeDownloadHelper(DownloadHelper):
-  """Class that helps in downloading a Google code project."""
-
-  def GetGoogleCodeDownloadsUrl(self, project_name):
-    """Retrieves the Download URL from the Google Code project page.
-
-    Args:
-      project_name: the name of the project.
-
-    Returns:
-      The downloads URL or None on error.
-    """
-    download_url = u'https://code.google.com/p/{0:s}/'.format(project_name)
-
-    page_content = self.DownloadPageContent(download_url)
-    if not page_content:
-      return
-
-    # The format of the project downloads URL is:
-    # https://googledrive.com/host/{random string}/
-    expression_string = (
-        u'<a href="(https://googledrive.com/host/[^/]*/)"[^>]*>Downloads</a>')
-    matches = re.findall(expression_string, page_content)
-
-    if not matches or len(matches) != 1:
-      return
-
-    return matches[0]
-
-  def GetLatestVersion(self, project_name):
-    """Retrieves the latest version number for a given project name.
-
-    Args:
-      project_name: the name of the project.
-
-    Returns:
-      The a string containing the latest version number or None on error.
-    """
-    download_url = self.GetGoogleCodeDownloadsUrl(project_name)
-
-    page_content = self.DownloadPageContent(download_url)
-    if not page_content:
-      return
-
-    # The format of the project download URL is:
-    # /host/{random string}/{project name}-{status-}{version}.tar.gz
-    # Note that the status is optional and will be: beta, alpha or experimental.
-    expression_string = u'/host/[^/]*/{0:s}-[a-z-]*([0-9]+)[.]tar[.]gz'.format(
-        project_name)
-    matches = re.findall(expression_string, page_content)
-
-    if not matches:
-      return
-
-    return unicode(max(matches))
-
-  def GetDownloadUrl(self, project_name, project_version):
-    """Retrieves the download URL for a given project name and version.
-
-    Args:
-      project_name: the name of the project.
-      project_version: the version of the project.
-
-    Returns:
-      The download URL of the project or None on error.
-    """
-    download_url = self.GetGoogleCodeDownloadsUrl(project_name)
-
-    page_content = self.DownloadPageContent(download_url)
-    if not page_content:
-      return
-
-    # The format of the project download URL is:
-    # /host/{random string}/{project name}-{status-}{version}.tar.gz
-    # Note that the status is optional and will be: beta, alpha or experimental.
-    expression_string = u'/host/[^/]*/{0:s}-[a-z-]*{1:s}[.]tar[.]gz'.format(
-        project_name, project_version)
-    matches = re.findall(expression_string, page_content)
-
-    if not matches or len(matches) != 1:
-      return
-
-    return u'https://googledrive.com{0:s}'.format(matches[0])
-
-  def GetProjectIdentifier(self, project_name):
-    """Retrieves the project identifier for a given project name.
-
-    Args:
-      project_name: the name of the project.
-
-    Returns:
-      The project identifier or None on error.
-    """
-    return u'com.google.code.p.{0:s}'.format(project_name)
-
-
 class GoogleCodeWikiDownloadHelper(DownloadHelper):
   """Class that helps in downloading a wiki-based Google code project."""
 
@@ -316,6 +227,141 @@ class GoogleCodeWikiDownloadHelper(DownloadHelper):
       The project identifier or None on error.
     """
     return u'com.google.code.p.{0:s}'.format(project_name)
+
+
+class GoogleDriveDownloadHelper(DownloadHelper):
+  """Class that helps in downloading a Google Drive hosted project."""
+
+  @abc.abstractmethod
+  def GetGoogleDriveDownloadsUrl(self, project_name):
+    """Retrieves the Google Drive Download URL.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The downloads URL or None on error.
+    """
+
+  def GetLatestVersion(self, project_name):
+    """Retrieves the latest version number for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The latest version number or 0 on error.
+    """
+    download_url = self.GetGoogleDriveDownloadsUrl(project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return 0
+
+    # The format of the project download URL is:
+    # /host/{random string}/{project name}-{status-}{version}.tar.gz
+    # Note that the status is optional and will be: beta, alpha or experimental.
+    expression_string = u'/host/[^/]*/{0:s}-[a-z-]*([0-9]+)[.]tar[.]gz'.format(
+        project_name)
+    matches = re.findall(expression_string, page_content)
+
+    if not matches:
+      return 0
+
+    return int(max(matches))
+
+  def GetDownloadUrl(self, project_name, project_version):
+    """Retrieves the download URL for a given project name and version.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+
+    Returns:
+      The download URL of the project or None on error.
+    """
+    download_url = self.GetGoogleDriveDownloadsUrl(project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return
+
+    # The format of the project download URL is:
+    # /host/{random string}/{project name}-{status-}{version}.tar.gz
+    # Note that the status is optional and will be: beta, alpha or experimental.
+    expression_string = u'/host/[^/]*/{0:s}-[a-z-]*{1!s}[.]tar[.]gz'.format(
+        project_name, project_version)
+    matches = re.findall(expression_string, page_content)
+
+    if len(matches) != 1:
+      # Try finding a match without the status in case the project provides
+      # multiple versions with a different status.
+      expression_string = u'/host/[^/]*/{0:s}-{1!s}[.]tar[.]gz'.format(
+          project_name, project_version)
+      matches = re.findall(expression_string, page_content)
+
+    if not matches or len(matches) != 1:
+      return
+
+    return u'https://googledrive.com{0:s}'.format(matches[0])
+
+
+class LibyalGitHubDownloadHelper(GoogleDriveDownloadHelper):
+  """Class that helps in downloading a libyal GitHub project."""
+
+  def GetGoogleDriveDownloadsUrl(self, project_name):
+    """Retrieves the Download URL from the GitHub project page.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The downloads URL or None on error.
+    """
+    download_url = (
+        u'https://raw.githubusercontent.com/libyal/{0:s}/master/'
+        u'{0:s}-wiki.ini').format(project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return
+
+    config_parser = configparser.RawConfigParser()
+    config_parser.readfp(io.BytesIO(page_content))
+
+    return json.loads(config_parser.get('source_package', 'url'))
+
+
+class Log2TimelineGitHubDownloadHelper(GoogleDriveDownloadHelper):
+  """Class that helps in downloading a log2timeline GitHub project."""
+
+  def GetGoogleDriveDownloadsUrl(self, project_name):
+    """Retrieves the Download URL from the GitHub project page.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The downloads URL or None on error.
+    """
+    download_url = (
+        u'https://github.com/log2timeline/{0:s}/wiki').format(project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return
+
+    # The format of the project downloads URL is:
+    # https://googledrive.com/host/{random string}/
+    expression_string = (
+        u'<li><a href="(https://googledrive.com/host/[^/]*/)">Downloads</a>'
+        u'</li>')
+    matches = re.findall(expression_string, page_content)
+
+    if not matches or len(matches) != 1:
+      return
+
+    return matches[0]
 
 
 class PyPiDownloadHelper(DownloadHelper):
@@ -1250,6 +1296,8 @@ class LibyalRpmBuildHelper(RpmBuildHelper):
     # Move the rpms to the build directory.
     self._MoveRpms(library_name, library_version)
 
+    # TODO: clean up rpmbuilds directory after move.
+
     return True
 
 
@@ -1288,7 +1336,7 @@ class PythonModuleRpmBuildHelper(RpmBuildHelper):
 
     # Move the rpms to the build directory.
     filenames = glob.glob(os.path.join(
-        source_directory, u'dist', u'{0:s}-{1:s}-1.{2:s}.rpm'.format(
+        source_directory, u'dist', u'{0:s}-{1!s}-1.{2:s}.rpm'.format(
             project_name, project_version, self.architecture)))
     for filename in filenames:
       logging.info(u'Moving: {0:s}'.format(filename))
@@ -1310,7 +1358,7 @@ class PythonModuleRpmBuildHelper(RpmBuildHelper):
         shutil.rmtree(filename, True)
 
     # Remove previous versions of rpms.
-    filenames_to_ignore = re.compile(u'{0:s}-.*{1:s}-1.{2:s}.rpm'.format(
+    filenames_to_ignore = re.compile(u'{0:s}-.*{1!s}-1.{2:s}.rpm'.format(
             project_name, project_version, self.architecture))
 
     rpm_filenames_glob = u'{0:s}-*-1.{1:s}.rpm'.format(
@@ -1339,10 +1387,11 @@ class DependencyBuilder(object):
     'bencode', 'binplist', 'construct', 'dfvfs', 'dpkt', 'pyparsing',
     'pysqlite', 'pytz', 'PyYAML', 'six'])
 
-  PROJECT_TYPE_GOOGLE_CODE = 1
-  PROJECT_TYPE_GOOGLE_CODE_WIKI = 2
-  PROJECT_TYPE_PYPI = 3
-  PROJECT_TYPE_SOURCE_FORGE = 4
+  PROJECT_TYPE_GOOGLE_CODE_WIKI = 1
+  PROJECT_TYPE_PYPI = 2
+  PROJECT_TYPE_SOURCE_FORGE = 3
+  PROJECT_TYPE_GITHUB_LIBYAL = 4
+  PROJECT_TYPE_GITHUB_LOG2TIMELINE = 5
 
   def __init__(self, build_target):
     """Initializes the dependency builder.
@@ -1371,7 +1420,7 @@ class DependencyBuilder(object):
 
     source_filename = download_helper.Download(project_name, project_version)
     if source_filename:
-      filenames_to_ignore = re.compile(u'^{0:s}-.*{1:s}'.format(
+      filenames_to_ignore = re.compile(u'^{0:s}-.*{1!s}'.format(
           project_name, project_version))
 
       # Remove files of previous versions in the format:
@@ -1387,8 +1436,9 @@ class DependencyBuilder(object):
       filenames = glob.glob(u'{0:s}-*'.format(project_name))
       for filename in filenames:
         if not filenames_to_ignore.match(filename):
-          logging.info(u'Removing: {0:s}'.format(filename))
-          shutil.rmtree(filename)
+          if os.path.isdir(filename):
+            logging.info(u'Removing: {0:s}'.format(filename))
+            shutil.rmtree(filename)
 
       if self._build_target == 'download':
         # If available run the script post-download.sh after download.
@@ -1584,14 +1634,16 @@ class DependencyBuilder(object):
     Raises:
       ValueError: if the project type is unsupported.
     """
-    if project_type == self.PROJECT_TYPE_GOOGLE_CODE:
-      download_helper = GoogleCodeDownloadHelper()
-    elif project_type == self.PROJECT_TYPE_GOOGLE_CODE_WIKI:
+    if project_type == self.PROJECT_TYPE_GOOGLE_CODE_WIKI:
       download_helper = GoogleCodeWikiDownloadHelper()
     elif project_type == self.PROJECT_TYPE_PYPI:
       download_helper = PyPiDownloadHelper()
     elif project_type == self.PROJECT_TYPE_SOURCE_FORGE:
       download_helper = SourceForgeDownloadHelper()
+    elif project_type == self.PROJECT_TYPE_GITHUB_LIBYAL:
+      download_helper = LibyalGitHubDownloadHelper()
+    elif project_type == self.PROJECT_TYPE_GITHUB_LOG2TIMELINE:
+      download_helper = Log2TimelineGitHubDownloadHelper()
     else:
       raise ValueError(u'Unsupported project type.')
 
@@ -1602,7 +1654,7 @@ def Main():
   build_targets = frozenset(['download', 'dpkg', 'msi', 'pkg', 'rpm'])
 
   args_parser = argparse.ArgumentParser(description=(
-      'Downloads and builds the latest versions of dfvfs.'))
+      'Downloads and builds the latest versions of plaso dependencies.'))
 
   args_parser.add_argument(
       'build_target', choices=sorted(build_targets), action='store',
@@ -1663,24 +1715,24 @@ def Main():
     (u'bencode', DependencyBuilder.PROJECT_TYPE_PYPI),
     (u'binplist', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI),
     (u'construct', DependencyBuilder.PROJECT_TYPE_PYPI),
-    (u'dfvfs', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'dfvfs', DependencyBuilder.PROJECT_TYPE_GITHUB_LOG2TIMELINE),
     (u'dpkt', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI),
-    (u'libbde', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libesedb', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libevt', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libevtx', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libewf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libfwsi', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'liblnk', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libmsiecf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libolecf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libqcow', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libregf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libsmdev', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libsmraw', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libvhdi', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libvmdk', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
-    (u'libvshadow', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE),
+    (u'libbde', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libesedb', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libevt', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libevtx', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libewf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libfwsi', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'liblnk', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libmsiecf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libolecf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libqcow', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libregf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libsmdev', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libsmraw', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libvhdi', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libvmdk', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
+    (u'libvshadow', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
     (u'pyparsing', DependencyBuilder.PROJECT_TYPE_SOURCE_FORGE),
     (u'pysqlite', DependencyBuilder.PROJECT_TYPE_PYPI),
     (u'pytz', DependencyBuilder.PROJECT_TYPE_PYPI),
