@@ -190,8 +190,7 @@ def CompareVersions(first_version_list, second_version_list):
 
 def Main():
   args_parser = argparse.ArgumentParser(description=(
-      u'Installs the latest versions of libyal packages in the current '
-      u'directory.'))
+      u'Installs the latest versions of plaso dependencies.'))
 
   _ = args_parser.parse_args()
 
