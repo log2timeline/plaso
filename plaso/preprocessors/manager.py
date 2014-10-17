@@ -39,7 +39,7 @@ class PreprocessPluginsManager(object):
     Yields:
       A preprocess plugin objects that matches the platform and weight.
     """
-    for plugin_class in cls._plugin_classes:
+    for plugin_class in cls._plugin_classes.itervalues():
       plugin_supported_os = getattr(plugin_class, 'SUPPORTED_OS', [])
       plugin_weight = getattr(plugin_class, 'WEIGHT', 0)
       if (platform in plugin_supported_os and weight == plugin_weight):
@@ -57,7 +57,7 @@ class PreprocessPluginsManager(object):
       A list of weights.
     """
     weights = {}
-    for plugin_class in cls._plugin_classes:
+    for plugin_class in cls._plugin_classes.itervalues():
       plugin_supported_os = getattr(plugin_class, 'SUPPORTED_OS', [])
       plugin_weight = getattr(plugin_class, 'WEIGHT', 0)
       if platform in plugin_supported_os:
@@ -134,5 +134,5 @@ class PreprocessPluginsManager(object):
           logging.warning((
               u'Unable to run preprocessor: {0:s} for attribute: {1:s} '
               u'with error: {2:s}').format(
-                  plugin_object.plugin_name, plugin_object.ATTRIBUTE, 
+                  plugin_object.plugin_name, plugin_object.ATTRIBUTE,
                   exception))

@@ -110,18 +110,6 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
             u'Unable to parse file: {0:s} with error: {1:s}'.format(
                 file_entry.path_spec.comparable, exception))
 
-  def _ParseEvent(self, event_object, file_entry, parser_name):
-    """Adjust value of an extracted EventObject before storing it."""
-    # TODO: Make some more adjustments to the event object.
-    # Need to apply time skew, and other information extracted from
-    # the configuration of the tool.
-    self._parser_context.ProcessEvent(
-        event_object, parser_name=parser_name, file_entry=file_entry)
-
-    if not self._parser_context.MatchesFilter(event_object):
-      self._event_queue_producer.ProduceEventObject(event_object)
-      self._parser_context.number_of_events += 1
-
   def GetStatus(self):
     """Returns a status dictionary for the worker process."""
     return {
