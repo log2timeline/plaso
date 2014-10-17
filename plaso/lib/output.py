@@ -276,11 +276,12 @@ class EventBuffer(object):
     # Special instance if this is a filestat entry we need to combine the
     # description field.
     if getattr(event_a, 'parser', u'') == 'filestat':
-      # TODO: Improve this to make the description more like "MAC." or "MA.."
-      # instead of "mtime;atime".
+      description_a = set(getattr(event_a, 'timestamp_desc', u'').split(';'))
+      description_b = set(getattr(event_b, 'timestamp_desc', u'').split(';'))
+      descriptions = list(description_a | description_b)
+      descriptions.sort()
       if event_b.timestamp_desc not in event_a.timestamp_desc:
-        setattr(event_a, 'timestamp_desc', u';'.join(
-            [event_a.timestamp_desc, event_b.timestamp_desc]))
+        setattr(event_a, 'timestamp_desc', u';'.join(descriptions))
 
   def End(self):
     """Call the formatter to produce the closing line."""
