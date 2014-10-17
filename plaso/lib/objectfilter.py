@@ -720,7 +720,7 @@ class Parser(lexer.SearchParser):
       return
 
     if self.current_expression.operator:
-      if not self.current_expression.operator in (
+      if not self.current_expression.operator.lower() in (
           'is', 'contains', 'inset', 'equals'):
         raise ParseError(
             u'Keyword \'not\' does not work against operator: {0:s}'.format(

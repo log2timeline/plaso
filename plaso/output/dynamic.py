@@ -104,20 +104,48 @@ class Dynamic(output.FileLogOutputFormatter):
 
   def ParseDate(self, event_object):
     """Return a date string from a timestamp value."""
-    date_use = timelib.Timestamp.CopyToDatetime(
-        event_object.timestamp, self.zone)
+    try:
+      date_use = timelib.Timestamp.CopyToDatetime(
+          event_object.timestamp, self.zone, raise_error=True)
+    except OverflowError as exception:
+      logging.error((
+          u'Unable to copy {0:d} into a human readable timestamp with error: '
+          u'{1:s}. Event {2:d}:{3:d} triggered the exception.').format(
+              event_object.timestamp, exception,
+              getattr(event_object, 'store_number', u''),
+              getattr(event_object, 'store_index', u'')))
+      return u'0000-00-00'
     return u'{0:04d}-{1:02d}-{2:02d}'.format(
         date_use.year, date_use.month, date_use.day)
 
   def ParseDateTime(self, event_object):
     """Return a datetime object from a timestamp, in an ISO format."""
-    return timelib.Timestamp.CopyToIsoFormat(
-        event_object.timestamp, timezone=self.zone)
+    try:
+      return timelib.Timestamp.CopyToIsoFormat(
+          event_object.timestamp, timezone=self.zone, raise_error=True)
+
+    except OverflowError as exception:
+      logging.error((
+          u'Unable to copy {0:d} into a human readable timestamp with error: '
+          u'{1:s}. Event {2:d}:{3:d} triggered the exception.').format(
+              event_object.timestamp, exception,
+              getattr(event_object, 'store_number', u''),
+              getattr(event_object, 'store_index', u'')))
+      return u'0000-00-00T00:00:00'
 
   def ParseTime(self, event_object):
     """Return a timestamp string from an integer timestamp value."""
-    date_use = timelib.Timestamp.CopyToDatetime(
-        event_object.timestamp, self.zone)
+    try:
+      date_use = timelib.Timestamp.CopyToDatetime(
+          event_object.timestamp, self.zone, raise_error=True)
+    except OverflowError as exception:
+      logging.error((
+          u'Unable to copy {0:d} into a human readable timestamp with error: '
+          u'{1:s}. Event {2:d}:{3:d} triggered the exception.').format(
+              event_object.timestamp, exception,
+              getattr(event_object, 'store_number', u''),
+              getattr(event_object, 'store_index', u'')))
+      return u'00:00:00'
     return u'{0:02d}:{1:02d}:{2:02d}'.format(
         date_use.hour, date_use.minute, date_use.second)
 

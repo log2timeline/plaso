@@ -127,7 +127,8 @@ class Elastic(output.LogOutputFormatter):
     # We want to remove millisecond precision (causes some issues in
     # conversion).
     ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
-        timelib.Timestamp.RoundToSeconds(event_object.timestamp))
+        timelib.Timestamp.RoundToSeconds(event_object.timestamp),
+        timezone=self.zone)
     msg, _ = self._formatters_manager.GetMessageStrings(event_object)
     ret_dict['message'] = msg
 
