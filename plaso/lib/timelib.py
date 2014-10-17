@@ -106,40 +106,55 @@ class Timestamp(object):
   DELPHI_TIME_TO_POSIX_BASE = 25569
 
   @classmethod
-  def CopyToDatetime(cls, timestamp, timezone):
+  def CopyToDatetime(cls, timestamp, timezone, raise_error=False):
     """Copies the timestamp to a datetime object.
 
     Args:
       timestamp: An integer containing the timestamp.
       timezone: The timezone (pytz.timezone) object.
+      raise_error: Boolean that if set to True will not absorb an OverflowError
+                   if the timestamp is out of bounds. By default there will be
+                   no error raised.
 
     Returns:
       A datetime object.
+
+    Raises:
+      OverflowError: If raises_error is set to True and an OverflowError error
+                     occurs. Otherwise the error is absorbed and a datetime
+                     object from the beginning of UNIX Epoch is returned.
     """
     datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc)
     try:
       datetime_object += datetime.timedelta(microseconds=timestamp)
       return datetime_object.astimezone(timezone)
     except OverflowError as exception:
-      logging.error(
-          u'Unable to copy {0:d} to a datetime object with error: {1:s}'.format(
-              timestamp, exception))
+      if raise_error:
+        raise
+      else:
+        logging.error((
+            u'Unable to copy {0:d} to a datetime object with error: '
+            u'{1:s}').format(timestamp, exception))
 
     return datetime_object
 
   @classmethod
-  def CopyToIsoFormat(cls, timestamp, timezone=pytz.utc):
+  def CopyToIsoFormat(cls, timestamp, timezone=pytz.utc, raise_error=False):
     """Copies the timestamp to an ISO 8601 formatted string.
 
     Args:
       timestamp: An integer containing the timestamp.
       timezone: Optional timezone (instance of pytz.timezone).
                 The default is UTC.
+      raise_error: Boolean that if set to True will not absorb an OverflowError
+                   if the timestamp is out of bounds. By default there will be
+                   no error raised.
 
     Returns:
       A string containing an ISO 8601 formatted date and time.
     """
-    datetime_object = cls.CopyToDatetime(timestamp, timezone)
+    datetime_object = cls.CopyToDatetime(
+        timestamp, timezone, raise_error=raise_error)
     return datetime_object.isoformat()
 
   @classmethod

@@ -19,5 +19,3 @@ Device Connected
 
 Document Printed
   (data_type is 'metadata:hachoir' OR data_type is 'metadata:OLECF') AND timestamp_desc contains 'Printed'
-
-  data_type is 'mac:asl:event'
