@@ -1350,9 +1350,13 @@ def RunModeConsole(front_end, options):
   namespace = {}
 
   event_queue = queue.SingleThreadedQueue()
+  parser_error_queue = queue.SingleThreadedQueue()
   event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+  parse_error_queue_producer = queue.ParseErrorQueueProducer(
+      parser_error_queue)
   RegCache.parser_context = parsers_context.ParserContext(
-      event_queue_producer, RegCache.knowledge_base_object)
+      event_queue_producer, parse_error_queue_producer,
+      RegCache.knowledge_base_object)
 
   hives, hive_collectors = front_end.GetHivesAndCollectors(
       options, options.plugin_name)

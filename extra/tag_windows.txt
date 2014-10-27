@@ -9,22 +9,76 @@ Application Execution
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4688
   data_type is 'windows:registry:appcompatcache'
 
+Application Installed
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 903
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 904
+
+Application Updated
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 905
+
+Application Removed
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 907
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 908
+
 Document Opened
   data_type is 'windows:registry:key_value' AND plugin contains 'mru' AND regvalue.__all__ not contains '.exe' AND timestamp > 0
+
+Failed Login
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4625
 
 Logon
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 540
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4624
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 21
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 1101
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Winlogon' and event_identifier is 7001
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' and event_identifier is 1147
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' and event_identifier is 1149
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-User Profiles Service' and event_identifier is 2
 
 Logoff
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 538
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4634
-  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 21
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Winlogon' and event_identifier is 7002
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 23
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 1103
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-User Profiles Service' and event_identifier is 4
+
+Disconnect
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 24
+
+Reconnect
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 25
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 1105
+
+Shell Start
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 22
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' and event_identifer is 1102
 
 Task Scheduled
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 602
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4698
+
+Job Success
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TaskScheduler' and event_identifier is 102
+
+Action Success
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-TaskScheduler' and event_identifier is 201
+
+Name Resolution Timeout
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-DNS-Client' and event_identifier is 1014
+
+Time Change
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Kernel-General' and event_identifier is 1
+
+Shutdown
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Kernel-General' and event_identifier is 13
+
+System Start
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Kernel-General' and event_identifier is 13
+
+System Sleep
+  data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Kernel-Power' and event_identifier is 42
 
 AutoRun
   data_type is 'windows:registry:key_value' and plugin contains 'Run'
