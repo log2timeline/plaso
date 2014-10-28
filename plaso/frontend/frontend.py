@@ -129,7 +129,7 @@ class Frontend(object):
     self._input_reader = input_reader
     self._output_writer = output_writer
 
-    # TODO: add preferred_encoding support ot output writer.
+    # TODO: add preferred_encoding support of the output writer.
     self.preferred_encoding = locale.getpreferredencoding().lower()
 
   def PrintColumnValue(self, name, description, column_length=25):
@@ -601,12 +601,20 @@ class StorageMediaFrontend(Frontend):
     if not self._source_path:
       raise errors.BadConfigOption(u'Missing source path.')
 
-    try:
-      self._source_path = unicode(self._source_path)
-    except UnicodeDecodeError as exception:
+    if isinstance(self._source_path, str):
+      # Note that the source path option can be an encoded byte string
+      # and we need to turn it into an Unicode string.
+      try:
+        self._source_path = unicode(
+            self._source_path.decode(sys.stdin.encoding))
+      except UnicodeDecodeError as exception:
+        raise errors.BadConfigOption((
+            u'Unable to convert source path to Unicode with error: '
+            u'{0:s}.').format(exception))
+
+    elif not isinstance(self._source_path, unicode):
       raise errors.BadConfigOption(
-          u'Unable to convert source path to Unicode with error: {0:s}.'.format(
-              exception))
+          u'Unsupported source path, string type required.')
 
     self._source_path = os.path.abspath(self._source_path)
 

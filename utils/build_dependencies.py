@@ -160,7 +160,7 @@ class BuildFilesDownloadHelper(DownloadHelper):
     Returns:
       The download URL of the project or None on error.
     """
-    filename = u'{0:s}-{1:s}-dpkg.tar.gz'.format(
+    filename = u'{0:s}-{1!s}-dpkg.tar.gz'.format(
         project_name, project_version)
     return u'/'.join([self._BASE_URL, filename])
 
