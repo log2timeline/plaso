@@ -689,6 +689,13 @@ class StorageMediaFrontend(Frontend):
       if vss_stores:
         vss_stores = self._ParseVssStores(vss_stores)
 
+    # Note that os.path.exists() does not support Windows device paths.
+    if (not self._source_path.startswith('\\\\.\\') and
+        not os.path.exists(self._source_path)):
+      raise errors.SourceScannerError(
+          u'No such device, file or directory: {0:s}.'.format(
+              self._source_path))
+
     # Use the dfVFS source scanner to do the actual scanning.
     scan_path_spec = None
 
