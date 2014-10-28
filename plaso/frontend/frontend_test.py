@@ -182,34 +182,34 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     with self.assertRaises(errors.BadConfigOption):
       test_front_end.ParseOptions(options)
 
-    options.source = self._GetTestFilePath(['image.dd'])
+    options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     test_front_end.ParseOptions(options)
 
   def testScanSource(self):
     """Tests the ScanSource function."""
-    test_file = self._GetTestFilePath(['tsk_volume_system.raw'])
+    test_file = self._GetTestFilePath([u'tsk_volume_system.raw'])
     self._TestScanSourcePartitionedImage(test_file)
 
-    test_file = self._GetTestFilePath(['image-split.E01'])
+    test_file = self._GetTestFilePath([u'image-split.E01'])
     self._TestScanSourcePartitionedImage(test_file)
 
-    test_file = self._GetTestFilePath(['image.E01'])
+    test_file = self._GetTestFilePath([u'image.E01'])
     self._TestScanSourceImage(test_file)
 
-    test_file = self._GetTestFilePath(['image.qcow2'])
+    test_file = self._GetTestFilePath([u'image.qcow2'])
     self._TestScanSourceImage(test_file)
 
-    test_file = self._GetTestFilePath(['vsstest.qcow2'])
+    test_file = self._GetTestFilePath([u'vsstest.qcow2'])
     self._TestScanSourceVssImage(test_file)
 
-    test_file = self._GetTestFilePath(['text_parser'])
+    test_file = self._GetTestFilePath([u'text_parser'])
     self._TestScanSourceDirectory(test_file)
 
-    test_file = self._GetTestFilePath(['image.vhd'])
+    test_file = self._GetTestFilePath([u'image.vhd'])
     self._TestScanSourceImage(test_file)
 
-    test_file = self._GetTestFilePath(['image.vmdk'])
+    test_file = self._GetTestFilePath([u'image.vmdk'])
     self._TestScanSourceImage(test_file)
 
 
@@ -227,7 +227,7 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
         self._input_reader, self._output_writer)
 
     options = test_lib.Options()
-    options.storage_file = self._GetTestFilePath(['psort_test.out'])
+    options.storage_file = self._GetTestFilePath([u'psort_test.out'])
 
     test_front_end.ParseOptions(options)
     storage_file = test_front_end.OpenStorageFile()
@@ -246,12 +246,12 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
     with self.assertRaises(errors.BadConfigOption):
       test_front_end.ParseOptions(options)
 
-    options.storage_file = self._GetTestFilePath(['no_such_file.out'])
+    options.storage_file = self._GetTestFilePath([u'no_such_file.out'])
 
     with self.assertRaises(errors.BadConfigOption):
       test_front_end.ParseOptions(options)
 
-    options.storage_file = self._GetTestFilePath(['psort_test.out'])
+    options.storage_file = self._GetTestFilePath([u'psort_test.out'])
 
     test_front_end.ParseOptions(options)
 

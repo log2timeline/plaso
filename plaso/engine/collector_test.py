@@ -86,7 +86,7 @@ class TestCollectorQueueConsumer(queue.PathSpecQueueConsumer):
 class CollectorTestCase(unittest.TestCase):
   """The collector test case."""
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
@@ -112,10 +112,10 @@ class CollectorTest(CollectorTestCase):
   def testFileSystemCollection(self):
     """Test collection on the file system."""
     test_files = [
-        self._GetTestFilePath(['syslog.tgz']),
-        self._GetTestFilePath(['syslog.zip']),
-        self._GetTestFilePath(['syslog.bz2']),
-        self._GetTestFilePath(['wtmp.1'])]
+        self._GetTestFilePath([u'syslog.tgz']),
+        self._GetTestFilePath([u'syslog.zip']),
+        self._GetTestFilePath([u'syslog.bz2']),
+        self._GetTestFilePath([u'wtmp.1'])]
 
     with TempDirectory() as dirname:
       for a_file in test_files:
@@ -182,19 +182,19 @@ class CollectorTest(CollectorTestCase):
     current_directory = os.getcwd()
 
     expected_path = os.path.join(
-        current_directory, 'test_data', 'testdir', 'filter_1.txt')
+        current_directory, u'test_data', u'testdir', u'filter_1.txt')
     self.assertTrue(expected_path in paths)
 
     expected_path = os.path.join(
-        current_directory, 'test_data', 'testdir', 'filter_2.txt')
+        current_directory, u'test_data', u'testdir', u'filter_2.txt')
     self.assertFalse(expected_path in paths)
 
     expected_path = os.path.join(
-        current_directory, 'test_data', 'testdir', 'filter_3.txt')
+        current_directory, u'test_data', u'testdir', u'filter_3.txt')
     self.assertTrue(expected_path in paths)
 
     expected_path = os.path.join(
-        current_directory, 'AUTHORS')
+        current_directory, u'AUTHORS')
     self.assertTrue(expected_path in paths)
 
   def testImageCollection(self):
@@ -217,7 +217,7 @@ class CollectorTest(CollectorTestCase):
 
     This means that the collection script should collect 6 files in total.
     """
-    test_file = self._GetTestFilePath(['syslog_image.dd'])
+    test_file = self._GetTestFilePath([u'syslog_image.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
@@ -240,7 +240,7 @@ class CollectorTest(CollectorTestCase):
 
   def testImageWithFilterCollection(self):
     """Test collection on a storage media image file with a filter."""
-    test_file = self._GetTestFilePath(['image.dd'])
+    test_file = self._GetTestFilePath([u'ímynd.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
@@ -284,14 +284,14 @@ class CollectorTest(CollectorTestCase):
     # path_specs[0]
     # type: TSK
     # file_path: '/a_directory/another_file'
-    # container_path: 'test_data/image.dd'
+    # container_path: 'test_data/ímynd.dd'
     # image_offset: 0
     self.assertEquals(paths[0], u'/a_directory/another_file')
 
     # path_specs[1]
     # type: TSK
     # file_path: '/passwords.txt'
-    # container_path: 'test_data/image.dd'
+    # container_path: 'test_data/ímynd.dd'
     # image_offset: 0
     self.assertEquals(paths[1], u'/passwords.txt')
 

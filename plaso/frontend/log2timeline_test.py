@@ -43,9 +43,9 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     test_front_end = log2timeline.Log2TimelineFrontend()
 
     options = test_lib.Options()
-    options.source = self._GetTestFilePath(['image.dd'])
+    options.source = self._GetTestFilePath([u'ímynd.dd'])
 
-    storage_file_path = os.path.join(self._temp_directory, 'plaso.db')
+    storage_file_path = os.path.join(self._temp_directory, u'plaso.db')
 
     test_front_end.ParseOptions(options)
     test_front_end.SetStorageFile(storage_file_path=storage_file_path)

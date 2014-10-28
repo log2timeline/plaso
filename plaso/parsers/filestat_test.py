@@ -37,7 +37,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
   def testTSKFile(self):
     """Read a file within an image file and make few tests."""
-    test_file = self._GetTestFilePath(['image.dd'])
+    test_file = self._GetTestFilePath([u'ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=test_file)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -53,7 +53,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
   def testZipFile(self):
     """Test a ZIP file."""
-    test_file = self._GetTestFilePath(['syslog.zip'])
+    test_file = self._GetTestFilePath([u'syslog.zip'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=test_file)
     zip_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -69,7 +69,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
   def testGzipFile(self):
     """Test a GZIP file."""
-    test_file = self._GetTestFilePath(['syslog.gz'])
+    test_file = self._GetTestFilePath([u'syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=test_file)
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -84,7 +84,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
   def testTarFile(self):
     """Test a TAR file."""
-    test_file = self._GetTestFilePath(['syslog.tar'])
+    test_file = self._GetTestFilePath([u'syslog.tar'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=test_file)
     tar_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -100,7 +100,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
   def testNestedFile(self):
     """Test a nested file."""
-    test_file = self._GetTestFilePath(['syslog.tgz'])
+    test_file = self._GetTestFilePath([u'syslog.tgz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=test_file)
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -116,7 +116,7 @@ class FileStatTest(test_lib.ParserTestCase):
     # The tar file has 1 event object.
     self.assertEquals(len(event_objects), 1)
 
-    test_file = self._GetTestFilePath(['syslog.tgz'])
+    test_file = self._GetTestFilePath([u'syslog.tgz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=test_file)
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -131,7 +131,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
-    test_file = self._GetTestFilePath(['syslog_image.dd'])
+    test_file = self._GetTestFilePath([u'syslog_image.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=test_file)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(

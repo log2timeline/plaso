@@ -48,7 +48,7 @@ class EngineTest(unittest.TestCase):
 
     self.assertNotEquals(test_engine, None)
 
-    source_path = os.path.join(self._TEST_DATA_PATH, u'image.dd')
+    source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
