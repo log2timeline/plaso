@@ -212,6 +212,10 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_file = self._GetTestFilePath([u'image.vmdk'])
     self._TestScanSourceImage(test_file)
 
+    with self.assertRaises(errors.SourceScannerError):
+      test_file = self._GetTestFilePath(['nosuchfile.raw'])
+      self._TestScanSourceImage(test_file)
+
 
 class AnalysisFrontendTests(test_lib.FrontendTestCase):
   """Tests for the analysis front-end object."""
