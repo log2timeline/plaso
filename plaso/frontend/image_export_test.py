@@ -131,7 +131,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
   def testDateFilter(self):
     """Test the save file based on date filter function."""
     # Open up a file entry.
-    path = self._GetTestFilePath([u'image.dd'])
+    path = self._GetTestFilePath([u'ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(

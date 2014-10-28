@@ -163,7 +163,7 @@ def Main():
       Example usage:
 
       Run the tool against an image (full kitchen sink)
-          log2timeline.py /cases/mycase/plaso.dump image.dd
+          log2timeline.py /cases/mycase/plaso.dump ímynd.dd
 
       Instead of answering questions, indicate some of the options on the
       command line (including data from particular VSS stores).
