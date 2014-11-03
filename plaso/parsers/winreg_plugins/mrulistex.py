@@ -68,10 +68,14 @@ class MRUListExPluginMixin(object):
     """
     mru_list_value = key.GetValue('MRUListEx')
 
+    # The key exists but does not contain a value named "MRUListEx".
+    if not mru_list_value:
+      return enumerate([])
+
     try:
       mru_list = self._MRULISTEX_STRUCT.parse(mru_list_value.data)
     except construct.FieldError:
-      logging.warning(u'[{0:s}] Unable to parse the MRU key: {2:s}'.format(
+      logging.warning(u'[{0:s}] Unable to parse the MRU key: {1:s}'.format(
           self.NAME, key.path))
       return enumerate([])
 
