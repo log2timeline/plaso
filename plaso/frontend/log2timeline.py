@@ -158,19 +158,21 @@ def Main():
 
   front_end = Log2TimelineFrontend()
 
-  epilog = (
-      """
-      Example usage:
+  epilog = u'\n'.join([
+      u'',
+      u'Example usage:',
+      u'',
+      u'Run the tool against an image (full kitchen sink)',
+      u'    log2timeline.py /cases/mycase/plaso.dump ímynd.dd',
+      u'',
+      u'Instead of answering questions, indicate some of the options on the',
+      u'command line (including data from particular VSS stores).',
+      (u'    log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.dump '
+       u'image.E01'),
+      u'',
+      u'And that\'s how you build a timeline using log2timeline...',
+      u''])
 
-      Run the tool against an image (full kitchen sink)
-          log2timeline.py /cases/mycase/plaso.dump ímynd.dd
-
-      Instead of answering questions, indicate some of the options on the
-      command line (including data from particular VSS stores).
-          log2timeline.py -o 63 --vss_stores 1,2 /cases/plaso_vss.dump image.E01
-
-      And that's how you build a timeline using log2timeline...
-      """)
   description = (
       """
       log2timeline is the main front-end to the plaso back-end, used to
