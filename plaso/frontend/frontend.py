@@ -38,6 +38,7 @@ import plaso
 from plaso import parsers   # pylint: disable=unused-import
 from plaso.engine import engine
 from plaso.engine import utils as engine_utils
+from plaso.engine import worker
 from plaso.frontend import rpc_proxy
 from plaso.lib import errors
 from plaso.lib import event
@@ -802,15 +803,19 @@ class ExtractionFrontend(StorageMediaFrontend):
                      output writer.
     """
     super(ExtractionFrontend, self).__init__(input_reader, output_writer)
+    self._buffer_size = 0
     self._collection_process = None
     self._collector = None
     self._debug_mode = False
+    self._enable_profiling = False
     self._engine = None
     self._filter_expression = None
     self._filter_object = None
     self._number_of_worker_processes = 0
+    self._old_preprocess = False
     self._parser_names = None
     self._preprocess = False
+    self._profiling_sample_rate = 1000
     self._run_foreman = True
     self._single_process_mode = False
     self._show_worker_memory_information = False
@@ -865,7 +870,10 @@ class ExtractionFrontend(StorageMediaFrontend):
     extraction_worker = self._engine.CreateExtractionWorker(
         worker_number, rpc_proxy=proxy_server)
 
-    extraction_worker.SetDebugMode(self._debug_mode)
+    extraction_worker.SetEnableDebugOutput(self._debug_mode)
+    extraction_worker.SetEnableProfiling(
+        self._enable_profiling,
+        profiling_sample_rate=self._profiling_sample_rate)
     extraction_worker.SetSingleProcessMode(self._single_process_mode)
 
     open_files = getattr(options, 'open_files', False)
@@ -1399,6 +1407,60 @@ class ExtractionFrontend(StorageMediaFrontend):
 
     self._resolver_context.Empty()
 
+  def AddExtractionOptions(self, argument_group):
+    """Adds the extraction options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
+        action='store_true', default=False, help=(
+            u'Only used in conjunction when appending to a previous storage '
+            u'file. When this option is used then a new preprocessing object '
+            u'is not calculated and instead the last one that got added to '
+            u'the storage file is used. This can be handy when parsing an '
+            u'image that contains more than a single partition.'))
+
+  def AddInformationalOptions(self, argument_group):
+    """Adds the informational options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        '-d', '--debug', dest='debug', action='store_true', default=False,
+        help=(
+            u'Enable debug mode. Intended for troubleshooting parsing '
+            u'issues.'))
+
+  def AddPerformanceOptions(self, argument_group):
+    """Adds the performance options to the argument group.
+
+    Args:
+      argument_group: The argparse argument group (instance of
+                      argparse._ArgumentGroup).
+    """
+    argument_group.add_argument(
+        '--buffer_size', '--buffer-size', '--bs', dest='buffer_size',
+        action='store', default=0,
+        help=u'The buffer size for the output (defaults to 196MiB).')
+
+    if worker.EventExtractionWorker.SupportsProfiling():
+      argument_group.add_argument(
+          '--profile', dest='enable_profiling', action='store_true',
+          default=False, help=(
+              u'Enable profiling of memory usage. Intended for '
+              u'troubleshooting memory issues.'))
+
+      argument_group.add_argument(
+          '--profile_sample_rate', '--profile-sample-rate',
+          dest='profile_sample_rate', action='store', default=0, help=(
+              u'The profile sample rate (defaults to a sample every 1000 '
+              u'files).'))
+
   # Note that this function is not called by the normal termination.
   def CleanUpAfterAbort(self):
     """Signals the tool to stop running nicely after an abort."""
@@ -1520,6 +1582,18 @@ class ExtractionFrontend(StorageMediaFrontend):
 
     self._debug_mode = getattr(options, 'debug', False)
 
+    self._enable_profiling = getattr(options, 'enable_profiling', False)
+
+    profile_sample_rate = getattr(options, 'profile_sample_rate', None)
+    if profile_sample_rate:
+      try:
+        self._profiling_sample_rate = int(profile_sample_rate, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid profile sample rate: {0:s}.'.format(profile_sample_rate))
+
+    self._old_preprocess = getattr(options, 'old_preprocess', False)
+
     timezone_string = getattr(options, 'timezone', None)
     if timezone_string:
       self._timezone = pytz.timezone(timezone_string)
@@ -1538,8 +1612,7 @@ class ExtractionFrontend(StorageMediaFrontend):
     """
     pre_obj = None
 
-    old_preprocess = getattr(options, 'old_preprocess', False)
-    if old_preprocess and os.path.isfile(self._storage_file_path):
+    if self._old_preprocess and os.path.isfile(self._storage_file_path):
       # Check if the storage file contains a preprocessing object.
       try:
         with storage.StorageFile(
