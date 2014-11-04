@@ -88,3 +88,8 @@ class WindowsRegistryEvent(time_events.TimestampEvent):
 
     if source_append:
       self.source_append = source_append
+
+
+class WindowsRegistryServiceEvent(WindowsRegistryEvent):
+  """Convenience class for service entries retrieved from the registry."""
+  DATA_TYPE = 'windows:registry:service'
