@@ -72,9 +72,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2012-08-28 09:23:49.002031')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
-    # TODO: Remove RegAlert completely
-    # self.assertTrue(event_object.regalert)
-
     expected_msg = (
         u'[{0:s}] '
         u'DisplayName: Test Driver '
@@ -83,9 +80,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'Group: Pnp Filter '
         u'ImagePath: C:\\Dell\\testdriver.sys '
         u'Start: Auto Start (2) '
-        # u'ImagePath: REGALERT Driver not in system32: '
-        # u'C:\\Dell\\testdriver.sys '
-        # u'Start: REGALERT Unusual Start for Driver: Auto Start (2) '
         u'Type: File System Driver (0x2)').format(key_path)
     expected_msg_short = (
         u'[{0:s}] '
@@ -132,8 +126,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2012-04-06 20:43:27.639075')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
-    self._TestRegvalue(event_object, u'Type', u'Service - Share Process (0x20)')
-    self._TestRegvalue(event_object, u'Start', u'Manual (3)')
+    self._TestRegvalue(event_object, u'Type', 0x20)
+    self._TestRegvalue(event_object, u'Start', 3)
     self._TestRegvalue(
         event_object, u'ServiceDll', u'%SystemRoot%\\System32\\qmgr.dll')
 
@@ -147,7 +141,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self._TestRegvalue(event_object, u'DisplayName', u'McAfee Task Manager')
-    self._TestRegvalue(event_object, u'Type', u'Service - Own Process (0x10)')
+    self._TestRegvalue(event_object, u'Type', 0x10)
 
     # Test the RdpVideoMiniport subkey event objects.
     self.assertEquals(len(rdp_video_miniport_event_objects), 1)
@@ -158,7 +152,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2011-09-17 13:37:59.347157')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
-    self._TestRegvalue(event_object, u'Start', u'Manual (3)')
+    self._TestRegvalue(event_object, u'Start', 3)
     expected_value = u'System32\\drivers\\rdpvideominiport.sys'
     self._TestRegvalue(event_object, u'ImagePath', expected_value)
 
