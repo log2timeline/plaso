@@ -25,6 +25,11 @@ import threading
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
+try:
+  from guppy import hpy
+except ImportError:
+  hpy = None
+
 from plaso.engine import classifier
 from plaso.lib import errors
 from plaso.lib import queue
@@ -64,7 +69,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
                  requests. The default value is None.
     """
     super(EventExtractionWorker, self).__init__(process_queue)
-    self._debug_mode = False
+    self._enable_debug_output = False
     self._identifier = identifier
     self._knowledge_base = knowledge_base
     self._open_files = False
@@ -81,9 +86,16 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._event_queue_producer = event_queue_producer
     self._parse_error_queue_producer =  parse_error_queue_producer
 
-    # Few attributes that contain the current status of the worker.
+    # Attributes that contain the current status of the worker.
     self._current_working_file = u''
     self._is_running = False
+
+    # Attributes for profiling.
+    self._enable_profiling = False
+    self._heapy = None
+    self._profiling_sample = 0
+    self._profiling_sample_rate = 1000
+    self._profiling_sample_file = u'{0!s}.hpy'.format(self._identifier)
 
   def _ConsumePathSpec(self, path_spec):
     """Consumes a path specification callback for ConsumePathSpecs."""
@@ -101,14 +113,32 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       logging.warning(u'Unable to parse file: {0:s} with error: {1:s}'.format(
           path_spec.comparable, exception))
 
-    if self._open_files:
-      try:
-        for sub_file_entry in classifier.Classifier.SmartOpenFiles(file_entry):
-          self.ParseFileEntry(sub_file_entry)
-      except IOError as exception:
-        logging.warning(
-            u'Unable to parse file: {0:s} with error: {1:s}'.format(
-                file_entry.path_spec.comparable, exception))
+  def _ProfilingStart(self):
+    """Starts the profiling."""
+    self._heapy.setrelheap()
+    self._profiling_sample = 0
+
+    try:
+      os.remove(self._profiling_sample_file)
+    except OSError:
+      pass
+
+  def _ProfilingStop(self):
+    """Stops the profiling."""
+    self._ProfilingWriteSample()
+
+  def _ProfilingUpdate(self):
+    """Updates the profiling."""
+    self._profiling_sample += 1
+
+    if self._profiling_sample >= self._profiling_sample_rate:
+      self._ProfilingWriteSample()
+      self._profiling_sample = 0
+
+  def _ProfilingWriteSample(self):
+    """Writes a profiling sample to the sample file."""
+    heap = self._heapy.heap()
+    heap.dump(self._profiling_sample_file)
 
   def GetStatus(self):
     """Returns a status dictionary for the worker process."""
@@ -175,7 +205,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
       # Check for debug mode and single process mode, then we would like
       # to debug this problem.
-      if self._single_process_mode and self._debug_mode:
+      if self._single_process_mode and self._enable_debug_output:
         pdb.post_mortem()
 
   def ParseFileEntry(self, file_entry):
@@ -206,6 +236,18 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
 
+    if self._enable_profiling:
+      self._ProfilingUpdate()
+
+    if self._open_files:
+      try:
+        for sub_file_entry in classifier.Classifier.SmartOpenFiles(file_entry):
+          self.ParseFileEntry(sub_file_entry)
+      except IOError as exception:
+        logging.warning(
+            u'Unable to parse file: {0:s} with error: {1:s}'.format(
+                file_entry.path_spec.comparable, exception))
+
   def Run(self, parser_filter_string=None):
     """Start the worker, monitor the queue and parse files.
 
@@ -221,8 +263,6 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
     self._parser_context.ResetCounters()
 
-    self._is_running = True
-
     if self._rpc_proxy:
       try:
         self._rpc_proxy.SetListeningPort(self.pid)
@@ -237,11 +277,19 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
             u'Unable to setup a RPC server for the worker: {0:d} [PID {1:d}] '
             u'with error: {2:s}'.format(self._identifier, self.pid, exception))
 
+    if self._enable_profiling:
+      self._ProfilingStart()
+
+    self._is_running = True
+
     self.ConsumePathSpecs()
 
     logging.info(
         u'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
         self._identifier, os.getpid()))
+
+    if self._enable_profiling:
+      self._ProfilingStop()
 
     self._is_running = False
     self._current_working_file = u''
@@ -255,14 +303,31 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       if proxy_thread.isAlive():
         proxy_thread.join()
 
-  def SetDebugMode(self, debug_mode):
-    """Sets the debug mode.
+  def SetEnableDebugOutput(self, enable_debug_output):
+    """Enables or disables debug output.
 
     Args:
-      debug_mode: boolean value to indicate if the debug mode should
-                  be enabled.
+      enable_debug_output: boolean value to indicate if the debug output
+                           should be enabled.
     """
-    self._debug_mode = debug_mode
+    self._enable_debug_output = enable_debug_output
+
+  def SetEnableProfiling(self, enable_profiling, profiling_sample_rate=1000):
+    """Enables or disables profiling.
+
+    Args:
+      enable_debug_output: boolean value to indicate if the profiling
+                           should be enabled.
+      profiling_sample_rate: optional integer indicating the profiling sample
+                             rate. The value contains the number of files
+                             processed. The default value is 1000.
+    """
+    if hpy:
+      self._enable_profiling = enable_profiling
+      self._profiling_sample_rate = profiling_sample_rate
+
+    if self._enable_profiling and not self._heapy:
+      self._heapy = hpy()
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.
@@ -307,3 +372,8 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
                     event object.
     """
     self._parser_context.SetTextPrepend(text_prepend)
+
+  @classmethod
+  def SupportsProfiling(cls):
+    """Returns a boolean value to indicate if profiling is supported."""
+    return hpy is not None
