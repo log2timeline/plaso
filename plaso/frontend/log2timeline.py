@@ -173,14 +173,15 @@ def Main():
       u'And that\'s how you build a timeline using log2timeline...',
       u''])
 
-  description = (
-      """
-      log2timeline is the main front-end to the plaso back-end, used to
-      collect and correlate events extracted from a filesystem.
+  description = u'\n'.join([
+      u'',
+      u'log2timeline is the main front-end to the plaso back-end, used to',
+      u'collect and correlate events extracted from a filesystem.',
+      u'',
+      u'More information can be gathered from here:',
+      u'    http://plaso.kiddaland.net/usage/log2timeline',
+      u''])
 
-      More information can be gathered from here:
-        http://plaso.kiddaland.net/usage/log2timeline
-      """)
   arg_parser = argparse.ArgumentParser(
       description=textwrap.dedent(description),
       formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -195,65 +196,63 @@ def Main():
   function_group.add_argument(
       '-z', '--zone', '--timezone', dest='timezone', action='store', type=str,
       default='UTC', help=(
-          'Define the timezone of the IMAGE (not the output). This is usually '
-          'discovered automatically by preprocessing but might need to be '
-          'specifically set if preprocessing does not properly detect or to '
-          'overwrite the detected time zone.'))
+          u'Define the timezone of the IMAGE (not the output). This is usually '
+          u'discovered automatically by preprocessing but might need to be '
+          u'specifically set if preprocessing does not properly detect or to '
+          u'overwrite the detected time zone.'))
 
   function_group.add_argument(
       '-t', '--text', dest='text_prepend', action='store', type=unicode,
       default=u'', metavar='TEXT', help=(
-          r'Define a free form text string that is prepended to each path '
-          r'to make it easier to distinguish one record from another in a '
-          r'timeline (like c:\, or host_w_c:\)'))
+          u'Define a free form text string that is prepended to each path '
+          u'to make it easier to distinguish one record from another in a '
+          u'timeline (like c:\\, or host_w_c:\\)'))
 
   function_group.add_argument(
       '--parsers', dest='parsers', type=str, action='store', default='',
       metavar='PARSER_LIST', help=(
-          'Define a list of parsers to use by the tool. This is a comma '
-          'separated list where each entry can be either a name of a parser '
-          'or a parser list. Each entry can be prepended with a minus sign '
-          'to negate the selection (exclude it). The list match is an '
-          'exact match while an individual parser matching is a case '
-          'insensitive substring match, with support for glob patterns. '
-          'Examples would be: "reg" that matches the substring "reg" in '
-          'all parser names or the glob pattern "sky[pd]" that would match '
-          'all parsers that have the string "skyp" or "skyd" in it\'s name. '
-          'All matching is case insensitive.'))
+          u'Define a list of parsers to use by the tool. This is a comma '
+          u'separated list where each entry can be either a name of a parser '
+          u'or a parser list. Each entry can be prepended with a minus sign '
+          u'to negate the selection (exclude it). The list match is an '
+          u'exact match while an individual parser matching is a case '
+          u'insensitive substring match, with support for glob patterns. '
+          u'Examples would be: "reg" that matches the substring "reg" in '
+          u'all parser names or the glob pattern "sky[pd]" that would match '
+          u'all parsers that have the string "skyp" or "skyd" in it\'s name. '
+          u'All matching is case insensitive.'))
 
   info_group.add_argument(
-      '-h', '--help', action='help', help='Show this help message and exit.')
+      '-h', '--help', action='help', help=u'Show this help message and exit.')
 
   info_group.add_argument(
       '--logfile', action='store', metavar='FILENAME', dest='logfile',
       type=unicode, default=u'', help=(
-          'If defined all log messages will be redirected to this file instead '
-          'the default STDERR.'))
+          u'If defined all log messages will be redirected to this file '
+          u'instead the default STDERR.'))
 
   function_group.add_argument(
       '-p', '--preprocess', dest='preprocess', action='store_true',
       default=False, help=(
-          'Turn on preprocessing. Preprocessing is turned on by default '
-          'when parsing image files, however if a mount point is being '
-          'parsed then this parameter needs to be set manually.'))
+          u'Turn on preprocessing. Preprocessing is turned on by default '
+          u'when parsing image files, however if a mount point is being '
+          u'parsed then this parameter needs to be set manually.'))
 
-  performance_group.add_argument(
-      '--buffer_size', '--buffer-size', '--bs', dest='buffer_size',
-      action='store', default=0,
-      help='The buffer size for the output (defaults to 196MiB).')
+  front_end.AddPerformanceOptions(performance_group)
 
   performance_group.add_argument(
       '--workers', dest='workers', action='store', type=int, default=0,
-      help=('The number of worker threads [defaults to available system '
-            'CPU\'s minus three].'))
+      help=(u'The number of worker threads [defaults to available system '
+            u'CPU\'s minus three].'))
 
-  function_group.add_argument(
-      '-i', '--image', dest='image', action='store_true', default=False,
-      help=(
-          'Indicates that this is an image instead of a regular file. It is '
-          'not necessary to include this option if -o (offset) is used, then '
-          'this option is assumed. Use this when parsing an image with an '
-          'offset of zero.'))
+  # TODO: seems to be no longer used, remove.
+  # function_group.add_argument(
+  #     '-i', '--image', dest='image', action='store_true', default=False,
+  #     help=(
+  #         'Indicates that this is an image instead of a regular file. It is '
+  #         'not necessary to include this option if -o (offset) is used, then '
+  #         'this option is assumed. Use this when parsing an image with an '
+  #         'offset of zero.'))
 
   front_end.AddVssProcessingOptions(deep_group)
 
@@ -266,10 +265,10 @@ def Main():
   function_group.add_argument(
       '-f', '--file_filter', '--file-filter', dest='file_filter',
       action='store', type=unicode, default=None, help=(
-          'List of files to include for targeted collection of files to parse, '
-          'one line per file path, setup is /path|file - where each element '
-          'can contain either a variable set in the preprocessing stage or a '
-          'regular expression'))
+          u'List of files to include for targeted collection of files to '
+          u'parse, one line per file path, setup is /path|file - where each '
+          u'element can contain either a variable set in the preprocessing '
+          u'stage or a regular expression.'))
 
   deep_group.add_argument(
       '--scan_archives', dest='open_files', action='store_true', default=False,
@@ -286,9 +285,9 @@ def Main():
   function_group.add_argument(
       '--partition', dest='partition_number', action='store', type=int,
       default=None, help=(
-          'Choose a partition number from a disk image. This partition '
-          'number should correspond to the partion number on the disk '
-          'image, starting from partition 1.'))
+          u'Choose a partition number from a disk image. This partition '
+          u'number should correspond to the partion number on the disk '
+          u'image, starting from partition 1.'))
 
   # Build the version information.
   version_string = u'log2timeline - plaso back-end {0:s}'.format(
@@ -296,11 +295,11 @@ def Main():
 
   info_group.add_argument(
       '-v', '--version', action='version', version=version_string,
-      help='Show the current version of the back-end.')
+      help=u'Show the current version of the back-end.')
 
   info_group.add_argument(
       '--info', dest='show_info', action='store_true', default=False,
-      help='Print out information about supported plugins and parsers.')
+      help=u'Print out information about supported plugins and parsers.')
 
   info_group.add_argument(
       '--show_memory_usage', '--show-memory-usage', action='store_true',
@@ -317,48 +316,39 @@ def Main():
           u'By default the foreman is run, but it can be turned off using this '
           u'parameter.'))
 
-  function_group.add_argument(
-      '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
-      action='store_true', default=False, help=(
-          'Only used in conjunction when appending to a previous storage '
-          'file. When this option is used then a new preprocessing object '
-          'is not calculated and instead the last one that got added to '
-          'the storage file is used. This can be handy when parsing an image '
-          'that contains more than a single partition.'))
+  front_end.AddExtractionOptions(function_group)
 
   function_group.add_argument(
       '--output', dest='output_module', action='store', type=unicode,
       default='', help=(
-          'Bypass the storage module directly storing events according to '
-          'the output module. This means that the output will not be in the '
-          'pstorage format but in the format chosen by the output module. '
-          '[Please not this feature is EXPERIMENTAL at this time, use at '
-          'own risk (eg. sqlite output does not yet work)]'))
+          u'Bypass the storage module directly storing events according to '
+          u'the output module. This means that the output will not be in the '
+          u'pstorage format but in the format chosen by the output module. '
+          u'[Please not this feature is EXPERIMENTAL at this time, use at '
+          u'own risk (eg. sqlite output does not yet work)]'))
 
-  info_group.add_argument(
-      '-d', '--debug', dest='debug', action='store_true', default=False,
-      help='Turn on debug information in the tool.')
+  front_end.AddInformationalOptions(info_group)
 
   arg_parser.add_argument(
       'output', action='store', metavar='STORAGE_FILE', nargs='?',
       type=unicode, help=(
-          'The path to the output file, if the file exists it will get '
-          'appended to.'))
+          u'The path to the output file, if the file exists it will get '
+          u'appended to.'))
 
   arg_parser.add_argument(
       'source', action='store', metavar='SOURCE',
       nargs='?', type=unicode, help=(
-          'The path to the source device, file or directory. If the source is '
-          'a supported storage media device or image file, archive file or '
-          'a directory, the files within are processed recursively.'))
+          u'The path to the source device, file or directory. If the source is '
+          u'a supported storage media device or image file, archive file or '
+          u'a directory, the files within are processed recursively.'))
 
   arg_parser.add_argument(
       'filter', action='store', metavar='FILTER', nargs='?', default=None,
       type=unicode, help=(
-          'A filter that can be used to filter the dataset before it '
-          'is written into storage. More information about the filters'
-          ' and it\'s usage can be found here: http://plaso.kiddaland.'
-          'net/usage/filters'))
+          u'A filter that can be used to filter the dataset before it '
+          u'is written into storage. More information about the filters '
+          u'and it\'s usage can be found here: http://plaso.kiddaland.'
+          u'net/usage/filters'))
 
   # Properly prepare the attributes according to local encoding.
   if front_end.preferred_encoding == 'ascii':

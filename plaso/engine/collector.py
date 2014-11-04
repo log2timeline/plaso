@@ -290,6 +290,8 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
     self._duplicate_file_check = False
     self._hashlist = {}
 
+    self.number_of_file_entries = 0
+
   def __enter__(self):
     """Enters a with statement."""
     return self
@@ -357,6 +359,7 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
         # path specifications that don't get processed.
         if self._collect_directory_metadata:
           self.ProducePathSpec(sub_file_entry.path_spec)
+          self.number_of_file_entries += 1
 
         sub_directories.append(sub_file_entry)
 
@@ -376,6 +379,7 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
           self._hashlist.setdefault(inode, []).append(hash_value)
 
         self.ProducePathSpec(sub_file_entry.path_spec)
+        self.number_of_file_entries += 1
 
     for sub_file_entry in sub_directories:
       try:
@@ -397,6 +401,7 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
 
       for path_spec in searcher.Find(find_specs=find_specs):
         self.ProducePathSpec(path_spec)
+        self.number_of_file_entries += 1
 
     else:
       file_entry = file_system.GetFileEntryByPathSpec(path_spec)
