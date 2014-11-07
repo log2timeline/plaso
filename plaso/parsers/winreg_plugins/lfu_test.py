@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import lfu
 from plaso.parsers.winreg_plugins import test_lib

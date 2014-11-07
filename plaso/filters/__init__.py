@@ -38,7 +38,7 @@ def GetFilter(filter_string):
   """Returns the first filter that matches the filter string.
 
   Args:
-    filter_string: A filter string for any of the avilable filters.
+    filter_string: A filter string for any of the available filters.
 
   Returns:
    The first FilterObject found matching the filter string. If no FilterObject

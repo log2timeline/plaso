@@ -63,7 +63,7 @@ class MacUserPlugin(interface.PlistPlugin):
         parser_context, plist_name=self.PLIST_PATH, top_level=top_level,
         **kwargs)
 
-  # Genearated events:
+  # Generated events:
   # name: string with the system user.
   # uid: user ID.
   # passwordpolicyoptions: XML Plist structures with the timestamp.
@@ -97,7 +97,7 @@ class MacUserPlugin(interface.PlistPlugin):
 
       if policy_dict.get('passwordLastSetTime', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-             policy_dict.get('passwordLastSetTime', '0'))
+            policy_dict.get('passwordLastSetTime', '0'))
         if timestamp > cocoa_zero:
           # Extract the hash password information.
           # It is store in the attribure ShadowHasData which is
@@ -135,7 +135,7 @@ class MacUserPlugin(interface.PlistPlugin):
 
       if policy_dict.get('lastLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-             policy_dict.get('lastLoginTimestamp', '0'))
+            policy_dict.get('lastLoginTimestamp', '0'))
         description = u'Last login from {0:s} ({1!s})'.format(account, uid)
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
@@ -144,7 +144,7 @@ class MacUserPlugin(interface.PlistPlugin):
 
       if policy_dict.get('failedLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
-             policy_dict.get('failedLoginTimestamp', '0'))
+            policy_dict.get('failedLoginTimestamp', '0'))
         description = (
             u'Last failed login from {0:s} ({1!s}) ({2!s} times)').format(
                 account, uid, policy_dict['failedLoginCount'])

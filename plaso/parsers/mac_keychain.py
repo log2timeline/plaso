@@ -63,7 +63,7 @@ class KeychainInternetRecordEvent(event.EventObject):
       text_description: Short description about the entry.
       comments: String that contains the comments added by the user.
       where: The domain name or IP where the password is used.
-      protocol: The internet protocol used (eg. htps).
+      protocol: The internet protocol used (eg. https).
       type_protocol: The sub-protocol used (eg. form).
       ssgp_hash: String with hexadecimal values from the password / cert hash.
     """
@@ -180,7 +180,7 @@ class KeychainParser(interface.BaseParser):
       construct.UBInt32('url'))
 
   TEXT = construct.PascalString(
-      'text', length_field = construct.UBInt32('length'))
+      'text', length_field=construct.UBInt32('length'))
   TIME = construct.Struct(
       'timestamp',
       construct.String('year', 4),
@@ -189,7 +189,7 @@ class KeychainParser(interface.BaseParser):
       construct.String('hour', 2),
       construct.String('minute', 2),
       construct.String('second', 2),
-     construct.Padding(2))
+      construct.Padding(2))
   TYPE_TEXT = construct.String('type', 4)
 
   # TODO: add more protocols.
@@ -392,7 +392,7 @@ class KeychainParser(interface.BaseParser):
       event_object = KeychainInternetRecordEvent(
           last_mod_time, eventdata.EventTimestamp.MODIFICATION_TIME,
           entry_name, account_name, text_description,
-          comments, where, protocol, type_protocol)
+          comments, where, protocol, type_protocol, ssgp_hash)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
 

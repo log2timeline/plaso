@@ -47,8 +47,9 @@ from plaso import output
 from plaso import parsers
 from plaso import preprocessors
 
+from plaso.classifier import scanner
+
 from plaso.engine import collector
-from plaso.engine import scanner
 from plaso.engine import utils as engine_utils
 from plaso.engine import engine
 

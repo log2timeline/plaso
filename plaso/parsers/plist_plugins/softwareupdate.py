@@ -38,8 +38,8 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
       'LastRecommendedUpdatesAvailable', 'RecommendedUpdates'])
 
   # Generated events:
-  # LastFullSuccessfulDate: timestamp when Mac OS X was full udpate.
-  # LastSuccessfulDate: tiemstamp when Mac OS X was partially udpate.
+  # LastFullSuccessfulDate: timestamp when Mac OS X was full update.
+  # LastSuccessfulDate: timestamp when Mac OS X was partially update.
 
   def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts relevant Mac OS X update entries.

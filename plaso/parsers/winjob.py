@@ -113,9 +113,9 @@ class WinJobParser(interface.BaseParser):
       construct.ULInt16('ran_millisecond'),
       )
 
-  # Using construct's utf-16 encoding here will create strings with their
+  # Using Construct's utf-16 encoding here will create strings with their
   # null terminators exposed. Instead, we'll read these variables raw and
-  # convert them using plaso's ReadUtf16() for proper formatting.
+  # convert them using Plaso's ReadUtf16() for proper formatting.
   JOB_VARIABLE_STRUCT = construct.Struct(
       'job_variable',
       construct.ULInt16('running_instance_count'),
@@ -132,7 +132,8 @@ class WinJobParser(interface.BaseParser):
           'working_dir',
           lambda ctx: ctx.working_dir_len * 2),
       construct.ULInt16('username_len'),
-      construct.String('username',
+      construct.String(
+          'username',
           lambda ctx: ctx.username_len * 2),
       construct.ULInt16('comment_len'),
       construct.String(
@@ -233,10 +234,10 @@ class WinJobParser(interface.BaseParser):
             last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, data.app_name,
             data.parameter, data.working_dir, data.username, trigger_type,
             data.comment),
-        WinJobEvent(
-            scheduled_date, u'Scheduled To Start', data.app_name,
-            data.parameter, data.working_dir, data.username, trigger_type,
-            data.comment)],
+         WinJobEvent(
+             scheduled_date, u'Scheduled To Start', data.app_name,
+             data.parameter, data.working_dir, data.username, trigger_type,
+             data.comment)],
         parser_name=self.NAME, file_entry=file_entry)
 
     # A scheduled end date is optional.

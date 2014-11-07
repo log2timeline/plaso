@@ -107,7 +107,7 @@ class PlasmFrontend(frontend.AnalysisFrontend):
 
     if self.mode not in ['cluster', 'group', 'tag']:
       raise errors.BadConfigOption(
-           u'Unsupported mode subcommand: {0:s}.'.format(self.mode))
+          u'Unsupported mode subcommand: {0:s}.'.format(self.mode))
 
     if self.mode == 'cluster':
       self._cluster_threshold = getattr(options, 'cluster_threshold', None)
@@ -387,8 +387,8 @@ class ClusteringEngine(object):
     self.target_filename = target_filename
     self.threshold = threshold
     self.closeness = closeness
-    sys.stdout.write("Support threshold: {}\nCloseness: {}ms\n\n".format(
-      threshold, closeness))
+    sys.stdout.write("Support threshold: {0:d}\nCloseness: {1:d}ms\n\n".format(
+        threshold, closeness))
 
     self.ignore = False
     self.frequent_words = []
@@ -613,8 +613,8 @@ class ClusteringEngine(object):
 
     sys.stdout.write(u'Constructing 1-dense clusters... \n')
     sys.stdout.flush()
-    frequent_filename = '.{0:s}_freq_{1:s}'.format(self.plaso_hash,
-        str(threshold))
+    frequent_filename = '.{0:s}_freq_{1:s}'.format(
+        self.plaso_hash, str(threshold))
     if os.path.isfile(frequent_filename):
       sys.stdout.write(u'Using previously calculated results.\n')
       x = open(frequent_filename, 'rb')
@@ -658,8 +658,8 @@ class ClusteringEngine(object):
     """
     sys.stdout.write(u'Calculating event type candidates...\n')
     sys.stdout.flush()
-    eventtype_filename = ".{0:s}_evtt_{1:s}".format(self.plaso_hash,
-        str(threshold))
+    eventtype_filename = ".{0:s}_evtt_{1:s}".format(
+        self.plaso_hash, str(threshold))
     if os.path.isfile(eventtype_filename):
       sys.stdout.write(u'Using previously calculated results.\n')
       x = open(eventtype_filename, 'rb')

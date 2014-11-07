@@ -49,8 +49,8 @@ class IISEventObject(time_events.TimestampEvent):
       timestamp: The timestamp time value, epoch.
       structure: The structure with any parsed log values to iterate over.
     """
-    super(IISEventObject, self).__init__(timestamp,
-        eventdata.EventTimestamp.WRITTEN_TIME)
+    super(IISEventObject, self).__init__(
+        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
 
     for key, value in structure.iteritems():
       if key in ('time', 'date'):
@@ -211,8 +211,8 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
     if not (date and time):
       logging.warning((
-        u'Unable to extract timestamp from IIS log line with structure: '
-        u'{0:s}.').format(structure))
+          u'Unable to extract timestamp from IIS log line with structure: '
+          u'{0:s}.').format(structure))
       return
 
     year, month, day = date

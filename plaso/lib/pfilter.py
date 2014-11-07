@@ -126,7 +126,7 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
       return ret
 
     # Check if this is a message request and we have a regular EventObject.
-    if attr_name == 'message' :
+    if attr_name == 'message':
       return self._GetMessage(obj)
 
     # Check if this is a source_short request.
@@ -148,12 +148,12 @@ class PlasoExpression(objectfilter.BasicExpression):
   # A simple dictionary used to swap attributes so other names can be used
   # to reference some core attributes (implementation specific).
   swap_source = {
-    'date': 'timestamp',
-    'datetime': 'timestamp',
-    'time': 'timestamp',
-    'description_long': 'message',
-    'description': 'message',
-    'description_short': 'message_short',
+      'date': 'timestamp',
+      'datetime': 'timestamp',
+      'time': 'timestamp',
+      'description_long': 'message',
+      'description': 'message',
+      'description_short': 'message_short',
   }
 
   def Compile(self, filter_implementation):
@@ -204,7 +204,7 @@ class ParserList(objectfilter.GenericBinaryOperator):
     """Return a bool depending on the parser list contains the parser."""
     if self.left_operand != 'parser':
       raise objectfilter.MalformedQueryError(
-        u'Unable to use keyword "inlist" for other than parser.')
+          u'Unable to use keyword "inlist" for other than parser.')
 
     if x in self.compiled_list:
       return True

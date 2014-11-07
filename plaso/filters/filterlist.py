@@ -86,8 +86,8 @@ class ObjectFilterList(filter_interface.FilterObject):
       matcher = pfilter.GetMatcher(meta.get('filter'), True)
       if not matcher:
         raise errors.WrongPlugin(
-          u'Filter entry [{}] malformed for rule: <{}>'.format(
-            meta.get('filter'), name))
+            u'Filter entry [{0:s}] malformed for rule: <{1:s}>'.format(
+                meta.get('filter'), name))
 
       self.filters.append((name, matcher, meta))
 

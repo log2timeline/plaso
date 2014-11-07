@@ -407,7 +407,7 @@ class AppCompatCachePlugin(interface.KeyPlugin):
     elif format_type == self._FORMAT_TYPE_2003:
       if cached_entry_size == self._CACHED_ENTRY_2003_32BIT_STRUCT.sizeof():
         cached_entry_struct = self._CACHED_ENTRY_2003_32BIT_STRUCT.parse(
-          cached_entry_data)
+            cached_entry_data)
 
       elif cached_entry_size == self._CACHED_ENTRY_2003_64BIT_STRUCT.sizeof():
         cached_entry_struct = self._CACHED_ENTRY_2003_64BIT_STRUCT.parse(
@@ -416,7 +416,7 @@ class AppCompatCachePlugin(interface.KeyPlugin):
     elif format_type == self._FORMAT_TYPE_VISTA:
       if cached_entry_size == self._CACHED_ENTRY_VISTA_32BIT_STRUCT.sizeof():
         cached_entry_struct = self._CACHED_ENTRY_VISTA_32BIT_STRUCT.parse(
-          cached_entry_data)
+            cached_entry_data)
 
       elif cached_entry_size == self._CACHED_ENTRY_VISTA_64BIT_STRUCT.sizeof():
         cached_entry_struct = self._CACHED_ENTRY_VISTA_64BIT_STRUCT.parse(
@@ -505,7 +505,7 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     elif format_type == self._FORMAT_TYPE_8:
       cached_entry_object.last_modification_time = construct.ULInt64(
-         'last_modification_time').parse(remaining_data[0:8])
+          'last_modification_time').parse(remaining_data[0:8])
 
     if format_type in [self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003]:
       cached_entry_object.file_size = cached_entry_struct.get('file_size')

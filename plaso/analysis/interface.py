@@ -30,11 +30,11 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
-  # The URLS should contain a list of URL's with additional information about
+  # The URLS should contain a list of URLs with additional information about
   # this analysis plugin.
   URLS = []
 
-  # The name of the plugin. This is the name that is matced against when
+  # The name of the plugin. This is the name that is matched against when
   # loading plugins, so it is important that this name is short, concise and
   # explains the nature of the plugin easily. It also needs to be unique.
   NAME = 'Plugin'
@@ -110,7 +110,8 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
     """Analyzes an event object.
 
     Args:
-      analysis_context: An analysis context object (instance of AnalysisContext).
+      analysis_context: An analysis context object (instance of
+        AnalysisContext).
       event_object: An event object (instance of EventObject).
     """
 
@@ -118,7 +119,8 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
     """For each item in the queue send the read event to analysis.
 
     Args:
-      analysis_context: An analysis context object (instance of AnalysisContext).
+      analysis_context: An analysis context object (instance of
+        AnalysisContext).
     """
     self.ConsumeEventObjects(analysis_context=analysis_context)
 

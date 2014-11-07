@@ -163,7 +163,7 @@ class CollectorTest(CollectorTestCase):
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
-          test_collection_queue)
+        test_collection_queue)
     test_collector_queue_consumer.ConsumePathSpecs()
 
     try:
@@ -233,7 +233,7 @@ class CollectorTest(CollectorTestCase):
     test_collector.Collect()
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
-          test_collection_queue)
+        test_collection_queue)
     test_collector_queue_consumer.ConsumePathSpecs()
 
     self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 3)

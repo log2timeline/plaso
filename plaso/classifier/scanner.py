@@ -214,7 +214,7 @@ class ScanTreeScannerBase(object):
       raise RuntimeError(u'Invalid total data size, value out of bounds.')
 
     if total_data_offset < 0 or (
-      total_data_size is not None and total_data_offset >= total_data_size):
+        total_data_size is not None and total_data_offset >= total_data_size):
       raise RuntimeError(u'Invalid total data offset, value out of bounds.')
 
     data_offset = 0
@@ -378,7 +378,7 @@ class Scanner(ScanTreeScannerBase):
     """
     self._ScanBufferScanState(
         self._scan_tree, scan_state, data, data_size,
-         scan_state.total_data_offset,
+        scan_state.total_data_offset,
         total_data_size=scan_state.total_data_size)
 
   def ScanFileObject(self, file_object):

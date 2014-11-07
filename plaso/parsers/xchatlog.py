@@ -38,7 +38,7 @@
 
    It could be managed the missing month/day case too, by extracting
    the month/day information from the header. But the parser logic
-   would become intricated, since it would need to manage day transition,
+   would become intricate, since it would need to manage day transition,
    chat lines crossing the midnight. From there derives the last day of
    the year bug, since the parser will not manage that transition.
 
@@ -55,7 +55,7 @@
    1.2) If 'END LOGGING'
     1.2.1) If parsing, set parsing=False
     1.2.2) If not parsing, log debug
-    1.2.3) Geneate new event end logging
+    1.2.3) Generate new event end logging
    1.3) If not BEGIN|END we are facing a different language
         and we don't now which language!
         If parsing is True, set parsing=False and log debug
@@ -127,7 +127,8 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   # Note that "BEGIN LOGGING" text is localized (default, English) and can be
   # different if XChat locale is different.
   HEADER_SIGNATURE = pyparsing.Keyword(u'****')
-  HEADER = (HEADER_SIGNATURE.suppress() + LOG_ACTION +
+  HEADER = (
+      HEADER_SIGNATURE.suppress() + LOG_ACTION +
       pyparsing.Keyword(u'LOGGING AT').suppress() + IGNORE_STRING +
       MONTH_NAME + DAY + TIME + YEAR)
 

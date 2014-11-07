@@ -151,7 +151,7 @@ class UtmpxParser(interface.BaseParser):
       return False
     user, _, _ = header.user.partition('\x00')
 
-    # The UTMPX_ENTRY structure will often succesfully compile on various
+    # The UTMPX_ENTRY structure will often successfully compile on various
     # structures, such as binary plist files, and thus we need to do some
     # additional validation. The first one is to check if the user name
     # can be converted into a unicode string, otherwise we can assume

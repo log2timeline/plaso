@@ -53,41 +53,42 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseCache_001(self):
     """Test Firefox 28 cache file _CACHE_001_ parsing."""
 
-    test_file = self._GetTestFilePath(['firefox_cache', 'firefox28',
-        '_CACHE_001_'])
+    test_file = self._GetTestFilePath(
+        ['firefox_cache', 'firefox28', '_CACHE_001_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(574, len(event_objects))
-    self.assertEquals(event_objects[1].url,
-        'HTTP:http://start.ubuntu.com/12.04/sprite.png')
+    self.assertEquals(
+        event_objects[1].url, 'HTTP:http://start.ubuntu.com/12.04/sprite.png')
 
     self.assertEquals(event_objects[1].timestamp,
-        timelib_test.CopyStringToTimestamp('2014-04-21 14:13:35'))
+                      timelib_test.CopyStringToTimestamp('2014-04-21 14:13:35'))
 
     self.VerifyMajorMinor(event_objects)
 
     expected_msg = (
-      u'Fetched 2 time(s) '
-      u'[HTTP/1.0 200 OK] GET '
-      u'"HTTP:http://start.ubuntu.com/12.04/sprite.png"')
+        u'Fetched 2 time(s) '
+        u'[HTTP/1.0 200 OK] GET '
+        u'"HTTP:http://start.ubuntu.com/12.04/sprite.png"')
     expected_msg_short = (
-      u'[HTTP/1.0 200 OK] GET '
-      u'"HTTP:http://start.ubuntu.com/12.04/sprite.png"')
+        u'[HTTP/1.0 200 OK] GET '
+        u'"HTTP:http://start.ubuntu.com/12.04/sprite.png"')
 
-    self._TestGetMessageStrings(event_objects[1],
-        expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_objects[1], expected_msg, expected_msg_short)
 
   def testParseCache_002(self):
     """Test Firefox 28 cache file _CACHE_002_ parsing."""
 
-    test_file = self._GetTestFilePath(['firefox_cache', 'firefox28',
-        '_CACHE_002_'])
+    test_file = self._GetTestFilePath(
+        ['firefox_cache', 'firefox28', '_CACHE_002_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(58, len(event_objects))
-    self.assertEquals(event_objects[2].url,
+    self.assertEquals(
+        event_objects[2].url,
         ('HTTP:http://www.google-analytics.com/__utm.gif?utmwv=5.5.0&utms='
          '1&utmn=1106893631&utmhn=www.dagbladet.no&utmcs=windows-1252&ut'
          'msr=1920x1080&utmvp=1430x669&utmsc=24-bit&utmul=en-us&utmje=0&'
@@ -98,24 +99,26 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
          '%3D(direct)%7Cutmcmd%3D(none)%3B&aip=1&utmu=qBQ~'))
 
     self.assertEquals(event_objects[1].timestamp,
-        timelib_test.CopyStringToTimestamp('2014-04-21 14:10:58'))
+                      timelib_test.CopyStringToTimestamp('2014-04-21 14:10:58'))
 
     self.VerifyMajorMinor(event_objects)
 
   def testParseCache_003(self):
     """Test Firefox 28 cache file _CACHE_003_ parsing."""
 
-    test_file = self._GetTestFilePath(['firefox_cache', 'firefox28',
-        '_CACHE_003_'])
+    test_file = self._GetTestFilePath(
+        ['firefox_cache', 'firefox28', '_CACHE_003_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(4, len(event_objects))
 
-    self.assertEquals(event_objects[3].url,
+    self.assertEquals(
+        event_objects[3].url,
         'HTTP:https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js')
 
-    self.assertEquals(event_objects[3].timestamp,
+    self.assertEquals(
+        event_objects[3].timestamp,
         timelib_test.CopyStringToTimestamp('2014-04-21 14:11:07'))
 
     self.VerifyMajorMinor(event_objects)
@@ -123,8 +126,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseAlternativeFilename(self):
     """Test Firefox 28 cache 003 file with alternative filename."""
 
-    test_file = self._GetTestFilePath(['firefox_cache', 'firefox28',
-        'E8D65m01'])
+    test_file = self._GetTestFilePath(
+        ['firefox_cache', 'firefox28', 'E8D65m01'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -133,52 +136,52 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseLegacyCache_001(self):
     """Test Firefox 3 cache file _CACHE_001_ parsing."""
 
-    test_file = self._GetTestFilePath(['firefox_cache', 'firefox3',
-        '_CACHE_001_'])
+    test_file = self._GetTestFilePath(
+        ['firefox_cache', 'firefox3', '_CACHE_001_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(25, len(event_objects))
 
     self.assertEquals(event_objects[0].timestamp,
-        timelib_test.CopyStringToTimestamp('2014-05-02 14:15:03'))
+                      timelib_test.CopyStringToTimestamp('2014-05-02 14:15:03'))
 
     expected_msg = (
-      u'Fetched 1 time(s) '
-      u'[HTTP/1.1 200 OK] GET '
-      u'"HTTP:http://start.mozilla.org/en-US/"')
+        u'Fetched 1 time(s) '
+        u'[HTTP/1.1 200 OK] GET '
+        u'"HTTP:http://start.mozilla.org/en-US/"')
     expected_msg_short = (
-      u'[HTTP/1.1 200 OK] GET '
-      u'"HTTP:http://start.mozilla.org/en-US/"')
+        u'[HTTP/1.1 200 OK] GET '
+        u'"HTTP:http://start.mozilla.org/en-US/"')
 
-    self._TestGetMessageStrings(event_objects[0],
-        expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_objects[0], expected_msg, expected_msg_short)
 
   def testParseLegacyCache_002(self):
     """Test Firefox 3 cache file _CACHE_002_ parsing."""
 
-    test_file = self._GetTestFilePath(['firefox_cache', 'firefox3',
-        '_CACHE_002_'])
+    test_file = self._GetTestFilePath(
+        ['firefox_cache', 'firefox3', '_CACHE_002_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(3, len(event_objects))
 
     self.assertEquals(event_objects[1].timestamp,
-        timelib_test.CopyStringToTimestamp('2014-05-02 14:25:55'))
+                      timelib_test.CopyStringToTimestamp('2014-05-02 14:25:55'))
 
   def testParseLegacyCache_003(self):
     """Test Firefox 3 cache file _CACHE_003_ parsing."""
 
-    test_file = self._GetTestFilePath(['firefox_cache', 'firefox3',
-        '_CACHE_003_'])
+    test_file = self._GetTestFilePath(
+        ['firefox_cache', 'firefox3', '_CACHE_003_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(2, len(event_objects))
 
     self.assertEquals(event_objects[1].timestamp,
-        timelib_test.CopyStringToTimestamp('2014-05-02 14:15:07'))
+                      timelib_test.CopyStringToTimestamp('2014-05-02 14:15:07'))
 
 
 if __name__ == '__main__':

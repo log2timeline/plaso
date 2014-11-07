@@ -98,7 +98,7 @@ class SQLiteDatabase(object):
     """Initializes the database object.
 
     Args:
-      file_enty: the file entry object.
+      file_entry: the file entry object.
     """
     self._cursor = None
     self._database = None
@@ -200,7 +200,7 @@ class SQLiteDatabase(object):
     except sqlite3.DatabaseError as exception:
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
-          self._file_entry.name, exception))
+              self._file_entry.name, exception))
       raise
 
     # Verify the table by reading in all table names and compare it to
@@ -211,7 +211,7 @@ class SQLiteDatabase(object):
     except sqlite3.DatabaseError as exception:
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
-          self._file_entry.name, exception))
+              self._file_entry.name, exception))
       raise
 
     self._tables = []

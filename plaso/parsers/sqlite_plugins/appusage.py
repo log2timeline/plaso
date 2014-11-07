@@ -74,7 +74,7 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   QUERIES = [(
       ('SELECT last_time, event, bundle_id, app_version, app_path, '
        'number_times FROM application_usage ORDER BY last_time'),
-       'ParseApplicationUsageRow')]
+      'ParseApplicationUsageRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset(['application_usage'])
@@ -83,7 +83,7 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
       self, parser_context, row, query=None, **unused_kwargs):
     """Parses an application usage row.
 
-    Args: 
+    Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
       query: Optional query string. The default is None.

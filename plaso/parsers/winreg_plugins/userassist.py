@@ -188,7 +188,8 @@ class UserAssistPlugin(interface.KeyPlugin):
           text_dict[value_name] = (
               u'[UserAssist entry: {0:d}, Count: {1:d}, '
               u'Application focus count: {2:d}, Focus duration: {3:d}]').format(
-              userassist_entry_index, count, app_focus_count, focus_duration)
+                  userassist_entry_index, count, app_focus_count,
+                  focus_duration)
 
           event_object = windows_events.WindowsRegistryEvent(
               timelib.Timestamp.FromFiletime(timestamp), count_subkey.path,

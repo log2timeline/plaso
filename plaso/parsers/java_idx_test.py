@@ -56,9 +56,10 @@ class IDXTest(test_lib.ParserTestCase):
     description_expected = u'File Hosted Date'
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    last_modified_date_expected = 1273023259720 * 1000
-    self.assertEqual(event_object.timestamp,
-        last_modified_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2010-05-05 01:34:19.720')
+    self.assertEqual(
+        event_object.timestamp, expected_timestamp)
 
     # Parse second event. Same metadata; different timestamp event.
     event_object = event_objects[1]
@@ -98,9 +99,10 @@ class IDXTest(test_lib.ParserTestCase):
     description_expected = 'File Hosted Date'
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    last_modified_date_expected = 996123600000 * 1000
-    self.assertEqual(event_object.timestamp,
-        last_modified_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2001-07-26 05:00:00'
+    )
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Parse second event. Same metadata; different timestamp event.
     event_object = event_objects[1]
@@ -112,8 +114,10 @@ class IDXTest(test_lib.ParserTestCase):
     description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    download_date_expected = 1358094121 * 1000000
-    self.assertEqual(event_object.timestamp, download_date_expected)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2013-01-13 16:22:01'
+    )
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

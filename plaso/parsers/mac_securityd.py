@@ -80,25 +80,25 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
   # Default ASL Securityd log.
   SECURITYD_LINE = (
-    text_parser.PyparsingConstants.MONTH.setResultsName('month') +
-    text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-    text_parser.PyparsingConstants.TIME.setResultsName('time') +
-    pyparsing.CharsNotIn(u'[').setResultsName('sender') +
-    pyparsing.Literal(u'[').suppress() +
-    text_parser.PyparsingConstants.PID.setResultsName('sender_pid') +
-    pyparsing.Literal(u']').suppress() +
-    pyparsing.Literal(u'<').suppress() +
-    pyparsing.CharsNotIn(u'>').setResultsName('level') +
-    pyparsing.Literal(u'>').suppress() +
-    pyparsing.Literal(u'[').suppress() +
-    pyparsing.CharsNotIn(u'{').setResultsName('facility') +
-    pyparsing.Literal(u'{').suppress() +
-    pyparsing.Optional(pyparsing.CharsNotIn(
-        u'}').setResultsName('security_api')) +
-    pyparsing.Literal(u'}').suppress() +
-    pyparsing.Optional(pyparsing.CharsNotIn(u']:').setResultsName('caller')) +
-    pyparsing.Literal(u']:').suppress() +
-    pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message'))
+      text_parser.PyparsingConstants.MONTH.setResultsName('month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
+      text_parser.PyparsingConstants.TIME.setResultsName('time') +
+      pyparsing.CharsNotIn(u'[').setResultsName('sender') +
+      pyparsing.Literal(u'[').suppress() +
+      text_parser.PyparsingConstants.PID.setResultsName('sender_pid') +
+      pyparsing.Literal(u']').suppress() +
+      pyparsing.Literal(u'<').suppress() +
+      pyparsing.CharsNotIn(u'>').setResultsName('level') +
+      pyparsing.Literal(u'>').suppress() +
+      pyparsing.Literal(u'[').suppress() +
+      pyparsing.CharsNotIn(u'{').setResultsName('facility') +
+      pyparsing.Literal(u'{').suppress() +
+      pyparsing.Optional(pyparsing.CharsNotIn(
+          u'}').setResultsName('security_api')) +
+      pyparsing.Literal(u'}').suppress() +
+      pyparsing.Optional(pyparsing.CharsNotIn(u']:').setResultsName('caller')) +
+      pyparsing.Literal(u']:').suppress() +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message'))
 
   # Repeated line.
   REPEATED_LINE = (

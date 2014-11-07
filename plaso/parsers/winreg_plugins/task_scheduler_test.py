@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import task_scheduler
 from plaso.parsers.winreg_plugins import test_lib
@@ -56,7 +55,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
     expected_msg = u'[{0:s}] {1:s}: {2:s}'.format(
-          key_path, regvalue_identifier, expected_value)
+        key_path, regvalue_identifier, expected_value)
 
     expected_msg_short = u'[{0:s}] Task: SynchronizeTi...'.format(key_path)
 

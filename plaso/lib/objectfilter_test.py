@@ -483,13 +483,13 @@ class ObjectFilterTest(unittest.TestCase):
   # an imported DLL matching advapi32.dll that imports RegQueryValueExA AND
   # and it exports a symbol called 'inject'.
   query = u'\n'.join([
-        '@imported_dlls( @imported_function ( name is "OpenFileA" ) )',
-        'AND',
-        '@imported_dlls (',
-        '  name regexp "(?i)advapi32.dll"',
-        '  AND @imported_function ( name is "RegQueryValueEx" )',
-        ')',
-        'AND @exported_symbols(name is "inject")'])
+      '@imported_dlls( @imported_function ( name is "OpenFileA" ) )',
+      'AND',
+      '@imported_dlls (',
+      '  name regexp "(?i)advapi32.dll"',
+      '  AND @imported_function ( name is "RegQueryValueEx" )',
+      ')',
+      'AND @exported_symbols(name is "inject")'])
 
   def testCompile(self):
     obj = DummyObject('something', 'Blue')

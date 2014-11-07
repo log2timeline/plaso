@@ -109,7 +109,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     except (TypeError, ValueError):
       return False
 
-    # Use the presence of these strings as a backup or incase of partial file.
+    # Use the presence of these strings as a backup or in case of partial file.
     if (not 'Access Protection' in row['status'] and
         not 'Would be blocked' in row['status']):
       return False

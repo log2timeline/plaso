@@ -61,7 +61,7 @@ class Sql4n6(output.LogOutputFormatter):
     self._formatters_manager = formatters_manager.EventFormatterManager
     self.set_status = getattr(config, 'set_status', None)
 
-    # TODO: Revisit handeling this outside of plaso.
+    # TODO: Revisit handling this outside of plaso.
     self.dbname = filehandle
     self.evidence = getattr(config, 'evidence', '-')
     self.append = getattr(config, 'append', False)
@@ -212,7 +212,7 @@ class Sql4n6(output.LogOutputFormatter):
           'Unable to output event, no event formatter found.')
 
     if (isinstance(
-      event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
+        event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
         event_formatter.FORMAT_STRING.find('<|>') == -1):
       event_formatter.FORMAT_STRING = u'[{keyname}]<|>{text}<|>'
 

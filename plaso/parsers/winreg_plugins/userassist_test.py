@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import userassist
@@ -57,7 +56,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
     expected_msg = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
-            key_path, regvalue_identifier, expected_value)
+        key_path, regvalue_identifier, expected_value)
     # The short message contains the first 76 characters of the key path.
     expected_msg_short = u'[{0:s}...'.format(key_path[:76])
 
@@ -88,7 +87,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, regvalue_identifier, expected_value)
 
     expected_msg = u'[{0:s}\\Count] {1:s}: {2:s}'.format(
-          key_path, regvalue_identifier, expected_value)
+        key_path, regvalue_identifier, expected_value)
     # The short message contains the first 76 characters of the key path.
     expected_msg_short = u'[{0:s}...'.format(key_path[:76])
 
