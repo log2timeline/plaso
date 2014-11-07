@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import iis as iis_formatter
-from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.parsers import test_lib
 from plaso.parsers import iis
@@ -63,7 +62,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         u'+WinHttp.WinHttpRequest.5)')
     expected_msg_short = (
         u'GET /some/image/path/something.jpg '
-         u'[ 10.10.10.100 > 10.10.10.100 : 80 ]')
+        u'[ 10.10.10.100 > 10.10.10.100 : 80 ]')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
@@ -75,8 +74,8 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.assertEquals(event_object.http_method, 'GET')
     self.assertEquals(event_object.http_status, 200)
-    self.assertEquals(event_object.requested_uri_stem,
-        u'/some/image/path/something.jpg')
+    self.assertEquals(
+        event_object.requested_uri_stem, u'/some/image/path/something.jpg')
 
     event_object = event_objects[1]
 

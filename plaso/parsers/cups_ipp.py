@@ -184,9 +184,9 @@ class CupsIppParser(interface.BaseParser):
       construct.Padding(1),
       INTEGER_8)
   INTEGER = construct.Struct(
-    'integer_value',
-    construct.Padding(1),
-    INTEGER_32)
+      'integer_value',
+      construct.Padding(1),
+      INTEGER_32)
 
   # Name of the pair.
   PAIR_NAME = construct.Struct(

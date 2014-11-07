@@ -42,7 +42,7 @@ class CacheTest(test_lib.WinRegTestCase):
     winreg_cache.BuildCache(winreg_file, 'SYSTEM')
 
     self.assertEqual(
-       winreg_cache.attributes['current_control_set'], 'ControlSet001')
+        winreg_cache.attributes['current_control_set'], 'ControlSet001')
 
 
 if __name__ == '__main__':

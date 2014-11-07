@@ -61,18 +61,18 @@ class OpenXMLParser(interface.BaseParser):
   DESCRIPTION = u'Parser for OpenXML (OXML) files.'
 
   _METAKEY_TRANSLATE = {
-    'creator': 'author',
-    'lastModifiedBy': 'last_saved_by',
-    'Total_Time': 'total_edit_time',
-    'Pages': 'num_pages',
-    'Characters_with_spaces': 'num_chars_w_spaces',
-    'Paragraphs': 'num_paragraphs',
-    'Characters': 'num_chars',
-    'Lines': 'num_lines',
-    'revision': 'revision_num',
-    'Words': 'num_words',
-    'Application': 'creating_app',
-    'Shared_Doc': 'shared',
+      'creator': 'author',
+      'lastModifiedBy': 'last_saved_by',
+      'Total_Time': 'total_edit_time',
+      'Pages': 'num_pages',
+      'Characters_with_spaces': 'num_chars_w_spaces',
+      'Paragraphs': 'num_paragraphs',
+      'Characters': 'num_chars',
+      'Lines': 'num_lines',
+      'revision': 'revision_num',
+      'Words': 'num_words',
+      'Application': 'creating_app',
+      'Shared_Doc': 'shared',
   }
 
   _FILES_REQUIRED = frozenset([
@@ -124,8 +124,8 @@ class OpenXMLParser(interface.BaseParser):
           root = ElementTree.fromstring(xml)
         except (OverflowError, IndexError, KeyError, ValueError) as exception:
           logging.warning(
-            u'[{0:s}] unable to read property with error: {1:s}.'.format(
-                self.NAME, exception))
+              u'[{0:s}] unable to read property with error: {1:s}.'.format(
+                  self.NAME, exception))
           continue
 
         for element in root.iter():

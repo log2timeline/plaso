@@ -86,7 +86,7 @@ class AnalysisContext(object):
 
     Args:
       user_paths: A dictionary object containing the paths per username.
-      file_path: The full path to the file being anayzed.
+      file_path: The full path to the file being analyzed.
       path_segment_separator: String containing the path segment separator.
 
     Returns:

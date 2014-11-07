@@ -124,7 +124,7 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
 
 
 class FirefoxDowloadFormatter(interface.EventFormatter):
-  """Formatter for a Firefox dowloads.sqlite dowload."""
+  """Formatter for a Firefox downloads.sqlite download."""
 
   DATA_TYPE = 'firefox:downloads:download'
 

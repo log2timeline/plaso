@@ -26,9 +26,9 @@ class SkyDriveLogFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'skydrive:log:line'
 
   FORMAT_STRING_PIECES = [
-    u'[{source_code}]',
-    u'({log_level})',
-    u'{text}']
+      u'[{source_code}]',
+      u'({log_level})',
+      u'{text}']
 
   FORMAT_STRING_SHORT_PIECES = [u'{text}']
 

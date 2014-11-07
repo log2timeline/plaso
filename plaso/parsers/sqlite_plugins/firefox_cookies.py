@@ -123,7 +123,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
     if row['expiry']:
       # Expiry time (nsCookieService::GetExpiry in
       # netwerk/cookie/nsCookieService.cpp).
-      # It's calculeated as the difference between the server time and the time
+      # It's calculated as the difference between the server time and the time
       # the server wants the cookie to expire and adding that difference to the
       # client time. This localizes the client time regardless of whether or not
       # the TZ environment variable was set on the client.

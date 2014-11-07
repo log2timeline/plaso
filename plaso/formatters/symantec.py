@@ -25,7 +25,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class SymantecFormatter(interface.ConditionalEventFormatter):
-  """Define the formatting for Symantec files."""
+  """Define the formatting for Symantec events."""
 
   DATA_TYPE = 'av:symantec:scanlog'
 
@@ -138,7 +138,7 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
       '13': 'Backed up file'
   }
 
-  # The indentifier for the formatter (a regular expression)
+  # The identifier for the formatter (a regular expression)
   FORMAT_STRING_SEPARATOR = u'; '
   FORMAT_STRING_PIECES = [
       u'Event Name: {event_map}',
@@ -148,7 +148,7 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
       u'Action0: {action0_map}',
       u'Action1: {action1_map}',
       u'Action2: {action2_map}',
-      u'Descripton: {description}',
+      u'Description: {description}',
       u'Scan ID: {scanid}',
       u'Event Data: {event_data}',
       u'Remote Machine: {remote_machine}',
@@ -181,17 +181,17 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
 
     if hasattr(event_object, 'event'):
       event_object.event_map = self.EVENT_NAMES.get(
-        event_object.event, 'Unknown')
+          event_object.event, 'Unknown')
     if hasattr(event_object, 'cat'):
       event_object.category_map = self.CATEGORY_NAMES.get(
-        event_object.cat, 'Unknown')
+          event_object.cat, 'Unknown')
     if hasattr(event_object, 'action1'):
       event_object.action1_map = self.ACTION_1_2_NAMES.get(
-        event_object.action1, 'Unknown')
+          event_object.action1, 'Unknown')
     if hasattr(event_object, 'action2'):
       event_object.action2_map = self.ACTION_1_2_NAMES.get(
-        event_object.action2, 'Unknown')
+          event_object.action2, 'Unknown')
     if hasattr(event_object, 'action0'):
       event_object.action0_map = self.ACTION_0_NAMES.get(
-        event_object.action0, 'Unknown')
+          event_object.action0, 'Unknown')
     return super(SymantecFormatter, self).GetMessages(event_object)

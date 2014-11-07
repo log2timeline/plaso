@@ -654,7 +654,7 @@ class ScanTreeNode(object):
       raise RuntimeError(u'Invalid total data size, value out of bounds.')
 
     if total_data_offset < 0 or (
-      total_data_size is not None and total_data_offset >= total_data_size):
+        total_data_size is not None and total_data_offset >= total_data_size):
       raise RuntimeError(u'Invalid total data offset, value out of bounds.')
 
     if (total_data_size is not None and
@@ -680,7 +680,8 @@ class ScanTreeNode(object):
       scan_object = self._byte_values[scan_tree_byte_value]
 
       logging.debug(
-        u'Scan tree node match at data offset: 0x{0:08x}.'.format(data_offset))
+          u'Scan tree node match at data offset: 0x{0:08x}.'.format(data_offset)
+      )
 
     else:
       scan_object = self.default_value

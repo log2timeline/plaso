@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import mac_wifi as mac_wifi_formatter
-from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers import mac_wifi
 from plaso.parsers import test_lib

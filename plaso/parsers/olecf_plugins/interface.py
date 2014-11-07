@@ -48,7 +48,7 @@ class OlecfPlugin(plugins.BasePlugin):
       creation_time = olecf_item.get_creation_time_as_integer()
     except OverflowError as exception:
       logging.warning(
-          u'Unable to read the creaton time with error: {0:s}'.format(
+          u'Unable to read the creation time with error: {0:s}'.format(
               exception))
       creation_time = 0
 

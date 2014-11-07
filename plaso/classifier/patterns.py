@@ -226,7 +226,7 @@ class PatternTable(object):
       self._AddPattern(pattern, ignore_list, is_bound)
 
   def _AddPattern(self, pattern, ignore_list, is_bound):
-    """Addes the byte values per offset in the pattern to the table.
+    """Adds the byte values per offset in the pattern to the table.
 
     Args:
       pattern: the pattern (instance of Pattern).

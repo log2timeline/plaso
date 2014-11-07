@@ -24,7 +24,6 @@ from plaso.formatters import olecf as olecf_formatter
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers.olecf_plugins import automatic_destinations
-from plaso.parsers.olecf_plugins import interface
 from plaso.parsers.olecf_plugins import test_lib
 
 
@@ -38,12 +37,12 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     test_file = self._GetTestFilePath([
-       u'1b4dd67f29cb1962.automaticDestinations-ms'])
+        u'1b4dd67f29cb1962.automaticDestinations-ms'])
     event_queue_consumer = self._ParseOleCfFileWithPlugin(
         test_file, self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 44) 
+    self.assertEquals(len(event_objects), 44)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
     event_object = event_objects[3]

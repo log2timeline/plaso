@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import mcafeeav as mcafeeav_formatter
-from plaso.lib import eventdata
 from plaso.parsers import mcafeeav
 from plaso.parsers import test_lib
 

@@ -150,7 +150,7 @@ class DateFilter(object):
       range.
 
     Raises:
-        errros.WrongFilterOption: If an attempt is made to filter against
+        errors.WrongFilterOption: If an attempt is made to filter against
                                   a date type that is not stored in the stat
                                   object.
     """

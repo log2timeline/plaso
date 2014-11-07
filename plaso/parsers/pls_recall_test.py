@@ -62,14 +62,14 @@ class PlsRecallTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.query, query_expected)
 
     expected_msg = (
-      u'Sequence #206 '
-      u'User: tsltmp '
-      u'Database Name: DB11 '
-      u'Query: SELECT * from test_databae where date > \'01/01/2012\'')
+        u'Sequence #206 '
+        u'User: tsltmp '
+        u'Database Name: DB11 '
+        u'Query: SELECT * from test_databae where date > \'01/01/2012\'')
 
     expected_msg_short = (
-      u'206 tsltmp DB11 '
-      u'SELECT * from test_databae where date > \'01/01/2012\'')
+        u'206 tsltmp DB11 '
+        u'SELECT * from test_databae where date > \'01/01/2012\'')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

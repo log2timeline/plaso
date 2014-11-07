@@ -44,8 +44,8 @@ class SkyDriveLogEvent(time_events.TimestampEvent):
       log_level: The log level used for the event.
       text: The log message.
     """
-    super(SkyDriveLogEvent, self).__init__(timestamp,
-      eventdata.EventTimestamp.ADDED_TIME)
+    super(SkyDriveLogEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
     self.offset = offset
     self.source_code = source_code
     self.log_level = log_level
@@ -162,8 +162,9 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     if not timestamp:
       logging.debug(u'Invalid timestamp {0:s}'.format(structure.timestamp))
       return
-    evt = SkyDriveLogEvent(timestamp, self.offset, structure.source_code,
-        structure.log_level, structure.text)
+    evt = SkyDriveLogEvent(
+        timestamp, self.offset, structure.source_code, structure.log_level,
+        structure.text)
     self.last_event = evt
     return evt
 
@@ -172,8 +173,9 @@ class SkyDriveLogParser(text_parser.PyparsingSingleLineTextParser):
     if not self.last_event:
       logging.debug(u'SkyDrive, found isolated line with no previous events')
       return
-    evt = SkyDriveLogEvent(self.last_event.timestamp, self.last_event.offset,
-        None, None, structure.text)
+    evt = SkyDriveLogEvent(
+        self.last_event.timestamp, self.last_event.offset, None, None,
+        structure.text)
     # TODO think to a possible refactoring for the non-header lines.
     self.last_event = None
     return evt

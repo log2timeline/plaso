@@ -176,7 +176,7 @@ class Engine(object):
     self._source_path_spec = source_path_spec
 
     self._source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-       self._source_path_spec, resolver_context=resolver_context)
+        self._source_path_spec, resolver_context=resolver_context)
 
     if not self._source_file_entry:
       raise errors.BadConfigOption(

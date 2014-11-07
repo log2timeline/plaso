@@ -35,8 +35,8 @@ class RegistryPlugin(plugins.BasePlugin):
   # Indicate the type of hive this plugin belongs to (eg. NTUSER, SOFTWARE).
   REG_TYPE = 'any'
 
-  # The URLS should contain a list of URL's with additional information about
-  # this key or value.
+  # URLS should contain a list of URLs with additional information about this
+  # key or value.
   URLS = []
 
   # WEIGHT is a simple integer value representing the priority of this plugin.
@@ -136,7 +136,7 @@ class KeyPlugin(RegistryPlugin):
       except KeyError as exception:
         logging.debug((
             u'Unable to expand Registry key {0:s} for plugin {1:s} with '
-            u'error: {1:s}').format(registry_key, self.NAME, exception))
+            u'error: {2:s}').format(registry_key, self.NAME, exception))
         continue
 
       if not expanded_key:

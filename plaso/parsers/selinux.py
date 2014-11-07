@@ -68,26 +68,28 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
   PID_RE = re.compile(r'pid=([0-9]+)[\s]+', re.DOTALL)
 
   tokens = [
-    # Skipping empty lines, both EOLs are considered here and in other states.
-    lexer.Token('INITIAL', r'^\r?\n', '', ''),
-    # FSM entry point ('type=anything msg=audit'), critical to recognize a
-    # SELinux audit file and used to retrieve the audit type. From there two
-    # next states are possible: TIME or failure, since TIME state is required.
-    # An empty type is not accepted and it will cause a failure.
-    # Examples:
-    #   type=SYSCALL msg=audit(...): ...
-    #   type=UNKNOWN[1323] msg=audit(...): ...
-    lexer.Token('INITIAL', r'^type=([\w]+(\[[0-9]+\])?)[ \t]+msg=audit',
-                'ParseType', 'TIMESTAMP'),
-    lexer.Token('TIMESTAMP', r'\(([0-9]+)\.([0-9]+):([0-9]*)\):',
-                'ParseTime', 'STRING'),
-    # Get the log entry description and stay in the same state.
-    lexer.Token('STRING', r'[ \t]*([^\r\n]+)', 'ParseString', ''),
-    # Entry parsed. Note that an empty description is managed and it will not
-    # raise a parsing failure.
-    lexer.Token('STRING', r'[ \t]*\r?\n', 'ParseMessage', 'INITIAL'),
-    # The entry is not formatted as expected, so the parsing failed.
-    lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseFailed', 'INITIAL')
+      # Skipping empty lines, both EOLs are considered here and in other states.
+      lexer.Token('INITIAL', r'^\r?\n', '', ''),
+      # FSM entry point ('type=anything msg=audit'), critical to recognize a
+      # SELinux audit file and used to retrieve the audit type. From there two
+      # next states are possible: TIME or failure, since TIME state is required.
+      # An empty type is not accepted and it will cause a failure.
+      # Examples:
+      #   type=SYSCALL msg=audit(...): ...
+      #   type=UNKNOWN[1323] msg=audit(...): ...
+      lexer.Token(
+          'INITIAL', r'^type=([\w]+(\[[0-9]+\])?)[ \t]+msg=audit', 'ParseType',
+          'TIMESTAMP'),
+      lexer.Token(
+          'TIMESTAMP', r'\(([0-9]+)\.([0-9]+):([0-9]*)\):', 'ParseTime',
+          'STRING'),
+      # Get the log entry description and stay in the same state.
+      lexer.Token('STRING', r'[ \t]*([^\r\n]+)', 'ParseString', ''),
+      # Entry parsed. Note that an empty description is managed and it will not
+      # raise a parsing failure.
+      lexer.Token('STRING', r'[ \t]*\r?\n', 'ParseMessage', 'INITIAL'),
+      # The entry is not formatted as expected, so the parsing failed.
+      lexer.Token('.', '([^\r\n]+)\r?\n', 'ParseFailed', 'INITIAL')
   ]
 
   def __init__(self):

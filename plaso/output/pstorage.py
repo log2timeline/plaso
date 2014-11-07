@@ -29,8 +29,7 @@ class Pstorage(output.LogOutputFormatter):
   def Start(self):
     """Sets up the output storage file."""
     pre_obj = event.PreprocessObject()
-    pre_obj.collection_information = {}
-    pre_obj.collection_information['time_of_run'] = timelib.Timestamp.GetNow()
+    pre_obj.collection_information = {'time_of_run': timelib.Timestamp.GetNow()}
     if hasattr(self._config, 'filter') and self._config.filter:
       pre_obj.collection_information['filter'] = self._config.filter
     if hasattr(self._config, 'storagefile') and self._config.storagefile:

@@ -57,7 +57,7 @@ from plaso.lib import queue
 
 
 # TODO: Remove this after the dfVFS integration.
-# TODO: Make sure we don't need to imlement the method _ConsumeItem, or
+# TODO: Make sure we don't need to implement the method _ConsumeItem, or
 # to have that not as an abstract method.
 # pylint: disable=abstract-method
 class PprofEventObjectQueueConsumer(queue.EventObjectQueueConsumer):

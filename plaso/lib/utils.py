@@ -32,7 +32,7 @@ RESERVED_VARIABLES = frozenset(
 
 
 def IsText(bytes_in, encoding=None):
-  """Examing the bytes in and determine if they are indicative of a text.
+  """Examine the bytes in and determine if they are indicative of a text.
 
   Parsers need quick and at least semi reliable method of discovering whether
   or not a particular byte stream is a text or resembles text or not. This can

@@ -286,9 +286,9 @@ class Foreman(object):
     logging.info((
         u'{0:s} - RSS: {1:d}, VMS: {2:d}, Shared: {3:d}, Text: {4:d}, lib: '
         u'{5:d}, data: {6:d}, dirty: {7:d}, Memory Percent: {8:0.2f}%').format(
-          label.label, mem_info.rss, mem_info.vms, mem_info.shared,
-          mem_info.text, mem_info.lib, mem_info.data, mem_info.dirty,
-          mem_info.percent * 100))
+            label.label, mem_info.rss, mem_info.vms, mem_info.shared,
+            mem_info.text, mem_info.lib, mem_info.data, mem_info.dirty,
+            mem_info.percent * 100))
 
   def _LogWorkerInformation(self, label, status=None):
     """Log information gathered from the worker.

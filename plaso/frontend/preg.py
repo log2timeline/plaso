@@ -254,7 +254,7 @@ class PregFrontend(frontend.ExtractionFrontend):
         raise errors.PreProcessFail(
             u'Missing directory location for: {0:s}'.format(file_path))
 
-      # The path is split in segments to make it path segement separator
+      # The path is split in segments to make it path segment separator
       # independent (and thus platform independent).
       path_segments = searcher.SplitPath(directory_location)
       path_segments.append(file_name)

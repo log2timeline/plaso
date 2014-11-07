@@ -105,7 +105,7 @@ class PlasoOutputUnitTest(unittest.TestCase):
     self.assertEquals(lines[-1], u'</EventFile>\n')
 
   def testOutputList(self):
-    """Test listing up all available registed modules."""
+    """Test listing up all available registered modules."""
     module_seen = False
     for name, description in output.ListOutputFormatters():
       if 'TestOutput' in name:

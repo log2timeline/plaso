@@ -301,11 +301,11 @@ class EventObject(object):
         if attr_key == 'pathspec':
           continue
         else:
-          out_write.append(u'  {{{key}}} {value}'.format(
-                key=attr_key, value=attr_value))
+          out_write.append(
+              u'  {{{key}}} {value}'.format(key=attr_key, value=attr_value))
       else:
-        out_additional.append(u'  {{{key}}} {value}'.format(
-              key=attr_key, value=attr_value))
+        out_additional.append(
+            u'  {{{key}}} {value}'.format(key=attr_key, value=attr_value))
 
     out_write.append(u'\n')
     out_additional.append(u'')

@@ -366,11 +366,11 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
 
       elif proto_attribute.name == 'pathspec':
         event_object.pathspec = (
-           cls._path_spec_serializer.ReadSerialized(proto.pathspec))
+            cls._path_spec_serializer.ReadSerialized(proto.pathspec))
 
       elif proto_attribute.name == 'tag':
         event_object.tag = ProtobufEventTagSerializer.ReadSerializedObject(
-           proto.tag)
+            proto.tag)
 
       elif proto_attribute.name == 'attributes':
         continue

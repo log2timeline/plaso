@@ -38,7 +38,7 @@ from plaso.output import helper
 
 
 class Tln(output.FileLogOutputFormatter):
-  """Five field TLN pipe deliminated outputter."""
+  """Five field TLN pipe delimited outputter."""
 
   DELIMITER = u'|'
 

@@ -25,7 +25,7 @@ class UtilsTestCase(unittest.TestCase):
 
   def testIsText(self):
     """Test the IsText method."""
-    bytes_in = 'thisi My Weird ASCII and non whatever string.'
+    bytes_in = 'this is My Weird ASCII and non whatever string.'
     self.assertTrue(utils.IsText(bytes_in))
 
     bytes_in = u'Plaso Síar Og Raðar Þessu'

@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import xchatscrollback as xchatscrollback_formatter
-from plaso.lib import eventdata
 from plaso.parsers import test_lib
 from plaso.parsers import xchatscrollback
 

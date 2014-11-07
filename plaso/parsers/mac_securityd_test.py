@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import mac_securityd as mac_securityd_formatter
-from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers import mac_securityd as mac_securityd_parser
 from plaso.parsers import test_lib
