@@ -23,7 +23,6 @@ import unittest
 from plaso.formatters import winreg as winreg_formatter
 from plaso.parsers.winreg_plugins import run
 from plaso.parsers.winreg_plugins import test_lib
-from plaso.winreg import winregistry
 
 
 class RunNtuserPlugintest(test_lib.RegistryPluginTestCase):

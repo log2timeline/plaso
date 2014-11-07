@@ -50,7 +50,7 @@ def LoadPlugins(plugin_names, incoming_queues):
 
   Args:
     plugin_names: A list of plugin names that should be loaded up. This
-                  shold be a list of strings.
+                  should be a list of strings.
     incoming_queues: A list of queues (QueueInterface object) that the plugin
                      uses to read in incoming events to analyse.
 

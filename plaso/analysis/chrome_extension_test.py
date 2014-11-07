@@ -32,7 +32,7 @@ from plaso.lib import queue
 
 class AnalyzeChromeExtensionTestPlugin(
     chrome_extension.AnalyzeChromeExtensionPlugin):
-  """Chrome extention analysis plugin used for testing."""
+  """Chrome extension analysis plugin used for testing."""
 
   NAME = 'chrome_extension_test'
 

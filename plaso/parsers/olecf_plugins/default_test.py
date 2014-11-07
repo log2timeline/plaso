@@ -23,7 +23,6 @@ import unittest
 from plaso.formatters import olecf as olecf_formatter
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
-from plaso.parsers.olecf_plugins import interface
 from plaso.parsers.olecf_plugins import default
 from plaso.parsers.olecf_plugins import test_lib
 

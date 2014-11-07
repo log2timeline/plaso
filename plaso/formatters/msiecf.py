@@ -56,7 +56,7 @@ class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
 
     if hasattr(event_object, 'http_headers'):
       event_object.http_headers_cleaned = event_object.http_headers.replace(
-        '\r\n', ' - ')
+          '\r\n', ' - ')
     # TODO: Could this be moved upstream since this is done in other parsers
     # as well?
     if getattr(event_object, 'recovered', None):

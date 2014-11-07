@@ -95,7 +95,7 @@ class BootExecutePlugin(interface.KeyPlugin):
         else:
           value_string = u''
           error_string = (
-              u'Key: {0:s}, value: {1:s}: unuspported value data type: '
+              u'Key: {0:s}, value: {1:s}: unsupported value data type: '
               u'{2:s}.').format(key.path, value.name, value.data_type_string)
           parser_context.ProduceParseError(
               self.NAME, error_string, file_entry=file_entry)

@@ -25,8 +25,7 @@ class XChatLogFormatter(interface.ConditionalEventFormatter):
 
   DATA_TYPE = 'xchat:log:line'
 
-  FORMAT_STRING_PIECES = [u'[nickname: {nickname}]',
-      u'{text}']
+  FORMAT_STRING_PIECES = [u'[nickname: {nickname}]', u'{text}']
 
   SOURCE_LONG = 'XChat Log File'
   SOURCE_SHORT = 'LOG'

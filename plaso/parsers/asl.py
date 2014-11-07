@@ -49,9 +49,9 @@ class AslEvent(event.EventObject):
       timestamp: timestamp of the entry.
       record_position: position where the record start.
       message_id: Identification value for an ASL message.
-      level: level of criticity.
+      level: level of criticality.
       record_header: header of the entry.
-        pid: identificaiton number of the process.
+        pid: identification number of the process.
         uid: identification number of the owner of the process.
         gid: identification number of the group of the process.
       read_uid: the user ID that can read this file. If -1: all.
@@ -397,9 +397,10 @@ class AslParser(interface.BaseParser):
             values[index * 2], values[(index * 2) + 1]))
 
     # Return the event and the offset for the next entry.
-    return AslEvent(timestamp, record_position, message_id,
-        level, record_header, read_uid, read_gid, computer_name,
-        sender, facility, message, extra_information), record_header.next_offset
+    return AslEvent(
+        timestamp, record_position, message_id, level, record_header, read_uid,
+        read_gid, computer_name, sender, facility, message,
+        extra_information), record_header.next_offset
 
 
 manager.ParsersManager.RegisterParser(AslParser)

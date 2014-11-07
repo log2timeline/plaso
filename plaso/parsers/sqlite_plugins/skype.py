@@ -369,7 +369,7 @@ class SkypePlugin(interface.SQLitePlugin):
 
         except ValueError:
           logging.debug((
-              u'[{0:s}] Unable to determine when the call {0:s} was '
+              u'[{0:s}] Unable to determine when the call {1:s} was '
               u'finished.').format(self.NAME, row['id']))
 
   def ParseFileTransfer(

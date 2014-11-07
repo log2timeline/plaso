@@ -66,7 +66,7 @@ class OfficeMRUPlugin(interface.KeyPlugin):
            The default is None.
       registry_type: Optional Registry type string. The default is None.
     """
-    # TODO: Test other Office versions to makesure this plugin is applicable.
+    # TODO: Test other Office versions to make sure this plugin is applicable.
     for value in key.GetValues():
       # Ignore any value not in the form: 'Item [0-9]+'.
       if not value.name or not self._RE_VALUE_NAME.search(value.name):

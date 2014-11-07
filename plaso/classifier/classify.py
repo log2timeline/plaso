@@ -28,7 +28,7 @@ from plaso.classifier import test_lib
 
 def Main():
   args_parser = argparse.ArgumentParser(
-      decription='Classify test program.')
+      description='Classify test program.')
 
   args_parser.add_argument(
       '-t', '--type', type='choice', metavar='TYPE', action='store',

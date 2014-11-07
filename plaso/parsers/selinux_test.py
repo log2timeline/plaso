@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import selinux as selinux_formatter
-from plaso.lib import eventdata
 from plaso.parsers import selinux
 from plaso.parsers import test_lib
 

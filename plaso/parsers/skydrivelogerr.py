@@ -86,7 +86,8 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       TIME_MSEC.setResultsName('time')).setResultsName('timestamp')
 
   # Header start.
-  SDE_HEADER_START = (pyparsing.Literal(u'######').suppress() +
+  SDE_HEADER_START = (
+      pyparsing.Literal(u'######').suppress() +
       pyparsing.Literal(u'Logging started.').setResultsName('log_start'))
 
   # Multiline entry end marker, matched from right to left.

@@ -84,7 +84,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._resolver_context = context.Context()
     self._single_process_mode = False
     self._event_queue_producer = event_queue_producer
-    self._parse_error_queue_producer =  parse_error_queue_producer
+    self._parse_error_queue_producer = parse_error_queue_producer
 
     # Attributes that contain the current status of the worker.
     self._current_working_file = u''
@@ -257,7 +257,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self.pid = os.getpid()
     logging.info(
         u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
-        self._identifier, self.pid))
+            self._identifier, self.pid))
 
     self.InitalizeParserObjects(parser_filter_string=parser_filter_string)
 
@@ -286,7 +286,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
     logging.info(
         u'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
-        self._identifier, os.getpid()))
+            self._identifier, os.getpid()))
 
     if self._enable_profiling:
       self._ProfilingStop()

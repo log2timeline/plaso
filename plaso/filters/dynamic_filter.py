@@ -24,27 +24,27 @@ class SelectiveLexer(lexer.Lexer):
   """A simple selective filter lexer implementation."""
 
   tokens = [
-    lexer.Token('INITIAL', r'SELECT', '', 'FIELDS'),
-    lexer.Token('FIELDS', r'(.+) WHERE ', 'SetFields', 'FILTER'),
-    lexer.Token('FIELDS', r'(.+) LIMIT', 'SetFields', 'LIMIT_END'),
-    lexer.Token('FIELDS', r'(.+) SEPARATED BY', 'SetFields', 'SEPARATE'),
-    lexer.Token('FIELDS', r'(.+)$', 'SetFields', 'END'),
-    lexer.Token('FILTER', r'(.+) SEPARATED BY', 'SetFilter', 'SEPARATE'),
-    lexer.Token('FILTER', r'(.+) LIMIT', 'SetFilter', 'LIMIT_END'),
-    lexer.Token('FILTER', r'(.+)$', 'SetFilter', 'END'),
-    lexer.Token('SEPARATE', r' ', '', ''),  # Ignore white space here.
-    lexer.Token('SEPARATE', r'LIMIT', '', 'LIMIT_END'),
-    lexer.Token(
-        'SEPARATE', r'[\'"]([^ \'"]+)[\'"] LIMIT', 'SetSeparator',
-        'LIMIT_END'),
-    lexer.Token(
-        'SEPARATE', r'[\'"]([^ \'"]+)[\'"]$', 'SetSeparator', 'END'),
-    lexer.Token(
-        'SEPARATE', r'(.+)$', 'SetSeparator', 'END'),
-    lexer.Token(
-        'LIMIT_END', r'SEPARATED BY [\'"]([^\'"]+)[\'"]', 'SetSeparator', ''),
-    lexer.Token('LIMIT_END', r'(.+) SEPARATED BY', 'SetLimit', 'SEPARATE'),
-    lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
+      lexer.Token('INITIAL', r'SELECT', '', 'FIELDS'),
+      lexer.Token('FIELDS', r'(.+) WHERE ', 'SetFields', 'FILTER'),
+      lexer.Token('FIELDS', r'(.+) LIMIT', 'SetFields', 'LIMIT_END'),
+      lexer.Token('FIELDS', r'(.+) SEPARATED BY', 'SetFields', 'SEPARATE'),
+      lexer.Token('FIELDS', r'(.+)$', 'SetFields', 'END'),
+      lexer.Token('FILTER', r'(.+) SEPARATED BY', 'SetFilter', 'SEPARATE'),
+      lexer.Token('FILTER', r'(.+) LIMIT', 'SetFilter', 'LIMIT_END'),
+      lexer.Token('FILTER', r'(.+)$', 'SetFilter', 'END'),
+      lexer.Token('SEPARATE', r' ', '', ''),  # Ignore white space here.
+      lexer.Token('SEPARATE', r'LIMIT', '', 'LIMIT_END'),
+      lexer.Token(
+          'SEPARATE', r'[\'"]([^ \'"]+)[\'"] LIMIT', 'SetSeparator',
+          'LIMIT_END'),
+      lexer.Token(
+          'SEPARATE', r'[\'"]([^ \'"]+)[\'"]$', 'SetSeparator', 'END'),
+      lexer.Token(
+          'SEPARATE', r'(.+)$', 'SetSeparator', 'END'),
+      lexer.Token(
+          'LIMIT_END', r'SEPARATED BY [\'"]([^\'"]+)[\'"]', 'SetSeparator', ''),
+      lexer.Token('LIMIT_END', r'(.+) SEPARATED BY', 'SetLimit', 'SEPARATE'),
+      lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
 
   def __init__(self, data=''):
     """Initialize the lexer."""

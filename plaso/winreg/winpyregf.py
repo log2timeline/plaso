@@ -188,7 +188,7 @@ class WinPyregfValue(interface.WinRegValue):
     except IOError:
       raise errors.WinRegistryValueError(
           'Unable to read data from value: {0:s}'.format(
-          self._pyregf_value.name))
+              self._pyregf_value.name))
 
   @property
   def data(self):

@@ -125,7 +125,7 @@ class TaskCachePlugin(interface.KeyPlugin):
       if len(dynamic_info_value.raw_data) != self._DYNAMIC_INFO_STRUCT_SIZE:
         logging.warning(
             u'[{0:s}] unsupported DynamicInfo value data size.'.format(
-            self.NAME))
+                self.NAME))
         continue
 
       dynamic_info = self._DYNAMIC_INFO_STRUCT.parse(

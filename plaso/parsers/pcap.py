@@ -77,7 +77,7 @@ def ParseDNS(dns_packet_data):
       dns_data.append(str(dns.rcode))
 
   except dpkt.UnpackError as exception:
-    dns_data.append('DNS Unpack Eror: {0:s}. First 20 of data {1:s}'.format(
+    dns_data.append('DNS Unpack Error: {0:s}. First 20 of data {1:s}'.format(
         exception, repr(dns_packet_data[:20])))
   except IndexError as exception:
     dns_data.append('DNS Index Error: {0:s}'.format(exception))
@@ -407,8 +407,8 @@ class Stream(object):
 
       return 'DNS', ParseDNS(self.stream_data)
 
-    elif self.protocol == 'UDP' and (self.source_port == 137
-                         or self.dest_port == 137):
+    elif self.protocol == 'UDP' and (
+        self.source_port == 137 or self.dest_port == 137):
       return 'NetBIOS', ParseNetBios(dpkt.netbios.NS(self.stream_data))
 
     elif self.protocol == 'ICMP':
@@ -592,9 +592,9 @@ class PcapParser(interface.BaseParser):
           [PcapEvent(
               min(entry.time_stamps), eventdata.EventTimestamp.START_TIME,
               entry),
-          PcapEvent(
-              max(entry.time_stamps), eventdata.EventTimestamp.END_TIME,
-              entry)],
+           PcapEvent(
+               max(entry.time_stamps), eventdata.EventTimestamp.END_TIME,
+               entry)],
           parser_name=self.NAME, file_entry=file_entry)
 
     for other_stream in other_streams:
@@ -602,9 +602,9 @@ class PcapParser(interface.BaseParser):
           [PcapEvent(
               min(other_stream.time_stamps),
               eventdata.EventTimestamp.START_TIME, other_stream),
-          PcapEvent(
-              max(other_stream.time_stamps), eventdata.EventTimestamp.END_TIME,
-              other_stream)],
+           PcapEvent(
+               max(other_stream.time_stamps), eventdata.EventTimestamp.END_TIME,
+               other_stream)],
           parser_name=self.NAME, file_entry=file_entry)
 
     file_object.close()

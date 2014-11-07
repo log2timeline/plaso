@@ -79,7 +79,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   _RE_LNK_ITEM_NAME = re.compile(r'^[1-9a-f][0-9a-f]*$')
 
   # We cannot use the parser registry here since winlnk could be disabled.
-  # TODO: see if there is a more elagant solution for this.
+  # TODO: see if there is a more elegant solution for this.
   _WINLNK_PARSER = winlnk.WinLnkParser()
 
   _DEST_LIST_STREAM_HEADER = construct.Struct(
@@ -95,7 +95,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
   _DEST_LIST_STREAM_HEADER_SIZE = _DEST_LIST_STREAM_HEADER.sizeof()
 
-  # Using construct's utf-16 encoding here will create strings with their
+  # Using Construct's utf-16 encoding here will create strings with their
   # end-of-string characters exposed. Instead the strings are read as
   # binary strings and converted using ReadUtf16().
   _DEST_LIST_STREAM_ENTRY = construct.Struct(
@@ -169,7 +169,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
       raise ValueError(u'Root item not set.')
 
     for item in root_item.sub_items:
-      if item.name  == u'DestList':
+      if item.name == u'DestList':
         self.ParseDestList(parser_context, item)
 
       elif self._RE_LNK_ITEM_NAME.match(item.name):

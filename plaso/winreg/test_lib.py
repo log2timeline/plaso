@@ -99,7 +99,7 @@ class TestRegKey(interface.WinRegKey):
     return len(self._subkeys)
 
   def GetSubkey(self, name):
-    """Retrive a subkey by name.
+    """Retrieve a subkey by name.
 
     Args:
       name: The relative path of the current key to the desired one.

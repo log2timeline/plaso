@@ -88,7 +88,7 @@ def ByteStreamCopyToUtf16Stream(byte_stream, byte_stream_size=None):
   """Reads an UTF-16 formatted stream from a byte stream.
 
   The UTF-16 formatted stream should be terminated by an end-of-string
-  character (\x00\x00). Otherwise the function reads upto the byte stream size.
+  character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
     byte_stream: The byte stream that contains the UTF-16 formatted stream.
@@ -152,7 +152,7 @@ def Ut16StreamCopyToString(byte_stream, byte_stream_size=None):
   """Copies an UTF-16 formatted byte stream to a string.
 
   The UTF-16 formatted byte stream should be terminated by an end-of-string
-  character (\x00\x00). Otherwise the function reads upto the byte stream size.
+  character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
     byte_stream: The UTF-16 formatted byte stream.
@@ -203,7 +203,7 @@ def ArrayOfUt16StreamCopyToString(byte_stream, byte_stream_size=None):
 
       array_of_strings.append(
           byte_stream[utf16_stream_start:byte_stream_index].decode(
-          'utf-16-le'))
+              'utf-16-le'))
       utf16_stream_start = byte_stream_index + 2
 
     byte_stream_index += 2

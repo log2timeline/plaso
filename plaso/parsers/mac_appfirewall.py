@@ -49,8 +49,8 @@ class MacAppFirewallLogEvent(time_events.TimestampEvent):
           process_name: string name of the entity that tried do the action.
       action: string with the action
     """
-    super(MacAppFirewallLogEvent, self).__init__(timestamp,
-        eventdata.EventTimestamp.ADDED_TIME)
+    super(MacAppFirewallLogEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
     self.timestamp = timestamp
     self.computer_name = structure.computer_name
     self.agent = structure.agent

@@ -76,8 +76,8 @@ class XChatScrollbackEvent(time_events.PosixTimeEvent):
       nickname: The nickname used.
       text: The text sent by nickname or other text (server, messages, etc.).
     """
-    super(XChatScrollbackEvent, self).__init__(timestamp,
-      eventdata.EventTimestamp.ADDED_TIME)
+    super(XChatScrollbackEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
     self.offset = offset
     self.nickname = nickname
     self.text = text
@@ -93,9 +93,9 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
 
   # Define how a log line should look like.
   LOG_LINE = (
-    pyparsing.Literal(u'T').suppress() +
-    pyparsing.Word(pyparsing.nums).setResultsName('epoch') +
-    pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('text'))
+      pyparsing.Literal(u'T').suppress() +
+      pyparsing.Word(pyparsing.nums).setResultsName('epoch') +
+      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('text'))
   LOG_LINE.parseWithTabs()
 
   # Define the available log line structures.
@@ -104,8 +104,9 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   ]
 
   # Define for the stripping phase.
-  STRIPPER = (pyparsing.Word(u'\x03', pyparsing.nums, max=3).suppress() |
-    pyparsing.Word(u'\x02\x07\x08\x0f\x16\x1d\x1f', exact=1).suppress())
+  STRIPPER = (
+      pyparsing.Word(u'\x03', pyparsing.nums, max=3).suppress() |
+      pyparsing.Word(u'\x02\x07\x08\x0f\x16\x1d\x1f', exact=1).suppress())
 
   # Define the structure for parsing <text> and get <nickname> and <text>
   MSG_NICK_START = pyparsing.Literal(u'<')

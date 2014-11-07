@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import skydrivelogerr as skydrivelogerr_formatter
-from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers import skydrivelogerr as skydrivelogerr_parser
 from plaso.parsers import test_lib
@@ -57,20 +56,23 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
         '2013-08-01 21:27:44.124')
     self.assertEquals(event_objects[18].timestamp, expected_timestamp)
 
-    expected_string = (u'Logging started. Version= 17.0.2011.0627 '
+    expected_string = (
+        u'Logging started. Version= 17.0.2011.0627 '
         '(StartLocalTime: 2013-07-25-180323.291 PID=0x8f4 TID=0x718 '
         'ContinuedFrom=)')
     expected_string_short = u'Logging started. Version= 17.0.2011.0627'
     self._TestGetMessageStrings(
         event_objects[0], expected_string, expected_string_short)
 
-    expected_string = (u'[AUTH authapi.cpp(280)] Sign in failed : '
+    expected_string = (
+        u'[AUTH authapi.cpp(280)] Sign in failed : '
         'DRX_E_AUTH_NO_VALID_CREDENTIALS')
     expected_string_short = u'Sign in failed : DRX_E_AUTH_NO_VALID_CREDENTIALS'
     self._TestGetMessageStrings(
         event_objects[1], expected_string, expected_string_short)
 
-    expected_string = (u'[WNS absconn.cpp(177)] Received data from server '
+    expected_string = (
+        u'[WNS absconn.cpp(177)] Received data from server '
         '(dwID=0x0;dwSize=0x3e;pbData=PNG 9 CON 48  <ping-response>'
         '<wait>44</wait></ping-response>)')
     expected_string_short = u'Received data from server'

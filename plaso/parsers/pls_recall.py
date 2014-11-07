@@ -71,12 +71,12 @@ class PlsRecallParser(interface.BaseParser):
   DESCRIPTION = u'Parser for PL-SQL Recall files.'
 
   PLS_STRUCT = construct.Struct(
-    'PL-SQL_Recall',
-    construct.ULInt32('Sequence'),
-    construct.LFloat64('TimeStamp'),
-    construct.String('Username', 31, None, '\x00'),
-    construct.String('Database', 81, None, '\x00'),
-    construct.String('Query', 4001, None, '\x00'))
+      'PL-SQL_Recall',
+      construct.ULInt32('Sequence'),
+      construct.LFloat64('TimeStamp'),
+      construct.String('Username', 31, None, '\x00'),
+      construct.String('Database', 81, None, '\x00'),
+      construct.String('Query', 4001, None, '\x00'))
 
   def Parse(self, parser_context, file_entry):
     """Extract entries from a PLSRecall.dat file.
@@ -105,9 +105,9 @@ class PlsRecallParser(interface.BaseParser):
 
     while pls_record:
       event_object = PlsRecallEvent(
-        timelib.Timestamp.FromDelphiTime(pls_record.TimeStamp),
-        pls_record.Sequence, pls_record.Username,
-        pls_record.Database, pls_record.Query)
+          timelib.Timestamp.FromDelphiTime(pls_record.TimeStamp),
+          pls_record.Sequence, pls_record.Username,
+          pls_record.Database, pls_record.Query)
       parser_context.ProduceEvent(
           event_object, parser_name=self.NAME, file_entry=file_entry)
 

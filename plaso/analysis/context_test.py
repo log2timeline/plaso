@@ -28,8 +28,8 @@ class AnalysisContextTest(test_lib.AnalysisPluginTestCase):
   """Tests for the analysis context."""
 
   MAC_PATHS = [
-      '/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
-      ('/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
+      '/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions',
+      ('/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions/'
        'apdfllckaahabafndbhieahigkjlhalf'),
       '/private/var/log/system.log',
       '/Users/frank/Library/Application Data/Google/Chrome/Default',

@@ -260,7 +260,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
         text_dict[feature_control] = value_string
 
       event_object = windows_events.WindowsRegistryEvent(
-          zone_key.last_written_timestamp, path, text_dict, 
+          zone_key.last_written_timestamp, path, text_dict,
           offset=zone_key.offset, registry_type=registry_type,
           urls=self.URLS)
       parser_context.ProduceEvent(event_object, plugin_name=self.NAME)

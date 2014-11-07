@@ -71,9 +71,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.title, expected_title)
 
     expected_msg = (
-         u'{} ({}) [count: 1] Host: news.google.com '
-         u'(URL not typed directly) Transition: TYPED').format(
-             expected_url, expected_title)
+        u'{0:s} ({1:s}) [count: 1] Host: news.google.com '
+        u'(URL not typed directly) Transition: TYPED').format(
+            expected_url, expected_title)
     expected_short = u'URL: {}'.format(expected_url)
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
@@ -112,11 +112,11 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.title, expected_title)
 
     expected_msg = (
-         u'Bookmark URL {} ({}) [folder=BOOKMARKS_MENU&'
-         u'folder=UNFILED_BOOKMARKS&folder=TOOLBAR&sort=12&excludeQueries=1&'
-         u'excludeItemIfParentHasAnnotation=livemark%2FfeedURI&maxResults=10&'
-         u'queryType=1] visit count 0').format(
-             expected_title, expected_url)
+        u'Bookmark URL {0:s} ({1:s}) [folder=BOOKMARKS_MENU&'
+        u'folder=UNFILED_BOOKMARKS&folder=TOOLBAR&sort=12&excludeQueries=1&'
+        u'excludeItemIfParentHasAnnotation=livemark%2FfeedURI&maxResults=10&'
+        u'queryType=1] visit count 0').format(
+            expected_title, expected_url)
     expected_short = (
         u'Bookmarked Recently Bookmarked '
         u'(place:folder=BOOKMARKS_MENU&folder=UNFILED_BO...')
@@ -156,9 +156,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEquals(event_object.title, expected_title)
 
     expected_msg = (
-         u'Bookmark Annotation: [RecentTags] to bookmark '
-         u'[{}] ({})').format(
-             expected_title, expected_url)
+        u'Bookmark Annotation: [RecentTags] to bookmark '
+        u'[{0:s}] ({1:s})').format(
+            expected_title, expected_url)
     expected_short = u'Bookmark Annotation: Recent Tags'
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 

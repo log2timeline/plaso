@@ -56,8 +56,8 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     event_object = event_objects[0]
     self.assertEqual(event_object.root, u'/Accounts')
     self.assertEqual(event_object.key, u'email@domain.com')
-    expected_desc = (u'Configured Apple account '
-                    u'email@domain.com (Joaquin Moreno Garijo)')
+    expected_desc = (
+        u'Configured Apple account email@domain.com (Joaquin Moreno Garijo)')
     self.assertEqual(event_object.desc, expected_desc)
     expected_string = u'/Accounts/email@domain.com {0:s}'.format(expected_desc)
     expected_short = expected_string[:77] + u'...'
