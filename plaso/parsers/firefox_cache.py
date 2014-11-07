@@ -86,8 +86,9 @@ class FirefoxCacheParser(interface.BaseParser):
       construct.UBInt32('request_size'),
       construct.UBInt32('info_size'))
 
-  ALTERNATIVE_CACHE_NAME = (pyparsing.Word(pyparsing.hexnums, exact=5) +
-      pyparsing.Word('m', exact=1) + pyparsing.Word(pyparsing.nums, exact=2))
+  ALTERNATIVE_CACHE_NAME = (
+      pyparsing.Word(pyparsing.hexnums, exact=5) + pyparsing.Word('m', exact=1)
+      + pyparsing.Word(pyparsing.nums, exact=2))
 
   FIREFOX_CACHE_CONFIG = collections.namedtuple(
       u'firefox_cache_config',
@@ -121,8 +122,8 @@ class FirefoxCacheParser(interface.BaseParser):
       try:
         # We have not yet determined the block size, so we use the smallest
         # possible size.
-        record = self.__NextRecord(file_entry.name, file_object,
-            self.MIN_BLOCK_SIZE)
+        record = self.__NextRecord(
+            file_entry.name, file_object, self.MIN_BLOCK_SIZE)
 
         record_size = (
             self.RECORD_HEADER_SIZE + record.request_size + record.info_size)
@@ -150,11 +151,12 @@ class FirefoxCacheParser(interface.BaseParser):
   def __Accept(self, candidate, block_size):
     """Determine whether the candidate is a valid cache record."""
 
-    record_size = (self.RECORD_HEADER_SIZE + candidate.request_size
-        + candidate.info_size)
+    record_size = (
+        self.RECORD_HEADER_SIZE + candidate.request_size+ candidate.info_size)
 
-    return (candidate.request_size > 0 and candidate.fetch_count > 0
-        and candidate.major == 1 and record_size // block_size < 256)
+    return (
+        candidate.request_size > 0 and candidate.fetch_count > 0 and
+        candidate.major == 1 and record_size // block_size < 256)
 
   def __NextRecord(self, filename, file_object, block_size):
     """Provide the next cache record."""

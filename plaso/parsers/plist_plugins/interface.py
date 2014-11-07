@@ -21,7 +21,7 @@ Plist files are only one example of a type of object that the Plaso tool is
 expected to encounter and process.  There can be and are many other parsers
 which are designed to process specific data types.
 
-PlistPlugin defines the attributes neccessary for registration, discovery
+PlistPlugin defines the attributes necessary for registration, discovery
 and operation of plugins for plist files which will be used by PlistParser.
 """
 
@@ -35,12 +35,12 @@ from plaso.parsers import plugins
 class PlistPlugin(plugins.BasePlugin):
   """This is an abstract class from which plugins should be based.
 
-  The following are the attributes and methods expected to be overriden by a
+  The following are the attributes and methods expected to be overridden by a
   plugin.
 
   Attributes:
   PLIST_PATH - string of the filename the plugin is designed to process.
-  PLIST_KEY - list of keys holding values that are neccessary for processing.
+  PLIST_KEY - list of keys holding values that are necessary for processing.
 
   Please note, PLIST_KEY is cAse sensitive and for a plugin to match a
   plist file needs to contain at minimum the number of keys needed for
@@ -69,7 +69,7 @@ class PlistPlugin(plugins.BasePlugin):
   PLIST_KEYS = frozenset(['any'])
 
   # This is expected to be overriden by the processing plugin.
-  # The URLS should contain a list of URL's with additional information about
+  # URLS should contain a list of URLs with additional information about
   # this key or value.
   # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
   URLS = []
@@ -81,7 +81,7 @@ class PlistPlugin(plugins.BasePlugin):
 
     This is the main method that a plist plugin needs to implement.
 
-    The contents of the plist keys defined in PLIST_KEYS will be made availible
+    The contents of the plist keys defined in PLIST_KEYS will be made available
     to the plugin as self.matched{'KEY': 'value'}. The plugin should implement
     logic to parse this into a useful event for incorporation into the Plaso
     timeline.
@@ -100,7 +100,7 @@ class PlistPlugin(plugins.BasePlugin):
     self.matched = {'DeviceCache': [{'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}, 'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}'...}]} and needs to implement logic here to extract
-    values, format, and yeild the data as a event.PlistEvent.
+    values, format, and produce the data as a event.PlistEvent.
 
     The attributes for a PlistEvent should include the following:
       root = Root key this event was extracted from. E.g. DeviceCache/

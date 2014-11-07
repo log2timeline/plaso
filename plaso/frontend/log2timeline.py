@@ -304,9 +304,9 @@ def Main():
   info_group.add_argument(
       '--show_memory_usage', '--show-memory-usage', action='store_true',
       default=False, dest='foreman_verbose', help=(
-           u'Indicates that basic memory usage should be included in the '
-           u'output of the process monitor. If this option is not set the '
-           u'tool only displays basic status and counter information.'))
+          u'Indicates that basic memory usage should be included in the '
+          u'output of the process monitor. If this option is not set the '
+          u'tool only displays basic status and counter information.'))
 
   info_group.add_argument(
       '--disable_worker_monitor', '--disable-worker-monitor',

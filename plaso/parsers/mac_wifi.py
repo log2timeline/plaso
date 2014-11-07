@@ -50,8 +50,8 @@ class MacWifiLogEvent(time_events.TimestampEvent):
               an AP, configured, etc. If the action is not known,
               the value is the message of the log (text variable).
     """
-    super(MacWifiLogEvent, self).__init__(timestamp,
-        eventdata.EventTimestamp.ADDED_TIME)
+    super(MacWifiLogEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
     self.agent = agent
     self.function = function
     self.text = text
@@ -141,8 +141,8 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
         if not security:
           security = 'Unknown'
         return (
-             u'New wifi configured. BSSID: {0:s}, SSID: {1:s}, '
-             u'Security: {2:s}.').format(bssid, ssid, security)
+            u'New wifi configured. BSSID: {0:s}, SSID: {1:s}, '
+            u'Security: {2:s}.').format(bssid, ssid, security)
     return text
 
   def _GetTimestamp(self, day, month, year, time):

@@ -41,7 +41,7 @@ from plaso.output import helper
 
 
 class L2ttln(output.FileLogOutputFormatter):
-  """Extended seven field pipe deliminated TLN; L2T 0.65 style."""
+  """Extended seven field pipe delimited TLN; L2T 0.65 style."""
 
   DELIMITER = u'|'
 

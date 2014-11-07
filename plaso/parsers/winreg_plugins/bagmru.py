@@ -160,7 +160,7 @@ class BagMRUPlugin(interface.KeyPlugin):
       if not sub_key:
         logging.debug(
             u'[{0:s}] Missing BagMRU sub key: {1:d} in key: {2:s}.'.format(
-        self.name, key.path, entry_number))
+                self.name, key.path, entry_number))
         continue
 
       value_string = value_strings.get(entry_number, u'')

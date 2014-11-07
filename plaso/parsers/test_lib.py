@@ -96,7 +96,7 @@ class ParserTestCase(unittest.TestCase):
     return event_objects
 
   def _GetParserContext(
-     self, event_queue, parse_error_queue, knowledge_base_values=None):
+      self, event_queue, parse_error_queue, knowledge_base_values=None):
     """Retrieves a parser context object.
 
     Args:

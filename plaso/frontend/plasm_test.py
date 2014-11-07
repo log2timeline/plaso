@@ -94,8 +94,7 @@ class PlasmTest(test_lib.FrontendTestCase):
 
     tag_input_file = open(tag_input_filename, 'wb')
     tag_input_file.write('\n'.join([
-      'Invalid Tag',
-      '  my hovercraft is full of eels']))
+        'Invalid Tag', '  my hovercraft is full of eels']))
     tag_input_file.close()
 
     tags = plasm.ParseTaggingFile(tag_input_filename)
@@ -109,9 +108,8 @@ class PlasmTest(test_lib.FrontendTestCase):
 
     tag_input_file = open(tag_input_filename, 'wb')
     tag_input_file.write('\n'.join([
-      'Semivalid Tag',
-      '  filename contains \'/tmp/whoaaaa\'',
-      '  Yandelavasa grldenwi stravenka']))
+        'Semivalid Tag', '  filename contains \'/tmp/whoaaaa\'',
+        '  Yandelavasa grldenwi stravenka']))
     tag_input_file.close()
 
     tags = plasm.ParseTaggingFile(tag_input_filename)

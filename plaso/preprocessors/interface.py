@@ -184,18 +184,18 @@ def GuessOS(searcher):
      A string indicating which OS we are dealing with.
   """
   find_specs = [
-    file_system_searcher.FindSpec(
-        location=u'/etc', case_sensitive=False),
-    file_system_searcher.FindSpec(
-        location=u'/System/Library', case_sensitive=False),
-    file_system_searcher.FindSpec(
-        location=u'/Windows/System32', case_sensitive=False),
-    file_system_searcher.FindSpec(
-        location=u'/WINNT/System32', case_sensitive=False),
-    file_system_searcher.FindSpec(
-        location=u'/WINNT35/System32', case_sensitive=False),
-    file_system_searcher.FindSpec(
-        location=u'/WTSRV/System32', case_sensitive=False)]
+      file_system_searcher.FindSpec(
+          location=u'/etc', case_sensitive=False),
+      file_system_searcher.FindSpec(
+          location=u'/System/Library', case_sensitive=False),
+      file_system_searcher.FindSpec(
+          location=u'/Windows/System32', case_sensitive=False),
+      file_system_searcher.FindSpec(
+          location=u'/WINNT/System32', case_sensitive=False),
+      file_system_searcher.FindSpec(
+          location=u'/WINNT35/System32', case_sensitive=False),
+      file_system_searcher.FindSpec(
+          location=u'/WTSRV/System32', case_sensitive=False)]
 
   locations = []
   for path_spec in searcher.Find(find_specs=find_specs):

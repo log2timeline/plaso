@@ -1,4 +1,4 @@
-#!/usr/bin/python
+  #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Copyright 2012 The Plaso Project Authors.
@@ -86,7 +86,7 @@ class Timestamp(object):
   # The difference between Jan 1, 1601 and Jan 1, 1970 in micro seconds
   WEBKIT_TIME_TO_POSIX_BASE = 11644473600L * 1000000
 
-  # The difference between Jan 1, 1601 and Jan 1, 1970 in 100th of nano seconds.
+  # The difference between Jan 1, 1601 and Jan 1, 1970 in 100s of nanoseconds.
   FILETIME_TO_POSIX_BASE = 11644473600L * 10000000
 
   # The number of seconds between January 1, 1904 and Jan 1, 1970.

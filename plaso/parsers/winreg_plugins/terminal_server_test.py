@@ -70,8 +70,8 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
-class DefaulTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the erminal Server Client MRU Windows Registry plugin."""
+class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the Terminal Server Client MRU Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""

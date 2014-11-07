@@ -21,7 +21,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import event
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import usbstor
 
@@ -58,19 +57,19 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event_object, u'revision', u'Rev_1024')
 
     expected_msg = (
-      u'[{0:s}] '
-      u'device_type: Disk '
-      u'friendly_name: HP v100w USB Device '
-      u'product: Prod_v100w '
-      u'revision: Rev_1024 '
-      u'serial: AA951D0000007252&0 '
-      u'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
-      u'vendor: Ven_HP').format(key_path)
+        u'[{0:s}] '
+        u'device_type: Disk '
+        u'friendly_name: HP v100w USB Device '
+        u'product: Prod_v100w '
+        u'revision: Rev_1024 '
+        u'serial: AA951D0000007252&0 '
+        u'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
+        u'vendor: Ven_HP').format(key_path)
 
     expected_msg_short = (
-      u'[{0:s}] '
-      u'device_type: Disk '
-      u'friendly_name: HP v100w USB D...').format(key_path)
+        u'[{0:s}] '
+        u'device_type: Disk '
+        u'friendly_name: HP v100w USB D...').format(key_path)
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

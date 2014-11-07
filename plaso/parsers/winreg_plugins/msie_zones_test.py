@@ -21,9 +21,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import eventdata
 from plaso.lib import timelib_test
-from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import msie_zones
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -111,27 +109,27 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'[1C00] Java permissions: 0x00020000 (Medium safety) '
         u'[2000] Binary and script behaviors: 0 (Allow) '
         u'[2001] .NET: Run components signed with Authenticode: '
-         u'3 (Not Allowed) '
+        u'3 (Not Allowed) '
         u'[2004] .NET: Run components not signed with Authenticode: '
-         u'3 (Not Allowed) '
+        u'3 (Not Allowed) '
         u'[2005] UNKNOWN: 0 '
         u'[2007] UNKNOWN: 3 '
         u'[2100] Open files based on content, not file extension: 0 (Allow) '
         u'[2101] Web sites in less privileged zone can navigate into this '
-         u'zone: 3 (Not Allowed) '
+        u'zone: 3 (Not Allowed) '
         u'[2102] Allow script initiated windows without size/position '
-         u'constraints: 0 (Allow) '
+        u'constraints: 0 (Allow) '
         u'[2103] Allow status bar updates via script: 0 '
         u'[2104] Allow websites to open windows without address or status '
-         u'bars: 0 '
+        u'bars: 0 '
         u'[2105] Allow websites to prompt for information using scripted '
-         u'windows: 0 '
+        u'windows: 0 '
         u'[2106] UNKNOWN: 0 '
         u'[2107] UNKNOWN: 0 '
         u'[2200] Automatic prompting for file downloads: 0 (Allow) '
         u'[2201] Automatic prompting for ActiveX controls: 0 (Allow) '
         u'[2300] Allow web pages to use restricted protocols for active '
-         u'content: 1 (Prompt User) '
+        u'content: 1 (Prompt User) '
         u'[2301] Use Phishing Filter: 3 '
         u'[2400] .NET: XAML browser applications: 0 '
         u'[2401] .NET: XPS documents: 0 '

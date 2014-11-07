@@ -71,7 +71,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     test_front_end.ProcessSource(options)
 
     expected_text_files = sorted([
-      os.path.join(self._temp_directory, u'a_directory', u'a_file')])
+        os.path.join(self._temp_directory, u'a_directory', u'a_file')])
 
     text_files = glob.glob(os.path.join(
         self._temp_directory, u'a_directory', u'*'))
@@ -79,7 +79,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     self.assertEquals(sorted(text_files), expected_text_files)
 
     # We need to reset the date filter to not affect other tests.
-    # pylint: disable-msg=protected-access
+    # pylint: disable=protected-access
     # TODO: Remove this once filtering has been moved to the front end object.
     image_export.FileSaver._date_filter = None
 
@@ -97,7 +97,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     test_front_end.ProcessSource(options)
 
     expected_text_files = sorted([
-      os.path.join(self._temp_directory, u'passwords.txt')])
+        os.path.join(self._temp_directory, u'passwords.txt')])
 
     text_files = glob.glob(os.path.join(self._temp_directory, u'*'))
 
@@ -120,8 +120,8 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     test_front_end.ProcessSource(options)
 
     expected_text_files = sorted([
-      os.path.join(self._temp_directory, u'a_directory', u'another_file'),
-      os.path.join(self._temp_directory, u'a_directory', u'a_file')])
+        os.path.join(self._temp_directory, u'a_directory', u'another_file'),
+        os.path.join(self._temp_directory, u'a_directory', u'a_file')])
 
     text_files = glob.glob(os.path.join(
         self._temp_directory, u'a_directory', u'*'))

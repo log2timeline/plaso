@@ -65,9 +65,9 @@ class SkypeCallFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'skype:event:call'
 
   FORMAT_STRING_PIECES = [
-     u'From: {src_call}',
-     u'To: {dst_call}',
-     u'[{call_type}]']
+      u'From: {src_call}',
+      u'To: {dst_call}',
+      u'[{call_type}]']
 
   SOURCE_LONG = 'Skype Call'
   SOURCE_SHORT = 'LOG'

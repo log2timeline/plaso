@@ -51,7 +51,7 @@ class BasePlugin(object):
   NAME = 'base_plugin'
   DESCRIPTION = u''
 
-  # The URLS should contain a list of URL's with additional information about
+  # The URLS should contain a list of URLs with additional information about
   # the plugin, for instance some additional reading material. That can be
   # a description of the data structure, or how to read the data that comes
   # out of the parser, etc. So in essence this is a field to define pointers

@@ -43,10 +43,9 @@ class TimeMachinePlugin(interface.PlistPlugin):
   # SnapshotDates: list of the backup dates.
 
   TM_BACKUP_ALIAS = construct.Struct(
-    'tm_backup_alias',
-    construct.Padding(10),
-    construct.PascalString(
-    'value', length_field = construct.UBInt8('length')))
+      'tm_backup_alias',
+      construct.Padding(10),
+      construct.PascalString('value', length_field=construct.UBInt8('length')))
 
   def GetEntries(self, parser_context, match=None, **unused_kwargs):
     """Extracts relevant TimeMachine entries.

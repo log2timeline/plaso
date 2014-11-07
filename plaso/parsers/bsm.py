@@ -49,7 +49,7 @@ def _BsmTokenGetLength(context):
 # CString because the latter seems to break pickling on Windows.
 
 def _BsmTokenIsEndOfString(value, unused_context):
-  """Contruct context parser helper function to replace lambda."""
+  """Construct context parser helper function to replace lambda."""
   return value == '\x00'
 
 
@@ -57,12 +57,12 @@ def _BsmTokenIsEndOfString(value, unused_context):
 # IfThenElse because the latter seems to break pickling on Windows.
 
 def _BsmTokenGetNetType(context):
-  """Contruct context parser helper function to replace lambda."""
+  """Construct context parser helper function to replace lambda."""
   return context.net_type
 
 
 def _BsmTokenGetSocketDomain(context):
-  """Contruct context parser helper function to replace lambda."""
+  """Construct context parser helper function to replace lambda."""
   return context.socket_domain
 
 
@@ -245,8 +245,8 @@ class BsmParser(interface.BaseParser):
   # length: integer that has the number of bytes from the entry size.
   BSM_TOKEN_TRAILER = construct.Struct(
       'bsm_token_trailer',
-       construct.UBInt16('magic'),
-       construct.UBInt32('record_length'))
+      construct.UBInt16('magic'),
+      construct.UBInt32('record_length'))
 
   # A 32-bits argument.
   # num_arg: the number of the argument.
@@ -423,11 +423,11 @@ class BsmParser(interface.BaseParser):
 
   INET4_ADDR_TYPE = construct.Struct(
       'addr_type',
-       construct.UBInt16('ip_type'),
-       construct.UBInt16('source_port'),
-       construct.UBInt32('source_address'),
-       construct.UBInt16('destination_port'),
-       construct.UBInt32('destination_address'))
+      construct.UBInt16('ip_type'),
+      construct.UBInt16('source_port'),
+      construct.UBInt32('source_address'),
+      construct.UBInt16('destination_port'),
+      construct.UBInt32('destination_address'))
 
   # au_to_socket_ex // AUT_SOCKET_EX
   # TODO: Change the 26 for unixbsm.BSM_PROTOCOLS.INET6.
@@ -1016,8 +1016,8 @@ class BsmParser(interface.BaseParser):
         daddr = self._IPv4Format(token.structure_addr_port.destination_address)
 
       return u'[{0}: from {1} port {2} to {3} port {4}]'.format(
-           bsm_type, saddr, token.structure_addr_port.source_port,
-           daddr, token.structure_addr_port.destination_port)
+          bsm_type, saddr, token.structure_addr_port.source_port,
+          daddr, token.structure_addr_port.destination_port)
 
     elif bsm_type == 'BSM_TOKEN_IPC_PERM':
       return (

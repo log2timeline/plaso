@@ -53,7 +53,7 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
         "integer": 34,
         "string": "Normal string"}"""
 
-    # Collaps multiple spaces and new lines into a single space.
+    # Collapse multiple spaces and new lines into a single space.
     expression = re.compile(r'[ \n]+')
     self._json_string = expression.sub(' ', self._json_string)
     # Remove spaces after { and [ characters.

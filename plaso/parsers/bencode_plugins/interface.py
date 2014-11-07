@@ -21,7 +21,7 @@ Bencoded files are only one example of a type of object that the Plaso tool is
 expected to encounter and process.  There can be and are many other parsers
 which are designed to process specific data types.
 
-BencodePlugin defines the attributes neccessary for registration, discovery
+BencodePlugin defines the attributes necessary for registration, discovery
 and operation of plugins for bencoded files which will be used by
 BencodeParser.
 """
@@ -37,12 +37,12 @@ class BencodePlugin(plugins.BasePlugin):
   """This is an abstract class from which plugins should be based."""
 
   # BENCODE_KEYS is a list of keys required by a plugin.
-  # This is expected to be overriden by the processing plugin.
+  # This is expected to be overridden by the processing plugin.
   # Ex. frozenset(['activity-date', 'done-date'])
   BENCODE_KEYS = frozenset(['any'])
 
-  # This is expected to be overriden by the processing plugin.
-  # The URLS should contain a list of URL's with additional information about
+  # This is expected to be overridden by the processing plugin.
+  # URLS should contain a list of URLs with additional information about
   # this key or value.
   # Ex. ['https://wiki.theory.org/BitTorrentSpecification#Bencoding']
   URLS = []
@@ -57,7 +57,7 @@ class BencodePlugin(plugins.BasePlugin):
     from the root (same as the check for plugin applicability). This level is
     suitable for most cases.
 
-    For cases where there is varability in the name at the first level
+    For cases where there is variability in the name at the first level
     (e.g. it is the MAC addresses of a device, or a UUID) it is possible to
     override the depth limit and use _GetKeys to fetch from a deeper level.
 
@@ -89,7 +89,7 @@ class BencodePlugin(plugins.BasePlugin):
 
     The hierarchy of a bencode file is a series of nested dictionaries and
     lists. This is a helper function helps plugins navigate the structure
-    without having to reimplent their own recsurive methods.
+    without having to reimplement their own recursive methods.
 
     This method implements an overridable depth limit to prevent processing
     extremely deeply nested dictionaries. If the limit is reached a debug
@@ -134,7 +134,7 @@ class BencodePlugin(plugins.BasePlugin):
     This is the main method that a bencode plugin needs to implement.
 
     The contents of the bencode keys defined in BENCODE_KEYS can be made
-    availible to the plugin as both a matched{'KEY': 'value'} and as the
+    available to the plugin as both a matched{'KEY': 'value'} and as the
     entire bencoded data dictionary. The plugin should implement logic to parse
     the most relevant data set into a useful event for incorporation into the
     Plaso timeline.

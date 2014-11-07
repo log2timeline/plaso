@@ -236,8 +236,9 @@ class UtmpParser(interface.BaseParser):
       ip_address = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
           entry.address_a, entry.address_b, entry.address_c, entry.address_d)
 
-    return UtmpEvent(entry.timestamp, entry.microsecond, user,
-        computer_name, terminal, status, ip_address, entry)
+    return UtmpEvent(
+        entry.timestamp, entry.microsecond, user, computer_name, terminal,
+        status, ip_address, entry)
 
   def _GetTextFromNullTerminatedString(
       self, null_terminated_string, default_string=u'N/A'):

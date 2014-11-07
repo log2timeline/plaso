@@ -69,7 +69,7 @@ class FrontendOutputWriter(object):
 
   @abc.abstractmethod
   def Write(self, string):
-    """Wtites a string to the output.
+    """Writes a string to the output.
 
     Args:
       string: A string containing the output.
@@ -112,7 +112,7 @@ class StdoutFrontendOutputWriter(object):
 class Frontend(object):
   """Class that implements a front-end."""
 
-  # The maximum length of the line in number of charcters.
+  # The maximum length of the line in number of characters.
   _LINE_LENGTH = 80
 
   def __init__(self, input_reader, output_writer):

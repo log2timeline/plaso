@@ -24,7 +24,6 @@ from plaso.formatters import winreg as winreg_formatter
 from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import ccleaner
 from plaso.parsers.winreg_plugins import test_lib
-from plaso.winreg import winregistry
 
 
 __author__ = 'Marc Seguin (segumarc@gmail.com)'

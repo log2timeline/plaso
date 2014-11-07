@@ -34,7 +34,7 @@ from plaso.parsers.winreg_plugins import interface
 # and thus mixins are to be used sparsely in this codebase, hence we need
 # to find a better solution in not needing to distinguish between key and
 # value plugins.
-# TODO: refactor Registry key and value plugin to rid ourselved of the mixin.
+# TODO: refactor Registry key and value plugin to rid ourselves of the mixin.
 class MRUListExPluginMixin(object):
   """Class for common MRUListEx Windows Registry plugin functionality."""
 

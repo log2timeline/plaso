@@ -42,7 +42,7 @@ class PreprocessPluginsManager(object):
     for plugin_class in cls._plugin_classes.itervalues():
       plugin_supported_os = getattr(plugin_class, 'SUPPORTED_OS', [])
       plugin_weight = getattr(plugin_class, 'WEIGHT', 0)
-      if (platform in plugin_supported_os and weight == plugin_weight):
+      if platform in plugin_supported_os and weight == plugin_weight:
         yield plugin_class()
 
   @classmethod

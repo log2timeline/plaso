@@ -36,7 +36,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class Mysql4n6(output.LogOutputFormatter):
-  """Contains functions for outputing as 4n6time MySQL database."""
+  """Contains functions for outputting as 4n6time MySQL database."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -164,7 +164,7 @@ class Mysql4n6(output.LogOutputFormatter):
            u'event_type VARCHAR(256), source_name VARCHAR(256), '
            u'user_sid VARCHAR(256), computer_name VARCHAR(256), '
            u'evidence VARCHAR(256), '
-          u'PRIMARY KEY (rowid)) ENGINE=InnoDB ROW_FORMAT=COMPRESSED'))
+           u'PRIMARY KEY (rowid)) ENGINE=InnoDB ROW_FORMAT=COMPRESSED'))
       if self.set_status:
         self.set_status(u'Created table: log2timeline')
 
@@ -288,7 +288,7 @@ class Mysql4n6(output.LogOutputFormatter):
           u'Unable to output event, no event formatter found.')
 
     if (isinstance(
-      event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
+        event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
         event_formatter.FORMAT_STRING.find('<|>') == -1):
       event_formatter.FORMAT_STRING = u'[{keyname}]<|>{text}<|>'
 

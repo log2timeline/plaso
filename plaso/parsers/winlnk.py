@@ -33,7 +33,7 @@ if pylnk.get_version() < '20130304':
 
 class WinLnkLinkEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows Shortcut (LNK) link event."""
- 
+
   DATA_TYPE = 'windows:lnk:link'
 
   def __init__(self, timestamp, timestamp_description, lnk_file, link_target):
@@ -129,12 +129,13 @@ class WinLnkParser(interface.BaseParser):
         [WinLnkLinkEvent(
             lnk_file.get_file_access_time_as_integer(),
             eventdata.EventTimestamp.ACCESS_TIME, lnk_file, link_target),
-        WinLnkLinkEvent(
-            lnk_file.get_file_creation_time_as_integer(),
-            eventdata.EventTimestamp.CREATION_TIME, lnk_file, link_target),
-        WinLnkLinkEvent(
-            lnk_file.get_file_modification_time_as_integer(),
-            eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file, link_target)],
+         WinLnkLinkEvent(
+             lnk_file.get_file_creation_time_as_integer(),
+             eventdata.EventTimestamp.CREATION_TIME, lnk_file, link_target),
+         WinLnkLinkEvent(
+             lnk_file.get_file_modification_time_as_integer(),
+             eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file,
+             link_target)],
         parser_name=self.NAME, file_entry=file_entry)
 
     # TODO: add support for the distributed link tracker.

@@ -28,6 +28,6 @@ class PlsRecallFormatter(interface.EventFormatter):
 
   # The format string.
   FORMAT_STRING = (u'Sequence #{sequence} User: {username} '
-                     u'Database Name: {database_name} Query: {query}')
+                   u'Database Name: {database_name} Query: {query}')
   FORMAT_STRING_SHORT = u'{sequence} {username} {database_name} {query}'
 

@@ -84,25 +84,25 @@ class ShellItemsParser(object):
           fat_date_time = exension_block.get_creation_time_as_integer()
           if fat_date_time:
             event_object = shell_item_events.ShellItemFileEntryEvent(
-               fat_date_time, eventdata.EventTimestamp.CREATION_TIME,
-               shell_item.name, long_name, localized_name, file_reference,
-               self._origin)
+                fat_date_time, eventdata.EventTimestamp.CREATION_TIME,
+                shell_item.name, long_name, localized_name, file_reference,
+                self._origin)
             parser_context.ProduceEvent(event_object, parser_name=self.NAME)
 
           fat_date_time = exension_block.get_access_time_as_integer()
           if fat_date_time:
             event_object = shell_item_events.ShellItemFileEntryEvent(
-               fat_date_time, eventdata.EventTimestamp.ACCESS_TIME,
-               shell_item.name, long_name, localized_name, file_reference,
-               self._origin)
+                fat_date_time, eventdata.EventTimestamp.ACCESS_TIME,
+                shell_item.name, long_name, localized_name, file_reference,
+                self._origin)
             parser_context.ProduceEvent(event_object, parser_name=self.NAME)
 
       fat_date_time = shell_item.get_modification_time_as_integer()
       if fat_date_time:
         event_object = shell_item_events.ShellItemFileEntryEvent(
-           fat_date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-           shell_item.name, long_name, localized_name, file_reference,
-           self._origin)
+            fat_date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+            shell_item.name, long_name, localized_name, file_reference,
+            self._origin)
         parser_context.ProduceEvent(event_object, parser_name=self.NAME)
 
       if long_name:

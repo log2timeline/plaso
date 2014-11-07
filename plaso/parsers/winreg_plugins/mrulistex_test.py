@@ -46,13 +46,13 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
         winreg_interface.WinRegValue.REG_BINARY, 123))
     values.append(winreg_test_lib.TestRegValue(
         '0', 'Some random text here'.encode('utf_16_le'),
-         winreg_interface.WinRegValue.REG_SZ, 1892))
+        winreg_interface.WinRegValue.REG_SZ, 1892))
     values.append(winreg_test_lib.TestRegValue(
         '1', 'c:\\evil.exe'.encode('utf_16_le'),
-         winreg_interface.WinRegValue.REG_BINARY, 612))
+        winreg_interface.WinRegValue.REG_BINARY, 612))
     values.append(winreg_test_lib.TestRegValue(
         '2', 'C:\\looks_legit.exe'.encode('utf_16_le'),
-         winreg_interface.WinRegValue.REG_SZ, 1001))
+        winreg_interface.WinRegValue.REG_SZ, 1001))
 
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, 1346145829002031, values, 1456)

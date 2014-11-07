@@ -38,7 +38,7 @@ class MetaclassRegistry(abc.ABCMeta):
     """
     abc.ABCMeta.__init__(cls, name, bases, env_dict)
 
-    # Register the name of the immedient parent class.
+    # Register the name of the immediate parent class.
     if bases:
       cls.parent_class_name = getattr(bases[0], 'NAME', bases[0])
       cls.parent_class = bases[0]
