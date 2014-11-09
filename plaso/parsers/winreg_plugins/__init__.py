@@ -34,6 +34,7 @@ from plaso.parsers.winreg_plugins import task_scheduler
 from plaso.parsers.winreg_plugins import terminal_server
 from plaso.parsers.winreg_plugins import typedurls
 from plaso.parsers.winreg_plugins import userassist
+from plaso.parsers.winreg_plugins import usb
 from plaso.parsers.winreg_plugins import usbstor
 from plaso.parsers.winreg_plugins import winrar
 from plaso.parsers.winreg_plugins import winver
