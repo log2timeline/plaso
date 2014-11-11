@@ -138,21 +138,28 @@ class ParserContext(object):
     return self._filter_object and self._filter_object.Matches(event_object)
 
   def ProcessEvent(
-      self, event_object, parser_name=None, plugin_name=None, file_entry=None,
-      query=None):
+      self, event_object, parser_name=None, parser_chain=None, plugin_name=None,
+      file_entry=None, query=None):
     """Processes an event before it is emitted to the event queue.
 
     Args:
       event_object: the event object (instance of EventObject).
       parser_name: Optional name of the parser. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       plugin_name: Optional name of the plugin. The default is None.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
       query: Optional query string. The default is None.
     """
-    if not getattr(event_object, 'parser', None) and parser_name:
+    if not getattr(event_object, 'parser', None) and parser_chain:
+      event_object.parser = parser_chain
+    elif not getattr(event_object, 'parser', None) and parser_name:
+      # TODO: Remove this when all plugins have been refactored so the
       event_object.parser = parser_name
 
+    # TODO: Remove this when all plugins have been refactored so the
+    # parser name contains the entire chain.
     if not getattr(event_object, 'plugin', None) and plugin_name:
       event_object.plugin = plugin_name
 
@@ -194,21 +201,23 @@ class ParserContext(object):
       event_object.query = query
 
   def ProduceEvent(
-      self, event_object, parser_name=None, plugin_name=None, file_entry=None,
-      query=None):
+      self, event_object, parser_name=None, parser_chain=None, plugin_name=None,
+      file_entry=None, query=None):
     """Produces an event onto the queue.
 
     Args:
       event_object: the event object (instance of EventObject).
       parser_name: Optional name of the parser. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       plugin_name: Optional name of the plugin. The default is None.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
       query: Optional query string. The default is None.
     """
     self.ProcessEvent(
-        event_object, parser_name=parser_name, plugin_name=plugin_name,
-        file_entry=file_entry, query=query)
+        event_object, parser_name=parser_name, parser_chain=parser_chain,
+        plugin_name=plugin_name, file_entry=file_entry, query=query)
 
     if self.MatchesFilter(event_object):
       return
@@ -217,14 +226,16 @@ class ParserContext(object):
     self.number_of_events += 1
 
   def ProduceEvents(
-      self, event_objects, parser_name=None, plugin_name=None, file_entry=None,
-      query=None):
+      self, event_objects, parser_name=None, parser_chain=None,
+      plugin_name=None, file_entry=None, query=None):
     """Produces events onto the queue.
 
     Args:
       event_objects: a list or generator of event objects (instances of
                      EventObject).
       parser_name: Optional name of the parser. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       plugin_name: Optional name of the plugin. The default is None.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
@@ -232,8 +243,8 @@ class ParserContext(object):
     """
     for event_object in event_objects:
       self.ProduceEvent(
-          event_object, parser_name=parser_name, plugin_name=plugin_name,
-          file_entry=file_entry, query=query)
+          event_object, parser_name=parser_name, parser_chain=parser_chain,
+          plugin_name=plugin_name, file_entry=file_entry, query=query)
 
   def ProduceParseError(self, name, description, file_entry=None):
     """Produces a parse error.

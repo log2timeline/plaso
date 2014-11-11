@@ -49,7 +49,7 @@ class BencodePlugin(plugins.BasePlugin):
 
   NAME = 'bencode'
 
-  def _GetKeys(self, top_level, keys, depth=1):
+  def _GetKeys(self, data, keys, depth=1):
     """Helper function to return keys nested in a bencode dict.
 
     By default this function will return the values for the named keys requested
@@ -62,7 +62,7 @@ class BencodePlugin(plugins.BasePlugin):
     override the depth limit and use _GetKeys to fetch from a deeper level.
 
     Args:
-      top_level: bencode data in dictionary form.
+      data: bencode data in dictionary form.
       keys: A list of keys that should be returned.
       depth: Defines how many levels deep to check for a match.
 
@@ -74,10 +74,10 @@ class BencodePlugin(plugins.BasePlugin):
 
     if depth == 1:
       for key in keys:
-        match[key] = top_level[key]
+        match[key] = data[key]
     else:
       for _, parsed_key, parsed_value in self._RecurseKey(
-          top_level, depth=depth):
+          data, depth=depth):
         if parsed_key in keys:
           match[parsed_key] = parsed_value
           if set(match.keys()) == keys:
@@ -128,7 +128,9 @@ class BencodePlugin(plugins.BasePlugin):
               yield keyval
 
   @abc.abstractmethod
-  def GetEntries(self, parser_context, data=None, match=None, **kwargs):
+  def GetEntries(
+      self, parser_context, file_entry=None, data=None, match=None,
+      parser_chain=None, **kwargs):
     """Extracts event object from the values of entries within a bencoded file.
 
     This is the main method that a bencode plugin needs to implement.
@@ -147,12 +149,18 @@ class BencodePlugin(plugins.BasePlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      data: Bencode data in dictionary form.
-      match: A dictionary containing only the keys selected in the
-             BENCODE_KEYS.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      data: Bencode data in dictionary form. The default is None.
+      match: Optional dictionary containing only the keys selected in the
+             BENCODE_KEYS. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
 
-  def Process(self, parser_context, top_level=None, **kwargs):
+  def Process(
+      self, parser_context, file_entry=None, parser_chain=None,
+      data=None, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current bencode file being processed is a match for
@@ -166,22 +174,28 @@ class BencodePlugin(plugins.BasePlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      top_level: Bencode data in dictionary form.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+      data: Bencode data in dictionary form. The default is None.
 
     Raises:
       WrongBencodePlugin: If this plugin is not able to process the given file.
       ValueError: If top level is not set.
     """
-    if top_level is None:
-      raise ValueError(u'Top level is not set.')
+    if data is None:
+      raise ValueError(u'Data is not set.')
 
-    if not set(top_level.keys()).issuperset(self.BENCODE_KEYS):
+    if not set(data.keys()).issuperset(self.BENCODE_KEYS):
       raise errors.WrongBencodePlugin(self.NAME)
 
     # This will raise if unhandled keyword arguments are passed.
     super(BencodePlugin, self).Process(parser_context, **kwargs)
 
     logging.debug(u'Bencode Plugin Used: {0:s}'.format(self.NAME))
-    match = self._GetKeys(top_level, self.BENCODE_KEYS, 3)
+    match = self._GetKeys(data, self.BENCODE_KEYS, 3)
 
-    self.GetEntries(parser_context, data=top_level, match=match)
+    self.GetEntries(
+        parser_context, file_entry=file_entry, data=data,
+        parser_chain=parser_chain, match=match)
