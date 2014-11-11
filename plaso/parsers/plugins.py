@@ -49,6 +49,7 @@ class BasePlugin(object):
   # and used for parser/plugin selection, so this needs to be concise and unique
   # for all plugins/parsers, eg: 'Chrome', 'Safari', 'UserAssist', etc.
   NAME = 'base_plugin'
+
   DESCRIPTION = u''
 
   # The URLS should contain a list of URLs with additional information about
@@ -65,10 +66,27 @@ class BasePlugin(object):
     """Return the name of the plugin."""
     return self.NAME
 
-  def GetEntries(self, **kwargs):
+  def _BuildParserChain(self, parser_chain=None):
+    """Return the parser chain with the addition of the current parser.
+
+    Args:
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+
+    Returns:
+      The parser chain, with the addition of the current parser.
+    """
+    if not parser_chain:
+      return self.NAME
+
+    return u'/'.join([parser_chain, self.NAME])
+
+  def GetEntries(self, unused_parser_chain=None, **kwargs):
     """Extract and return EventObjects from the data structure.
 
     Args:
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
               the correct plugin.
@@ -82,7 +100,7 @@ class BasePlugin(object):
     if kwargs:
       raise ValueError(u'Unused keyword arguments.')
 
-  def Process(self, unused_parser_context, **kwargs):
+  def Process(self, unused_parser_context, unused_parser_chain=None, **kwargs):
     """Evaluate if this is the correct plugin and return a generator.
 
     The purpose of the process function is to evaluate if this particular
@@ -93,6 +111,8 @@ class BasePlugin(object):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
               the correct plugin.

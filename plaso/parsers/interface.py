@@ -33,8 +33,23 @@ class BaseParser(object):
   NAME = 'base_parser'
   DESCRIPTION = u''
 
+  def _BuildParserChain(self, parser_chain=None):
+    """Return the parser chain with the addition of the current parser.
+
+    Args:
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+
+    Returns:
+      The parser chain, with the addition of the current parser.
+    """
+    if not parser_chain:
+      return self.NAME
+
+    return u'/'.join([parser_chain, self.NAME])
+
   @abc.abstractmethod
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Parsers the file entry and extracts event objects.
 
     This is the main function of the class, the one that actually
@@ -52,6 +67,8 @@ class BaseParser(object):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
     Raises:
       NotImplementedError when not implemented.
@@ -165,7 +182,7 @@ class BasePluginsParser(BaseParser):
       yield plugin_name, plugin_class
 
   @abc.abstractmethod
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Parsers the file entry and extracts event objects.
 
     This is the main function of the class, the one that actually
@@ -183,6 +200,8 @@ class BasePluginsParser(BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
     Raises:
       NotImplementedError when not implemented.

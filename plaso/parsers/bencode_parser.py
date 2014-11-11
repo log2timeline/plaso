@@ -75,36 +75,41 @@ class BencodeParser(interface.BasePluginsParser):
       raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
 
     try:
-      top_level_object = bencode.bdecode(file_object.read())
+      data_object = bencode.bdecode(file_object.read())
     except (IOError, bencode.BTFailure) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse invalid Bencoded file with error: {0:s}'.format(
               exception))
 
-    if not top_level_object:
+    if not data_object:
       raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
 
-    return top_level_object
+    return data_object
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Parse and extract values from a bencoded file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
-    top_level_object = self.GetTopLevel(file_object)
+    data_object = self.GetTopLevel(file_object)
 
-    if not top_level_object:
+    if not data_object:
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse: {1:s}. Skipping.'.format(
               self.NAME, file_entry.name))
 
+    parser_chain = self._BuildParserChain(parser_chain)
     for plugin_object in self._plugins:
       try:
-        plugin_object.Process(parser_context, top_level=top_level_object)
+        plugin_object.Process(
+            parser_context, data=data_object, file_entry=file_entry,
+            parser_chain=parser_chain)
 
       except errors.WrongBencodePlugin as exception:
         logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
