@@ -42,8 +42,7 @@ class MRUListExPluginMixin(object):
 
   @abc.abstractmethod
   def _ParseMRUListExEntryValue(
-      self, parser_context, key, entry_index, entry_number, text_dict,
-      **kwargs):
+      self, parser_context, key, entry_index, entry_number, **kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -52,7 +51,9 @@ class MRUListExPluginMixin(object):
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
-      text_dict: text dictionary object to append textual strings.
+
+    Returns:
+      A string containing the value.
     """
 
   def _ParseMRUListExValue(self, key):
@@ -92,15 +93,20 @@ class MRUListExPluginMixin(object):
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
-    for index, entry_number in self._ParseMRUListExValue(key):
+    for entry_index, entry_number in self._ParseMRUListExValue(key):
       # TODO: detect if list ends prematurely.
       # MRU lists are terminated with 0xffffffff (-1).
       if entry_number == 0xffffffff:
         break
 
-      self._ParseMRUListExEntryValue(
-          parser_context, key, index, entry_number, text_dict,
+      value_string = self._ParseMRUListExEntryValue(
+          parser_context, key, entry_index, entry_number,
           codepage=codepage)
+
+      value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
+          entry_index + 1, entry_number)
+
+      text_dict[value_text] = value_string
 
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict,
@@ -128,8 +134,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
           lambda obj, ctx: obj == '\x00\x00', construct.Field('string', 2)))
 
   def _ParseMRUListExEntryValue(
-      self, parser_context, key, entry_index, entry_number, text_dict,
-      **unused_kwargs):
+      self, parser_context, key, entry_index, entry_number, **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -138,7 +143,9 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
-      text_dict: text dictionary object to append textual strings.
+
+    Returns:
+      A string containing the value.
     """
     value_string = u''
 
@@ -166,10 +173,7 @@ class MRUListExStringPlugin(interface.ValuePlugin, MRUListExPluginMixin):
             u'value: {2:d} in key: {3:s} with error: {4:s}').format(
                 self.NAME, value_string, entry_number, key.path, exception))
 
-    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
-        entry_index + 1, entry_number)
-
-    text_dict[value_text] = value_string
+    return value_string
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, codepage='cp1252',
@@ -218,8 +222,8 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
       u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StreamMRU'])
 
   def _ParseMRUListExEntryValue(
-      self, parser_context, key, entry_index, entry_number, text_dict,
-      codepage='cp1252', **unused_kwargs):
+      self, parser_context, key, entry_index, entry_number, codepage='cp1252',
+      **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -228,8 +232,10 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
-      text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
+
+    Returns:
+      A string containing the value.
     """
     value_string = u''
 
@@ -251,10 +257,7 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
       value_string = u'Shell item list: [{0:s}]'.format(
           shell_items_parser.CopyToPath())
 
-    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
-        entry_index + 1, entry_number)
-
-    text_dict[value_text] = value_string
+    return value_string
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, codepage='cp1252',
@@ -299,8 +302,8 @@ class MRUListExStringAndShellItemPlugin(
       construct.Anchor('shell_item'))
 
   def _ParseMRUListExEntryValue(
-      self, parser_context, key, entry_index, entry_number, text_dict,
-      codepage='cp1252', **unused_kwargs):
+      self, parser_context, key, entry_index, entry_number, codepage='cp1252',
+      **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -309,8 +312,10 @@ class MRUListExStringAndShellItemPlugin(
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
-      text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
+
+    Returns:
+      A string containing the value.
     """
     value_string = u''
 
@@ -355,10 +360,7 @@ class MRUListExStringAndShellItemPlugin(
           value_string = u'Path: {0:s}, Shell item: [{1:s}]'.format(
               path, shell_items_parser.CopyToPath())
 
-    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
-        entry_index + 1, entry_number)
-
-    text_dict[value_text] = value_string
+    return value_string
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, codepage='cp1252',
@@ -403,8 +405,8 @@ class MRUListExStringAndShellItemListPlugin(
       construct.Anchor('shell_item_list'))
 
   def _ParseMRUListExEntryValue(
-      self, parser_context, key, entry_index, entry_number, text_dict,
-      codepage='cp1252', **unused_kwargs):
+      self, parser_context, key, entry_index, entry_number, codepage='cp1252',
+      **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -413,8 +415,10 @@ class MRUListExStringAndShellItemListPlugin(
            the MRUListEx value.
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
-      text_dict: text dictionary object to append textual strings.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
+
+    Returns:
+      A string containing the value.
     """
     value_string = u''
 
@@ -459,10 +463,7 @@ class MRUListExStringAndShellItemListPlugin(
           value_string = u'Path: {0:s}, Shell item list: [{1:s}]'.format(
               path, shell_items_parser.CopyToPath())
 
-    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
-        entry_index + 1, entry_number)
-
-    text_dict[value_text] = value_string
+    return value_string
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, codepage='cp1252',
