@@ -182,5 +182,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
         self._WINLNK_PARSER.ParseFileObject(
             parser_context, item, display_name=display_name)
 
+        # TODO: check for trailing data?
+
 
 olecf.OleCfParser.RegisterPlugin(AutomaticDestinationsOlecfPlugin)

@@ -160,15 +160,17 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     """
     self.attributes['iyear'] = int(match.group(1))
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a text file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
-    Yields:
-      An event object (instance of EventObject).
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     path_spec_printable = u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, file_entry.name)
@@ -433,12 +435,14 @@ class TextCSVParser(interface.BaseParser):
     parser_context.ProduceEvent(
         event_object, parser_name=self.NAME, file_entry=file_entry)
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a CVS file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', u';')
     file_object = file_entry.GetFileObject()
@@ -735,15 +739,17 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
                 parser_context.GetDisplayName(file_entry)))
       return line.strip()
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a text file using a pyparsing definition.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
-    Yields:
-      An event object (instance of EventObject).
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     # TODO: find a more elegant way for this; currently the mac_wifi and
     # syslog parser seem to rely on this member.
@@ -884,15 +890,17 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     self._FillBuffer(filehandle)
     return throw
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Parse a text file using a pyparsing definition.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
-    Yields:
-      An event object (instance of EventObject).
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     self.file_entry = file_entry
 

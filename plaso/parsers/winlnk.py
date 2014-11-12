@@ -27,8 +27,8 @@ from plaso.parsers import manager
 from plaso.parsers.shared import shell_items
 
 
-if pylnk.get_version() < '20130304':
-  raise ImportWarning('WinLnkParser requires at least pylnk 20130304.')
+if pylnk.get_version() < '20141026':
+  raise ImportWarning('WinLnkParser requires at least pylnk 20141026.')
 
 
 class WinLnkLinkEvent(time_events.FiletimeEvent):
@@ -73,19 +73,24 @@ class WinLnkParser(interface.BaseParser):
   NAME = 'lnk'
   DESCRIPTION = u'Parser for Windows Shortcut (LNK) files.'
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a Windows Shortcut (LNK) file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
-    self.ParseFileObject(parser_context, file_object, file_entry=file_entry)
+    self.ParseFileObject(
+        parser_context, file_object, file_entry=file_entry,
+        parser_chain=parser_chain)
     file_object.close()
 
   def ParseFileObject(
-      self, parser_context, file_object, file_entry=None, display_name=None):
+      self, parser_context, file_object, file_entry=None, parser_chain=None,
+      display_name=None):
     """Parses a Windows Shortcut (LNK) file.
 
     The file entry is used to determine the display name if it was not provided.
@@ -95,8 +100,15 @@ class WinLnkParser(interface.BaseParser):
       file_object: A file-like object.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       display_name: Optional display name.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
+    parser_chain = self._BuildParserChain(parser_chain)
+
     if not display_name and file_entry:
       display_name = parser_context.GetDisplayName(file_entry)
 
@@ -106,7 +118,6 @@ class WinLnkParser(interface.BaseParser):
     try:
       lnk_file.open_file_object(file_object)
     except IOError as exception:
-      lnk_file.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.NAME, display_name, exception))
@@ -136,9 +147,10 @@ class WinLnkParser(interface.BaseParser):
              lnk_file.get_file_modification_time_as_integer(),
              eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file,
              link_target)],
-        parser_name=self.NAME, file_entry=file_entry)
+        parser_chain=parser_chain, file_entry=file_entry)
 
     # TODO: add support for the distributed link tracker.
+
     lnk_file.close()
 
 

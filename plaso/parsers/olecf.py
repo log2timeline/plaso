@@ -48,16 +48,17 @@ class OleCfParser(interface.BasePluginsParser):
         self._default_plugin = self._plugins.pop(list_index)
         break
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extracts data from an OLE Compound File (OLECF).
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
-    Yields:
-      Event objects (EventObject) that contains the parsed
-      attributes.
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     file_object = file_entry.GetFileObject()
     olecf_file = pyolecf.file()

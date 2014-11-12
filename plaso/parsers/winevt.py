@@ -79,7 +79,8 @@ class WinEvtParser(interface.BaseParser):
   DESCRIPTION = u'Parser for Windows EventLog (EVT) files.'
 
   def _ParseRecord(
-      self, parser_context, evt_record, file_entry=None, recovered=False):
+      self, parser_context, evt_record, file_entry=None, parser_chain=None,
+      recovered=False):
     """Extract data from a Windows EventLog (EVT) record.
 
     Args:
@@ -87,6 +88,8 @@ class WinEvtParser(interface.BaseParser):
       evt_record: An event record (pyevt.record).
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       recovered: Boolean value to indicate the record was recovered, False
                  by default.
     """
@@ -103,7 +106,7 @@ class WinEvtParser(interface.BaseParser):
           creation_time, eventdata.EventTimestamp.CREATION_TIME,
           evt_record, recovered)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     try:
       written_time = evt_record.get_written_time_as_integer()
@@ -118,19 +121,22 @@ class WinEvtParser(interface.BaseParser):
           written_time, eventdata.EventTimestamp.WRITTEN_TIME,
           evt_record, recovered)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a Windows EventLog (EVT) file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
-    Yields:
-      An event object (instance of WinEvtRecordEvent) that contains the parsed
-      data.
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
+    parser_chain = self._BuildParserChain(parser_chain)
+
     file_object = file_entry.GetFileObject()
     evt_file = pyevt.file()
     evt_file.set_ascii_codepage(parser_context.codepage)
@@ -147,7 +153,9 @@ class WinEvtParser(interface.BaseParser):
     for record_index in range(0, evt_file.number_of_records):
       try:
         evt_record = evt_file.get_record(record_index)
-        self._ParseRecord(parser_context, evt_record, file_entry=file_entry)
+        self._ParseRecord(
+            parser_context, evt_record, file_entry=file_entry,
+            parser_chain=parser_chain)
       except IOError as exception:
         logging.warning((
             u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
@@ -158,7 +166,8 @@ class WinEvtParser(interface.BaseParser):
       try:
         evt_record = evt_file.get_recovered_record(record_index)
         self._ParseRecord(
-            parser_context, evt_record, file_entry=file_entry, recovered=True)
+            parser_context, evt_record, file_entry=file_entry,
+            parser_chain=parser_chain, recovered=True)
       except IOError as exception:
         logging.info((
             u'[{0:s}] unable to parse recovered event record: {1:d} in file: '

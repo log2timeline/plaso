@@ -76,17 +76,19 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # The creation timestamp.
+    event_object = event_objects[1]
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-13 23:29:02.849131')
-    event_object = event_objects[1]
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
+    event_object = event_objects[2]
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-14 01:39:18.220000')
-    event_object = event_objects[2]
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.assertEquals(event_object.timestamp, expected_timestamp)
