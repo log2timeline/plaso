@@ -19,8 +19,6 @@
 
 import logging
 import os
-import pdb
-import threading
 
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -31,14 +29,13 @@ except ImportError:
   hpy = None
 
 from plaso.engine import classifier
+from plaso.engine import queue
 from plaso.lib import errors
-from plaso.lib import queue
-from plaso.parsers import context as parsers_context
 from plaso.parsers import manager as parsers_manager
 
 
-class EventExtractionWorker(queue.PathSpecQueueConsumer):
-  """Class that extracts events for files and directories.
+class BaseEventExtractionWorker(queue.ItemQueueConsumer):
+  """Class that defines the event extraction worker base.
 
   This class is designed to watch a queue for path specifications of files
   and directories (file entries) for which events need to be extracted.
@@ -50,39 +47,30 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
 
   def __init__(
       self, identifier, process_queue, event_queue_producer,
-      parse_error_queue_producer, knowledge_base, rpc_proxy=None):
+      parse_error_queue_producer, parser_context):
     """Initializes the event extraction worker object.
 
     Args:
-      identifier: A thread identifier, usually an incrementing integer.
-      process_queue: the process queue (instance of Queue).
-      event_queue_producer: the event object queue producer (instance of
-                            EventObjectQueueProducer).
-      parse_error_queue_producer: the parse error queue producer (instance of
-                            ParseErrorQueueProducer).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
-      rpc_proxy: A proxy object (instance of proxy.ProxyServer) that can be
-                 used to setup RPC functionality for the worker. This is
-                 optional and if not provided the worker will not listen to RPC
-                 requests. The default value is None.
+      identifier: The identifier, usually an incrementing integer.
+      process_queue: The process queue (instance of Queue). This queue contains
+                     the file entries that need to be processed.
+      event_queue_producer: The event object queue producer (instance of
+                            ItemQueueProducer).
+      parse_error_queue_producer: The parse error queue producer (instance of
+                                  ItemQueueProducer).
+      parser_context: A parser context object (instance of ParserContext).
     """
-    super(EventExtractionWorker, self).__init__(process_queue)
+    super(BaseEventExtractionWorker, self).__init__(process_queue)
     self._enable_debug_output = False
     self._identifier = identifier
-    self._knowledge_base = knowledge_base
     self._open_files = False
-    self._parser_context = parsers_context.ParserContext(
-        event_queue_producer, parse_error_queue_producer, knowledge_base)
+    self._parser_context = parser_context
     self._filestat_parser_object = None
     self._parser_objects = None
-    self._rpc_proxy = rpc_proxy
 
     # We need a resolver context per process to prevent multi processing
     # issues with file objects stored in images.
     self._resolver_context = context.Context()
-    self._single_process_mode = False
     self._event_queue_producer = event_queue_producer
     self._parse_error_queue_producer = parse_error_queue_producer
 
@@ -97,8 +85,12 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     self._profiling_sample_rate = 1000
     self._profiling_sample_file = u'{0!s}.hpy'.format(self._identifier)
 
-  def _ConsumePathSpec(self, path_spec):
-    """Consumes a path specification callback for ConsumePathSpecs."""
+  def _ConsumeItem(self, path_spec):
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      path_spec: a path specification (instance of dfvfs.PathSpec).
+    """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(
         path_spec, resolver_context=self._resolver_context)
 
@@ -112,6 +104,52 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     except IOError as exception:
       logging.warning(u'Unable to parse file: {0:s} with error: {1:s}'.format(
           path_spec.comparable, exception))
+
+  def _DebugParseFileEntry(self):
+    """Callback for debugging file entry parsing failures."""
+    return
+
+  def _ParseFileEntryWithParser(self, parser_object, file_entry):
+    """Parses a file entry with a specific parser.
+
+    Args:
+      parser_object: A parser object (instance of BaseParser).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Raises:
+      QueueFull: If a queue is full.
+    """
+    try:
+      parser_object.Parse(self._parser_context, file_entry)
+
+    except errors.UnableToParseFile as exception:
+      logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
+          parser_object.NAME, file_entry.name, exception))
+
+    except errors.QueueFull:
+      raise
+
+    except IOError as exception:
+      logging.debug(
+          u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
+              parser_object.NAME, file_entry.path_spec.comparable,
+              exception))
+
+    # Casting a wide net, catching all exceptions. Done to keep the worker
+    # running, despite the parser hitting errors, so the worker doesn't die
+    # if a single file is corrupted or there is a bug in a parser.
+    except Exception as exception:
+      logging.warning(
+          u'[{0:s}] Unable to process file: {1:s} with error: {2:s}.'.format(
+              parser_object.NAME, file_entry.path_spec.comparable,
+              exception))
+      logging.debug(
+          u'The path specification that caused the error: {0:s}'.format(
+              file_entry.path_spec.comparable))
+      logging.exception(exception)
+
+      if self._enable_debug_output:
+        self._DebugParseFileEntry()
 
   def _ProfilingStart(self):
     """Starts the profiling."""
@@ -141,7 +179,7 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     heap.dump(self._profiling_sample_file)
 
   def GetStatus(self):
-    """Returns a status dictionary for the worker process."""
+    """Returns a status dictionary."""
     return {
         'is_running': self._is_running,
         'identifier': u'Worker_{0:d}'.format(self._identifier),
@@ -169,44 +207,6 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
       if parser_object.NAME == 'filestat':
         self._filestat_parser_object = parser_object
         break
-
-  def _ParseFileEntryWithParser(self, parser_object, file_entry):
-    """Parses a file entry with a specific parser.
-
-    Args:
-      parser_object: A parser object (instance of BaseParser).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-    """
-    try:
-      parser_object.Parse(self._parser_context, file_entry)
-
-    except errors.UnableToParseFile as exception:
-      logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
-          parser_object.NAME, file_entry.name, exception))
-
-    except IOError as exception:
-      logging.debug(
-          u'[{0:s}] Unable to parse: {1:s} with error: {2:s}'.format(
-              parser_object.NAME, file_entry.path_spec.comparable,
-              exception))
-
-    # Casting a wide net, catching all exceptions. Done to keep the worker
-    # running, despite the parser hitting errors, so the worker doesn't die
-    # if a single file is corrupted or there is a bug in a parser.
-    except Exception as exception:
-      logging.warning(
-          u'[{0:s}] Unable to process file: {1:s} with error: {2:s}.'.format(
-              parser_object.NAME, file_entry.path_spec.comparable,
-              exception))
-      logging.debug(
-          u'The path specification that caused the error: {0:s}'.format(
-              file_entry.path_spec.comparable))
-      logging.exception(exception)
-
-      # Check for debug mode and single process mode, then we would like
-      # to debug this problem.
-      if self._single_process_mode and self._enable_debug_output:
-        pdb.post_mortem()
 
   def ParseFileEntry(self, file_entry):
     """Parses a file entry.
@@ -248,60 +248,33 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
             u'Unable to parse file: {0:s} with error: {1:s}'.format(
                 file_entry.path_spec.comparable, exception))
 
-  def Run(self, parser_filter_string=None):
-    """Start the worker, monitor the queue and parse files.
-
-    Args:
-      parser_filter_string: Optional parser filter string. The default is None.
-    """
-    self.pid = os.getpid()
-    logging.info(
-        u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
-            self._identifier, self.pid))
-
-    self.InitalizeParserObjects(parser_filter_string=parser_filter_string)
-
+  def Run(self):
+    """Extracts event objects from file entries."""
     self._parser_context.ResetCounters()
-
-    if self._rpc_proxy:
-      try:
-        self._rpc_proxy.SetListeningPort(self.pid)
-        self._rpc_proxy.Open()
-        self._rpc_proxy.RegisterFunction('status', self.GetStatus)
-
-        proxy_thread = threading.Thread(
-            name='rpc_proxy', target=self._rpc_proxy.StartProxy)
-        proxy_thread.start()
-      except errors.ProxyFailedToStart as exception:
-        logging.error(
-            u'Unable to setup a RPC server for the worker: {0:d} [PID {1:d}] '
-            u'with error: {2:s}'.format(self._identifier, self.pid, exception))
 
     if self._enable_profiling:
       self._ProfilingStart()
 
     self._is_running = True
 
-    self.ConsumePathSpecs()
+    logging.info(
+        u'Worker {0:d} (PID: {1:d}) started monitoring process queue.'.format(
+            self._identifier, os.getpid()))
+
+    self.ConsumeItems()
 
     logging.info(
         u'Worker {0:d} (PID: {1:d}) stopped monitoring process queue.'.format(
             self._identifier, os.getpid()))
 
+    self._current_working_file = u''
+
+    self._is_running = False
+
     if self._enable_profiling:
       self._ProfilingStop()
 
-    self._is_running = False
-    self._current_working_file = u''
-
     self._resolver_context.Empty()
-
-    if self._rpc_proxy:
-      # Close the proxy, free up resources so we can shut down the thread.
-      self._rpc_proxy.Close()
-
-      if proxy_thread.isAlive():
-        proxy_thread.join()
 
   def SetEnableDebugOutput(self, enable_debug_output):
     """Enables or disables debug output.
@@ -350,19 +323,10 @@ class EventExtractionWorker(queue.PathSpecQueueConsumer):
     """Sets the open files mode.
 
     Args:
-      file_files: boolean value to indicate if the worker should scan for
-                  sun file entries inside files.
+      open_files: boolean value to indicate if the worker should scan for
+                  file entries inside files.
     """
     self._open_files = open_files
-
-  def SetSingleProcessMode(self, single_process_mode):
-    """Sets the single process mode.
-
-    Args:
-      single_process_mode: boolean value to indicate if the single process mode
-                          should be enabled.
-    """
-    self._single_process_mode = single_process_mode
 
   def SetTextPrepend(self, text_prepend):
     """Sets the text prepend.

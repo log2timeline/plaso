@@ -23,8 +23,8 @@ import SocketServer
 
 import psutil
 
-from plaso.frontend import rpc_proxy
 from plaso.lib import timelib
+from plaso.multi_processing import rpc_proxy
 
 
 class ProcessInfo(object):

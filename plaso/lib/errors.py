@@ -53,6 +53,10 @@ class QueueEmpty(Error):
   """Class that implements a queue empty exception."""
 
 
+class QueueFull(Error):
+  """Class that implements a queue full exception."""
+
+
 class SameFileType(Error):
   """Raised when a file is being evaluated against the same driver type."""
 

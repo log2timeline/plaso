@@ -21,12 +21,13 @@ import shutil
 import tempfile
 import unittest
 
+from plaso.engine import queue
 from plaso.frontend import plasm
 from plaso.frontend import test_lib
 from plaso.lib import event
 from plaso.lib import pfilter
-from plaso.lib import queue
 from plaso.lib import storage
+from plaso.multi_processing import multi_process
 
 
 class TestEvent(event.EventObject):
@@ -60,9 +61,10 @@ class PlasmTest(test_lib.FrontendTestCase):
 
     pfilter.TimeRangeCache.ResetTimeConstraints()
 
-    test_queue = queue.MultiThreadedQueue()
-    test_queue_producer = queue.EventObjectQueueProducer(test_queue)
-    test_queue_producer.ProduceEventObjects([
+    # TODO: add upper queue limit.
+    test_queue = multi_process.MultiProcessingQueue()
+    test_queue_producer = queue.ItemQueueProducer(test_queue)
+    test_queue_producer.ProduceItems([
         TestEvent(0),
         TestEvent(1000),
         TestEvent(2000000, '/tmp/whoaaaaa'),

@@ -233,13 +233,15 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
         elif value.DataIsInteger():
           if value.name in self.KNOWN_PERMISSIONS_VALUE_NAMES:
-            value_string = self.CONTROL_VALUES_PERMISSIONS[value.data]
+            value_string = self.CONTROL_VALUES_PERMISSIONS.get(
+                value.data, u'UNKNOWN')
           elif value.name == '1A00':
-            value_string = self.CONTROL_VALUES_1A00[value.data]
+            value_string = self.CONTROL_VALUES_1A00.get(value.data, u'UNKNOWN')
           elif value.name == '1C00':
-            value_string = self.CONTROL_VALUES_1C00[value.data]
+            value_string = self.CONTROL_VALUES_1C00.get(value.data, u'UNKNOWN')
           elif value.name == '1E05':
-            value_string = self.CONTROL_VALUES_SAFETY[value.data]
+            value_string = self.CONTROL_VALUES_SAFETY.get(
+                value.data, u'UNKNOWN')
           else:
             value_string = u'{0:d}'.format(value.data)
 
