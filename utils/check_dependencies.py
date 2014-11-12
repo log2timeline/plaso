@@ -286,7 +286,7 @@ if __name__ == '__main__':
       ('pybde', 20140531),
       ('pyesedb', 20140301),
       ('pyevt', None),
-      ('pyevtx', None),
+      ('pyevtx', 20141112),
       ('pyewf', 20131210),
       ('pyfwsi', 20140714),
       ('pylnk', 20130304),
