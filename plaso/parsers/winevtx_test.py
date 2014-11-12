@@ -67,7 +67,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.computer_name, expected_computer_name)
     self.assertEquals(event_object.source_name, u'Microsoft-Windows-Eventlog')
     self.assertEquals(event_object.event_level, 4)
-    self.assertEquals(event_object.event_identifier, 0x00000069)
+    self.assertEquals(event_object.event_identifier, 105)
 
     self.assertEquals(event_object.strings[0], u'System')
 
@@ -117,7 +117,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.xml_string, expected_xml_string)
 
     expected_msg = (
-        u'[7036 / 0x00001b7c] '
+        u'[7036 / 0x1b7c] '
         u'Record Number: 12050 '
         u'Event Level: 4 '
         u'Source Name: Service Control Manager '
@@ -127,9 +127,9 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         u'7300740061006C006C00650072002F0031000000\']')
 
     expected_msg_short = (
-        u'[0x00001b7c] '
+        u'[7036 / 0x1b7c] '
         u'Strings: [u\'Windows Modules Installer\', '
-        u'u\'stopped\', u\'5400720075...')
+        u'u\'stopped\', u\'5400720...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

@@ -197,6 +197,8 @@ def Main():
   operating_system = platform.system()
   cpu_architecture = platform.machine().lower()
   linux_name = None
+  sub_directory = None
+  noarch_sub_directory = None
 
   if operating_system == u'Darwin':
     # TODO: determine OSX version
@@ -206,7 +208,6 @@ def Main():
 
     # Note that the sub directory should be URL encoded.
     sub_directory = u'macosx%2010.9'
-    noarch_sub_directory = None
 
   elif operating_system == u'Linux':
     linux_name, linux_version, _ = platform.linux_distribution()
@@ -245,8 +246,6 @@ def Main():
     else:
       logging.error(u'CPU architecture: {0:s} not supported.'.format(
           cpu_architecture))
-
-    noarch_sub_directory = None
 
   else:
     logging.error(u'Operating system: {0:s} not supported.'.format(
