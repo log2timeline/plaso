@@ -26,9 +26,11 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
 
   DATA_TYPE = 'windows:evt:record'
 
+  # TODO: add string representation of facility.
   FORMAT_STRING_PIECES = [
       u'[{event_identifier} /',
-      u'0x{event_identifier:08x}]',
+      u'0x{event_identifier:04x}]',
+      u'Severity: {severity_string}',
       u'Record Number: {record_number}',
       u'Event Type: {event_type_string}',
       u'Event Category: {event_category}',
@@ -37,15 +39,26 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
       u'Strings: {strings}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'[0x{event_identifier:08x}]',
+      u'[{event_identifier} /',
+      u'0x{event_identifier:04x}]',
       u'Strings: {strings}']
 
   SOURCE_LONG = 'WinEVT'
   SOURCE_SHORT = 'EVT'
 
   # Mapping of the numeric event types to a descriptive string.
-  _EVENT_TYPES = [u'Error event', u'Warning event', u'Information event',
-                  u'Success Audit event', u'Failure Audit event']
+  _EVENT_TYPES = [
+      u'Error event',
+      u'Warning event',
+      u'Information event',
+      u'Success Audit event',
+      u'Failure Audit event']
+
+  _SEVERITY = [
+      u'Success',
+      u'Informational',
+      u'Warning',
+      u'Error']
 
   def GetEventTypeString(self, event_type):
     """Retrieves a string representation of the event type.
@@ -59,6 +72,19 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
     if event_type >= 0 and event_type < len(self._EVENT_TYPES):
       return self._EVENT_TYPES[event_type]
     return u'Unknown {0:d}'.format(event_type)
+
+  def GetSeverityString(self, severity):
+    """Retrieves a string representation of the severity.
+
+    Args:
+      severity: The numeric severity.
+
+    Returns:
+      An Unicode string containing a description of the event type.
+    """
+    if severity >= 0 and severity < len(self._SEVERITY):
+      return self._SEVERITY[severity]
+    return u'Unknown {0:d}'.format(severity)
 
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
@@ -78,5 +104,10 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
     # Update event object with the event type string.
     event_object.event_type_string = self.GetEventTypeString(
         event_object.event_type)
+
+    # TODO: add string representation of facility.
+
+    # Update event object with the severity string.
+    event_object.severity_string = self.GetSeverityString(event_object.severity)
 
     return super(WinEvtFormatter, self).GetMessages(event_object)

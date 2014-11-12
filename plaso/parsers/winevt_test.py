@@ -67,7 +67,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.computer_name, u'WKS-WINXP32BIT')
     self.assertEquals(event_object.source_name, u'LSASRV')
     self.assertEquals(event_object.event_category, 3)
-    self.assertEquals(event_object.event_identifier, 0x8000a001)
+    self.assertEquals(event_object.event_identifier, 40961)
     self.assertEquals(event_object.strings[0], u'cifs/CONTROLLER')
 
     expected_string = (
@@ -95,7 +95,8 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_msg = (
-        u'[2147524609 / 0x8000a001] '
+        u'[40961 / 0xa001] '
+        u'Severity: Warning '
         u'Record Number: 1392 '
         u'Event Type: Information event '
         u'Event Category: 3 '
@@ -108,9 +109,9 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         u'(0xc0000388)"\']')
 
     expected_msg_short = (
-        u'[0x8000a001] '
+        u'[40961 / 0xa001] '
         u'Strings: [u\'cifs/CONTROLLER\', '
-        u'u\'"The system detected a possible ...')
+        u'u\'"The system detected a possi...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

@@ -24,7 +24,7 @@ class WinEvtxFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'[{event_identifier} /',
-      u'0x{event_identifier:08x}]',
+      u'0x{event_identifier:04x}]',
       u'Record Number: {record_number}',
       u'Event Level: {event_level}',
       u'Source Name: {source_name}',
@@ -33,7 +33,8 @@ class WinEvtxFormatter(interface.ConditionalEventFormatter):
       u'XML string: {xml_strings}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'[0x{event_identifier:08x}]',
+      u'[{event_identifier} /',
+      u'0x{event_identifier:04x}]',
       u'Strings: {strings}']
 
   SOURCE_LONG = 'WinEVTX'
