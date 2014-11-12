@@ -26,12 +26,13 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.analysis import context
 from plaso.artifacts import knowledge_base
+from plaso.engine import queue
+from plaso.engine import single_process
 from plaso.lib import event
-from plaso.lib import queue
 from plaso.parsers import context as parsers_context
 
 
-class TestAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
+class TestAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements a test analysis report queue consumer."""
 
   def __init__(self, queue_object):
@@ -43,8 +44,12 @@ class TestAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
     super(TestAnalysisReportQueueConsumer, self).__init__(queue_object)
     self.analysis_reports = []
 
-  def _ConsumeAnalysisReport(self, analysis_report):
-    """Consumes an analysis report callback for ConsumeAnalysisReports."""
+  def _ConsumeItem(self, analysis_report):
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      analysis_report: the analysis report (instance of AnalysisReport).
+    """
     self.analysis_reports.append(analysis_report)
 
   @property
@@ -73,7 +78,7 @@ class AnalysisPluginTestCase(unittest.TestCase):
     Returns:
       A list of analysis reports (instances of AnalysisReport).
     """
-    analysis_report_queue_consumer.ConsumeAnalysisReports()
+    analysis_report_queue_consumer.ConsumeItems()
 
     analysis_reports = []
     for analysis_report in analysis_report_queue_consumer.analysis_reports:
@@ -107,10 +112,10 @@ class AnalysisPluginTestCase(unittest.TestCase):
     Returns:
       An event object queue object (instance of Queue).
     """
-    event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+    event_queue = single_process.SingleProcessQueue()
+    event_queue_producer = queue.ItemQueueProducer(event_queue)
 
-    parse_error_queue = queue.SingleThreadedQueue()
+    parse_error_queue = single_process.SingleProcessQueue()
 
     parser_context = parsers_context.ParserContext(
         event_queue_producer, parse_error_queue, knowledge_base_object)
@@ -134,10 +139,10 @@ class AnalysisPluginTestCase(unittest.TestCase):
     Returns:
       An event object queue object (instance of Queue).
     """
-    analysis_report_queue = queue.SingleThreadedQueue()
+    analysis_report_queue = single_process.SingleProcessQueue()
     analysis_report_queue_consumer = TestAnalysisReportQueueConsumer(
         analysis_report_queue)
-    analysis_report_queue_producer = queue.AnalysisReportQueueProducer(
+    analysis_report_queue_producer = queue.ItemQueueProducer(
         analysis_report_queue)
 
     analysis_context = context.AnalysisContext(

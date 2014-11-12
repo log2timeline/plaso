@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains a simple RPC proxy object that."""
+"""Simple RPC proxy server and client."""
 
 import logging
 import SimpleXMLRPCServer
@@ -29,13 +29,13 @@ from plaso.lib import proxy
 
 
 class StandardRpcProxyServer(proxy.ProxyServer):
-  """Class that implements a simple XML RPC based proxy."""
+  """Class that implements a simple XML RPC based proxy server."""
 
   def __init__(self, port=0):
-    """Initialize the RPC proxy.
+    """Initializes the RPC proxy server object.
 
     Args:
-      port: The port number the proxy should listen on. Defaults to port zero.
+      port: The port number the proxy should listen on. Defaults to 0.
     """
     super(StandardRpcProxyServer, self).__init__(
         proxy.GetProxyPortNumberFromPID(port))
@@ -94,10 +94,10 @@ class StandardRpcProxyClient(proxy.ProxyClient):
   """Class that implements a simple XML RPC based proxy client."""
 
   def __init__(self, port=0):
-    """Initialize the RPC proxy client.
+    """Initializes the RPC proxy client object.
 
     Args:
-      port: The port number the proxy should connect to. Defaults to port zero.
+      port: The port number the proxy should connect to. Defaults to 0.
     """
     super(StandardRpcProxyClient, self).__init__(
         proxy.GetProxyPortNumberFromPID(port))

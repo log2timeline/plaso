@@ -26,8 +26,9 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.artifacts import knowledge_base
+from plaso.engine import queue
+from plaso.engine import single_process
 from plaso.lib import event
-from plaso.lib import queue
 from plaso.parsers import context
 
 
@@ -108,9 +109,8 @@ class ParserTestCase(unittest.TestCase):
     Returns:
       A parser context object (instance of ParserContext).
     """
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-    parse_error_queue_producer = queue.ParseErrorQueueProducer(
-        parse_error_queue)
+    event_queue_producer = queue.ItemQueueProducer(event_queue)
+    parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -166,10 +166,10 @@ class ParserTestCase(unittest.TestCase):
       An event object queue consumer object (instance of
       TestEventObjectQueueConsumer).
     """
-    event_queue = queue.SingleThreadedQueue()
+    event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = TestEventObjectQueueConsumer(event_queue)
 
-    parse_error_queue = queue.SingleThreadedQueue()
+    parse_error_queue = single_process.SingleProcessQueue()
 
     parser_context = self._GetParserContext(
         event_queue, parse_error_queue,

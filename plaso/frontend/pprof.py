@@ -51,9 +51,10 @@ import pyregf
 
 import plaso
 from plaso.engine import engine
+from plaso.engine import queue
+from plaso.engine import single_process
 from plaso.frontend import psort
 from plaso.frontend import utils as frontend_utils
-from plaso.lib import queue
 
 
 # TODO: Remove this after the dfVFS integration.
@@ -187,10 +188,11 @@ def ProcessFile(options):
   options.text_prepend = u''
 
   # Set up the engine.
-  collection_queue = queue.SingleThreadedQueue()
-  storage_queue = queue.SingleThreadedQueue()
-  parse_error_queue = queue.SingleThreadedQueue()
-  engine_object = engine.Engine(
+  # TODO: refactor and add queue limit.
+  collection_queue = single_process.SingleProcessQueue()
+  storage_queue = single_process.SingleProcessQueue()
+  parse_error_queue = single_process.SingleProcessQueue()
+  engine_object = engine.BaseEngine(
       collection_queue, storage_queue, parse_error_queue)
 
   # Create a worker.

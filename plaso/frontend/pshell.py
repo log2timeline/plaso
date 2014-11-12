@@ -50,11 +50,12 @@ from plaso import preprocessors
 from plaso.classifier import scanner
 
 from plaso.engine import collector
-from plaso.engine import utils as engine_utils
 from plaso.engine import engine
+from plaso.engine import queue
+from plaso.engine import single_process
+from plaso.engine import utils as engine_utils
 
 from plaso.frontend import frontend
-from plaso.frontend import rpc_proxy
 from plaso.frontend import utils as frontend_utils
 
 from plaso.lib import binary
@@ -63,19 +64,20 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import filter_interface
-from plaso.lib import foreman
 from plaso.lib import lexer
 from plaso.lib import objectfilter
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
-from plaso.lib import process_info
 from plaso.lib import proxy
 from plaso.lib import putils
-from plaso.lib import queue
 from plaso.lib import registry as class_registry
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.lib import utils
+
+from plaso.multi_processing import foreman
+from plaso.multi_processing import rpc_proxy
+from plaso.multi_processing import process_info
 
 from plaso.output import helper as output_helper
 
@@ -259,14 +261,15 @@ def ParseFile(file_entry):
     file_entry = OpenOSFile(file_entry)
 
   # Set up the engine.
-  collection_queue = queue.SingleThreadedQueue()
-  storage_queue = queue.SingleThreadedQueue()
-  parse_error_queue = queue.SingleThreadedQueue()
-  engine_object = engine.Engine(
+  # TODO: refactor and add queue limit.
+  collection_queue = single_process.SingleProcessQueue()
+  storage_queue = single_process.SingleProcessQueue()
+  parse_error_queue = single_process.SingleProcessQueue()
+  engine_object = engine.BaseEngine(
       collection_queue, storage_queue, parse_error_queue)
 
   # Create a worker.
-  worker_object = engine_object.CreateExtractionWorker('0')
+  worker_object = engine_object.CreateExtractionWorker(0)
   # TODO: add support for parser_filter_string.
   worker_object.InitalizeParserObjects()
   worker_object.ParseFileEntry(file_entry)

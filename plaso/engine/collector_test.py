@@ -30,8 +30,9 @@ from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import collector
+from plaso.engine import queue
+from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
-from plaso.lib import queue
 
 
 class TempDirectory(object):
@@ -52,7 +53,7 @@ class TempDirectory(object):
     shutil.rmtree(self.name, True)
 
 
-class TestCollectorQueueConsumer(queue.PathSpecQueueConsumer):
+class TestCollectorQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements a test collector queue consumer."""
 
   def __init__(self, queue_object):
@@ -64,8 +65,12 @@ class TestCollectorQueueConsumer(queue.PathSpecQueueConsumer):
     super(TestCollectorQueueConsumer, self).__init__(queue_object)
     self.path_specs = []
 
-  def _ConsumePathSpec(self, path_spec):
-    """Consumes a path specification callback for ConsumePathSpecs."""
+  def _ConsumeItem(self, path_spec):
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      path_spec: a path specification (instance of dfvfs.PathSpec).
+    """
     self.path_specs.append(path_spec)
 
   @property
@@ -124,7 +129,7 @@ class CollectorTest(CollectorTestCase):
       path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_OS, location=dirname)
 
-      test_collection_queue = queue.SingleThreadedQueue()
+      test_collection_queue = single_process.SingleProcessQueue()
       resolver_context = context.Context()
       test_collector = collector.Collector(
           test_collection_queue, dirname, path_spec,
@@ -133,7 +138,7 @@ class CollectorTest(CollectorTestCase):
 
       test_collector_queue_consumer = TestCollectorQueueConsumer(
           test_collection_queue)
-      test_collector_queue_consumer.ConsumePathSpecs()
+      test_collector_queue_consumer.ConsumeItems()
 
       self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 4)
 
@@ -151,7 +156,7 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/AUTHORS\n')
       temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
 
-    test_collection_queue = queue.SingleThreadedQueue()
+    test_collection_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, dirname, path_spec,
@@ -164,7 +169,7 @@ class CollectorTest(CollectorTestCase):
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
         test_collection_queue)
-    test_collector_queue_consumer.ConsumePathSpecs()
+    test_collector_queue_consumer.ConsumeItems()
 
     try:
       os.remove(filter_name)
@@ -225,7 +230,7 @@ class CollectorTest(CollectorTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
 
-    test_collection_queue = queue.SingleThreadedQueue()
+    test_collection_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, test_file, path_spec,
@@ -234,7 +239,7 @@ class CollectorTest(CollectorTestCase):
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
         test_collection_queue)
-    test_collector_queue_consumer.ConsumePathSpecs()
+    test_collector_queue_consumer.ConsumeItems()
 
     self.assertEquals(test_collector_queue_consumer.number_of_path_specs, 3)
 
@@ -255,7 +260,7 @@ class CollectorTest(CollectorTestCase):
       temp_file.write('/a_directory/another.+\n')
       temp_file.write('/passwords.txt\n')
 
-    test_collection_queue = queue.SingleThreadedQueue()
+    test_collection_queue = single_process.SingleProcessQueue()
     resolver_context = context.Context()
     test_collector = collector.Collector(
         test_collection_queue, test_file, path_spec,
@@ -268,7 +273,7 @@ class CollectorTest(CollectorTestCase):
 
     test_collector_queue_consumer = TestCollectorQueueConsumer(
         test_collection_queue)
-    test_collector_queue_consumer.ConsumePathSpecs()
+    test_collector_queue_consumer.ConsumeItems()
 
     try:
       os.remove(filter_name)

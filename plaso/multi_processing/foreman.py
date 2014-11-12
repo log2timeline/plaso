@@ -20,7 +20,7 @@
 import collections
 import logging
 
-from plaso.lib import process_info
+from plaso.multi_processing import process_info
 
 
 class Foreman(object):
@@ -48,7 +48,8 @@ class Foreman(object):
     """Initialize the foreman process.
 
     Args:
-      show_memory_usage: Include memory information in logging.
+      show_memory_usage: Optional boolean value to indicate memory information
+                         should be included in logging. The default is false.
     """
     self._last_status_dict = {}
     self._process_information = process_info.ProcessInfo()
@@ -172,7 +173,7 @@ class Foreman(object):
     logging.info(
         u'Foreman received a signal indicating that processing is completed.')
 
-    # This function may be called via RPC functions that expect a value to be
+    # This function may be called via RPC functions that expects a value to be
     # returned.
     return True
 
