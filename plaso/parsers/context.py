@@ -34,9 +34,9 @@ class ParserContext(object):
 
     Args:
       event_queue_producer: the event object queue producer (instance of
-                            EventObjectQueueProducer).
+                            ItemQueueProducer).
       parse_error_queue_producer: the parse error queue producer (instance of
-                            ParseErrorQueueProducer).
+                                  ItemQueueProducer).
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for parsing.
@@ -222,7 +222,7 @@ class ParserContext(object):
     if self.MatchesFilter(event_object):
       return
 
-    self._event_queue_producer.ProduceEventObject(event_object)
+    self._event_queue_producer.ProduceItem(event_object)
     self.number_of_events += 1
 
   def ProduceEvents(
@@ -258,7 +258,7 @@ class ParserContext(object):
     if self._parse_error_queue_producer:
       path_spec = getattr(file_entry, 'path_spec', None)
       parse_error = event.ParseError(name, description, path_spec=path_spec)
-      self._parse_error_queue_producer.ProduceParseError(parse_error)
+      self._parse_error_queue_producer.ProduceItem(parse_error)
       self.number_of_parse_errors += 1
 
   def ResetCounters(self):

@@ -32,11 +32,12 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.artifacts import knowledge_base
 from plaso.engine import collector
 from plaso.engine import utils as engine_utils
+from plaso.engine import queue
+from plaso.engine import single_process
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.lib import queue
 from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -316,7 +317,7 @@ class FileSaver(object):
               filename, exception))
 
 
-class ImageExtractorQueueConsumer(queue.PathSpecQueueConsumer):
+class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements an image extractor queue consumer."""
 
   def __init__(self, process_queue, extensions, destination_path):
@@ -331,8 +332,12 @@ class ImageExtractorQueueConsumer(queue.PathSpecQueueConsumer):
     self._destination_path = destination_path
     self._extensions = extensions
 
-  def _ConsumePathSpec(self, path_spec):
-    """Consumes a path specification callback for ConsumePathSpecs."""
+  def _ConsumeItem(self, path_spec):
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      path_spec: a path specification (instance of dfvfs.PathSpec).
+    """
     # TODO: move this into a function of path spec e.g. GetExtension().
     location = getattr(path_spec, 'location', None)
     if not location:
@@ -376,7 +381,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
 
-    input_queue = queue.SingleThreadedQueue()
+    input_queue = single_process.SingleProcessQueue()
 
     # TODO: add support to handle multiple partitions.
     self._source_path_spec = self.GetSourcePathSpec()
@@ -390,7 +395,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     input_queue_consumer = ImageExtractorQueueConsumer(
         input_queue, extensions, destination_path)
-    input_queue_consumer.ConsumePathSpecs()
+    input_queue_consumer.ConsumeItems()
 
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(self, filter_file_path, destination_path):

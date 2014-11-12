@@ -20,12 +20,10 @@
 import abc
 import locale
 import logging
-import multiprocessing
 import os
 import pdb
 import signal
 import sys
-import threading
 import traceback
 
 from dfvfs.helpers import source_scanner
@@ -36,17 +34,15 @@ from dfvfs.volume import vshadow_volume_system
 
 import plaso
 from plaso import parsers   # pylint: disable=unused-import
-from plaso.engine import engine
+from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.engine import worker
-from plaso.frontend import rpc_proxy
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import foreman
 from plaso.lib import pfilter
-from plaso.lib import queue
 from plaso.lib import storage
 from plaso.lib import timelib
+from plaso.multi_processing import multi_process
 from plaso.parsers import manager as parsers_manager
 
 import pytz
@@ -216,9 +212,6 @@ class StorageMediaFrontend(Frontend):
     self._source_path = None
     self._source_scanner = source_scanner.SourceScanner()
     self._vss_stores = None
-
-    # TODO: turn into a process pool.
-    self._worker_processes = {}
 
   def _GetPartionIdentifierFromUser(self, volume_system, volume_identifiers):
     """Asks the user to provide the partitioned volume identifier.
@@ -786,10 +779,10 @@ class StorageMediaFrontend(Frontend):
 class ExtractionFrontend(StorageMediaFrontend):
   """Class that implements an extraction front-end."""
 
-  # The minimum number of processes.
-  MINIMUM_WORKERS = 2
-  # The maximum number of processes.
-  MAXIMUM_WORKERS = 15
+  _DEFAULT_PROFILING_SAMPLE_RATE = 1000
+
+  # Approximately 250 MB of queued items per worker.
+  _DEFAULT_QUEUE_SIZE = 125000
 
   def __init__(self, input_reader, output_writer):
     """Initializes the front-end object.
@@ -811,20 +804,21 @@ class ExtractionFrontend(StorageMediaFrontend):
     self._engine = None
     self._filter_expression = None
     self._filter_object = None
+    self._mount_path = None
     self._number_of_worker_processes = 0
     self._old_preprocess = False
+    self._open_files = False
+    self._operating_system = None
+    self._output_module = None
     self._parser_names = None
     self._preprocess = False
-    self._profiling_sample_rate = 1000
+    self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
+    self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._run_foreman = True
     self._single_process_mode = False
     self._show_worker_memory_information = False
     self._storage_file_path = None
-    self._storage_process = None
     self._timezone = pytz.utc
-
-    # TODO: turn into a process pool.
-    self._worker_processes = {}
 
   def _CheckStorageFile(self, storage_file_path):
     """Checks if the storage file path is valid.
@@ -852,46 +846,6 @@ class ExtractionFrontend(StorageMediaFrontend):
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
-
-  def _CreateExtractionWorker(self, worker_number, options):
-    """Creates an extraction worker object.
-
-    Args:
-      worker_number: number that identifies the worker.
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Returns:
-      An extraction worker (instance of worker.ExtractionWorker).
-    """
-    # Set up a simple XML RPC server for the worker for status indications.
-    # Since we don't know the worker's PID for now we'll set the initial port
-    # number to zero and then adjust it later.
-    proxy_server = rpc_proxy.StandardRpcProxyServer()
-    extraction_worker = self._engine.CreateExtractionWorker(
-        worker_number, rpc_proxy=proxy_server)
-
-    extraction_worker.SetEnableDebugOutput(self._debug_mode)
-    extraction_worker.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate)
-    extraction_worker.SetSingleProcessMode(self._single_process_mode)
-
-    open_files = getattr(options, 'open_files', False)
-    extraction_worker.SetOpenFiles(open_files)
-
-    if getattr(options, 'os', None):
-      mount_path = getattr(options, 'filename', None)
-      extraction_worker.SetMountPath(mount_path)
-
-    filter_query = getattr(options, 'filter', None)
-    if filter_query:
-      filter_object = pfilter.GetMatcher(filter_query)
-      extraction_worker.SetFilterObject(filter_object)
-
-    text_prepend = getattr(options, 'text_prepend', None)
-    extraction_worker.SetTextPrepend(text_prepend)
-
-    return extraction_worker
 
   def _DebugPrintCollector(self, options):
     """Prints debug information about the collector.
@@ -966,7 +920,10 @@ class ExtractionFrontend(StorageMediaFrontend):
             filters.append(line.rstrip())
         collection_information['file_filter'] = ', '.join(filters)
 
-    collection_information['os_detected'] = getattr(options, 'os', 'N/A')
+    if self._operating_system:
+      collection_information['os_detected'] = self._operating_system
+    else:
+      collection_information['os_detected'] = 'N/A'
 
     if self._scan_context.source_type in [
         self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -1079,49 +1036,32 @@ class ExtractionFrontend(StorageMediaFrontend):
     start_collection_process = True
 
     self._number_of_worker_processes = getattr(options, 'workers', 0)
-    if self._number_of_worker_processes < 1:
-      # One worker for each "available" CPU (minus other processes).
-      # The number three here is derived from the fact that the engine starts
-      # up:
-      #   + A collector process.
-      #   + A storage process.
-      # If we want to utilize all CPUs on the system we therefore need to start
-      # up workers that amounts to the total number of CPUs - 3 (these two plus
-      # the main process). Thus the number three.
-      cpus = multiprocessing.cpu_count() - 3
-
-      if cpus <= self.MINIMUM_WORKERS:
-        cpus = self.MINIMUM_WORKERS
-      elif cpus >= self.MAXIMUM_WORKERS:
-        # Let's have a maximum amount of workers.
-        cpus = self.MAXIMUM_WORKERS
-
-      self._number_of_worker_processes = cpus
 
     logging.info(u'Starting extraction in multi process mode.')
 
-    collection_queue = queue.MultiThreadedQueue()
-    storage_queue = queue.MultiThreadedQueue()
-    parse_error_queue = queue.MultiThreadedQueue()
-    self._engine = engine.Engine(
-        collection_queue, storage_queue, parse_error_queue)
+    self._engine = multi_process.MultiProcessEngine(
+        maximum_number_of_queued_items=self._queue_size)
 
+    self._engine.SetEnableDebugOutput(self._debug_mode)
+    self._engine.SetEnableProfiling(
+        self._enable_profiling,
+        profiling_sample_rate=self._profiling_sample_rate)
+    self._engine.SetOpenFiles(self._open_files)
+
+    if self._filter_object:
+      self._engine.SetFilterObject(self._filter_object)
+
+    if self._mount_path:
+      self._engine.SetMountPath(self._mount_path)
+
+    if self._text_prepend:
+      self._engine.SetTextPrepend(self._text_prepend)
     # TODO: add support to handle multiple partitions.
     self._engine.SetSource(
         self.GetSourcePathSpec(), resolver_context=self._resolver_context)
 
     logging.debug(u'Starting preprocessing.')
     pre_obj = self.PreprocessSource(options)
-
-    output_module = getattr(options, 'output_module', None)
-    if output_module:
-      storage_writer = storage.BypassStorageWriter(
-          storage_queue, self._storage_file_path,
-          output_module_string=output_module, pre_obj=pre_obj)
-    else:
-      storage_writer = storage.StorageFileWriter(
-          storage_queue, self._storage_file_path, self._buffer_size, pre_obj)
-
     logging.debug(u'Preprocessing done.')
 
     # TODO: make sure parsers option is not set by preprocessing.
@@ -1151,151 +1091,29 @@ class ExtractionFrontend(StorageMediaFrontend):
     else:
       resolver_context = self._resolver_context
 
-    engine_proxy = None
-    rpc_proxy_client = None
-
-    if self._run_foreman:
-      worker_foreman = foreman.Foreman(
-          show_memory_usage=self._show_worker_memory_information)
-
-      # Start a proxy server (only needed when a foreman is started).
-      engine_proxy = rpc_proxy.StandardRpcProxyServer(os.getpid())
-      try:
-        engine_proxy.Open()
-        engine_proxy.RegisterFunction(
-            'signal_end_of_collection', worker_foreman.SignalEndOfProcessing)
-
-        proxy_thread = threading.Thread(
-            name='rpc_proxy', target=engine_proxy.StartProxy)
-        proxy_thread.start()
-
-        rpc_proxy_client = rpc_proxy.StandardRpcProxyClient(
-            engine_proxy.listening_port)
-      except errors.ProxyFailedToStart as exception:
-        proxy_thread = None
-        logging.error((
-            u'Unable to setup a RPC server for the engine with error '
-            u'{0:s}').format(exception))
-    else:
-      worker_foreman = None
-
+    # TODO: create multi process collector.
     self._collector = self._engine.CreateCollector(
         include_directory_stat, vss_stores=self._vss_stores,
         filter_find_specs=filter_find_specs, resolver_context=resolver_context)
 
-    if rpc_proxy_client:
-      self._collector.SetProxy(rpc_proxy_client)
-
     self._DebugPrintCollector(options)
 
-    logging.info(u'Starting storage process.')
-    self._storage_process = multiprocessing.Process(
-        name='StorageThread', target=storage_writer.WriteEventObjects)
-    self._storage_process.start()
-
-    if start_collection_process:
-      logging.info(u'Starting collection process.')
-      self._collection_process = multiprocessing.Process(
-          name='Collection', target=self._collector.Collect)
-      self._collection_process.start()
-
-    logging.info(u'Starting worker processes to extract events.')
-
-    for worker_nr in range(self._number_of_worker_processes):
-      extraction_worker = self._CreateExtractionWorker(worker_nr, options)
-
-      logging.debug(u'Starting worker: {0:d} process'.format(worker_nr))
-      worker_name = u'Worker_{0:d}'.format(worker_nr)
-      # TODO: Test to see if a process pool can be a better choice.
-      self._worker_processes[worker_name] = multiprocessing.Process(
-          name=worker_name, target=extraction_worker.Run,
-          kwargs={'parser_filter_string': parser_filter_string})
-
-      self._worker_processes[worker_name].start()
-      pid = self._worker_processes[worker_name].pid
-      if worker_foreman:
-        worker_foreman.MonitorWorker(pid=pid, name=worker_name)
-
-    logging.info(u'Collecting and processing files.')
-    if self._collection_process:
-      while self._collection_process.is_alive():
-        self._collection_process.join(10)
-        # Check the worker status regularly while collection is still ongoing.
-        if worker_foreman:
-          worker_foreman.CheckStatus()
-          # TODO: We get a signal when collection is done, which might happen
-          # before the collection thread joins. Look at the option of speeding
-          # up the process of the collector stopping by potentially killing it.
+    if self._output_module:
+      storage_writer = storage.BypassStorageWriter(
+          self._engine.storage_queue, self._storage_file_path,
+          output_module_string=self._output_module, pre_obj=pre_obj)
     else:
-      self._collector.Collect()
+      storage_writer = storage.StorageFileWriter(
+          self._engine.storage_queue, self._storage_file_path,
+          self._buffer_size, pre_obj)
 
-    logging.info(u'Collection is done, waiting for processing to complete.')
-    if worker_foreman:
-      worker_foreman.SignalEndOfProcessing()
-
-    # Close the RPC server since the collection thread is done.
-    if engine_proxy:
-      # Close the proxy, free up resources so we can shut down the thread.
-      engine_proxy.Close()
-
-      if proxy_thread.isAlive():
-        proxy_thread.join()
-
-    # Run through the running workers, one by one.
-    # This will go through a list of all active worker processes and check it's
-    # status. If a worker has completed it will be removed from the list.
-    # The process will not wait longer than five seconds for each worker to
-    # complete, if longer time passes it will simply check it's status and
-    # move on. That ensures that worker process is monitored and status is
-    # updated.
-    while self._worker_processes:
-      for process_name, process_obj in sorted(self._worker_processes.items()):
-        if worker_foreman:
-          worker_label = worker_foreman.GetLabel(
-              name=process_name, pid=process_obj.pid)
-        else:
-          worker_label = None
-
-        if not worker_label:
-          if process_obj.is_alive():
-            logging.info((
-                u'Process {0:s} [{1:d}] is not monitored by the foreman. Most '
-                u'likely due to a worker having completed it\'s processing '
-                u'while waiting for another worker to complete.').format(
-                    process_name, process_obj.pid))
-            logging.info(
-                u'Waiting for worker {0:s} to complete.'.format(process_name))
-            process_obj.join()
-            logging.info(u'Worker: {0:s} [{1:d}] has completed.'.format(
-                process_name, process_obj.pid))
-
-          del self._worker_processes[process_name]
-          continue
-
-        if process_obj.is_alive():
-          # Check status of worker.
-          worker_foreman.CheckStatus(label=worker_label)
-          process_obj.join(5)
-        # Note that we explicitly must test against exitcode 0 here since
-        # process.exitcode will be None if there is no exitcode.
-        elif process_obj.exitcode != 0:
-          logging.warning((
-              u'Worker process: {0:s} already exited with code: '
-              u'{1:d}.').format(process_name, process_obj.exitcode))
-          process_obj.terminate()
-          worker_foreman.TerminateProcess(label=worker_label)
-
-        else:
-          # Process is no longer alive, no need to monitor.
-          worker_foreman.StopMonitoringWorker(label=worker_label)
-          # Remove it from our list of active workers.
-          del self._worker_processes[process_name]
-
-    logging.info(u'Processing is done, waiting for storage to complete.')
-
-    self._engine.SignalEndOfInputStorageQueue()
-    self._storage_process.join()
-    logging.info(u'Storage is done.')
+    self._engine.ProcessSource(
+        self._collector, storage_writer,
+        parser_filter_string=parser_filter_string,
+        number_of_extraction_workers=self._number_of_worker_processes,
+        have_collection_process=start_collection_process,
+        have_foreman_process=self._run_foreman,
+        show_memory_usage=self._show_worker_memory_information)
 
   def _ProcessSourceSingleProcessMode(self, options):
     """Processes the source in a single process.
@@ -1335,11 +1153,21 @@ class ExtractionFrontend(StorageMediaFrontend):
     Args:
       options: the command line arguments (instance of argparse.Namespace).
     """
-    collection_queue = queue.SingleThreadedQueue()
-    storage_queue = queue.SingleThreadedQueue()
-    parse_error_queue = queue.SingleThreadedQueue()
-    self._engine = engine.Engine(
-        collection_queue, storage_queue, parse_error_queue)
+    self._engine = single_process.SingleProcessEngine(self._queue_size)
+    self._engine.SetEnableDebugOutput(self._debug_mode)
+    self._engine.SetEnableProfiling(
+        self._enable_profiling,
+        profiling_sample_rate=self._profiling_sample_rate)
+    self._engine.SetOpenFiles(self._open_files)
+
+    if self._filter_object:
+      self._engine.SetFilterObject(self._filter_object)
+
+    if self._mount_path:
+      self._engine.SetMountPath(self._mount_path)
+
+    if self._text_prepend:
+      self._engine.SetTextPrepend(self._text_prepend)
 
     # TODO: add support to handle multiple partitions.
     self._engine.SetSource(
@@ -1379,31 +1207,18 @@ class ExtractionFrontend(StorageMediaFrontend):
 
     self._DebugPrintCollector(options)
 
-    logging.debug(u'Starting collection.')
-    self._collector.Collect()
-    logging.debug(u'Collection done.')
-
-    extraction_worker = self._CreateExtractionWorker(0, options)
-
-    logging.debug(u'Starting extraction worker.')
-    extraction_worker.Run(parser_filter_string=parser_filter_string)
-    logging.debug(u'Extraction worker done.')
-
-    self._engine.SignalEndOfInputStorageQueue()
-
-    output_module = getattr(options, 'output_module', None)
-    if output_module:
+    if self._output_module:
       storage_writer = storage.BypassStorageWriter(
-          storage_queue, self._storage_file_path,
-          output_module_string=output_module, pre_obj=pre_obj)
+          self._engine.storage_queue, self._storage_file_path,
+          output_module_string=self._output_module, pre_obj=pre_obj)
     else:
       storage_writer = storage.StorageFileWriter(
-          storage_queue, self._storage_file_path,
+          self._engine.storage_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj)
 
-    logging.debug(u'Starting storage.')
-    storage_writer.WriteEventObjects()
-    logging.debug(u'Storage done.')
+    self._engine.ProcessSource(
+        self._collector, storage_writer,
+        parser_filter_string=parser_filter_string)
 
     self._resolver_context.Empty()
 
@@ -1448,7 +1263,13 @@ class ExtractionFrontend(StorageMediaFrontend):
         action='store', default=0,
         help=u'The buffer size for the output (defaults to 196MiB).')
 
-    if worker.EventExtractionWorker.SupportsProfiling():
+    argument_group.add_argument(
+        '--queue_size', '--queue-size', dest='queue_size', action='store',
+        default=0, help=(
+            u'The maximum number of queued items per worker '
+            u'(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
+
+    if worker.BaseEventExtractionWorker.SupportsProfiling():
       argument_group.add_argument(
           '--profile', dest='enable_profiling', action='store_true',
           default=False, help=(
@@ -1458,8 +1279,8 @@ class ExtractionFrontend(StorageMediaFrontend):
       argument_group.add_argument(
           '--profile_sample_rate', '--profile-sample-rate',
           dest='profile_sample_rate', action='store', default=0, help=(
-              u'The profile sample rate (defaults to a sample every 1000 '
-              u'files).'))
+              u'The profile sample rate (defaults to a sample every {0:d} '
+              u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
 
   # Note that this function is not called by the normal termination.
   def CleanUpAfterAbort(self):
@@ -1568,6 +1389,24 @@ class ExtractionFrontend(StorageMediaFrontend):
         raise errors.BadConfigOption(
             u'Invalid buffer size: {0:s}.'.format(self._buffer_size))
 
+    queue_size = getattr(options, 'queue_size', None)
+    if queue_size:
+      try:
+        self._queue_size = int(queue_size, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid queue size: {0:s}.'.format(queue_size))
+
+    self._enable_profiling = getattr(options, 'enable_profiling', False)
+
+    profile_sample_rate = getattr(options, 'profile_sample_rate', None)
+    if profile_sample_rate:
+      try:
+        self._profiling_sample_rate = int(profile_sample_rate, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid profile sample rate: {0:s}.'.format(profile_sample_rate))
+
     self._filter_expression = getattr(options, 'filter', None)
     if self._filter_expression:
       self._filter_object = pfilter.GetMatcher(self._filter_expression)
@@ -1582,16 +1421,6 @@ class ExtractionFrontend(StorageMediaFrontend):
 
     self._debug_mode = getattr(options, 'debug', False)
 
-    self._enable_profiling = getattr(options, 'enable_profiling', False)
-
-    profile_sample_rate = getattr(options, 'profile_sample_rate', None)
-    if profile_sample_rate:
-      try:
-        self._profiling_sample_rate = int(profile_sample_rate, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid profile sample rate: {0:s}.'.format(profile_sample_rate))
-
     self._old_preprocess = getattr(options, 'old_preprocess', False)
 
     timezone_string = getattr(options, 'timezone', None)
@@ -1600,6 +1429,15 @@ class ExtractionFrontend(StorageMediaFrontend):
 
     self._single_process_mode = getattr(
         options, 'single_process', False)
+
+    self._output_module = getattr(options, 'output_module', None)
+
+    self._operating_system = getattr(options, 'os', None)
+    self._open_files = getattr(options, 'open_files', False)
+    self._text_prepend = getattr(options, 'text_prepend', None)
+
+    if self._operating_system:
+      self._mount_path = getattr(options, 'filename', None)
 
   def PreprocessSource(self, options):
     """Preprocesses the source.
@@ -1629,10 +1467,9 @@ class ExtractionFrontend(StorageMediaFrontend):
         self._scan_context.SOURCE_TYPE_DIRECTORY,
         self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
         self._scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
-      platform = getattr(options, 'os', None)
       try:
         self._engine.PreprocessSource(
-            platform, resolver_context=self._resolver_context)
+            self._operating_system, resolver_context=self._resolver_context)
       except IOError as exception:
         logging.error(u'Unable to preprocess with error: {0:s}'.format(
             exception))

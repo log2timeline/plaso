@@ -22,8 +22,9 @@ import unittest
 
 from plaso.analysis import chrome_extension
 from plaso.analysis import test_lib
+from plaso.engine import queue
+from plaso.engine import single_process
 from plaso.lib import event
-from plaso.lib import queue
 
 # We are accessing quite a lot of protected members in this test file.
 # Suppressing that message test file wide.
@@ -104,11 +105,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     knowledge_base = self._SetUpKnowledgeBase(knowledge_base_values={
         'users': self.MAC_USERS})
 
-    event_queue = queue.SingleThreadedQueue()
+    event_queue = single_process.SingleProcessQueue()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.EventObjectQueueProducer(event_queue)
-    test_queue_producer.ProduceEventObjects([
+    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer.ProduceItems([
         self._CreateTestEventObject(path) for path in self.MAC_PATHS])
     test_queue_producer.SignalEndOfInput()
 
@@ -149,11 +150,11 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     knowledge_base = self._SetUpKnowledgeBase(knowledge_base_values={
         'users': self.WIN_USERS})
 
-    event_queue = queue.SingleThreadedQueue()
+    event_queue = single_process.SingleProcessQueue()
 
     # Fill the incoming queue with events.
-    test_queue_producer = queue.EventObjectQueueProducer(event_queue)
-    test_queue_producer.ProduceEventObjects([
+    test_queue_producer = queue.ItemQueueProducer(event_queue)
+    test_queue_producer.ProduceItems([
         self._CreateTestEventObject(path) for path in self.WIN_PATHS])
     test_queue_producer.SignalEndOfInput()
 

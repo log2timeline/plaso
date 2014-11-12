@@ -21,7 +21,8 @@ import unittest
 
 from plaso.analysis import context
 from plaso.analysis import test_lib
-from plaso.lib import queue
+from plaso.engine import queue
+from plaso.engine import single_process
 
 
 class AnalysisContextTest(test_lib.AnalysisPluginTestCase):
@@ -64,8 +65,8 @@ class AnalysisContextTest(test_lib.AnalysisPluginTestCase):
     """Sets up the needed objects used throughout the test."""
     knowledge_base = self._SetUpKnowledgeBase()
 
-    analysis_report_queue = queue.SingleThreadedQueue()
-    analysis_report_queue_producer = queue.AnalysisReportQueueProducer(
+    analysis_report_queue = single_process.SingleProcessQueue()
+    analysis_report_queue_producer = queue.ItemQueueProducer(
         analysis_report_queue)
 
     self._analysis_context = context.AnalysisContext(

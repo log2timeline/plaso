@@ -48,6 +48,8 @@ except ImportError:
 from IPython.core import magic
 
 from plaso.artifacts import knowledge_base
+from plaso.engine import queue
+from plaso.engine import single_process
 
 # Import the winreg formatter to register it, adding the option
 # to print event objects using the default formatter.
@@ -59,7 +61,6 @@ from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
-from plaso.lib import queue
 from plaso.lib import timelib
 from plaso.parsers import context as parsers_context
 from plaso.parsers import manager as parsers_manager
@@ -85,7 +86,11 @@ class PregEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     self.event_objects = []
 
   def _ConsumeEventObject(self, event_object, **unused_kwargs):
-    """Consumes an event object callback for ConsumeEventObjects."""
+    """Consumes an event object callback for ConsumeEventObject.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
     self.event_objects.append(event_object)
 
 
@@ -546,12 +551,11 @@ class PregFrontend(frontend.ExtractionFrontend):
     _, hive_collector = hive_collectors[0]
     OpenHive(hives[0], hive_collector)
 
-    event_queue = queue.SingleThreadedQueue()
-    event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+    event_queue = single_process.SingleProcessQueue()
+    event_queue_producer = queue.ItemQueueProducer(event_queue)
 
-    parse_error_queue = queue.SingleThreadedQueue()
-    parse_error_queue_producer = queue.ParseErrorQueueProducer(
-        parse_error_queue)
+    parse_error_queue = single_process.SingleProcessQueue()
+    parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
 
     RegCache.parser_context = parsers_context.ParserContext(
         event_queue_producer, parse_error_queue_producer,
@@ -1253,13 +1257,12 @@ def ParseKey(key, verbose=False, use_plugins=None):
       else:
         plugins[weight].append(plugin(reg_cache=RegCache.reg_cache))
 
-  event_queue = queue.SingleThreadedQueue()
+  event_queue = single_process.SingleProcessQueue()
   event_queue_consumer = PregEventObjectQueueConsumer(event_queue)
-  event_queue_producer = queue.EventObjectQueueProducer(event_queue)
+  event_queue_producer = queue.ItemQueueProducer(event_queue)
 
-  parse_error_queue = queue.SingleThreadedQueue()
-  parse_error_queue_producer = queue.ParseErrorQueueProducer(
-      parse_error_queue)
+  parse_error_queue = single_process.SingleProcessQueue()
+  parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
 
   RegCache.parser_context = parsers_context.ParserContext(
       event_queue_producer, parse_error_queue_producer,
@@ -1349,11 +1352,10 @@ def RunModeConsole(front_end, options):
   """
   namespace = {}
 
-  event_queue = queue.SingleThreadedQueue()
-  parser_error_queue = queue.SingleThreadedQueue()
-  event_queue_producer = queue.EventObjectQueueProducer(event_queue)
-  parse_error_queue_producer = queue.ParseErrorQueueProducer(
-      parser_error_queue)
+  event_queue = single_process.SingleProcessQueue()
+  parser_error_queue = single_process.SingleProcessQueue()
+  event_queue_producer = queue.ItemQueueProducer(event_queue)
+  parse_error_queue_producer = queue.ItemQueueProducer(parser_error_queue)
   RegCache.parser_context = parsers_context.ParserContext(
       event_queue_producer, parse_error_queue_producer,
       RegCache.knowledge_base_object)

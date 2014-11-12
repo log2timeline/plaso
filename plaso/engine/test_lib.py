@@ -20,6 +20,33 @@
 import os
 import unittest
 
+from plaso.engine import queue
+
+
+class TestQueueConsumer(queue.ItemQueueConsumer):
+  """Class that implements the test queue consumer.
+
+     The queue consumer subscribes to updates on the queue.
+  """
+
+  def __init__(self, test_queue):
+    """Initializes the queue consumer.
+
+    Args:
+      test_queue: the test queue (instance of Queue).
+    """
+    super(TestQueueConsumer, self).__init__(test_queue)
+    self.items = []
+
+  def _ConsumeItem(self, item):
+    """Consumes an item callback for ConsumeItems."""
+    self.items.append(item)
+
+  @property
+  def number_of_items(self):
+    """The number of items."""
+    return len(self.items)
+
 
 class EngineTestCase(unittest.TestCase):
   """The unit test case for a front-end."""

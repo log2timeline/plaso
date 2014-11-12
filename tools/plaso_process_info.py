@@ -34,7 +34,7 @@ import textwrap
 import psutil
 
 from plaso.frontend import frontend
-from plaso.lib import process_info
+from plaso.multi_processing import process_info
 
 
 def IsWorkerProcess(process):

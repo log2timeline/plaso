@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the engine."""
+"""Tests the single process processing engine."""
 
 import os
 import unittest
@@ -25,26 +25,72 @@ from dfvfs.helpers import file_system_searcher
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
-from plaso.engine import collector
-from plaso.engine import engine
-from plaso.engine import worker
-from plaso.lib import queue
+from plaso.engine import single_process
+from plaso.engine import test_lib
+from plaso.lib import errors
 
 
-class EngineTest(unittest.TestCase):
+class SingleProcessQueueTest(unittest.TestCase):
+  """Tests the single process queue."""
+
+  _ITEMS = frozenset(['item1', 'item2', 'item3', 'item4'])
+
+  def testPushPopItem(self):
+    """Tests the PushItem and PopItem functions."""
+    test_queue = single_process.SingleProcessQueue()
+
+    for item in self._ITEMS:
+      test_queue.PushItem(item)
+
+    self.assertEquals(len(test_queue), len(self._ITEMS))
+
+    test_queue.SignalEndOfInput()
+    test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
+    test_queue_consumer.ConsumeItems()
+
+    expected_number_of_items = len(self._ITEMS)
+    self.assertEquals(
+        test_queue_consumer.number_of_items, expected_number_of_items)
+
+  def testQueueEmpty(self):
+    """Tests the queue raises the QueueEmpty exception."""
+    test_queue = single_process.SingleProcessQueue()
+
+    with self.assertRaises(errors.QueueEmpty):
+      test_queue.PopItem()
+
+  def testQueueFull(self):
+    """Tests the queue raises the QueueFull exception."""
+    test_queue = single_process.SingleProcessQueue(
+        maximum_number_of_queued_items=5)
+
+    for item in self._ITEMS:
+      test_queue.PushItem(item)
+
+    with self.assertRaises(errors.QueueFull):
+      test_queue.PushItem('item5')
+
+    with self.assertRaises(errors.QueueFull):
+      test_queue.PushItem('item6')
+
+    test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
+    test_queue_consumer.ConsumeItems()
+
+    expected_number_of_items = len(self._ITEMS)
+    self.assertEquals(
+        test_queue_consumer.number_of_items, expected_number_of_items + 1)
+
+
+class SingleProcessEngineTest(unittest.TestCase):
   """Tests for the engine object."""
 
   _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   def testEngine(self):
     """Test the engine functionality."""
-    collection_queue = queue.SingleThreadedQueue()
-    storage_queue = queue.SingleThreadedQueue()
-    parse_error_queue = queue.SingleThreadedQueue()
-
     resolver_context = context.Context()
-    test_engine = engine.Engine(
-        collection_queue, storage_queue, parse_error_queue)
+    test_engine = single_process.SingleProcessEngine(
+        maximum_number_of_queued_items=25000)
 
     self.assertNotEquals(test_engine, None)
 
@@ -73,11 +119,14 @@ class EngineTest(unittest.TestCase):
         False, vss_stores=None, filter_find_specs=None,
         resolver_context=resolver_context)
     self.assertNotEquals(test_collector, None)
-    self.assertIsInstance(test_collector, collector.Collector)
+    self.assertIsInstance(
+        test_collector, single_process.SingleProcessCollector)
 
-    test_extraction_worker = test_engine.CreateExtractionWorker(0, None)
+    test_extraction_worker = test_engine.CreateExtractionWorker(0)
     self.assertNotEquals(test_extraction_worker, None)
-    self.assertIsInstance(test_extraction_worker, worker.EventExtractionWorker)
+    self.assertIsInstance(
+        test_extraction_worker,
+        single_process.SingleProcessEventExtractionWorker)
 
 
 if __name__ == '__main__':

@@ -107,12 +107,12 @@ import zipfile
 from google.protobuf import message
 import yaml
 
+from plaso.engine import queue
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import limit
 from plaso.lib import pfilter
 from plaso.lib import output
-from plaso.lib import queue
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2

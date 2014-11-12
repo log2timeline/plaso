@@ -17,6 +17,7 @@
 # limitations under the License.
 """The processing engine."""
 
+import abc
 import logging
 
 from dfvfs.helpers import file_system_searcher
@@ -25,15 +26,14 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.artifacts import knowledge_base
 from plaso.engine import collector
-from plaso.engine import worker
+from plaso.engine import queue
 from plaso.lib import errors
-from plaso.lib import queue
 from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
 
-class Engine(object):
-  """Class that defines the processing engine."""
+class BaseEngine(object):
+  """Class that defines the processing engine base."""
 
   def __init__(self, collection_queue, storage_queue, parse_error_queue):
     """Initialize the engine object.
@@ -44,18 +44,32 @@ class Engine(object):
       parse_error_queue: the parser error queue object (instance of Queue).
     """
     self._collection_queue = collection_queue
+    self._enable_debug_output = False
+    self._enable_profiling = False
+    self._event_queue_producer = queue.ItemQueueProducer(storage_queue)
+    self._filter_object = None
+    self._mount_path = None
+    self._open_files = False
+    self._parse_error_queue = parse_error_queue
+    self._parse_error_queue_producer = queue.ItemQueueProducer(
+        parse_error_queue)
+    self._profiling_sample_rate = 1000
     self._source = None
     self._source_path_spec = None
     self._source_file_entry = None
-    self._event_queue_producer = queue.EventObjectQueueProducer(storage_queue)
-    self._parse_error_queue_producer = queue.ParseErrorQueueProducer(
-        parse_error_queue)
+    self._text_prepend = None
+
     self.knowledge_base = knowledge_base.KnowledgeBase()
+    self.storage_queue = storage_queue
 
   def CreateCollector(
       self, include_directory_stat, vss_stores=None, filter_find_specs=None,
       resolver_context=None):
-    """Creates a collector.
+    """Creates a collector object.
+
+       The collector discovers all the files that need to be processed by
+       the workers. Once a file is discovered it is added to the process queue
+       as a path specification (instance of dfvfs.PathSpec).
 
     Args:
       include_directory_stat: Boolean value to indicate whether directory
@@ -68,6 +82,9 @@ class Engine(object):
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None. Note that every thread or process
                         must have its own resolver context.
+
+    Returns:
+      A collector object (instance of Collector).
 
     Raises:
       RuntimeError: if source path specification is not set.
@@ -89,23 +106,16 @@ class Engine(object):
 
     return collector_object
 
-  def CreateExtractionWorker(self, worker_number, rpc_proxy=None):
+  @abc.abstractmethod
+  def CreateExtractionWorker(self, worker_number):
     """Creates an extraction worker object.
 
     Args:
       worker_number: A number that identifies the worker.
-      rpc_proxy: A proxy object (instance of proxy.ProxyServer) that can be
-                 used to setup RPC functionality for the worker. This is
-                 optional and if not provided the worker will not listen to RPC
-                 requests.
 
     Returns:
       An extraction worker (instance of worker.ExtractionWorker).
     """
-    return worker.EventExtractionWorker(
-        worker_number, self._collection_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, self.knowledge_base,
-        rpc_proxy=rpc_proxy)
 
   def GetSourceFileSystemSearcher(self, resolver_context=None):
     """Retrieves the file system searcher of the source.
@@ -152,6 +162,54 @@ class Engine(object):
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
         platform, searcher, self.knowledge_base)
+
+  def SetEnableDebugOutput(self, enable_debug_output):
+    """Enables or disables debug output.
+
+    Args:
+      enable_debug_output: boolean value to indicate if the debug output
+                           should be enabled.
+    """
+    self._enable_debug_output = enable_debug_output
+
+  def SetEnableProfiling(self, enable_profiling, profiling_sample_rate=1000):
+    """Enables or disables profiling.
+
+    Args:
+      enable_debug_output: boolean value to indicate if the profiling
+                           should be enabled.
+      profiling_sample_rate: optional integer indicating the profiling sample
+                             rate. The value contains the number of files
+                             processed. The default value is 1000.
+    """
+    self._enable_profiling = enable_profiling
+    self._profiling_sample_rate = profiling_sample_rate
+
+  def SetFilterObject(self, filter_object):
+    """Sets the filter object.
+
+    Args:
+      filter_object: the filter object (instance of objectfilter.Filter).
+    """
+    self._filter_object = filter_object
+
+  def SetMountPath(self, mount_path):
+    """Sets the mount path.
+
+    Args:
+      mount_path: string containing the mount path.
+    """
+    self._mount_path = mount_path
+
+  # TODO: rename this mode.
+  def SetOpenFiles(self, open_files):
+    """Sets the open files mode.
+
+    Args:
+      open_files: boolean value to indicate if the worker should scan for
+                  file entries inside files.
+    """
+    self._open_files = open_files
 
   def SetSource(self, source_path_spec, resolver_context=None):
     """Sets the source.
@@ -201,6 +259,16 @@ class Engine(object):
         raise errors.BadConfigOption(
             u'Source: {0:s} has to be a file or directory.'.format(
                 self._source))
+
+  # TODO: remove this functionality.
+  def SetTextPrepend(self, text_prepend):
+    """Sets the text prepend.
+
+    Args:
+      text_prepend: string that contains the text to prepend to every
+                    event object.
+    """
+    self._text_prepend = text_prepend
 
   def SignalEndOfInputStorageQueue(self):
     """Signals the storage queue no input remains."""

@@ -41,14 +41,15 @@ from plaso import output   # pylint: disable=unused-import
 from plaso.analysis import context as analysis_context
 from plaso.analysis import interface as analysis_interface
 from plaso.artifacts import knowledge_base
+from plaso.engine import queue
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import bufferlib
 from plaso.lib import errors
 from plaso.lib import output as output_lib
 from plaso.lib import pfilter
-from plaso.lib import queue
 from plaso.lib import timelib
+from plaso.multi_processing import multi_process
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
 
@@ -317,16 +318,19 @@ class PsortFrontend(frontend.AnalysisFrontend):
         storage_file._pre_obj = pre_obj
 
         # Start queues and load up plugins.
-        analysis_output_queue = queue.MultiThreadedQueue()
+        # TODO: add upper queue limit.
+        analysis_output_queue = multi_process.MultiProcessingQueue()
         event_queue_producers = []
         event_queues = []
         analysis_plugins_list = [
             x.strip() for x in options.analysis_plugins.split(',')]
 
         for _ in xrange(0, len(analysis_plugins_list)):
-          event_queues.append(queue.MultiThreadedQueue())
+          # TODO: add upper queue limit.
+          analysis_plugin_queue = multi_process.MultiProcessingQueue()
+          event_queues.append(analysis_plugin_queue)
           event_queue_producers.append(
-              queue.EventObjectQueueProducer(event_queues[-1]))
+              queue.ItemQueueProducer(event_queues[-1]))
 
         knowledge_base_object = knowledge_base.KnowledgeBase()
 
@@ -335,7 +339,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
         # Now we need to start all the plugins.
         for analysis_plugin in analysis_plugins:
-          analysis_report_queue_producer = queue.AnalysisReportQueueProducer(
+          analysis_report_queue_producer = queue.ItemQueueProducer(
               analysis_output_queue)
           analysis_context_object = analysis_context.AnalysisContext(
               analysis_report_queue_producer, knowledge_base_object)
@@ -388,7 +392,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
             analysis_output_queue, storage_file, self._filter_expression,
             self.preferred_encoding)
 
-        analysis_queue_consumer.ConsumeAnalysisReports()
+        analysis_queue_consumer.ConsumeItems()
 
         if analysis_queue_consumer.tags:
           storage_file.StoreTagging(analysis_queue_consumer.tags)
@@ -410,7 +414,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
 # or change the interface so that is not an abstract method.
 # TODO: Remove this after dfVFS integration.
 # pylint: disable=abstract-method
-class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
+class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements an analysis report queue consumer for psort."""
 
   def __init__(
@@ -431,8 +435,12 @@ class PsortAnalysisReportQueueConsumer(queue.AnalysisReportQueueConsumer):
     self.counter = collections.Counter()
     self.tags = []
 
-  def _ConsumeAnalysisReport(self, analysis_report):
-    """Consumes an analysis report callback for ConsumeAnalysisReports."""
+  def _ConsumeItem(self, analysis_report):
+    """Consumes an item callback for ConsumeItems.
+
+    Args:
+      analysis_report: the analysis report (instance of AnalysisReport).
+    """
     self.counter['Total Reports'] += 1
     self.counter[u'Report: {0:s}'.format(analysis_report.plugin_name)] += 1
 
@@ -483,7 +491,7 @@ def _AppendEvent(event_object, output_buffer, event_queues):
     event_object.inode = new_inode
 
   for event_queue in event_queues:
-    event_queue.ProduceEventObject(event_object)
+    event_queue.ProduceItem(event_object)
 
 
 def ProcessOutput(
