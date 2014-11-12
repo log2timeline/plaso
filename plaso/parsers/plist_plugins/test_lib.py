@@ -21,7 +21,7 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.lib import queue
+from plaso.engine import single_process
 from plaso.parsers import test_lib
 
 
@@ -73,10 +73,10 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
       An event object queue consumer object (instance of
       TestEventObjectQueueConsumer).
     """
-    event_queue = queue.SingleThreadedQueue()
+    event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)
 
-    parse_error_queue = queue.SingleThreadedQueue()
+    parse_error_queue = single_process.SingleProcessQueue()
 
     parser_context = self._GetParserContext(
         event_queue, parse_error_queue,

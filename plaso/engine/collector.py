@@ -27,11 +27,11 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.engine import queue
 from plaso.lib import errors
-from plaso.lib import queue
 
 
-class Collector(queue.PathSpecQueueProducer):
+class Collector(queue.ItemQueueProducer):
   """Class that implements a collector object."""
 
   def __init__(
@@ -40,11 +40,12 @@ class Collector(queue.PathSpecQueueProducer):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it added to the process queue
+       the workers. Once a file is discovered it is added to the process queue
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      process_queue: The files processing queue (instance of Queue).
+      process_queue: The process queue (instance of Queue). This queue contains
+                     the file entries that need to be processed.
       source_path: Path of the source file or directory.
       source_path_spec: The source path specification (instance of
                         dfvfs.PathSpec) as determined by the file system
@@ -56,7 +57,6 @@ class Collector(queue.PathSpecQueueProducer):
     self._filter_find_specs = None
     self._fs_collector = FileSystemCollector(process_queue)
     self._resolver_context = resolver_context
-    self._rpc_proxy = None
     # TODO: remove the need to pass source_path
     self._source_path = os.path.abspath(source_path)
     self._source_path_spec = source_path_spec
@@ -189,14 +189,8 @@ class Collector(queue.PathSpecQueueProducer):
     source_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
         self._source_path_spec, resolver_context=self._resolver_context)
 
-    if self._rpc_proxy:
-      self._rpc_proxy.Open()
-
     if not source_file_entry:
       logging.warning(u'No files to collect.')
-      if self._rpc_proxy:
-        # Send the notification.
-        _ = self._rpc_proxy.GetData(u'signal_end_of_collection')
       self.SignalEndOfInput()
       return
 
@@ -210,7 +204,7 @@ class Collector(queue.PathSpecQueueProducer):
     type_indicator = self._source_path_spec.type_indicator
     if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
       if source_file_entry.IsFile():
-        self.ProducePathSpec(self._source_path_spec)
+        self.ProduceItem(self._source_path_spec)
 
       else:
         file_system = path_spec_resolver.Resolver.OpenFileSystem(
@@ -227,10 +221,6 @@ class Collector(queue.PathSpecQueueProducer):
     else:
       self._ProcessImage(
           self._source_path_spec.parent, find_specs=self._filter_find_specs)
-
-    if self._rpc_proxy:
-      # Send the notification.
-      _ = self._rpc_proxy.GetData(u'signal_end_of_collection')
 
     self.SignalEndOfInput()
 
@@ -252,14 +242,6 @@ class Collector(queue.PathSpecQueueProducer):
     """
     self._filter_find_specs = filter_find_specs
 
-  def SetProxy(self, rpc_proxy):
-    """Sets the RPC proxy the collector should use.
-
-    Args:
-      rpc_proxy: A proxy object (instance of lib.proxy.ProxyClient).
-    """
-    self._rpc_proxy = rpc_proxy
-
   def SetVssInformation(self, vss_stores):
     """Sets the Volume Shadow Snapshots (VSS) information.
 
@@ -272,18 +254,19 @@ class Collector(queue.PathSpecQueueProducer):
     self._vss_stores = vss_stores
 
 
-class FileSystemCollector(queue.PathSpecQueueProducer):
+class FileSystemCollector(queue.ItemQueueProducer):
   """Class that implements a file system collector object."""
 
   def __init__(self, process_queue):
     """Initializes the collector object.
 
        The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it added to the process queue
+       the workers. Once a file is discovered it is added to the process queue
        as a path specification (instance of dfvfs.PathSpec).
 
     Args:
-      process_queue: The files processing queue (instance of Queue).
+      process_queue: The process queue (instance of Queue). This queue contains
+                     the file entries that need to be processed.
     """
     super(FileSystemCollector, self).__init__(process_queue)
     self._collect_directory_metadata = True
@@ -358,7 +341,7 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
         # This check is here to improve performance by not producing
         # path specifications that don't get processed.
         if self._collect_directory_metadata:
-          self.ProducePathSpec(sub_file_entry.path_spec)
+          self.ProduceItem(sub_file_entry.path_spec)
           self.number_of_file_entries += 1
 
         sub_directories.append(sub_file_entry)
@@ -378,7 +361,7 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
 
           self._hashlist.setdefault(inode, []).append(hash_value)
 
-        self.ProducePathSpec(sub_file_entry.path_spec)
+        self.ProduceItem(sub_file_entry.path_spec)
         self.number_of_file_entries += 1
 
     for sub_file_entry in sub_directories:
@@ -400,7 +383,7 @@ class FileSystemCollector(queue.PathSpecQueueProducer):
       searcher = file_system_searcher.FileSystemSearcher(file_system, path_spec)
 
       for path_spec in searcher.Find(find_specs=find_specs):
-        self.ProducePathSpec(path_spec)
+        self.ProduceItem(path_spec)
         self.number_of_file_entries += 1
 
     else:

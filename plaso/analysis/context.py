@@ -26,7 +26,7 @@ class AnalysisContext(object):
 
     Args:
       analysis_report_queue_producer: the analysis report queue producer
-                                      (instance of AnalysisReportQueueProducer).
+                                      (instance of ItemQueueProducer).
       knowledge_base: A knowledge base object (instance of KnowledgeBase),
                       which contains information from the source data needed
                       for analysis.
@@ -164,5 +164,5 @@ class AnalysisContext(object):
     """
     self.ProcessAnalysisReport(analysis_report, plugin_name=plugin_name)
 
-    self._analysis_report_queue_producer.ProduceAnalysisReport(analysis_report)
+    self._analysis_report_queue_producer.ProduceItem(analysis_report)
     self.number_of_produced_analysis_reports += 1

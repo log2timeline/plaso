@@ -19,7 +19,7 @@
 
 import abc
 
-from plaso.lib import queue
+from plaso.engine import queue
 from plaso.lib import registry
 from plaso.lib import timelib
 

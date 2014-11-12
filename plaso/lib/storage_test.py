@@ -23,15 +23,16 @@ import shutil
 import unittest
 import zipfile
 
+from plaso.engine import queue
 from plaso.events import text_events
 from plaso.events import windows_events
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import pfilter
-from plaso.lib import queue
 from plaso.lib import storage
 from plaso.lib import timelib_test
+from plaso.multi_processing import multi_process
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
 
@@ -130,9 +131,11 @@ class StorageFileTest(unittest.TestCase):
     # For the purpose of this test it has to be run in sequence,
     # hence the call to WriteEventObjects after all the event objects
     # have been queued up.
-    test_queue = queue.MultiThreadedQueue()
-    test_queue_producer = queue.EventObjectQueueProducer(test_queue)
-    test_queue_producer.ProduceEventObjects(self._event_objects)
+
+    # TODO: add upper queue limit.
+    test_queue = multi_process.MultiProcessingQueue()
+    test_queue_producer = queue.ItemQueueProducer(test_queue)
+    test_queue_producer.ProduceItems(self._event_objects)
     test_queue_producer.SignalEndOfInput()
 
     with tempfile.NamedTemporaryFile() as temp_file:

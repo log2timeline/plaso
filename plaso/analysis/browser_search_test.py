@@ -24,7 +24,6 @@ from plaso.analysis import test_lib
 # pylint: disable=unused-import
 from plaso.formatters import chrome as chrome_formatter
 from plaso.lib import event
-from plaso.lib import queue
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome
 
