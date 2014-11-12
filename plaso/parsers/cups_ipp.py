@@ -206,13 +206,17 @@ class CupsIppParser(interface.BaseParser):
       'com.apple.print.JobInfo.PMApplicationName': u'application',
       'com.apple.print.JobInfo.PMJobOwner': u'owner'}
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract a entry from an CUPS IPP file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
+    parser_chain = self._BuildParserChain(parser_chain)
+
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
@@ -246,27 +250,26 @@ class CupsIppParser(interface.BaseParser):
       data_dict.setdefault(pretty_name, []).append(value)
       name, value = self.ReadPair(parser_context, file_entry, file_object)
 
-    # Yield the events.
     if u'time-at-creation' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-creation'][0],
           eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if u'time-at-processing' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-processing'][0],
           eventdata.EventTimestamp.START_TIME, data_dict)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if u'time-at-completed' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-completed'][0],
           eventdata.EventTimestamp.END_TIME, data_dict)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     file_object.close()
 

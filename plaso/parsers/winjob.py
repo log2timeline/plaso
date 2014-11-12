@@ -169,7 +169,7 @@ class WinJobParser(interface.BaseParser):
       construct.ULInt16('trigger_reserved2'),
       construct.ULInt16('trigger_reserved3'))
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a Windows job file.
 
     This is the main parsing engine for the parser. It determines if
@@ -179,11 +179,14 @@ class WinJobParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
-    Yields:
-      An EventObject (instance of WinJobEvent) that contains the extracted
-      attributes.
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
+    parser_chain = self._BuildParserChain(parser_chain)
+
     file_object = file_entry.GetFileObject()
     try:
       header = self.JOB_FIXED_STRUCT.parse_stream(file_object)
@@ -238,7 +241,7 @@ class WinJobParser(interface.BaseParser):
              scheduled_date, u'Scheduled To Start', data.app_name,
              data.parameter, data.working_dir, data.username, trigger_type,
              data.comment)],
-        parser_name=self.NAME, file_entry=file_entry)
+        parser_chain=parser_chain, file_entry=file_entry)
 
     # A scheduled end date is optional.
     if data.sched_end_year:
@@ -255,7 +258,7 @@ class WinJobParser(interface.BaseParser):
           scheduled_end_date, 'Scheduled To End', data.app_name, data.parameter,
           data.working_dir, data.username, trigger_type, data.comment)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     file_object.close()
 

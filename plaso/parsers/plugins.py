@@ -91,9 +91,6 @@ class BasePlugin(object):
               arguments to be able to evaluate whether or not this is
               the correct plugin.
 
-    Yields:
-      EventObjects extracted from the data set.
-
     Raises:
       ValueError: When there are unused keyword arguments.
     """
@@ -116,9 +113,6 @@ class BasePlugin(object):
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
               the correct plugin.
-
-    Returns:
-      A generator, self.GetEntries(), if the correct plugin, otherwise None.
 
     Raises:
       ValueError: When there are unused keyword arguments.

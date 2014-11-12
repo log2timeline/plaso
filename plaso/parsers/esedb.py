@@ -48,16 +48,17 @@ class EseDbParser(interface.BasePluginsParser):
     super(EseDbParser, self).__init__()
     self._plugins = EseDbParser.GetPluginObjects()
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extracts data from an ESE database File.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
-    Yields:
-      An event event (instance of EventObject) that contains the parsed
-      values.
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     file_object = file_entry.GetFileObject()
     esedb_file = pyesedb.file()
