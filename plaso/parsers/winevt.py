@@ -48,6 +48,7 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
 
     self.recovered = recovered
     self.offset = evt_record.offset
+
     try:
       self.record_number = evt_record.identifier
     except OverflowError as exception:
@@ -55,15 +56,25 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
           u'Unable to assign the record identifier with error: {0:s}.'.format(
               exception))
     try:
-      self.event_identifier = evt_record.event_identifier
+      event_identifier = evt_record.event_identifier
     except OverflowError as exception:
+      event_identifier = None
       logging.warning(
           u'Unable to assign the event identifier with error: {0:s}.'.format(
               exception))
 
+    # We are only interest in the event identifier code to match the behavior
+    # of EVTX event records.
+    if event_identifier is not None:
+      self.event_identifier = event_identifier & 0xffff
+      self.facility = (event_identifier >> 16) & 0x0fff
+      self.severity = event_identifier >> 30
+      self.message_identifier = event_identifier
+
     self.event_type = evt_record.event_type
     self.event_category = evt_record.event_category
     self.source_name = evt_record.source_name
+
     # Computer name is the value stored in the event record and does not
     # necessarily corresponds with the actual hostname.
     self.computer_name = evt_record.computer_name
