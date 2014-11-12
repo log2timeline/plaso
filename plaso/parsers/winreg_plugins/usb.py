@@ -43,7 +43,7 @@ class USBPlugin(interface.KeyPlugin):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of winreg.WinRegKey).
-          The default is None.
+           The default is None.
       registry_type: Optional Registry type string. The default is None.
     """
     for subkey in key.GetSubkeys():
@@ -53,7 +53,7 @@ class USBPlugin(interface.KeyPlugin):
       vendor_identification = None
       product_identification = None
       try:
-        subkey_name_parts = subkey.name.split('&')
+        subkey_name_parts = subkey.name.split(u'&')
         if len(subkey_name_parts) >= 2:
           vendor_identification = subkey_name_parts[0]
           product_identification = subkey_name_parts[1]
