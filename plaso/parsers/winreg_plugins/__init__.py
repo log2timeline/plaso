@@ -30,6 +30,7 @@ from plaso.parsers.winreg_plugins import officemru
 from plaso.parsers.winreg_plugins import outlook
 from plaso.parsers.winreg_plugins import run
 from plaso.parsers.winreg_plugins import services
+from plaso.parsers.winreg_plugins import shutdown
 from plaso.parsers.winreg_plugins import task_scheduler
 from plaso.parsers.winreg_plugins import terminal_server
 from plaso.parsers.winreg_plugins import typedurls
