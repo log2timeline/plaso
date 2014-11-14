@@ -46,6 +46,8 @@ class EventTimestamp(object):
   START_TIME = u'Start Time'
   END_TIME = u'End Time'
 
+  LAST_SHUTDOWN = u'Last Shutdown Time'
+
   FIRST_CONNECTED = u'First Connection Time'
   LAST_CONNECTED = u'Last Connection Time'
 
