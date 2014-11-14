@@ -46,6 +46,7 @@ def GetLegacy(evt):
       eventdata.EventTimestamp.PAGE_VISITED,
       eventdata.EventTimestamp.LAST_VISITED_TIME,
       eventdata.EventTimestamp.START_TIME,
+      eventdata.EventTimestamp.LAST_SHUTDOWN,
       eventdata.EventTimestamp.LAST_CONNECTED,
       eventdata.EventTimestamp.LAST_RUNTIME,
       eventdata.EventTimestamp.LAST_PRINTED]:
