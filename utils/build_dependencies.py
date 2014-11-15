@@ -30,6 +30,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import time
 import urllib2
 
 try:
@@ -143,26 +144,240 @@ class DownloadHelper(object):
     """
 
 
-class BuildFilesDownloadHelper(DownloadHelper):
-  """Class that helps in downloading build files."""
+class PythonModuleDpkgBuildFilesGenerator(object):
+  """Class that helps in generating dpkg build files for Python modules."""
 
-  _BASE_URL = (
-    u'https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/'
-    u'3rd%20party/build-files')
+  _PACKAGE_NAMES = {
+      u'PyYAML': u'yaml',
+      u'pytz': u'tz',
+  }
 
-  def GetDownloadUrl(self, project_name, project_version):
-    """Retrieves the download URL for a given project name and version.
+  _EMAIL_ADDRESS = u'Log2Timeline <log2timeline-dev@googlegroups.com>'
+
+  _DOCS_FILENAMES = [
+      u'CHANGES', u'CHANGES.txt', u'CHANGES.TXT',
+      u'LICENSE', u'LICENSE.txt', u'LICENSE.TXT',
+      u'README', u'README.txt', u'README.TXT']
+
+  _CHANGELOG_TEMPLATE = u'\n'.join([
+      u'python-{project_name:s} ({project_version!s}-1) unstable; urgency=low',
+      u'',
+      u'  * Auto-generated',
+      u'',
+      u' -- {maintainer_email_address:s}  {date_time:s}'])
+
+  _COMPAT_TEMPLATE = u'\n'.join([
+      u'7'])
+
+  _CONTROL_TEMPLATE = u'\n'.join([
+      u'Source: python-{project_name:s}',
+      u'Section: misc',
+      u'Priority: extra',
+      u'Maintainer: {upstream_maintainer:s}',
+      u'Build-Depends: debhelper (>= 7), python, python-setuptools',
+      u'Standards-Version: 3.8.3',
+      u'Homepage: {upstream_homepage:s}',
+      u'',
+      u'Package: python-{project_name:s}',
+      u'Section: python',
+      u'Architecture: all',
+      u'Depends: tzdata, ${{shlibs:Depends}}, ${{python:Depends}}',
+      u'Description: {description_short:s}',
+      u' {description_long:s}',
+      u''])
+
+  _COPYRIGHT_TEMPLATE = u'\n'.join([
+      u''])
+
+  _RULES_TEMPLATE = u'\n'.join([
+      u'#!/usr/bin/make -f',
+      u'# debian/rules that uses debhelper >= 7.',
+      u'',
+      u'# Uncomment this to turn on verbose mode.',
+      u'#export DH_VERBOSE=1',
+      u'',
+      u'# This has to be exported to make some magic below work.',
+      u'export DH_OPTIONS',
+      u'',
+      u'',
+      u'%:',
+      u'	dh  $@',
+      u'',
+      u'override_dh_auto_clean:',
+      u'',
+      u'override_dh_auto_test:',
+      u'',
+      u'override_dh_installmenu:',
+      u'',
+      u'override_dh_installmime:',
+      u'',
+      u'override_dh_installmodules:',
+      u'',
+      u'override_dh_installlogcheck:',
+      u'',
+      u'override_dh_installlogrotate:',
+      u'',
+      u'override_dh_installpam:',
+      u'',
+      u'override_dh_installppp:',
+      u'',
+      u'override_dh_installudev:',
+      u'',
+      u'override_dh_installwm:',
+      u'',
+      u'override_dh_installxfonts:',
+      u'',
+      u'override_dh_gconf:',
+      u'',
+      u'override_dh_icons:',
+      u'',
+      u'override_dh_perl:',
+      u'',
+      u'override_dh_pysupport:',
+      u''])
+
+  def __init__(
+      self, project_name, project_version, project_information, plaso_path):
+    """Initializes the dpkg build files generator.
 
     Args:
       project_name: the name of the project.
       project_version: the version of the project.
-
-    Returns:
-      The download URL of the project or None on error.
+      project_information: a dictionary object containing project information
+                           values.
+      plaso_path: the path to the plaso source files.
     """
-    filename = u'{0:s}-{1!s}-dpkg.tar.gz'.format(
-        project_name, project_version)
-    return u'/'.join([self._BASE_URL, filename])
+    super(PythonModuleDpkgBuildFilesGenerator, self).__init__()
+    self._project_name = project_name
+    self._project_version = project_version
+    self._project_information = project_information
+    self._plaso_path = plaso_path
+
+  def _GenerateChangelogFile(self, dpkg_path):
+    """Generate the dpkg build changelog file.
+
+    Args:
+      dpkg_path: the path to the dpkg files.
+    """
+    timezone_minutes, _ = divmod(time.timezone, 60)
+    timezone_hours, timezone_minutes = divmod(timezone_minutes, 60)
+
+    # If timezone_hours is -1 {0:02d} will format as -1 instead of -01
+    # hence we detect the sign and force a leading zero.
+    if timezone_hours < 0:
+      timezone_string = u'-{0:02d}{1:02d}'.format(
+          -timezone_hours, timezone_minutes)
+    else:
+      timezone_string = u'+{0:02d}{1:02d}'.format(
+          timezone_hours, timezone_minutes)
+
+    date_time_string = u'{0:s} {1:s}'.format(
+        time.strftime('%a, %d %b %Y %H:%M:%S'), timezone_string)
+
+    project_name = self._PACKAGE_NAMES.get(
+        self._project_name, self._project_name)
+
+    template_values = {
+        'project_name': project_name,
+        'project_version': self._project_version,
+        'maintainer_email_address': self._EMAIL_ADDRESS,
+        'date_time': date_time_string}
+
+    filename = os.path.join(dpkg_path, u'changelog')
+    with open(filename, 'wb') as file_object:
+      data = self._CHANGELOG_TEMPLATE.format(**template_values)
+      file_object.write(data.encode('utf-8'))
+
+  def _GenerateCompatFile(self, dpkg_path):
+    """Generate the dpkg build compat file.
+
+    Args:
+      dpkg_path: the path to the dpkg files.
+    """
+    filename = os.path.join(dpkg_path, u'compat')
+    with open(filename, 'wb') as file_object:
+      data = self._COMPAT_TEMPLATE
+      file_object.write(data.encode('utf-8'))
+
+  def _GenerateControlFile(self, dpkg_path):
+    """Generate the dpkg build control file.
+
+    Args:
+      dpkg_path: the path to the dpkg files.
+    """
+    project_name = self._PACKAGE_NAMES.get(
+        self._project_name, self._project_name)
+
+    template_values = {
+        'project_name': project_name,
+        'upstream_maintainer': self._project_information['upstream_maintainer'],
+        'upstream_homepage': self._project_information['upstream_homepage'],
+        'description_short': self._project_information['description_short'],
+        'description_long': self._project_information['description_long']}
+
+    filename = os.path.join(dpkg_path, u'control')
+    with open(filename, 'wb') as file_object:
+      data = self._CONTROL_TEMPLATE.format(**template_values)
+      file_object.write(data.encode('utf-8'))
+
+  def _GenerateCopyrightFile(self, dpkg_path):
+    """Generate the dpkg build copyright file.
+
+    Args:
+      dpkg_path: the path to the dpkg files.
+    """
+    license_file = os.path.join(
+        self._plaso_path, u'config', u'licenses',
+        u'LICENSE.{0:s}'.format(self._project_name))
+
+    filename = os.path.join(dpkg_path, u'copyright')
+
+    shutil.copy(license_file, filename)
+
+  def _GenerateDocsFile(self, dpkg_path):
+    """Generate the dpkg build .docs file.
+
+    Args:
+      dpkg_path: the path to the dpkg files.
+    """
+    project_name = self._PACKAGE_NAMES.get(
+        self._project_name, self._project_name)
+
+    # Determine the available doc files.
+    doc_files = []
+    for filename in self._DOCS_FILENAMES:
+      if os.path.exists(filename):
+        doc_files.append(filename)
+
+    filename = os.path.join(
+        dpkg_path, u'python-{0:s}.docs'.format(project_name))
+    with open(filename, 'wb') as file_object:
+      file_object.write(u'\n'.join(doc_files))
+
+  def _GenerateRulesFile(self, dpkg_path):
+    """Generate the dpkg build rules file.
+
+    Args:
+      dpkg_path: the path to the dpkg files.
+    """
+    filename = os.path.join(dpkg_path, u'rules')
+    with open(filename, 'wb') as file_object:
+      data = self._RULES_TEMPLATE
+      file_object.write(data.encode('utf-8'))
+
+  def GenerateFiles(self, dpkg_path):
+    """Generate the dpkg build files.
+
+    Args:
+      dpkg_path: the path to the dpkg files.
+    """
+    os.mkdir(dpkg_path)
+    self._GenerateChangelogFile(dpkg_path)
+    self._GenerateCompatFile(dpkg_path)
+    self._GenerateControlFile(dpkg_path)
+    self._GenerateCopyrightFile(dpkg_path)
+    self._GenerateDocsFile(dpkg_path)
+    self._GenerateRulesFile(dpkg_path)
 
 
 class GoogleCodeWikiDownloadHelper(DownloadHelper):
@@ -306,6 +521,7 @@ class GoogleDriveDownloadHelper(DownloadHelper):
     return u'https://googledrive.com{0:s}'.format(matches[0])
 
 
+# pylint: disable=abstract-method
 class LibyalGitHubDownloadHelper(GoogleDriveDownloadHelper):
   """Class that helps in downloading a libyal GitHub project."""
 
@@ -332,6 +548,7 @@ class LibyalGitHubDownloadHelper(GoogleDriveDownloadHelper):
     return json.loads(config_parser.get('source_package', 'url'))
 
 
+# pylint: disable=abstract-method
 class Log2TimelineGitHubDownloadHelper(GoogleDriveDownloadHelper):
   """Class that helps in downloading a log2timeline GitHub project."""
 
@@ -494,6 +711,7 @@ class BuildHelper(object):
   """Base class that helps in building."""
 
   LOG_FILENAME = u'build.log'
+  ENCODING = 'utf-8'
 
   def Extract(self, source_filename):
     """Extracts the given source filename.
@@ -508,11 +726,19 @@ class BuildHelper(object):
     if not source_filename or not os.path.exists(source_filename):
       return
 
-    archive = tarfile.open(source_filename, 'r:gz', encoding='utf-8')
+    archive = tarfile.open(source_filename, 'r:gz', encoding=self.ENCODING)
     directory_name = ''
 
     for tar_info in archive.getmembers():
       filename = getattr(tar_info, 'name', None)
+      try:
+        filename = filename.decode(self.ENCODING)
+      except UnicodeDecodeError:
+        logging.warning(
+            u'Unable to decode filename in tar file: {0:s}'.format(
+                source_filename))
+        continue
+
       if filename is None:
         logging.warning(
             u'Missing filename in tar file: {0:s}'.format(source_filename))
@@ -546,6 +772,29 @@ class BuildHelper(object):
 class DpkgBuildHelper(BuildHelper):
   """Class that helps in building dpkg packages (.deb)."""
 
+  # TODO: determine BUILD_DEPENDENCIES from the build files?
+  # TODO: what about flex, byacc?
+  _BUILD_DEPENDENCIES = frozenset([
+      'git',
+      'build-essential',
+      'autotools-dev',
+      'autoconf',
+      'automake',
+      'autopoint',
+      'libtool',
+      'gettext',
+      'debhelper',
+      'fakeroot',
+      'quilt',
+      'zlib1g-dev',
+      'libbz2-dev',
+      'libssl-dev',
+      'libfuse-dev',
+      'python-dev',
+      'python-setuptools',
+      'libsqlite3-dev',
+  ])
+
   def _BuildPrepare(self, source_directory):
     """Make the necassary preperations before building the dpkg packages.
 
@@ -555,7 +804,7 @@ class DpkgBuildHelper(BuildHelper):
     Returns:
       True if the preparations were successful, False otherwise.
     """
-    # Script to run before building, e.g. to change the dpkg packing files.
+    # Script to run before building, e.g. to change the dpkg build files.
     if os.path.exists(u'prep-dpkg.sh'):
       command = u'sh ../prep-dpkg.sh'
       exit_code = subprocess.call(
@@ -587,28 +836,38 @@ class DpkgBuildHelper(BuildHelper):
 
     return True
 
+  @classmethod
+  def CheckBuildDependencies(cls):
+    """Checks if the build dependencies are met.
+
+    Returns:
+      A list of package names that need to be installed or an empty list.
+    """
+    missing_packages = []
+    for package_name in cls._BUILD_DEPENDENCIES:
+      if not cls.CheckIsInstalled(package_name):
+        missing_packages.append(package_name)
+
+    return missing_packages
+
+  @classmethod
+  def CheckIsInstalled(cls, package_name):
+    """Checks if a package is installed.
+
+    Args:
+      package_name: the name of the package.
+
+    Returns:
+      A boolean value containing true if the package is installed
+      false otherwise.
+    """
+    command = u'dpkg-query -l {0:s} >/dev/null 2>&1'.format(package_name)
+    exit_code = subprocess.call(command, shell=True)
+    return exit_code == 0
+
 
 class LibyalDpkgBuildHelper(DpkgBuildHelper):
   """Class that helps in building libyal dpkg packages (.deb)."""
-
-  # TODO: determine BUILD_DEPENDENCIES from spec files?
-  BUILD_DEPENDENCIES = frozenset([
-      'build-essential',
-      'autoconf',
-      'automake',
-      'autopoint',
-      'libtool',
-      'gettext',
-      'debhelper',
-      'fakeroot',
-      'quilt',
-      'autotools-dev',
-      'zlib1g-dev',
-      'libssl-dev',
-      'libfuse-dev',
-      'python-dev',
-      'python-setuptools',
-  ])
 
   def __init__(self):
     """Initializes the build helper."""
@@ -669,14 +928,6 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
 
     return True
 
-  def CheckBuildEnvironment(self):
-    """Checks if the build environment is sane."""
-    # TODO: allow to pass additional dependencies or determine them
-    # from the dpkg files.
-
-    # TODO: check if build environment has all the dependencies.
-    # sudo dpkg -l <package>
-
   def Clean(self, library_name, library_version):
     """Cleans the dpkg packages in the current directory.
 
@@ -727,16 +978,22 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
   """Class that helps in building python module dpkg packages (.deb)."""
 
   _PACKAGE_NAMES = {
+      u'PyYAML': u'yaml',
       u'pytz': u'tz',
   }
 
-  def Build(self, source_filename, project_name, project_version):
+  def Build(
+      self, source_filename, project_name, project_version,
+      project_information, plaso_path):
     """Builds the dpkg packages.
 
     Args:
       source_filename: the name of the source package file.
       project_name: the name of the project.
       project_version: the version of the project.
+      project_information: a dictionary object containing project information
+                           values.
+      plaso_path: the path to the plaso source files.
 
     Returns:
       True if the build was successful, False otherwise.
@@ -752,18 +1009,16 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
       dpkg_directory = os.path.join(source_directory, u'config', u'dpkg')
 
     if not os.path.exists(dpkg_directory):
-      # Download the dpkg build files if necessary.
+      # Generate the dpkg build files if necessary.
       os.chdir(source_directory)
 
-      build_files_download_helper = BuildFilesDownloadHelper()
-      build_files = build_files_download_helper.Download(
-          project_name, project_version)
-
-      build_files_build_helper = BuildHelper()
-      dpkg_directory = build_files_build_helper.Extract(build_files)
-      dpkg_directory = os.path.join(source_directory, dpkg_directory)
+      build_files_generator = PythonModuleDpkgBuildFilesGenerator(
+          project_name, project_version, project_information, plaso_path)
+      build_files_generator.GenerateFiles(u'dpkg')
 
       os.chdir(u'..')
+
+      dpkg_directory = os.path.join(source_directory, u'dpkg')
 
     if not os.path.exists(dpkg_directory):
       logging.error(u'Missing dpkg sub directory in: {0:s}'.format(
@@ -1108,6 +1363,32 @@ class PythonModulePkgBuildHelper(PkgBuildHelper):
 class RpmBuildHelper(BuildHelper):
   """Class that helps in building rpm packages (.rpm)."""
 
+  # TODO: determine BUILD_DEPENDENCIES from the build files?
+  _BUILD_DEPENDENCIES = frozenset([
+      'git',
+      'binutils',
+      'autoconf',
+      'automake',
+      'libtool',
+      'gettext-devel',
+      'make',
+      'pkgconfig',
+      'gcc',
+      'gcc-c++',
+      'flex',
+      'byacc',
+      'zlib-devel',
+      'bzip2-devel',
+      'openssl-devel',
+      'fuse-devel',
+      'rpm-build',
+      'python-devel',
+      'git',
+      'python-dateutil',
+      'python-setuptools',
+      'sqlite-devel',
+  ])
+
   def __init__(self):
     """Initializes the build helper."""
     super(RpmBuildHelper, self).__init__()
@@ -1210,6 +1491,35 @@ class RpmBuildHelper(BuildHelper):
     for filename in filenames:
       logging.info(u'Moving: {0:s}'.format(filename))
       shutil.move(filename, '.')
+
+  @classmethod
+  def CheckBuildDependencies(cls):
+    """Checks if the build dependencies are met.
+
+    Returns:
+      A list of package names that need to be installed or an empty list.
+    """
+    missing_packages = []
+    for package_name in cls._BUILD_DEPENDENCIES:
+      if not cls.CheckIsInstalled(package_name):
+        missing_packages.append(package_name)
+
+    return missing_packages
+
+  @classmethod
+  def CheckIsInstalled(cls, package_name):
+    """Checks if a package is installed.
+
+    Args:
+      package_name: the name of the package.
+
+    Returns:
+      A boolean value containing true if the package is installed
+      false otherwise.
+    """
+    command = u'rpm -qi {0:s} >/dev/null 2>&1'.format(package_name)
+    exit_code = subprocess.call(command, shell=True)
+    return exit_code == 0
 
   def Clean(self, project_name, project_version):
     """Cleans the rpmbuild directory.
@@ -1393,21 +1703,26 @@ class DependencyBuilder(object):
   PROJECT_TYPE_GITHUB_LIBYAL = 4
   PROJECT_TYPE_GITHUB_LOG2TIMELINE = 5
 
-  def __init__(self, build_target):
+  def __init__(self, build_target, plaso_path):
     """Initializes the dependency builder.
 
     Args:
       build_target: the build target.
+      plaso_path: the path to the plaso source files.
     """
     super(DependencyBuilder, self).__init__()
     self._build_target = build_target
+    self._plaso_path = plaso_path
 
-  def _BuildDependency(self, download_helper, project_name):
+  def _BuildDependency(
+      self, download_helper, project_name, project_information):
     """Builds a dependency.
 
     Args:
       download_helper: the download helper (instance of DownloadHelper).
       project_name: the name of the project
+      project_information: a dictionary object containing project information
+                           values.
 
     Returns:
       True if the build is successful or False on error.
@@ -1460,7 +1775,8 @@ class DependencyBuilder(object):
 
       elif project_name in self._PYTHON_MODULES:
         if not self._BuildPythonModule(
-            download_helper, source_filename, project_name, project_version):
+            download_helper, source_filename, project_name, project_version,
+            project_information):
           return False
 
     return True
@@ -1486,13 +1802,11 @@ class DependencyBuilder(object):
       build_helper.Clean(project_name, project_version)
 
       if not os.path.exists(deb_filename):
-        # TODO: add call to CheckBuildEnvironment or only do this once?
-
         logging.info(u'Building deb of: {0:s}'.format(source_filename))
         if not build_helper.Build(source_filename):
-          logging.ingo(
+          logging.info(
               u'Build of: {0:s} failed for more info check {1:s}'.format(
-                  source_filename, build_helper.LOG_FILENAME))
+                  source_filename, os.path.abspath(build_helper.LOG_FILENAME)))
           return False
 
     elif self._build_target == 'pkg':
@@ -1508,7 +1822,7 @@ class DependencyBuilder(object):
             source_filename, project_name, project_version):
           logging.info(
               u'Build of: {0:s} failed for more info check {1:s}'.format(
-                  source_filename, build_helper.LOG_FILENAME))
+                  source_filename, os.path.abspath(build_helper.LOG_FILENAME)))
           return False
 
     elif self._build_target == 'rpm':
@@ -1536,7 +1850,7 @@ class DependencyBuilder(object):
         if not build_successful:
           logging.info(
               u'Build of: {0:s} failed for more info check {1:s}'.format(
-                  source_filename, build_helper.LOG_FILENAME))
+                  source_filename, os.path.abspath(build_helper.LOG_FILENAME)))
           return False
 
     if build_helper and os.path.exists(build_helper.LOG_FILENAME):
@@ -1546,7 +1860,8 @@ class DependencyBuilder(object):
     return True
 
   def _BuildPythonModule(
-      self, download_helper, source_filename, project_name, project_version):
+      self, download_helper, source_filename, project_name, project_version,
+      project_information):
     """Builds a Python module dependency.
 
     Args:
@@ -1554,6 +1869,8 @@ class DependencyBuilder(object):
       source_filename: the name of the source package file.
       project_name: the name of the project
       project_version: the version of the project.
+      project_information: a dictionary object containing project information
+                           values.
 
     Returns:
       True if the build is successful or False on error.
@@ -1569,10 +1886,11 @@ class DependencyBuilder(object):
       if not os.path.exists(deb_filename):
         logging.info(u'Building deb of: {0:s}'.format(source_filename))
         if not build_helper.Build(
-            source_filename, project_name, project_version):
+            source_filename, project_name, project_version,
+            project_information, self._plaso_path):
           logging.info(
               u'Build of: {0:s} failed for more info check {1:s}'.format(
-                  source_filename, build_helper.LOG_FILENAME))
+                  source_filename, os.path.abspath(build_helper.LOG_FILENAME)))
           return False
 
     elif self._build_target == 'pkg':
@@ -1594,7 +1912,7 @@ class DependencyBuilder(object):
         if not build_successful:
           logging.info(
               u'Build of: {0:s} failed for more info check {1:s}'.format(
-                  source_filename, build_helper.LOG_FILENAME))
+                  source_filename, os.path.abspath(build_helper.LOG_FILENAME)))
           return False
 
     elif self._build_target == 'rpm':
@@ -1612,7 +1930,7 @@ class DependencyBuilder(object):
         if not build_successful:
           logging.info(
               u'Build of: {0:s} failed for more info check {1:s}'.format(
-                  source_filename, build_helper.LOG_FILENAME))
+                  source_filename, os.path.abspath(build_helper.LOG_FILENAME)))
           return False
 
     if build_helper and os.path.exists(build_helper.LOG_FILENAME):
@@ -1621,12 +1939,14 @@ class DependencyBuilder(object):
 
     return True
 
-  def Build(self, project_name, project_type):
+  def Build(self, project_name, project_type, project_information):
     """Builds a dependency.
 
     Args:
       project_name: the project name.
       project_type: the project type.
+      project_information: a dictionary object containing project information
+                           values.
 
     Returns:
       True if the build is successful or False on error.
@@ -1647,7 +1967,8 @@ class DependencyBuilder(object):
     else:
       raise ValueError(u'Unsupported project type.')
 
-    return self._BuildDependency(download_helper, project_name)
+    return self._BuildDependency(
+        download_helper, project_name, project_information)
 
 
 def Main():
@@ -1655,6 +1976,12 @@ def Main():
 
   args_parser = argparse.ArgumentParser(description=(
       'Downloads and builds the latest versions of plaso dependencies.'))
+
+  args_parser.add_argument(
+      '--build-directory', '--build_directory', action='store',
+      metavar='DIRECTORY', dest='build_directory', type=unicode,
+      default=u'dependencies', help=(
+          u'The location of the the build directory.'))
 
   args_parser.add_argument(
       'build_target', choices=sorted(build_targets), action='store',
@@ -1679,12 +2006,30 @@ def Main():
   logging.basicConfig(
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
-  dependency_builder = DependencyBuilder(options.build_target)
+  if options.build_target == 'dpkg':
+    missing_packages = DpkgBuildHelper.CheckBuildDependencies()
+    if missing_packages:
+      print (u'Required build package(s) missing. Please install: '
+             u'{0:s}.'.format(u', '.join(missing_packages)))
+      print u''
+      return False
+
+  elif options.build_target == 'rpm':
+    missing_packages = RpmBuildHelper.CheckBuildDependencies()
+    if missing_packages:
+      print (u'Required build package(s) missing. Please install: '
+             u'{0:s}.'.format(u', '.join(missing_packages)))
+      print u''
+      return False
+
+  # __file__ will point to a different location when access later in
+  # the script. So we need to preserve the location of the plaso source
+  # files here for future usage.
+  plaso_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  dependency_builder = DependencyBuilder(options.build_target, plaso_path)
 
   # TODO: allow for patching e.g. dpkt 1.8.
   # Have builder check patches URL.
-
-  # TODO: use patches to provide missing packaging files, e.g. dpkg.
 
   # TODO:
   # ipython
@@ -1702,56 +2047,130 @@ def Main():
   #
   # Solution: use protobuf-python.spec to build
 
+  # TODO: download and build sqlite3 from source?
+
   # TODO: rpm build of psutil is broken, fix upstream or add patching.
   # (u'psutil', DependencyBuilder.PROJECT_TYPE_PYPI),
-
-  # TODO: dependency sqlite-devel (rpm) or libsqlite3-dev (deb)
-  # or download and build sqlite3 from source?
 
   # TODO: generate dpkg files instead of downloading them or
   # download and override version information.
 
   builds = [
-    (u'bencode', DependencyBuilder.PROJECT_TYPE_PYPI),
-    (u'binplist', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI),
-    (u'construct', DependencyBuilder.PROJECT_TYPE_PYPI),
-    (u'dfvfs', DependencyBuilder.PROJECT_TYPE_GITHUB_LOG2TIMELINE),
-    (u'dpkt', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI),
-    (u'libbde', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libesedb', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libevt', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libevtx', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libewf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libfwsi', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'liblnk', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libmsiecf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libolecf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libqcow', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libregf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libsmdev', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libsmraw', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libvhdi', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libvmdk', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'libvshadow', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL),
-    (u'pyparsing', DependencyBuilder.PROJECT_TYPE_SOURCE_FORGE),
-    (u'pysqlite', DependencyBuilder.PROJECT_TYPE_PYPI),
-    (u'pytz', DependencyBuilder.PROJECT_TYPE_PYPI),
-    (u'PyYAML', DependencyBuilder.PROJECT_TYPE_PYPI),
-    (u'six', DependencyBuilder.PROJECT_TYPE_PYPI)]
+    (u'bencode', DependencyBuilder.PROJECT_TYPE_PYPI, {
+        'upstream_maintainer': u'Thomas Rampelberg <thomas@bittorrent.com>',
+        'upstream_homepage': u'http://bittorent.com/',
+        'description_short': (
+            u'The BitTorrent bencode module as light-weight, standalone '
+            u'package'),
+        'description_long': (
+            u'The BitTorrent bencode module as light-weight, standalone '
+            u'package.')}),
 
-  build_directory = u'dependencies'
-  if not os.path.exists(build_directory):
-    os.mkdir(build_directory)
-  os.chdir(build_directory)
+    (u'binplist', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI, {}),
+    (u'construct', DependencyBuilder.PROJECT_TYPE_PYPI, {
+        'upstream_maintainer': u'Tomer Filiba <tomerfiliba@gmail.com>',
+        'upstream_homepage': u'http://construct.readthedocs.org/en/latest/',
+        'description_short': (
+            u'Construct is a powerful declarative parser (and builder) for '
+            u'binary data'),
+        'description_long': (
+            u'Construct is a powerful declarative parser (and builder) for '
+            u'binary data.')}),
+
+    (u'dfvfs', DependencyBuilder.PROJECT_TYPE_GITHUB_LOG2TIMELINE, {}),
+    (u'dpkt', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI, {
+        'upstream_maintainer': u'Dug Song <dugsong@monkey.org>',
+        'upstream_homepage': u'https://code.google.com/p/dpkt/',
+        'description_short': (
+            u'Python packet creation / parsing module'),
+        'description_long': (
+            u'Python module for fast, simple packet creation / parsing, '
+            u'with definitions for the basic TCP/IP protocols.')}),
+
+    (u'libbde', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libesedb', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libevt', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libevtx', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libewf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libfwsi', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'liblnk', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libmsiecf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libolecf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libqcow', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libregf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libsmdev', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libsmraw', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libvhdi', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libvmdk', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'libvshadow', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
+    (u'pyparsing', DependencyBuilder.PROJECT_TYPE_SOURCE_FORGE, {
+        'upstream_maintainer': u'Paul McGuire <ptmcg@users.sourceforge.net>',
+        'upstream_homepage': u'http://pyparsing.wikispaces.com/',
+        'description_short': u'Python parsing module',
+        'description_long': (
+            u'The parsing module is an alternative approach to creating and '
+            u'executing simple grammars, vs. the traditional lex/yacc '
+            u'approach, or the use of regular expressions. The parsing '
+            u'module provides a library of classes that client code uses '
+            u'to construct the grammar directly in Python code.')}),
+
+    (u'pysqlite', DependencyBuilder.PROJECT_TYPE_PYPI, {
+        'upstream_maintainer': u'Gerhard Häring <gh@ghaering.de>',
+        'upstream_homepage': u'https://pypi.python.org/pypi/pysqlite/',
+        'description_short': u'Python interface to SQLite 3',
+        'description_long': (
+            u'pysqlite is a DB-API 2.0-compliant database interface for '
+            u'SQLite.')}),
+
+    (u'pytz', DependencyBuilder.PROJECT_TYPE_PYPI, {
+        'upstream_maintainer': u'Stuart Bishop <stuart@stuartbishop.net>',
+        'upstream_homepage': u'http://pypi.python.org/pypi/pytz/',
+        'description_short': u'Python version of the Olson timezone database',
+        'description_long': (
+            u'python-tz brings the Olson tz database into Python. This library '
+            u'allows accurate and cross platform timezone calculations using '
+            u'Python 2.3 or higher. It also solves the issue of ambiguous '
+            u'times at the end of daylight savings, which you can read more '
+            u'about in the Python Library Reference (datetime.tzinfo).')}),
+
+    (u'PyYAML', DependencyBuilder.PROJECT_TYPE_PYPI, {
+        'upstream_maintainer': u'Kirill Simonov <xi@resolvent.net>',
+        'upstream_homepage': u'http://pyyaml.org/',
+        'description_short': u'YAML parser and emitter for Python',
+        'description_long': (
+            u'Python-yaml is a complete YAML 1.1 parser and emitter for '
+            u'Python. It can parse all examples from the specification. '
+            u'The parsing algorithm is simple enough to be a reference '
+            u'for YAML parser implementors. A simple extension API is '
+            u'also provided. The package is built using libyaml for '
+            u'improved speed.')}),
+
+    (u'six', DependencyBuilder.PROJECT_TYPE_PYPI, {
+        'upstream_maintainer': u'Benjamin Peterson <benjamin@python.org>',
+        'upstream_homepage': u'http://pypi.python.org/pypi/six/',
+        'description_short': (
+            u'Python 2 and 3 compatibility library (Python 2 interface)'),
+        'description_long': (
+            u'Six is a Python 2 and 3 compatibility library. It provides '
+            u'utility functions for smoothing over the differences between '
+            u'the Python versions with the goal of writing Python code that '
+            u'is compatible on both Python versions.')})]
+
+  if not os.path.exists(options.build_directory):
+    os.mkdir(options.build_directory)
+
+  current_working_directory = os.getcwd()
+  os.chdir(options.build_directory)
 
   result = True
-  for project_name, project_type in builds:
-    if not dependency_builder.Build(project_name, project_type):
+  for project_name, project_type, project_information in builds:
+    if not dependency_builder.Build(
+        project_name, project_type, project_information):
       print u'Failed building: {0:s}'.format(project_name)
       result = False
       break
 
-  os.chdir(u'..')
+  os.chdir(current_working_directory)
 
   return result
 
