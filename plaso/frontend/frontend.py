@@ -458,6 +458,10 @@ class StorageMediaFrontend(Frontend):
         pass
 
     if vss_stores:
+      if len(vss_stores) == 1 and vss_stores[0] == 'all':
+        # We need to set the stores to cover all vss stores.
+        vss_stores = range(1, volume_system.number_of_volumes + 1)
+
       if not set(vss_stores).difference(
           normalized_volume_identifiers):
         return vss_stores
@@ -534,6 +538,10 @@ class StorageMediaFrontend(Frontend):
     """
     if not vss_stores:
       return []
+
+    if vss_stores == 'all':
+      # We want to process all the VSS stores.
+      return ['all']
 
     stores = []
     for vss_store_range in vss_stores.split(','):

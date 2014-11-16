@@ -167,6 +167,21 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     self.assertEquals(test_front_end._partition_offset, 0)
     self.assertEquals(test_front_end._vss_stores, [1])
 
+    options = test_lib.Options()
+    options.source = test_file
+    options.vss_stores = 'all'
+
+    test_front_end.ParseOptions(options)
+
+    test_front_end.ScanSource(options)
+    path_spec = test_front_end.GetSourcePathSpec()
+    self.assertNotEquals(path_spec, None)
+    self.assertEquals(
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+    # pylint: disable=protected-access
+    self.assertEquals(test_front_end._partition_offset, 0)
+    self.assertEquals(test_front_end._vss_stores, [1, 2])
+
   def setUp(self):
     """Sets up the objects used throughout the test."""
     self._input_reader = frontend.StdinFrontendInputReader()

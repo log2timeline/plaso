@@ -88,13 +88,17 @@ class PluginList(object):
     _ = map(ret.extend, self._value_plugins.values())
     return ret
 
-  def GetExpandedKeyPaths(self, parser_context, reg_cache=None):
+  def GetExpandedKeyPaths(
+      self, parser_context, reg_cache=None, plugin_names=None):
     """Retrieves a list of expanded Windows Registry key paths.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       reg_cache: Optional Windows Registry objects cache (instance of
                  WinRegistryCache). The default is None.
+      plugin_names: Optional list of plugin names, if defined only keys from
+                    these plugins will be expanded. The default is None which
+                    means all key plugins will get expanded keys.
 
     Returns:
       A list of expanded Windows Registry key paths.
@@ -103,6 +107,8 @@ class PluginList(object):
     for key_plugin_cls in self.GetAllKeyPlugins():
       key_plugin = key_plugin_cls(reg_cache=reg_cache)
 
+      if plugin_names and key_plugin.NAME not in plugin_names:
+        continue
       key_plugin.ExpandKeys(parser_context)
       if not key_plugin.expanded_keys:
         continue
@@ -228,12 +234,14 @@ class WinRegistryParser(interface.BasePluginsParser):
       plugins_list.AddPlugin(plugin_class.REG_TYPE, plugin_class)
     return plugins_list
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, unused_parser_chain=None):
     """Extract data from a Windows Registry file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     # TODO: Remove this magic reads when the classifier has been
     # implemented, until then we need to make sure we are dealing with
