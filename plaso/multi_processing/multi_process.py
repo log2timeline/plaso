@@ -313,8 +313,9 @@ class MultiProcessEngine(engine.BaseEngine):
     for worker_number in range(number_of_extraction_workers):
       extraction_worker = self.CreateExtractionWorker(worker_number)
 
-      extraction_worker.InitalizeParserObjects(
-          parser_filter_string=parser_filter_string)
+      # TODO: clean this up with the implementation of a task based
+      # multi-processing approach.
+      extraction_worker.parser_filter_string = parser_filter_string
 
       worker_name = u'Worker_{0:d}'.format(worker_number)
 
@@ -476,6 +477,13 @@ class MultiProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
   def Run(self):
     """Extracts event objects from file entries."""
     self._StartRPCProxyServerThread()
+
+    # We need to initialize the parser object after the process
+    # has forked otherwise on Windows the "fork" will fail with
+    # a PickleError for Python modules that cannot be pickled.
+    if not self._parser_objects:
+      self.InitalizeParserObjects(
+          parser_filter_string=self.parser_filter_string)
 
     super(MultiProcessEventExtractionWorker, self).Run()
 
