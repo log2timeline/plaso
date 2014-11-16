@@ -82,19 +82,19 @@ def PrintResults(my_results):
   failures = 0
   print 'Ran: {0:d} tests.'.format(my_results.testsRun)
   if my_results.wasSuccessful():
-    print '--++'*20
+    print '--++' * 20
     print 'Yeee you know what, all tests came out clean.'
-    print '--++'*20
+    print '--++' * 20
   else:
     errors = len(my_results.errors)
     failures = len(my_results.failures)
 
     print my_results.printErrors()
     print FormatHeader('Tests failed.')
-    print '  {:>10s}: {0:d}\n  {:>10s}: {1:d}\n  {:>10s}: {2:d}'.format(
+    print '  {0:>10s}: {1:d}\n  {2:>10s}: {3:d}\n  {4:>10s}: {5:d}'.format(
         'Errors', errors, 'Failures', failures, 'Total',
         errors + failures)
-    print '+='*40
+    print '+=' * 40
 
 
 if __name__ == '__main__':
