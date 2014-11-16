@@ -121,7 +121,7 @@ class KnowledgeBase(object):
     """Sets the default timezone.
 
     Args:
-      codepage: the default timezone.
+      timezone: the default timezone.
     """
     # TODO: check if value is sane.
     self._default_timezone = timezone
