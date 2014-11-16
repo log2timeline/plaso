@@ -52,7 +52,8 @@ def RunTests(debug_mode=False):
   # related to securityd parsing, yet the tests fail, but not if run
   # independently, this has something to do with the test suite.
   blacklisted_casses = [
-      'plaso.parsers.pcap_test', 'plaso.parsers.mac_securityd_test']
+      'plaso.parsers.pcap_test', 'plaso.parsers.mac_securityd_test',
+      'plaso.frontend.preg_test']
 
   tests = None
   for test_file in sorted(FindTestFiles()):
