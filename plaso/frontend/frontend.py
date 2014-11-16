@@ -746,6 +746,7 @@ class StorageMediaFrontend(Frontend):
     self._scan_context.OpenSourcePath(self._source_path)
 
     while True:
+      last_scan_node = self._scan_context.last_scan_node
       self._scan_context = self._source_scanner.Scan(
           self._scan_context, scan_path_spec=scan_path_spec)
 
@@ -755,7 +756,8 @@ class StorageMediaFrontend(Frontend):
           self._scan_context.SOURCE_TYPE_FILE]:
         break
 
-      if not self._scan_context.last_scan_node:
+      if (not self._scan_context.last_scan_node or
+          self._scan_context.last_scan_node == last_scan_node):
         raise errors.SourceScannerError(
             u'No supported file system found in source: {0:s}.'.format(
                 self._source_path))
