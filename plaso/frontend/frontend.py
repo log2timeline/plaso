@@ -193,6 +193,10 @@ class Frontend(object):
 class StorageMediaFrontend(Frontend):
   """Class that implements a front-end with storage media support."""
 
+  # For context see: http://en.wikipedia.org/wiki/Byte
+  _UNITS_1000 = ['B', 'kB', 'MB', 'GB', 'TB', 'EB', 'ZB', 'YB']
+  _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
+
   def __init__(self, input_reader, output_writer):
     """Initializes the front-end object.
 
@@ -212,6 +216,43 @@ class StorageMediaFrontend(Frontend):
     self._source_path = None
     self._source_scanner = source_scanner.SourceScanner()
     self._vss_stores = None
+
+  def _GetHumanReadableSize(self, size):
+    """Retrieves a human readable string of the size.
+
+    Args:
+      size: The size in bytes.
+
+    Returns:
+      A human readable string of the size.
+    """
+    magnitude_1000 = 0
+    size_1000 = float(size)
+    while size_1000 >= 1000:
+      size_1000 /= 1000
+      magnitude_1000 += 1
+
+    magnitude_1024 = 0
+    size_1024 = float(size)
+    while size_1024 >= 1024:
+      size_1024 /= 1024
+      magnitude_1024 += 1
+
+    size_string_1000 = None
+    if magnitude_1000 > 0 and magnitude_1000 <= 7:
+      size_string_1000 = u'{0:.1f}{1:s}'.format(
+          size_1000, self._UNITS_1000[magnitude_1000])
+
+    size_string_1024 = None
+    if magnitude_1024 > 0 and magnitude_1024 <= 7:
+      size_string_1024 = u'{0:.1f}{1:s}'.format(
+          size_1024, self._UNITS_1024[magnitude_1024])
+
+    if not size_string_1000 or not size_string_1024:
+      return u'{0:d} B'.format(size)
+
+    return u'{0:s} / {1:s} ({2:d} B)'.format(
+        size_string_1024, size_string_1000, size)
 
   def _GetPartionIdentifierFromUser(self, volume_system, volume_identifiers):
     """Asks the user to provide the partitioned volume identifier.
@@ -235,8 +276,9 @@ class StorageMediaFrontend(Frontend):
 
       volume_extent = volume.extents[0]
       self._output_writer.Write(
-          u'{0:s}\t\t{1:d} (0x{1:08x})\t{2:d}\n'.format(
-              volume.identifier, volume_extent.offset, volume_extent.size))
+          u'{0:s}\t\t{1:d} (0x{1:08x})\t{2:s}\n'.format(
+              volume.identifier, volume_extent.offset,
+              self._GetHumanReadableSize(volume_extent.size)))
 
     self._output_writer.Write(u'\n')
 
