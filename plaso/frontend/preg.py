@@ -45,6 +45,7 @@ except ImportError:
   # pylint: disable=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
+from IPython.config.loader import Config
 from IPython.core import magic
 
 from plaso.artifacts import knowledge_base
@@ -73,6 +74,78 @@ from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
 
 
+class ConsoleConfig(object):
+  """Class that contains functions to configure console actions."""
+
+  @classmethod
+  def GetConfig(cls):
+    """Retrieves the iPython config.
+
+    Returns:
+      The IPython config object (instance of
+      IPython.terminal.embed.InteractiveShellEmbed)
+    """
+    try:
+      # The "get_ipython" function does not exist except within an IPython
+      # session.
+      return get_ipython()  # pylint: disable-msg=undefined-variable
+    except NameError:
+      return Config()
+
+  @classmethod
+  def SetPrompt(
+      cls, hive_path=None, config=None, prepend_string=None):
+    """Sets the prompt string on the console.
+
+    Args:
+      hive_path: The hive name or path as a string, this is optional name or
+                 location of the loaded hive. If not defined the name is derived
+                 from a default string.
+      config: The IPython configuration object (instance of
+              IPython.terminal.embed.InteractiveShellEmbed), this is optional
+              and is automatically derived if not used.
+      prepend_string: An optional string that can be injected into the prompt
+                      just prior to the command count.
+    """
+    if hive_path is None:
+      path_string = u'Unknown hive loaded'
+    else:
+      path_string = hive_path
+
+    prompt_strings = [
+        r'[{color.LightBlue}\T{color.Normal}]',
+        r'{color.LightPurple} ',
+        path_string,
+        r'\n{color.Normal}']
+    if prepend_string is not None:
+      prompt_strings.append(u'{0:s} '.format(prepend_string))
+    prompt_strings.append(r'[{color.Red}\#{color.Normal}] \$ ')
+
+    if config is None:
+      ipython_config = cls.GetConfig()
+    else:
+      ipython_config = config
+
+    try:
+      ipython_config.PromptManager.in_template = r''.join(prompt_strings)
+    except AttributeError:
+      ipython_config.prompt_manager.in_template = r''.join(prompt_strings)
+
+
+class PregCache(object):
+  """Cache storage used for iPython and other aspects of preg."""
+
+  events_from_last_parse = []
+
+  knowledge_base_object = knowledge_base.KnowledgeBase()
+
+  # Parser context, used when parsing Registry keys.
+  parser_context = None
+
+  hive_storage = None
+  shell_helper = None
+
+
 class PregEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
   """Class that implements a list event object queue consumer."""
 
@@ -86,72 +159,12 @@ class PregEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     self.event_objects = []
 
   def _ConsumeEventObject(self, event_object, **unused_kwargs):
-    """Consumes an event object callback for ConsumeEventObject.
+    """Consumes an event object callback for ConsumeEventObjects.
 
     Args:
       event_object: the event object (instance of EventObject).
     """
     self.event_objects.append(event_object)
-
-
-class RegCache(object):
-  """Cache for current hive and Registry key."""
-
-  # Attributes that are cached.
-  cur_key = ''
-  hive = None
-  hive_type = 'UNKNOWN'
-  knowledge_base_object = knowledge_base.KnowledgeBase()
-  parser_context = None
-  path_expander = None
-  reg_cache = None
-  file_entry = None
-  events_from_last_parse = []
-
-  REG_TYPES = {
-      'NTUSER': ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
-      'SOFTWARE': ('\\Microsoft\\Windows\\CurrentVersion\\App Paths',),
-      'SECURITY': ('\\Policy\\PolAdtEv',),
-      'SYSTEM': ('\\Select',),
-      'SAM': ('\\SAM\\Domains\\Account\\Users',),
-      'UNKNOWN': (),
-  }
-
-  @classmethod
-  def SetHiveType(cls):
-    """Guess the type of the current hive in the cache."""
-    # Detect Registry type.
-    registry_type = 'UNKNOWN'
-    for reg_type in cls.REG_TYPES:
-      if reg_type == 'UNKNOWN':
-        continue
-      found = True
-      for reg_key in cls.REG_TYPES[reg_type]:
-        if not RegCache.hive.GetKeyByPath(reg_key):
-          found = False
-          break
-      if found:
-        registry_type = reg_type
-        break
-
-    cls.hive_type = registry_type
-
-  @classmethod
-  def BuildCache(cls):
-    """Build the Registry cache."""
-    # Calculate the Registry cache.
-    cls.reg_cache = cache.WinRegistryCache()
-    cls.reg_cache.BuildCache(cls.hive, cls.hive_type)
-    cls.path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
-        reg_cache=cls.reg_cache)
-
-  @classmethod
-  def GetHiveName(cls):
-    """Return the name of the Registry hive file."""
-    if not hasattr(cls, 'hive'):
-      return 'N/A'
-
-    return getattr(cls.hive, 'name', 'N/A')
 
 
 class PregFrontend(frontend.ExtractionFrontend):
@@ -164,9 +177,95 @@ class PregFrontend(frontend.ExtractionFrontend):
     super(PregFrontend, self).__init__(input_reader, output_writer)
     self._key_path = None
     self._parse_restore_points = False
-    self._registry_file = None
     self._verbose_output = False
     self.plugins = None
+
+  def ParseHive(
+      self, hive_path_or_path_spec, hive_collectors, shell_helper,
+      key_paths=None, use_plugins=None, verbose=False):
+    """Opens a hive file, and returns information about parsed keys.
+
+    This function takes a path to a hive and a list of collectors (or
+    none if the Registry file is passed to the tool).
+
+    The function then opens up the hive inside each collector and runs
+    the plugins defined (or all if no plugins are defined) against all
+    the keys supplied to it.
+
+    Args:
+      hive_path: Full path to the hive file in question.
+      hive_collectors: A list of collectors to use (instance of
+                       dfvfs.helpers.file_system_searcher.FileSystemSearcher)
+      shell_helper: A helper object (instance of PregHelper).
+      key_paths: A list of Registry keys paths that are to be parsed.
+      use_plugins: A list of plugins used to parse the key, None if all
+      plugins should be used.
+      verbose: Print more verbose content, like hex dump of extracted events.
+
+    Returns:
+      A string containing extracted information.
+    """
+    if isinstance(hive_path_or_path_spec, basestring):
+      hive_path_spec = None
+      hive_path = hive_path_or_path_spec
+    else:
+      hive_path_spec = hive_path_or_path_spec
+      hive_path = hive_path_spec.location
+
+    if key_paths is None:
+      key_paths = []
+
+    print_strings = []
+    for name, hive_collector in hive_collectors:
+      # Printing '*' 80 times.
+      print_strings.append(u'*' * 80)
+      print_strings.append(
+          u'{0:>15} : {1:s}{2:s}'.format(u'Hive File', hive_path, name))
+      if hive_path_spec:
+        current_hive = shell_helper.OpenHive(hive_path_spec, hive_collector)
+      else:
+        current_hive = shell_helper.OpenHive(hive_path, hive_collector)
+
+      for key_path in key_paths:
+        key_texts = []
+        key_dict = {}
+        if current_hive.reg_cache:
+          key_dict.update(current_hive.reg_cache.attributes.items())
+
+        if PregCache.knowledge_base_object.pre_obj:
+          key_dict.update(
+              PregCache.knowledge_base_object.pre_obj.__dict__.items())
+
+        key = current_hive.GetKeyByPath(key_path)
+        key_texts.append(u'{0:>15} : {1:s}'.format(u'Key Name', key_path))
+        if not key:
+          key_texts.append(u'Unable to open key: {0:s}'.format(key_path))
+          if verbose:
+            print_strings.extend(key_texts)
+          continue
+        key_texts.append(
+            u'{0:>15} : {1:d}'.format(u'Subkeys', key.number_of_subkeys))
+        key_texts.append(u'{0:>15} : {1:d}'.format(
+            u'Values', key.number_of_values))
+        key_texts.append(u'')
+
+        if verbose:
+          key_texts.append(u'{0:-^80}'.format(u' SubKeys '))
+          for subkey in key.GetSubkeys():
+            key_texts.append(
+                u'{0:>15} : {1:s}'.format(u'Key Name', subkey.path))
+
+        key_texts.append(u'')
+        key_texts.append(u'{0:-^80}'.format(u' Plugins '))
+
+        output_string = ParseKey(
+            key=key, shell_helper=shell_helper, verbose=verbose,
+            use_plugins=use_plugins, hive_helper=current_hive)
+        key_texts.extend(output_string)
+
+        print_strings.extend(key_texts)
+
+    return u'\n'.join(print_strings)
 
   def ParseOptions(self, options, source_option='source'):
     """Parses the options and initializes the front-end.
@@ -194,7 +293,6 @@ class PregFrontend(frontend.ExtractionFrontend):
       if not image and not os.path.isfile(regfile):
         raise errors.BadConfigOption(
             u'Registry file: {0:s} does not exist.'.format(regfile))
-      self._registry_file = regfile
 
     self._key_path = getattr(options, 'key', None)
     self._parse_restore_points = getattr(options, 'restore_points', False)
@@ -207,11 +305,17 @@ class PregFrontend(frontend.ExtractionFrontend):
     """Prints information about the supported plugins."""
     # TODO: replace frontend_utils.FormatHeader by frontend function.
     print frontend_utils.FormatHeader(u'Supported Plugins')
-    key_plugin_cls = self.plugins.GetAllKeyPlugins()[0]
+    all_plugins = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
 
-    for plugin, obj in sorted(key_plugin_cls.classes.items()):
-      doc_string, _, _ = obj.__doc__.partition('\n')
-      print frontend_utils.FormatOutputString(plugin, doc_string)
+    print frontend_utils.FormatHeader(u'Key Plugins')
+    for plugin_obj in all_plugins.GetAllKeyPlugins():
+      print frontend_utils.FormatOutputString(
+          plugin_obj.NAME, plugin_obj.DESCRIPTION)
+
+    print frontend_utils.FormatHeader(u'Value Plugins')
+    for plugin_obj in all_plugins.GetAllValuePlugins():
+      print frontend_utils.FormatOutputString(
+          plugin_obj.NAME, plugin_obj.DESCRIPTION)
 
   def _ExpandKeysRedirect(self, keys):
     """Expands a list of Registry key paths with their redirect equivalents.
@@ -331,7 +435,7 @@ class PregFrontend(frontend.ExtractionFrontend):
     for path in paths:
       try:
         expanded_paths.append(expander.ExpandPath(
-            path, pre_obj=RegCache.knowledge_base_object.pre_obj))
+            path, pre_obj=PregCache.knowledge_base_object.pre_obj))
 
       except KeyError as exception:
         logging.error(u'Unable to expand keys with error: {0:s}'.format(
@@ -339,19 +443,23 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     return expanded_paths
 
-  def _GetRegistryKeysFromType(self, registry_type):
+  def _GetRegistryKeysFromHive(self, hive_helper, parser_context):
     """Retrieves a list of all key plugins for a given Registry type.
 
     Args:
-      registry_type: the Registry type string.
+      hive_helper: A hive object (instance of PregHiveHelper).
+      parser_context: A parser context object (instance of ParserContext).
 
     Returns:
       A list of Windows Registry keys.
     """
     keys = []
+    if not hive_helper:
+      return
     for key_plugin_cls in self.plugins.GetAllKeyPlugins():
-      temp_obj = key_plugin_cls(reg_cache=RegCache.reg_cache)
-      if temp_obj.REG_TYPE == registry_type:
+      temp_obj = key_plugin_cls(reg_cache=hive_helper.reg_cache)
+      if temp_obj.REG_TYPE == hive_helper.type:
+        temp_obj.ExpandKeys(parser_context)
         keys.extend(temp_obj.expanded_keys)
 
     return keys
@@ -397,10 +505,11 @@ class PregFrontend(frontend.ExtractionFrontend):
     Returns:
       A list of Windows Registry types.
     """
+    reg_cache = cache.WinRegistryCache()
     types = []
     for plugin in self._GetRegistryPlugins(plugin_name):
       for key_plugin_cls in self.plugins.GetAllKeyPlugins():
-        temp_obj = key_plugin_cls(reg_cache=RegCache.reg_cache)
+        temp_obj = key_plugin_cls(reg_cache=reg_cache)
         if plugin is temp_obj.plugin_name:
           if temp_obj.REG_TYPE not in types:
             types.append(temp_obj.REG_TYPE)
@@ -408,13 +517,12 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     return types
 
-  def _GetSearchersForImage(self, volume_path_spec, options):
+  def _GetSearchersForImage(self, volume_path_spec):
     """Retrieves the file systems searchers for searching the image.
 
     Args:
       volume_path_spec: The path specification of the volume containing
                         the file system (instance of dfvfs.PathSpec).
-      options: the command line arguments (instance of argparse.Namespace).
 
     Returns:
       A list of tuples containing the a string identifying the file system
@@ -433,13 +541,7 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     searchers.append((u'', searcher))
 
-    # TODO: Remove this option parsing and rely on self._vss_stores instead.
-    vss_stores = getattr(options, 'vss_stores', [])
-    if vss_stores is None:
-      vss_stores = []
-
-    if not vss_stores and self._vss_stores:
-      vss_stores = self._vss_stores
+    vss_stores = self._vss_stores
 
     for store_index in vss_stores:
       vss_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -454,54 +556,85 @@ class PregFrontend(frontend.ExtractionFrontend):
           file_system, vss_path_spec)
 
       searchers.append((
-          u':VSS Store {0:d}'.format(store_index + 1), searcher))
+          u':VSS Store {0:d}'.format(store_index), searcher))
 
     return searchers
 
-  def GetHivesAndCollectors(self, options, plugin_name):
+  def GetHivesAndCollectors(
+      self, options, registry_types=None, plugin_name=None):
     """Returns a list of discovered Registry hives and collectors.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
-      plugin_name: string containing the name of the plugin or an empty
-                   string for all the types.
+      registry_types: an optional list of Registry types, eg: NTUSER, SAM, etc
+                      that should be included. Defaults to None.
+      plugin_name: an optional string containing the name of the plugin or an
+                   empty string for all the types. Defaults to None.
+
+    Returns:
+      A tuple of hives and searchers, where hives is a list that contains
+      either a string (location of a Registry hive) or path specs (instance of
+      dfvfs.path.path_spec.PathSpec). The searchers is a list of tuples that
+      contain the name of the searcher and a searcher object (instance of
+      dfvfs.helpers.file_system_searcher.FileSystemSearcher) or None (if no
+      searcher is required).
+
+    Raises:
+      ValueError: If neither registry_types nor plugin name is passed
+                  as a parameter.
     """
+    if registry_types is None and plugin_name is None:
+      raise ValueError(
+          u'Missing registry_types or plugin_name value.')
+
     # TODO: use non-preprocess collector with filter to collect hives.
 
     # TODO: rewrite to always use collector or equiv.
-    if self._source_path:
-      try:
-        self.ScanSource(options)
-      except errors.SourceScannerError as exception:
-        raise errors.BadConfigOption((
-            u'Unable to scan for a supported filesystem with error: {0:s}\n'
-            u'Most likely the image format is not supported by the '
-            u'tool.').format(exception))
-
-      searchers = self._GetSearchersForImage(
-          self.GetSourcePathSpec().parent, options)
-      _, searcher = searchers[0]
-
-      # Run preprocessing on image.
-      platform = preprocess_interface.GuessOS(searcher)
-
-      preprocess_manager.PreprocessPluginsManager.RunPlugins(
-          platform, searcher, RegCache.knowledge_base_object)
-
-      # Find all the Registry paths we need to check.
-      if self._registry_file:
-        paths = self._GetRegistryFilePaths(
-            plugin_name, registry_type=self._registry_file.upper())
-      else:
-        paths = self._GetRegistryFilePaths(plugin_name)
-
-      hives = []
-      for path in paths:
-        hives.extend(self._FindRegistryPaths(searcher, path))
-
-    else:
-      hives = [self._registry_file]
+    if not self._source_path:
       searchers = [(u'', None)]
+      return registry_types, searchers
+
+    try:
+      self.ScanSource(options)
+    except errors.SourceScannerError as exception:
+      raise errors.BadConfigOption((
+          u'Unable to scan for a supported filesystem with error: {0:s}\n'
+          u'Most likely the image format is not supported by the '
+          u'tool.').format(exception))
+
+    searchers = self._GetSearchersForImage(self.GetSourcePathSpec().parent)
+    _, searcher = searchers[0]
+
+    # Run preprocessing on image.
+    platform = preprocess_interface.GuessOS(searcher)
+
+    preprocess_manager.PreprocessPluginsManager.RunPlugins(
+        platform, searcher, PregCache.knowledge_base_object)
+
+    # Create the keyword list if plugins are used.
+    if plugin_name:
+      if not plugin_name.startswith('winreg_'):
+        plugin_name = u'winreg_{0:s}'.format(plugin_name)
+      if registry_types is None:
+        registry_types = []
+      plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+      for plugin_cls in plugins_list.GetAllKeyPlugins():
+        if plugin_name.lower() == plugin_cls.NAME.lower():
+          if plugin_cls.REG_TYPE not in registry_types:
+            registry_types.append(plugin_cls.REG_TYPE)
+
+    # Find all the Registry paths we need to check.
+    if registry_types:
+      paths = []
+      for registry_type in registry_types:
+        paths.extend(self._GetRegistryFilePaths(
+            plugin_name, registry_type=registry_type.upper()))
+    else:
+      paths = self._GetRegistryFilePaths(plugin_name)
+
+    hives = []
+    for path in paths:
+      hives.extend(self._FindRegistryPaths(searcher, path))
 
     return hives, searchers
 
@@ -518,16 +651,27 @@ class PregFrontend(frontend.ExtractionFrontend):
       plugin_name: string containing the name of the plugin or an empty
                    string for all the types.
     """
-    hives, hive_collectors = self.GetHivesAndCollectors(options, plugin_name)
+    regfile = getattr(options, 'regfile', u'')
+
+    hives, hive_collectors = self.GetHivesAndCollectors(
+        options, registry_types=[regfile],
+        plugin_name=plugin_name)
 
     key_paths = [self._key_path]
 
     # Expand the keys paths if there is a need (due to Windows redirect).
     self._ExpandKeysRedirect(key_paths)
 
+    hive_storage = PregStorage()
+    shell_helper = PregHelper(options, self, hive_storage)
+
+    if hives is None:
+      hives = [regfile]
+
     for hive in hives:
-      output_string = ParseHive(
-          hive, hive_collectors, key_paths, None, self._verbose_output)
+      output_string = self.ParseHive(
+          hive, hive_collectors, shell_helper,
+          key_paths=key_paths, verbose=self._verbose_output)
       self._output_writer.Write(output_string)
 
   def RunModeRegistryPlugin(self, options, plugin_name):
@@ -538,9 +682,11 @@ class PregFrontend(frontend.ExtractionFrontend):
       plugin_name: string containing the name of the plugin or an empty
                    string for all the types.
     """
-    hives, hive_collectors = self.GetHivesAndCollectors(options, plugin_name)
-    if not hives:
-      return
+    hives, hive_collectors = self.GetHivesAndCollectors(
+        options, plugin_name=plugin_name)
+
+    if hives is None:
+      hives = [getattr(options, 'regfile', None)]
 
     plugin_list = self._GetRegistryPlugins(plugin_name)
 
@@ -549,61 +695,414 @@ class PregFrontend(frontend.ExtractionFrontend):
     # create the reg_cache object, which is necessary to fully
     # expand all keys.
     _, hive_collector = hive_collectors[0]
-    OpenHive(hives[0], hive_collector)
-
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_producer = queue.ItemQueueProducer(event_queue)
-
-    parse_error_queue = single_process.SingleProcessQueue()
-    parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
-
-    RegCache.parser_context = parsers_context.ParserContext(
-        event_queue_producer, parse_error_queue_producer,
-        RegCache.knowledge_base_object)
+    hive_storage = PregStorage()
+    shell_helper = PregHelper(options, self, hive_storage)
+    hive_helper = shell_helper.OpenHive(hives[0], hive_collector)
+    parser_context = shell_helper.BuildParserContext()
 
     # Get all the appropriate keys from these plugins.
     key_paths = self.plugins.GetExpandedKeyPaths(
-        RegCache.parser_context, reg_cache=RegCache.reg_cache)
+        parser_context, reg_cache=hive_helper.reg_cache,
+        plugin_names=plugin_list)
 
     for hive in hives:
-      output_string = ParseHive(
-          hive, hive_collectors, key_paths, plugin_list, self._verbose_output)
+      output_string = self.ParseHive(
+          hive, hive_collectors, shell_helper,
+          key_paths=key_paths, use_plugins=plugin_list,
+          verbose=self._verbose_output)
       self._output_writer.Write(output_string)
 
-  def RunModeRegistryFile(self, options):
+  def RunModeRegistryFile(self, options, regfile):
     """Run against a Registry file.
 
     Finds and opens all Registry hives as configured in the configuration
     object and determines the type of Registry file opened. Then it will
-    load up all the Registry plugins suitable for that particular registry
+    load up all the Registry plugins suitable for that particular Registry
     file, find all Registry keys they are able to parse and run through
     them, one by one.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
+      regfile: A string containing either full path to the Registry hive or
+               a keyword to match it.
     """
     # Get all the hives and collectors.
     hives, hive_collectors = self.GetHivesAndCollectors(
-        options, options.plugin_name)
+        options, registry_types=[regfile])
+
+    hive_storage = PregStorage()
+    shell_helper = PregHelper(options, self, hive_storage)
+    parser_context = shell_helper.BuildParserContext()
 
     for hive in hives:
-      for _, hive_collector in hive_collectors:
-        OpenHive(hive, hive_collector)
+      for collector_name, hive_collector in hive_collectors:
+        hive_helper = shell_helper.OpenHive(
+            hive, hive_collector=hive_collector,
+            hive_collector_name=collector_name)
+        hive_type = hive_helper.type
 
-        key_paths = self._GetRegistryKeysFromType(RegCache.hive_type)
+        key_paths = self._GetRegistryKeysFromHive(hive_helper, parser_context)
         self._ExpandKeysRedirect(key_paths)
 
-        plugins_to_run = self._GetRegistryPlugins(RegCache.hive_type)
-        output_string = ParseHive(
-            hive, hive_collectors, key_paths, plugins_to_run,
-            self._verbose_output)
+        plugins_to_run = self._GetRegistryPlugins(hive_type)
+        output_string = self.ParseHive(
+            hive, hive_collectors, shell_helper, key_paths=key_paths,
+            use_plugins=plugins_to_run, verbose=self._verbose_output)
         self._output_writer.Write(output_string)
+
+
+class PregHelper(object):
+  """Class that defines various helper functions.
+
+  The purpose of this class is to bridge the plaso generated objects
+  with the IPython objects, making it easier to create magic classes
+  and provide additional helper functions to the IPython shell.
+  """
+
+  def __init__(self, tool_options, tool_front_end, hive_storage):
+    """Initialize the helper object.
+
+    Args:
+      tool_options: A configuration object.
+      tool_front_end: A front end object (instance of PregFrontend).
+      hive_storage: A hive storage object (instance of PregStorage).
+    """
+    super(PregHelper, self).__init__()
+    self.tool_options = tool_options
+    self.tool_front_end = tool_front_end
+    self.hive_storage = hive_storage
+
+  def BuildParserContext(self, event_queue=None):
+    """Build the parser object.
+
+    Args:
+      event_queue: An event queue object (instance of Queue). This is
+                   optional and if a queue is not provided a default
+                   one will be provided.
+
+    Returns:
+      A parser context object (instance of parsers_context.ParserContext).
+    """
+    if event_queue is None:
+      event_queue = single_process.SingleProcessQueue()
+    event_queue_producer = queue.ItemQueueProducer(event_queue)
+
+    parse_error_queue = single_process.SingleProcessQueue()
+    parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
+
+    return parsers_context.ParserContext(
+        event_queue_producer, parse_error_queue_producer,
+        PregCache.knowledge_base_object)
+
+  def OpenHive(
+      self, filename_or_path_spec, hive_collector, hive_collector_name=None,
+      codepage='cp1252'):
+    """Open a Registry hive based on a collector or a filename.
+
+    Args:
+      filename_or_path_spec: file path to the hive as a string or a path spec
+                             object (instance of dfvfs.path.path_spec.PathSpec)
+      hive_collector: the collector to use (instance of
+                      dfvfs.helpers.file_system_searcher.FileSystemSearcher)
+      hive_collector_name: optional string denoting the name of the collector
+                           used. The default value is None.
+      codepage: the default codepage, default is cp1252.
+
+    Returns:
+      A hive helper object (instance of PregHiveHelper).
+    """
+    PregCache.knowledge_base_object.SetDefaultCodepage(codepage)
+
+    if isinstance(filename_or_path_spec, basestring):
+      filename = filename_or_path_spec
+      path_spec = None
+    else:
+      filename = filename_or_path_spec.location
+      path_spec = filename_or_path_spec
+
+    if not hive_collector:
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_OS, location=filename)
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    else:
+      file_entry = hive_collector.GetFileEntryByPathSpec(path_spec)
+
+    win_registry = winregistry.WinRegistry(
+        winregistry.WinRegistry.BACKEND_PYREGF)
+
+    try:
+      hive_object = win_registry.OpenFile(
+          file_entry, codepage=PregCache.knowledge_base_object.codepage)
+    except IOError:
+      if filename is not None:
+        filename_string = filename
+      elif path_spec:
+        filename_string = path_spec.location
+      else:
+        filename_string = u'unknown file path'
+      logging.error(
+          u'Unable to open Registry hive: {0:s} [{1:s}]'.format(
+              filename_string, hive_collector_name))
+      return
+
+    return PregHiveHelper(
+        hive_object, file_entry=file_entry, collector_name=hive_collector_name)
+
+  def Scan(self, registry_types):
+    """Scan for available hives using keyword.
+
+    Args:
+      registry_types: A list of keywords to scan for, eg: "NTUSER",
+                      "SOFTWARE", etc.
+    """
+    if not registry_types:
+      print (
+          u'Unable to scan for an empty keyword. Please specify a keyword, '
+          u'eg: NTUSER, SOFTWARE, etc')
+      return
+
+    hives, collectors = self.tool_front_end.GetHivesAndCollectors(
+        self.tool_options, registry_types=registry_types)
+
+    if not hives:
+      print u'No new discovered hives.'
+      return
+
+    if type(hives) in (list, tuple):
+      for hive in hives:
+        for name, collector in collectors:
+          hive_helper = self.OpenHive(
+              hive, hive_collector=collector, hive_collector_name=name)
+          if hive_helper:
+            self.hive_storage.AppendHive(hive_helper)
+    else:
+      for name, collector in collectors:
+        hive_helper = self.OpenHive(
+              hives, hive_collector=collector, hive_collector_name=name)
+        if hive_helper:
+          self.hive_storage.AppendHive(hive_helper)
+
+
+class PregHiveHelper(object):
+  """Class that defines few helper functions for Registry operations."""
+
+  _currently_loaded_registry_key = ''
+  _hive = None
+  _hive_type = u'UNKNOWN'
+
+  collector_name = None
+  file_entry = None
+  path_expander = None
+  reg_cache = None
+
+  REG_TYPES = {
+      u'NTUSER': ('\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer',),
+      u'SOFTWARE': ('\\Microsoft\\Windows\\CurrentVersion\\App Paths',),
+      u'SECURITY': ('\\Policy\\PolAdtEv',),
+      u'SYSTEM': ('\\Select',),
+      u'SAM': ('\\SAM\\Domains\\Account\\Users',),
+      u'UNKNOWN': (),
+  }
+
+  @property
+  def name(self):
+    """Return the name of the hive."""
+    return getattr(self._hive, 'name', u'N/A')
+
+  @property
+  def path(self):
+    """Return the file path of the hive."""
+    path_spec = getattr(self.file_entry, 'path_spec', None)
+    if not path_spec:
+      return u'N/A'
+
+    return getattr(path_spec, 'location', u'N/A')
+
+  @property
+  def root_key(self):
+    """Return the root key of the Registry hive."""
+    return self._hive.GetKeyByPath(u'\\')
+
+  @property
+  def type(self):
+    """Return the hive type."""
+    return self._hive_type
+
+  def __init__(self, hive, file_entry, collector_name):
+    """Initialize the Registry hive helper.
+
+    Args:
+      hive: A hive object (instance of WinPyregfFile).
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+      collector_name: Name of the collector used as a string.
+    """
+    self._hive = hive
+    self.file_entry = file_entry
+    self.collector_name = collector_name
+
+    # Determine type and build cache.
+    self._SetHiveType()
+    self._BuildHiveCache()
+
+    # Initialize the hive to the root key.
+    _ = self.GetKeyByPath(u'\\')
+
+  def _BuildHiveCache(self):
+    """Calculate the Registry cache."""
+    self.reg_cache = cache.WinRegistryCache()
+    self.reg_cache.BuildCache(self._hive, self._hive_type)
+    self.path_expander = winreg_path_expander.WinRegistryKeyPathExpander(
+        reg_cache=self.reg_cache)
+
+  def _SetHiveType(self):
+    """Detect and set the hive type."""
+    get_key_by_path = self._hive.GetKeyByPath
+    for reg_type in self.REG_TYPES:
+      if reg_type == u'UNKNOWN':
+        continue
+
+      # For a hive to be considered a specific type all of the keys need to
+      # be found.
+      found = True
+      for reg_key in self.REG_TYPES[reg_type]:
+        if not get_key_by_path(reg_key):
+          found = False
+          break
+
+      if found:
+        self._hive_type = reg_type
+        return
+
+  def GetCurrentRegistryKey(self):
+    """Return the currently loaded Registry key."""
+    return self._currently_loaded_registry_key
+
+  def GetCurrentRegistryPath(self):
+    """Return the loaded Registry key path or None if no key is loaded."""
+    key = self._currently_loaded_registry_key
+    if not key:
+      return
+
+    return key.path
+
+  def GetKeyByPath(self, path):
+    """Retrieves a specific key defined by the Registry path.
+
+    Args:
+      path: the Registry path.
+
+    Returns:
+      The key (instance of WinRegKey) if available or None otherwise.
+    """
+    if not path:
+      return
+
+    key = self._hive.GetKeyByPath(path)
+    if not key:
+      return
+
+    self._currently_loaded_registry_key = key
+    return key
+
+
+class PregStorage(object):
+  """Class for storing discovered hives."""
+
+  # Index number of the currently loaded Registry hive.
+  _current_index = -1
+  _currently_loaded_hive = None
+
+  _hive_list = []
+
+  @property
+  def loaded_hive(self):
+    """Return the currently loaded hive or None if no hive loaded."""
+    if not self._currently_loaded_hive:
+      return
+
+    return self._currently_loaded_hive
+
+  def __len__(self):
+    """Return the number of available hives."""
+    return len(self._hive_list)
+
+  def AppendHive(self, hive_helper):
+    """Append a hive object to the Registry hive storage.
+
+    Args:
+      hive_helper: A hive object (instance of PregHiveHelper)
+    """
+    self._hive_list.append(hive_helper)
+
+  def AppendHives(self, hive_helpers):
+    """Append hives to the Registry hive storage.
+
+    Args:
+      hive_helpers: A list of hive objects (instance of PregHiveHelper)
+    """
+    if type(hive_helpers) not in (list, tuple):
+      hive_helpers = [hive_helpers]
+
+    self._hive_list.extend(hive_helpers)
+
+  def ListHives(self):
+    """Return a string with a list of all available hives and collectors.
+
+    Returns:
+      A string with a list of all available hives and collectors. If there are
+      no loaded hives None will be returned.
+    """
+    if not self._hive_list:
+      return
+
+    return_strings = [u'Index Hive [collector]']
+    for index, hive in enumerate(self._hive_list):
+      collector = hive.collector_name
+      if not collector:
+        collector = u'Currently Allocated'
+
+      if self._current_index == index:
+        star = u'*'
+      else:
+        star = u''
+      return_strings.append(u'{0:<5d} {1:s}{2:s} [{3:s}]'.format(
+          index, star, hive.path, collector))
+
+    return u'\n'.join(return_strings)
+
+  def SetOpenHive(self, hive_index):
+    """Set the current open hive.
+
+    Args:
+      hive_index: An index (integer) into the hive list.
+    """
+    if not self._hive_list:
+      return
+
+    index = hive_index
+    if isinstance(hive_index, basestring):
+      try:
+        index = int(hive_index, 10)
+      except ValueError:
+        print u'Wrong hive index, value should be decimal.'
+        return
+
+    try:
+      hive_helper = self._hive_list[index]
+    except IndexError:
+      print u'Hive not found, index out of range?'
+      return
+
+    self._current_index = index
+    self._currently_loaded_hive = hive_helper
 
 
 def CdCompleter(unused_self, unused_event):
   """Completer function for the cd command, returning back sub keys."""
   return_list = []
-  for key in RegCache.cur_key.GetSubkeys():
+  current_hive = PregCache.hive_storage.loaded_hive
+  current_key = current_hive.GetCurrentRegistryKey()
+  for key in current_key.GetSubkeys():
     return_list.append(key.name)
 
   return return_list
@@ -621,8 +1120,11 @@ def PluginCompleter(unused_self, event_object):
 
   plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
 
-  for plugin_cls in plugins_list.GetKeyPlugins(RegCache.hive_type):
-    plugins_list = plugin_cls(reg_cache=RegCache.reg_cache)
+  current_hive = PregCache.hive_storage.loaded_hive
+  hive_type = current_hive.type
+
+  for plugin_cls in plugins_list.GetKeyPlugins(hive_type):
+    plugins_list = plugin_cls(reg_cache=current_hive.reg_cache)
 
     plugin_name = plugins_list.plugin_name
     if plugin_name.startswith('winreg'):
@@ -656,128 +1158,8 @@ class MyMagics(magic.Magics):
 
   output_writer = sys.stdout
 
-  @magic.line_magic
-  def redirect_output(self, output_object):
-    """Change the output writer to redirect plugin output to a file."""
-
-    if isinstance(output_object, basestring):
-      output_object = open(output_object, 'wb')
-
-    if hasattr(output_object, 'write'):
-      self.output_writer = output_object
-
-  # Lowercase name since this is used inside the python console shell.
-  @magic.line_magic
-  def plugin(self, line):
-    """Parse a Registry key using a specific plugin."""
-    if not IsLoaded():
-      print u'No hive loaded, unable to parse.'
-      return
-
-    if not line:
-      print u'No plugin name added.'
-      return
-
-    plugin_name = line
-    if '-h' in line:
-      items = line.split()
-      if len(items) != 2:
-        print u'Wrong usage: plugin [-h] PluginName'
-        return
-      if items[0] == '-h':
-        plugin_name = items[1]
-      else:
-        plugin_name = items[0]
-
-    if not plugin_name.startswith('winreg'):
-      plugin_name = u'winreg_{0:s}'.format(plugin_name)
-
-    plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
-    plugin_found = False
-    for plugin_cls in plugins_list.GetKeyPlugins(RegCache.hive_type):
-      plugin = plugin_cls(reg_cache=RegCache.reg_cache)
-      if plugin.plugin_name == plugin_name:
-        # If we found the correct plugin.
-        plugin_found = True
-        break
-
-    if not plugin_found:
-      print u'No plugin named: {0:s} available for Registry type {1:s}'.format(
-          plugin_name, RegCache.hive_type)
-      return
-
-    if not hasattr(plugin, 'REG_KEYS'):
-      print u'Plugin: {0:s} has no key information.'.format(line)
-      return
-
-    if '-h' in line:
-      print frontend_utils.FormatHeader(plugin_name)
-      print frontend_utils.FormatOutputString('Description', plugin.__doc__)
-      print u''
-      for registry_key in plugin.expanded_keys:
-        print frontend_utils.FormatOutputString('Registry Key', registry_key)
-      return
-
-    if not plugin.expanded_keys:
-      plugin.ExpandKeys(RegCache.parser_context)
-
-    for registry_key in plugin.expanded_keys:
-      key = RegCache.hive.GetKeyByPath(registry_key)
-      if not key:
-        print u'Key: {0:s} not found'.format(registry_key)
-        continue
-
-      # Move the current location to the key to be parsed.
-      self.cd(registry_key)
-      # Parse the key.
-      print_strings = ParseKey(
-          RegCache.cur_key, verbose=False, use_plugins=[plugin_name])
-      self.output_writer.write(u'\n'.join(print_strings))
-    self.output_writer.flush()
-
-  # Lowercase name since this is used inside the python console shell.
-  @magic.line_magic
-  def parse(self, line):
-    """Parse the current key."""
-    if 'true' in line.lower():
-      verbose = True
-    elif '-v' in line.lower():
-      verbose = True
-    else:
-      verbose = False
-
-    if not IsLoaded():
-      return
-
-    print_strings = ParseKey(RegCache.cur_key, verbose=verbose)
-    self.output_writer.write(u'\n'.join(print_strings))
-
-    # Print out a hex dump of all binary values.
-    if verbose:
-      header_shown = False
-      for value in RegCache.cur_key.GetValues():
-        if value.DataIsBinaryData():
-          if not header_shown:
-            header_shown = True
-            print frontend_utils.FormatHeader('Hex Dump')
-          # Print '-' 80 times.
-          self.output_writer.write(u'-'*80)
-          self.output_writer.write(u'\n')
-          self.output_writer.write(
-              frontend_utils.FormatOutputString('Attribute', value.name))
-          self.output_writer.write(u'-'*80)
-          self.output_writer.write(u'\n')
-          self.output_writer.write(
-              frontend_utils.OutputWriter.GetHexDump(value.data))
-          self.output_writer.write(u'\n')
-          self.output_writer.write(u'+-'*40)
-          self.output_writer.write(u'\n')
-
-    self.output_writer.flush()
-
-  # Lowercase name since this is used inside the python console shell.
-  @magic.line_magic
-  def cd(self, key):
+  @magic.line_magic('cd')
+  def ChangeDirectory(self, key):
     """Change between Registry keys, like a directory tree.
 
     The key path can either be an absolute path or a relative one.
@@ -791,49 +1173,60 @@ class MyMagics(magic.Magics):
     key_path = key
 
     if not key:
-      self.cd('\\')
+      self.ChangeDirectory('\\')
+
+    loaded_hive = PregCache.hive_storage.loaded_hive
+
+    if not loaded_hive:
+      return
 
     # Check if we need to expand environment attributes.
     match = self.EXPANSION_RE.search(key)
     if match and u'{0:s}{0:s}'.format(
         self.EXPANSION_KEY_OPEN) not in match.group(0):
       try:
-        key = RegCache.path_expander.ExpandPath(
-            key, pre_obj=RegCache.knowledge_base_object.pre_obj)
+        key = loaded_hive.path_expander.ExpandPath(
+            key, pre_obj=PregCache.knowledge_base_object.pre_obj)
       except (KeyError, IndexError):
         pass
 
-    if key.startswith('\\'):
-      registry_key = RegCache.hive.GetKeyByPath(key)
+    if key.startswith(u'\\'):
+      registry_key = loaded_hive.GetKeyByPath(key)
     elif key == '.':
       return
-    elif key.startswith('.\\'):
-      current_path = RegCache.hive.cur_key.path
-      _, _, key_path = key.partition('\\')
-      registry_key = RegCache.hive.GetKeyByPath(u'{0:s}\\{1:s}'.format(
+    elif key.startswith(u'.\\'):
+      print 'BINGO'
+      current_path = loaded_hive.GetCurrentRegistryPath()
+      _, _, key_path = key.partition(u'\\')
+      registry_key = loaded_hive.GetKeyByPath(u'{0:s}\\{1:s}'.format(
           current_path, key_path))
-    elif key.startswith('..'):
-      parent_path, _, _ = RegCache.cur_key.path.rpartition('\\')
-      _, _, key_path = key.partition('\\')
+    elif key.startswith(u'..'):
+      parent_path, _, _ = loaded_hive.GetCurrentRegistryPath().rpartition(u'\\')
+      # We know the path starts with a "..".
+      if len(key) == 2:
+        key_path = u''
+      else:
+        key_path = key[3:]
       if parent_path:
         if key_path:
           path = u'{0:s}\\{1:s}'.format(parent_path, key_path)
         else:
           path = parent_path
-        registry_key = RegCache.hive.GetKeyByPath(path)
+        registry_key = loaded_hive.GetKeyByPath(path)
       else:
-        registry_key = RegCache.hive.GetKeyByPath(u'\\{0:s}'.format(key_path))
+        registry_key = loaded_hive.GetKeyByPath(u'\\{0:s}'.format(key_path))
 
     else:
       # Check if key is not set at all, then assume traversal from root.
-      if not RegCache.cur_key:
-        RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
+      if not loaded_hive.GetCurrentRegistryPath():
+        _ = loaded_hive.GetKeyByPath(u'\\')
 
-      if RegCache.cur_key.name == RegCache.hive.GetKeyByPath('\\').name:
+      current_key = loaded_hive.GetCurrentRegistryKey()
+      if current_key.name == loaded_hive.root_key.name:
         key_path = u'\\{0:s}'.format(key)
       else:
-        key_path = u'{0:s}\\{1:s}'.format(RegCache.cur_key.path, key)
-      registry_key = RegCache.hive.GetKeyByPath(key_path)
+        key_path = u'{0:s}\\{1:s}'.format(current_key.path, key)
+      registry_key = loaded_hive.GetKeyByPath(key_path)
 
     if registry_key:
       if key_path == '\\':
@@ -841,27 +1234,38 @@ class MyMagics(magic.Magics):
       else:
         path = registry_key.path
 
-      # Set the Registry key and the prompt.
-      RegCache.cur_key = registry_key
-      ip = get_ipython()    # pylint: disable=undefined-variable
-      ip.prompt_manager.in_template = u'{0:s}->{1:s} [\\#] '.format(
-          StripCurlyBrace(RegCache.GetHiveName()),
-          StripCurlyBrace(path).replace('\\', '\\\\'))
+      ConsoleConfig.SetPrompt(
+          hive_path=loaded_hive.path,
+          prepend_string=StripCurlyBrace(path).replace('\\', '\\\\'))
     else:
       print u'Unable to change to: {0:s}'.format(key_path)
 
-  # Lowercase name since this is used inside the python console shell.
-  @magic.line_magic
-  def pwd(self, unused_line):
-    """Print the current path."""
-    if not IsLoaded():
-      return
+  @magic.line_magic('hive')
+  def HiveActions(self, line):
+    """Define the hive command on the console prompt."""
+    if line.startswith('list'):
+      print PregCache.hive_storage.ListHives()
 
-    print RegCache.cur_key.path
+      print u''
+      print u'To open a hive, use: hive_open INDEX'
+    elif line.startswith('open ') or line.startswith('load '):
+      PregCache.hive_storage.SetOpenHive(line[5:])
+      hive_helper = PregCache.hive_storage.loaded_hive
+      print u'Opening hive: {0:s} [{1:s}]'.format(
+          hive_helper.path, hive_helper.collector_name)
+      ConsoleConfig.SetPrompt(hive_path=hive_helper.path)
+    elif line.startswith('scan'):
+      items = line.split()
+      if len(items) < 2:
+        print (
+            u'Unable to scan for an empty keyword. Please specify a keyword, '
+            u'eg: NTUSER, SOFTWARE, etc')
+        return
 
-  # Lowercase name since this is used inside the python console shell.
-  @magic.line_magic
-  def ls(self, line):
+      PregCache.hive_storage.Scan(items[1:])
+
+  @magic.line_magic('ls')
+  def ListDirectoryContent(self, line):
     """List all subkeys and values of the current key."""
     if not IsLoaded():
       return
@@ -874,7 +1278,12 @@ class MyMagics(magic.Magics):
       verbose = False
 
     sub = []
-    for key in RegCache.cur_key.GetSubkeys():
+    current_hive = PregCache.hive_storage.loaded_hive
+    if not current_hive:
+      return
+
+    current_key = current_hive.GetCurrentRegistryKey()
+    for key in current_key.GetSubkeys():
       # TODO: move this construction into a separate function in OutputWriter.
       timestamp, _, _ = frontend_utils.OutputWriter.GetDateTimeString(
           key.last_written_timestamp).partition('.')
@@ -883,7 +1292,7 @@ class MyMagics(magic.Magics):
           timestamp.replace('T', ' '), '[KEY]',
           key.name), True))
 
-    for value in RegCache.cur_key.GetValues():
+    for value in current_key.GetValues():
       if not verbose:
         sub.append((u'{0:>19s} {1:>14s}]  {2:s}'.format(
             u'', '[' + value.data_type_string, value.name), False))
@@ -916,9 +1325,160 @@ class MyMagics(magic.Magics):
 
     for entry, subkey in sorted(sub):
       if subkey:
-        print u'dr-xr-xr-x {0:s}'.format(entry)
+        self.output_writer.write(u'dr-xr-xr-x {0:s}\n'.format(entry))
       else:
-        print u'-r-xr-xr-x {0:s}'.format(entry)
+        self.output_writer.write(u'-r-xr-xr-x {0:s}\n'.format(entry))
+
+  @magic.line_magic('parse')
+  def ParseCurrentKey(self, line):
+    """Parse the current key."""
+    if 'true' in line.lower():
+      verbose = True
+    elif '-v' in line.lower():
+      verbose = True
+    else:
+      verbose = False
+
+    if not IsLoaded():
+      return
+
+    current_hive = PregCache.hive_storage.loaded_hive
+    if not current_hive:
+      return
+
+    # Clear the last results from parse key.
+    PregCache.events_from_last_parse = []
+
+    print_strings = ParseKey(
+        key=current_hive.GetCurrentRegistryKey(), hive_helper=current_hive,
+        shell_helper=PregCache.shell_helper, verbose=verbose)
+    self.output_writer.write(u'\n'.join(print_strings))
+
+    # Print out a hex dump of all binary values.
+    if verbose:
+      header_shown = False
+      for value in current_hive.GetCurrentRegistryKey().GetValues():
+        if value.DataIsBinaryData():
+          if not header_shown:
+            header_shown = True
+            print frontend_utils.FormatHeader('Hex Dump')
+          # Print '-' 80 times.
+          self.output_writer.write(u'-'*80)
+          self.output_writer.write(u'\n')
+          self.output_writer.write(
+              frontend_utils.FormatOutputString('Attribute', value.name))
+          self.output_writer.write(u'-'*80)
+          self.output_writer.write(u'\n')
+          self.output_writer.write(
+              frontend_utils.OutputWriter.GetHexDump(value.data))
+          self.output_writer.write(u'\n')
+          self.output_writer.write(u'+-'*40)
+          self.output_writer.write(u'\n')
+
+    self.output_writer.flush()
+
+  @magic.line_magic('plugin')
+  def ParseWithPlugin(self, line):
+    """Parse a Registry key using a specific plugin."""
+    if not IsLoaded():
+      print u'No hive loaded, unable to parse.'
+      return
+
+    current_hive = PregCache.hive_storage.loaded_hive
+    if not current_hive:
+      return
+
+    if not line:
+      print u'No plugin name added.'
+      return
+
+    plugin_name = line
+    if '-h' in line:
+      items = line.split()
+      if len(items) != 2:
+        print u'Wrong usage: plugin [-h] PluginName'
+        return
+      if items[0] == '-h':
+        plugin_name = items[1]
+      else:
+        plugin_name = items[0]
+
+    if not plugin_name.startswith('winreg'):
+      plugin_name = u'winreg_{0:s}'.format(plugin_name)
+
+    hive_type = current_hive.type
+    plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+    plugin_found = False
+    for plugin_cls in plugins_list.GetKeyPlugins(hive_type):
+      plugin = plugin_cls(reg_cache=current_hive.reg_cache)
+      if plugin.plugin_name == plugin_name:
+        # If we found the correct plugin.
+        plugin_found = True
+        break
+
+    if not plugin_found:
+      print u'No plugin named: {0:s} available for Registry type {1:s}'.format(
+          plugin_name, hive_type)
+      return
+
+    if not hasattr(plugin, 'REG_KEYS'):
+      print u'Plugin: {0:s} has no key information.'.format(line)
+      return
+
+    if '-h' in line:
+      print frontend_utils.FormatHeader(plugin_name)
+      print frontend_utils.FormatOutputString('Description', plugin.__doc__)
+      print u''
+      for registry_key in plugin.expanded_keys:
+        print frontend_utils.FormatOutputString('Registry Key', registry_key)
+      return
+
+    if not plugin.expanded_keys:
+      plugin.ExpandKeys(PregCache.parser_context)
+
+    # Clear the last results from parse key.
+    PregCache.events_from_last_parse = []
+
+    # Defining outside of for loop for optimization.
+    get_key_by_path = current_hive.GetKeyByPath
+    for registry_key in plugin.expanded_keys:
+      key = get_key_by_path(registry_key)
+      if not key:
+        print u'Key: {0:s} not found'.format(registry_key)
+        continue
+
+      # Move the current location to the key to be parsed.
+      self.ChangeDirectory(registry_key)
+      # Parse the key.
+      print_strings = ParseKey(
+          key=current_hive.GetCurrentRegistryKey(), hive_helper=current_hive,
+          shell_helper=PregCache.shell_helper, verbose=False,
+          use_plugins=[plugin_name])
+      self.output_writer.write(u'\n'.join(print_strings))
+    self.output_writer.flush()
+
+  @magic.line_magic('pwd')
+  def PrintCurrentWorkingDirectory(self, unused_line):
+    """Print the current path."""
+    if not IsLoaded():
+      return
+
+    current_hive = PregCache.hive_storage.loaded_hive
+    if not current_hive:
+      return
+
+    self.output_writer.write(u'{0:s}\n'.format(
+        current_hive.GetCurrentRegistryPath()))
+
+  @magic.line_magic('redirect_output')
+  def RedirectOutput(self, output_object):
+    """Change the output writer to redirect plugin output to a file."""
+
+    if isinstance(output_object, basestring):
+      output_object = open(output_object, 'wb')
+
+    if hasattr(output_object, 'write'):
+      self.output_writer = output_object
 
 
 def StripCurlyBrace(string):
@@ -928,13 +1488,20 @@ def StripCurlyBrace(string):
 
 def IsLoaded():
   """Checks if a Windows Registry Hive is loaded."""
-  if hasattr(RegCache.cur_key, 'path'):
+  current_hive = PregCache.hive_storage.loaded_hive
+  if not current_hive:
+    return False
+
+  current_key = current_hive.GetCurrentRegistryKey()
+  if hasattr(current_key, 'path'):
     return True
 
-  if RegCache.GetHiveName() != 'N/A':
+  if current_hive.name != 'N/A':
     return True
 
-  print u'No hive loaded, cannot complete action. Use OpenHive to load a hive.'
+  print (
+      u'No hive loaded, cannot complete action. Use "hive list" '
+      u'and "hive open" to load a hive.')
   return False
 
 
@@ -945,11 +1512,12 @@ def GetValue(value_name):
     value_name: A string containing the name of the value to be retrieved.
 
   Returns:
-    The registry value (instance of WinPyregfValue) if it exists, None if
+    The Registry value (instance of WinPyregfValue) if it exists, None if
     either there is no currently loaded Registry key or if the value does
     not exist.
   """
-  current_key = RegCache.cur_key
+  current_hive = PregCache.hive_storage.loaded_hive
+  current_key = current_hive.GetCurrentRegistryKey()
 
   if not current_key:
     return
@@ -982,51 +1550,8 @@ def GetCurrentKey():
     The currently loaded Registry key (instance of WinPyregfKey) or None
     if there is no loaded key.
   """
-  return RegCache.cur_key
-
-
-# TODO: Refactor this function or add another helper that makes opening up other
-# hives simpler (and to find other hives within the image, eg I open SYSTEM and
-# then I realize I need SOFTWARE, etc). Also to allow opening NTUSER based on
-# usernames.
-def OpenHive(filename_or_path_spec, hive_collector, codepage='cp1252'):
-  """Open a Registry hive based on a collector or a filename."""
-  RegCache.knowledge_base_object.SetDefaultCodepage(codepage)
-
-  if isinstance(filename_or_path_spec, basestring):
-    filename = filename_or_path_spec
-    path_spec = None
-  else:
-    filename = filename_or_path_spec.location
-    path_spec = filename_or_path_spec
-
-  if not hive_collector:
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=filename)
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-  else:
-    file_entry = hive_collector.GetFileEntryByPathSpec(path_spec)
-
-  win_registry = winregistry.WinRegistry(
-      winregistry.WinRegistry.BACKEND_PYREGF)
-
-  try:
-    RegCache.hive = win_registry.OpenFile(
-        file_entry, codepage=RegCache.knowledge_base_object.codepage)
-  except IOError:
-    if filename is not None:
-      filename_string = filename
-    elif path_spec:
-      filename_string = path_spec.location
-    else:
-      filename_string = u'unknown file path'
-    logging.error(
-        u'Unable to open Registry hive: {0:s}'.format(filename_string))
-    sys.exit(1)
-  RegCache.SetHiveType()
-  RegCache.file_entry = file_entry
-  RegCache.BuildCache()
-  RegCache.cur_key = RegCache.hive.GetKeyByPath('\\')
+  current_hive = PregCache.hive_storage.loaded_hive
+  return current_hive.GetCurrentRegistryKey()
 
 
 def GetFormatString(event_object):
@@ -1086,11 +1611,13 @@ def GetEventHeader(event_object, descriptions, exclude_timestamp):
   return ret_strings
 
 
-def GetEventBody(event_object, show_hex=False):
+def GetEventBody(event_object, file_entry=None, show_hex=False):
   """Returns a list of strings containing information from an event.
 
   Args:
     event_object: An event object (instance of event.EventObject).
+    file_entry: An optional file entry object (instance of dfvfs.FileEntry) that
+                the event originated from. Default is None.
     show_hex: A boolean, if set to True hex dump of the value is included in
               the output. The default value is False.
 
@@ -1122,8 +1649,8 @@ def GetEventBody(event_object, show_hex=False):
   for attribute, value in attributes.items():
     ret_strings.append(format_string.format(attribute, value))
 
-  if show_hex:
-    event_object.pathspec = RegCache.file_entry.path_spec
+  if show_hex and file_entry:
+    event_object.pathspec = file_entry.path_spec
     ret_strings.append(frontend_utils.FormatHeader(
         u'Hex Output From Event.', '-'))
     ret_strings.append(
@@ -1132,86 +1659,7 @@ def GetEventBody(event_object, show_hex=False):
   return ret_strings
 
 
-def ParseHive(
-    hive_path_or_path_spec, hive_collectors, key_paths, use_plugins, verbose):
-  """Opens a hive file, and returns information about parsed keys.
-
-  This function takes a path to a hive and a list of collectors (or
-  none if the Registry file is passed to the tool).
-
-  The function then opens up the hive inside each collector and runs
-  the plugins defined (or all if no plugins are defined) against all
-  the keys supplied to it.
-
-  Args:
-    hive_path: Full path to the hive file in question.
-    hive_collectors: A list of collectors to use.
-    key_paths: A list of Registry keys paths that are to be parsed.
-    use_plugins: A list of plugins used to parse the key, None if all
-    plugins should be used.
-    verbose: Print more verbose content, like hex dump of extracted events.
-
-  Returns:
-    A string containing extracted information.
-  """
-  if isinstance(hive_path_or_path_spec, basestring):
-    hive_path_spec = None
-    hive_path = hive_path_or_path_spec
-  else:
-    hive_path_spec = hive_path_or_path_spec
-    hive_path = hive_path_spec.location
-
-  print_strings = []
-  for name, hive_collector in hive_collectors:
-    # Printing '*' 80 times.
-    print_strings.append(u'*' * 80)
-    print_strings.append(
-        u'{0:>15} : {1:s}{2:s}'.format(u'Hive File', hive_path, name))
-    if hive_path_spec:
-      OpenHive(hive_path_spec, hive_collector)
-    else:
-      OpenHive(hive_path, hive_collector)
-
-    for key_path in key_paths:
-      key_texts = []
-      key_dict = {}
-      if RegCache.reg_cache:
-        key_dict.update(RegCache.reg_cache.attributes.items())
-
-      if RegCache.knowledge_base_object.pre_obj:
-        key_dict.update(RegCache.knowledge_base_object.pre_obj.__dict__.items())
-
-      key = RegCache.hive.GetKeyByPath(key_path)
-      key_texts.append(u'{0:>15} : {1:s}'.format(u'Key Name', key_path))
-      if not key:
-        key_texts.append(u'Unable to open key: {0:s}'.format(key_path))
-        if verbose:
-          print_strings.extend(key_texts)
-        continue
-      key_texts.append(
-          u'{0:>15} : {1:d}'.format(u'Subkeys', key.number_of_subkeys))
-      key_texts.append(u'{0:>15} : {1:d}'.format(
-          u'Values', key.number_of_values))
-      key_texts.append(u'')
-
-      if verbose:
-        key_texts.append(u'{0:-^80}'.format(u' SubKeys '))
-        for subkey in key.GetSubkeys():
-          key_texts.append(
-              u'{0:>15} : {1:s}'.format(u'Key Name', subkey.path))
-
-      key_texts.append(u'')
-      key_texts.append(u'{0:-^80}'.format(u' Plugins '))
-
-      output_string = ParseKey(key, verbose=verbose, use_plugins=use_plugins)
-      key_texts.extend(output_string)
-
-      print_strings.extend(key_texts)
-
-  return u'\n'.join(print_strings)
-
-
-def ParseKey(key, verbose=False, use_plugins=None):
+def ParseKey(key, shell_helper, hive_helper, verbose=False, use_plugins=None):
   """Parse a single Registry key and return parsed information.
 
   Parses the Registry key either using the supplied plugin or trying against
@@ -1219,6 +1667,8 @@ def ParseKey(key, verbose=False, use_plugins=None):
 
   Args:
     key: The Registry key to parse, WinRegKey object or a string.
+    shell_helper: A shell helper object (instance of PregHelper).
+    hive_helper: A hive object (instance of PregHiveHelper).
     verbose: Print additional information, such as a hex dump.
     use_plugins: A list of plugin names to use, or none if all should be used.
 
@@ -1226,21 +1676,17 @@ def ParseKey(key, verbose=False, use_plugins=None):
     A list of strings.
   """
   print_strings = []
-  # Check if hive is set.
-  if not RegCache.hive:
+  if not hive_helper:
     return
 
-  if type(key) in (unicode, str):
-    key = RegCache.hive.GetKeyByPath(key)
+  if isinstance(key, basestring):
+    key = hive_helper.GetKeyByPath(key)
 
   if not key:
     return
 
   # Detect Registry type.
-  registry_type = RegCache.hive_type
-
-  # Clear the last results from parse key.
-  RegCache.events_from_last_parse = []
+  registry_type = hive_helper.type
 
   plugins = {}
   plugins_list = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
@@ -1251,28 +1697,23 @@ def ParseKey(key, verbose=False, use_plugins=None):
     plugins[weight] = []
     for plugin in plugin_list:
       if use_plugins:
-        plugin_obj = plugin(reg_cache=RegCache.reg_cache)
-        if plugin_obj.plugin_name in use_plugins:
+        plugin_obj = plugin(reg_cache=hive_helper.reg_cache)
+        if plugin_obj.NAME in use_plugins:
           plugins[weight].append(plugin_obj)
       else:
-        plugins[weight].append(plugin(reg_cache=RegCache.reg_cache))
+        plugins[weight].append(plugin(
+            reg_cache=hive_helper.reg_cache))
 
   event_queue = single_process.SingleProcessQueue()
   event_queue_consumer = PregEventObjectQueueConsumer(event_queue)
-  event_queue_producer = queue.ItemQueueProducer(event_queue)
 
-  parse_error_queue = single_process.SingleProcessQueue()
-  parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
-
-  RegCache.parser_context = parsers_context.ParserContext(
-      event_queue_producer, parse_error_queue_producer,
-      RegCache.knowledge_base_object)
+  # Build a parser context.
+  parser_context = shell_helper.BuildParserContext(event_queue)
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:
     for plugin in plugins[weight]:
-      plugin.Process(RegCache.parser_context, key=key)
-
+      plugin.Process(parser_context, key=key)
       event_queue_consumer.ConsumeEventObjects()
       if not event_queue_consumer.event_objects:
         continue
@@ -1283,7 +1724,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
               plugin.plugin_name)))
       print_strings.append(u'')
       print_strings.append(u'[{0:s}] {1:s}'.format(
-          plugin.REG_TYPE, plugin.__doc__.partition('\n')[0]))
+          plugin.REG_TYPE, plugin.DESCRIPTION))
       print_strings.append(u'')
       if plugin.URLS:
         print_strings.append(u'Additional information can be found here:')
@@ -1296,7 +1737,7 @@ def ParseKey(key, verbose=False, use_plugins=None):
       event_objects_and_timestamps = {}
       event_object = event_queue_consumer.event_objects.pop(0)
       while event_object:
-        RegCache.events_from_last_parse.append(event_object)
+        PregCache.events_from_last_parse.append(event_object)
         event_objects_and_timestamps.setdefault(
             event_object.timestamp, []).append(event_object)
 
@@ -1333,7 +1774,8 @@ def ParseKey(key, verbose=False, use_plugins=None):
 
         for event_object in event_objects_and_timestamps[event_timestamp]:
           print_strings.append(u'')
-          print_strings.extend(GetEventBody(event_object, verbose))
+          print_strings.extend(GetEventBody(
+              event_object, hive_helper.file_entry, verbose))
 
       print_strings.append(u'')
 
@@ -1351,17 +1793,6 @@ def RunModeConsole(front_end, options):
     options: the command line arguments (instance of argparse.Namespace).
   """
   namespace = {}
-
-  event_queue = single_process.SingleProcessQueue()
-  parser_error_queue = single_process.SingleProcessQueue()
-  event_queue_producer = queue.ItemQueueProducer(event_queue)
-  parse_error_queue_producer = queue.ItemQueueProducer(parser_error_queue)
-  RegCache.parser_context = parsers_context.ParserContext(
-      event_queue_producer, parse_error_queue_producer,
-      RegCache.knowledge_base_object)
-
-  hives, hive_collectors = front_end.GetHivesAndCollectors(
-      options, options.plugin_name)
 
   function_name_length = 23
   banners = []
@@ -1391,85 +1822,55 @@ def RunModeConsole(front_end, options):
       function_name_length))
   banners.append(frontend_utils.FormatOutputString(
       u'get_value value_name', (
-          u'Get a value from the currently loaded registry key.')))
+          u'Get a value from the currently loaded Registry key.')))
   banners.append(frontend_utils.FormatOutputString(
       u'get_value_data value_name', (
           u'Get a value data from a value stored in the currently loaded '
-          u'registry key.')))
+          u'Registry key.')))
   banners.append(frontend_utils.FormatOutputString(
-      u'get_key', u'Return the currently loaded registry key.'))
+      u'get_key', u'Return the currently loaded Registry key.'))
 
   banners.append(u'')
 
-  if len(hives) == 1:
-    hive = hives[0]
-    hives = []
-  else:
-    hive = None
+  # Build the global cache and prepare the tool.
+  hive_storage = PregStorage()
+  shell_helper = PregHelper(options, front_end, hive_storage)
+  parser_context = shell_helper.BuildParserContext()
 
-  if len(hive_collectors) == 1:
-    hive_collector = hive_collectors[0][1]
-    hive_collectors = []
-  else:
-    hive_collector = None
+  PregCache.parser_context = parser_context
+  PregCache.shell_helper = shell_helper
+  PregCache.hive_storage = hive_storage
 
-  if hive and not hive_collectors:
-    OpenHive(hive, hive_collector)
+  registry_types = getattr(options, 'regfile', None)
+  if not registry_types:
+    registry_types = ['NTUSER', 'SOFTWARE', 'SYSTEM', 'SAM', 'SECURITY']
+  PregCache.shell_helper.Scan(registry_types)
 
-  if RegCache.hive and RegCache.GetHiveName() != 'N/A':
+  if len(PregCache.hive_storage) == 1:
+    PregCache.hive_storage.SetOpenHive(0)
+    hive_helper = PregCache.hive_storage.loaded_hive
+    banners.append(
+        u'Opening hive: {0:s} [{1:s}]'.format(
+            hive_helper.path, hive_helper.collector_name))
+    ConsoleConfig.SetPrompt(hive_path=hive_helper.path)
+
+  loaded_hive = PregCache.hive_storage.loaded_hive
+
+  if loaded_hive and loaded_hive.name != u'N/A':
     banners.append(
         u'Registry hive: {0:s} is available and loaded.'.format(
-            RegCache.GetHiveName()))
-  elif hives:
-    banners.append('More than one Registry file ready for use.')
-    banners.append('')
-    banners.append('Registry files discovered:')
-    for number, hive in enumerate(hives):
-      banners.append(' - {0:d}  {1:s}'.format(number, hive.location))
-    banners.append('')
-    banners.append('To load a hive use:')
-    text = 'OpenHive(hives[NR], collector)'
-
-    if hive_collectors:
-      banners.append('')
-      banners.append((
-          'There is more than one collector available. To use any of them '
-          'instead of the attribute "collector" in the OpenHive '
-          'function use the collectors attribute.\nThe available collectors '
-          'are:'))
-      counter = 0
-      for name, _ in hive_collectors:
-        if not name:
-          name = 'Current Value'
-        banners.append(' {0:d} = {1:s}'.format(counter, name))
-        counter += 1
-
-      banners.append(
-          'To use the collector use:\ncollector = collectors[NR][1]\nwhere '
-          'NR is the number as listed above.')
-    else:
-      banners.append(frontend_utils.FormatOutputString(text, (
-          'Collector is an available attribute and NR is a number ranging'
-          ' from 0 to {0:d} (see above which files these numbers belong to).'
-          ' To get the name of the loaded hive use RegCache.GetHiveName()'
-          ' and RegCache.hive_type to get the '
-          'type.').format(len(hives) + 1), len(text)))
+            loaded_hive.name))
   else:
-    # We have a single hive but many collectors.
-    banners.append(
-        'There is more than one collector available for the hive that was '
-        'discovered. To open up a hive use:\nOpenHive(hive, collectors[NR][1])'
-        '\nWhere NR is one of the following values:')
+    banners.append(u'More than one Registry file ready for use.')
+    banners.append(u'')
+    banners.append(PregCache.hive_storage.ListHives())
+    banners.append(u'')
+    banners.append((
+        u'Use "hive open INDEX" to load a hive and "hive list" to see a '
+        u'list of available hives.'))
 
-    counter = 0
-    for name, _ in hive_collectors:
-      if not name:
-        name = 'Current Value'
-      banners.append(' {0:d} = {1:s}'.format(counter, name))
-      counter += 1
-
-  banners.append('')
-  banners.append('Happy command line console fu-ing.')
+  banners.append(u'')
+  banners.append(u'Happy command line console fu-ing.')
 
   # Adding variables in scope.
   namespace.update(globals())
@@ -1478,14 +1879,19 @@ def RunModeConsole(front_end, options):
       'get_key': GetCurrentKey,
       'get_value': GetValue,
       'get_value_data': GetValueData,
-      'hives': hives,
-      'hive': hive,
-      'collector': hive_collector,
-      'collectors': hive_collectors})
+      'options': options})
+
+  ipshell_config = ConsoleConfig.GetConfig()
+  if loaded_hive:
+    ConsoleConfig.SetPrompt(
+        hive_path=loaded_hive.name, config=ipshell_config)
+  else:
+    ConsoleConfig.SetPrompt(hive_path=u'NO HIVE LOADED', config=ipshell_config)
 
   # Starting the shell.
   ipshell = InteractiveShellEmbed(
-      user_ns=namespace, banner1=u'\n'.join(banners), exit_msg='')
+      user_ns=namespace, config=ipshell_config, banner1=u'\n'.join(banners),
+      exit_msg='')
   ipshell.confirm_exit = False
   # Adding "magic" functions.
   ipshell.register_magics(MyMagics)
@@ -1498,6 +1904,7 @@ def RunModeConsole(front_end, options):
   ipshell.set_hook('complete_command', VerboseCompleter, str_key='%ls')
   ipshell.set_hook('complete_command', VerboseCompleter, str_key='%parse')
   ipshell.set_hook('complete_command', PluginCompleter, str_key='%plugin')
+
   ipshell()
 
 
@@ -1524,7 +1931,7 @@ Open up a console session for the SYSTEM hive inside an image:
       """).format(os.path.basename(sys.argv[0]))
 
   description = textwrap.dedent("""
-preg is a simple Windows Registry parser using the plaso registry
+preg is a simple Windows Registry parser using the plaso Registry
 plugins and image parsing capabilities.
 
 It uses the back-end libraries of plaso to read raw image files and
@@ -1592,6 +1999,10 @@ in a textual format.
   # Parse the command line arguments.
   options = arg_parser.parse_args()
 
+  if options.info:
+    front_end.PrintSupportedPlugins()
+    return True
+
   try:
     front_end.ParseOptions(options, source_option='image')
   except errors.BadConfigOption as exception:
@@ -1602,18 +2013,15 @@ in a textual format.
 
   # Run the tool, using the run mode according to the options passed
   # to the tool.
-  if options.info:
-    front_end.PrintSupportedPlugins()
-  elif options.console:
+  if options.console:
     RunModeConsole(front_end, options)
-
   # TODO: merge the following run functions.
   elif options.key and options.regfile:
     front_end.RunModeRegistryKey(options, options.plugin_name)
   elif options.plugin_name:
     front_end.RunModeRegistryPlugin(options, options.plugin_name)
   elif options.regfile:
-    front_end.RunModeRegistryFile(options)
+    front_end.RunModeRegistryFile(options, options.regfile)
   else:
     print (u'Incorrect usage. You\'ll need to define the path of either '
            u'a storage media image or a Windows Registry file.')

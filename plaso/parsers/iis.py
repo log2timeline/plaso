@@ -140,6 +140,9 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
       ('logline', LOG_LINE_6_0)]
 
+  # Define a signature value for the log file.
+  SIGNATURE = '#Software: Microsoft Internet Information Services'
+
   def __init__(self):
     """Initializes a parser object."""
     super(WinIISParser, self).__init__()
@@ -158,8 +161,9 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: Examine other versions of the file format and if this parser should
     # support them. For now just checking if it contains the IIS header.
-    if u'#Software: Microsoft Internet Information Services' in line:
+    if self.SIGNATURE in line:
       return True
+
     return False
 
   def ParseRecord(self, unused_parser_context, key, structure):
