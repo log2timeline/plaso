@@ -211,12 +211,17 @@ class SkypePlugin(interface.SQLitePlugin):
       'CallMembers', 'Calls'])
 
   def ParseAccountInformation(
-      self, parser_context, row, query=None, **unused_kwargs):
+      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
+      **unused_kwargs):
     """Parses the Accounts database.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
     """
     if row['profile_timestamp']:
@@ -225,7 +230,8 @@ class SkypePlugin(interface.SQLitePlugin):
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
     if row['authreq_timestamp']:
       event_object = SkypeAccountEvent(
@@ -233,7 +239,8 @@ class SkypePlugin(interface.SQLitePlugin):
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
     if row['lastonline_timestamp']:
       event_object = SkypeAccountEvent(
@@ -241,7 +248,8 @@ class SkypePlugin(interface.SQLitePlugin):
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
     if row['mood_timestamp']:
       event_object = SkypeAccountEvent(
@@ -249,7 +257,8 @@ class SkypePlugin(interface.SQLitePlugin):
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
     if row['sent_authrequest_time']:
       event_object = SkypeAccountEvent(
@@ -257,7 +266,8 @@ class SkypePlugin(interface.SQLitePlugin):
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
     if row['lastused_timestamp']:
       event_object = SkypeAccountEvent(
@@ -265,14 +275,21 @@ class SkypePlugin(interface.SQLitePlugin):
           row['fullname'], row['given_displayname'], row['emails'],
           row['country'])
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
-  def ParseChat(self, parser_context, row, query=None, **unused_kwargs):
+  def ParseChat(
+      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
+      **unused_kwargs):
     """Parses a chat message row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
     """
     to_account = ''
@@ -291,28 +308,42 @@ class SkypePlugin(interface.SQLitePlugin):
 
     event_object = SkypeChatEvent(row, to_account)
     parser_context.ProduceEvent(
-        event_object, plugin_name=self.NAME, query=query)
+        event_object, query=query, parser_chain=parser_chain,
+        file_entry=file_entry)
 
-  def ParseSMS(self, parser_context, row, query=None, **unused_kwargs):
+  def ParseSMS(
+      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
+      **unused_kwargs):
     """Parse SMS.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
     """
     dst_number = row['dstnum_sms'].replace(' ', '')
 
     event_object = SkypeSMSEvent(row, dst_number)
     parser_context.ProduceEvent(
-        event_object, plugin_name=self.NAME, query=query)
+        event_object, query=query, parser_chain=parser_chain,
+        file_entry=file_entry)
 
-  def ParseCall(self, parser_context, row, query=None, **unused_kwargs):
+  def ParseCall(
+      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
+      **unused_kwargs):
     """Parse the calls taking into accounts some rows.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
     """
     try:
@@ -349,14 +380,16 @@ class SkypePlugin(interface.SQLitePlugin):
         row['try_call'], 'WAITING', user_start_call, source, destination,
         video_conference)
     parser_context.ProduceEvent(
-        event_object, plugin_name=self.NAME, query=query)
+        event_object, query=query, parser_chain=parser_chain,
+        file_entry=file_entry)
 
     if row['accept_call']:
       event_object = SkypeCallEvent(
           row['accept_call'], 'ACCEPTED', user_start_call, source, destination,
           video_conference)
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
       if row['call_duration']:
         try:
@@ -365,7 +398,8 @@ class SkypePlugin(interface.SQLitePlugin):
               timestamp, 'FINISHED', user_start_call, source, destination,
               video_conference)
           parser_context.ProduceEvent(
-              event_object, plugin_name=self.NAME, query=query)
+              event_object, query=query, parser_chain=parser_chain,
+              file_entry=file_entry)
 
         except ValueError:
           logging.debug((
@@ -373,8 +407,8 @@ class SkypePlugin(interface.SQLitePlugin):
               u'finished.').format(self.NAME, row['id']))
 
   def ParseFileTransfer(
-      self, parser_context, row, cache=None, database=None, query=None,
-      **unused_kwargs):
+      self, parser_context, row, file_entry=None, parser_chain=None, cache=None,
+      database=None, query=None, **unused_kwargs):
     """Parse the transfer files.
 
      There is no direct relationship between who sends the file and
@@ -383,6 +417,10 @@ class SkypePlugin(interface.SQLitePlugin):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: the row with all information related with the file transfers.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
       cache: a cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
@@ -426,25 +464,29 @@ class SkypePlugin(interface.SQLitePlugin):
         event_object = SkypeTransferFileEvent(
             row, row['starttime'], 'GETSOLICITUDE', source, destination)
         parser_context.ProduceEvent(
-            event_object, plugin_name=self.NAME, query=query)
+            event_object, query=query, parser_chain=parser_chain,
+            file_entry=file_entry)
 
       if row['accepttime']:
         event_object = SkypeTransferFileEvent(
             row, row['accepttime'], 'ACCEPTED', source, destination)
         parser_context.ProduceEvent(
-            event_object, plugin_name=self.NAME, query=query)
+            event_object, query=query, parser_chain=parser_chain,
+            file_entry=file_entry)
 
       if row['finishtime']:
         event_object = SkypeTransferFileEvent(
             row, row['finishtime'], 'FINISHED', source, destination)
         parser_context.ProduceEvent(
-            event_object, plugin_name=self.NAME, query=query)
+            event_object, query=query, parser_chain=parser_chain,
+            file_entry=file_entry)
 
     elif row['status'] == 2 and row['starttime']:
       event_object = SkypeTransferFileEvent(
           row, row['starttime'], 'SENDSOLICITUDE', source, destination)
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
 
 sqlite.SQLiteParser.RegisterPlugin(SkypePlugin)

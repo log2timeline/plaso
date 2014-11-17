@@ -53,8 +53,8 @@ class TransmissionPlugin(interface.BencodePlugin):
       'seeding-time-seconds'])
 
   def GetEntries(
-      self, parser_context, file_entry=None, data=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None, data=None,
+      **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 
     This is the main parsing engine for the parser. It determines if
@@ -68,15 +68,13 @@ class TransmissionPlugin(interface.BencodePlugin):
       parser_context: A parser context object (instance of ParserContext).
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
-      data: Optional bencode data in dictionary form. The default is None.
       parser_chain: Optional string containing the parsing chain up to this
                     point. The default is None.
+      data: Optional bencode data in dictionary form. The default is None.
     """
     # Place the obtained values into the event.
     destination = data.get('destination', None)
     seeding_time = data.get('seeding-time-seconds', None)
-
-    parser_chain = self._BuildParserChain(parser_chain)
 
     # Create timeline events based on extracted values.
     if data.get('added-date', 0):

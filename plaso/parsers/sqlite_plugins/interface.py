@@ -39,11 +39,17 @@ class SQLitePlugin(plugins.BasePlugin):
   # List of tables that should be present in the database, for verification.
   REQUIRED_TABLES = frozenset([])
 
-  def GetEntries(self, parser_context, cache=None, database=None, **kwargs):
+  def GetEntries(
+      self, parser_context, file_entry=None, parser_chain=None, cache=None,
+      database=None, **kwargs):
     """Extracts event objects from a SQLite database.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       cache: A SQLiteCache object.
       database: A database object (instance of SQLiteDatabase).
     """
@@ -62,14 +68,17 @@ class SQLitePlugin(plugins.BasePlugin):
 
         while row:
           callback(
-              parser_context, row, query=query, cache=cache, database=database)
+              parser_context, row, query=query, cache=cache, database=database,
+              file_entry=file_entry, parser_chain=parser_chain)
 
           row = sql_results.fetchone()
 
       except sqlite3.DatabaseError as exception:
         logging.debug(u'SQLite error occured: {0:s}'.format(exception))
 
-  def Process(self, parser_context, cache=None, database=None, **kwargs):
+  def Process(
+      self, parser_context, file_entry=None, parser_chain=None, cache=None,
+      database=None, **kwargs):
     """Determine if this is the right plugin for this database.
 
     This function takes a SQLiteDatabase object and compares the list
@@ -81,6 +90,10 @@ class SQLitePlugin(plugins.BasePlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       cache: A SQLiteCache object.
       database: A database object (instance of SQLiteDatabase).
 
@@ -99,4 +112,10 @@ class SQLitePlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(SQLitePlugin, self).Process(parser_context, **kwargs)
 
-    self.GetEntries(parser_context, cache=cache, database=database)
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
+    self.GetEntries(
+        parser_context, cache=cache, database=database, file_entry=file_entry,
+        parser_chain=parser_chain)

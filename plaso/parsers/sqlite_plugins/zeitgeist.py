@@ -62,17 +62,23 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset(['event', 'actor'])
 
   def ParseZeitgeistEventRow(
-      self, parser_context, row, query=None, **unused_kwargs):
+      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
+      **unused_kwargs):
     """Parses zeitgeist event row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
     """
     event_object = ZeitgeistEvent(row['timestamp'], row['id'], row['subj_uri'])
     parser_context.ProduceEvent(
-        event_object, plugin_name=self.NAME, query=query)
+        event_object, query=query, parser_chain=parser_chain,
+        file_entry=file_entry)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ZeitgeistPlugin)
