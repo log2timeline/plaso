@@ -202,13 +202,17 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     return u'/{0:s}/'.format(u'/'.join(paths))
 
   def ParseCloudEntryRow(
-      self, parser_context, row, query=None, cache=None, database=None,
-      **unused_kwargs):
+      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
+      cache=None, database=None, **unused_kwargs):
     """Parses a cloud entry row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
       cache: The local cache object.
       database: The database object.
@@ -225,23 +229,29 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
         row['modified'], eventdata.EventTimestamp.MODIFICATION_TIME,
         row['url'], cloud_filename, row['size'], row['doc_type'], shared)
     parser_context.ProduceEvent(
-        event_object, plugin_name=self.NAME, query=query)
+        event_object, query=query, parser_chain=parser_chain,
+        file_entry=file_entry)
 
     if row['created']:
       event_object = GoogleDriveSnapshotCloudEntryEvent(
           row['created'], eventdata.EventTimestamp.CREATION_TIME,
           row['url'], cloud_filename, row['size'], row['doc_type'], shared)
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
   def ParseLocalEntryRow(
-      self, parser_context, row, query=None, cache=None, database=None,
-      **unused_kwargs):
+      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
+      cache=None, database=None, **unused_kwargs):
     """Parses a local entry row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
       cache: The local cache object (instance of SQLiteCache).
       database: A database object (instance of SQLiteDatabase).
@@ -251,7 +261,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     event_object = GoogleDriveSnapshotLocalEntryEvent(
         row['modified'], local_path, row['size'])
     parser_context.ProduceEvent(
-        event_object, plugin_name=self.NAME, query=query)
+        event_object, query=query, parser_chain=parser_chain,
+        file_entry=file_entry)
 
 
 sqlite.SQLiteParser.RegisterPlugin(GoogleDrivePlugin)

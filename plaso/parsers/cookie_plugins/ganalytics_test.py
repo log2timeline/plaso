@@ -23,6 +23,7 @@ import unittest
 from plaso.formatters import ganalytics as ganalytics_formatter
 from plaso.lib import eventdata
 from plaso.lib import timelib_test
+from plaso.parsers.cookie_plugins import ganalytics
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import firefox_cookies
 from plaso.parsers.sqlite_plugins import test_lib
@@ -38,14 +39,8 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
     """Return a list of analytics cookies."""
     cookies = []
     for event_object in self._GetEventObjectsFromQueue(event_queue_consumer):
-      # TODO: this approach is fragile fix this.
-      plugin = getattr(event_object, 'plugin', None)
-      if plugin is None or not plugin.startswith('google_analytics_'):
-        continue
-
-      if event_object.plugin.startswith('google_analytics'):
+      if isinstance(event_object, ganalytics.GoogleAnalyticsEvent):
         cookies.append(event_object)
-
     return cookies
 
   def testParsingFirefox29CookieDatabase(self):

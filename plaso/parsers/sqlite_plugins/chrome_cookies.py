@@ -106,12 +106,18 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
     super(ChromeCookiePlugin, self).__init__()
     self._cookie_plugins = cookie_interface.GetPlugins()
 
-  def ParseCookieRow(self, parser_context, row, query=None, **unused_kwargs):
+  def ParseCookieRow(
+      self, parser_context, row, file_entry=None, parser_chain=None,
+      query=None, **unused_kwargs):
     """Parses a cookie row.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       row: The row resulting from the query.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       query: Optional query string. The default is None.
     """
     event_object = ChromeCookieEvent(
@@ -119,14 +125,16 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
         row['host_key'], row['name'], row['value'], row['path'], row['secure'],
         row['httponly'], row['persistent'])
     parser_context.ProduceEvent(
-        event_object, plugin_name=self.NAME, query=query)
+        event_object, query=query, parser_chain=parser_chain,
+        file_entry=file_entry)
 
     event_object = ChromeCookieEvent(
         row['last_access_utc'], eventdata.EventTimestamp.ACCESS_TIME,
         row['host_key'], row['name'], row['value'], row['path'], row['secure'],
         row['httponly'], row['persistent'])
     parser_context.ProduceEvent(
-        event_object, plugin_name=self.NAME, query=query)
+        event_object, query=query, parser_chain=parser_chain,
+        file_entry=file_entry)
 
     if row['has_expires']:
       event_object = ChromeCookieEvent(
@@ -134,7 +142,8 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
           row['host_key'], row['name'], row['value'], row['path'],
           row['secure'], row['httponly'], row['persistent'])
       parser_context.ProduceEvent(
-          event_object, plugin_name=self.NAME, query=query)
+          event_object, query=query, parser_chain=parser_chain,
+          file_entry=file_entry)
 
     # Go through all cookie plugins to see if there are is any specific parsing
     # needed.
@@ -149,7 +158,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       try:
         cookie_plugin.Process(
             parser_context, cookie_name=row['name'], cookie_data=row['value'],
-            url=url)
+            url=url, parser_chain=parser_chain, file_entry=file_entry)
       except errors.WrongPlugin:
         pass
 

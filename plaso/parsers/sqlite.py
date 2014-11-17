@@ -237,12 +237,14 @@ class SQLiteParser(interface.BasePluginsParser):
     self._plugins = SQLiteParser.GetPluginObjects()
     self.db = None
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Parses an SQLite database.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
     Returns:
       A event object generator (EventObjects) extracted from the database.
@@ -259,11 +261,14 @@ class SQLiteParser(interface.BasePluginsParser):
             u'Unable to parse SQLite database with error: {0:s}.'.format(
                 repr(exception)))
 
+      parser_chain = self._BuildParserChain(parser_chain)
       # Create a cache in which the resulting tables are cached.
       cache = SQLiteCache()
       for plugin_object in self._plugins:
         try:
-          plugin_object.Process(parser_context, cache=cache, database=database)
+          plugin_object.Process(
+              parser_context, file_entry=file_entry, parser_chain=parser_chain,
+              cache=cache, database=database)
 
         except errors.WrongPlugin:
           logging.debug(

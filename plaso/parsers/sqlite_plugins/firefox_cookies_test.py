@@ -58,9 +58,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     #
     # In total: 93 * 3 + 15 + 5 + 5 = 304 events.
     for event_object in self._GetEventObjectsFromQueue(event_queue_consumer):
-      # TODO: this approach is fragile fix this.
-      plugin = getattr(event_object, 'plugin', None)
-      if plugin == 'firefox_cookies':
+      if isinstance(event_object, firefox_cookies.FirefoxCookieEvent):
         event_objects.append(event_object)
       else:
         extra_objects.append(event_object)
