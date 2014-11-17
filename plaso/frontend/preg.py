@@ -45,6 +45,7 @@ except ImportError:
   # pylint: disable=no-name-in-module
   from IPython.frontend.terminal.embed import InteractiveShellEmbed
 
+import IPython
 from IPython.config.loader import Config
 from IPython.core import magic
 
@@ -72,6 +73,11 @@ from plaso.preprocessors import manager as preprocess_manager
 from plaso.winreg import cache
 from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
+
+
+if IPython.version_info < (1, 2, 1):
+  raise ImportWarning(
+      'Preg requires at least IPython version 1.2.1.')
 
 
 class ConsoleConfig(object):

@@ -279,6 +279,9 @@ if __name__ == '__main__':
   if not CheckPythonModule('yaml', '__version__', '3.10'):
     check_result = False
 
+  if not CheckPythonModule('IPython', '__version__', '1.2.1'):
+    check_result = False
+
   if not CheckPytsk():
     check_result = False
 
