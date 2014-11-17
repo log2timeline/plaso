@@ -56,8 +56,8 @@ class UTorrentPlugin(interface.BencodePlugin):
   BENCODE_KEYS = frozenset(['.fileguard'])
 
   def GetEntries(
-      self, parser_context, file_entry=None, data=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None, data=None,
+      **unused_kwargs):
     """Extracts uTorrent active torrents.
 
     This is the main parsing engine for the plugin. It determines if
@@ -81,12 +81,10 @@ class UTorrentPlugin(interface.BencodePlugin):
       parser_context: A parser context object (instance of ParserContext).
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
-      data: Optional bencode data in dictionary form. The default is None.
       parser_chain: Optional string containing the parsing chain up to this
                     point. The default is None.
+      data: Optional bencode data in dictionary form. The default is None.
     """
-    parser_chain = self._BuildParserChain(parser_chain)
-
     # Walk through one of the torrent keys to ensure it's from a valid file.
     for key, value in data.iteritems():
       if not u'.torrent' in key:
