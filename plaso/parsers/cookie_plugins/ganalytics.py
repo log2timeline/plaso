@@ -66,11 +66,18 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
        u'google-analytics-cookies-and-forensic-implications')]
 
   def GetEntries(
-      self, parser_context, cookie_data=None, url=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None,
+      cookie_data=None, url=None, **unused_kwargs):
     """Extracts event objects from the cookie.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+      cookie_data: The cookie data, as a byte string.
+      url: The full URL or path where the cookie got set.
     """
     # The structure of the field:
     #   <domain hash>.<last time>.<sessions>.<sources>.<variables>
@@ -103,7 +110,8 @@ class GoogleAnalyticsUtmzPlugin(interface.CookiePlugin):
         url, 'utmz', self.COOKIE_NAME, domain_hash=domain_hash,
         sessions=int(sessions, 10), sources=int(sources, 10),
         **kwargs)
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
@@ -119,13 +127,18 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
        u'google-analytics-cookies-and-forensic-implications')]
 
   def GetEntries(
-      self, parser_context, cookie_data=None, url=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None,
+      cookie_data=None, url=None, **unused_kwargs):
     """Extracts event objects from the cookie.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      cookie_data: Optional cookie data, as a byte string.
-      url: Optional URL or path where the cookie got set.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+      cookie_data: The cookie data, as a byte string.
+      url: The full URL or path where the cookie got set.
     """
     # Values has the structure of:
     # <domain hash>.<visitor ID>.<first visit>.<previous>.<last>.<# of
@@ -145,19 +158,22 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
         first_epoch, 'Analytics Creation Time', url, 'utma', self.COOKIE_NAME,
         domain_hash=domain_hash, visitor_id=visitor_id,
         sessions=int(sessions, 10))
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     event_object = GoogleAnalyticsEvent(
         int(previous, 10), 'Analytics Previous Time', url, 'utma',
         self.COOKIE_NAME, domain_hash=domain_hash, visitor_id=visitor_id,
         sessions=int(sessions, 10))
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     event_object = GoogleAnalyticsEvent(
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
         url, 'utma', self.COOKIE_NAME, domain_hash=domain_hash,
         visitor_id=visitor_id, sessions=int(sessions, 10))
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
@@ -173,13 +189,18 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
        u'google-analytics-cookies-and-forensic-implications')]
 
   def GetEntries(
-      self, parser_context, cookie_data=None, url=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None,
+      cookie_data=None, url=None, **unused_kwargs):
     """Extracts event objects from the cookie.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      cookie_data: Optional cookie data, as a byte string.
-      url: Optional URL or path where the cookie got set.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+      cookie_data: The cookie data, as a byte string.
+      url: The full URL or path where the cookie got set.
     """
     # Values has the structure of:
     #   <domain hash>.<pages viewed>.10.<last time>
@@ -196,4 +217,5 @@ class GoogleAnalyticsUtmbPlugin(interface.CookiePlugin):
         int(last, 10), eventdata.EventTimestamp.LAST_VISITED_TIME,
         url, 'utmb', self.COOKIE_NAME, domain_hash=domain_hash,
         pages_viewed=int(pages_viewed, 10))
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
