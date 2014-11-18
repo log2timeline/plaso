@@ -20,8 +20,13 @@
 import StringIO
 import unittest
 
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+
 from plaso.frontend import preg
 from plaso.frontend import test_lib
+
+from plaso.lib import errors
 
 
 class StringIOOutputWriter(object):
@@ -70,6 +75,57 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     shell_helper = preg.PregHelper(options, test_front_end, hive_storage)
 
     return shell_helper, output_writer
+
+  def testBadRun(self):
+    """Test few functions that should raise exceptions."""
+    shell_helper, _ = self._GetHelperAndOutputWriter()
+
+    options = test_lib.Options()
+    options.foo = u'bar'
+
+    with self.assertRaises(errors.BadConfigOption):
+      shell_helper.tool_front_end.ParseOptions(options)
+
+    options.regfile = 'this_path_does_not_exist'
+    with self.assertRaises(errors.BadConfigOption):
+      shell_helper.tool_front_end.ParseOptions(options)
+
+  def testFrontEnd(self):
+    """Test various functions inside the front end object."""
+    shell_helper, _ = self._GetHelperAndOutputWriter()
+    front_end = shell_helper.tool_front_end
+
+    options = test_lib.Options()
+    hive_path = self._GetTestFilePath([u'NTUSER.DAT'])
+    options.regfile = hive_path
+
+    front_end.ParseOptions(options, source_option='image')
+
+    # Test the --info parameter to the tool.
+    info_string = front_end.GetListOfAllPlugins()
+    self.assertTrue(u'* Supported Plugins *' in info_string)
+    self.assertTrue(
+        u'userassist : Parser for User Assist Registry data' in info_string)
+    self.assertTrue(
+        u'services : Parser for services and drivers Registry ' in info_string)
+
+    # Get paths to various registry files.
+    hive_paths_for_usersassist = set([
+        u'/Documents And Settings/.+/NTUSER.DAT', '/Users/.+/NTUSER.DAT'])
+    # Testing functions within the front end, thus need to access protected
+    # members.
+    # pylint: disable-msg=protected-access
+    test_paths_for_userassist = set(
+        front_end._GetRegistryFilePaths(u'userassist'))
+
+    self.assertEquals(hive_paths_for_usersassist, test_paths_for_userassist)
+
+    # Set the path to the system registry.
+    preg.PregCache.knowledge_base_object.pre_obj.sysregistry = u'C:/Windows/Foo'
+
+    # Test the SOFTWARE hive.
+    test_paths = front_end._GetRegistryFilePaths(u'', u'SOFTWARE')
+    self.assertEqual(test_paths, [u'C:/Windows/Foo/SOFTWARE'])
 
   def testMagicClass(self):
     """Test the magic class functions."""
@@ -137,6 +193,28 @@ class PregFrontendTest(test_lib.FrontendTestCase):
         u'\\UserAssist\\{5E6AB780-7743-11CF-A12B-00AA004AE837}\n')
 
     self.assertEquals(current_directory, output_string.GetValue())
+
+  def testParseHive(self):
+    """Test the ParseHive function."""
+    shell_helper, _ = self._GetHelperAndOutputWriter()
+
+    # TODO: Replace this once _GetTestFileEntry is pushed in.
+    system_hive_path = self._GetTestFilePath(['SYSTEM'])
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=system_hive_path)
+    collectors = [('current', None)]
+
+    key_paths = [
+        u'\\ControlSet001\\Enum\\USBSTOR',
+        u'\\ControlSet001\\Enum\\USB',
+        u'\\ControlSet001\\Control\\Windows']
+
+    output = shell_helper.tool_front_end.ParseHive(
+        path_spec, collectors, shell_helper, key_paths=key_paths,
+        use_plugins=None, verbose=False)
+
+    self.assertTrue(u'ComponentizedBuild : [REG_DWORD_LE] 1' in output)
+    self.assertTrue(u'subkey_name : Disk&Ven_HP&Prod_v100w&Rev_1024' in output)
 
   def testRunPlugin(self):
     """Tests running the preg frontend against a plugin."""
@@ -266,7 +344,6 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     registry_key = preg.GetCurrentKey()
     self.assertEquals(registry_key.path, u'\\')
 
-    # TODO: Add tests for the hive cache.
     # TODO: Add tests for formatting of events, eg: parse a key, get the event
     # objects and test the formatting of said event object.
     # TODO: Add tests for running in console mode.
