@@ -234,7 +234,7 @@ class WinRegistryParser(interface.BasePluginsParser):
       plugins_list.AddPlugin(plugin_class.REG_TYPE, plugin_class)
     return plugins_list
 
-  def Parse(self, parser_context, file_entry, unused_parser_chain=None):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a Windows Registry file.
 
     Args:
@@ -315,6 +315,8 @@ class WinRegistryParser(interface.BasePluginsParser):
     # 4. generic value-based plugins.
     root_key = winreg_file.GetKeyByPath(u'\\')
 
+    parser_chain = self._BuildParserChain(parser_chain)
+
     for key in self._RecurseKey(root_key):
       for weight in plugins.iterkeys():
         # TODO: determine if the plugin matches the key and continue
@@ -323,7 +325,7 @@ class WinRegistryParser(interface.BasePluginsParser):
           plugin.Process(
               parser_context, file_entry=file_entry, key=key,
               registry_type=self._registry_type,
-              codepage=parser_context.codepage)
+              codepage=parser_context.codepage, parser_chain=parser_chain)
 
     winreg_file.Close()
 

@@ -56,7 +56,7 @@ class BasePlugin(object):
   # the plugin, for instance some additional reading material. That can be
   # a description of the data structure, or how to read the data that comes
   # out of the parser, etc. So in essence this is a field to define pointers
-  # to additional resources to assist the practioner reading the output of
+  # to additional resources to assist the practitioner reading the output of
   # the plugin.
   URLS = []
 
@@ -95,7 +95,8 @@ class BasePlugin(object):
       ValueError: When there are unused keyword arguments.
     """
     if kwargs:
-      raise ValueError(u'Unused keyword arguments.')
+      raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
+          kwargs.keys()))
 
   def Process(self, unused_parser_context, unused_parser_chain=None, **kwargs):
     """Evaluate if this is the correct plugin and return a generator.
@@ -118,7 +119,8 @@ class BasePlugin(object):
       ValueError: When there are unused keyword arguments.
     """
     if kwargs:
-      raise ValueError(u'Unused keyword arguments.')
+      raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
+          kwargs.keys()))
 
 
 class BasePluginCache(object):

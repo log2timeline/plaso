@@ -68,6 +68,10 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-08-28 09:23:49.002031')
     self.assertEquals(event_object.timestamp, expected_timestamp)
@@ -90,9 +94,9 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
-    test_file = self._GetTestFilePath(['SYSTEM'])
+    test_file_entry = self._GetTestFileEntryFromPath(['SYSTEM'])
     key_path = u'\\ControlSet001\\services'
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
+    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
 
     event_objects = []
 
@@ -103,7 +107,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     for winreg_subkey in winreg_key.GetSubkeys():
       event_queue_consumer = self._ParseKeyWithPlugin(
-          self._plugin, winreg_subkey)
+          self._plugin, winreg_subkey, file_entry=test_file_entry)
       sub_event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
       event_objects.extend(sub_event_objects)
@@ -121,6 +125,11 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEquals(len(bits_event_objects), 1)
 
     event_object = bits_event_objects[0]
+
+    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-04-06 20:43:27.639075')

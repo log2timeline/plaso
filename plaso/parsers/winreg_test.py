@@ -30,20 +30,24 @@ class WinRegTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     self._parser = winreg.WinRegistryParser()
 
-  def _GetPlugins(self, event_objects):
+  def _GetParserChains(self, event_objects):
     """Return a dict with a plugin count given a list of event objects."""
-    plugins = {}
+    parser_chains = {}
     for event_object in event_objects:
-      plugin = getattr(event_object, 'plugin', None)
-      if not plugin:
+      parser_chain = getattr(event_object, 'parser', None)
+      if not parser_chain:
         continue
 
-      if plugin in plugins:
-        plugins[plugin] += 1
+      if parser_chain in parser_chains:
+        parser_chains[parser_chain] += 1
       else:
-        plugins[plugin] = 1
+        parser_chains[parser_chain] = 1
 
-    return plugins
+    return parser_chains
+
+  def _PluginNameToParserChain(self, plugin_name):
+    """Generate the correct parser chain for a given plugin."""
+    return 'winreg/{0:s}'.format(plugin_name)
 
   def testNtuserParsing(self):
     """Parse a NTUSER.dat file and check few items."""
@@ -53,16 +57,17 @@ class WinRegTest(test_lib.ParserTestCase):
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    plugins = self._GetPlugins(event_objects)
+    parser_chains = self._GetParserChains(event_objects)
 
     # The _registry_type member is created dynamically by invoking
-    # the _GetPlugins function.
+    # the _GetParserChains function.
     registry_type = getattr(self._parser, '_registry_type', '')
     self.assertEquals(registry_type, 'NTUSER')
 
-    self.assertTrue('winreg_userassist' in plugins)
+    expected_chain = self._PluginNameToParserChain('winreg_userassist')
+    self.assertTrue(expected_chain in parser_chains)
 
-    self.assertEquals(plugins['winreg_userassist'], 14)
+    self.assertEquals(parser_chains[expected_chain], 14)
 
   def testSystemParsing(self):
     """Parse a SYSTEM hive an run few tests."""
@@ -72,22 +77,29 @@ class WinRegTest(test_lib.ParserTestCase):
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    plugins = self._GetPlugins(event_objects)
+    parser_chains = self._GetParserChains(event_objects)
 
     # The _registry_type member is created dynamically by invoking
-    # the _GetPlugins function.
+    # the _GetParserChains function.
     registry_type = getattr(self._parser, '_registry_type', '')
     self.assertEquals(registry_type, 'SYSTEM')
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
-    self.assertTrue('winreg_usbstor' in plugins)
-    self.assertTrue('winreg_boot_execute' in plugins)
-    self.assertTrue('winreg_services' in plugins)
+    plugin_names = ['winreg_usbstor', 'winreg_boot_execute', 'winreg_services']
+    for plugin in plugin_names:
+      expected_chain = self._PluginNameToParserChain(plugin)
+      self.assertTrue(
+          expected_chain in parser_chains,
+          u'Chain {0:s} not found in events.'.format(expected_chain))
 
-    self.assertEquals(plugins.get('winreg_usbstor', 0), 3)
-    self.assertEquals(plugins.get('winreg_boot_execute', 0), 2)
-    self.assertEquals(plugins.get('winreg_services', 0), 831)
+    # Check that the number of events produced by each plugin are correct.
+    self.assertEquals(parser_chains.get(
+        self._PluginNameToParserChain('winreg_usbstor'), 0), 3)
+    self.assertEquals(parser_chains.get(
+        self._PluginNameToParserChain('winreg_boot_execute'), 0), 2)
+    self.assertEquals(parser_chains.get(
+        self._PluginNameToParserChain('winreg_services'), 0), 831)
 
 
 if __name__ == '__main__':

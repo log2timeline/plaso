@@ -33,8 +33,8 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """Retrieves a Windows Registry key from a file.
 
     Args:
-      path: the path of the file.
-      key_path: the path of the key to parse.
+      path: The path to the file, as a string.
+      key_path: The path of the key to parse.
 
     Returns:
       A Windows Registry key (instance of WinRegKey).
@@ -42,19 +42,36 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    return self._GetKeyFromFileEntry(file_entry, key_path)
+
+  def _GetKeyFromFileEntry(self, file_entry, key_path):
+    """Retrieves a Windows Registry key from a file.
+
+    Args:
+      file_entry: A dfVFS file_entry object that references a test file.
+      key_path: The path of the key to parse.
+
+    Returns:
+      A Windows Registry key (instance of WinRegKey).
+    """
     registry = winregistry.WinRegistry(winregistry.WinRegistry.BACKEND_PYREGF)
     winreg_file = registry.OpenFile(file_entry, codepage='cp1252')
     return winreg_file.GetKeyByPath(key_path)
 
   def _ParseKeyWithPlugin(
-      self, plugin_object, winreg_key, knowledge_base_values=None):
+      self, plugin_object, winreg_key, knowledge_base_values=None,
+      file_entry=None, parser_chain=None):
     """Parses a key within a Windows Registry file using the plugin object.
 
     Args:
-      plugin_object: the plugin object.
-      winreg_key: the Windows Registry Key.
-      knowledge_base_values: optional dict containing the knowledge base
+      plugin_object: The plugin object.
+      winreg_key: The Windows Registry Key.
+      knowledge_base_values: Optional dict containing the knowledge base
                              values. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
     Returns:
       An event object queue consumer object (instance of
@@ -70,7 +87,9 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     parser_context = self._GetParserContext(
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
-    plugin_object.Process(parser_context, key=winreg_key)
+    plugin_object.Process(
+        parser_context, key=winreg_key, parser_chain=parser_chain,
+        file_entry=file_entry)
 
     return event_queue_consumer
 

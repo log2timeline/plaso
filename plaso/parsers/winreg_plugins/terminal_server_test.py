@@ -28,7 +28,7 @@ from plaso.winreg import test_lib as winreg_test_lib
 
 
 class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the erminal Server Client Windows Registry plugin."""
+  """Tests for the Terminal Server Client Windows Registry plugin."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
@@ -60,6 +60,10 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEquals(len(event_objects), 1)
 
     event_object = event_objects[0]
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
@@ -100,6 +104,10 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEquals(len(event_objects), 2)
 
     event_object = event_objects[0]
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
