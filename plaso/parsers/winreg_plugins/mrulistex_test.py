@@ -65,6 +65,10 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     # A MRUListEx event object.
     event_object = event_objects[0]
 
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-08-28 09:23:49.002031')
     self.assertEquals(event_object.timestamp, expected_timestamp)
@@ -90,18 +94,24 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'OpenSavePidlMRU')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 65)
 
     # A MRUListEx event object.
     event_object = event_objects[40]
+
+    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-08-28 22:48:28.159308')
@@ -151,17 +161,23 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 6)
 
     # A MRUListEx event object.
     event_object = event_objects[0]
+
+    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-04-01 13:52:39.113741')
@@ -226,18 +242,24 @@ class TestMRUListExStringAndShellItemListPlugin(
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
         u'LastVisitedPidlMRU')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 31)
 
     # A MRUListEx event object.
     event_object = event_objects[30]
+
+    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-04-01 13:52:38.966290')

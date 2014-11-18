@@ -37,7 +37,8 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR']
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Collect Values in Servers and return event for each one.
 
     Args:
@@ -45,6 +46,10 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     for subkey in key.GetSubkeys():
       username_value = subkey.GetValue('UsernameHint')
@@ -62,7 +67,8 @@ class TerminalServerClientPlugin(interface.KeyPlugin):
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
           source_append=': RDP Connection')
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class TerminalServerClientMRUPlugin(interface.KeyPlugin):
@@ -77,7 +83,8 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       u'\\Software\\Microsoft\\Terminal Server Client\\LocalDevices']
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Collect MRU Values and return event for each one.
 
     Args:
@@ -85,6 +92,10 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
     """
     for value in key.GetValues():
       # TODO: add a check for the value naming scheme.
@@ -108,7 +119,8 @@ class TerminalServerClientMRUPlugin(interface.KeyPlugin):
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
           source_append=u': RDP Connection')
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

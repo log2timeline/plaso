@@ -40,14 +40,19 @@ class TypedURLsPlugin(interface.KeyPlugin):
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Collect typed URLs values.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
       registry_type: Optional Registry type string. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     for value in key.GetValues():
       # Ignore any value not in the form: 'url[0-9]+'.
@@ -72,7 +77,8 @@ class TypedURLsPlugin(interface.KeyPlugin):
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
           source_append=u': Typed URLs')
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 winreg.WinRegistryParser.RegisterPlugin(TypedURLsPlugin)

@@ -39,7 +39,8 @@ class ShutdownPlugin(interface.KeyPlugin):
   FILETIME_STRUCT = construct.ULInt64('filetime_timestamp')
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Collect ShutdownTime value under Windows and produce an event object.
 
     Args:
@@ -47,6 +48,10 @@ class ShutdownPlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
           The default is None.
       registry_type: Optional Registry type string. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     shutdown_value = key.GetValue('ShutdownTime')
     text_dict = {}
@@ -55,7 +60,7 @@ class ShutdownPlugin(interface.KeyPlugin):
       filetime = self.FILETIME_STRUCT.parse(shutdown_value.data)
     except construct.FieldError as exception:
       logging.error(
-          u'Unable to extract shutdown timestamp: {:s}'.format(exception))
+          u'Unable to extract shutdown timestamp: {0:s}'.format(exception))
       return
     timestamp = timelib.Timestamp.FromFiletime(filetime)
 
@@ -64,7 +69,8 @@ class ShutdownPlugin(interface.KeyPlugin):
         usage=eventdata.EventTimestamp.LAST_SHUTDOWN, offset=key.offset,
         registry_type=registry_type,
         source_append=u'Shutdown Entry')
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 winreg.WinRegistryParser.RegisterPlugin(ShutdownPlugin)

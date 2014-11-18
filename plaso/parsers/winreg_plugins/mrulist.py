@@ -83,7 +83,8 @@ class MRUListPluginMixin(object):
     return enumerate(mru_list)
 
   def _ParseMRUListKey(
-      self, parser_context, key, registry_type=None, codepage='cp1252'):
+      self, parser_context, key, registry_type=None, file_entry=None,
+      parser_chain=None, codepage='cp1252'):
     """Extract event objects from a MRUList Registry key.
 
     Args:
@@ -91,6 +92,10 @@ class MRUListPluginMixin(object):
       key: the Registry key (instance of winreg.WinRegKey).
       registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+            The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
     """
     text_dict = {}
     for entry_index, entry_letter in self._ParseMRUListValue(key):
@@ -114,7 +119,8 @@ class MRUListPluginMixin(object):
         key.last_written_timestamp, key.path, text_dict,
         offset=key.offset, registry_type=registry_type,
         source_append=': MRU List')
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
@@ -171,7 +177,7 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
 
   def GetEntries(
       self, parser_context, file_entry=None, key=None, registry_type=None,
-      codepage='cp1252', **unused_kwargs):
+      parser_chain=None, codepage='cp1252', **unused_kwargs):
     """Extracts event objects from a MRU list.
 
     Args:
@@ -181,10 +187,13 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseMRUListKey(
-        parser_context, key, registry_type=registry_type, codepage=codepage)
+        parser_context, key, registry_type=registry_type,
+        parser_chain=parser_chain, file_entry=file_entry, codepage=codepage)
 
   def Process(self, parser_context, key=None, codepage='cp1252', **kwargs):
     """Determine if we can process this Registry key or not.
@@ -254,7 +263,7 @@ class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, codepage='cp1252',
-      **unused_kwargs):
+      file_entry=None, parser_chain=None, **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUList value.
 
     Args:
@@ -263,9 +272,14 @@ class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
            The default is None.
       registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+            The default is None.
     """
     self._ParseMRUListKey(
-        parser_context, key, registry_type=registry_type, codepage=codepage)
+        parser_context, key, registry_type=registry_type, codepage=codepage,
+        parser_chain=parser_chain, file_entry=file_entry)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

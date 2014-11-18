@@ -102,7 +102,7 @@ class MultiProcessEngine(engine.BaseEngine):
         maximum_number_of_queued_items=maximum_number_of_queued_items)
 
     super(MultiProcessEngine, self).__init__(
-      collection_queue, storage_queue, parse_error_queue)
+        collection_queue, storage_queue, parse_error_queue)
 
     self._collection_process = None
     self._storage_process = None
@@ -505,6 +505,18 @@ class MultiProcessingQueue(queue.Queue):
 
     # maxsize contains the maximum number of items allowed to be queued,
     # where 0 represents unlimited.
+    # We need to check that we aren't asking for a bigger queue than the
+    # platform supports, which requires access to this protected member.
+    # pylint: disable=protected-access
+    queue_max_length = multiprocessing._multiprocessing.SemLock.SEM_VALUE_MAX
+    # pylint: enable=protected-access
+    if maximum_number_of_queued_items > queue_max_length:
+      logging.warn(
+          u'Maximum queue size requested ({0:d}) is larger than system '
+          u'supported maximum size. Setting queue size to maximum supported '
+          u'size, '
+          u'({1:d})'.format(maximum_number_of_queued_items, queue_max_length))
+      maximum_number_of_queued_items = queue_max_length
     self._queue = multiprocessing.Queue(
         maxsize=maximum_number_of_queued_items)
 
