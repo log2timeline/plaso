@@ -34,7 +34,8 @@ class BootVerificationPlugin(interface.KeyPlugin):
   URLS = ['http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Gather the BootVerification key values and return one event for all.
 
     This key is rare, so its presence is suspect.
@@ -51,7 +52,8 @@ class BootVerificationPlugin(interface.KeyPlugin):
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict, offset=key.offset,
         registry_type=registry_type, urls=self.URLS)
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class BootExecutePlugin(interface.KeyPlugin):
@@ -67,7 +69,7 @@ class BootExecutePlugin(interface.KeyPlugin):
 
   def GetEntries(
       self, parser_context, file_entry=None, key=None, registry_type=None,
-      **unused_kwargs):
+      parser_chain=None, **unused_kwargs):
     """Gather the BootExecute Value, compare to default, return event.
 
     The rest of the values in the Session Manager key are in a separate event.
@@ -79,6 +81,8 @@ class BootExecutePlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
     """
     text_dict = {}
 
@@ -105,7 +109,8 @@ class BootExecutePlugin(interface.KeyPlugin):
         event_object = windows_events.WindowsRegistryEvent(
             key.last_written_timestamp, key.path, value_dict, offset=key.offset,
             registry_type=registry_type, urls=self.URLS)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       else:
         text_dict[value.name] = value.data
@@ -113,7 +118,8 @@ class BootExecutePlugin(interface.KeyPlugin):
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict, offset=key.offset,
         registry_type=registry_type, urls=self.URLS)
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

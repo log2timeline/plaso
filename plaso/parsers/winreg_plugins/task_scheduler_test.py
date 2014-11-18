@@ -46,6 +46,10 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-14 04:53:25.811618')
     self.assertEquals(event_object.timestamp, expected_timestamp)

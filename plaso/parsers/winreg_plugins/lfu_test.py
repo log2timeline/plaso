@@ -71,6 +71,10 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-08-31 20:45:29')
     self.assertEquals(event_object.timestamp, expected_timestamp)
@@ -127,6 +131,10 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     self.assertEquals(len(event_objects), 1)
 
     event_object = event_objects[0]
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-08-31 20:45:29')

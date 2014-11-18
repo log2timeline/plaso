@@ -65,7 +65,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
   """Tests for the preg front-end."""
 
   def _GetHelperAndOutputWriter(self):
-    """Return a helper object (instanc of PregHelper) and an output writer."""
+    """Return a helper object (instance of PregHelper) and an output writer."""
     hive_storage = preg.PregStorage()
     options = test_lib.Options()
 
@@ -145,7 +145,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     storage_length = len(preg.PregCache.hive_storage)
     preg.PregCache.hive_storage.SetOpenHive(storage_length - 1)
 
-    magic_obj = preg.MyMagics()
+    magic_obj = preg.MyMagics(None)
 
     # Change directory and verify it worked.
     registry_key_path = u'\\Software\\JavaSoft\\Java Update\\Policy'
@@ -316,7 +316,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     # Open a Registry key using the magic class.
     registry_key_path = u'\\Software\\JavaSoft\\Java Update\\Policy'
-    magic_obj = preg.MyMagics()
+    magic_obj = preg.MyMagics(None)
     magic_obj.ChangeDirectory(registry_key_path)
 
     registry_key = preg.GetCurrentKey()

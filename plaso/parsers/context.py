@@ -155,15 +155,16 @@ class ParserContext(object):
     if not getattr(event_object, 'parser', None) and parser_chain:
       event_object.parser = parser_chain
     elif not getattr(event_object, 'parser', None) and parser_name:
-      # TODO: Remove this when all plugins have been refactored so the
+      # TODO: Remove this when all plugins have been refactored such that the
+      # parser name contains the entire chain.
       event_object.parser = parser_name
 
-    # TODO: Remove this when all plugins have been refactored so the
+    # TODO: Remove this when all plugins have been refactored such that the
     # parser name contains the entire chain.
     if not getattr(event_object, 'plugin', None) and plugin_name:
       event_object.plugin = plugin_name
 
-    # TODO: deperecate text_prepend in favor of an event tag.
+    # TODO: deprecate text_prepend in favor of an event tag.
     if not getattr(event_object, 'text_prepend', None) and self._text_prepend:
       event_object.text_prepend = self._text_prepend
 
