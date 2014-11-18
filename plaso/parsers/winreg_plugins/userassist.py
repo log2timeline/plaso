@@ -87,7 +87,8 @@ class UserAssistPlugin(interface.KeyPlugin):
       construct.Padding(4))
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
@@ -95,6 +96,10 @@ class UserAssistPlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     version_value = key.GetValue('Version')
     count_subkey = key.GetSubkey('Count')
@@ -169,7 +174,8 @@ class UserAssistPlugin(interface.KeyPlugin):
             event_object = windows_events.WindowsRegistryEvent(
                 timelib.Timestamp.FromFiletime(filetime), count_subkey.path,
                 text_dict, offset=value.offset, registry_type=registry_type)
-            parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+            parser_context.ProduceEvent(
+                event_object, parser_chain=parser_chain, file_entry=file_entry)
 
         elif version_value.data == 5:
           if len(value.data) != self.USERASSIST_V5_STRUCT.sizeof():
@@ -195,7 +201,8 @@ class UserAssistPlugin(interface.KeyPlugin):
               timelib.Timestamp.FromFiletime(timestamp), count_subkey.path,
               text_dict, offset=count_subkey.offset,
               registry_type=registry_type)
-          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+          parser_context.ProduceEvent(
+              event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 winreg.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

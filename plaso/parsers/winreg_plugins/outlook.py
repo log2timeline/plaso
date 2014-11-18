@@ -50,13 +50,19 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
   REG_TYPE = 'NTUSER'
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Collect the values under Outlook and return event for each one.
     Args:
       parser_context: A parser context object (instance of ParserContext).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+
     """
     value_index = 0
     for value in key.GetValues():
@@ -82,7 +88,8 @@ class OutlookSearchMRUPlugin(interface.KeyPlugin):
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
           source_append=': PST Paths')
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       value_index += 1
 

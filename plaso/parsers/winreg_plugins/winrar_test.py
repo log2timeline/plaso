@@ -59,6 +59,10 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_string = (

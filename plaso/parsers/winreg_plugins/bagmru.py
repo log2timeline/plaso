@@ -122,7 +122,7 @@ class BagMRUPlugin(interface.KeyPlugin):
 
   def _ParseSubKey(
       self, parser_context, key, parent_value_string, registry_type=None,
-      codepage='cp1252'):
+      file_entry=None, parser_chain=None, codepage='cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
@@ -130,6 +130,10 @@ class BagMRUPlugin(interface.KeyPlugin):
       key: the Registry key (instance of winreg.WinRegKey).
       parent_value_string: string containing the parent value string.
       registry_type: Optional Registry type string. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+            The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     text_dict = {}
@@ -148,7 +152,8 @@ class BagMRUPlugin(interface.KeyPlugin):
         key.last_written_timestamp, key.path, text_dict,
         offset=key.offset, registry_type=registry_type, urls=self.URLS,
         source_append=': BagMRU')
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     for index, entry_number in self._ParseMRUListExValue(key):
       # TODO: detect if list ends prematurely.
@@ -169,7 +174,7 @@ class BagMRUPlugin(interface.KeyPlugin):
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, codepage='cp1252',
-      **unused_kwargs):
+      file_entry=None, parser_chain=None, **unused_kwargs):
     """Extract event objects from a Registry key containing a MRUListEx value.
 
     Args:
@@ -177,11 +182,15 @@ class BagMRUPlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseSubKey(
         parser_context, key, u'', registry_type=registry_type,
-        codepage=codepage)
+        parser_chain=parser_chain, file_entry=file_entry, codepage=codepage)
 
 
 winreg.WinRegistryParser.RegisterPlugin(BagMRUPlugin)

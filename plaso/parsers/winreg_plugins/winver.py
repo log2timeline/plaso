@@ -58,7 +58,8 @@ class WinVerPlugin(interface.KeyPlugin):
     return value.data
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Gather minimal information about system install and return an event.
 
     Args:
@@ -66,6 +67,10 @@ class WinVerPlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     text_dict = {}
     text_dict[u'Owner'] = self.GetValueString(key, 'RegisteredOwner')
@@ -90,7 +95,8 @@ class WinVerPlugin(interface.KeyPlugin):
     event_object.source_long = 'SOFTWARE WinVersion key'
     if text_dict[u'Owner']:
       event_object.owner = text_dict[u'Owner']
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 winreg.WinRegistryParser.RegisterPlugin(WinVerPlugin)

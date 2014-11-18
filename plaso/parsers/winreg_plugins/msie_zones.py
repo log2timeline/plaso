@@ -158,7 +158,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
   def GetEntries(
       self, parser_context, file_entry=None, key=None, registry_type=None,
-      **unused_kwargs):
+      parser_chain=None, **unused_kwargs):
     """Retrieves information of the Internet Settings Zones values.
 
     The MSIE Feature controls are stored in the Zone specific subkeys in:
@@ -172,6 +172,8 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     text_dict = {}
 
@@ -205,7 +207,8 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict, offset=key.offset,
         registry_type=registry_type, urls=self.URLS)
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if key.number_of_subkeys == 0:
       error_string = u'Key: {0:s} missing subkeys.'.format(key.path)
@@ -265,7 +268,8 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
           zone_key.last_written_timestamp, path, text_dict,
           offset=zone_key.offset, registry_type=registry_type,
           urls=self.URLS)
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class MsieZoneSettingsSoftwareZonesPlugin(MsieZoneSettingsPlugin):

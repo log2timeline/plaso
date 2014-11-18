@@ -44,7 +44,8 @@ class DefaultPlugin(interface.KeyPlugin):
   WEIGHT = 3
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Returns an event object based on a Registry key name and values.
 
     Args:
@@ -90,14 +91,17 @@ class DefaultPlugin(interface.KeyPlugin):
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict,
         offset=key.offset, registry_type=registry_type)
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
   # Even though the DefaultPlugin is derived from KeyPlugin it needs to
   # overwrite the Process function to make sure it is called when no other
   # plugin is available.
 
   def Process(
-      self, parser_context, key=None, registry_type=None, **kwargs):
+      self, parser_context, key=None, registry_type=None,
+      parser_chain=None, **kwargs):
     """Process the key and return a generator to extract event objects.
 
     Args:
@@ -107,8 +111,10 @@ class DefaultPlugin(interface.KeyPlugin):
       registry_type: Optional Registry type string. The default is None.
     """
     # Note that we should NOT call the Process function of the KeyPlugin here.
+    parser_chain = self._BuildParserChain(parser_chain)
     self.GetEntries(
-        parser_context, key=key, registry_type=registry_type, **kwargs)
+        parser_context, key=key, registry_type=registry_type,
+        parser_chain=parser_chain, **kwargs)
 
 
 winreg.WinRegistryParser.RegisterPlugin(DefaultPlugin)

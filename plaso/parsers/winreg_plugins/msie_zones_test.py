@@ -45,6 +45,10 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-08-28 21:32:44.937675')
     self.assertEquals(event_object.timestamp, expected_timestamp)
@@ -167,6 +171,10 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEquals(len(event_objects), 6)
 
     event_object = event_objects[1]
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-08-28 21:32:44.937675')
@@ -296,6 +304,10 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-09-16 21:12:40.145514')
     self.assertEquals(event_object.timestamp, expected_timestamp)
@@ -337,6 +349,10 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEquals(len(event_objects), 6)
 
     event_object = event_objects[1]
+
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-09-16 21:12:40.145514')

@@ -58,6 +58,10 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[0]
 
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-08-31 20:09:55')
     self.assertEquals(event_object.timestamp, expected_timestamp)
@@ -75,7 +79,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
         u'Owner: ...').format(key_path)
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
-
+    # TODO: Write a test for a non-synthetic key
 
 if __name__ == '__main__':
   unittest.main()

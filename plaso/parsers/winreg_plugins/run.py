@@ -37,7 +37,8 @@ class RunUserPlugin(interface.KeyPlugin):
   URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, **unused_kwargs):
+      self, parser_context, key=None, registry_type=None, file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Collect the Values under the Run Key and return an event for each one.
 
     Args:
@@ -45,6 +46,10 @@ class RunUserPlugin(interface.KeyPlugin):
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     for value in key.GetValues():
       # Ignore the default value.
@@ -62,7 +67,8 @@ class RunUserPlugin(interface.KeyPlugin):
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
           urls=self.URLS, registry_type=registry_type,
           source_append=': Run Key')
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class RunSoftwarePlugin(RunUserPlugin):

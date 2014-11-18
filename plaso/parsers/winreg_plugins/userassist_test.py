@@ -35,17 +35,23 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessOnWinXP(self):
     """Tests the Process function on a Windows XP Registry file."""
-    test_file = self._GetTestFilePath(['NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         u'\\{75048700-EF1F-11D0-9888-006097DEACF9}')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 14)
 
     event_object = event_objects[0]
+
+    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-08-04 15:11:22.811067')
@@ -64,17 +70,25 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
-    test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-WIN7.DAT'])
+
     key_path = (
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\UserAssist'
         u'\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 62)
 
     event_object = event_objects[0]
+
+    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2010-11-10 07:49:37.078067')

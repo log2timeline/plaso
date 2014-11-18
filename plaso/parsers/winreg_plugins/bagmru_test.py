@@ -35,16 +35,22 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
-    winreg_key = self._GetKeyFromFile(test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 15)
 
     event_object = event_objects[0]
+
+    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    # This should just be the plugin name, as we're invoking it directly,
+    # and not through the parser.
+    self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-08-04 15:19:16.997750')
