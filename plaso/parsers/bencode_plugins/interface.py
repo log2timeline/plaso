@@ -201,5 +201,5 @@ class BencodePlugin(plugins.BasePlugin):
     parser_chain = self._BuildParserChain(parser_chain)
 
     self.GetEntries(
-        parser_context, file_entry=file_entry, data=data,
-        parser_chain=parser_chain, match=match)
+        parser_context, file_entry=file_entry, parser_chain=parser_chain,
+        data=data, match=match)

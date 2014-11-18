@@ -78,12 +78,14 @@ class PlsRecallParser(interface.BaseParser):
       construct.String('Database', 81, None, '\x00'),
       construct.String('Query', 4001, None, '\x00'))
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract entries from a PLSRecall.dat file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
 
@@ -103,13 +105,17 @@ class PlsRecallParser(interface.BaseParser):
     file_object.seek(0, os.SEEK_SET)
     pls_record = self.PLS_STRUCT.parse_stream(file_object)
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     while pls_record:
       event_object = PlsRecallEvent(
           timelib.Timestamp.FromDelphiTime(pls_record.TimeStamp),
           pls_record.Sequence, pls_record.Username,
           pls_record.Database, pls_record.Query)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       try:
         pls_record = self.PLS_STRUCT.parse_stream(file_object)

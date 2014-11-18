@@ -75,6 +75,10 @@ class OleCfParser(interface.BasePluginsParser):
     root_item = olecf_file.root_item
     item_names = [item.name for item in root_item.sub_items]
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     # Compare the list of available plugins.
     # We will try to use every plugin against the file (except
     # the default plugin) and run it. Only if none of the plugins
@@ -83,8 +87,8 @@ class OleCfParser(interface.BasePluginsParser):
     for plugin_object in self._plugins:
       try:
         plugin_object.Process(
-            parser_context, file_entry=file_entry, root_item=root_item,
-            item_names=item_names)
+            parser_context, file_entry=file_entry, parser_chain=parser_chain,
+            root_item=root_item, item_names=item_names)
 
       except errors.WrongPlugin:
         logging.debug(
@@ -95,8 +99,8 @@ class OleCfParser(interface.BasePluginsParser):
     # the default OLECF plugin.
     if not parsed and self._default_plugin:
       self._default_plugin.Process(
-          parser_context, file_entry=file_entry, root_item=root_item,
-          item_names=item_names)
+          parser_context, file_entry=file_entry, parser_chain=parser_chain,
+          root_item=root_item, item_names=item_names)
 
     olecf_file.close()
     file_object.close()

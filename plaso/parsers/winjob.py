@@ -209,6 +209,10 @@ class WinJobParser(interface.BaseParser):
           u'Unable to parse Windows Task Job file with error: {0:s}'.format(
               exception))
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     trigger_type = self.TRIGGER_TYPES.get(data.trigger_type, u'Unknown')
 
     last_run_date = timelib.Timestamp.FromTimeParts(

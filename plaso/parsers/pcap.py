@@ -491,12 +491,14 @@ class PcapParser(interface.BaseParser):
   NAME = 'pcap'
   DESCRIPTION = u'Parser for PCAP files.'
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a pcap file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
 
@@ -517,6 +519,10 @@ class PcapParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.NAME, file_entry.name, exception))
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
 
     packet_id = 0
     ip_list = []
@@ -595,7 +601,7 @@ class PcapParser(interface.BaseParser):
            PcapEvent(
                max(entry.time_stamps), eventdata.EventTimestamp.END_TIME,
                entry)],
-          parser_name=self.NAME, file_entry=file_entry)
+          parser_chain=parser_chain, file_entry=file_entry)
 
     for other_stream in other_streams:
       parser_context.ProduceEvents(
@@ -605,7 +611,7 @@ class PcapParser(interface.BaseParser):
            PcapEvent(
                max(other_stream.time_stamps), eventdata.EventTimestamp.END_TIME,
                other_stream)],
-          parser_name=self.NAME, file_entry=file_entry)
+          parser_chain=parser_chain, file_entry=file_entry)
 
     file_object.close()
 

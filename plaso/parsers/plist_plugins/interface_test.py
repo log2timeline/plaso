@@ -39,7 +39,7 @@ class MockPlugin(interface.PlistPlugin):
     event_object = plist_event.PlistEvent(
         u'/DeviceCache/44-00-00-00-00-00', u'LastInquiryUpdate',
         1351827808261762)
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(event_object, parser_chain=self.NAME)
 
 
 class TestPlistPlugin(test_lib.PlistPluginTestCase):

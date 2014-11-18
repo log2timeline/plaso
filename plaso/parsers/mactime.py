@@ -111,7 +111,9 @@ class MactimeParser(text_parser.TextCSVParser):
     # TODO: Add additional verification.
     return True
 
-  def ParseRow(self, parser_context, row_offset, row, file_entry=None):
+  def ParseRow(
+      self, parser_context, row_offset, row, file_entry=None,
+      parser_chain=None):
     """Parses a row and extract event objects.
 
     Args:
@@ -121,6 +123,8 @@ class MactimeParser(text_parser.TextCSVParser):
            COLUMNS class list.
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     for key, value in row.iteritems():
       if isinstance(row[key], basestring):
@@ -136,7 +140,7 @@ class MactimeParser(text_parser.TextCSVParser):
       event_object = MactimeEvent(
           value, timestamp_description, row_offset, row)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 manager.ParsersManager.RegisterParser(MactimeParser)

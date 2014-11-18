@@ -121,7 +121,7 @@ class JavaIDXParser(interface.BaseParser):
       construct.PascalString(
           'string', length_field=construct.UBInt16('length')))
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a Java cache IDX file.
 
     This is the main parsing engine for the parser. It determines if
@@ -132,6 +132,8 @@ class JavaIDXParser(interface.BaseParser):
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -151,6 +153,10 @@ class JavaIDXParser(interface.BaseParser):
 
     if not magic.idx_version in [602, 603, 604, 605]:
       raise errors.UnableToParseFile(u'Not a valid Java IDX file')
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
 
     # Obtain the relevant values from the file. The last modified date
     # denotes when the file was last modified on the HOST. For example,
@@ -207,7 +213,7 @@ class JavaIDXParser(interface.BaseParser):
         last_modified_timestamp, 'File Hosted Date', magic.idx_version, url,
         ip_address)
     parser_context.ProduceEvent(
-        event_object, parser_name=self.NAME, file_entry=file_entry)
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if section_one:
       expiration_date = section_one.get('expiration_date', None)
@@ -217,14 +223,14 @@ class JavaIDXParser(interface.BaseParser):
             expiration_timestamp, 'File Expiration Date', magic.idx_version,
             url, ip_address)
         parser_context.ProduceEvent(
-            event_object, parser_name=self.NAME, file_entry=file_entry)
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if download_date:
       event_object = JavaIDXEvent(
           download_date, eventdata.EventTimestamp.FILE_DOWNLOADED,
           magic.idx_version, url, ip_address)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 manager.ParsersManager.RegisterParser(JavaIDXParser)

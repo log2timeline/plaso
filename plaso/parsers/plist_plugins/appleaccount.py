@@ -35,19 +35,25 @@ class AppleAccountPlugin(interface.PlistPlugin):
   PLIST_PATH = u'com.apple.coreservices.appleidauthenticationinfo'
   PLIST_KEYS = frozenset(['AuthCertificates', 'AccessorVersions', 'Accounts'])
 
-  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
+  def Process(
+      self, parser_context, file_entry=None, parser_chain=None, plist_name=None,
+      top_level=None, **kwargs):
     """Check if it is a valid Apple account plist file name.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       plist_name: name of the plist file.
       top_level: dictionary with the plist file parsed.
     """
     if not plist_name.startswith(self.PLIST_PATH):
       raise errors.WrongPlistPlugin(self.NAME, plist_name)
     super(AppleAccountPlugin, self).Process(
-        parser_context, plist_name=self.PLIST_PATH, top_level=top_level,
-        **kwargs)
+        parser_context, file_entry=file_entry, parser_chain=parser_chain,
+        plist_name=self.PLIST_PATH, top_level=top_level, **kwargs)
 
   # Generated events:
   # Accounts: account name.
@@ -57,11 +63,17 @@ class AppleAccountPlugin(interface.PlistPlugin):
   # LastSuccessfulConnect: last time when the account was connected.
   # ValidationDate: last time when the account was validated.
 
-  def GetEntries(self, parser_context, match=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, file_entry=None, parser_chain=None, match=None,
+      **unused_kwargs):
     """Extracts relevant Apple Account entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
@@ -76,21 +88,24 @@ class AppleAccountPlugin(interface.PlistPlugin):
           general_description)
       event_object = plist_event.PlistEvent(
           root, key, account['CreationDate'], description)
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       if 'LastSuccessfulConnect' in account:
         description = u'Connected Apple account {0:s}'.format(
             general_description)
         event_object = plist_event.PlistEvent(
             root, key, account['LastSuccessfulConnect'], description)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       if 'ValidationDate' in account:
         description = u'Last validation Apple account {0:s}'.format(
             general_description)
         event_object = plist_event.PlistEvent(
             root, key, account['ValidationDate'], description)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 plist.PlistParser.RegisterPlugin(AppleAccountPlugin)

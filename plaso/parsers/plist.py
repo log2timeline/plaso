@@ -97,12 +97,14 @@ class PlistParser(interface.BasePluginsParser):
 
     return top_level_object
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Parse and extract values from a plist file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     # TODO: Should we rather query the stats object to get the size here?
     file_object = file_entry.GetFileObject()
@@ -120,6 +122,10 @@ class PlistParser(interface.BasePluginsParser):
       raise errors.UnableToParseFile(
           u'[{0:s}] file size: {1:d} bytes is larger than 50 MB.'.format(
               self.NAME, file_size))
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
 
     top_level_object = None
     try:
@@ -140,7 +146,8 @@ class PlistParser(interface.BasePluginsParser):
     for plugin_object in self._plugins:
       try:
         plugin_object.Process(
-            parser_context, plist_name=plist_name, top_level=top_level_object)
+            parser_context, file_entry=file_entry, parser_chain=parser_chain,
+            plist_name=plist_name, top_level=top_level_object)
 
       except errors.WrongPlistPlugin as exception:
         logging.debug(u'[{0:s}] Wrong plugin: {1:s} for: {2:s}'.format(

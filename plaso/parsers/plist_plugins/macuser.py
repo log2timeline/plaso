@@ -51,17 +51,23 @@ class MacUserPlugin(interface.PlistPlugin):
 
   _ROOT = u'/'
 
-  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
+  def Process(
+      self, parser_context, file_entry=None, parser_chain=None, plist_name=None,
+      top_level=None, **kwargs):
     """Check if it is a valid Mac OS X system  account plist file name.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       plist_name: name of the plist file.
       top_level: dictionary with the plist file parsed.
     """
     super(MacUserPlugin, self).Process(
-        parser_context, plist_name=self.PLIST_PATH, top_level=top_level,
-        **kwargs)
+        parser_context, file_entry=file_entry, parser_chain=parser_chain,
+        plist_name=self.PLIST_PATH, top_level=top_level, **kwargs)
 
   # Generated events:
   # name: string with the system user.
@@ -75,11 +81,17 @@ class MacUserPlugin(interface.PlistPlugin):
   #        It is translated by the library as a 2001-01-01 00:00:00 (COCAO
   #        zero time representation). If this happens, the event is not yield.
 
-  def GetEntries(self, parser_context, match=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, file_entry=None, parser_chain=None, match=None,
+      **unused_kwargs):
     """Extracts relevant user timestamp entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
@@ -131,7 +143,8 @@ class MacUserPlugin(interface.PlistPlugin):
                   account, uid, password_hash)
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'passwordLastSetTime', timestamp, description)
-          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+          parser_context.ProduceEvent(
+              event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       if policy_dict.get('lastLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
@@ -140,7 +153,8 @@ class MacUserPlugin(interface.PlistPlugin):
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'lastLoginTimestamp', timestamp, description)
-          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+          parser_context.ProduceEvent(
+              event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       if policy_dict.get('failedLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
@@ -151,7 +165,8 @@ class MacUserPlugin(interface.PlistPlugin):
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'failedLoginTimestamp', timestamp, description)
-          parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+          parser_context.ProduceEvent(
+              event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 plist.PlistParser.RegisterPlugin(MacUserPlugin)

@@ -66,12 +66,14 @@ class HachoirParser(interface.BaseParser):
   NAME = 'hachoir'
   DESCRIPTION = u'Parser that wraps Hachoir.'
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a file using Hachoir.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
 
@@ -118,6 +120,10 @@ class HachoirParser(interface.BaseParser):
           u'[{0:s}] unable to parse file {1:s}: No metadata'.format(
               self.NAME, file_entry.name))
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     attributes = {}
     extracted_events = []
     for meta in metatext:
@@ -160,7 +166,7 @@ class HachoirParser(interface.BaseParser):
     for date, key in extracted_events:
       event_object = HachoirEvent(date, key, attributes)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 manager.ParsersManager.RegisterParser(HachoirParser)
