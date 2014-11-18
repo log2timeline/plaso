@@ -71,12 +71,17 @@ class EseDbParser(interface.BasePluginsParser):
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.NAME, file_entry.name, exception))
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     # Compare the list of available plugins.
     cache = EseDbCache()
     for plugin_object in self._plugins:
       try:
         plugin_object.Process(
-            parser_context, database=esedb_file, cache=cache)
+            parser_context, file_entry=file_entry, parser_chain=parser_chain,
+            database=esedb_file, cache=cache)
 
       except errors.WrongPlugin:
         logging.debug((

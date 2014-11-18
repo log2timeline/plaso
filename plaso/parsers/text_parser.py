@@ -195,6 +195,10 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     self.error = 0
     self.buffer = ''
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     while True:
       _ = self.NextToken()
 
@@ -215,7 +219,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
         try:
           event_object = self.ParseLine(parser_context)
           parser_context.ProduceEvent(
-              event_object, parser_name=self.NAME, file_entry=file_entry)
+              event_object, parser_chain=parser_chain, file_entry=file_entry)
 
           file_verified = True
 
@@ -417,7 +421,9 @@ class TextCSVParser(interface.BaseParser):
     """
     pass
 
-  def ParseRow(self, parser_context, row_offset, row, file_entry=None):
+  def ParseRow(
+      self, parser_context, row_offset, row, file_entry=None,
+      parser_chain=None):
     """Parse a line of the log file and extract event objects.
 
     Args:
@@ -427,13 +433,15 @@ class TextCSVParser(interface.BaseParser):
            COLUMNS class list.
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     event_object = event.EventObject()
     if row_offset is not None:
       event_object.offset = row_offset
     event_object.row_dict = row
     parser_context.ProduceEvent(
-        event_object, parser_name=self.NAME, file_entry=file_entry)
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
   def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a CVS file.
@@ -491,12 +499,18 @@ class TextCSVParser(interface.BaseParser):
           u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
           u'failed.').format(self.NAME, path_spec_printable))
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     self.ParseRow(
-        parser_context, text_file_object.tell(), row, file_entry=file_entry)
+        parser_context, text_file_object.tell(), row, file_entry=file_entry,
+        parser_chain=parser_chain)
 
     for row in reader:
       self.ParseRow(
-          parser_context, text_file_object.tell(), row, file_entry=file_entry)
+          parser_context, text_file_object.tell(), row, file_entry=file_entry,
+          parser_chain=parser_chain)
 
     file_object.close()
 
@@ -786,6 +800,10 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     if not self.VerifyStructure(parser_context, line):
       raise errors.UnableToParseFile('Wrong file structure.')
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     # Set the offset to the beginning of the file.
     self._current_offset = 0
     # Read every line in the text file.
@@ -808,7 +826,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
         if parsed_event:
           parsed_event.offset = self._current_offset
           parser_context.ProduceEvent(
-              parsed_event, parser_name=self.NAME, file_entry=file_entry)
+              parsed_event, parser_chain=parser_chain, file_entry=file_entry)
       else:
         logging.warning(u'Unable to parse log line: {0:s}'.format(line))
 
@@ -921,6 +939,10 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     if not self.VerifyStructure(parser_context, self._buffer):
       raise errors.UnableToParseFile('Wrong file structure.')
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     # Set the offset to the beginning of the file.
     self._current_offset = 0
 
@@ -956,7 +978,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         if parsed_event:
           parsed_event.offset = self._current_offset
           parser_context.ProduceEvent(
-              parsed_event, parser_name=self.NAME, file_entry=file_entry)
+              parsed_event, parser_chain=parser_chain, file_entry=file_entry)
 
         self._current_offset += end
         self._buffer = self._buffer[end:]

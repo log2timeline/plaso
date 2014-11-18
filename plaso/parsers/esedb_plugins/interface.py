@@ -214,11 +214,17 @@ class EseDbPlugin(plugins.BasePlugin):
 
     return table_names
 
-  def GetEntries(self, parser_context, database=None, cache=None, **kwargs):
+  def GetEntries(
+      self, parser_context, file_entry=None, parser_chain=None, database=None,
+      cache=None, **kwargs):
     """Extracts event objects from the database.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       database: Optional ESE database object (instance of pyesedb.file).
                 The default is None.
       cache: Optional cache object (instance of EseDbCache). The default is
@@ -253,14 +259,20 @@ class EseDbPlugin(plugins.BasePlugin):
       # that are assigned dynamically and cannot be defined by
       # the table name-callback mechanism.
       callback(
-          parser_context, database=database, table=esedb_table, cache=cache,
-          **kwargs)
+          parser_context, file_entry=file_entry, parser_chain=parser_chain,
+          database=database, table=esedb_table, cache=cache, **kwargs)
 
-  def Process(self, parser_context, database=None, cache=None, **kwargs):
+  def Process(
+      self, parser_context, file_entry=None, parser_chain=None, database=None,
+      cache=None, **kwargs):
     """Determines if this is the appropriate plugin for the database.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       database: Optional ESE database object (instance of pyesedb.file).
                 The default is None.
       cache: Optional cache object (instance of EseDbCache). The default is
@@ -282,5 +294,10 @@ class EseDbPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(EseDbPlugin, self).Process(parser_context, **kwargs)
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     self.GetEntries(
-        parser_context, database=database, cache=cache, **kwargs)
+        parser_context, file_entry=file_entry, parser_chain=parser_chain,
+        database=database, cache=cache, **kwargs)

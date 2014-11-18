@@ -73,22 +73,24 @@ class OlecfPlugin(plugins.BasePlugin):
 
   @abc.abstractmethod
   def ParseItems(
-      self, parser_context, file_entry=None, root_item=None, items=None,
-      **kwargs):
+      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
+      items=None, **kwargs):
     """Parses OLECF items.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
     """
 
   def Process(
-      self, parser_context, file_entry=None, root_item=None, item_names=None,
-      **kwargs):
+      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
+      item_names=None, **kwargs):
     """Determine if this is the right plugin for this OLECF file.
 
     This function takes a list of sub items found in the root of a
@@ -99,6 +101,8 @@ class OlecfPlugin(plugins.BasePlugin):
       parser_context: A parser context object (instance of ParserContext).
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
@@ -118,6 +122,10 @@ class OlecfPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(OlecfPlugin, self).Process(parser_context, **kwargs)
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     items = []
     for item_string in self.REQUIRED_ITEMS:
       item = root_item.get_sub_item_by_name(item_string)
@@ -126,7 +134,8 @@ class OlecfPlugin(plugins.BasePlugin):
         items.append(item)
 
     self.ParseItems(
-        parser_context, file_entry=file_entry, root_item=root_item, items=items)
+        parser_context, file_entry=file_entry, parser_chain=parser_chain,
+        root_item=root_item, items=items)
 
 
 class OleDefinitions(object):

@@ -41,11 +41,17 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
   # LastFullSuccessfulDate: timestamp when Mac OS X was full update.
   # LastSuccessfulDate: timestamp when Mac OS X was partially update.
 
-  def GetEntries(self, parser_context, match=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, file_entry=None, parser_chain=None, match=None,
+      **unused_kwargs):
     """Extracts relevant Mac OS X update entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
@@ -57,7 +63,8 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
     description = u'Last Mac OS X {0:s} full update.'.format(version)
     event_object = plist_event.PlistEvent(
         root, key, match['LastFullSuccessfulDate'], description)
-    parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+    parser_context.ProduceEvent(
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if pending:
       software = []
@@ -69,7 +76,8 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
               version, pending, u','.join(software))
       event_object = plist_event.PlistEvent(
           root, key, match['LastSuccessfulDate'], description)
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 plist.PlistParser.RegisterPlugin(SoftwareUpdatePlugin)

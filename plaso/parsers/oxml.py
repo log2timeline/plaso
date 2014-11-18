@@ -84,12 +84,14 @@ class OpenXMLParser(interface.BaseParser):
     fix_key = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from an OXML file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
 
@@ -111,6 +113,11 @@ class OpenXMLParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.NAME, file_entry.name, 'OXML element(s) missing.'))
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     metadata = {}
     timestamps = {}
 
@@ -147,21 +154,21 @@ class OpenXMLParser(interface.BaseParser):
           timestamps.get('created'), eventdata.EventTimestamp.CREATION_TIME,
           metadata)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if timestamps.get('modified', None):
       event_object = OpenXMLParserEvent(
           timestamps.get('modified'),
           eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if timestamps.get('lastPrinted', None):
       event_object = OpenXMLParserEvent(
           timestamps.get('lastPrinted'), eventdata.EventTimestamp.LAST_PRINTED,
           metadata)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 manager.ParsersManager.RegisterParser(OpenXMLParser)

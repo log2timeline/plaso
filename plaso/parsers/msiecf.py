@@ -75,7 +75,8 @@ class MsiecfParser(interface.BaseParser):
   DESCRIPTION = u'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
 
   def _ParseUrl(
-      self, parser_context, msiecf_item, file_entry=None, recovered=False):
+      self, parser_context, msiecf_item, file_entry=None, parser_chain=None,
+      recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) URL item.
 
        Every item is stored as an event object, one for each timestamp.
@@ -85,6 +86,8 @@ class MsiecfParser(interface.BaseParser):
       msiecf_item: An item (pymsiecf.url).
       file_entry: optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       recovered: Boolean value to indicate the item was recovered, False
                  by default.
     """
@@ -132,14 +135,14 @@ class MsiecfParser(interface.BaseParser):
     event_object = MsiecfUrlEvent(
         primary_timestamp, primary_timestamp_desc, msiecf_item, recovered)
     parser_context.ProduceEvent(
-        event_object, parser_name=self.NAME, file_entry=file_entry)
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     if secondary_timestamp > 0:
       event_object = MsiecfUrlEvent(
           secondary_timestamp, secondary_timestamp_desc, msiecf_item,
           recovered)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     expiration_timestamp = msiecf_item.get_expiration_time_as_integer()
     if expiration_timestamp > 0:
@@ -157,7 +160,7 @@ class MsiecfParser(interface.BaseParser):
             eventdata.EventTimestamp.EXPIRATION_TIME, msiecf_item, recovered)
 
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
     last_checked_timestamp = msiecf_item.get_last_checked_time_as_integer()
     if last_checked_timestamp > 0:
@@ -165,14 +168,16 @@ class MsiecfParser(interface.BaseParser):
           timelib.Timestamp.FromFatDateTime(last_checked_timestamp),
           eventdata.EventTimestamp.LAST_CHECKED_TIME, msiecf_item, recovered)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from a MSIE Cache File (MSIECF).
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
     msiecf_file = pymsiecf.file()
@@ -191,7 +196,9 @@ class MsiecfParser(interface.BaseParser):
       try:
         msiecf_item = msiecf_file.get_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
-          self._ParseUrl(parser_context, msiecf_item, file_entry=file_entry)
+          self._ParseUrl(
+              parser_context, msiecf_item, file_entry=file_entry,
+              parser_chain=parser_chain)
 
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
@@ -206,7 +213,7 @@ class MsiecfParser(interface.BaseParser):
         if isinstance(msiecf_item, pymsiecf.url):
           self._ParseUrl(
               parser_context, msiecf_item, file_entry=file_entry,
-              recovered=True)
+              parser_chain=parser_chain, recovered=True)
 
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.

@@ -192,12 +192,14 @@ class AslParser(interface.BaseParser):
           'value',
           length_field=construct.UBInt32('length')))
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract entries from an ASL file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
@@ -218,12 +220,16 @@ class AslParser(interface.BaseParser):
     old_offset = header.offset
     last_offset_header = header.last_offset
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     # If the ASL file has entries.
     if offset:
       event_object, offset = self.ReadAslEvent(file_object, offset)
       while event_object:
         parser_context.ProduceEvent(
-            event_object, parser_name=self.NAME, file_entry=file_entry)
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
         # TODO: an anomaly object must be emitted once that is implemented.
         # Sanity check, the last read element must be the same as

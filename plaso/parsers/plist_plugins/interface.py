@@ -76,7 +76,8 @@ class PlistPlugin(plugins.BasePlugin):
 
   @abc.abstractmethod
   def GetEntries(
-      self, parser_context, top_level=None, match=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None, top_level=None,
+      match=None, **unused_kwargs):
     """Extracts event objects from the values of entries within a plist.
 
     This is the main method that a plist plugin needs to implement.
@@ -112,12 +113,18 @@ class PlistPlugin(plugins.BasePlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       top_level: Optional plist in dictionary form. The default is None.
       match: Optional dictionary containing extracted keys from PLIST_KEYS.
              The default is None.
     """
 
-  def Process(self, parser_context, plist_name=None, top_level=None, **kwargs):
+  def Process(
+      self, parser_context, file_entry=None, parser_chain=None, plist_name=None,
+      top_level=None, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current plist being processed is a match for a
@@ -131,6 +138,10 @@ class PlistPlugin(plugins.BasePlugin):
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
 
@@ -171,7 +182,14 @@ class PlistPlugin(plugins.BasePlugin):
     logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
         self.NAME, plist_name))
     match = GetKeys(top_level, self.PLIST_KEYS)
-    self.GetEntries(parser_context, top_level=top_level, match=match)
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
+    self.GetEntries(
+        parser_context, file_entry=file_entry, parser_chain=parser_chain,
+        top_level=top_level, match=match)
 
 
 def RecurseKey(recur_item, root='', depth=15):
