@@ -181,7 +181,7 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       u'Package: python-{project_name:s}',
       u'Section: python',
       u'Architecture: all',
-      u'Depends: tzdata, ${{shlibs:Depends}}, ${{python:Depends}}',
+      u'Depends: ${{shlibs:Depends}}, ${{python:Depends}}',
       u'Description: {description_short:s}',
       u' {description_long:s}',
       u''])
@@ -2031,8 +2031,7 @@ def Main():
   # TODO: allow for patching e.g. dpkt 1.8.
   # Have builder check patches URL.
 
-  # TODO:
-  # ipython
+  # TODO: package ipython.
 
   # TODO:
   # (u'protobuf', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI),
@@ -2054,6 +2053,8 @@ def Main():
 
   # TODO: generate dpkg files instead of downloading them or
   # download and override version information.
+
+  # TODO: python-tz add tzdata dependency.
 
   builds = [
     (u'bencode', DependencyBuilder.PROJECT_TYPE_PYPI, {
