@@ -555,12 +555,14 @@ class BsmParser(interface.BaseParser):
     self.bsm_type_list_all = self.BSM_TYPE_LIST.copy()
     self.bsm_type_list_all.update(self.BSM_TYPE_LIST_NOT_TESTED)
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract entries from a BSM file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
@@ -577,10 +579,14 @@ class BsmParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not a BSM File, unable to parse.')
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     event_object = self.ReadBSMEvent(parser_context, file_object)
     while event_object:
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       event_object = self.ReadBSMEvent(parser_context, file_object)
 

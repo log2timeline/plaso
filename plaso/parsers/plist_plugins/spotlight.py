@@ -40,11 +40,17 @@ class SpotlightPlugin(interface.PlistPlugin):
   #   LAST_USED: last time when it was executed.
   #   DISPLAY_NAME: the display name of the program associated.
 
-  def GetEntries(self, parser_context, match=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, file_entry=None, parser_chain=None, match=None,
+      **unused_kwargs):
     """Extracts relevant Spotlight entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
@@ -54,7 +60,8 @@ class SpotlightPlugin(interface.PlistPlugin):
           u'({2:s})').format(search_text, data['DISPLAY_NAME'], data['PATH'])
       event_object = plist_event.PlistEvent(
           u'/UserShortcuts', search_text, data['LAST_USED'], description)
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 plist.PlistParser.RegisterPlugin(SpotlightPlugin)

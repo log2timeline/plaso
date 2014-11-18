@@ -114,13 +114,22 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
       construct.ULInt16('path_size'),
       construct.String('path', lambda ctx: ctx.path_size * 2))
 
-  def ParseDestList(self, parser_context, olecf_item):
+  def ParseDestList(
+      self, parser_context, file_entry=None, parser_chain=None,
+      olecf_item=None):
     """Parses the DestList OLECF item.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      olecf_item: An OLECF item (instance of pyolecf.item).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
+      olecf_item: An optional OLECF item (instance of pyolecf.item).
     """
+    if not olecf_item:
+      return
+
     try:
       header = self._DEST_LIST_STREAM_HEADER.parse_stream(olecf_item)
     except (IOError, construct.FieldError) as exception:
@@ -148,18 +157,22 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
       event_object = AutomaticDestinationsDestListEntryEvent(
           entry.last_modification_time,
           eventdata.EventTimestamp.MODIFICATION_TIME, entry_offset, entry)
-      parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+      parser_context.ProduceEvent(
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       entry_offset = olecf_item.get_offset()
 
   def ParseItems(
-      self, parser_context, file_entry=None, root_item=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
+      **unused_kwargs):
     """Parses OLECF items.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       root_item: Optional root item of the OLECF file. The default is None.
 
     Raises:
@@ -170,7 +183,9 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
     for item in root_item.sub_items:
       if item.name == u'DestList':
-        self.ParseDestList(parser_context, item)
+        self.ParseDestList(
+            parser_context, file_entry=file_entry, parser_chain=parser_chain,
+            olecf_item=item)
 
       elif self._RE_LNK_ITEM_NAME.match(item.name):
         if file_entry:
@@ -180,7 +195,8 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
           display_name = u'# {0:s}'.format(item.name)
 
         self._WINLNK_PARSER.ParseFileObject(
-            parser_context, item, display_name=display_name)
+            parser_context, item, file_entry=file_entry,
+            parser_chain=parser_chain, display_name=display_name)
 
         # TODO: check for trailing data?
 

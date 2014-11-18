@@ -208,14 +208,20 @@ class FirefoxCacheParser(interface.BaseParser):
 
     return FirefoxCacheEvent(candidate, request_method, url, response_code)
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract records from a Firefox cache file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     firefox_config = self._GetFirefoxConfig(file_entry)
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
 
     file_object = file_entry.GetFileObject()
 
@@ -227,7 +233,7 @@ class FirefoxCacheParser(interface.BaseParser):
             file_entry.name, file_object, firefox_config.block_size)
 
         parser_context.ProduceEvent(
-            event_object, parser_name=self.NAME, file_entry=file_entry)
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       except IOError:
         logging.debug(u'[{0:s}] {1:s}:{2:d}: Invalid cache record.'.format(
