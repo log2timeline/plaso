@@ -80,12 +80,14 @@ class WinRecycleBinParser(interface.BaseParser):
 
   MAGIC_STRUCT = construct.ULInt64('magic')
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract entries from a Windows RecycleBin $Ixx file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -97,6 +99,10 @@ class WinRecycleBinParser(interface.BaseParser):
     if magic_header is not 1:
       raise errors.UnableToParseFile(
           u'Not an $Ixxx file, wrong magic header.')
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
 
     # We may have to rely on filenames since this header is very generic.
     # TODO: Rethink this and potentially make a better test.
@@ -111,7 +117,7 @@ class WinRecycleBinParser(interface.BaseParser):
     file_object.close()
     event_object = WinRecycleEvent(u'', filename_utf, record, 0)
     parser_context.ProduceEvent(
-        event_object, parser_name=self.NAME, file_entry=file_entry)
+        event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class WinRecycleInfo2Parser(interface.BaseParser):
@@ -143,12 +149,14 @@ class WinRecycleInfo2Parser(interface.BaseParser):
   UNICODE_FILENAME_OFFSET = 0x11C
   RECORD_INDEX_OFFSET = 0x108
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract entries from Windows Recycler INFO2 file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -160,6 +168,10 @@ class WinRecycleInfo2Parser(interface.BaseParser):
     if magic_header is not 5:
       raise errors.UnableToParseFile(
           u'Not an INFO2 file, wrong magic header.')
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
 
     # Since this header value is really generic it is hard not to use filename
     # as an indicator too.
@@ -200,7 +212,7 @@ class WinRecycleInfo2Parser(interface.BaseParser):
       event_object = WinRecycleEvent(
           filename_ascii, filename_utf, record_information, record_size)
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       data = file_object.read(record_size)
 

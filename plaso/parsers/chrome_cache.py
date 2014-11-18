@@ -327,12 +327,14 @@ class ChromeCacheParser(interface.BaseParser):
   NAME = 'chrome_cache'
   DESCRIPTION = u'Parser for Chrome Cache files.'
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract event objects from Chrome Cache files.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
     index_file = IndexFile()
@@ -347,6 +349,10 @@ class ChromeCacheParser(interface.BaseParser):
     # Build a lookup table for the data block files.
     file_system = file_entry.GetFileSystem()
     path_segments = file_system.SplitPath(file_entry.path_spec.location)
+
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
 
     data_block_files = {}
     for cache_address in index_file.index_table:
@@ -412,7 +418,7 @@ class ChromeCacheParser(interface.BaseParser):
 
         event_object = ChromeCacheEntryEvent(cache_entry)
         parser_context.ProduceEvent(
-            event_object, parser_name=self.NAME, file_entry=file_entry)
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
         cache_address = cache_entry.next
         cache_address_chain_length += 1

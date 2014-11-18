@@ -47,11 +47,17 @@ class TimeMachinePlugin(interface.PlistPlugin):
       construct.Padding(10),
       construct.PascalString('value', length_field=construct.UBInt8('length')))
 
-  def GetEntries(self, parser_context, match=None, **unused_kwargs):
+  def GetEntries(
+      self, parser_context, file_entry=None, parser_chain=None, match=None,
+      **unused_kwargs):
     """Extracts relevant TimeMachine entries.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
@@ -73,7 +79,8 @@ class TimeMachinePlugin(interface.PlistPlugin):
         description = u'TimeMachine Backup in {0:s} ({1:s})'.format(
             alias, hd_uuid)
         event_object = plist_event.PlistEvent(root, key, timestamp, description)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 plist.PlistParser.RegisterPlugin(TimeMachinePlugin)

@@ -347,11 +347,16 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
   REQUIRED_ITEMS = frozenset([u'\005DocumentSummaryInformation'])
 
   def ParseItems(
-      self, parser_context, root_item=None, items=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
+      items=None, **unused_kwargs):
     """Parses a document summary information OLECF item.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
@@ -362,13 +367,15 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
       if root_creation_time:
         event_object = OleCfDocumentSummaryInfoEvent(
             root_creation_time, eventdata.EventTimestamp.CREATION_TIME, item)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       if root_modification_time:
         event_object = OleCfDocumentSummaryInfoEvent(
             root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             item)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
 class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
@@ -381,11 +388,16 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
   REQUIRED_ITEMS = frozenset([u'\005SummaryInformation'])
 
   def ParseItems(
-      self, parser_context, root_item=None, items=None, **unused_kwargs):
+      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
+      items=None, **unused_kwargs):
     """Parses a summary information OLECF item.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
@@ -399,20 +411,23 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
         event_object = OleCfSummaryInfoEvent(
             timestamp, timestamp_description,
             summary_information_object.attributes)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       if root_creation_time:
         event_object = OleCfSummaryInfoEvent(
             root_creation_time, eventdata.EventTimestamp.CREATION_TIME,
             summary_information_object.attributes)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       if root_modification_time:
         event_object = OleCfSummaryInfoEvent(
             root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             summary_information_object.attributes)
-        parser_context.ProduceEvent(event_object, plugin_name=self.NAME)
+        parser_context.ProduceEvent(
+            event_object, parser_chain=parser_chain, file_entry=file_entry)
 
 
-olecf.OleCfParser.RegisterPlugin(DocumentSummaryOlecfPlugin)
-olecf.OleCfParser.RegisterPlugin(SummaryInfoOlecfPlugin)
+olecf.OleCfParser.RegisterPlugins(
+    [DocumentSummaryOlecfPlugin, SummaryInfoOlecfPlugin])

@@ -115,12 +115,14 @@ class UtmpParser(interface.BaseParser):
   # it can be a free flowing text field.
   _DEFAULT_TEST_VALUE = u'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
 
-  def Parse(self, parser_context, file_entry):
+  def Parse(self, parser_context, file_entry, parser_chain=None):
     """Extract data from an UTMP file.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     file_object = file_entry.GetFileObject()
     try:
@@ -169,12 +171,16 @@ class UtmpParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not an UTMP file, no timestamp set in the first record.')
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     file_object.seek(0, os.SEEK_SET)
     event_object = self._ReadUtmpEvent(file_object)
     while event_object:
       event_object.offset = file_object.tell()
       parser_context.ProduceEvent(
-          event_object, parser_name=self.NAME, file_entry=file_entry)
+          event_object, file_entry=file_entry, parser_chain=None)
 
       event_object = self._ReadUtmpEvent(file_object)
 
