@@ -38,7 +38,7 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['skydriveerr.log'])
+    test_file = self._GetTestFilePath([u'skydriveerr.log'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -56,10 +56,15 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
         '2013-08-01 21:27:44.124')
     self.assertEquals(event_objects[18].timestamp, expected_timestamp)
 
+    expected_detail = (
+        u'StartLocalTime: 2013-07-25-180323.291 PID=0x8f4 TID=0x718 '
+        u'ContinuedFrom=')
+    self.assertEquals(event_objects[0].detail, expected_detail)
+
     expected_string = (
-        u'Logging started. Version= 17.0.2011.0627 '
-        '(StartLocalTime: 2013-07-25-180323.291 PID=0x8f4 TID=0x718 '
-        'ContinuedFrom=)')
+        u'Logging started. Version= 17.0.2011.0627 ({0:s})').format(
+            expected_detail)
+
     expected_string_short = u'Logging started. Version= 17.0.2011.0627'
     self._TestGetMessageStrings(
         event_objects[0], expected_string, expected_string_short)
@@ -78,6 +83,20 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
     expected_string_short = u'Received data from server'
     self._TestGetMessageStrings(
         event_objects[18], expected_string, expected_string_short)
+
+  def testParseUnicode(self):
+    """Tests the Parse function on Unicode data."""
+    test_file = self._GetTestFilePath([u'skydriveerr-unicode.log'])
+    event_queue_consumer = self._ParseFile(self._parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+
+    self.assertEquals(len(event_objects), 19)
+
+    # TODO: check if this test passes because the encoding on my system
+    # is UTF-8.
+    expected_text = (
+        u'No node found named Passport-Jméno-člena')
+    self.assertEquals(event_objects[3].text, expected_text)
 
 
 if __name__ == '__main__':
