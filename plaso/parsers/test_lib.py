@@ -20,7 +20,6 @@
 import os
 import unittest
 
-from plaso.formatters import manager as formatters_manager
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -28,6 +27,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.artifacts import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.parsers import context
 
