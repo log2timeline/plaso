@@ -1,0 +1,28 @@
+######Logging started. Version=17.0.2011.0627 StartSystemTime:2013-07-25-160323.291 StartLocalTime:2013-07-25-180323.291 PID=0x8f4 TID=0x718 ContinuedFrom=
+07-25-13,16:03:24.649,13,a98,0,AUTH,authapi.cpp(280),0,0,ERR,Sign in failed : DRX_E_AUTH_NO_VALID_CREDENTIALS,
+07-25-13,16:03:24.649,15,718,0,PAL,systeminformationhelper.cpp(661),0,002AF7F8,ERR,The registry key to block Remote Access is not found.,System Error Code=0x2
+07-25-13,16:04:02.669,48,a98,0,AUTH,oauthprofile.cpp(268),0,0,ERR,No node found named Passport-Jméno-člena, no user name available,
+07-25-13,16:06:31.306,cb,5d4,0,WNS,wnpconnmanager.cpp(176),7a93608,0,ERR,Failed to resolve proxy name. not using proxy,proxyName=;hr=8004da0e
+07-25-13,16:06:31.321,f8,5c4,0,P2P,relayedtransportfactory.cpp(72),7a7ea58,0,ERR,JUMPONFAILURE Failed: ,msg=Runtime::GetProxyName(serverName, proxyName, port);hr=8004da0e
+07-25-13,16:06:32.351,194,884,0,NM,notificationendpoint.cpp(24),0,0,ERR,JUMPONFAILURE Failed: ,msg=m_pReceiver->GetUris(queueUri, dgramUri, wlsSubscriptionUri);hr=8004da17
+07-25-13,16:06:33.755,238,a98,0,DFA,ranotificationmanager.cpp(383),0,02A36DC8,ERR,Succeeded Macro failed,hr=8004da0e
+######Logging started. Version=17.0.2011.0627 StartSystemTime:2013-07-25-174828.105 StartLocalTime:2013-07-25-194828.105 PID=0x90c TID=0x910 ContinuedFrom=
+07-25-13,17:48:47.582,9e,aa0,0,NM,notificationendpoint.cpp(24),0,0,ERR,JUMPONFAILURE Failed: ,msg=m_pReceiver->GetUris(queueUri, dgramUri, wlsSubscriptionUri);hr=8004da17
+07-25-13,17:48:49.189,13c,970,0,PAL,statemachine.cpp(274),2c2d5b0,0,ERR,No such transition defined,owner=@02C5A384;from=Closed;to=Closed
+07-26-13,11:18:11.778,137,9ec,0,NM,notificationendpoint.cpp(24),0,0,ERR,JUMPONFAILURE Failed: ,msg=m_pReceiver->GetUris(queueUri, dgramUri, wlsSubscriptionUri);hr=8004da17
+######Logging started. Version=17.0.2011.0627 StartSystemTime:2013-07-26-112344.929 StartLocalTime:2013-07-26-132344.929 PID=0x95c TID=0x960 ContinuedFrom=
+07-26-13,12:25:36.611,be,838,0,PAL,runtime.cpp(219),3041de0,0,ERR,JUMPONFAILURE Failed: ,msg=HttpPAL::GetProxies(wszServerTarget, proxyList);hr=8004da0e
+07-26-13,14:54:55.842,e3,a44,0,NM,notificationendpoint.cpp(24),0,0,ERR,JUMPONFAILURE Failed: ,msg=m_pReceiver->GetUris(queueUri, dgramUri, wlsSubscriptionUri);hr=8004da17
+07-26-13,12:59:25.172,174,a24,0,WNS,wnpconnmanager.cpp(268),651b70,0068CEB8,VRB,Sending command,data=CNT 1 CON 214
+Context: 48cc
+Last-Msg-Id: 0
+
+BND 3 CON 102
+Context: 48cc
+
+<wns-response><ver>1</ver><nonce>18542210062762168551983387045</nonce></wns-response>
+07-26-13,12:59:25.484,17e,a24,0,WNS,wnpnet.cpp(1060),651b70,03178DE8,NRM,State changed,from=WNP_CONNECTING;to=WNP_CONNECTED
+08-01-13,21:23:30.745,4bf,b5c,0,NM,wnshttpesclient.cpp(229),332148,049B0BE4,ERR,,this=@049B0BE4;wm=0x2
+08-01-13,21:27:44.124,564,b5c,0,WNS,absconn.cpp(177),332148,02BCAE60,VRB,Received data from server,dwID=0x0;dwSize=0x3e;pbData=PNG 9 CON 48
+
+<ping-response><wait>44</wait></ping-response>
