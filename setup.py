@@ -93,7 +93,7 @@ if not encoding:
 # Make sure the default encoding is set correctly otherwise
 # setup.py sdist will fail to include filenames with Unicode characters.
 reload(sys)
-sys.setdefaultencoding(sys.stdin.encoding)
+sys.setdefaultencoding(encoding)
 
 # Unicode in the description will break python-setuptools, hence
 # "Plaso Langar Að Safna Öllu" was removed.
