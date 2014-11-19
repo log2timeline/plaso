@@ -101,7 +101,8 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.CharsNotIn(u',').setResultsName('source_code') + COMMA +
       IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA +
       pyparsing.Optional(pyparsing.CharsNotIn(u',').setResultsName('text')) +
-      COMMA + pyparsing.SkipTo(SDE_ENTRY_END).setResultsName('detail'))
+      COMMA + pyparsing.SkipTo(SDE_ENTRY_END).setResultsName('detail') +
+      pyparsing.lineEnd())
 
   # SkyDriveError header pyparsing structure.
   SDE_HEADER = (
@@ -111,12 +112,13 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Literal(u'StartSystemTime:').suppress() +
       SDE_HEADER_TIMESTAMP +
       pyparsing.Literal(u'StartLocalTime:').setResultsName('lt_str') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('details'))
+      pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName('details') +
+      pyparsing.lineEnd())
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
       ('logline', SDE_LINE),
-      ('header', SDE_HEADER),
+      ('header', SDE_HEADER)
   ]
 
   def __init__(self):
@@ -178,7 +180,7 @@ class SkyDriveLogErrorParser(text_parser.PyparsingMultiLineTextParser):
     # Replace newlines with spaces in structure.detail to preserve output.
     return SkyDriveLogErrorEvent(
         timestamp, structure.module, structure.source_code,
-        structure.text, structure.detail.replace(u'\r\n', u' '))
+        structure.text, structure.detail.replace(u'\n', u' '))
 
   def _ParseHeader(self, structure):
     """Parse header lines and store appropriate attributes.
