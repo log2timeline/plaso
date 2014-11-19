@@ -693,7 +693,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
   ENCODING = ''
 
   def __init__(self):
-    """A constructor for the pyparsing assistant."""
+    """Initializes the pyparsing single-line text parser object."""
     super(PyparsingSingleLineTextParser, self).__init__()
     self.encoding = self.ENCODING
     self._current_offset = 0
@@ -869,44 +869,145 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     """
 
 
+class EncodedTextReader(object):
+  """Class to read simple encoded text."""
+
+  def __init__(self, buffer_size=2048, encoding=None):
+    """Initializes the encoded test reader object.
+
+    Args:
+      buffer_size: optional buffer size. The default is 2048.
+      encoding: optional encoding. The default is None.
+    """
+    super(EncodedTextReader, self).__init__()
+    self._buffer = ''
+    self._buffer_size = buffer_size
+    self._current_offset = 0
+    self._encoding = encoding
+
+    if self._encoding:
+      self._new_line = u'\n'.encode(self._encoding)
+      self._carriage_return = u'\r'.encode(self._encoding)
+    else:
+      self._new_line = '\n'
+      self._carriage_return = '\r'
+
+    self._new_line_length = len(self._new_line)
+    self._carriage_return_length = len(self._carriage_return)
+
+    self.lines = u''
+
+  def _ReadLine(self, file_object):
+    """Reads a line from the file object.
+
+    Args:
+      file_object: the file-like object.
+
+    Returns:
+      A string containing the line.
+    """
+    if len(self._buffer) < self._buffer_size:
+      self._buffer = ''.join([
+          self._buffer, file_object.read(self._buffer_size)])
+
+    line, new_line, self._buffer = self._buffer.partition(self._new_line)
+    if not line and not new_line:
+      line = self._buffer
+      self._buffer = ''
+
+    self._current_offset += len(line)
+
+    # Strip carriage returns from the text.
+    if line.endswith(self._carriage_return):
+      line = line[:-self._carriage_return_length]
+
+    if new_line:
+      line = ''.join([line, self._new_line])
+      self._current_offset += self._new_line_length
+
+    # If a parser specifically indicates specific encoding we need
+    # to handle the buffer as it is an encoded string.
+    # If it fails we fail back to the original raw string.
+    if self._encoding:
+      try:
+        line = line.decode(self._encoding)
+      except UnicodeDecodeError:
+        # TODO: it might be better to raise here.
+        pass
+
+    return line
+
+  def ReadLine(self, file_object):
+    """Reads a line.
+
+    Args:
+      file_object: the file-like object.
+
+    Returns:
+      A single line read from the lines buffer.
+    """
+    line, _, self.lines = self.lines.partition('\n')
+    if not line:
+      self.ReadLines(file_object)
+      line, _, self.lines = self.lines.partition('\n')
+
+    return line
+
+  def ReadLines(self, file_object):
+    """Reads lines into the lines buffer.
+
+    Args:
+      file_object: the file-like object.
+    """
+    lines_size = len(self.lines)
+    if lines_size < self._buffer_size:
+      lines_size = self._buffer_size - lines_size
+      while lines_size > 0:
+        line = self._ReadLine(file_object)
+        if not line:
+          break
+
+        self.lines = u''.join([self.lines, line])
+        lines_size -= len(line)
+
+  def Reset(self):
+    """Resets the encoded text reader."""
+    self._buffer = ''
+    self._current_offset = 0
+
+    self.lines = u''
+
+  def SkipAhead(self, file_object, number_of_characters):
+    """Skips ahead a number of characters.
+
+    Args:
+      file_object: the file-like object.
+      number_of_characters: the number of characters.
+    """
+    lines_size = len(self.lines)
+    while number_of_characters >= lines_size:
+      number_of_characters -= lines_size
+
+      self.lines = u''
+      self.ReadLines(file_object)
+      lines_size = len(self.lines)
+      if lines_size == 0:
+        return
+
+    self.lines = self.lines[number_of_characters:]
+
+
 class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
   """Multi line text parser based on the pyparsing library."""
 
   BUFFER_SIZE = 2048
 
   def __init__(self):
-    """A constructor for the pyparsing assistant."""
+    """Initializes the pyparsing multi-line text parser object."""
     super(PyparsingMultiLineTextParser, self).__init__()
-    self._buffer = ''
     self._buffer_size = self.BUFFER_SIZE
-
-  def _FillBuffer(self, filehandle):
-    """Fill the buffer."""
-    if len(self._buffer) > self._buffer_size:
-      return
-
-    self._buffer += filehandle.read(self._buffer_size)
-
-    # If a parser specifically indicates specific encoding we need
-    # to handle the buffer as it is an unicode string.
-    # If it fails we fail back to the original raw string.
-    if self.encoding:
-      try:
-        buffer_decoded = self._buffer.decode(self.encoding)
-        self._buffer = buffer_decoded
-      except UnicodeDecodeError:
-        pass
-
-  def _NextLine(self, filehandle):
-    """Move to the next newline in the buffer."""
-    throw, _, self._buffer = self._buffer.partition('\n')
-    if throw.startswith('\r'):
-      throw = throw[1:]
-      self._current_offset += 1
-
-    self._current_offset += 1 + len(throw)
-    self._FillBuffer(filehandle)
-    return throw
+    self._text_reader = EncodedTextReader(
+        buffer_size=self.BUFFER_SIZE, encoding=self.ENCODING)
 
   def Parse(self, parser_context, file_entry, parser_chain=None):
     """Parse a text file using a pyparsing definition.
@@ -918,50 +1019,45 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
                     point. The default is None.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      UnableToParseFile: if the line structures are missing.
     """
-    self.file_entry = file_entry
+    if not self.LINE_STRUCTURES:
+      raise errors.UnableToParseFile(u'Missing line structures.')
+
+    self._text_reader.Reset()
 
     file_object = file_entry.GetFileObject()
-
-    if not self.LINE_STRUCTURES:
-      raise errors.UnableToParseFile(
-          u'Line structure undeclared, unable to proceed.')
-
     file_object.seek(0, os.SEEK_SET)
 
-    self._buffer = ''
-    self._FillBuffer(file_object)
+    self._text_reader.ReadLines(file_object)
 
-    if not utils.IsText(self._buffer):
+    if not utils.IsText(self._text_reader.lines):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
-    if not self.VerifyStructure(parser_context, self._buffer):
-      raise errors.UnableToParseFile('Wrong file structure.')
+    if not self.VerifyStructure(parser_context, self._text_reader.lines):
+      raise errors.UnableToParseFile(u'Wrong file structure.')
 
     # Add ourselves to the parser chain, which will be used in all subsequent
     # event creation in this parser.
     parser_chain = self._BuildParserChain(parser_chain)
 
-    # Set the offset to the beginning of the file.
-    self._current_offset = 0
-
     # Read every line in the text file.
-    while self._buffer:
+    while self._text_reader.lines:
       # Initialize pyparsing objects.
       tokens = None
       start = 0
       end = 0
 
-      structure_key = None
+      key = None
 
       # Try to parse the line using all the line structures.
       for key, structure in self.LINE_STRUCTURES:
         try:
           parsed_structure = next(
-              structure.scanString(self._buffer, maxMatches=1), None)
+              structure.scanString(self._text_reader.lines, maxMatches=1), None)
         except pyparsing.ParseException:
           continue
+
         if not parsed_structure:
           continue
 
@@ -970,23 +1066,22 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         # Only want to parse the structure if it starts
         # at the beginning of the buffer.
         if start == 0:
-          structure_key = key
           break
 
-      if tokens and not start:
-        parsed_event = self.ParseRecord(parser_context, structure_key, tokens)
+      if tokens and start == 0:
+        parsed_event = self.ParseRecord(parser_context, key, tokens)
         if parsed_event:
-          parsed_event.offset = self._current_offset
+          # TODO: need a reliable way to handle this.
+          # parsed_event.offset = self._text_reader.line_offset
           parser_context.ProduceEvent(
               parsed_event, parser_chain=parser_chain, file_entry=file_entry)
 
-        self._current_offset += end
-        self._buffer = self._buffer[end:]
-      else:
-        old_line = self._NextLine(file_object)
-        if old_line:
-          logging.warning(u'Unable to parse log line: {0:s}'.format(
-              repr(old_line)))
+        self._text_reader.SkipAhead(file_object, end)
 
-      # Re-fill the buffer.
-      self._FillBuffer(file_object)
+      else:
+        odd_line = self._text_reader.ReadLine(file_object)
+        if odd_line:
+          logging.warning(
+              u'Unable to parse log line: {0:s}'.format(repr(odd_line)))
+
+      self._text_reader.ReadLines(file_object)
