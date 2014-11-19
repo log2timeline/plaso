@@ -110,7 +110,7 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
 
     serializer = json_serializer.JsonEventObjectSerializer
     json_string = serializer.WriteSerialized(event_object)
-    self.assertEquals(json_string, self._json_string)
+    self.assertEquals(sorted(json_string), sorted(self._json_string))
 
     event_object = serializer.ReadSerialized(json_string)
 
