@@ -230,7 +230,7 @@ class BasePluginsParser(BaseParser):
 
   @classmethod
   def RegisterPlugins(cls, plugin_classes):
-    """Registers a plugin classes.
+    """Registers plugin classes.
 
     Args:
       plugin_classes: a list of class objects of the plugins.

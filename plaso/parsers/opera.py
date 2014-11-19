@@ -322,5 +322,5 @@ class OperaGlobalHistoryParser(interface.BaseParser):
     file_object.close()
 
 
-manager.ParsersManager.RegisterParser(OperaTypedHistoryParser)
-manager.ParsersManager.RegisterParser(OperaGlobalHistoryParser)
+manager.ParsersManager.RegisterParsers([
+    OperaTypedHistoryParser, OperaGlobalHistoryParser])

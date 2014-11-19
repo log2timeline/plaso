@@ -190,6 +190,30 @@ class ParsersManager(object):
     cls._parser_classes[parser_name] = parser_class
 
   @classmethod
+  def RegisterParsers(cls, parser_classes):
+    """Registers parser classes.
+
+    The parser classes are identified based on their lower case name.
+
+    Args:
+      parser_classes: a list of class objects of the parsers.
+
+    Raises:
+      KeyError: if parser class is already set for the corresponding name.
+    """
+    for parser_class in parser_classes:
+      cls.RegisterParser(parser_class)
+
+  @classmethod
+  def SupportsPlugins(cls):
+    """Determines if a parser supports plugins.
+
+    Returns:
+      A boolean value indicating whether the parser supports plugins.
+    """
+    return True
+
+  @classmethod
   def SetParserFilterString(cls, parser_filter_string):
     """Sets the parser filter string.
 
