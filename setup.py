@@ -22,6 +22,7 @@
 """
 
 import glob
+import locale
 import os
 import sys
 
@@ -82,6 +83,12 @@ class TestCommand(Command):
 
   def run(self):
     test_results = run_tests.RunTests()
+
+encoding = sys.stdin.encoding
+
+# Note that sys.stdin.encoding can be None.
+if not encoding:
+  encoding = locale.getpreferredencoding()
 
 # Make sure the default encoding is set correctly otherwise
 # setup.py sdist will fail to include filenames with Unicode characters.
