@@ -646,11 +646,17 @@ class StorageMediaFrontend(Frontend):
       raise errors.BadConfigOption(u'Missing source path.')
 
     if isinstance(self._source_path, str):
+      encoding = sys.stdin.encoding
+
+      # Note that sys.stdin.encoding can be None.
+      if not encoding:
+        encoding = self.preferred_encoding
+
       # Note that the source path option can be an encoded byte string
       # and we need to turn it into an Unicode string.
       try:
         self._source_path = unicode(
-            self._source_path.decode(sys.stdin.encoding))
+            self._source_path.decode(encoding))
       except UnicodeDecodeError as exception:
         raise errors.BadConfigOption((
             u'Unable to convert source path to Unicode with error: '
