@@ -75,7 +75,8 @@ from plaso.winreg import path_expander as winreg_path_expander
 from plaso.winreg import winregistry
 
 
-if IPython.version_info < (1, 2, 1):
+# Older versions of IPython don't have a version_info attribute.
+if getattr(IPython, 'version_info', (0, 0, 0)) < (1, 2, 1):
   raise ImportWarning(
       'Preg requires at least IPython version 1.2.1.')
 
@@ -2024,7 +2025,7 @@ in a textual format.
       '-p', '--plugins', dest='plugin_names', action='append', default=[],
       type=unicode, metavar='PLUGIN_NAME',
       help=(
-          u'Substring match of the Registry plugin to be used, this'
+          u'Substring match of the Registry plugin to be used, this '
           u'parameter can be repeated to create a list of plugins to be '
           u'run against, eg: "-p userassist -p rdp" or "-p userassist".'))
 
