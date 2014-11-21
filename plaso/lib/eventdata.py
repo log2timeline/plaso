@@ -48,6 +48,10 @@ class EventTimestamp(object):
 
   LAST_SHUTDOWN = u'Last Shutdown Time'
 
+  ACCOUNT_CREATED = u'Account Created'
+  LAST_LOGIN_TIME = u'Last Login Time'
+  LAST_PASSWORD_RESET = u'Last Password Reset'
+
   FIRST_CONNECTED = u'First Connection Time'
   LAST_CONNECTED = u'Last Connection Time'
 

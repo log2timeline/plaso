@@ -29,6 +29,7 @@ from plaso.parsers.winreg_plugins import msie_zones
 from plaso.parsers.winreg_plugins import officemru
 from plaso.parsers.winreg_plugins import outlook
 from plaso.parsers.winreg_plugins import run
+from plaso.parsers.winreg_plugins import sam_users
 from plaso.parsers.winreg_plugins import services
 from plaso.parsers.winreg_plugins import shutdown
 from plaso.parsers.winreg_plugins import task_scheduler
