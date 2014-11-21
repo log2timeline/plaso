@@ -43,10 +43,13 @@ def GetLegacy(evt):
   # Access time.
   if evt.timestamp_desc in [
       eventdata.EventTimestamp.ACCESS_TIME,
+      eventdata.EventTimestamp.ACCOUNT_CREATED,
       eventdata.EventTimestamp.PAGE_VISITED,
       eventdata.EventTimestamp.LAST_VISITED_TIME,
       eventdata.EventTimestamp.START_TIME,
       eventdata.EventTimestamp.LAST_SHUTDOWN,
+      eventdata.EventTimestamp.LAST_LOGIN_TIME,
+      eventdata.EventTimestamp.LAST_PASSWORD_RESET,
       eventdata.EventTimestamp.LAST_CONNECTED,
       eventdata.EventTimestamp.LAST_RUNTIME,
       eventdata.EventTimestamp.LAST_PRINTED]:
