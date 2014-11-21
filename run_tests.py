@@ -48,11 +48,8 @@ def FindTestFiles():
 
 def RunTests(debug_mode=False):
   """Runs all the tests and returns the results back."""
-  # TODO: Re-enable the preg front-end test as soon as TravisCL has upgraded
-  # to trusty (currently running precise) or a newer, supported, version of
-  # IPython has been added to the precise repository.
   blacklisted_tests = [
-      'plaso.parsers.pcap_test', 'plaso.frontend.preg_test']
+      'plaso.parsers.pcap_test']
 
   tests = None
   for test_file in sorted(FindTestFiles()):
