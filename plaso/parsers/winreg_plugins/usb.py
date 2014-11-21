@@ -30,7 +30,7 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class USBPlugin(interface.KeyPlugin):
   """USB Windows Registry plugin for last connection time."""
 
-  NAME = 'winreg_USB'
+  NAME = 'winreg_usb'
   DESCRIPTION = u'Parser for USB storage Registry data.'
 
   REG_KEYS = [u'\\{current_control_set}\\Enum\\USB']
