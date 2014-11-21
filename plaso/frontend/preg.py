@@ -177,6 +177,12 @@ class PregEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
 class PregFrontend(frontend.ExtractionFrontend):
   """Class that implements the preg front-end."""
 
+  # All Registry plugins start with "winreg_", thus the Preg library cuts that
+  # part of, both for display and matching. That way a plugin can be called by
+  # the second half of the name, eg: "userassist" instead of
+  # "winreg_userassist".
+  PLUGIN_UNIQUE_NAME_START = len('winreg_')
+
   def __init__(self, output_writer):
     """Initializes the front-end object."""
     input_reader = frontend.StdinFrontendInputReader()
@@ -197,12 +203,14 @@ class PregFrontend(frontend.ExtractionFrontend):
     return_strings.append(frontend_utils.FormatHeader(u'Key Plugins'))
     for plugin_obj in all_plugins.GetAllKeyPlugins():
       return_strings.append(frontend_utils.FormatOutputString(
-          plugin_obj.NAME[7:], plugin_obj.DESCRIPTION))
+          plugin_obj.NAME[self.PLUGIN_UNIQUE_NAME_START:],
+          plugin_obj.DESCRIPTION))
 
     return_strings.append(frontend_utils.FormatHeader(u'Value Plugins'))
     for plugin_obj in all_plugins.GetAllValuePlugins():
       return_strings.append(frontend_utils.FormatOutputString(
-          plugin_obj.NAME[7:], plugin_obj.DESCRIPTION))
+          plugin_obj.NAME[self.PLUGIN_UNIQUE_NAME_START:],
+          plugin_obj.DESCRIPTION))
 
     return u'\n'.join(return_strings)
 
@@ -1154,7 +1162,7 @@ def PluginCompleter(unused_self, event_object):
 
     plugin_name = plugins_list.plugin_name
     if plugin_name.startswith('winreg'):
-      plugin_name = plugin_name[7:]
+      plugin_name = plugin_name[PregFrontend.PLUGIN_UNIQUE_NAME_START:]
 
     if plugin_name == 'default':
       continue
@@ -1923,6 +1931,7 @@ def RunModeConsole(front_end, options):
       'options': options})
 
   ipshell_config = ConsoleConfig.GetConfig()
+
   if loaded_hive:
     ConsoleConfig.SetPrompt(
         hive_path=loaded_hive.name, config=ipshell_config)
