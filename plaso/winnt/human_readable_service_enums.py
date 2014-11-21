@@ -34,7 +34,7 @@ SERVICE_ENUMS = {
         3: 'Manual (3)',
         4: 'Disabled (4)'
     },
-    # Human readable strings for the error handling .
+    # Human readable strings for the error handling.
     'ErrorControl': {
         0: 'Ignore (0)',
         1: 'Normal (1)',
