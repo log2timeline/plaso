@@ -348,8 +348,8 @@ message AnalysisReport {
   //                final displayed report.
   //    {heading_start} / {heading_end}: An indication of main header.
   //    {subheading_start} / {subheading_end}: An indication of a subheader.
-  // This is no way meant as a "HTML/XML look-alike" in terms of defintions.
-  // This is mearly a very simple implementation that only contains these
+  // This is no way meant as a "HTML/XML look-alike" in terms of definitions.
+  // This is merely a very simple implementation that only contains these
   // "special" tags, meant to make it easier to export the final report in a
   // HTML or any other format for later viewing.
   optional string text = 3;
