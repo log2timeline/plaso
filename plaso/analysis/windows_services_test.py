@@ -124,7 +124,15 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
         analysis_report_queue_consumer)
 
     report = analysis_reports[0]
-    self.assertEquals(len(report.text), 136830)
+    text = report.text
+
+    # We'll check that a few strings are in the report, like they're supposed
+    # to be, rather than checking for the exact content of the string,
+    # as that's dependent on the full path to the test files.
+    test_strings = [u'1394ohci', u'WwanSvc', u'Sources:', u'ControlSet001',
+                    u'ControlSet001']
+    for string in test_strings:
+      self.assertTrue(string in text)
 
 
 if __name__ == '__main__':
