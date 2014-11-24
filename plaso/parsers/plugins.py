@@ -81,25 +81,8 @@ class BasePlugin(object):
 
     return u'/'.join([parser_chain, self.NAME])
 
-  def GetEntries(self, unused_parser_chain=None, **kwargs):
-    """Extract and return EventObjects from the data structure.
-
-    Args:
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-      kwargs: Depending on the plugin they may require different sets of
-              arguments to be able to evaluate whether or not this is
-              the correct plugin.
-
-    Raises:
-      ValueError: When there are unused keyword arguments.
-    """
-    if kwargs:
-      raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
-          kwargs.keys()))
-
   def Process(self, unused_parser_context, unused_parser_chain=None, **kwargs):
-    """Evaluate if this is the correct plugin and return a generator.
+    """Evaluates if this is the correct plugin and processes data accordingly.
 
     The purpose of the process function is to evaluate if this particular
     plugin is the correct one for the particular data structure at hand.

@@ -49,7 +49,7 @@ class PreprocessPluginsManagerTest(unittest.TestCase):
   """Tests for the preprocess plugins manager."""
 
   def testRegistration(self):
-    """Tests the RegisterPlugin and DeregisterPlugin function."""
+    """Tests the RegisterPlugin and DeregisterPlugin functions."""
     # pylint: disable=protected-access
     number_of_plugins = len(manager.PreprocessPluginsManager._plugin_classes)
 
