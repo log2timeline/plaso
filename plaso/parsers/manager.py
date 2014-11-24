@@ -82,7 +82,9 @@ class ParsersManager(object):
       if filter_string in cls._parser_classes:
         parser_class = cls._parser_classes[filter_string]
         active_list.append(filter_string)
-        active_list.extend(parser_class.GetPluginNames())
+
+        if parser_class.SupportsPlugins():
+          active_list.extend(parser_class.GetPluginNames())
 
       elif filter_string in preset_categories:
         active_list.extend(
@@ -203,15 +205,6 @@ class ParsersManager(object):
     """
     for parser_class in parser_classes:
       cls.RegisterParser(parser_class)
-
-  @classmethod
-  def SupportsPlugins(cls):
-    """Determines if a parser supports plugins.
-
-    Returns:
-      A boolean value indicating whether the parser supports plugins.
-    """
-    return True
 
   @classmethod
   def SetParserFilterString(cls, parser_filter_string):
