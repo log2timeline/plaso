@@ -49,6 +49,13 @@ class MactimeEvent(time_events.PosixTimeEvent):
     self.user_gid = data.get('gid', None)
     self.md5 = data.get('md5', None)
     self.filename = data.get('name', 'N/A')
+    # Check if the filename field is not a string, eg in the instances where a
+    # filename only conists of numbers. In that case the self.filename field
+    # becomes an integer value instead of a string value. That causes issues
+    # later in the process, where we expect the filename value to be a string.
+    if not isinstance(self.filename, basestring):
+      self.filename = unicode(self.filename)
+
     self.mode_as_string = data.get('mode_as_string', None)
     self.size = data.get('size', None)
 

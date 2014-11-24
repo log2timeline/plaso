@@ -25,6 +25,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib_test
 from plaso.parsers import mactime
 from plaso.parsers import test_lib
+from plaso.serializer import protobuf_serializer
 
 
 class MactimeUnitTest(test_lib.ParserTestCase):
@@ -40,24 +41,11 @@ class MactimeUnitTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    # The file contains 12 lines x 4 timestamps per line, which should be
-    # 48 events in total. However several of these events have an empty
+    # The file contains 13 lines x 4 timestamps per line, which should be
+    # 52 events in total. However several of these events have an empty
     # timestamp value and are omitted.
-    # Total number of valid entries per line:
-    #   1: 3
-    #   2: 3
-    #   3: 3
-    #   4: 3
-    #   5: 0
-    #   6: 0
-    #   7: 3
-    #   8: 0
-    #   9: 0
-    #  10: 3
-    #  11: 4
-    #  12: 4
-    #  Total: 6 * 3 + 2 * 4 = 26
-    self.assertEquals(len(event_objects), 26)
+    # Total entries: 11 * 3 + 2 * 4 = 41
+    self.assertEquals(len(event_objects), 41)
 
     # Test this entry:
     # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961583|
@@ -100,9 +88,17 @@ class MactimeUnitTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.filename, u'/a_directory/another_file')
     self.assertEquals(event_object.mode_as_string, u'r/rrw-------')
 
-    event_object = event_objects[25]
+    event_object = event_objects[37]
 
     self.assertEquals(event_object.inode, 4)
+
+    # Serialize the event objects.
+    serialized_events = []
+    serializer = protobuf_serializer.ProtobufEventObjectSerializer
+    for event_object in event_objects:
+      serialized_events.append(serializer.WriteSerialized(event_object))
+
+    self.assertEquals(len(serialized_events), len(event_objects))
 
 
 if __name__ == '__main__':
