@@ -32,7 +32,7 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class UsersPlugin(interface.KeyPlugin):
   """SAM Windows Registry plugin for Users Account information."""
 
-  NAME = 'winreg_Users'
+  NAME = 'winreg_sam_users'
   DESCRIPTION = u'Parser for SAM Users and Names Registry keys.'
 
   REG_KEYS = [u'\\SAM\\Domains\\Account\\Users']
