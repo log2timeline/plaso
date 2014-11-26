@@ -28,6 +28,7 @@ from plaso.formatters import bsm
 from plaso.formatters import chrome
 from plaso.formatters import chrome_cache
 from plaso.formatters import chrome_cookies
+from plaso.formatters import chrome_extension_activity
 from plaso.formatters import cups_ipp
 from plaso.formatters import filestat
 from plaso.formatters import firefox

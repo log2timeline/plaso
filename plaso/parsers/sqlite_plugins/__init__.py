@@ -21,6 +21,7 @@ from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import appusage
 from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import chrome_cookies
+from plaso.parsers.sqlite_plugins import chrome_extension_activity
 from plaso.parsers.sqlite_plugins import mac_document_versions
 from plaso.parsers.sqlite_plugins import firefox
 from plaso.parsers.sqlite_plugins import firefox_cookies
