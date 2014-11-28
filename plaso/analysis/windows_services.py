@@ -17,18 +17,26 @@
 # limitations under the License.
 """A plugin to enable quick triage of Windows Services."""
 
+import yaml
+
 from plaso.analysis import interface
 from plaso.lib import event
 from plaso.winnt import human_readable_service_enums
 
 
-class WindowsService(object):
+class WindowsService(yaml.YAMLObject):
   """Class to represent a Windows Service."""
   # This is used for comparison operations and defines attributes that should
   # not be used during evaluation of whether two services are the same.
   COMPARE_EXCLUDE = frozenset(['sources'])
 
   KEY_PATH_SEPARATOR = u'\\'
+
+  # YAML attributes
+  yaml_tag = u'!WindowsService'
+  yaml_loader = yaml.SafeLoader
+  yaml_dumper = yaml.SafeDumper
+
 
   def __init__(self, name, service_type, image_path, start_type, object_name,
                source, service_dll=None):
@@ -175,15 +183,28 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  def __init__(self, incoming_queue):
+  ARGUMENTS = [
+      ('--windows-services-output', {
+          'dest': 'windows-services-output',
+          'type': unicode,
+          'help': 'Specify how the results should be displayed. Options are '
+                  'text and yaml.',
+          'action': 'store',
+          'default': u'text',
+          'choices': [u'text', u'yaml']}),]
+
+  def __init__(self, incoming_queue, options=None):
     """Initializes the Windows Services plugin
 
     Args:
       incoming_queue: A queue to read events from.
+      options: Optional command line arguments (instance of
+      argparse.Namespace). The default is None.
     """
     super(AnalyzeWindowsServicesPlugin, self).__init__(incoming_queue)
     self._service_collection = WindowsServiceCollection()
     self.plugin_type = interface.AnalysisPlugin.TYPE_REPORT
+    self._output_mode = getattr(options, 'windows-services-output', u'text')
 
   def ExamineEvent(self, analysis_context, event_object, **kwargs):
     """Analyzes an event_object and creates Windows Services as required.
@@ -197,14 +218,12 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
     # TODO: Handle event log entries here also (ie, event id 4697).
     if getattr(event_object, 'data_type', None) != 'windows:registry:service':
       return
-    # Checking for these values is currently our best way of detecting services.
-    if (event_object.regvalue.get('Type', None) and
-        event_object.regvalue.get('Start', None)):
+    else:
       # Create and store the service.
       service = WindowsService.FromEvent(event_object)
       self._service_collection.AddService(service)
 
-  def _FormatService(self, service):
+  def _FormatServiceText(self, service):
     """Produces a human readable multi-line string representing the service.
 
     Args:
@@ -230,11 +249,16 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
     """
     report = event.AnalysisReport()
 
-    lines_of_text = ['Listing Windows Services']
-    for service in self._service_collection.services:
-      lines_of_text.append(self._FormatService(service))
-      # Separate services with a blank line.
-      lines_of_text.append(u'')
+    if self._output_mode == 'yaml':
+      lines_of_text = []
+      lines_of_text.append(
+          yaml.safe_dump_all(self._service_collection.services))
+    else:
+      lines_of_text = ['Listing Windows Services']
+      for service in self._service_collection.services:
+        lines_of_text.append(self._FormatServiceText(service))
+        # Separate services with a blank line.
+        lines_of_text.append(u'')
 
     report.SetText(lines_of_text)
 

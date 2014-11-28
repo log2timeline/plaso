@@ -36,11 +36,16 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
   _TITLE_RE = re.compile('<title>([^<]+)</title>')
   _WEB_STORE_URL = u'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
-  def __init__(self, incoming_queue):
+  # We need to implement the interface for analysis plugins, but we don't use
+  # command line options here, so disable checking for unused args.
+  # pylint: disable=unused-argument
+  def __init__(self, incoming_queue, options=None):
     """Initializes the Chrome extension analysis plugin.
 
     Args:
       incoming_queue: A queue that is used to listen to incoming events.
+      options: Optional command line arguments (instance of
+          argparse.Namespace). The default is None.
     """
     super(AnalyzeChromeExtensionPlugin, self).__init__(incoming_queue)
 
@@ -54,6 +59,8 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
 
     # Saved list of already looked up extensions.
     self._extensions = {}
+
+  # pylint: enable=unused-argument
 
   def _GetChromeWebStorePage(self, extension_id):
     """Retrieves the page for the extension from the Chrome store website.
@@ -137,7 +144,8 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     """Analyzes an event object.
 
     Args:
-      analysis_context: An analysis context object (instance of AnalysisContext).
+      analysis_context: An analysis context object
+        (instance of AnalysisContext).
       event_object: An event object (instance of EventObject).
     """
     # Only interested in filesystem events.
