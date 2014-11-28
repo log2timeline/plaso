@@ -335,7 +335,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
         knowledge_base_object = knowledge_base.KnowledgeBase()
 
         analysis_plugins = analysis.LoadPlugins(
-            analysis_plugins_list, event_queues)
+            analysis_plugins_list, event_queues, options)
 
         # Now we need to start all the plugins.
         for analysis_plugin in analysis_plugins:

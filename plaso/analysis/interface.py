@@ -69,15 +69,21 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
   # into the argparse parser.
   ARGUMENTS = []
 
-  def __init__(self, incoming_queue):
+  # We need to implement the interface for analysis plugins, but we don't use
+  # command line options here, so disable checking for unused args.
+  # pylint: disable=unused-argument
+  def __init__(self, incoming_queue, options=None):
     """Initializes an analysis plugin.
 
     Args:
       incoming_queue: A queue that is used to listen to incoming events.
+      options: Optional command line arguments (instance of
+        argparse.Namespace). The default is None.
     """
     super(AnalysisPlugin, self).__init__(incoming_queue)
     self.plugin_type = self.TYPE_REPORT
 
+  # pylint: enable=unused-argument
   def _ConsumeEventObject(self, event_object, analysis_context=None, **kwargs):
     """Consumes an event object callback for ConsumeEventObjects.
 
