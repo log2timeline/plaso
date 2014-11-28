@@ -160,11 +160,16 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
       ('url contains "duckduckgo.com"', 'DuckDuckGo')
   )
 
-  def __init__(self, incoming_queue):
+  # We need to implement the interface for analysis plugins, but we don't use
+  # command line options here, so disable checking for unused args.
+  # pylint: disable=unused-argument
+  def __init__(self, incoming_queue, options=None):
     """Initializes the browser search analysis plugin.
 
     Args:
       incoming_queue: A queue that is used to listen to incoming events.
+      options: Optional command line arguments (instance of
+        argparse.Namespace). The default is None.
     """
     super(AnalyzeBrowserSearchPlugin, self).__init__(incoming_queue)
     self._filter_dict = {}
@@ -179,6 +184,8 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
       call_back_obj = getattr(FilterClass, call_back, None)
       if filter_obj and call_back_obj:
         self._filter_dict[filter_obj] = (call_back, call_back_obj)
+
+  # pylint: enable=unused-argument
 
   def CompileReport(self):
     """Compiles a report of the analysis.
@@ -216,7 +223,8 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
     """Analyzes an event object.
 
     Args:
-      analysis_context: An analysis context object (instance of AnalysisContext).
+      analysis_context: An analysis context object
+          (instance of AnalysisContext).
       event_object: An event object (instance of EventObject).
     """
     # This event requires an URL attribute.
