@@ -43,7 +43,7 @@ def ListAllPluginNames(show_all=True):
   return sorted(results)
 
 
-def LoadPlugins(plugin_names, incoming_queues):
+def LoadPlugins(plugin_names, incoming_queues, options=None):
   """Yield analysis plugins for a given list of plugin names.
 
   Given a list of plugin names this method finds the analysis
@@ -54,9 +54,11 @@ def LoadPlugins(plugin_names, incoming_queues):
                   should be a list of strings.
     incoming_queues: A list of queues (QueueInterface object) that the plugin
                      uses to read in incoming events to analyse.
+    options: Optional command line arguments (instance of
+        argparse.Namespace). The default is None.
 
   Yields:
-    A list of initialized analysis plugin objects.
+    Analysis plugin objects (instances of AnalysisPlugin).
 
   Raises:
     errors.BadConfigOption: If plugins_names does not contain a list of
@@ -78,4 +80,4 @@ def LoadPlugins(plugin_names, incoming_queues):
       except (TypeError, IndexError):
         incoming_queue = None
 
-      yield plugin_object(incoming_queue)
+      yield plugin_object(incoming_queue, options)
