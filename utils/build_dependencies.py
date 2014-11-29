@@ -521,18 +521,25 @@ class GoogleDriveDownloadHelper(DownloadHelper):
     return u'https://googledrive.com{0:s}'.format(matches[0])
 
 
+# TODO: Merge with LibyalGithubReleasesDownloadHelper when Google Drive
+# support is no longer needed.
 # pylint: disable=abstract-method
-class LibyalGitHubDownloadHelper(GoogleDriveDownloadHelper):
+class LibyalGitHubDownloadHelper(DownloadHelper):
   """Class that helps in downloading a libyal GitHub project."""
 
-  def GetGoogleDriveDownloadsUrl(self, project_name):
-    """Retrieves the Download URL from the GitHub project page.
+  def __init__(self):
+    """Initializes the download helper."""
+    super(LibyalGitHubDownloadHelper, self).__init__()
+    self._download_helper = None
+
+  def GetWikiConfigurationSourcePackageUrl(self, project_name):
+    """Retrieves the source package URL from the libyal wiki configuration.
 
     Args:
       project_name: the name of the project.
 
     Returns:
-      The downloads URL or None on error.
+      The source package URL or None on error.
     """
     download_url = (
         u'https://raw.githubusercontent.com/libyal/{0:s}/master/'
@@ -546,6 +553,144 @@ class LibyalGitHubDownloadHelper(GoogleDriveDownloadHelper):
     config_parser.readfp(io.BytesIO(page_content))
 
     return json.loads(config_parser.get('source_package', 'url'))
+
+  def GetLatestVersion(self, project_name):
+    """Retrieves the latest version number for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The latest version number or 0 on error.
+    """
+    if not self._download_helper:
+      download_url = self.GetWikiConfigurationSourcePackageUrl(project_name)
+
+      if download_url.startswith('https://github.com'):
+        self._download_helper = LibyalGithubReleasesDownloadHelper()
+
+      elif download_url.startswith('https://googledrive.com'):
+        self._download_helper = LibyalGoogleDriveDownloadHelper(download_url)
+
+    return self._download_helper.GetLatestVersion(project_name)
+
+  def GetDownloadUrl(self, project_name, project_version):
+    """Retrieves the download URL for a given project name and version.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+
+    Returns:
+      The download URL of the project or None on error.
+    """
+    if not self._download_helper:
+      download_url = self.GetWikiConfigurationSourcePackageUrl(project_name)
+
+      if download_url.startswith('https://github.com'):
+        self._download_helper = LibyalGithubReleasesDownloadHelper()
+
+      elif download_url.startswith('https://googledrive.com'):
+        self._download_helper = LibyalGoogleDriveDownloadHelper(download_url)
+
+    return self._download_helper.GetDownloadUrl(project_name, project_version)
+
+
+class LibyalGoogleDriveDownloadHelper(GoogleDriveDownloadHelper):
+  """Class that helps in downloading a libyal project with Google Drive."""
+
+  def __init__(self, google_drive_url):
+    """Initializes the download helper.
+
+    Args:
+      google_drive_url: the project Google Drive URL.
+    """
+    super(LibyalGoogleDriveDownloadHelper, self).__init__()
+    self._google_drive_url = google_drive_url
+
+  def GetGoogleDriveDownloadsUrl(self, project_name):
+    """Retrieves the Download URL from the GitHub project page.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The downloads URL or None on error.
+    """
+    return self._google_drive_url
+
+
+class LibyalGithubReleasesDownloadHelper(DownloadHelper):
+  """Class that helps in downloading a libyal project with GitHub releases."""
+
+  def GetLatestVersion(self, project_name):
+    """Retrieves the latest version number for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The latest version number or 0 on error.
+    """
+    download_url = (
+        u'https://github.com/libyal/{0:s}/releases').format(project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return 0
+
+    # The format of the project download URL is:
+    # /libyal/{project name}/releases/download/{git tag}/
+    # {project name}{status-}{version}.tar.gz
+    # Note that the status is optional and will be: beta, alpha or experimental.
+    expression_string = (
+        u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-[a-z-]*([0-9]+)'
+        u'[.]tar[.]gz').format(project_name)
+    matches = re.findall(expression_string, page_content)
+
+    if not matches:
+      return 0
+
+    return int(max(matches))
+
+  def GetDownloadUrl(self, project_name, project_version):
+    """Retrieves the download URL for a given project name and version.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+
+    Returns:
+      The download URL of the project or None on error.
+    """
+    download_url = (
+        u'https://github.com/libyal/{0:s}/releases').format(project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return
+
+    # The format of the project download URL is:
+    # /libyal/{project name}/releases/download/{git tag}/
+    # {project name}{status-}{version}.tar.gz
+    # Note that the status is optional and will be: beta, alpha or experimental.
+    expression_string = (
+        u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-[a-z-]*{1!s}'
+        u'[.]tar[.]gz').format(project_name, project_version)
+    matches = re.findall(expression_string, page_content)
+
+    if len(matches) != 1:
+      # Try finding a match without the status in case the project provides
+      # multiple versions with a different status.
+      expression_string = (
+          u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-*{1!s}'
+          u'[.]tar[.]gz').format(project_name, project_version)
+      matches = re.findall(expression_string, page_content)
+
+    if not matches or len(matches) != 1:
+      return
+
+    return u'https://github.com{0:s}'.format(matches[0])
 
 
 # pylint: disable=abstract-method

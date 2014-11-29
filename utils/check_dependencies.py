@@ -31,7 +31,7 @@ def GetLibyalGoogleDriveVersion(library_name):
     The latest version for a given libyal library on Google Drive
     or 0 on error.
   """
-  url = 'https://code.google.com/p/{0}/'.format(library_name)
+  url = 'https://code.google.com/p/{0:s}/'.format(library_name)
 
   url_object = urllib2.urlopen(url)
 
@@ -59,7 +59,7 @@ def GetLibyalGoogleDriveVersion(library_name):
   # The format of the library download URL is:
   # /host/{random string}/{library name}-{status-}{version}.tar.gz
   # Note that the status is optional and will be: beta, alpha or experimental.
-  expression_string = '/host/[^/]*/{0}-[a-z-]*([0-9]+)[.]tar[.]gz'.format(
+  expression_string = '/host/[^/]*/{0:s}-[a-z-]*([0-9]+)[.]tar[.]gz'.format(
       library_name)
   matches = re.findall(expression_string, data)
 
