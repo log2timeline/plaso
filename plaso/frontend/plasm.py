@@ -738,6 +738,8 @@ def Main():
       File Download
           timestamp_desc is 'File Downloaded'
       ------------------------------
+
+      Tag files can be found in the "extra" directory of plaso.
       """)
 
   epilog_group = ("""
@@ -748,13 +750,18 @@ def Main():
       the grouping is calculated.
       """)
 
+  epilog_main = ("""
+      For help with a specific action, use "plasm.py {cluster,group,tag} -h".
+      """)
+
   description = (
-      u'PLASM (Plaso Langar Ad Safna Minna)- Application to group and tag '
+      u'PLASM (Plaso Langar Ad Safna Minna)- Application to tag and group '
       u'Plaso storage files.')
 
   arg_parser = argparse.ArgumentParser(
       description=textwrap.dedent(description),
-      formatter_class=argparse.RawDescriptionHelpFormatter)
+      formatter_class=argparse.RawDescriptionHelpFormatter,
+      epilog=textwrap.dedent(epilog_main))
 
   arg_parser.add_argument(
       '-q', '--quiet', action='store_true', dest='quiet', default=False,
