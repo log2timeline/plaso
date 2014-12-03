@@ -448,6 +448,9 @@ class PregFrontend(frontend.ExtractionFrontend):
         if restore_path:
           paths.append('{0:s}/_REGISTRY_MACHINE_SECURITY'.format(restore_path))
 
+      elif reg_type == 'USRCLASS':
+        paths.append('/Users/.+/AppData/Local/Microsoft/Windows/UsrClass.dat')
+
       elif reg_type == 'SAM':
         paths.append('{sysregistry}/SAM')
         if restore_path:
@@ -565,6 +568,9 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     vss_stores = self._vss_stores
 
+    if not vss_stores:
+      return searchers
+
     for store_index in vss_stores:
       vss_path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_VSHADOW, store_index=store_index - 1,
@@ -608,7 +614,7 @@ class PregFrontend(frontend.ExtractionFrontend):
     """
     if registry_types is None and plugin_names is None:
       raise ValueError(
-          u'Missing registry_types or plugin_name value.')
+          u'Missing Registry_types or plugin_name value.')
 
     if plugin_names is None:
       plugin_names = []
@@ -647,8 +653,19 @@ class PregFrontend(frontend.ExtractionFrontend):
       for plugin_name in plugin_names:
         if not plugin_name.startswith('winreg_'):
           plugin_name = u'winreg_{0:s}'.format(plugin_name)
+
         for plugin_cls in plugins_list.GetAllKeyPlugins():
           if plugin_name == plugin_cls.NAME.lower():
+            # If a plugin is available for every Registry type
+            # we need to make sure all Registry hives are included.
+            if plugin_cls.REG_TYPE == u'any':
+              for available_type in PregHiveHelper.REG_TYPES.iterkeys():
+                if available_type is u'Unknown':
+                  continue
+
+                if available_type not in registry_types:
+                  registry_types.append(available_type)
+
             if plugin_cls.REG_TYPE not in registry_types:
               registry_types.append(plugin_cls.REG_TYPE)
 
@@ -935,6 +952,8 @@ class PregHiveHelper(object):
       u'SECURITY': ('\\Policy\\PolAdtEv',),
       u'SYSTEM': ('\\Select',),
       u'SAM': ('\\SAM\\Domains\\Account\\Users',),
+      u'USRCLASS': (
+          '\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion',),
       u'UNKNOWN': (),
   }
 
@@ -1890,7 +1909,8 @@ def RunModeConsole(front_end, options):
     registry_types = registry_types.split(u',')
 
   if not registry_types:
-    registry_types = ['NTUSER', 'SOFTWARE', 'SYSTEM', 'SAM', 'SECURITY']
+    registry_types = [
+        'NTUSER', 'USRCLASS', 'SOFTWARE', 'SYSTEM', 'SAM', 'SECURITY']
   PregCache.shell_helper.Scan(registry_types)
 
   if len(PregCache.hive_storage) == 1:
