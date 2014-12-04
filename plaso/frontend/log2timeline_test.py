@@ -24,6 +24,7 @@ import unittest
 
 from plaso.frontend import log2timeline
 from plaso.frontend import test_lib
+from plaso.lib import pfilter
 from plaso.lib import storage
 
 
@@ -32,6 +33,10 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
 
   def setUp(self):
     """Sets up the objects used throughout the test."""
+    # This is necessary since TimeRangeCache uses class members.
+    # TODO: remove this work around and properly fix TimeRangeCache.
+    pfilter.TimeRangeCache.ResetTimeConstraints()
+
     self._temp_directory = tempfile.mkdtemp()
 
   def tearDown(self):

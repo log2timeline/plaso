@@ -25,8 +25,6 @@ class ParsersManager(object):
 
   _parser_classes = {}
 
-  _parser_filter_string = u''
-
   @classmethod
   def DeregisterParser(cls, parser_class):
     """Deregisters a parser class.
@@ -205,20 +203,3 @@ class ParsersManager(object):
     """
     for parser_class in parser_classes:
       cls.RegisterParser(parser_class)
-
-  @classmethod
-  def SetParserFilterString(cls, parser_filter_string):
-    """Sets the parser filter string.
-
-    The parser_filter_string is a simple comma separated value string that
-    denotes a list of parser names to include and/or exclude. Each entry
-    can have the value of:
-      + Exact match of a list of parsers, or a preset (see
-        plaso/frontend/presets.py for a full list of available presets).
-      + A name of a single parser (case insensitive), eg. msiecfparser.
-      + A glob name for a single parser, eg: '*msie*' (case insensitive).
-
-    Args:
-      parser_filter_string: The parser filter string.
-    """
-    cls._parser_filter_string = parser_filter_string
