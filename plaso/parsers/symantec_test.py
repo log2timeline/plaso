@@ -21,8 +21,11 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import symantec as symantec_formatter
+from plaso.lib import timelib_test
 from plaso.parsers import symantec
 from plaso.parsers import test_lib
+
+import pytz
 
 
 class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
@@ -31,6 +34,21 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._parser = symantec.SymantecParser()
+
+  def testGetTimestamp(self):
+    """Tests the _GetTimestamp function."""
+    # pylint: disable=protected-access
+    timestamp = self._parser._GetTimestamp('200A13080122', timezone=pytz.UTC)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2002-11-19 08:01:34')
+    self.assertEquals(timestamp, expected_timestamp)
+
+    timestamp = self._parser._GetTimestamp('2A0A1E0A2F1D', timezone=pytz.UTC)
+
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-11-30 10:47:29')
+    self.assertEquals(timestamp, expected_timestamp)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -44,7 +62,9 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Test the second entry:
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.timestamp, 1354272449000000)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        '2012-11-30 10:47:29')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.user, u'davnads')
     expected_file = (
         u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')

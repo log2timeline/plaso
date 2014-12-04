@@ -236,8 +236,10 @@ class StorageFile(object):
       IOError: if we open up the file in read only mode and the file does
       not exist.
     """
-    # TODO: set self._bound_first and remove the hasattr checks for
-    # a true of false evaluation.
+    # bound_first and bound_last contain timestamps and None is used
+    # to indicate not set.
+    self._bound_first = None
+    self._bound_last = None
     self._buffer = []
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = 0
@@ -481,7 +483,8 @@ class StorageFile(object):
 
     Args:
       stream_number: The proto stream number.
-      entry_index: Read a specific entry in the file, otherwise the next one.
+      entry_index: Read a specific entry in the file. The default is -1,
+                   which represents the next available entry.
 
     Returns:
       A tuple containing the event object protobuf string and the entry index
@@ -506,8 +509,8 @@ class StorageFile(object):
       file_object, last_entry_index = self._GetProtoStreamSeekOffset(
           stream_number, entry_index, stream_offset)
 
-    if (not last_entry_index and hasattr(self, '_bound_first')
-        and self._bound_first and entry_index == -1):
+    if (not last_entry_index and entry_index == -1 and
+        self._bound_first is not None):
       # We only get here if the following conditions are met:
       #   1. last_entry_index is not set (so this is the first read
       #      from this file).
@@ -523,25 +526,31 @@ class StorageFile(object):
       # 'cheaper' file, one that only contains timestamps to find the proper
       # entry into the storage file. That way we'll get to the right place in
       # the file and can start reading protobufs from the right location.
-      index = 0
 
-      # TODO: why is the stream name set here but not used? Is this a left over?
       stream_name = 'plaso_timestamps.{0:06d}'.format(stream_number)
 
-      # Recent add-on to the storage file, not certain this file exists.
       if stream_name in self._GetStreamNames():
         timestamp_file_object = self._OpenStream(stream_name, 'r')
         if timestamp_file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
 
+        index = 0
         timestamp_compare = 0
+        encountered_error = False
         while timestamp_compare < self._bound_first:
           timestamp_raw = timestamp_file_object.read(8)
           if len(timestamp_raw) != 8:
+            encountered_error = True
             break
+
           timestamp_compare = struct.unpack('<q', timestamp_raw)[0]
           index += 1
-        return self._GetEventObjectProtobufString(stream_number, index)
+
+        if encountered_error:
+          return None, None
+
+        return self._GetEventObjectProtobufString(
+            stream_number, entry_index=index)
 
     size_data = file_object.read(4)
 
@@ -854,7 +863,7 @@ class StorageFile(object):
     """Return a generator with all EventObjects from a group."""
     for group_event in group_proto.events:
       yield self.GetEventObject(
-          group_event.store_number, group_event.store_index)
+          group_event.store_number, entry_index=group_event.store_index)
 
   def GetTagging(self):
     """Return a generator that reads all tagging information from storage.
@@ -895,38 +904,14 @@ class StorageFile(object):
     Returns:
       An EventObject with the EventTag object attached.
     """
-    evt = self.GetEventObject(tag_event.store_number, tag_event.store_index)
+    evt = self.GetEventObject(
+        tag_event.store_number, entry_index=tag_event.store_index)
     if not evt:
       return None
 
     evt.tag = tag_event
 
     return evt
-
-  def GetProtoEntry(self, stream_number, entry_index=-1):
-    """Return an EventObject protobuf.
-
-    By default the next entry in the appropriate proto file is read
-    and returned, however any entry can be read using the index file.
-
-    Args:
-      stream_number: The proto stream number.
-      entry_index: Read a specific entry in the file, otherwise the next one.
-
-    Returns:
-      An event protobuf (EventObject) entry read from the file.
-    """
-    event_object_data, entry_index = self._GetEventObjectProtobufString(
-        stream_number, entry_index)
-    if not event_object_data:
-      return None
-
-    proto = plaso_storage_pb2.EventObject()
-    proto.ParseFromString(event_object_data)
-    proto.store_number = stream_number
-    proto.store_index = entry_index
-
-    return proto
 
   def GetStorageInformation(self):
     """Retrieves storage (preprocessing) information stored in the storage file.
@@ -972,14 +957,10 @@ class StorageFile(object):
 
   def SetStoreLimit(self, unused_my_filter=None):
     """Set a limit to the stores used for returning data."""
-    # We are setting the bounds now, remove potential prior bound settings.
-    if hasattr(self, '_bound_first'):
-      del self._bound_first
+    # Retrieve set first and last timestamps.
+    self._bound_first, self._bound_last = pfilter.TimeRangeCache.GetTimeRange()
 
     self.store_range = []
-
-    # Retrieve set first and last timestamps.
-    self._GetTimeBounds()
 
     # TODO: Fetch a filter object from the filter query.
 
@@ -1000,21 +981,15 @@ class StorageFile(object):
       else:
         logging.debug(u'Store [{0:d}] not used'.format(number))
 
-  def _GetTimeBounds(self):
-    """Get the upper and lower time bounds."""
-    if hasattr(self, '_bound_first'):
-      return
-
-    self._bound_first, self._bound_last = pfilter.TimeRangeCache.GetTimeRange()
-
   def GetSortedEntry(self):
     """Return a sorted entry from the storage file.
 
     Returns:
       An event object (instance of EventObject).
     """
-    if not hasattr(self, '_bound_first'):
-      self._GetTimeBounds()
+    if self._bound_first is None:
+      self._bound_first, self._bound_last = (
+          pfilter.TimeRangeCache.GetTimeRange())
 
     if not hasattr(self, '_merge_buffer'):
       self._merge_buffer = []
@@ -1023,6 +998,7 @@ class StorageFile(object):
         event_object = self.GetEventObject(store_number)
         if not event_object:
           return
+
         while event_object.timestamp < self._bound_first:
           event_object = self.GetEventObject(store_number)
           if not event_object:
@@ -1063,14 +1039,15 @@ class StorageFile(object):
 
     Args:
       stream_number: The proto stream number.
-      entry_index: Read a specific entry in the file, otherwise the next one.
+      entry_index: Read a specific entry in the file. The default is -1,
+                   which represents the next available entry.
 
     Returns:
       An event object (instance of EventObject) entry read from the file or
       None if not able to read in a new event.
     """
     event_object_data, entry_index = self._GetEventObjectProtobufString(
-        stream_number, entry_index)
+        stream_number, entry_index=entry_index)
     if not event_object_data:
       return
 

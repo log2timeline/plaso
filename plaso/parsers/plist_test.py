@@ -19,7 +19,6 @@
 
 import unittest
 
-from plaso.parsers import manager
 from plaso.parsers import plist
 # Register all plugins.
 from plaso.parsers import plist_plugins  # pylint: disable=unused-import
@@ -31,8 +30,6 @@ class PlistParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    parser_filter_string = 'plist_bluetooth, plist_default'
-    manager.ParsersManager.SetParserFilterString(parser_filter_string)
     self._parser = plist.PlistParser()
 
   def testParse(self):
