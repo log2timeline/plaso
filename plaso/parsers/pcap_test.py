@@ -32,7 +32,6 @@ class PcapParserTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     self._parser = pcap.PcapParser()
 
-  @unittest.skip('The pcap parser is currently broken')
   def testParse(self):
     """Tests the Parse function."""
     test_file = self._GetTestFilePath(['test.pcap'])
@@ -40,11 +39,14 @@ class PcapParserTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # PCAP information:
-    #    Number of streams: 96
+    #    Number of streams: 96 (TCP: 47, UDP: 39, ICMP: 0, Other: 10)
+    #
+    # For each stream 2 event objects are generated one for the start
+    # and one for the end time.
 
-    self.assertEquals(len(event_objects), 96)
+    self.assertEquals(len(event_objects), 192)
 
-    # Test stream 3.
+    # Test stream 3 (event object 6).
     #    Protocol:        TCP
     #    Source IP:       192.168.195.130
     #    Dest IP:         63.245.217.43
@@ -54,7 +56,7 @@ class PcapParserTest(test_lib.ParserTestCase):
     #    Starting Packet: 4
     #    Ending Packet:   6
 
-    event_object = event_objects[3]
+    event_object = event_objects[6]
     self.assertEquals(event_object.packet_count, 3)
     self.assertEquals(event_object.protocol, u'TCP')
     self.assertEquals(event_object.source_ip, u'192.168.195.130')
@@ -65,7 +67,7 @@ class PcapParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.first_packet_id, 4)
     self.assertEquals(event_object.last_packet_id, 6)
 
-    # Test stream 6.
+    # Test stream 6 (event object 12).
     #    Protocol:        UDP
     #    Source IP:       192.168.195.130
     #    Dest IP:         192.168.195.2
@@ -76,7 +78,7 @@ class PcapParserTest(test_lib.ParserTestCase):
     #    Ending Packet:   6
     #    Protocol Data:   DNS Query for  wpad.localdomain
 
-    event_object = event_objects[6]
+    event_object = event_objects[12]
     self.assertEquals(event_object.packet_count, 5)
     self.assertEquals(event_object.protocol, u'UDP')
     self.assertEquals(event_object.source_ip, u'192.168.195.130')
@@ -88,8 +90,6 @@ class PcapParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.last_packet_id, 1307)
     self.assertEquals(
         event_object.protocol_data, u'DNS Query for  wpad.localdomain')
-
-    event_object = event_object.event_objects[0]
 
     expected_msg = (
         u'Source IP: 192.168.195.130 '
@@ -108,7 +108,7 @@ class PcapParserTest(test_lib.ParserTestCase):
         u'Packet Count: 5')
     expected_msg_short = (
         u'Type: DNS '
-        u'Last Packet ID: 1307')
+        u'First Packet ID: 11')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

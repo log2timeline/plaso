@@ -40,9 +40,7 @@ from plaso.parsers import msiecf
 from plaso.parsers import olecf
 from plaso.parsers import opera
 from plaso.parsers import oxml
-# Disable pcap parser for now until the parser has been
-# updated to be able to take advantage of dpkt version 1.8.
-#from plaso.parsers import pcap
+from plaso.parsers import pcap
 from plaso.parsers import plist
 from plaso.parsers import popcontest
 from plaso.parsers import pls_recall
