@@ -54,7 +54,8 @@ class BagMRUPlugin(interface.KeyPlugin):
 
   def _ParseMRUListExEntryValue(
       self, parser_context, key, entry_index, entry_number, text_dict,
-      value_strings, parent_value_string, codepage='cp1252', **unused_kwargs):
+      value_strings, parent_value_string, codepage='cp1252', file_entry=None,
+      parser_chain=None, **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -64,8 +65,13 @@ class BagMRUPlugin(interface.KeyPlugin):
       entry_index: integer value representing the MRUListEx entry index.
       entry_number: integer value representing the entry number.
       text_dict: text dictionary object to append textual strings.
-      value_string: value string dictionary object to append value strings.
+      value_strings: value string dictionary object to append value strings.
       parent_value_string: string containing the parent value string.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+            The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
     """
     value = key.GetValue(u'{0:d}'.format(entry_number))
     value_string = u''
@@ -81,7 +87,9 @@ class BagMRUPlugin(interface.KeyPlugin):
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
-      shell_items_parser.Parse(parser_context, value.data, codepage=codepage)
+      shell_items_parser.Parse(
+          parser_context, value.data, codepage=codepage, file_entry=file_entry,
+          parser_chain=parser_chain)
 
       value_string = shell_items_parser.CopyToPath()
       if parent_value_string:
@@ -146,7 +154,8 @@ class BagMRUPlugin(interface.KeyPlugin):
 
       self._ParseMRUListExEntryValue(
           parser_context, key, index, entry_number, text_dict, value_strings,
-          parent_value_string, codepage=codepage)
+          parent_value_string, codepage=codepage, file_entry=file_entry,
+          parser_chain=parser_chain)
 
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict,
@@ -170,7 +179,8 @@ class BagMRUPlugin(interface.KeyPlugin):
 
       value_string = value_strings.get(entry_number, u'')
       self._ParseSubKey(
-          parser_context, sub_key, value_string, codepage=codepage)
+          parser_context, sub_key, value_string, file_entry=file_entry,
+          parser_chain=parser_chain, codepage=codepage)
 
   def GetEntries(
       self, parser_context, key=None, registry_type=None, codepage='cp1252',
@@ -190,7 +200,7 @@ class BagMRUPlugin(interface.KeyPlugin):
     """
     self._ParseSubKey(
         parser_context, key, u'', registry_type=registry_type,
-        parser_chain=parser_chain, file_entry=file_entry, codepage=codepage)
+        codepage=codepage, parser_chain=parser_chain, file_entry=file_entry)
 
 
 winreg.WinRegistryParser.RegisterPlugin(BagMRUPlugin)
