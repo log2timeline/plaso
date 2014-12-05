@@ -192,6 +192,10 @@ class MsiecfParser(interface.BaseParser):
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
               self.NAME, file_entry.name, exception))
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     for item_index in range(0, msiecf_file.number_of_items):
       try:
         msiecf_item = msiecf_file.get_item(item_index)
