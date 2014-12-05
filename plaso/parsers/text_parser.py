@@ -1029,7 +1029,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     file_object = file_entry.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
-    self._text_reader.ReadLines(file_object)
+    try:
+      self._text_reader.ReadLines(file_object)
+    except UnicodeDecodeError as exception:
+      raise errors.UnableToParseFile(
+          u'Not a text file, with error: {0:s}'.format(exception))
 
     if not utils.IsText(self._text_reader.lines):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')

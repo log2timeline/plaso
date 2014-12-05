@@ -42,7 +42,8 @@ class MRUListPluginMixin(object):
 
   @abc.abstractmethod
   def _ParseMRUListEntryValue(
-      self, parser_context, key, entry_index, entry_letter, **kwargs):
+      self, parser_context, key, entry_index, entry_letter, file_entry=None,
+      parser_chain=None, **kwargs):
     """Parses the MRUList entry value.
 
     Args:
@@ -51,6 +52,10 @@ class MRUListPluginMixin(object):
            the MRUList value.
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+            The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
 
     Returns:
       A string containing the value.
@@ -108,7 +113,7 @@ class MRUListPluginMixin(object):
 
       value_string = self._ParseMRUListEntryValue(
           parser_context, key, entry_index, entry_letter,
-          codepage=codepage)
+          codepage=codepage, file_entry=file_entry, parser_chain=parser_chain)
 
       value_text = u'Index: {0:d} [MRU Value {1:s}]'.format(
           entry_index + 1, entry_letter)
@@ -195,20 +200,30 @@ class MRUListStringPlugin(interface.ValuePlugin, MRUListPluginMixin):
         parser_context, key, registry_type=registry_type,
         parser_chain=parser_chain, file_entry=file_entry, codepage=codepage)
 
-  def Process(self, parser_context, key=None, codepage='cp1252', **kwargs):
+  def Process(
+      self, parser_context, file_entry=None, key=None, registry_type=None,
+      codepage='cp1252', parser_chain=None, **kwargs):
     """Determine if we can process this Registry key or not.
 
     Args:
       parser_context: A parser context object (instance of ParserContext).
-      key: A Windows Registry key (instance of WinRegKey).
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+                  The default is None.
+      key: Optional Registry key (instance of winreg.WinRegKey).
+           The default is None.
+      registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
     """
     # Prevent this plugin triggering on sub paths of non-string MRUList values.
     if u'Explorer\\DesktopStreamMRU' in key.path:
       return
 
     super(MRUListStringPlugin, self).Process(
-        parser_context, key=key, codepage=codepage, **kwargs)
+        parser_context, file_entry=file_entry, key=key,
+        registry_type=registry_type, codepage=codepage,
+        parser_chain=parser_chain, **kwargs)
 
 
 class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
@@ -221,11 +236,12 @@ class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
   REG_KEYS = frozenset([
       (u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
        u'DesktopStreamMRU')])
+
   URLS = [u'https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
   def _ParseMRUListEntryValue(
       self, parser_context, key, entry_index, entry_letter, codepage='cp1252',
-      **unused_kwargs):
+      file_entry=None, parser_chain=None, **unused_kwargs):
     """Parses the MRUList entry value.
 
     Args:
@@ -235,6 +251,10 @@ class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
       entry_index: integer value representing the MRUList entry index.
       entry_letter: character value representing the entry.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
+      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
+            The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
 
     Returns:
       A string containing the value.
@@ -254,7 +274,9 @@ class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
-      shell_items_parser.Parse(parser_context, value.data, codepage=codepage)
+      shell_items_parser.Parse(
+          parser_context, value.data, codepage=codepage, file_entry=file_entry,
+          parser_chain=parser_chain)
 
       value_string = u'Shell item list: [{0:s}]'.format(
           shell_items_parser.CopyToPath())
@@ -272,10 +294,10 @@ class MRUListShellItemListPlugin(interface.KeyPlugin, MRUListPluginMixin):
            The default is None.
       registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
-      parser_chain: Optional string containing the parsing chain up to this
-              point. The default is None.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
             The default is None.
+      parser_chain: Optional string containing the parsing chain up to this
+              point. The default is None.
     """
     self._ParseMRUListKey(
         parser_context, key, registry_type=registry_type, codepage=codepage,

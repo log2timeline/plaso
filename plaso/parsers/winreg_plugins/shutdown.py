@@ -54,6 +54,8 @@ class ShutdownPlugin(interface.KeyPlugin):
                     point. The default is None.
     """
     shutdown_value = key.GetValue('ShutdownTime')
+    if not shutdown_value:
+      return
     text_dict = {}
     text_dict['Description'] = shutdown_value.name
     try:
