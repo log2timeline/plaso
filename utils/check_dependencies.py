@@ -21,8 +21,61 @@ import re
 import urllib2
 
 
-def GetLibyalGoogleDriveVersion(library_name):
-  """Retrieves the version number for a given libyal library on Google Drive.
+def DownloadPageContent(download_url):
+  """Downloads the page content.
+
+  Args:
+    download_url: the URL where to download the page content.
+
+  Returns:
+    The page content if successful, None otherwise.
+  """
+  if not download_url:
+    return
+
+  url_object = urllib2.urlopen(download_url)
+
+  if url_object.code != 200:
+    return
+
+  return url_object.read()
+
+
+def GetLibyalGithubReleasesLatestVersion(library_name):
+  """Retrieves the latest version number of a libyal library on GitHub releases.
+
+  Args:
+    library_name: the name of the libyal library.
+
+  Returns:
+    The latest version for a given libyal library on GitHub releases
+    or 0 on error.
+  """
+  download_url = (
+      u'https://github.com/libyal/{0:s}/releases').format(library_name)
+
+  page_content = DownloadPageContent(download_url)
+  if not page_content:
+    return 0
+
+  # The format of the project download URL is:
+  # /libyal/{project name}/releases/download/{git tag}/
+  # {project name}{status-}{version}.tar.gz
+  # Note that the status is optional and will be: beta, alpha or experimental.
+  expression_string = (
+      u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-[a-z-]*([0-9]+)'
+      u'[.]tar[.]gz').format(library_name)
+  matches = re.findall(expression_string, page_content)
+
+  if not matches:
+    return 0
+
+  return int(max(matches))
+
+
+# TODO: Remove when Google Drive support is no longer needed.
+def GetLibyalGoogleDriveLatestVersion(library_name):
+  """Retrieves the latest version number of a libyal library on Google Drive.
 
   Args:
     library_name: the name of the libyal library.
@@ -31,37 +84,31 @@ def GetLibyalGoogleDriveVersion(library_name):
     The latest version for a given libyal library on Google Drive
     or 0 on error.
   """
-  url = 'https://code.google.com/p/{0:s}/'.format(library_name)
+  download_url = 'https://code.google.com/p/{0:s}/'.format(library_name)
 
-  url_object = urllib2.urlopen(url)
-
-  if url_object.code != 200:
-    return None
-
-  data = url_object.read()
+  page_content = DownloadPageContent(download_url)
+  if not page_content:
+    return 0
 
   # The format of the library downloads URL is:
   # https://googledrive.com/host/{random string}/
   expression_string = (
       '<a href="(https://googledrive.com/host/[^/]*/)"[^>]*>Downloads</a>')
-  matches = re.findall(expression_string, data)
+  matches = re.findall(expression_string, page_content)
 
   if not matches or len(matches) != 1:
     return 0
 
-  url_object = urllib2.urlopen(matches[0])
-
-  if url_object.code != 200:
+  page_content = DownloadPageContent(matches[0])
+  if not page_content:
     return 0
-
-  data = url_object.read()
 
   # The format of the library download URL is:
   # /host/{random string}/{library name}-{status-}{version}.tar.gz
   # Note that the status is optional and will be: beta, alpha or experimental.
   expression_string = '/host/[^/]*/{0:s}-[a-z-]*([0-9]+)[.]tar[.]gz'.format(
       library_name)
-  matches = re.findall(expression_string, data)
+  matches = re.findall(expression_string, page_content)
 
   if not matches:
     return 0
@@ -94,8 +141,17 @@ def CheckLibyal(libyal_python_modules):
 
       installed_version = int(module_object.get_version())
       try:
-        latest_version = GetLibyalGoogleDriveVersion(libyal_name)
+        latest_version = GetLibyalGithubReleasesLatestVersion(libyal_name)
       except urllib2.URLError:
+        latest_version = 0
+
+      if not latest_version:
+        try:
+          latest_version = GetLibyalGoogleDriveLatestVersion(libyal_name)
+        except urllib2.URLError:
+          latest_version = 0
+
+      if not latest_version:
         print (
             u'Unable to determine latest version of {0:s} ({1:s}).\n').format(
                 libyal_name, module_name)
