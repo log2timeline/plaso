@@ -120,7 +120,11 @@ class CupsIppEvent(event.EventObject):
       if ',' in value:
         values[index] = u'"{0:s}"'.format(value)
 
-    return u', '.join(values)
+    try:
+      return u', '.join(values)
+    except UnicodeDecodeError as exception:
+      logging.error(
+          u'Unable to parse log line, with error: {0:s}'.format(exception))
 
 
 class CupsIppParser(interface.BaseParser):
