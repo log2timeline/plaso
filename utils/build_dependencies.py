@@ -40,7 +40,87 @@ except ImportError:
   import configparser
 
 
+# Since os.path.abspath() uses the current working directory (cwd)
+# os.path.abspath(__file__) will point to a different location if
+# cwd has been changed. Hence we preserve the absolute location of __file__.
+__file__ = os.path.abspath(__file__)
+
+
 # TODO: look into merging functionality with update dependencies script.
+
+
+class DependencyDefinition(object):
+  """Class that implements a dependency definition."""
+
+  def __init__(self, name):
+    """Initializes the dependency definition.
+
+    Args:
+      name: the name of the dependency.
+    """
+    self.description_long = None
+    self.description_short = None
+    self.dpkg_dependencies = None
+    self.dpkg_name = None
+    self.download_url = None
+    self.homepage_url = None
+    self.maintainer = None
+    self.name = name
+
+
+class DependencyDefinitionReader(object):
+  """Class that implements a dependency definition reader."""
+
+  def _GetConfigValue(self, config_parser, section_name, value_name):
+    """Retrieves a value from the config parser.
+
+    Args:
+      config_parser: the configuration parser (instance of ConfigParser).
+      section_name: the name of the section that contains the value.
+      value_name: the name of the value.
+
+    Returns:
+      An object containing the value or None if the value does not exists.
+    """
+    try:
+      return config_parser.get(section_name, value_name)
+    except configparser.NoOptionError:
+      return
+
+  def Read(self, file_object):
+    """Reads dependency definitions.
+
+    Args:
+      file_object: the file-like object to read from.
+ 
+    Yields:
+      Dependency definitions (instances of DependencyDefinition).
+    """
+    # TODO: replace by:
+    # config_parser = configparser. ConfigParser(interpolation=None)
+    config_parser = configparser.RawConfigParser()
+    config_parser.readfp(file_object)
+
+    for section_name in config_parser.sections():
+      dependency_definition = DependencyDefinition(section_name)
+      dependency_definition.description_long = self._GetConfigValue(
+          config_parser, section_name, 'description_long')
+      dependency_definition.description_short = self._GetConfigValue(
+          config_parser, section_name, 'description_short')
+      dependency_definition.dpkg_dependencies = self._GetConfigValue(
+          config_parser, section_name, 'dpkg_dependencies')
+      dependency_definition.dpkg_name = self._GetConfigValue(
+          config_parser, section_name, 'dpkg_name')
+      dependency_definition.download_url = self._GetConfigValue(
+          config_parser, section_name, 'download_url')
+      dependency_definition.homepage_url = self._GetConfigValue(
+          config_parser, section_name, 'homepage_url')
+      dependency_definition.maintainer = self._GetConfigValue(
+          config_parser, section_name, 'maintainer')
+
+      # Need at minimum a name and a download URL.
+      if dependency_definition.name and dependency_definition.download_url:
+        yield dependency_definition
 
 
 class DownloadHelper(object):
@@ -207,6 +287,100 @@ class GoogleCodeWikiDownloadHelper(DownloadHelper):
       The project identifier or None on error.
     """
     return u'com.google.code.p.{0:s}'.format(project_name)
+
+
+class GithubReleasesDownloadHelper(DownloadHelper):
+  """Class that helps in downloading a project with GitHub releases."""
+
+  def __init__(self, organization):
+    """Initializes the download helper.
+
+    Args:
+      organization: the github organization or user name.
+    """
+    super(GithubReleasesDownloadHelper, self).__init__()
+    self.organization = organization
+
+  def GetLatestVersion(self, project_name):
+    """Retrieves the latest version number for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The latest version number or 0 on error.
+    """
+    download_url = u'https://github.com/{0:s}/{1:s}/releases'.format(
+        self.organization, project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return 0
+
+    # The format of the project download URL is:
+    # /{organization}/{project name}/releases/download/{git tag}/
+    # {project name}{status-}{version}.tar.gz
+    # Note that the status is optional and will be: beta, alpha or experimental.
+    expression_string = (
+        u'/{0:s}/{1:s}/releases/download/[^/]*/{1:s}-[a-z-]*([0-9]+)'
+        u'[.]tar[.]gz').format(self.organization, project_name)
+    matches = re.findall(expression_string, page_content)
+
+    if not matches:
+      return 0
+
+    return int(max(matches))
+
+  def GetDownloadUrl(self, project_name, project_version):
+    """Retrieves the download URL for a given project name and version.
+
+    Args:
+      project_name: the name of the project.
+      project_version: the version of the project.
+
+    Returns:
+      The download URL of the project or None on error.
+    """
+    download_url = u'https://github.com/{0:s}/{1:s}/releases'.format(
+        self.organization, project_name)
+
+    page_content = self.DownloadPageContent(download_url)
+    if not page_content:
+      return
+
+    # The format of the project download URL is:
+    # /{organization}/{project name}/releases/download/{git tag}/
+    # {project name}{status-}{version}.tar.gz
+    # Note that the status is optional and will be: beta, alpha or experimental.
+    expression_string = (
+        u'/{0:s}/{1:s}/releases/download/[^/]*/{1:s}-[a-z-]*{2!s}'
+        u'[.]tar[.]gz').format(self.organization, project_name, project_version)
+    matches = re.findall(expression_string, page_content)
+
+    if len(matches) != 1:
+      # Try finding a match without the status in case the project provides
+      # multiple versions with a different status.
+      expression_string = (
+          u'/{0:s}/{1:s}/releases/download/[^/]*/{1:s}-*{2!s}'
+          u'[.]tar[.]gz').format(
+              self.organization, project_name, project_version)
+      matches = re.findall(expression_string, page_content)
+
+    if not matches or len(matches) != 1:
+      return
+
+    return u'https://github.com{0:s}'.format(matches[0])
+
+  def GetProjectIdentifier(self, project_name):
+    """Retrieves the project identifier for a given project name.
+
+    Args:
+      project_name: the name of the project.
+
+    Returns:
+      The project identifier or None on error.
+    """
+    return u'com.github.{0:s}.{1:s}'.format(self.organization, project_name)
 
 
 class GoogleDriveDownloadHelper(DownloadHelper):
@@ -385,110 +559,20 @@ class LibyalGoogleDriveDownloadHelper(GoogleDriveDownloadHelper):
     return self._google_drive_url
 
 
-class LibyalGithubReleasesDownloadHelper(DownloadHelper):
+class LibyalGithubReleasesDownloadHelper(GithubReleasesDownloadHelper):
   """Class that helps in downloading a libyal project with GitHub releases."""
 
-  def GetLatestVersion(self, project_name):
-    """Retrieves the latest version number for a given project name.
-
-    Args:
-      project_name: the name of the project.
-
-    Returns:
-      The latest version number or 0 on error.
-    """
-    download_url = (
-        u'https://github.com/libyal/{0:s}/releases').format(project_name)
-
-    page_content = self.DownloadPageContent(download_url)
-    if not page_content:
-      return 0
-
-    # The format of the project download URL is:
-    # /libyal/{project name}/releases/download/{git tag}/
-    # {project name}{status-}{version}.tar.gz
-    # Note that the status is optional and will be: beta, alpha or experimental.
-    expression_string = (
-        u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-[a-z-]*([0-9]+)'
-        u'[.]tar[.]gz').format(project_name)
-    matches = re.findall(expression_string, page_content)
-
-    if not matches:
-      return 0
-
-    return int(max(matches))
-
-  def GetDownloadUrl(self, project_name, project_version):
-    """Retrieves the download URL for a given project name and version.
-
-    Args:
-      project_name: the name of the project.
-      project_version: the version of the project.
-
-    Returns:
-      The download URL of the project or None on error.
-    """
-    download_url = (
-        u'https://github.com/libyal/{0:s}/releases').format(project_name)
-
-    page_content = self.DownloadPageContent(download_url)
-    if not page_content:
-      return
-
-    # The format of the project download URL is:
-    # /libyal/{project name}/releases/download/{git tag}/
-    # {project name}{status-}{version}.tar.gz
-    # Note that the status is optional and will be: beta, alpha or experimental.
-    expression_string = (
-        u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-[a-z-]*{1!s}'
-        u'[.]tar[.]gz').format(project_name, project_version)
-    matches = re.findall(expression_string, page_content)
-
-    if len(matches) != 1:
-      # Try finding a match without the status in case the project provides
-      # multiple versions with a different status.
-      expression_string = (
-          u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-*{1!s}'
-          u'[.]tar[.]gz').format(project_name, project_version)
-      matches = re.findall(expression_string, page_content)
-
-    if not matches or len(matches) != 1:
-      return
-
-    return u'https://github.com{0:s}'.format(matches[0])
+  def __init__(self):
+    """Initializes the download helper."""
+    super(LibyalGithubReleasesDownloadHelper, self).__init__('libyal')
 
 
-# pylint: disable=abstract-method
-class Log2TimelineGitHubDownloadHelper(GoogleDriveDownloadHelper):
+class Log2TimelineGitHubDownloadHelper(GithubReleasesDownloadHelper):
   """Class that helps in downloading a log2timeline GitHub project."""
 
-  def GetGoogleDriveDownloadsUrl(self, project_name):
-    """Retrieves the Download URL from the GitHub project page.
-
-    Args:
-      project_name: the name of the project.
-
-    Returns:
-      The downloads URL or None on error.
-    """
-    download_url = (
-        u'https://github.com/log2timeline/{0:s}/wiki').format(project_name)
-
-    page_content = self.DownloadPageContent(download_url)
-    if not page_content:
-      return
-
-    # The format of the project downloads URL is:
-    # https://googledrive.com/host/{random string}/
-    expression_string = (
-        u'<li><a href="(https://googledrive.com/host/[^/]*/)">Downloads</a>'
-        u'</li>')
-    matches = re.findall(expression_string, page_content)
-
-    if not matches or len(matches) != 1:
-      return
-
-    return matches[0]
+  def __init__(self):
+    """Initializes the download helper."""
+    super(Log2TimelineGitHubDownloadHelper, self).__init__('log2timeline')
 
 
 class PyPiDownloadHelper(DownloadHelper):
@@ -777,11 +861,6 @@ class SourcePackageHelper(SourceHelper):
 class PythonModuleDpkgBuildFilesGenerator(object):
   """Class that helps in generating dpkg build files for Python modules."""
 
-  _PACKAGE_NAMES = {
-      u'PyYAML': u'yaml',
-      u'pytz': u'tz',
-  }
-
   _EMAIL_ADDRESS = u'Log2Timeline <log2timeline-dev@googlegroups.com>'
 
   _DOCS_FILENAMES = [
@@ -811,7 +890,7 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       u'Package: python-{project_name:s}',
       u'Section: python',
       u'Architecture: all',
-      u'Depends: ${{shlibs:Depends}}, ${{python:Depends}}',
+      u'Depends: {depends:s}',
       u'Description: {description_short:s}',
       u' {description_long:s}',
       u''])
@@ -867,21 +946,19 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       u''])
 
   def __init__(
-      self, project_name, project_version, project_information, plaso_path):
+      self, project_name, project_version, dependency_definition):
     """Initializes the dpkg build files generator.
 
     Args:
       project_name: the name of the project.
       project_version: the version of the project.
-      project_information: a dictionary object containing project information
-                           values.
-      plaso_path: the path to the plaso source files.
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
     """
     super(PythonModuleDpkgBuildFilesGenerator, self).__init__()
     self._project_name = project_name
     self._project_version = project_version
-    self._project_information = project_information
-    self._plaso_path = plaso_path
+    self._dependency_definition = dependency_definition
 
   def _GenerateChangelogFile(self, dpkg_path):
     """Generate the dpkg build changelog file.
@@ -904,8 +981,10 @@ class PythonModuleDpkgBuildFilesGenerator(object):
     date_time_string = u'{0:s} {1:s}'.format(
         time.strftime('%a, %d %b %Y %H:%M:%S'), timezone_string)
 
-    project_name = self._PACKAGE_NAMES.get(
-        self._project_name, self._project_name)
+    if self._dependency_definition.dpkg_name:
+      project_name = self._dependency_definition.dpkg_name
+    else:
+      project_name = self._project_name
 
     template_values = {
         'project_name': project_name,
@@ -935,15 +1014,26 @@ class PythonModuleDpkgBuildFilesGenerator(object):
     Args:
       dpkg_path: the path to the dpkg files.
     """
-    project_name = self._PACKAGE_NAMES.get(
-        self._project_name, self._project_name)
+    if self._dependency_definition.dpkg_name:
+      project_name = self._dependency_definition.dpkg_name
+    else:
+      project_name = self._project_name
+
+
+    depends = []
+    if self._dependency_definition.dpkg_dependencies:
+      depends.append(self._dependency_definition.dpkg_dependencies)
+    depends.append('${{shlibs:Depends}}')
+    depends.append('${{python:Depends}}')
+    depends = u', '.join(depends)
 
     template_values = {
         'project_name': project_name,
-        'upstream_maintainer': self._project_information['upstream_maintainer'],
-        'upstream_homepage': self._project_information['upstream_homepage'],
-        'description_short': self._project_information['description_short'],
-        'description_long': self._project_information['description_long']}
+        'upstream_maintainer': self._dependency_definition.maintainer,
+        'upstream_homepage': self._dependency_definition.homepage_url,
+        'depends': depends,
+        'description_short': self._dependency_definition.description_short,
+        'description_long': self._dependency_definition.description_long}
 
     filename = os.path.join(dpkg_path, u'control')
     with open(filename, 'wb') as file_object:
@@ -957,7 +1047,7 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       dpkg_path: the path to the dpkg files.
     """
     license_file = os.path.join(
-        self._plaso_path, u'config', u'licenses',
+        os.path.dirname(os.path.dirname(__file__)), u'config', u'licenses',
         u'LICENSE.{0:s}'.format(self._project_name))
 
     filename = os.path.join(dpkg_path, u'copyright')
@@ -970,8 +1060,10 @@ class PythonModuleDpkgBuildFilesGenerator(object):
     Args:
       dpkg_path: the path to the dpkg files.
     """
-    project_name = self._PACKAGE_NAMES.get(
-        self._project_name, self._project_name)
+    if self._dependency_definition.dpkg_name:
+      project_name = self._dependency_definition.dpkg_name
+    else:
+      project_name = self._project_name
 
     # Determine the available doc files.
     doc_files = []
@@ -1014,6 +1106,16 @@ class BuildHelper(object):
   """Base class that helps in building."""
 
   LOG_FILENAME = u'build.log'
+
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(BuildHelper, self).__init__()
+    self._dependency_definition = dependency_definition
 
 
 class DpkgBuildHelper(BuildHelper):
@@ -1116,9 +1218,14 @@ class DpkgBuildHelper(BuildHelper):
 class LibyalDpkgBuildHelper(DpkgBuildHelper):
   """Class that helps in building libyal dpkg packages (.deb)."""
 
-  def __init__(self):
-    """Initializes the build helper."""
-    super(LibyalDpkgBuildHelper, self).__init__()
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(LibyalDpkgBuildHelper, self).__init__(dependency_definition)
     self.architecture = platform.machine()
 
     if self.architecture == 'i686':
@@ -1226,19 +1333,11 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
 class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
   """Class that helps in building python module dpkg packages (.deb)."""
 
-  _PACKAGE_NAMES = {
-      u'PyYAML': u'yaml',
-      u'pytz': u'tz',
-  }
-
-  def Build(self, source_helper, project_information, plaso_path):
+  def Build(self, source_helper):
     """Builds the dpkg packages.
 
     Args:
       source_helper: the source helper (instance of SourceHelper).
-      project_information: a dictionary object containing project information
-                           values.
-      plaso_path: the path to the plaso source files.
 
     Returns:
       True if the build was successful, False otherwise.
@@ -1262,7 +1361,7 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
 
       build_files_generator = PythonModuleDpkgBuildFilesGenerator(
           source_helper.project_name, source_helper.project_version,
-          project_information, plaso_path)
+          self._dependency_definition)
       build_files_generator.GenerateFiles(u'dpkg')
 
       os.chdir(u'..')
@@ -1337,8 +1436,10 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
     Returns:
       A filename of one of the resulting dpkg packages.
     """
-    project_name = self._PACKAGE_NAMES.get(
-        source_helper.project_name, source_helper.project_name)
+    if self._dependency_definition.dpkg_name:
+      project_name = self._dependency_definition.dpkg_name
+    else:
+      project_name = source_helper.project_name
 
     return u'python-{0:s}_{1!s}-1_all.deb'.format(
         project_name, source_helper.project_version)
@@ -1347,26 +1448,59 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
 class MsiBuildHelper(BuildHelper):
   """Class that helps in building Microsoft Installer packages (.msi)."""
 
-  def __init__(self):
-    """Initializes the build helper."""
-    super(MsiBuildHelper, self).__init__()
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(MsiBuildHelper, self).__init__(dependency_definition)
     self.architecture = platform.machine()
 
     if self.architecture == 'x86':
       self.architecture = 'win32'
-    # TODO: check if x86_64 is returned on 64-bit Windows.
-    elif self.architecture == 'x86_64':
-      self.architecture = 'amd64'
+    elif self.architecture == 'AMD64':
+      self.architecture = 'win-amd64'
 
 
 class LibyalMsiBuildHelper(MsiBuildHelper):
   """Class that helps in building Microsoft Installer packages (.msi)."""
 
-  def __init__(self):
-    """Initializes the build helper."""
-    super(LibyalMsiBuildHelper, self).__init__()
-    # TODO: Detect Visual Studio version
-    self.version = '2008'
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+
+    Raises:
+      RuntimeError: if the Visual Studio version could be determined or
+                    msvscpp-convert.py could not be found.
+    """
+    super(LibyalMsiBuildHelper, self).__init__(dependency_definition)
+
+    if os.environ['VS90COMNTOOLS']:
+      self.version = '2008'
+
+    elif not os.environ['VS100COMNTOOLS']:
+      self.version = '2010'
+
+    elif not os.environ['VS110COMNTOOLS']:
+      self.version = '2012'
+
+    elif not os.environ['VS120COMNTOOLS']:
+      self.version = '2013'
+
+    else:
+      raise RuntimeError(u'Unable to determine Visual Studio version.')
+
+    if self.version != '2008':
+      self._msvscpp_convert = os.path.join(
+          os.path.dirname(__file__), u'msvscpp-convert.py')
+
+      if not os.path.exists(self._msvscpp_convert):
+        raise RuntimeError(u'Unable to find msvscpp-convert.py')
 
   def _BuildPrepare(self, source_directory):
     """Prepares the source for building with Visual Studio.
@@ -1420,13 +1554,6 @@ class LibyalMsiBuildHelper(MsiBuildHelper):
     Args:
       source_directory: the name of the source directory.
     """
-    msvscpp_convert = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), u'msvscpp-convert.py')
-
-    if not os.path.exists(msvscpp_convert):
-      logging.error(u'Unable to find msvscpp-convert.py')
-      return False
-
     os.chdir(source_directory)
 
     solution_filenames = glob.glob(os.path.join(u'msvscpp', u'*.sln'))
@@ -1438,7 +1565,8 @@ class LibyalMsiBuildHelper(MsiBuildHelper):
 
     if not os.path.exists(u'vs2008'):
       command = u'{0:s} {1:s} --to {2:s} {3:s}'.format(
-          sys.executable, msvscpp_convert, self.version, solution_filename)
+          sys.executable, self._msvscpp_convert, self.version,
+          solution_filename)
       exit_code = subprocess.call(command, shell=False)
       if exit_code != 0:
         logging.error(u'Running: "{0:s}" failed.'.format(command))
@@ -1709,9 +1837,14 @@ class PythonModuleMsiBuildHelper(MsiBuildHelper):
 class PkgBuildHelper(BuildHelper):
   """Class that helps in building MacOS-X packages (.pkg)."""
 
-  def __init__(self):
-    """Initializes the build helper."""
-    super(PkgBuildHelper, self).__init__()
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(PkgBuildHelper, self).__init__(dependency_definition)
     self._pkgbuild = os.path.join(u'/', u'usr', u'bin', u'pkgbuild')
 
   def _BuildDmg(self, pkg_filename, dmg_filename):
@@ -1888,7 +2021,7 @@ class LibyalPkgBuildHelper(PkgBuildHelper):
       shutil.copy(os.path.join(source_directory, u'NEWS'), share_doc_path)
       shutil.copy(os.path.join(source_directory, u'README'), share_doc_path)
 
-      project_identifier = u'com.google.code.p.{0:s}'.format(
+      project_identifier = u'com.github.libyal.{0:s}'.format(
           source_helper.project_name)
       if not self._BuildPkg(
           source_directory, project_identifier, source_helper.project_version,
@@ -1929,8 +2062,7 @@ class PythonModulePkgBuildHelper(PkgBuildHelper):
     log_filename = os.path.join(u'..', self.LOG_FILENAME)
 
     if not os.path.exists(pkg_filename):
-      command = u'python setup.py build > {0:s} 2>&1'.format(
-          os.path.join(u'..', log_filename))
+      command = u'python setup.py build > {0:s} 2>&1'.format(log_filename)
       exit_code = subprocess.call(
           u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
       if exit_code != 0:
@@ -1938,8 +2070,7 @@ class PythonModulePkgBuildHelper(PkgBuildHelper):
         return False
 
       command = u'python setup.py install --root={0:s}/tmp > {1:s} 2>&1'.format(
-          os.path.abspath(source_directory),
-          os.path.join(u'..', log_filename))
+          os.path.abspath(source_directory), log_filename)
       exit_code = subprocess.call(
           u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
       if exit_code != 0:
@@ -2003,9 +2134,14 @@ class RpmBuildHelper(BuildHelper):
       'sqlite-devel',
   ])
 
-  def __init__(self):
-    """Initializes the build helper."""
-    super(RpmBuildHelper, self).__init__()
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(RpmBuildHelper, self).__init__(dependency_definition)
     self.architecture = platform.machine()
 
     self.rpmbuild_path = os.path.join(u'~', u'rpmbuild')
@@ -2250,9 +2386,14 @@ class LibyalRpmBuildHelper(RpmBuildHelper):
 class PythonModuleRpmBuildHelper(RpmBuildHelper):
   """Class that helps in building rpm packages (.rpm)."""
 
-  def __init__(self):
-    """Initializes the build helper."""
-    super(PythonModuleRpmBuildHelper, self).__init__()
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(PythonModuleRpmBuildHelper, self).__init__(dependency_definition)
     self.architecture = 'noarch'
 
   def Build(self, source_helper):
@@ -2335,37 +2476,29 @@ class DependencyBuilder(object):
     'bencode', 'binplist', 'construct', 'dfvfs', 'dpkt', 'pyparsing',
     'pysqlite', 'pytz', 'PyYAML', 'six'])
 
-  PROJECT_TYPE_GOOGLE_CODE_WIKI = 1
-  PROJECT_TYPE_PYPI = 2
-  PROJECT_TYPE_SOURCE_FORGE = 3
-  PROJECT_TYPE_GITHUB_LIBYAL = 4
-  PROJECT_TYPE_GITHUB_LOG2TIMELINE = 5
-
-  def __init__(self, build_target, plaso_path):
+  def __init__(self, build_target):
     """Initializes the dependency builder.
 
     Args:
       build_target: the build target.
-      plaso_path: the path to the plaso source files.
     """
     super(DependencyBuilder, self).__init__()
     self._build_target = build_target
-    self._plaso_path = plaso_path
 
   def _BuildDependency(
-      self, download_helper, project_name, project_information):
+      self, download_helper, dependency_definition):
     """Builds a dependency.
 
     Args:
       download_helper: the download helper (instance of DownloadHelper).
-      project_name: the name of the project
-      project_information: a dictionary object containing project information
-                           values.
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
 
     Returns:
       True if the build is successful or False on error.
     """
-    source_helper = SourcePackageHelper(download_helper, project_name)
+    source_helper = SourcePackageHelper(
+        download_helper, dependency_definition.name)
 
     source_helper.Clean()
 
@@ -2380,12 +2513,13 @@ class DependencyBuilder(object):
           logging.error(u'Running: "{0:s}" failed.'.format(command))
           return False
 
-    elif project_name in self._LIBYAL_LIBRARIES:
-      if not self._BuildLibyalLibrary(source_helper):
+    # TODO
+    elif dependency_definition.name in self._LIBYAL_LIBRARIES:
+      if not self._BuildLibyalLibrary(source_helper, dependency_definition):
         return False
 
-    elif project_name in self._PYTHON_MODULES:
-      if not self._BuildPythonModule(source_helper, project_information):
+    elif dependency_definition.name in self._PYTHON_MODULES:
+      if not self._BuildPythonModule(source_helper, dependency_definition):
         return False
 
     else:
@@ -2393,28 +2527,30 @@ class DependencyBuilder(object):
 
     return True
 
-  def _BuildLibyalLibrary(self, source_helper):
+  def _BuildLibyalLibrary(self, source_helper, dependency_definition):
     """Builds a libyal library and its Python module dependency.
 
     Args:
       source_helper: the source helper (instance of SourceHelper).
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
 
     Returns:
       True if the build is successful or False on error.
     """
     build_helper = None
     if self._build_target == 'dpkg':
-      build_helper = LibyalDpkgBuildHelper()
+      build_helper = LibyalDpkgBuildHelper(dependency_definition)
 
     elif self._build_target in ['msi']:
       # TODO: setup dokan and zlib in build directory.
-      build_helper = LibyalMsiBuildHelper()
+      build_helper = LibyalMsiBuildHelper(dependency_definition)
 
     elif self._build_target == 'pkg':
-      build_helper = LibyalPkgBuildHelper()
+      build_helper = LibyalPkgBuildHelper(dependency_definition)
 
     elif self._build_target == 'rpm':
-      build_helper = LibyalRpmBuildHelper()
+      build_helper = LibyalRpmBuildHelper(dependency_definition)
 
     if not build_helper:
       return False
@@ -2437,30 +2573,30 @@ class DependencyBuilder(object):
 
     return True
 
-  def _BuildPythonModule(self, source_helper, project_information):
+  def _BuildPythonModule(self, source_helper, dependency_definition):
     """Builds a Python module dependency.
 
     Args:
       source_helper: the source helper (instance of SourceHelper).
-      project_information: a dictionary object containing project information
-                           values.
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
 
     Returns:
       True if the build is successful or False on error.
     """
     build_helper = None
     if self._build_target == 'dpkg':
-      build_helper = PythonModuleDpkgBuildHelper()
+      build_helper = PythonModuleDpkgBuildHelper(dependency_definition)
 
     elif self._build_target in ['msi']:
       # TODO: setup sqlite in build directory.
-      build_helper = PythonModuleMsiBuildHelper()
+      build_helper = PythonModuleMsiBuildHelper(dependency_definition)
 
     elif self._build_target == 'pkg':
-      build_helper = PythonModulePkgBuildHelper()
+      build_helper = PythonModulePkgBuildHelper(dependency_definition)
 
     elif self._build_target == 'rpm':
-      build_helper = PythonModuleRpmBuildHelper()
+      build_helper = PythonModuleRpmBuildHelper(dependency_definition)
 
     if not build_helper:
       return False
@@ -2470,13 +2606,7 @@ class DependencyBuilder(object):
     build_helper.Clean(source_helper)
 
     if not os.path.exists(output_filename):
-      if self._build_target == 'dpkg':
-        result = build_helper.Build(
-            source_helper, project_information, self._plaso_path)
-      else:
-        result = build_helper.Build(source_helper)
-
-      if not result:
+      if not build_helper.Build(source_helper):
         logging.warning((
             u'Build of: {0:s} failed, for more information check '
             u'{1:s}').format(
@@ -2489,14 +2619,12 @@ class DependencyBuilder(object):
 
     return True
 
-  def Build(self, project_name, project_type, project_information):
+  def Build(self, dependency_definition):
     """Builds a dependency.
 
     Args:
-      project_name: the project name.
-      project_type: the project type.
-      project_information: a dictionary object containing project information
-                           values.
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
 
     Returns:
       True if the build is successful or False on error.
@@ -2504,21 +2632,38 @@ class DependencyBuilder(object):
     Raises:
       ValueError: if the project type is unsupported.
     """
-    if project_type == self.PROJECT_TYPE_GOOGLE_CODE_WIKI:
-      download_helper = GoogleCodeWikiDownloadHelper()
-    elif project_type == self.PROJECT_TYPE_PYPI:
-      download_helper = PyPiDownloadHelper()
-    elif project_type == self.PROJECT_TYPE_SOURCE_FORGE:
-      download_helper = SourceForgeDownloadHelper()
-    elif project_type == self.PROJECT_TYPE_GITHUB_LIBYAL:
-      download_helper = LibyalGitHubDownloadHelper()
-    elif project_type == self.PROJECT_TYPE_GITHUB_LOG2TIMELINE:
-      download_helper = Log2TimelineGitHubDownloadHelper()
-    else:
-      raise ValueError(u'Unsupported project type.')
+    download_url = dependency_definition.download_url
+    if download_url.endswith(u'/'):
+      download_url = download_url[:-1]
 
-    return self._BuildDependency(
-        download_helper, project_name, project_information)
+    # Unify http:// and https:// URLs for the download helper check.
+    if download_url.startswith(u'https://'):
+      download_url = u'http://{0:s}'.format(download_url[8:])
+
+    if (download_url.startswith(u'http://code.google.com/p/') and
+        download_url.endswith(u'/downloads/list')):
+      download_helper = GoogleCodeWikiDownloadHelper()
+
+    elif download_url.startswith(u'http://pypi.python.org/pypi/'):
+      download_helper = PyPiDownloadHelper()
+
+    elif (download_url.startswith(u'http://sourceforge.net/projects/') and
+        download_url.endswith(u'/files')):
+      download_helper = SourceForgeDownloadHelper()
+
+    # TODO: make this a more generic github download helper when
+    # when Google Drive support is no longer needed.
+    elif (download_url.startswith(u'http://github.com/libyal/') or
+          download_url.startswith(u'http://googledrive.com/host/')):
+      download_helper = LibyalGitHubDownloadHelper()
+
+    elif download_url.startswith(u'http://github.com/log2timeline/'):
+      download_helper = Log2TimelineGitHubDownloadHelper()
+
+    else:
+      raise ValueError(u'Unsupported downloads URL.')
+
+    return self._BuildDependency(download_helper, dependency_definition)
 
 
 def Main():
@@ -2528,14 +2673,19 @@ def Main():
       'Downloads and builds the latest versions of plaso dependencies.'))
 
   args_parser.add_argument(
+      'build_target', choices=sorted(build_targets), action='store',
+      metavar='BUILD_TARGET', default=None, help='The build target.')
+
+  args_parser.add_argument(
       '--build-directory', '--build_directory', action='store',
       metavar='DIRECTORY', dest='build_directory', type=unicode,
       default=u'dependencies', help=(
           u'The location of the the build directory.'))
 
   args_parser.add_argument(
-      'build_target', choices=sorted(build_targets), action='store',
-      metavar='BUILD_TARGET', default=None, help='The build target.')
+      '-c', '--config', dest='config_file', action='store',
+      metavar='CONFIG_FILE', default=None,
+      help='path of the build configuration file.')
 
   options = args_parser.parse_args()
 
@@ -2550,6 +2700,15 @@ def Main():
     print u'Unsupported build target: {0:s}.'.format(options.build_target)
     print u''
     args_parser.print_help()
+    print u''
+    return False
+
+  if not options.config_file:
+    options.config_file = os.path.join(
+        os.path.dirname(__file__), 'dependencies.ini')
+
+  if not os.path.exists(options.config_file):
+    print u'No such config file: {0:s}.'.format(options.config_file)
     print u''
     return False
 
@@ -2572,11 +2731,7 @@ def Main():
       print u''
       return False
 
-  # __file__ will point to a different location when access later in
-  # the script. So we need to preserve the location of the plaso source
-  # files here for future usage.
-  plaso_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-  dependency_builder = DependencyBuilder(options.build_target, plaso_path)
+  dependency_builder = DependencyBuilder(options.build_target)
 
   # TODO: allow for patching e.g. dpkt 1.8.
   # Have builder check patches URL.
@@ -2597,116 +2752,17 @@ def Main():
   # Solution: use protobuf-python.spec to build
 
   # TODO: download and build sqlite3 from source?
+  # http://www.sqlite.org/download.html
+  # or copy sqlite3.h, .lib and .dll to src/ directory?
 
   # TODO: rpm build of psutil is broken, fix upstream or add patching.
   # (u'psutil', DependencyBuilder.PROJECT_TYPE_PYPI),
 
-  # TODO: generate dpkg files instead of downloading them or
-  # download and override version information.
-
-  # TODO: python-tz add tzdata dependency.
-
-  # TODO: make this config file driven?
-  builds = [
-    (u'bencode', DependencyBuilder.PROJECT_TYPE_PYPI, {
-        'upstream_maintainer': u'Thomas Rampelberg <thomas@bittorrent.com>',
-        'upstream_homepage': u'http://bittorent.com/',
-        'description_short': (
-            u'The BitTorrent bencode module as light-weight, standalone '
-            u'package'),
-        'description_long': (
-            u'The BitTorrent bencode module as light-weight, standalone '
-            u'package.')}),
-
-    (u'binplist', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI, {}),
-    (u'construct', DependencyBuilder.PROJECT_TYPE_PYPI, {
-        'upstream_maintainer': u'Tomer Filiba <tomerfiliba@gmail.com>',
-        'upstream_homepage': u'http://construct.readthedocs.org/en/latest/',
-        'description_short': (
-            u'Construct is a powerful declarative parser (and builder) for '
-            u'binary data'),
-        'description_long': (
-            u'Construct is a powerful declarative parser (and builder) for '
-            u'binary data.')}),
-
-    (u'dfvfs', DependencyBuilder.PROJECT_TYPE_GITHUB_LOG2TIMELINE, {}),
-    (u'dpkt', DependencyBuilder.PROJECT_TYPE_GOOGLE_CODE_WIKI, {
-        'upstream_maintainer': u'Dug Song <dugsong@monkey.org>',
-        'upstream_homepage': u'https://code.google.com/p/dpkt/',
-        'description_short': (
-            u'Python packet creation / parsing module'),
-        'description_long': (
-            u'Python module for fast, simple packet creation / parsing, '
-            u'with definitions for the basic TCP/IP protocols.')}),
-
-    (u'libbde', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libesedb', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libevt', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libevtx', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libewf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libfwsi', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'liblnk', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libmsiecf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libolecf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libqcow', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libregf', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libsmdev', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libsmraw', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libvhdi', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libvmdk', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'libvshadow', DependencyBuilder.PROJECT_TYPE_GITHUB_LIBYAL, {}),
-    (u'pyparsing', DependencyBuilder.PROJECT_TYPE_SOURCE_FORGE, {
-        'upstream_maintainer': u'Paul McGuire <ptmcg@users.sourceforge.net>',
-        'upstream_homepage': u'http://pyparsing.wikispaces.com/',
-        'description_short': u'Python parsing module',
-        'description_long': (
-            u'The parsing module is an alternative approach to creating and '
-            u'executing simple grammars, vs. the traditional lex/yacc '
-            u'approach, or the use of regular expressions. The parsing '
-            u'module provides a library of classes that client code uses '
-            u'to construct the grammar directly in Python code.')}),
-
-    (u'pysqlite', DependencyBuilder.PROJECT_TYPE_PYPI, {
-        'upstream_maintainer': u'Gerhard Häring <gh@ghaering.de>',
-        'upstream_homepage': u'https://pypi.python.org/pypi/pysqlite/',
-        'description_short': u'Python interface to SQLite 3',
-        'description_long': (
-            u'pysqlite is a DB-API 2.0-compliant database interface for '
-            u'SQLite.')}),
-
-    (u'pytz', DependencyBuilder.PROJECT_TYPE_PYPI, {
-        'upstream_maintainer': u'Stuart Bishop <stuart@stuartbishop.net>',
-        'upstream_homepage': u'http://pypi.python.org/pypi/pytz/',
-        'description_short': u'Python version of the Olson timezone database',
-        'description_long': (
-            u'python-tz brings the Olson tz database into Python. This library '
-            u'allows accurate and cross platform timezone calculations using '
-            u'Python 2.3 or higher. It also solves the issue of ambiguous '
-            u'times at the end of daylight savings, which you can read more '
-            u'about in the Python Library Reference (datetime.tzinfo).')}),
-
-    (u'PyYAML', DependencyBuilder.PROJECT_TYPE_PYPI, {
-        'upstream_maintainer': u'Kirill Simonov <xi@resolvent.net>',
-        'upstream_homepage': u'http://pyyaml.org/',
-        'description_short': u'YAML parser and emitter for Python',
-        'description_long': (
-            u'Python-yaml is a complete YAML 1.1 parser and emitter for '
-            u'Python. It can parse all examples from the specification. '
-            u'The parsing algorithm is simple enough to be a reference '
-            u'for YAML parser implementors. A simple extension API is '
-            u'also provided. The package is built using libyaml for '
-            u'improved speed.')}),
-
-    (u'six', DependencyBuilder.PROJECT_TYPE_PYPI, {
-        'upstream_maintainer': u'Benjamin Peterson <benjamin@python.org>',
-        'upstream_homepage': u'http://pypi.python.org/pypi/six/',
-        'description_short': (
-            u'Python 2 and 3 compatibility library (Python 2 interface)'),
-        'description_long': (
-            u'Six is a Python 2 and 3 compatibility library. It provides '
-            u'utility functions for smoothing over the differences between '
-            u'the Python versions with the goal of writing Python code that '
-            u'is compatible on both Python versions.')})]
+  builds = []
+  with open(options.config_file) as file_object:
+    dependency_definition_reader = DependencyDefinitionReader()
+    for dependency_definition in dependency_definition_reader.Read(file_object):
+      builds.append(dependency_definition)
 
   if not os.path.exists(options.build_directory):
     os.mkdir(options.build_directory)
@@ -2715,10 +2771,9 @@ def Main():
   os.chdir(options.build_directory)
 
   result = True
-  for project_name, project_type, project_information in builds:
-    if not dependency_builder.Build(
-        project_name, project_type, project_information):
-      print u'Failed building: {0:s}'.format(project_name)
+  for dependency_definition in builds:
+    if not dependency_builder.Build(dependency_definition):
+      print u'Failed building: {0:s}'.format(dependency_definition.name)
       result = False
       break
 

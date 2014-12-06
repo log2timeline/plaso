@@ -192,7 +192,14 @@ def Main():
   args_parser = argparse.ArgumentParser(description=(
       u'Installs the latest versions of plaso dependencies.'))
 
-  _ = args_parser.parse_args()
+  args_parser.add_argument(
+      '-f', '--force', dest='force_install', action='store_true',
+      default=False, help=(
+          u'Force installation. This option removes existing versions '
+          u'of installed dependencies. The default behavior is to only'
+          u'install a dependency if not or an older version is installed.'))
+
+  options = args_parser.parse_args()
 
   operating_system = platform.system()
   cpu_architecture = platform.machine().lower()
@@ -207,7 +214,7 @@ def Main():
           cpu_architecture))
 
     # Note that the sub directory should be URL encoded.
-    sub_directory = u'macosx%2010.9'
+    sub_directory = u'macosx%2010.10'
 
   elif operating_system == u'Linux':
     linux_name, linux_version, _ = platform.linux_distribution()
@@ -363,12 +370,28 @@ def Main():
       if not package_name:
         continue
 
-      if (package_name.startswith(u'com.google.code.p.') or
+      if (package_name.startswith(u'com.github.libyal.') or
+          package_name.startswith(u'com.github.log2timeline.') or
+          package_name.startswith(u'com.github.sleuthkit.') or
+          package_name.startswith(u'com.google.code.p.') or
+          package_name.startswith(u'org.samba.') or
           package_name.startswith(u'org.python.pypi.') or
           package_name.startswith(u'net.sourceforge.projects.')):
 
-        if package_name.startswith(u'com.google.code.p.'):
+        if package_name.startswith(u'com.github.libyal.'):
           name = package_name[18:]
+
+        elif package_name.startswith(u'com.github.log2timeline.'):
+          name = package_name[24:]
+
+        elif package_name.startswith(u'com.github.sleuthkit.'):
+          name = package_name[21:]
+
+        elif package_name.startswith(u'com.google.code.p.'):
+          name = package_name[18:]
+
+        elif package_name.startswith(u'org.samba.'):
+          name = package_name[10:]
 
         elif package_name.startswith(u'org.python.pypi.'):
           name = package_name[16:]
@@ -414,7 +437,9 @@ def Main():
               _, _, volume = attribute.rpartition(u'volume: ')
 
           version = version.split(u'.')
-          if name not in package_versions:
+          if options.force_install:
+            compare_result = -1
+          elif name not in package_versions:
             compare_result = 1
           # TODO: handle pytsk.
           else:
@@ -491,7 +516,9 @@ def Main():
         name, _, version = name.partition(u'-')
 
         version = version.split(u'.')
-        if name not in package_versions:
+        if options.force_install:
+          compare_result = -1
+        elif name not in package_versions:
           compare_result = 1
         elif name == u'pytsk':
           # We cannot really tell by the version number that pytsk needs to
