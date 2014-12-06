@@ -114,7 +114,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
         u'/Documents And Settings/.+/NTUSER.DAT', '/Users/.+/NTUSER.DAT'])
     # Testing functions within the front end, thus need to access protected
     # members.
-    # pylint: disable-msg=protected-access
+    # pylint: disable=protected-access
     test_paths_for_userassist = set(
         front_end._GetRegistryFilePaths(u'userassist'))
 
