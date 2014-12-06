@@ -95,7 +95,7 @@ class ConsoleConfig(object):
     try:
       # The "get_ipython" function does not exist except within an IPython
       # session.
-      return get_ipython()  # pylint: disable-msg=undefined-variable
+      return get_ipython()  # pylint: disable=undefined-variable
     except NameError:
       return Config()
 
