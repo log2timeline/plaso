@@ -51,9 +51,11 @@ class AirportPlugin(interface.PlistPlugin):
     for wifi in match['RememberedNetworks']:
       description = (
           u'[WiFi] Connected to network: <{0:s}> using security {1:s}').format(
-              wifi['SSIDString'], wifi['SecurityType'])
+              wifi.get('SSIDString', u'no SSID string'),
+              wifi.get('SecurityType', u'N/A'))
+      last_connected = wifi.get('LastConnected')
       event_object = plist_event.PlistEvent(
-          u'/RememberedNetworks', u'item', wifi['LastConnected'], description)
+          u'/RememberedNetworks', u'item', last_connected, description)
       parser_context.ProduceEvent(
           event_object, parser_chain=parser_chain, file_entry=file_entry)
 

@@ -106,7 +106,7 @@ class MRUListExPluginMixin(object):
 
       value_string = self._ParseMRUListExEntryValue(
           parser_context, key, entry_index, entry_number,
-          codepage=codepage)
+          codepage=codepage, file_entry=file_entry, parser_chain=parser_chain)
 
       value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
           entry_index + 1, entry_number)
