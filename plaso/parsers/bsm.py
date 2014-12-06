@@ -747,7 +747,11 @@ class BsmParser(interface.BaseParser):
     # If is Mac OS X BSM file, next entry is a  text token indicating
     # if it is a normal start or it is a recovery track.
     if parser_context.platform == 'MacOSX':
-      if self.BSM_TYPE_LIST[token_id][0] != 'BSM_TOKEN_TEXT':
+      bsm_type_list = self.BSM_TYPE_LIST.get(token_id)
+      if not bsm_type_list:
+        return False
+
+      if bsm_type_list[0] != 'BSM_TOKEN_TEXT':
         logging.warning(u'It is not a valid first entry for Mac OS X BSM.')
         return False
       try:
@@ -844,7 +848,10 @@ class BsmParser(interface.BaseParser):
 
     if bsm_type in [
         'BSM_TOKEN_TEXT', 'BSM_TOKEN_PATH', 'BSM_TOKEN_ZONENAME']:
-      string = self._CopyUtf8ByteArrayToString(token.text)
+      try:
+        string = self._CopyUtf8ByteArrayToString(token.text)
+      except TypeError:
+        string = u'Unknown'
       return u'[{0}: {1:s}]'.format(bsm_type, string)
 
     elif bsm_type in [
