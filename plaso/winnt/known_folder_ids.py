@@ -18,7 +18,7 @@
 """This file contains the Windows NT Known Folder identifier definitions."""
 
 # For now ignore the line too long errors.
-# pylint: disable-msg=line-too-long
+# pylint: disable=line-too-long
 
 # For now copied from:
 # https://code.google.com/p/libfwsi/wiki/KnownFolderIdentifiers
