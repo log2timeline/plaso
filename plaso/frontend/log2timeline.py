@@ -363,7 +363,11 @@ def Main():
 
   u_argv = [x.decode(front_end.preferred_encoding) for x in sys.argv]
   sys.argv = u_argv
-  options = arg_parser.parse_args()
+  try:
+    options = arg_parser.parse_args()
+  except UnicodeEncodeError:
+    # If we get here we are attempting to print help in a "dumb" terminal.
+    print arg_parser.format_help().encode(front_end.preferred_encoding)
 
   if options.timezone == 'list':
     front_end.ListTimeZones()

@@ -310,7 +310,10 @@ class KeychainParser(interface.BaseParser):
       file_object.seek(
           record.text_description - file_object.tell() + offset -1,
           os.SEEK_CUR)
-      text_description = self.TEXT.parse_stream(file_object)
+      try:
+        text_description = self.TEXT.parse_stream(file_object)
+      except construct.FieldError:
+        text_description = u'N/A (error)'
     else:
       text_description = u'N/A'
 
@@ -319,17 +322,26 @@ class KeychainParser(interface.BaseParser):
       file_object.seek(
           record.text_description - file_object.tell() + offset -1,
           os.SEEK_CUR)
-      comments = self.TEXT.parse_stream(file_object)
+      try:
+        comments = self.TEXT.parse_stream(file_object)
+      except construct.FieldError:
+        comments = u'N/A (error)'
     else:
       comments = u'N/A'
 
     file_object.seek(
         record.entry_name - file_object.tell() + offset - 1, os.SEEK_CUR)
-    entry_name = self.TEXT.parse_stream(file_object)
+    try:
+      entry_name = self.TEXT.parse_stream(file_object)
+    except construct.FieldError:
+      entry_name = u'N/A (error)'
 
     file_object.seek(
         record.account_name - file_object.tell() + offset - 1, os.SEEK_CUR)
-    account_name = self.TEXT.parse_stream(file_object)
+    try:
+      account_name = self.TEXT.parse_stream(file_object)
+    except construct.FieldError:
+      account_name = u'N/A (error)'
 
     return (
         ssgp_hash, creation_time, last_mod_time,
