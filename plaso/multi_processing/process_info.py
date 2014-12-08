@@ -55,6 +55,10 @@ class ProcessInfo(object):
     self._command_line = ''
     self._parent = None
     self._process = psutil.Process(self._pid)
+    if getattr(psutil, 'version_info', (0, 0, 0)) < (2, 0, 0):
+      self._psutil_pre_v2 = True
+    else:
+      self._psutil_pre_v2 = False
 
     # TODO: Allow the client proxy object to determined at run time and not
     # a fixed value as here.
@@ -69,7 +73,10 @@ class ProcessInfo(object):
   @property
   def name(self):
     """Return the name of the process."""
-    return self._process.name
+    if self._psutil_pre_v2:
+      return self._process.name
+
+    return self._process.name()
 
   @property
   def command_line(self):
@@ -78,7 +85,12 @@ class ProcessInfo(object):
       return self._command_line
 
     try:
-      self._command_line = u' '.join(self._process.cmdline)
+      if self._psutil_pre_v2:
+        command_lines = self._process.cmdline
+      else:
+        command_lines = self._process.cmdline()
+
+      self._command_line = u' '.join(command_lines)
     except psutil.NoSuchProcess:
       return
 
@@ -91,7 +103,13 @@ class ProcessInfo(object):
       return self._parent
 
     try:
-      self._parent = ProcessInfo(pid=self._process.parent.pid)
+      if self._psutil_pre_v2:
+        parent_pid = self._process.parent.pid
+      else:
+        parent = self._process.parent()   # pylint: disable-msg=not-callable
+        parent_pid = parent.pid
+
+      self._parent = ProcessInfo(pid=parent_pid)
       return self._parent
     except psutil.NoSuchProcess:
       return
@@ -145,7 +163,10 @@ class ProcessInfo(object):
   def status(self):
     """Return the process status."""
     try:
-      return self._process.status
+      if self._psutil_pre_v2:
+        return self._process.status
+      else:
+        return self._process.status()
     except psutil.NoSuchProcess:
       return u'exited'
 
@@ -157,7 +178,11 @@ class ProcessInfo(object):
       An integer representing the number of microseconds since Unix Epoch time
       in UTC.
     """
-    return timelib.Timestamp.FromPosixTime(int(self._process.create_time))
+    if self._psutil_pre_v2:
+      create_time = self._process.create_time
+    else:
+      create_time = self._process.create_time()
+    return timelib.Timestamp.FromPosixTime(int(create_time))
 
   @property
   def io_counters(self):
