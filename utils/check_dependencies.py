@@ -305,7 +305,7 @@ if __name__ == '__main__':
     check_result = False
 
   if not CheckPythonModule(
-      'psutil', '__version__', '1.2.1', maximum_version='1.2.1'):
+      'psutil', '__version__', '1.2.1'):
     check_result = False
 
   if not CheckPythonModule('construct', '__version__', '2.5.2'):
