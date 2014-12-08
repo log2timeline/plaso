@@ -14,25 +14,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
 # This is a simple installer script for the Mac OS X platform.
+
+EXIT_SUCCESS=0;
+EXIT_FAILURE=1;
 
 echo "==============================================================="
 echo "        PLASO INSTALLER"
 echo "==============================================================="
-if [ "$USER" != "root" ]
+
+if test "$USER" != "root";
 then
-  echo "Need to have root privileges, testing sudo."
+  echo "Need to have root privileges, testing sudo.";
   sudo ls > /dev/null
 
-  if [ $? -ne 0 ]
+  if test $? -ne 0;
   then
-    echo "Do you have sudo privileges?"
-    exit 1
+    echo "Do you have root privileges?";
+    exit ${EXIT_FAILURE};
   fi
 fi
 
-echo "Installing packages."
-find /Volumes/plaso_rc2/packages/ -name "*.pkg" -exec sudo installer -target / -pkg {} \;
+echo "Installing packages.";
 
-echo "Done."
+find ./packages/ -name "*.pkg" -exec sudo installer -target / -pkg {} \;
+
+echo "Done.";
+
+exit ${EXIT_SUCCESS};
+
