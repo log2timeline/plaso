@@ -232,6 +232,8 @@ class MacOSXKeyboard(PlistPreprocessPlugin):
   def ParseKey(self, key, key_name):
     """Determines the keyboard layout."""
     value = super(MacOSXKeyboard, self).ParseKey(key, key_name)
+    if type(value) in (list, tuple):
+      value = value[0]
     _, _, keyboard_layout = value.rpartition('.')
 
     return keyboard_layout
