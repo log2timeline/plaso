@@ -81,6 +81,10 @@ class UnableToParseFile(Error):
   """Raised when a parser is not designed to parse a file."""
 
 
+class UserAbort(Error):
+  """Class that defines an user initiated abort exception."""
+
+
 class WrongBencodePlugin(Error):
   """Error reporting wrong bencode plugin used."""
 

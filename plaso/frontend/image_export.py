@@ -574,9 +574,11 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
       options: the command line arguments (instance of argparse.Namespace).
 
     Raises:
-      BadConfigOption: if the options are incorrect or not supported.
+      SourceScannerError: if the source scanner could not find a supported
+                          file system.
+      UserAbort: if the user initiated an abort.
     """
-    super(ImageExportFrontend, self).ProcessSource(options)
+    self.ScanSource(options)
 
     filter_file = getattr(options, 'filter', None)
     if filter_file:
@@ -676,9 +678,18 @@ def Main():
   try:
     front_end.ProcessSource(options)
     logging.info(u'Processing completed.')
-  except KeyboardInterrupt:
+
+  except (KeyboardInterrupt, errors.UserAbort):
     logging.warning(u'Aborted by user.')
     return False
+
+  except errors.SourceScannerError as exception:
+    logging.warning((
+        u'Unable to scan for a supported filesystem with error: {0:s}\n'
+        u'Most likely the image format is not supported by the '
+        u'tool.').format(exception))
+    return False
+
   return True
 
 

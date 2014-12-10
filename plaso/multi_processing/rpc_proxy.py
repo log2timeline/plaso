@@ -125,7 +125,6 @@ class StandardRpcProxyClient(proxy.ProxyClient):
       return
 
     call_back = getattr(self._proxy, call_back_name, None)
-
     if call_back is None:
       return
 

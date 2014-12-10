@@ -421,10 +421,18 @@ def Main():
   try:
     front_end.ProcessSource(options)
     logging.info(u'Processing completed.')
-  except KeyboardInterrupt:
+
+  except (KeyboardInterrupt, errors.UserAbort):
     logging.warning(u'Aborted by user.')
-    front_end.CleanUpAfterAbort()
     return False
+
+  except errors.SourceScannerError as exception:
+    logging.warning((
+        u'Unable to scan for a supported filesystem with error: {0:s}\n'
+        u'Most likely the image format is not supported by the '
+        u'tool.').format(exception))
+    return False
+
   return True
 
 

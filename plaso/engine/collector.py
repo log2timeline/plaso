@@ -110,6 +110,9 @@ class Collector(queue.ItemQueueProducer):
         logging.debug(u'Collection from image FAILED.')
       return
 
+    if self._abort:
+      return
+
     if self._vss_stores:
       self._ProcessVSS(volume_path_spec, find_specs=find_specs)
 
@@ -143,6 +146,9 @@ class Collector(queue.ItemQueueProducer):
     vss_store_range = [store_nr - 1 for store_nr in self._vss_stores]
 
     for store_index in vss_store_range:
+      if self._abort:
+        return
+
       if find_specs:
         logging.info((
             u'Collecting from VSS volume: {0:d} out of: {1:d} '
@@ -253,6 +259,11 @@ class Collector(queue.ItemQueueProducer):
     """
     self._vss_stores = vss_stores
 
+  def SignalAbort(self):
+    """Signals the producer to abort."""
+    super(Collector, self).SignalAbort()
+    self._fs_collector.SignalAbort()
+
 
 class FileSystemCollector(queue.ItemQueueProducer):
   """Class that implements a file system collector object."""
@@ -321,6 +332,9 @@ class FileSystemCollector(queue.ItemQueueProducer):
     sub_directories = []
 
     for sub_file_entry in file_entry.sub_file_entries:
+      if self._abort:
+        return
+
       try:
         if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
           continue
@@ -365,6 +379,9 @@ class FileSystemCollector(queue.ItemQueueProducer):
         self.number_of_file_entries += 1
 
     for sub_file_entry in sub_directories:
+      if self._abort:
+        return
+
       try:
         self._ProcessDirectory(sub_file_entry)
       except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
@@ -383,6 +400,9 @@ class FileSystemCollector(queue.ItemQueueProducer):
       searcher = file_system_searcher.FileSystemSearcher(file_system, path_spec)
 
       for path_spec in searcher.Find(find_specs=find_specs):
+        if self._abort:
+          return
+
         self.ProduceItem(path_spec)
         self.number_of_file_entries += 1
 

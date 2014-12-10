@@ -22,7 +22,6 @@ import locale
 import logging
 import os
 import pdb
-import signal
 import sys
 import traceback
 
@@ -377,7 +376,7 @@ class StorageMediaFrontend(Frontend):
         selected_volume_identifier = self._GetPartionIdentifierFromUser(
             volume_system, volume_identifiers)
       except KeyboardInterrupt:
-        raise errors.SourceScannerError(u'File system scan aborted.')
+        raise errors.UserAbort(u'File system scan aborted.')
 
       volume = volume_system.GetVolumeByIdentifier(selected_volume_identifier)
       if not volume:
@@ -424,7 +423,7 @@ class StorageMediaFrontend(Frontend):
       self._vss_stores = self._GetVssStoreIdentifiersFromUser(
           volume_system, volume_identifiers, vss_stores=vss_stores)
     except KeyboardInterrupt:
-      raise errors.SourceScannerError(u'File system scan aborted.')
+      raise errors.UserAbort(u'File system scan aborted.')
 
     return
 
@@ -668,23 +667,6 @@ class StorageMediaFrontend(Frontend):
 
     self._source_path = os.path.abspath(self._source_path)
 
-  def ProcessSource(self, options):
-    """Processes the source.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are incorrect or not supported.
-    """
-    try:
-      self.ScanSource(options)
-    except errors.SourceScannerError as exception:
-      raise errors.BadConfigOption((
-          u'Unable to scan for a supported filesystem with error: {0:s}\n'
-          u'Most likely the image format is not supported by the '
-          u'tool.').format(exception))
-
   def ScanSource(self, options):
     """Scans the source path for volume and file systems.
 
@@ -904,6 +886,21 @@ class ExtractionFrontend(StorageMediaFrontend):
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+  # Note that this function is not called by the normal termination.
+  def _CleanUpAfterAbort(self):
+    """Signals the tool to stop running nicely after an abort."""
+    if self._single_process_mode and self._debug_mode:
+      logging.warning(u'Running in debug mode, set up debugger.')
+      pdb.post_mortem()
+      return
+
+    if self._collector:
+      logging.warning(u'Stopping collector.')
+      self._collector.SignalEndOfInput()
+
+    if self._engine:
+      self._engine.SignalAbort()
 
   def _DebugPrintCollector(self, options):
     """Prints debug information about the collector.
@@ -1165,13 +1162,18 @@ class ExtractionFrontend(StorageMediaFrontend):
           self._engine.storage_queue, self._storage_file_path,
           self._buffer_size, pre_obj)
 
-    self._engine.ProcessSource(
-        self._collector, storage_writer,
-        parser_filter_string=parser_filter_string,
-        number_of_extraction_workers=self._number_of_worker_processes,
-        have_collection_process=start_collection_process,
-        have_foreman_process=self._run_foreman,
-        show_memory_usage=self._show_worker_memory_information)
+    try:
+      self._engine.ProcessSource(
+          self._collector, storage_writer,
+          parser_filter_string=parser_filter_string,
+          number_of_extraction_workers=self._number_of_worker_processes,
+          have_collection_process=start_collection_process,
+          have_foreman_process=self._run_foreman,
+          show_memory_usage=self._show_worker_memory_information)
+
+    except KeyboardInterrupt:
+      self._CleanUpAfterAbort()
+      raise errors.UserAbort(u'Process source aborted.')
 
   def _ProcessSourceSingleProcessMode(self, options):
     """Processes the source in a single process.
@@ -1274,11 +1276,17 @@ class ExtractionFrontend(StorageMediaFrontend):
           self._engine.storage_queue, self._storage_file_path,
           buffer_size=self._buffer_size, pre_obj=pre_obj)
 
-    self._engine.ProcessSource(
-        self._collector, storage_writer,
-        parser_filter_string=parser_filter_string)
+    try:
+      self._engine.ProcessSource(
+          self._collector, storage_writer,
+          parser_filter_string=parser_filter_string)
 
-    self._resolver_context.Empty()
+    except KeyboardInterrupt:
+      self._CleanUpAfterAbort()
+      raise errors.UserAbort(u'Process source aborted.')
+
+    finally:
+      self._resolver_context.Empty()
 
   def AddExtractionOptions(self, argument_group):
     """Adds the extraction options to the argument group.
@@ -1339,76 +1347,6 @@ class ExtractionFrontend(StorageMediaFrontend):
           dest='profile_sample_rate', action='store', default=0, help=(
               u'The profile sample rate (defaults to a sample every {0:d} '
               u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
-
-  # Note that this function is not called by the normal termination.
-  def CleanUpAfterAbort(self):
-    """Signals the tool to stop running nicely after an abort."""
-    if self._single_process_mode and self._debug_mode:
-      logging.warning(u'Running in debug mode, set up debugger.')
-      pdb.post_mortem()
-      return
-
-    logging.warning(u'Stopping collector.')
-    if self._collector:
-      self._collector.SignalEndOfInput()
-
-    logging.warning(u'Stopping storage.')
-    self._engine.SignalEndOfInputStorageQueue()
-
-    # Kill the collection process.
-    if self._collection_process:
-      logging.warning(u'Terminating the collection process.')
-      self._collection_process.terminate()
-
-    try:
-      logging.warning(u'Waiting for workers to complete.')
-      for worker_name, worker_process in self._worker_processes.iteritems():
-        pid = worker_process.pid
-        logging.warning(u'Waiting for worker: {0:s} [PID {1:d}]'.format(
-            worker_name, pid))
-        # Let's kill the process, different methods depending on the platform
-        # used.
-        if sys.platform.startswith('win'):
-          import ctypes
-          process_terminate = 1
-          handle = ctypes.windll.kernel32.OpenProcess(
-              process_terminate, False, pid)
-          ctypes.windll.kernel32.TerminateProcess(handle, -1)
-          ctypes.windll.kernel32.CloseHandle(handle)
-        else:
-          try:
-            os.kill(pid, signal.SIGKILL)
-          except OSError as exception:
-            logging.error(
-                u'Unable to kill process {0:d} with error: {1:s}'.format(
-                    pid, exception))
-
-        logging.warning(u'Worker: {0:d} CLOSED'.format(pid))
-
-      logging.warning(u'Workers completed.')
-      if hasattr(self, 'storage_process'):
-        logging.warning(u'Waiting for storage.')
-        self._storage_process.join()
-        logging.warning(u'Storage ended.')
-
-      logging.info(u'Exiting the tool.')
-      # Sometimes the main process will be unresponsive.
-      if not sys.platform.startswith('win'):
-        os.kill(os.getpid(), signal.SIGKILL)
-
-    except KeyboardInterrupt:
-      logging.warning(u'Terminating all processes.')
-      for process in self._worker_processes:
-        process.terminate()
-
-      logging.warning(u'Worker processes terminated.')
-      if hasattr(self, 'storage_process'):
-        self._storage_process.terminate()
-        logging.warning(u'Storage terminated.')
-
-      # Sometimes the main process will be unresponsive.
-      if not sys.platform.startswith('win'):
-        os.kill(os.getpid(), signal.SIGKILL)
 
   def GetSourceFileSystemSearcher(self):
     """Retrieves the file system searcher of the source.
@@ -1598,9 +1536,11 @@ class ExtractionFrontend(StorageMediaFrontend):
       options: the command line arguments (instance of argparse.Namespace).
 
     Raises:
-      BadConfigOption: if the options are incorrect or not supported.
+      SourceScannerError: if the source scanner could not find a supported
+                          file system.
+      UserAbort: if the user initiated an abort.
     """
-    super(ExtractionFrontend, self).ProcessSource(options)
+    self.ScanSource(options)
 
     self.PrintOptions(options, self._source_path)
 
