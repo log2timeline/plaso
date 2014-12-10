@@ -17,9 +17,12 @@
 # limitations under the License.
 """The multi-process processing engine."""
 
+import ctypes
 import logging
 import multiprocessing
 import os
+import signal
+import sys
 import threading
 
 from plaso.engine import collector
@@ -32,52 +35,26 @@ from plaso.multi_processing import rpc_proxy
 from plaso.parsers import context as parsers_context
 
 
-class MultiProcessCollector(collector.Collector):
-  """Class that implements a multi-process collector object."""
+def SigKill(pid):
+  """Convenience function to issue a SIGKILL or equivalent.
 
-  def __init__(
-      self, process_queue, source_path, source_path_spec,
-      resolver_context=None):
-    """Initializes the multi-process collector object.
+  Args:
+    pid: The process identifier.
+  """
+  if sys.platform.startswith('win'):
+    process_terminate = 1
+    handle = ctypes.windll.kernel32.OpenProcess(
+        process_terminate, False, pid)
+    ctypes.windll.kernel32.TerminateProcess(handle, -1)
+    ctypes.windll.kernel32.CloseHandle(handle)
 
-       The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it is added to the process queue
-       as a path specification (instance of dfvfs.PathSpec).
-
-    Args:
-      process_queue: The process queue (instance of Queue). This queue contains
-                     the file entries that need to be processed.
-      source_path: Path of the source file or directory.
-      source_path_spec: The source path specification (instance of
-                        dfvfs.PathSpec) as determined by the file system
-                        scanner. The default is None.
-      resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None.
-    """
-    super(MultiProcessCollector, self).__init__(
-        process_queue, source_path, source_path_spec,
-        resolver_context=resolver_context)
-
-    self._rpc_proxy_client = None
-
-  def Collect(self):
-    """Collects files from the source."""
-    if self._rpc_proxy_client:
-      self._rpc_proxy_client.Open()
-
-    super(MultiProcessCollector, self).Collect()
-
-    if self._rpc_proxy_client:
-      # Send the notification.
-      _ = self._rpc_proxy_client.GetData(u'signal_end_of_collection')
-
-  def SetProxy(self, rpc_proxy_client):
-    """Sets the RPC proxy the collector should use.
-
-    Args:
-      rpc_proxy_client: A RPC proxy client object (instance of ProxyClient).
-    """
-    self._rpc_proxy_client = rpc_proxy_client
+  else:
+    try:
+      os.kill(pid, signal.SIGKILL)
+    except OSError as exception:
+      logging.error(
+          u'Unable to kill process {0:d} with error: {1:s}'.format(
+              pid, exception))
 
 
 class MultiProcessEngine(engine.BaseEngine):
@@ -105,6 +82,7 @@ class MultiProcessEngine(engine.BaseEngine):
         collection_queue, storage_queue, parse_error_queue)
 
     self._collection_process = None
+    self._foreman_object = None
     self._storage_process = None
 
     # TODO: turn into a process pool.
@@ -113,6 +91,7 @@ class MultiProcessEngine(engine.BaseEngine):
     # Attributes for RPC proxy server thread.
     self._proxy_thread = None
     self._rpc_proxy_server = None
+    self._rpc_port_number = 0
 
   def _StartRPCProxyServerThread(self, foreman_object):
     """Starts the RPC proxy server thread.
@@ -134,6 +113,8 @@ class MultiProcessEngine(engine.BaseEngine):
           name='rpc_proxy', target=self._rpc_proxy_server.StartProxy)
       self._proxy_thread.start()
 
+      self._rpc_port_number = self._rpc_proxy_server.listening_port
+
     except errors.ProxyFailedToStart as exception:
       logging.error((
           u'Unable to setup a RPC server for the engine with error '
@@ -150,8 +131,9 @@ class MultiProcessEngine(engine.BaseEngine):
     if self._proxy_thread.isAlive():
       self._proxy_thread.join()
 
-    self._rpc_proxy_server = None
     self._proxy_thread = None
+    self._rpc_proxy_server = None
+    self._rpc_port_number = 0
 
   def CreateCollector(
       self, include_directory_stat, vss_stores=None, filter_find_specs=None,
@@ -183,7 +165,7 @@ class MultiProcessEngine(engine.BaseEngine):
     if not self._source_path_spec:
       raise RuntimeError(u'Missing source.')
 
-    collector_object = MultiProcessCollector(
+    collector_object = collector.Collector(
         self._collection_queue, self._source, self._source_path_spec,
         resolver_context=resolver_context)
 
@@ -210,7 +192,7 @@ class MultiProcessEngine(engine.BaseEngine):
         self._event_queue_producer, self._parse_error_queue_producer,
         self.knowledge_base)
 
-    extraction_worker = MultiProcessEventExtractionWorker(
+    extraction_worker = worker.BaseEventExtractionWorker(
         worker_number, self._collection_queue, self._event_queue_producer,
         self._parse_error_queue_producer, parser_context)
 
@@ -280,53 +262,34 @@ class MultiProcessEngine(engine.BaseEngine):
 
       number_of_extraction_workers = cpu_count
 
-    foreman_object = None
-    rpc_proxy_client = None
-
     if have_foreman_process:
-      foreman_object = foreman.Foreman(show_memory_usage=show_memory_usage)
-      self._StartRPCProxyServerThread(foreman_object)
+      self._foreman_object = foreman.Foreman(
+          show_memory_usage=show_memory_usage)
+      self._StartRPCProxyServerThread(self._foreman_object)
 
-      try:
-        rpc_proxy_client = rpc_proxy.StandardRpcProxyClient(
-            self._rpc_proxy_server.listening_port)
-
-        collector_object.SetProxy(rpc_proxy_client)
-
-      except errors.ProxyFailedToStart as exception:
-        logging.error((
-            u'Unable to setup a RPC client for the engine with error '
-            u'{0:s}').format(exception))
-
-    logging.info(u'Starting storage process.')
-    self._storage_process = multiprocessing.Process(
-        name='StorageProcess', target=storage_writer.WriteEventObjects)
+    self._storage_process = MultiProcessStorageProcess(
+        storage_writer, name='StorageProcess')
     self._storage_process.start()
 
     if have_collection_process:
-      logging.info(u'Starting collection process.')
-      self._collection_process = multiprocessing.Process(
-          name='CollectionProcess', target=collector_object.Collect)
+      self._collection_process = MultiProcessCollectionProcess(
+          collector_object, self._rpc_port_number, name='CollectionProcess')
       self._collection_process.start()
 
     logging.info(u'Starting extraction worker processes.')
     for worker_number in range(number_of_extraction_workers):
       extraction_worker = self.CreateExtractionWorker(worker_number)
 
-      # TODO: clean this up with the implementation of a task based
-      # multi-processing approach.
-      extraction_worker.parser_filter_string = parser_filter_string
-
       worker_name = u'Worker_{0:d}'.format(worker_number)
 
       # TODO: Test to see if a process pool can be a better choice.
-      logging.debug(u'Starting worker: {0:d} process'.format(worker_number))
-      worker_process = multiprocessing.Process(
-          name=worker_name, target=extraction_worker.Run)
+      worker_process = MultiProcessEventExtractionWorkerProcess(
+          extraction_worker, parser_filter_string, name=worker_name)
       worker_process.start()
 
-      if have_foreman_process:
-        foreman_object.MonitorWorker(pid=worker_process.pid, name=worker_name)
+      if self._foreman_object:
+        self._foreman_object.MonitorWorker(
+            pid=worker_process.pid, name=worker_name)
 
       self._worker_processes[worker_name] = worker_process
 
@@ -336,11 +299,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
     else:
       while self._collection_process.is_alive():
-        self._collection_process.join(10)
+        self._collection_process.join(timeout=10)
 
         # Check the worker status regularly while collection is still ongoing.
-        if have_foreman_process:
-          foreman_object.CheckStatus()
+        if self._foreman_object:
+          self._foreman_object.CheckStatus()
 
           # TODO: We get a signal when collection is done, which might happen
           # before the collection thread joins. Look at the option of speeding
@@ -348,8 +311,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
     logging.info(u'Collection stopped.')
 
-    if have_foreman_process:
-      foreman_object.SignalEndOfProcessing()
+    self._StopProcessing()
+
+  def _StopProcessing(self):
+    """Stops the foreman and worker processes."""
+    if self._foreman_object:
+      self._foreman_object.SignalEndOfProcessing()
       self._StopRPCProxyServerThread()
 
     # Run through the running workers, one by one.
@@ -360,9 +327,11 @@ class MultiProcessEngine(engine.BaseEngine):
     # move on. That ensures that worker process is monitored and status is
     # updated.
     while self._worker_processes:
+      # Note that self._worker_processes is altered in this loop hence we need
+      # it to be sorted.
       for process_name, process_obj in sorted(self._worker_processes.items()):
-        if have_foreman_process:
-          worker_label = foreman_object.GetLabel(
+        if self._foreman_object:
+          worker_label = self._foreman_object.GetLabel(
               name=process_name, pid=process_obj.pid)
         else:
           worker_label = None
@@ -385,8 +354,9 @@ class MultiProcessEngine(engine.BaseEngine):
 
         if process_obj.is_alive():
           # Check status of worker.
-          foreman_object.CheckStatus(label=worker_label)
-          process_obj.join(5)
+          self._foreman_object.CheckStatus(label=worker_label)
+          process_obj.join(timeout=5)
+
         # Note that we explicitly must test against exitcode 0 here since
         # process.exitcode will be None if there is no exitcode.
         elif process_obj.exitcode != 0:
@@ -394,13 +364,16 @@ class MultiProcessEngine(engine.BaseEngine):
               u'Worker process: {0:s} already exited with code: '
               u'{1:d}.').format(process_name, process_obj.exitcode))
           process_obj.terminate()
-          foreman_object.TerminateProcess(label=worker_label)
+          self._foreman_object.TerminateProcess(label=worker_label)
 
         else:
           # Process is no longer alive, no need to monitor.
-          foreman_object.StopMonitoringWorker(label=worker_label)
+          self._foreman_object.StopMonitoringWorker(label=worker_label)
           # Remove it from our list of active workers.
           del self._worker_processes[process_name]
+
+    if self._foreman_object:
+      self._foreman_object = None
 
     logging.info(u'Extraction workers stopped.')
     self._event_queue_producer.SignalEndOfInput()
@@ -408,28 +381,161 @@ class MultiProcessEngine(engine.BaseEngine):
     self._storage_process.join()
     logging.info(u'Storage writer stopped.')
 
-
-class MultiProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
-  """Class that defines the multi-process event extraction worker."""
-
-  def __init__(
-      self, identifier, process_queue, event_queue_producer,
-      parse_error_queue_producer, parser_context):
-    """Initializes the event extraction worker object.
+  def _AbortNormal(self, timeout=None):
+    """Abort in a normal way.
 
     Args:
-      identifier: A thread identifier, usually an incrementing integer.
-      process_queue: The process queue (instance of Queue). This queue contains
-                     the file entries that need to be processed.
-      event_queue_producer: The event object queue producer (instance of
-                            ItemQueueProducer).
-      parse_error_queue_producer: The parse error queue producer (instance of
-                                  ItemQueueProducer).
-      parser_context: A parser context object (instance of ParserContext).
+      timeout: The process join timeout. The default is None meaning
+               no timeout.
     """
-    super(MultiProcessEventExtractionWorker, self).__init__(
-        identifier, process_queue, event_queue_producer,
-        parse_error_queue_producer, parser_context)
+    if self._collection_process:
+      logging.warning(u'Signaling collection process to abort.')
+      self._collection_process.SignalAbort()
+
+    if self._worker_processes:
+      logging.warning(u'Signaling worker processes to abort.')
+      for _, worker_process in self._worker_processes.iteritems():
+        worker_process.SignalAbort()
+
+    logging.warning(u'Signaling storage process to abort.')
+    self._event_queue_producer.SignalEndOfInput()
+    self._storage_process.SignalAbort()
+
+    if self._collection_process:
+      logging.warning(u'Waiting for collection process: {0:d}.'.format(
+          self._collection_process.pid))
+      # TODO: it looks like xmlrpclib.ServerProxy is not allowing the
+      # collection process to close.
+      self._collection_process.join(timeout=timeout)
+
+    if self._worker_processes:
+      for worker_name, worker_process in self._worker_processes.iteritems():
+        logging.warning(u'Waiting for worker: {0:s} process: {1:d}'.format(
+            worker_name, worker_process.pid))
+        worker_process.join(timeout=timeout)
+
+    if self._storage_process:
+      logging.warning(u'Waiting for storage process: {0:d}.'.format(
+          self._collection_process.pid))
+      self._storage_process.join(timeout=timeout)
+
+  def _AbortTerminate(self):
+    """Abort processing by sending SIGTERM or equivalent."""
+    if self._collection_process and self._collection_process.is_alive():
+      logging.warning(u'Terminating collection process: {0:d}.'.format(
+          self._collection_process.pid))
+      self._collection_process.terminate()
+
+    if self._worker_processes:
+      for worker_name, worker_process in self._worker_processes.iteritems():
+        if worker_process.is_alive():
+          logging.warning(u'Terminating worker: {0:s} process: {1:d}'.format(
+              worker_name, worker_process.pid))
+          worker_process.terminate()
+
+    if self._storage_process and self._storage_process.is_alive():
+      logging.warning(u'Terminating storage process: {0:d}.'.format(
+          self._storage_process.pid))
+      self._storage_process.terminate()
+
+  def _AbortKill(self):
+    """Abort processing by sending SIGKILL or equivalent."""
+    if self._collection_process and self._collection_process.is_alive():
+      logging.warning(u'Killing collection process: {0:d}.'.format(
+          self._collection_process.pid))
+      SigKill(self._collection_process.pid)
+
+    if self._worker_processes:
+      for worker_name, worker_process in self._worker_processes.iteritems():
+        if worker_process.is_alive():
+          logging.warning(u'Killing worker: {0:s} process: {1:d}'.format(
+              worker_name, worker_process.pid))
+          SigKill(worker_process.pid)
+
+    if self._storage_process and self._storage_process.is_alive():
+      logging.warning(u'Killing storage process: {0:d}.'.format(
+          self._storage_process.pid))
+      SigKill(self._storage_process.pid)
+
+  def SignalAbort(self):
+    """Signals the engine to abort."""
+    super(MultiProcessEngine, self).SignalAbort()
+
+    try:
+      self._AbortNormal(timeout=2)
+      self._AbortTerminate()
+    except KeyboardInterrupt:
+      self._AbortKill()
+
+    # TODO: remove the need for this.
+    # Sometimes the main process will be unresponsive.
+    SigKill(os.getpid())
+
+
+class MultiProcessCollectionProcess(multiprocessing.Process):
+  """Class that defines a multi-processing collection process."""
+
+  def __init__(self, collector_object, rpc_port_number, **kwargs):
+    """Initializes the process object.
+
+    Args:
+      collector_object: A collector object (instance of Collector).
+      rpc_port_number: An integer value containing the RPC end point port
+                       number or 0 if not set.
+    """
+    super(MultiProcessCollectionProcess, self).__init__(**kwargs)
+    self._collector_object = collector_object
+    self._rpc_port_number = rpc_port_number
+
+  # This method part of the multiprocessing.Process interface hence its name
+  # is not following the style guide.
+  def run(self):
+    """The main loop."""
+    # Prevent the KeyboardInterrupt being raised inside the worker process.
+    # This will prevent a collection process to generate a traceback
+    # when interrupted.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    logging.debug(u'Collection process: {0!s} started'.format(self._name))
+    if self._rpc_port_number:
+      try:
+        rpc_proxy_client = rpc_proxy.StandardRpcProxyClient(
+            self._rpc_port_number)
+        rpc_proxy_client.Open()
+
+      except errors.ProxyFailedToStart as exception:
+        logging.error((
+            u'Unable to setup a RPC client for the collector process with '
+            u'error {0:s}').format(exception))
+
+    self._collector_object.Collect()
+
+    logging.debug(u'Collection process: {0!s} stopped'.format(self._name))
+    if rpc_proxy_client:
+      _ = rpc_proxy_client.GetData(u'signal_end_of_collection')
+
+  def SignalAbort(self):
+    """Signals the process to abort."""
+    self._collector_object.SignalAbort()
+
+
+class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
+  """Class that defines a multi-processing event extraction worker process."""
+
+  def __init__(self, extraction_worker, parser_filter_string, **kwargs):
+    """Initializes the process object.
+
+    Args:
+      extraction_worker: The extraction worker object (instance of
+                         MultiProcessEventExtractionWorker).
+      parser_filter_string: Optional parser filter string. The default is None.
+    """
+    super(MultiProcessEventExtractionWorkerProcess, self).__init__(**kwargs)
+    self._extraction_worker = extraction_worker
+
+    # TODO: clean this up with the implementation of a task based
+    # multi-processing approach.
+    self._parser_filter_string = parser_filter_string
 
     # Attributes for RPC proxy server thread.
     self._proxy_thread = None
@@ -448,7 +554,8 @@ class MultiProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
     try:
       self._rpc_proxy_server.SetListeningPort(os.getpid())
       self._rpc_proxy_server.Open()
-      self._rpc_proxy_server.RegisterFunction('status', self.GetStatus)
+      self._rpc_proxy_server.RegisterFunction(
+          'status', self._extraction_worker.GetStatus)
 
       self._proxy_thread = threading.Thread(
           name='rpc_proxy', target=self._rpc_proxy_server.StartProxy)
@@ -474,24 +581,66 @@ class MultiProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
     self._rpc_proxy_server = None
     self._proxy_thread = None
 
-  def Run(self):
-    """Extracts event objects from file entries."""
-    self._StartRPCProxyServerThread()
+  # This method part of the multiprocessing.Process interface hence its name
+  # is not following the style guide.
+  def run(self):
+    """The main loop."""
+    # Prevent the KeyboardInterrupt being raised inside the worker process.
+    # This will prevent a worker process to generate a traceback
+    # when interrupted.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     # We need to initialize the parser object after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
-    if not self._parser_objects:
-      self.InitalizeParserObjects(
-          parser_filter_string=self.parser_filter_string)
+    self._extraction_worker.InitalizeParserObjects(
+        parser_filter_string=self._parser_filter_string)
 
-    super(MultiProcessEventExtractionWorker, self).Run()
+    logging.debug(u'Worker process: {0!s} started'.format(self._name))
+    self._StartRPCProxyServerThread()
 
+    self._extraction_worker.Run()
+
+    logging.debug(u'Worker process: {0!s} stopped'.format(self._name))
     self._StopRPCProxyServerThread()
+
+  def SignalAbort(self):
+    """Signals the process to abort."""
+    self._extraction_worker.SignalAbort()
+
+
+class MultiProcessStorageProcess(multiprocessing.Process):
+  """Class that defines a multi-processing storage process."""
+
+  def __init__(self, storage_writer, **kwargs):
+    """Initializes the process object.
+
+    Args:
+      storage_writer: A storage writer object (instance of BaseStorageWriter).
+    """
+    super(MultiProcessStorageProcess, self).__init__(**kwargs)
+    self._storage_writer = storage_writer
+
+  # This method part of the multiprocessing.Process interface hence its name
+  # is not following the style guide.
+  def run(self):
+    """The main loop."""
+    # Prevent the KeyboardInterrupt being raised inside the worker process.
+    # This will prevent a storage process to generate a traceback
+    # when interrupted.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    logging.debug(u'Storage process: {0!s} started'.format(self._name))
+    self._storage_writer.WriteEventObjects()
+    logging.debug(u'Storage process: {0!s} stopped'.format(self._name))
+
+  def SignalAbort(self):
+    """Signals the process to abort."""
+    self._storage_writer.SignalAbort()
 
 
 class MultiProcessingQueue(queue.Queue):
-  """Multi-processing queue."""
+  """Class that defines the multi-processing queue."""
 
   def __init__(self, maximum_number_of_queued_items=0):
     """Initializes the multi-processing queue object.

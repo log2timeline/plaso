@@ -42,6 +42,7 @@ class ParserContext(object):
                       for parsing.
     """
     super(ParserContext, self).__init__()
+    self._abort = False
     self._event_queue_producer = event_queue_producer
     self._filter_object = None
     self._knowledge_base = knowledge_base
@@ -51,6 +52,11 @@ class ParserContext(object):
 
     self.number_of_events = 0
     self.number_of_parse_errors = 0
+
+  @property
+  def abort(self):
+    """Read-only value to indicate the parsing should be aborted."""
+    return self._abort
 
   @property
   def codepage(self):
@@ -277,3 +283,7 @@ class ParserContext(object):
       text_prepend: string that contains the text to prepend to every event.
     """
     self._text_prepend = text_prepend
+
+  def SignalAbort(self):
+    """Signals the parsers to abort."""
+    self._abort = True

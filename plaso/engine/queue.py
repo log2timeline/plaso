@@ -71,7 +71,12 @@ class QueueConsumer(object):
       queue_object: the queue object (instance of Queue).
     """
     super(QueueConsumer, self).__init__()
+    self._abort = False
     self._queue = queue_object
+
+  def SignalAbort(self):
+    """Signals the consumer to abort."""
+    self._abort = True
 
 
 class QueueProducer(object):
@@ -87,7 +92,12 @@ class QueueProducer(object):
       queue_object: the queue object (instance of Queue).
     """
     super(QueueProducer, self).__init__()
+    self._abort = False
     self._queue = queue_object
+
+  def SignalAbort(self):
+    """Signals the producer to abort."""
+    self._abort = True
 
   def SignalEndOfInput(self):
     """Signals the queue no input remains."""
@@ -112,11 +122,8 @@ class EventObjectQueueConsumer(QueueConsumer):
 
     Args:
       kwargs: keyword arguments to pass to the _ConsumeEventObject callback.
-
-    Raises:
-      RuntimeError: when there is an unsupported object type on the queue.
     """
-    while True:
+    while not self._abort:
       try:
         item = self._queue.PopItem()
       except errors.QueueEmpty:
@@ -129,6 +136,8 @@ class EventObjectQueueConsumer(QueueConsumer):
         break
 
       self._ConsumeEventObject(item, **kwargs)
+
+    self._abort = False
 
 
 class ItemQueueConsumer(QueueConsumer):
@@ -147,7 +156,7 @@ class ItemQueueConsumer(QueueConsumer):
 
   def ConsumeItems(self):
     """Consumes the items that are pushed on the queue."""
-    while True:
+    while not self._abort:
       try:
         item = self._queue.PopItem()
       except errors.QueueEmpty:
@@ -160,6 +169,8 @@ class ItemQueueConsumer(QueueConsumer):
         break
 
       self._ConsumeItem(item)
+
+    self._abort = False
 
 
 class ItemQueueProducer(QueueProducer):
