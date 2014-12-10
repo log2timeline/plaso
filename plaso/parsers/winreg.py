@@ -322,6 +322,9 @@ class WinRegistryParser(interface.BasePluginsParser):
         # TODO: determine if the plugin matches the key and continue
         # to the next key.
         for plugin in plugins[weight]:
+          if parser_context.abort:
+            break
+
           plugin.Process(
               parser_context, file_entry=file_entry, key=key,
               registry_type=self._registry_type,
