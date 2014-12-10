@@ -242,7 +242,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     if self._open_files:
       try:
         for sub_file_entry in classifier.Classifier.SmartOpenFiles(file_entry):
+          if self._abort:
+            break
+
           self.ParseFileEntry(sub_file_entry)
+
       except IOError as exception:
         logging.warning(
             u'Unable to parse file: {0:s} with error: {1:s}'.format(
@@ -336,6 +340,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                     event object.
     """
     self._parser_context.SetTextPrepend(text_prepend)
+
+  def SignalAbort(self):
+    """Signals the worker to abort."""
+    super(BaseEventExtractionWorker, self).SignalAbort()
+    self._parser_context.SignalAbort()
 
   @classmethod
   def SupportsProfiling(cls):
