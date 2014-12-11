@@ -521,7 +521,7 @@ class PcapParser(interface.BaseParser):
 
       else:
         tcp = ip_packet.data
-      
+
       stream_key = 'tcp: {0:s}:{1:d} > {2:s}:{3:d}'.format(
           source_ip_address, tcp.sport, destination_ip_address, tcp.dport)
 
@@ -631,62 +631,62 @@ class PcapParser(interface.BaseParser):
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_DTP:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), 'DTP')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), 'DTP')
       stream_object.protocol_data = 'DTP'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_REVARP:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), 'RARP')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), 'RARP')
       stream_object.protocol_data = 'Reverse ARP'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_8021Q:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), '8021Q packet')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), '8021Q packet')
       stream_object.protocol_data = '8021Q packet'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_IPX:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), 'IPX')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), 'IPX')
       stream_object.protocol_data = 'IPX'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_PPP:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), 'PPP')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), 'PPP')
       stream_object.protocol_data = 'PPP'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_MPLS:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), 'MPLS')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), 'MPLS')
       stream_object.protocol_data = 'MPLS'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_MPLS_MCAST:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), 'MPLS')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), 'MPLS')
       stream_object.protocol_data = 'MPLS MCAST'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_PPPoE_DISC:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), 'PPOE')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), 'PPOE')
       stream_object.protocol_data = 'PPoE Disc packet'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_PPPoE:
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), 'PPPoE')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), 'PPPoE')
       stream_object.protocol_data = 'PPPoE'
 
     elif str(hex(ether.type)) == '0x2452':
       stream_object = Stream(
-           packet_values, ether.data, binascii.hexlify(ether.src),
-           binascii.hexlify(ether.dst), '802.11')
+          packet_values, ether.data, binascii.hexlify(ether.src),
+          binascii.hexlify(ether.dst), '802.11')
       stream_object.protocol_data = '802.11'
 
     return stream_object
@@ -718,8 +718,8 @@ class PcapParser(interface.BaseParser):
       source_ip_address = socket.inet_ntoa(ip_packet.src)
       destination_ip_address = socket.inet_ntoa(ip_packet.dst)
       stream_object = Stream(
-             packet_values, ip_packet.data, source_ip_address,
-             destination_ip_address, 'BAD')
+          packet_values, ip_packet.data, source_ip_address,
+          destination_ip_address, 'BAD')
       stream_object.protocolData = 'Bad truncated IP packet'
       other_streams.append(stream_object)
 
@@ -817,24 +817,27 @@ class PcapParser(interface.BaseParser):
       if not stream_object.protocol == 'ICMP':
         stream_object.Clean()
 
+      event_objects = [
+          PcapEvent(
+              min(stream_object.timestamps),
+              eventdata.EventTimestamp.START_TIME, stream_object),
+          PcapEvent(
+              max(stream_object.timestamps),
+              eventdata.EventTimestamp.END_TIME, stream_object)]
+
       parser_context.ProduceEvents(
-          [PcapEvent(
-               min(stream_object.timestamps),
-               eventdata.EventTimestamp.START_TIME, stream_object),
-           PcapEvent(
-               max(stream_object.timestamps),
-               eventdata.EventTimestamp.END_TIME, stream_object)],
-          parser_chain=parser_chain, file_entry=file_entry)
+          event_objects, parser_chain=parser_chain, file_entry=file_entry)
 
     for stream_object in other_streams:
+      event_objects = [
+          PcapEvent(
+              min(stream_object.timestamps),
+              eventdata.EventTimestamp.START_TIME, stream_object),
+          PcapEvent(
+              max(stream_object.timestamps),
+              eventdata.EventTimestamp.END_TIME, stream_object)]
       parser_context.ProduceEvents(
-          [PcapEvent(
-               min(stream_object.timestamps),
-               eventdata.EventTimestamp.START_TIME, stream_object),
-           PcapEvent(
-               max(stream_object.timestamps),
-               eventdata.EventTimestamp.END_TIME, stream_object)],
-          parser_chain=parser_chain, file_entry=file_entry)
+          event_objects, parser_chain=parser_chain, file_entry=file_entry)
 
 
 manager.ParsersManager.RegisterParser(PcapParser)

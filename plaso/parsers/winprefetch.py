@@ -397,6 +397,10 @@ class WinPrefetchParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Unsupported format version: {0:d}'.format(format_version))
 
+    # Add ourselves to the parser chain, which will be used in all subsequent
+    # event creation in this parser.
+    parser_chain = self._BuildParserChain(parser_chain)
+
     file_information = self._ParseFileInformation(file_object, format_version)
     metrics_array = self._ParseMetricsArray(
         file_object, format_version, file_information)
