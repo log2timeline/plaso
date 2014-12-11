@@ -135,7 +135,7 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
       # to an output writer. Change this entire function so it can utilize
       # PrintHeader or something similar.
       return_string_pieces.append(frontend_utils.FormatHeader(header))
-      for entry_header, entry_data in data:
+      for entry_header, entry_data in sorted(data):
         return_string_pieces.append(
             frontend_utils.FormatOutputString(entry_header, entry_data))
 
@@ -368,6 +368,7 @@ def Main():
   except UnicodeEncodeError:
     # If we get here we are attempting to print help in a "dumb" terminal.
     print arg_parser.format_help().encode(front_end.preferred_encoding)
+    return False
 
   if options.timezone == 'list':
     front_end.ListTimeZones()
