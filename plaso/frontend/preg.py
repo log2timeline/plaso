@@ -49,6 +49,8 @@ import IPython
 from IPython.config.loader import Config
 from IPython.core import magic
 
+import pysmdev
+
 from plaso.artifacts import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
@@ -182,6 +184,12 @@ class PregFrontend(frontend.ExtractionFrontend):
   # the second half of the name, eg: "userassist" instead of
   # "winreg_userassist".
   PLUGIN_UNIQUE_NAME_START = len('winreg_')
+
+  # Define the different run modes.
+  RUN_MODE_CONSOLE = 1
+  RUN_MODE_REG_FILE = 2
+  RUN_MODE_REG_PLUGIN = 3
+  RUN_MODE_REG_KEY = 4
 
   def __init__(self, output_writer):
     """Initializes the front-end object."""
@@ -337,6 +345,29 @@ class PregFrontend(frontend.ExtractionFrontend):
     self._verbose_output = getattr(options, 'verbose', False)
 
     self.plugins = parsers_manager.ParsersManager.GetWindowsRegistryPlugins()
+
+    if image:
+      file_to_check = image
+    else:
+      file_to_check = regfile
+
+    is_file, reason = PathExists(file_to_check)
+    if not is_file:
+      raise errors.BadConfigOption(
+          u'Unable to read the input file with error: {0:s}'.format(reason))
+
+    if getattr(options, 'console', False):
+      self.run_mode = self.RUN_MODE_CONSOLE
+    elif getattr(options, 'key', u'') and regfile:
+      self.run_mode = self.RUN_MODE_REG_KEY
+    elif getattr(options, 'plugin_names', u''):
+      self.run_mode = self.RUN_MODE_REG_PLUGIN
+    elif regfile:
+      self.run_mode = self.RUN_MODE_REG_PLUGIN
+    else:
+      raise errors.BadConfigOption(
+          u'Incorrect usage. You\'ll need to define the path of either '
+          u'a storage media image or a Windows Registry file.')
 
   def _ExpandKeysRedirect(self, keys):
     """Expands a list of Registry key paths with their redirect equivalents.
@@ -611,6 +642,8 @@ class PregFrontend(frontend.ExtractionFrontend):
     Raises:
       ValueError: If neither registry_types nor plugin name is passed
                   as a parameter.
+      BadConfigOption: If the source scanner is unable to complete due to
+                       a source scanner error or back end error in dfvfs.
     """
     if registry_types is None and plugin_names is None:
       raise ValueError(
@@ -1849,6 +1882,29 @@ def ParseKey(key, shell_helper, hive_helper, verbose=False, use_plugins=None):
   return print_strings
 
 
+# TODO: Move this to dfVFS and improve.
+def PathExists(file_path):
+  """Determine whether given file path exists as a file, directory or a device.
+
+  Args:
+    file_path: A string denoting the file path that needs checking.
+
+  Returns:
+    A tuple, a boolean indicating whether or not the path exists and a string
+    that contains the reason, if any, why this was not determined to be a file.
+  """
+  if os.path.exists(file_path):
+    return True, u''
+
+  try:
+    if pysmdev.check_device(file_path):
+      return True, u''
+  except IOError as exception:
+    return False, u'Unable to determine, with error: {0:s}'.format(exception)
+
+  return False, u'Not an existing file.'
+
+
 def RunModeConsole(front_end, options):
   """Open up an iPython console.
 
@@ -2086,19 +2142,14 @@ in a textual format.
 
   # Run the tool, using the run mode according to the options passed
   # to the tool.
-  if options.console:
+  if front_end.run_mode == front_end.RUN_MODE_CONSOLE:
     RunModeConsole(front_end, options)
-  # TODO: merge the following run functions.
-  elif options.key and options.regfile:
+  if front_end.run_mode == front_end.RUN_MODE_REG_KEY:
     front_end.RunModeRegistryKey(options, options.plugin_names)
-  elif options.plugin_names:
+  elif front_end.run_mode == front_end.RUN_MODE_REG_PLUGIN:
     front_end.RunModeRegistryPlugin(options, options.plugin_names)
-  elif options.regfile:
+  elif front_end.run_mode == front_end.RUN_MODE_REG_FILE:
     front_end.RunModeRegistryFile(options, options.regfile)
-  else:
-    print (u'Incorrect usage. You\'ll need to define the path of either '
-           u'a storage media image or a Windows Registry file.')
-    return False
 
   return True
 

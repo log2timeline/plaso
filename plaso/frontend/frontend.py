@@ -27,6 +27,7 @@ import traceback
 
 from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
@@ -743,8 +744,12 @@ class StorageMediaFrontend(Frontend):
 
     while True:
       last_scan_node = self._scan_context.last_scan_node
-      self._scan_context = self._source_scanner.Scan(
-          self._scan_context, scan_path_spec=scan_path_spec)
+      try:
+        self._scan_context = self._source_scanner.Scan(
+            self._scan_context, scan_path_spec=scan_path_spec)
+      except dfvfs_errors.BackEndError as exception:
+        raise errors.SourceScannerError(
+            u'Unable to scan source, with error: {0:s}'.format(exception))
 
       # The source is a directory or file.
       if self._scan_context.source_type in [
