@@ -49,7 +49,7 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-DISTDIR="Plaso ${PLASO_VERSION}";
+DISTDIR="plaso-${PLASO_VERSION}";
 
 if test -d "${DISTDIR}";
 then
@@ -60,8 +60,9 @@ fi
 
 mkdir "${DISTDIR}";
 cp -r config/licenses "${DISTDIR}";
-cp config/macosx/install.sh "${DISTDIR}";
 cp config/macosx/Readme.txt "${DISTDIR}";
+
+sed "s/@VOLUMENAME@/${DISTDIR}/" config/macosx/install.sh.in > "${DISTDIR}/install.sh";
 
 mkdir "${DISTDIR}/packages";
 cp dependencies/*.pkg "${DISTDIR}/packages";

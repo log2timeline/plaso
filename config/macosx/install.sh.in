@@ -26,19 +26,29 @@ echo "==============================================================="
 
 if test "$USER" != "root";
 then
-  echo "Need to have root privileges, testing sudo.";
+  echo "This script requires root privileges. Running: sudo.";
   sudo ls > /dev/null
 
   if test $? -ne 0;
   then
     echo "Do you have root privileges?";
+
     exit ${EXIT_FAILURE};
   fi
 fi
 
+VOLUME_NAME="/Volumes/@VOLUMENAME@";
+
+if ! test -d ${VOLUME_NAME};
+then
+  echo "Unable to find installation directory: ${VOLUME_NAME}";
+
+  exit ${EXIT_FAILURE};
+fi
+
 echo "Installing packages.";
 
-find ./packages/ -name "*.pkg" -exec sudo installer -target / -pkg {} \;
+find ${VOLUME_NAME} -name "*.pkg" -exec sudo installer -target / -pkg {} \;
 
 echo "Done.";
 
