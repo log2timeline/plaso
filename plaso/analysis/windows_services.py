@@ -17,11 +17,13 @@
 # limitations under the License.
 """A plugin to enable quick triage of Windows Services."""
 
-import yaml
-
 from plaso.analysis import interface
 from plaso.lib import event
 from plaso.winnt import human_readable_service_enums
+
+# Moving this import to the bottom due to complaints from certain versions of
+# linters.
+import yaml
 
 
 class WindowsService(yaml.YAMLObject):
