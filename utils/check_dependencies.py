@@ -295,23 +295,41 @@ if __name__ == '__main__':
   if not CheckPythonModule('bencode', '', ''):
     check_result = False
 
-  if not CheckPythonModule('dateutil.parser', '', ''):
-    check_result = False
-
   if not CheckPythonModule('binplist', '__version__', '0.1.4'):
-    check_result = False
-
-  if not CheckPythonModule('six', '__version__', '1.1.0'):
-    check_result = False
-
-  if not CheckPythonModule(
-      'psutil', '__version__', '1.2.1'):
     check_result = False
 
   if not CheckPythonModule('construct', '__version__', '2.5.2'):
     check_result = False
 
+  if not CheckPythonModule('dateutil.parser', '', ''):
+    check_result = False
+
+  if not CheckPythonModule('dfvfs', '__version__', '20140824'):
+    check_result = False
+
   if not CheckPythonModule('dpkt', '__version__', '1.8'):
+    check_result = False
+
+  # The protobuf module does not appear to have version information.
+  if not CheckPythonModule('google.protobuf', '', ''):
+    check_result = False
+
+  if not CheckPythonModule('hachoir_core', '__version__', '1.3.3'):
+    check_result = False
+
+  if not CheckPythonModule('hachoir_parser', '__version__', '1.3.4'):
+    check_result = False
+
+  if not CheckPythonModule('hachoir_metadata', '__version__', '1.3.3'):
+    check_result = False
+
+  if not CheckPythonModule('IPython', '__version__', '1.2.1'):
+    check_result = False
+
+  if not CheckPythonModule('yaml', '__version__', '3.10'):
+    check_result = False
+
+  if not CheckPythonModule('psutil', '__version__', '1.2.1'):
     check_result = False
 
   if not CheckPythonModule('pyparsing', '__version__', '2.0.2'):
@@ -322,20 +340,10 @@ if __name__ == '__main__':
   if not CheckPythonModule('pytz', '', ''):
     check_result = False
 
-  # The protobuf module does not appear to have version information.
-  if not CheckPythonModule('google.protobuf', '', ''):
-    check_result = False
-
-  if not CheckPythonModule('dfvfs', '__version__', '20140824'):
+  if not CheckPythonModule('six', '__version__', '1.1.0'):
     check_result = False
 
   if not CheckPythonModule('sqlite3', 'sqlite_version', '3.7.8'):
-    check_result = False
-
-  if not CheckPythonModule('yaml', '__version__', '3.10'):
-    check_result = False
-
-  if not CheckPythonModule('IPython', '__version__', '1.2.1'):
     check_result = False
 
   if not CheckPytsk():
