@@ -19,6 +19,8 @@
 EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
+# TODO: make this script Mac OS X compatible.
+
 # Remove support for hachoir which is GPLv2 and cannot be distributed
 # in binary form. Leave the formatter because it does not link in the
 # hachoir code.
@@ -38,6 +40,8 @@ SED_SCRIPT="
 }";
 
 sed -i -e "${SED_SCRIPT}" plaso/frontend/presets.py
+
+sed -i "/hachoir_/+2d" plaso/utils/check_dependencies.py
 
 exit ${EXIT_SUCCESS};
 
