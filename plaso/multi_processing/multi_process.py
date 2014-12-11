@@ -497,6 +497,8 @@ class MultiProcessCollectionProcess(multiprocessing.Process):
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     logging.debug(u'Collection process: {0!s} started'.format(self._name))
+
+    rpc_proxy_client = None
     if self._rpc_port_number:
       try:
         rpc_proxy_client = rpc_proxy.StandardRpcProxyClient(
