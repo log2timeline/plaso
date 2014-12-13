@@ -68,7 +68,7 @@ mkdir "${DISTDIR}/packages";
 cp dependencies/*.pkg "${DISTDIR}/packages";
 cp ../python-plaso-${PLASO_VERSION}.pkg "${DISTDIR}/packages";
 
-hdiutil create ../plaso-${PLASO_VERSION}_macosx-${MACOSX_VERSION}.dmg -srcfolder "${DISTDIR}/packages" -fs HFS+;
+hdiutil create ../plaso-${PLASO_VERSION}_macosx-${MACOSX_VERSION}.dmg -srcfolder "${DISTDIR}/" -fs HFS+;
 
 exit ${EXIT_SUCCESS};
 
