@@ -19,6 +19,8 @@
 
 import json
 
+from dfvfs.serializer import json_serializer as dfvfs_json_serializer
+
 from plaso.lib import event
 from plaso.serializer import interface
 
@@ -88,9 +90,11 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
     json_attributes = json.loads(json_string)
 
     for key, value in json_attributes.iteritems():
-      # TODO: Add pathspec support.
       if key == 'tag':
         value = JsonEventTagSerializer.ReadSerialized(value)
+      elif key == 'pathspec':
+        value = dfvfs_json_serializer.JsonPathSpecSerializer.ReadSerialized(
+            value)
 
       setattr(event_object, key, value)
 
@@ -108,9 +112,10 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
     """
     event_attributes = event_object.GetValues()
 
-    # TODO: Add pathspec support.
+    serializer = dfvfs_json_serializer.JsonPathSpecSerializer
     if 'pathspec' in event_attributes:
-      del event_attributes['pathspec']
+      event_attributes['pathspec'] = serializer.WriteSerialized(
+          event_attributes['pathspec'])
 
     return json.dumps(event_attributes, cls=_EventTypeJsonEncoder)
 

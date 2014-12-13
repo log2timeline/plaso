@@ -146,10 +146,10 @@ class StorageFileTest(unittest.TestCase):
 
       expected_z_filename_list = [
           'plaso_index.000001', 'plaso_meta.000001', 'plaso_proto.000001',
-          'plaso_timestamps.000001']
+          'plaso_timestamps.000001', 'serializer.txt']
 
       z_filename_list = sorted(z_file.namelist())
-      self.assertEquals(len(z_filename_list), 4)
+      self.assertEquals(len(z_filename_list), 5)
       self.assertEquals(z_filename_list, expected_z_filename_list)
 
   def testStorage(self):

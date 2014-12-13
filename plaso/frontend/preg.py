@@ -2135,7 +2135,7 @@ in a textual format.
   try:
     front_end.ParseOptions(options, source_option='image')
   except errors.BadConfigOption as exception:
-    arg_parser.print_help()
+    arg_parser.print_usage()
     print u''
     logging.error('{0:s}'.format(exception))
     return False
