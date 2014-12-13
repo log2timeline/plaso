@@ -829,6 +829,9 @@ class ExtractionFrontend(StorageMediaFrontend):
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
 
+  _EVENT_SERIALIZER_FORMAT_PROTO = u'proto'
+  _EVENT_SERIALIZER_FORMAT_JSON = u'json'
+
   def __init__(self, input_reader, output_writer):
     """Initializes the front-end object.
 
@@ -863,6 +866,7 @@ class ExtractionFrontend(StorageMediaFrontend):
     self._single_process_mode = False
     self._show_worker_memory_information = False
     self._storage_file_path = None
+    self._storage_serializer_format = self._EVENT_SERIALIZER_FORMAT_PROTO
     self._timezone = pytz.utc
 
   def _CheckStorageFile(self, storage_file_path):
@@ -1165,7 +1169,8 @@ class ExtractionFrontend(StorageMediaFrontend):
     else:
       storage_writer = storage.StorageFileWriter(
           self._engine.storage_queue, self._storage_file_path,
-          self._buffer_size, pre_obj)
+          buffer_size=self._buffer_size, pre_obj=pre_obj,
+          serializer_format=self._storage_serializer_format)
 
     try:
       self._engine.ProcessSource(
@@ -1279,7 +1284,8 @@ class ExtractionFrontend(StorageMediaFrontend):
     else:
       storage_writer = storage.StorageFileWriter(
           self._engine.storage_queue, self._storage_file_path,
-          buffer_size=self._buffer_size, pre_obj=pre_obj)
+          buffer_size=self._buffer_size, pre_obj=pre_obj,
+          serializer_format=self._storage_serializer_format)
 
     try:
       self._engine.ProcessSource(
@@ -1407,6 +1413,11 @@ class ExtractionFrontend(StorageMediaFrontend):
       except ValueError:
         raise errors.BadConfigOption(
             u'Invalid profile sample rate: {0:s}.'.format(profile_sample_rate))
+
+    serializer_format = getattr(
+        options, 'serializer_format', self._EVENT_SERIALIZER_FORMAT_PROTO)
+    if serializer_format:
+      self.SetStorageSerializer(serializer_format)
 
     self._filter_expression = getattr(options, 'filter', None)
     if self._filter_expression:
@@ -1584,6 +1595,20 @@ class ExtractionFrontend(StorageMediaFrontend):
       storage_file_path: The path of the storage file.
     """
     self._storage_file_path = storage_file_path
+
+  def SetStorageSerializer(self, storage_serializer_format):
+    """Sets the storage serializer.
+
+    Args:
+      storage_serializer_format: String denoting the type of serializer
+                                 to be used in the storage. The values
+                                 can be either "proto" or "json".
+    """
+    if storage_serializer_format not in (
+        self._EVENT_SERIALIZER_FORMAT_JSON,
+        self._EVENT_SERIALIZER_FORMAT_PROTO):
+      return
+    self._storage_serializer_format = storage_serializer_format
 
   def SetRunForeman(self, run_foreman=True):
     """Sets a flag indicating whether the frontend should monitor workers.

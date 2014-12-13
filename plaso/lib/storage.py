@@ -116,6 +116,7 @@ from plaso.lib import output
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
+from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
 
 
@@ -220,7 +221,8 @@ class StorageFile(object):
     source_short_map[value.name] = value.number
 
   def __init__(
-      self, output_file, buffer_size=0, read_only=False, pre_obj=None):
+      self, output_file, buffer_size=0, read_only=False, pre_obj=None,
+      serializer_format='proto'):
     """Initializes the storage file.
 
     Args:
@@ -231,6 +233,8 @@ class StorageFile(object):
                  for reading only. The default is false.
       pre_obj: Optional preprocessing object that gets stored inside
                the storage file. The default is None.
+      serializer_format: A string containing either "proto" or "json". The
+                         default is proto.
 
     Raises:
       IOError: if we open up the file in read only mode and the file does
@@ -244,6 +248,8 @@ class StorageFile(object):
     self._buffer_first_timestamp = sys.maxint
     self._buffer_last_timestamp = 0
     self._buffer_size = 0
+    self._event_object_serializer = None
+    self._event_serializer_format_string = u''
     self._event_tag_index = None
     self._file_open = False
     self._file_number = 1
@@ -257,14 +263,17 @@ class StorageFile(object):
 
     self._analysis_report_serializer = (
         protobuf_serializer.ProtobufAnalysisReportSerializer)
-    self._event_object_serializer = (
-        protobuf_serializer.ProtobufEventObjectSerializer)
     self._event_tag_serializer = (
         protobuf_serializer.ProtobufEventTagSerializer)
     self._pre_obj_serializer = (
         protobuf_serializer.ProtobufPreprocessObjectSerializer)
+    self._SetEventObjectSerializer(serializer_format)
 
     self._Open(read_only)
+
+    # Add information about the serializer used in the storage.
+    if not read_only and not self._OpenStream('serializer.txt'):
+      self._WriteStream('serializer.txt', self._event_serializer_format_string)
 
   def GetLastPreprocessObject(self):
     """Return the last pre-processing object from the storage file if possible.
@@ -310,6 +319,11 @@ class StorageFile(object):
 
     self._file_open = True
     self._read_only = read_only
+
+    # Read the serializer string (if available).
+    serializer = self._ReadStream('serializer.txt')
+    if serializer:
+      self._SetEventObjectSerializer(serializer)
 
     if not self._read_only:
       logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
@@ -773,6 +787,17 @@ class StorageFile(object):
       file_object.close()
 
     return ''.join(data_segments)
+
+  def _SetEventObjectSerializer(self, serializer_string):
+    """Set the serializer for the event object."""
+    if serializer_string == 'json':
+      self._event_object_serializer = (
+          json_serializer.JsonEventObjectSerializer)
+      self._event_serializer_format_string = 'json'
+    else:
+      self._event_object_serializer = (
+          protobuf_serializer.ProtobufEventObjectSerializer)
+      self._event_serializer_format_string = 'proto'
 
   def _WritePreprocessObject(self, pre_obj):
     """Writes a preprocess object to the storage file.
@@ -1449,7 +1474,9 @@ class StorageFile(object):
 class StorageFileWriter(queue.EventObjectQueueConsumer):
   """Class that implements a storage file writer object."""
 
-  def __init__(self, storage_queue, output_file, buffer_size=0, pre_obj=None):
+  def __init__(
+      self, storage_queue, output_file, buffer_size=0, pre_obj=None,
+      serializer_format='proto'):
     """Initializes the storage file writer.
 
     Args:
@@ -1457,11 +1484,14 @@ class StorageFileWriter(queue.EventObjectQueueConsumer):
       output_file: The path to the output file.
       buffer_size: The estimated size of a protobuf file.
       pre_obj: A preprocessing object (instance of PreprocessObject).
+      serializer_format: A string containing either "proto" or "json". Defaults
+                         to proto.
     """
     super(StorageFileWriter, self).__init__(storage_queue)
     self._buffer_size = buffer_size
     self._output_file = output_file
     self._pre_obj = pre_obj
+    self._serializer_format = serializer_format
     self._storage_file = None
 
   def _ConsumeEventObject(self, event_object, **unused_kwargs):
@@ -1471,7 +1501,8 @@ class StorageFileWriter(queue.EventObjectQueueConsumer):
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
     self._storage_file = StorageFile(
-        self._output_file, buffer_size=self._buffer_size, pre_obj=self._pre_obj)
+        self._output_file, buffer_size=self._buffer_size, pre_obj=self._pre_obj,
+        serializer_format=self._serializer_format)
     self.ConsumeEventObjects()
     self._storage_file.Close()
 
@@ -1527,6 +1558,7 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
 
     self._output_module = output_class(
         self, self._output_file, config=self._pre_obj)
+
     self._output_module.Start()
     self.ConsumeEventObjects()
     self._output_module.End()
