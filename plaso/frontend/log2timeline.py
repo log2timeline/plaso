@@ -25,6 +25,9 @@ import time
 import textwrap
 
 import plaso
+
+# Registering output modules so that output bypass works.
+from plaso import output as _   # pylint: disable=unused-import
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -326,6 +329,13 @@ def Main():
           u'pstorage format but in the format chosen by the output module. '
           u'[Please not this feature is EXPERIMENTAL at this time, use at '
           u'own risk (eg. sqlite output does not yet work)]'))
+
+  function_group.add_argument(
+      '--serializer-format', '--serializer_format', dest='serializer_format',
+      action='store', default='proto', metavar='FORMAT', help=(
+          u'By default the storage uses protobufs for serializing event '
+          u'objects. This parameter can be used to change that behavior. '
+          u'The choices are "proto" and "json".'))
 
   front_end.AddInformationalOptions(info_group)
 
