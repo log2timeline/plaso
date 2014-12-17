@@ -1575,7 +1575,7 @@ class ExtractionFrontend(StorageMediaFrontend):
       # single worker.
       # TODO: Refactor this use of using the options object.
       options.workers = 1
-      self._single_process_mode = False
+      self._single_process_mode = True
 
     if self._scan_context.source_type in [
         self._scan_context.SOURCE_TYPE_DIRECTORY]:

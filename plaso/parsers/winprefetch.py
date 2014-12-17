@@ -404,7 +404,17 @@ class WinPrefetchParser(interface.BaseParser):
     file_information = self._ParseFileInformation(file_object, format_version)
     metrics_array = self._ParseMetricsArray(
         file_object, format_version, file_information)
-    filename_strings = self._ParseFilenameStrings(file_object, file_information)
+    try:
+      filename_strings = self._ParseFilenameStrings(
+          file_object, file_information)
+    except UnicodeDecodeError as exception:
+      logging.warning((
+          u'[{0:s}] Unable to parse filename information from file {1:s} '
+          u'with error: {2:s}').format(
+              parser_chain,
+              file_entry.path_spec.comparable.replace(u'\n', u';'),
+              exception))
+      filename_strings = {}
 
     if len(metrics_array) != len(filename_strings):
       logging.debug(
@@ -435,6 +445,8 @@ class WinPrefetchParser(interface.BaseParser):
             event_object, parser_chain=parser_chain, file_entry=file_entry)
 
       for filename in filename_strings.itervalues():
+        if not filename:
+          continue
         if (filename.startswith(volume_device_path) and
             filename.endswith(executable)):
           _, _, path = filename.partition(volume_device_path)
