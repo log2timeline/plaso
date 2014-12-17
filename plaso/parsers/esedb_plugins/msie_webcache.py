@@ -177,8 +177,17 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       else:
         value_mappings = None
 
-      record_values = self._GetRecordValues(
-          table.name, esedb_record, value_mappings=value_mappings)
+      try:
+        record_values = self._GetRecordValues(
+            table.name, esedb_record, value_mappings=value_mappings)
+      except UnicodeDecodeError as exception:
+        logging.error((
+            u'[{0:s}] Unable to return record values for {1:s} with error: '
+            u'{2:s}').format(
+                parser_chain,
+                file_entry.path_spec.comparable.replace(u'\n', u';'),
+                exception))
+        continue
 
       if (container_name in [
           u'Content', u'Cookies', u'History', u'iedownload'] or

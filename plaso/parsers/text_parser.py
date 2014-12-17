@@ -1088,4 +1088,12 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           logging.warning(
               u'Unable to parse log line: {0:s}'.format(repr(odd_line)))
 
-      self._text_reader.ReadLines(file_object)
+      try:
+        self._text_reader.ReadLines(file_object)
+      except UnicodeDecodeError as exception:
+        logging.error(
+            u'[{0:s}] Unable to read lines from file: {1:s} with error: '
+            u'{2:s}'.format(
+                parser_chain,
+                file_entry.path_spec.comparable.replace(u'\n', u';'),
+                exception))

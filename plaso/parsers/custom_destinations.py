@@ -168,7 +168,16 @@ class CustomDestinationsParser(interface.BaseParser):
           definitions.TYPE_INDICATOR_DATA_RANGE, range_offset=file_offset,
           range_size=remaining_file_size, parent=file_entry.path_spec)
 
-      lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
+      try:
+        lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
+      except RuntimeError as exception:
+        logging.error((
+            u'[{0:s}] Unable to open LNK file from {1:s} with error: '
+            u'{2:s}').format(
+                parser_chain,
+                file_entry.path_spec.comparable.replace(u'\n', u';'),
+                exception))
+        return
 
       display_name = u'{0:s} # 0x{1:08x}'.format(
           parser_context.GetDisplayName(file_entry), file_offset)

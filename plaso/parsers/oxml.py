@@ -121,7 +121,14 @@ class OpenXMLParser(interface.BaseParser):
     metadata = {}
     timestamps = {}
 
-    rels_xml = zip_container.read('_rels/.rels')
+    try:
+      rels_xml = zip_container.read('_rels/.rels')
+    except zipfile.BadZipfile as exception:
+      logging.error(
+          u'Unable to parse file {0:s} with error: {1:s}'.format(
+              file_entry.name, exception))
+      return
+
     rels_root = ElementTree.fromstring(rels_xml)
 
     for properties in rels_root.iter():
@@ -129,7 +136,9 @@ class OpenXMLParser(interface.BaseParser):
         try:
           xml = zip_container.read(properties.get('Target'))
           root = ElementTree.fromstring(xml)
-        except (OverflowError, IndexError, KeyError, ValueError) as exception:
+        except (
+            OverflowError, IndexError, KeyError, ValueError,
+            zipfile.BadZipfile) as exception:
           logging.warning(
               u'[{0:s}] unable to read property with error: {1:s}.'.format(
                   self.NAME, exception))
