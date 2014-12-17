@@ -19,7 +19,7 @@
 
 categories = {
     'win_gen': [
-        'bencode', 'filestat', 'google_drive', 'java_idx', 'lnk',
+        'bencode', 'esedb', 'filestat', 'google_drive', 'java_idx', 'lnk',
         'mcafee_protection', 'olecf', 'openxml', 'prefetch',
         'skydrive_log_error', 'skydrive_log', 'skype',
         'symantec_scanlog', 'webhist', 'winfirewall', 'winjob',
@@ -29,17 +29,19 @@ categories = {
     'winxp_slow': [
         'hachoir', 'winxp'],
     'win7': [
-        'recycle_bin', 'win_gen', 'winevtx'],
+        'recycle_bin', 'custom_destinations', 'olecf_automatic_destinations',
+        'win_gen', 'winevtx'],
     'win7_slow': [
         'hachoir', 'win7'],
     'webhist': [
-        'chrome_cache', 'chrome_cookies', 'chrome_history', 'firefox_cache',
+        'chrome_cache', 'chrome_cookies', 'chrome_extension_activity',
+        'chrome_history', 'firefox_cache', 'firefox_cookies',
         'firefox_downloads', 'firefox_history', 'java_idx', 'msie_webcache',
         'msiecf', 'opera_global', 'opera_typed_history', 'safari_history'],
     'linux': [
         'bencode', 'filestat', 'google_drive', 'java_idx', 'olecf', 'openxml',
-        'popcontest', 'selinux', 'skype', 'syslog', 'utmp', 'webhist',
-        'xchatlog', 'xchatscrollback', 'zeitgeist'],
+        'pls_recall', 'popularity_contest', 'selinux', 'skype', 'syslog',
+        'utmp', 'webhist', 'xchatlog', 'xchatscrollback', 'zeitgeist'],
     'macosx': [
         'appusage', 'asl_log', 'bencode', 'bsm_log', 'cups_ipp', 'filestat',
         'google_drive', 'java_idx', 'ls_quarantine', 'mac_appfirewall_log',
@@ -51,7 +53,7 @@ categories = {
     # mode.
     'macosx_slow': ['macosx', 'syslog'],
     'android': [
-        'android_calls', 'android_sms'],
+        'android_app_usage', 'android_calls', 'android_sms'],
 }
 
 

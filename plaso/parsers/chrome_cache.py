@@ -372,8 +372,16 @@ class ChromeCacheParser(interface.BaseParser):
         data_block_file_path_spec = path_spec_factory.Factory.NewPathSpec(
             file_entry.path_spec.TYPE_INDICATOR, **kwargs)
 
-        data_block_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-            data_block_file_path_spec)
+        try:
+          data_block_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+              data_block_file_path_spec)
+        except RuntimeError as exception:
+          logging.error((
+              u'[{0:s}] Unable to open data block file: {1:s} while parsing '
+              u'{2:s} with error: {3:s}').format(
+                  parser_chain, kwargs['location'],
+                  file_entry.path_spec.comparable, exception))
+          data_block_file_entry = None
 
         if not data_block_file_entry:
           logging.error(u'Missing data block file: {0:s}'.format(
