@@ -506,7 +506,8 @@ class ProtobufEventObjectSerializer(interface.EventObjectSerializer):
       event_object: an event object (instance of EventObject).
 
     Returns:
-      A protobuf string containing the serialized form.
+      A protobuf string containing the serialized form or None if
+      there is an error encoding the protobuf.
     """
     proto = cls.WriteSerializedObject(event_object)
     try:
