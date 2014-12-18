@@ -17,6 +17,7 @@
 # limitations under the License.
 """The json serializer object implementation."""
 
+import logging
 import json
 
 from dfvfs.serializer import json_serializer as dfvfs_json_serializer
@@ -108,7 +109,8 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
       event_object: an event object (instance of EventObject).
 
     Returns:
-      An object containing the serialized form.
+      An object containing the serialized form or None if the event
+      cannot be serialized.
     """
     event_attributes = event_object.GetValues()
 
@@ -117,7 +119,13 @@ class JsonEventObjectSerializer(interface.EventObjectSerializer):
       event_attributes['pathspec'] = serializer.WriteSerialized(
           event_attributes['pathspec'])
 
-    return json.dumps(event_attributes, cls=_EventTypeJsonEncoder)
+    try:
+      return json.dumps(event_attributes, cls=_EventTypeJsonEncoder)
+    except UnicodeDecodeError as exception:
+      # TODO: Add better error handling so this can be traced to a parser or
+      # a plugin and to which file that caused it.
+      logging.error(u'Unable to serialize event with error: {0:s}'.format(
+          exception))
 
 
 class JsonEventTagSerializer(interface.EventTagSerializer):
