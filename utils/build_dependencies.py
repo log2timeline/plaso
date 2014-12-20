@@ -1920,7 +1920,7 @@ class PkgBuildHelper(BuildHelper):
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
         logging.info(u'Removing: {0:s}'.format(filename))
-        shutil.rmtree(filename)
+        os.remove(filename)
 
   def GetOutputFilename(self, source_helper):
     """Retrieves the filename of one of the resulting files.
