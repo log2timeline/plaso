@@ -304,7 +304,7 @@ if __name__ == '__main__':
   if not CheckPythonModule('dateutil.parser', '', ''):
     check_result = False
 
-  if not CheckPythonModule('dfvfs', '__version__', '20141212'):
+  if not CheckPythonModule('dfvfs', '__version__', '20141220'):
     check_result = False
 
   if not CheckPythonModule('dpkt', '__version__', '1.8'):
