@@ -1,5 +1,9 @@
-# Don't want compiled files being displayed.
+# Ignore back-up files.
+*~
+
+# Ignore compiled Python files.
 *.pyc
+*.pyo
 
 # Don't include build related files.
 /dependencies/
