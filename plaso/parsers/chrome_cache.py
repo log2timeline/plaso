@@ -418,7 +418,7 @@ class ChromeCacheParser(interface.BaseParser):
 
         try:
           cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
-        except IOError as exception:
+        except (IOError, UnicodeDecodeError) as exception:
           logging.error(
               u'Unable to parse cache entry with error: {0:s}'.format(
                   exception))
