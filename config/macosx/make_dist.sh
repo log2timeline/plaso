@@ -20,14 +20,14 @@
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
-if ! test -d dependencies;
+if test ! -d dependencies;
 then
   echo "Missing dependencies directory.";
 
   exit ${EXIT_FAILURE};
 fi
 
-if ! test -d config;
+if test ! -d config;
 then
   echo "Missing config directory.";
 
@@ -36,24 +36,32 @@ fi
 
 MACOSX_VERSION=`sw_vers -productVersion | awk -F '.' '{print $1 "." $2}'`;
 PLASO_VERSION=`grep -e '^__version' plaso/__init__.py | sed -e "s/^[^=]*= '\([^']*\)'/\1/g"`;
+PKG_IDENTIFIER="com.github.log2timeline.plaso";
+PKG_FILENAME="../python-plaso-${PLASO_VERSION}.pkg";
+DISTDIR="plaso-${PLASO_VERSION}";
 
-if ! test -z $1;
+if test ! -z $1;
 then
   PLASO_VERSION="${PLASO_VERSION}-$1";
 fi
 
-if ! test -f ../python-plaso-${PLASO_VERSION}.pkg;
+rm -rf build dist ${DISTDIR} ../${PKG_FILENAME} plaso-${PLASO_VERSION}_macosx-${MACOSX_VERSION}.dmg;
+
+python setup.py bdist
+
+mkdir dist/tmp
+cd dist/tmp
+tar xfvz ../*.tar.gz
+cd ../..
+
+mkdir -p dist/tmp/usr/share/doc/plaso
+cp AUTHORS ACKNOWLEDGEMENTS LICENSE dist/tmp/usr/share/doc/plaso
+
+pkgbuild --root dist/tmp --identifier ${PKG_IDENTIFIER} --version ${PLASO_VERSION} --ownership recommended ${PKG_FILENAME};
+
+if test ! -f ${PKG_FILENAME};
 then
   echo "Missing plaso package: ../python-plaso-${PLASO_VERSION}.pkg file.";
-
-  exit ${EXIT_FAILURE};
-fi
-
-DISTDIR="plaso-${PLASO_VERSION}";
-
-if test -d "${DISTDIR}";
-then
-  echo "Distribution directory: ${DISTDIR} already exists.";
 
   exit ${EXIT_FAILURE};
 fi
