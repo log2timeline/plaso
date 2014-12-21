@@ -29,8 +29,8 @@ categories = {
     'winxp_slow': [
         'hachoir', 'winxp'],
     'win7': [
-        'recycle_bin', 'custom_destinations', 'olecf_automatic_destinations',
-        'win_gen', 'winevtx'],
+        'recycle_bin', 'custom_destinations', 'esedb_file_history',
+        'olecf_automatic_destinations', 'win_gen', 'winevtx'],
     'win7_slow': [
         'hachoir', 'win7'],
     'webhist': [
