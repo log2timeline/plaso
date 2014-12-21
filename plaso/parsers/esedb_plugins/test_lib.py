@@ -24,6 +24,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import single_process
+from plaso.parsers import esedb
 from plaso.parsers import test_lib
 
 
@@ -71,6 +72,7 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
     esedb_file = self._OpenEseDbFile(path)
-    plugin_object.Process(parser_context, database=esedb_file)
+    cache = esedb.EseDbCache()
+    plugin_object.Process(parser_context, database=esedb_file, cache=cache)
 
     return event_queue_consumer

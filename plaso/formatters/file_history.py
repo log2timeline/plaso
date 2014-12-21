@@ -15,7 +15,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains import statements for the ESE database plugins."""
+"""Formatters for the file history ESE database events."""
 
-from plaso.parsers.esedb_plugins import file_history
-from plaso.parsers.esedb_plugins import msie_webcache
+from plaso.formatters import interface
+
+
+class FileHistoryNamespaceEventFormatter(interface.ConditionalEventFormatter):
+  """Formatter for a file history ESE database namespace table record."""
+
+  DATA_TYPE = 'file_history:namespace:event'
+
+  FORMAT_STRING_PIECES = [
+      u'Filename: {original_filename}',
+      u'Identifier: {identifier}',
+      u'Parent Identifier: {parent_identifier}',
+      u'Attributes: {file_attribute}',
+      u'USN number: {usn_number}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Filename: {original_filename}']
+
+  SOURCE_LONG = 'File History Namespace'
+  SOURCE_SHORT = 'LOG'
