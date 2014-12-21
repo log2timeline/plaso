@@ -31,6 +31,7 @@ from plaso.formatters import chrome_cookies
 from plaso.formatters import chrome_extension_activity
 from plaso.formatters import cups_ipp
 from plaso.formatters import filestat
+from plaso.formatters import file_history
 from plaso.formatters import firefox
 from plaso.formatters import firefox_cache
 from plaso.formatters import firefox_cookies

@@ -34,6 +34,15 @@ if pyesedb.get_version() < '20140301':
 class EseDbCache(plugins.BasePluginCache):
   """A cache storing query results for ESEDB plugins."""
 
+  def StoreDictInCache(self, attribute_name, dict_object):
+    """Store a dict object in cache.
+
+    Args:
+      attribute_name: The name of the attribute.
+      dict_object: A dict object.
+    """
+    setattr(self, attribute_name, dict_object)
+
 
 class EseDbParser(interface.BasePluginsParser):
   """Parses Extensible Storage Engine (ESE) database files (EDB)."""
