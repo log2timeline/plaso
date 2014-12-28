@@ -45,7 +45,7 @@ then
   PLASO_VERSION="${PLASO_VERSION}-$1";
 fi
 
-rm -rf build dist ${DISTDIR} ../${PKG_FILENAME} plaso-${PLASO_VERSION}_macosx-${MACOSX_VERSION}.dmg;
+rm -rf build dist ${DISTDIR} ../${PKG_FILENAME} ../plaso-${PLASO_VERSION}_macosx-${MACOSX_VERSION}.dmg;
 
 python setup.py bdist
 
