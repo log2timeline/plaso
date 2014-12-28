@@ -880,15 +880,14 @@ class PythonModuleDpkgBuildFilesGenerator(object):
 
   _CONTROL_TEMPLATE = u'\n'.join([
       u'Source: python-{project_name:s}',
-      u'Section: misc',
+      u'Section: python',
       u'Priority: extra',
       u'Maintainer: {upstream_maintainer:s}',
       u'Build-Depends: debhelper (>= 7), python, python-setuptools',
-      u'Standards-Version: 3.8.3',
+      u'Standards-Version: 3.9.5',
       u'Homepage: {upstream_homepage:s}',
       u'',
       u'Package: python-{project_name:s}',
-      u'Section: python',
       u'Architecture: all',
       u'Depends: {depends:s}',
       u'Description: {description_short:s}',
@@ -912,38 +911,57 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       u'%:',
       u'	dh  $@',
       u'',
+      u'.PHONY: override_dh_auto_clean',
       u'override_dh_auto_clean:',
       u'',
+      u'.PHONY: override_dh_auto_test',
       u'override_dh_auto_test:',
       u'',
+      u'.PHONY: override_dh_installmenu',
       u'override_dh_installmenu:',
       u'',
+      u'.PHONY: override_dh_installmime',
       u'override_dh_installmime:',
       u'',
+      u'.PHONY: override_dh_installmodules',
       u'override_dh_installmodules:',
       u'',
+      u'.PHONY: override_dh_installlogcheck',
       u'override_dh_installlogcheck:',
       u'',
+      u'.PHONY: override_dh_installlogrotate',
       u'override_dh_installlogrotate:',
       u'',
+      u'.PHONY: override_dh_installpam',
       u'override_dh_installpam:',
       u'',
+      u'.PHONY: override_dh_installppp',
       u'override_dh_installppp:',
       u'',
+      u'.PHONY: override_dh_installudev',
       u'override_dh_installudev:',
       u'',
+      u'.PHONY: override_dh_installwm',
       u'override_dh_installwm:',
       u'',
+      u'.PHONY: override_dh_installxfonts',
       u'override_dh_installxfonts:',
       u'',
+      u'.PHONY: override_dh_gconf',
       u'override_dh_gconf:',
       u'',
+      u'.PHONY: override_dh_icons',
       u'override_dh_icons:',
       u'',
+      u'.PHONY: override_dh_perl',
       u'override_dh_perl:',
       u'',
+      u'.PHONY: override_dh_pysupport',
       u'override_dh_pysupport:',
       u''])
+
+  _SOURCE_FORMAT_TEMPLATE = u'\n'.join([
+      u'1.0'])
 
   def __init__(
       self, project_name, project_version, dependency_definition):
@@ -1087,6 +1105,17 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       data = self._RULES_TEMPLATE
       file_object.write(data.encode('utf-8'))
 
+  def _GenerateSourceFormatFile(self, dpkg_path):
+    """Generate the dpkg build source/format file.
+
+    Args:
+      dpkg_path: the path to the dpkg files.
+    """
+    filename = os.path.join(dpkg_path, u'source', u'format')
+    with open(filename, 'wb') as file_object:
+      data = self._SOURCE_FORMAT_TEMPLATE
+      file_object.write(data.encode('utf-8'))
+
   def GenerateFiles(self, dpkg_path):
     """Generate the dpkg build files.
 
@@ -1100,6 +1129,9 @@ class PythonModuleDpkgBuildFilesGenerator(object):
     self._GenerateCopyrightFile(dpkg_path)
     self._GenerateDocsFile(dpkg_path)
     self._GenerateRulesFile(dpkg_path)
+
+    os.mkdir(os.path.join(dpkg_path, u'source'))
+    self._GenerateSourceFormatFile(dpkg_path)
 
 
 class BuildHelper(object):
@@ -1480,16 +1512,16 @@ class LibyalMsiBuildHelper(MsiBuildHelper):
     """
     super(LibyalMsiBuildHelper, self).__init__(dependency_definition)
 
-    if os.environ['VS90COMNTOOLS']:
+    if 'VS90COMNTOOLS' in os.environ:
       self.version = '2008'
 
-    elif not os.environ['VS100COMNTOOLS']:
+    elif 'VS100COMNTOOLS' in os.environ:
       self.version = '2010'
 
-    elif not os.environ['VS110COMNTOOLS']:
+    elif 'VS110COMNTOOLS' in os.environ:
       self.version = '2012'
 
-    elif not os.environ['VS120COMNTOOLS']:
+    elif 'VS120COMNTOOLS' in os.environ:
       self.version = '2013'
 
     else:
