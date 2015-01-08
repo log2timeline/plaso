@@ -83,7 +83,7 @@ class DependencyDefinitionReader(object):
       An object containing the value or None if the value does not exists.
     """
     try:
-      return config_parser.get(section_name, value_name)
+      return config_parser.get(section_name, value_name).decode('utf-8')
     except configparser.NoOptionError:
       return
 
@@ -909,10 +909,16 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       u'',
       u'',
       u'%:',
-      u'	dh  $@',
+      u'	dh  $@ --with python2',
+      u'',
+      u'.PHONY: override_dh_auto_build',
+      u'override_dh_auto_build:',
       u'',
       u'.PHONY: override_dh_auto_clean',
       u'override_dh_auto_clean:',
+      u'',
+      u'.PHONY: override_dh_auto_install',
+      u'override_dh_auto_install:',
       u'',
       u'.PHONY: override_dh_auto_test',
       u'override_dh_auto_test:',
@@ -958,6 +964,10 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       u'',
       u'.PHONY: override_dh_pysupport',
       u'override_dh_pysupport:',
+      u'',
+      u'.PHONY: override_dh_python2',
+      u'override_dh_python2:',
+      u'	dh_python2 -V 2.7 setup.py',
       u''])
 
   _SOURCE_FORMAT_TEMPLATE = u'\n'.join([
@@ -1041,17 +1051,26 @@ class PythonModuleDpkgBuildFilesGenerator(object):
     depends = []
     if self._dependency_definition.dpkg_dependencies:
       depends.append(self._dependency_definition.dpkg_dependencies)
-    depends.append('${{shlibs:Depends}}')
-    depends.append('${{python:Depends}}')
+    depends.append('${shlibs:Depends}')
+    depends.append('${misc:Depends}')
     depends = u', '.join(depends)
+
+    # description short needs to be a single line.
+    description_short = self._dependency_definition.description_short
+    description_short = u' '.join(description_short.split(u'\n'))
+
+    # description long needs a space at the start of every line after
+    # the first.
+    description_long = self._dependency_definition.description_long
+    description_long = u'\n '.join(description_long.split(u'\n'))
 
     template_values = {
         'project_name': project_name,
         'upstream_maintainer': self._dependency_definition.maintainer,
         'upstream_homepage': self._dependency_definition.homepage_url,
         'depends': depends,
-        'description_short': self._dependency_definition.description_short,
-        'description_long': self._dependency_definition.description_long}
+        'description_short': description_short,
+        'description_long': description_long}
 
     filename = os.path.join(dpkg_path, u'control')
     with open(filename, 'wb') as file_object:
