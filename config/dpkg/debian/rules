@@ -9,37 +9,63 @@ export DH_OPTIONS
 
 
 %:
-	dh  $@
+	dh  $@ --with python2
 
+.PHONY: override_dh_auto_build
+override_dh_auto_build:
+
+.PHONY: override_dh_auto_clean
 override_dh_auto_clean:
 
+.PHONY: override_dh_auto_install
+override_dh_auto_install:
+
+.PHONY: override_dh_auto_test
 override_dh_auto_test:
 
+.PHONY: override_dh_installmenu
 override_dh_installmenu:
 
+.PHONY: override_dh_installmime
 override_dh_installmime:
 
+.PHONY: override_dh_installmodules
 override_dh_installmodules:
 
+.PHONY: override_dh_installlogcheck
 override_dh_installlogcheck:
 
+.PHONY: override_dh_installlogrotate
 override_dh_installlogrotate:
 
+.PHONY: override_dh_installpam
 override_dh_installpam:
 
+.PHONY: override_dh_installppp
 override_dh_installppp:
 
+.PHONY: override_dh_installudev
 override_dh_installudev:
 
+.PHONY: override_dh_installwm
 override_dh_installwm:
 
+.PHONY: override_dh_installxfonts
 override_dh_installxfonts:
 
+.PHONY: override_dh_gconf
 override_dh_gconf:
 
+.PHONY: override_dh_icons
 override_dh_icons:
 
+.PHONY: override_dh_perl
 override_dh_perl:
 
+.PHONY: override_dh_pysupport
 override_dh_pysupport:
+
+.PHONY: override_dh_python2
+override_dh_python2:
+	dh_python2 -V 2.7 setup.py
 

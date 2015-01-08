@@ -1,5 +1,5 @@
 Source: python-plaso
-Section: unknown
+Section: python
 Priority: extra
 Maintainer: Log2Timeline <log2timeline-dev@googlegroups.com>
 Build-Depends: debhelper (>= 7.0.0), python, python-setuptools
