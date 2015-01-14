@@ -764,7 +764,7 @@ class SourcePackageHelper(SourceHelper):
         u'^{0:s}-.*{1!s}'.format(self.project_name, self.project_version))
 
     # Remove previous versions of source packages in the format:
-    # library-*.tar.gz
+    # project-*.tar.gz
     filenames = glob.glob(u'{0:s}-*.tar.gz'.format(self.project_name))
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -772,7 +772,7 @@ class SourcePackageHelper(SourceHelper):
         os.remove(filename)
 
     # Remove previous versions of source directories in the format:
-    # library-{version}
+    # project-{version}
     filenames = glob.glob(u'{0:s}-*'.format(self.project_name))
     for filename in filenames:
       if os.path.isdir(filename) and not filenames_to_ignore.match(filename):
@@ -910,15 +910,6 @@ class PythonModuleDpkgBuildFilesGenerator(object):
       u'',
       u'%:',
       u'	dh  $@ --with python2',
-      u'',
-      u'.PHONY: override_dh_auto_build',
-      u'override_dh_auto_build:',
-      u'',
-      u'.PHONY: override_dh_auto_clean',
-      u'override_dh_auto_clean:',
-      u'',
-      u'.PHONY: override_dh_auto_install',
-      u'override_dh_auto_install:',
       u'',
       u'.PHONY: override_dh_auto_test',
       u'override_dh_auto_test:',
@@ -1195,18 +1186,27 @@ class DpkgBuildHelper(BuildHelper):
       'libsqlite3-dev',
   ])
 
-  def _BuildPrepare(self, source_directory):
+  def _BuildPrepare(
+      self, source_directory, project_name, project_version, version_suffix,
+      distribution, architecture):
     """Make the necassary preperations before building the dpkg packages.
 
     Args:
       source_directory: the name of the source directory.
+      project_name: the name of the project.
+      project_version: the version of the project.
+      version_suffix: the version suffix.
+      distribution: the distribution.
+      architecture: the architecture.
 
     Returns:
       True if the preparations were successful, False otherwise.
     """
-    # Script to run before building, e.g. to change the dpkg build files.
+    # Script to run before building, e.g. to change the dpkg packaging files.
     if os.path.exists(u'prep-dpkg.sh'):
-      command = u'sh ../prep-dpkg.sh'
+      command = u'sh ../prep-dpkg.sh {0:s} {1!s} {2:s} {3:s} {4:s}'.format(
+          project_name, project_version, version_suffix, distribution,
+          architecture)
       exit_code = subprocess.call(
           u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
       if exit_code != 0:
@@ -1215,19 +1215,28 @@ class DpkgBuildHelper(BuildHelper):
 
     return True
 
-  def _BuildFinalize(self, source_directory):
+  def _BuildFinalize(
+      self, source_directory, project_name, project_version, version_suffix,
+      distribution, architecture):
     """Make the necassary finalizations after building the dpkg packages.
 
     Args:
       source_directory: the name of the source directory.
+      project_name: the name of the project.
+      project_version: the version of the project.
+      version_suffix: the version suffix.
+      distribution: the distribution.
+      architecture: the architecture.
 
     Returns:
       True if the finalizations were successful, False otherwise.
     """
-    # Script to run after building, e.g. to automatically upload
-    # the dpkg package files to an apt repository.
+    # Script to run after building, e.g. to automatically upload the dpkg
+    # package files to an apt repository.
     if os.path.exists(u'post-dpkg.sh'):
-      command = u'sh ../post-dpkg.sh'
+      command = u'sh ../post-dpkg.sh {0:s} {1!s} {2:s} {3:s} {4:s}'.format(
+          project_name, project_version, version_suffix, distribution,
+          architecture)
       exit_code = subprocess.call(
           u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
       if exit_code != 0:
@@ -1278,11 +1287,13 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
     """
     super(LibyalDpkgBuildHelper, self).__init__(dependency_definition)
     self.architecture = platform.machine()
+    self.distribution = u''
+    self.version_suffix = u''
 
-    if self.architecture == 'i686':
-      self.architecture = 'i386'
-    elif self.architecture == 'x86_64':
-      self.architecture = 'amd64'
+    if self.architecture == u'i686':
+      self.architecture = u'i386'
+    elif self.architecture == u'x86_64':
+      self.architecture = u'amd64'
 
   def Build(self, source_helper):
     """Builds the dpkg packages.
@@ -1295,6 +1306,12 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
     """
     source_filename = source_helper.Download()
     logging.info(u'Building deb of: {0:s}'.format(source_filename))
+
+    # dpkg-buildpackage wants an source package filename without
+    # the status indication and orig indication.
+    deb_orig_source_filename = u'{0:s}_{1!s}.orig.tar.gz'.format(
+        source_helper.project_name, source_helper.project_version)
+    shutil.copy(source_filename, deb_orig_source_filename)
 
     source_directory = source_helper.Create()
     if not source_directory:
@@ -1320,7 +1337,10 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
       shutil.rmtree(debian_directory)
     shutil.copytree(dpkg_directory, debian_directory)
 
-    if not self._BuildPrepare(source_directory):
+    if not self._BuildPrepare(
+        source_directory, source_helper.project_name,
+        source_helper.project_version, self.version_suffix, self.distribution,
+        self.architecture):
       return False
 
     command = u'dpkg-buildpackage -uc -us -rfakeroot > {0:s} 2>&1'.format(
@@ -1331,7 +1351,10 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
       logging.error(u'Running: "{0:s}" failed.'.format(command))
       return False
 
-    if not self._BuildFinalize(source_directory):
+    if not self._BuildFinalize(
+        source_directory, source_helper.project_name,
+        source_helper.project_version, self.version_suffix, self.distribution,
+        self.architecture):
       return False
 
     return True
@@ -1342,11 +1365,25 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
     Args:
       source_helper: the source helper (instance of SourceHelper).
     """
+    filenames_to_ignore = re.compile(u'^{0:s}_{1!s}.orig.tar.gz'.format(
+        source_helper.project_name, source_helper.project_version))
+
+    # Remove files of previous versions in the format:
+    # project_version.orig.tar.gz
+    filenames = glob.glob(
+        u'{0:s}_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].orig.tar.gz'.format(
+            source_helper.project_name, self.architecture))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
     filenames_to_ignore = re.compile(u'^{0:s}[-_].*{1!s}'.format(
         source_helper.project_name, source_helper.project_version))
 
     # Remove files of previous versions in the format:
-    # library[-_]version-1_architecture.*
+    # project[-_]version-1_architecture.*
     filenames = glob.glob(
         u'{0:s}[-_]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-1_'
         u'{1:s}.*'.format(source_helper.project_name, self.architecture))
@@ -1357,7 +1394,7 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
         os.remove(filename)
 
     # Remove files of previous versions in the format:
-    # library[-_]*version-1.*
+    # project[-_]*version-1.*
     filenames = glob.glob(
         u'{0:s}[-_]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-1.*'.format(
             source_helper.project_name))
@@ -1381,8 +1418,161 @@ class LibyalDpkgBuildHelper(DpkgBuildHelper):
         self.architecture)
 
 
+class LibyalSourceDpkgBuildHelper(DpkgBuildHelper):
+  """Class that helps in building libyal source dpkg packages (.deb)."""
+
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(LibyalSourceDpkgBuildHelper, self).__init__(dependency_definition)
+    self.architecture = u'source'
+    self.distribution = u'trusty'
+    self.version_suffix = u'ppa1'
+
+  def Build(self, source_helper):
+    """Builds the dpkg packages.
+
+    Args:
+      source_helper: the source helper (instance of SourceHelper).
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    source_filename = source_helper.Download()
+    logging.info(u'Building source deb of: {0:s}'.format(source_filename))
+
+    # dpkg-buildpackage wants an source package filename without
+    # the status indication and orig indication.
+    deb_orig_source_filename = u'{0:s}_{1!s}.orig.tar.gz'.format(
+        source_helper.project_name, source_helper.project_version)
+    shutil.copy(source_filename, deb_orig_source_filename)
+
+    source_directory = source_helper.Create()
+    if not source_directory:
+      logging.error(
+          u'Extraction of source package: {0:s} failed'.format(source_filename))
+      return False
+
+    dpkg_directory = os.path.join(source_directory, u'dpkg')
+    if not os.path.exists(dpkg_directory):
+      dpkg_directory = os.path.join(source_directory, u'config', u'dpkg')
+
+    if not os.path.exists(dpkg_directory):
+      logging.error(u'Missing dpkg sub directory in: {0:s}'.format(
+          source_directory))
+      return False
+
+    debian_directory = os.path.join(source_directory, u'debian')
+
+    # If there is a debian directory remove it and recreate it from
+    # the dpkg directory.
+    if os.path.exists(debian_directory):
+      logging.info(u'Removing: {0:s}'.format(debian_directory))
+      shutil.rmtree(debian_directory)
+    shutil.copytree(dpkg_directory, debian_directory)
+
+    if not self._BuildPrepare(
+        source_directory, source_helper.project_name,
+        source_helper.project_version, self.version_suffix, self.distribution,
+        self.architecture):
+      return False
+
+    command = u'debuild -S -sa > {0:s} 2>&1'.format(
+        os.path.join(u'..', self.LOG_FILENAME))
+    exit_code = subprocess.call(
+        u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
+    if exit_code != 0:
+      logging.error(u'Running: "{0:s}" failed.'.format(command))
+      return False
+
+    if not self._BuildFinalize(
+        source_directory, source_helper.project_name,
+        source_helper.project_version, self.version_suffix, self.distribution,
+        self.architecture):
+      return False
+
+    return True
+
+  def Clean(self, source_helper):
+    """Cleans the dpkg packages in the current directory.
+
+    Args:
+      source_helper: the source helper (instance of SourceHelper).
+    """
+    filenames_to_ignore = re.compile(u'^{0:s}_{1!s}.orig.tar.gz'.format(
+        source_helper.project_name, source_helper.project_version))
+
+    # Remove files of previous versions in the format:
+    # project_version.orig.tar.gz
+    filenames = glob.glob(
+        u'{0:s}_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].orig.tar.gz'.format(
+            source_helper.project_name, self.architecture))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+    filenames_to_ignore = re.compile(u'^{0:s}[-_].*{1!s}'.format(
+        source_helper.project_name, source_helper.project_version))
+
+    # Remove files of previous versions in the format:
+    # project[-_]version-1suffix~distribution_architecture.*
+    filenames = glob.glob((
+        u'{0:s}[-_]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+        u'-1{1:s}~{2:s}_{3:s}.*').format(
+            source_helper.project_name, self.version_suffix, self.distribution,
+            self.architecture))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+    # Remove files of previous versions in the format:
+    # project[-_]*version-1suffix~distribution.*
+    filenames = glob.glob((
+        u'{0:s}[-_]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+        u'-1{1:s}~{2:s}.*').format(
+            source_helper.project_name, self.version_suffix, self.distribution))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+  def GetOutputFilename(self, source_helper):
+    """Retrieves the filename of one of the resulting files.
+
+    Args:
+      source_helper: the source helper (instance of SourceHelper).
+
+    Returns:
+      A filename of one of the resulting dpkg packages.
+    """
+    return u'{0:s}_{1!s}-1{2:s}~{3:s}_{4:s}.deb'.format(
+        source_helper.project_name, source_helper.project_version,
+        self.version_suffix, self.distribution, self.architecture)
+
+
 class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
   """Class that helps in building python module dpkg packages (.deb)."""
+
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(PythonModuleDpkgBuildHelper, self).__init__(dependency_definition)
+    self.architecture = u'all'
+    self.distribution = u''
+    self.version_suffix = u''
 
   def Build(self, source_helper):
     """Builds the dpkg packages.
@@ -1395,6 +1585,12 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
     """
     source_filename = source_helper.Download()
     logging.info(u'Building deb of: {0:s}'.format(source_filename))
+
+    # dpkg-buildpackage wants an source package filename without
+    # the status indication and orig indication.
+    deb_orig_source_filename = u'python-{0:s}_{1!s}.orig.tar.gz'.format(
+        source_helper.project_name, source_helper.project_version)
+    shutil.copy(source_filename, deb_orig_source_filename)
 
     source_directory = source_helper.Create()
     if not source_directory:
@@ -1433,7 +1629,10 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
       shutil.rmtree(debian_directory)
     shutil.copytree(dpkg_directory, debian_directory)
 
-    if not self._BuildPrepare(source_directory):
+    if not self._BuildPrepare(
+        source_directory, source_helper.project_name,
+        source_helper.project_version, self.version_suffix, self.distribution,
+        self.architecture):
       return False
 
     command = u'dpkg-buildpackage -uc -us -rfakeroot > {0:s} 2>&1'.format(
@@ -1444,7 +1643,10 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
       logging.error(u'Running: "{0:s}" failed.'.format(command))
       return False
 
-    if not self._BuildFinalize(source_directory):
+    if not self._BuildFinalize(
+        source_directory, source_helper.project_name,
+        source_helper.project_version, self.version_suffix, self.distribution,
+        self.architecture):
       return False
 
     return True
@@ -1455,13 +1657,27 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
     Args:
       source_helper: the source helper (instance of SourceHelper).
     """
+    filenames_to_ignore = re.compile(u'^python-{0:s}_{1!s}.orig.tar.gz'.format(
+        source_helper.project_name, source_helper.project_version))
+
+    # Remove files of previous versions in the format:
+    # python-project_version.orig.tar.gz
+    filenames = glob.glob(u'python-{0:s}_*.orig.tar.gz'.format(
+        source_helper.project_name, self.architecture))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
     filenames_to_ignore = re.compile(u'^python-{0:s}[-_].*{1!s}'.format(
         source_helper.project_name, source_helper.project_version))
 
     # Remove files of previous versions in the format:
     # python-{project name}[-_]{project version}-1_architecture.*
     filenames = glob.glob(
-        u'python-{0:s}[-_]*-1_all.*'.format(source_helper.project_name))
+        u'python-{0:s}[-_]*-1_{1:s}.*'.format(
+            source_helper.project_name, self.architecture))
 
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -1492,8 +1708,160 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
     else:
       project_name = source_helper.project_name
 
-    return u'python-{0:s}_{1!s}-1_all.deb'.format(
-        project_name, source_helper.project_version)
+    return u'python-{0:s}_{1!s}-1_{2:s}.deb'.format(
+        project_name, source_helper.project_version, self.architecture)
+
+
+class PythonModuleSourceDpkgBuildHelper(DpkgBuildHelper):
+  """Class that helps in building python module source dpkg packages (.deb)."""
+
+  def __init__(self, dependency_definition):
+    """Initializes the build helper.
+
+    Args:
+      dependency_definition: the dependency definition object (instance of
+                             DependencyDefinition).
+    """
+    super(PythonModuleSourceDpkgBuildHelper, self).__init__(
+        dependency_definition)
+    self.architecture = u'source'
+    self.distribution = u'trusty'
+    self.version_suffix = u'ppa1'
+
+  def Build(self, source_helper):
+    """Builds the dpkg packages.
+
+    Args:
+      source_helper: the source helper (instance of SourceHelper).
+
+    Returns:
+      True if the build was successful, False otherwise.
+    """
+    source_filename = source_helper.Download()
+    logging.info(u'Building source deb of: {0:s}'.format(source_filename))
+
+    # dpkg-buildpackage wants an source package filename without
+    # the status indication and orig indication.
+    deb_orig_source_filename = u'python-{0:s}_{1!s}.orig.tar.gz'.format(
+        source_helper.project_name, source_helper.project_version)
+    shutil.copy(source_filename, deb_orig_source_filename)
+
+    source_directory = source_helper.Create()
+    if not source_directory:
+      logging.error(
+          u'Extraction of source package: {0:s} failed'.format(source_filename))
+      return False
+
+    dpkg_directory = os.path.join(source_directory, u'dpkg')
+    if not os.path.exists(dpkg_directory):
+      dpkg_directory = os.path.join(source_directory, u'config', u'dpkg')
+
+    if not os.path.exists(dpkg_directory):
+      # Generate the dpkg build files if necessary.
+      os.chdir(source_directory)
+
+      build_files_generator = PythonModuleDpkgBuildFilesGenerator(
+          source_helper.project_name, source_helper.project_version,
+          self._dependency_definition)
+      build_files_generator.GenerateFiles(u'dpkg')
+
+      os.chdir(u'..')
+
+      dpkg_directory = os.path.join(source_directory, u'dpkg')
+
+    if not os.path.exists(dpkg_directory):
+      logging.error(u'Missing dpkg sub directory in: {0:s}'.format(
+          source_directory))
+      return False
+
+    debian_directory = os.path.join(source_directory, u'debian')
+
+    # If there is a debian directory remove it and recreate it from
+    # the dpkg directory.
+    if os.path.exists(debian_directory):
+      logging.info(u'Removing: {0:s}'.format(debian_directory))
+      shutil.rmtree(debian_directory)
+    shutil.copytree(dpkg_directory, debian_directory)
+
+    if not self._BuildPrepare(
+        source_directory, source_helper.project_name,
+        source_helper.project_version, self.version_suffix, self.distribution,
+        self.architecture):
+      return False
+
+    command = u'debuild -S -sa > {0:s} 2>&1'.format(
+        os.path.join(u'..', self.LOG_FILENAME))
+    exit_code = subprocess.call(
+        u'(cd {0:s} && {1:s})'.format(source_directory, command), shell=True)
+    if exit_code != 0:
+      logging.error(u'Running: "{0:s}" failed.'.format(command))
+      return False
+
+    if not self._BuildFinalize(
+        source_directory, source_helper.project_name,
+        source_helper.project_version, self.version_suffix, self.distribution,
+        self.architecture):
+      return False
+
+    return True
+
+  def Clean(self, source_helper):
+    """Cleans the dpkg packages in the current directory.
+
+    Args:
+      source_helper: the source helper (instance of SourceHelper).
+    """
+    filenames_to_ignore = re.compile(u'^python-{0:s}_{1!s}.orig.tar.gz'.format(
+        source_helper.project_name, source_helper.project_version))
+
+    # Remove files of previous versions in the format:
+    # python-project_version.orig.tar.gz
+    filenames = glob.glob(u'python-{0:s}_*.orig.tar.gz'.format(
+        source_helper.project_name, self.architecture))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+    filenames_to_ignore = re.compile(u'^python-{0:s}[-_].*{1!s}'.format(
+        source_helper.project_name, source_helper.project_version))
+
+    # Remove files of previous versions in the format:
+    # project[-_]version-1suffix~distribution_architecture.*
+    filenames = glob.glob((
+        u'python-{0:s}[-_]*-1{1:s}~{2:s}_{3:s}.*').format(
+            source_helper.project_name, self.version_suffix, self.distribution,
+            self.architecture))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+    # Remove files of previous versions in the format:
+    # project[-_]*version-1suffix~distribution.*
+    filenames = glob.glob((
+        u'python-{0:s}[-_]*-1{1:s}~{2:s}.*').format(
+            source_helper.project_name, self.version_suffix, self.distribution))
+
+    for filename in filenames:
+      if not filenames_to_ignore.match(filename):
+        logging.info(u'Removing: {0:s}'.format(filename))
+        os.remove(filename)
+
+  def GetOutputFilename(self, source_helper):
+    """Retrieves the filename of one of the resulting files.
+
+    Args:
+      source_helper: the source helper (instance of SourceHelper).
+
+    Returns:
+      A filename of one of the resulting dpkg packages.
+    """
+    return u'python-{0:s}_{1!s}-1{2:s}~{3:s}_{4:s}.deb'.format(
+        source_helper.project_name, source_helper.project_version,
+        self.version_suffix, self.distribution, self.architecture)
 
 
 class MsiBuildHelper(BuildHelper):
@@ -1509,10 +1877,10 @@ class MsiBuildHelper(BuildHelper):
     super(MsiBuildHelper, self).__init__(dependency_definition)
     self.architecture = platform.machine()
 
-    if self.architecture == 'x86':
-      self.architecture = 'win32'
-    elif self.architecture == 'AMD64':
-      self.architecture = 'win-amd64'
+    if self.architecture == u'x86':
+      self.architecture = u'win32'
+    elif self.architecture == u'AMD64':
+      self.architecture = u'win-amd64'
 
 
 class LibyalMsiBuildHelper(MsiBuildHelper):
@@ -2403,7 +2771,7 @@ class LibyalRpmBuildHelper(RpmBuildHelper):
     source_filename = source_helper.Download()
     logging.info(u'Building rpm of: {0:s}'.format(source_filename))
 
-    # rpmbuild wants the library filename without the status indication.
+    # rpmbuild wants the project filename without the status indication.
     rpm_source_filename = u'{0:s}-{1!s}.tar.gz'.format(
         source_helper.project_name, source_helper.project_version)
     os.rename(source_filename, rpm_source_filename)
@@ -2428,7 +2796,7 @@ class LibyalRpmBuildHelper(RpmBuildHelper):
       logging.info(u'Removing: {0:s}'.format(filename))
       os.remove(filename)
 
-    # Change the library filename back to the original.
+    # Change the project filename back to the original.
     os.rename(rpm_source_filename, source_filename)
 
     return build_successful
@@ -2579,7 +2947,7 @@ class DependencyBuilder(object):
     return True
 
   def _BuildLibyalLibrary(self, source_helper, dependency_definition):
-    """Builds a libyal library and its Python module dependency.
+    """Builds a libyal project and its Python module dependency.
 
     Args:
       source_helper: the source helper (instance of SourceHelper).
@@ -2592,6 +2960,9 @@ class DependencyBuilder(object):
     build_helper = None
     if self._build_target == 'dpkg':
       build_helper = LibyalDpkgBuildHelper(dependency_definition)
+
+    elif self._build_target == 'dpkg-source':
+      build_helper = LibyalSourceDpkgBuildHelper(dependency_definition)
 
     elif self._build_target in ['msi']:
       # TODO: setup dokan and zlib in build directory.
@@ -2638,6 +3009,9 @@ class DependencyBuilder(object):
     build_helper = None
     if self._build_target == 'dpkg':
       build_helper = PythonModuleDpkgBuildHelper(dependency_definition)
+
+    elif self._build_target == 'dpkg-source':
+      build_helper = PythonModuleSourceDpkgBuildHelper(dependency_definition)
 
     elif self._build_target in ['msi']:
       # TODO: setup sqlite in build directory.
@@ -2718,7 +3092,8 @@ class DependencyBuilder(object):
 
 
 def Main():
-  build_targets = frozenset(['download', 'dpkg', 'msi', 'pkg', 'rpm'])
+  build_targets = frozenset([
+      'download', 'dpkg', 'dpkg-source', 'msi', 'pkg', 'rpm'])
 
   args_parser = argparse.ArgumentParser(description=(
       'Downloads and builds the latest versions of plaso dependencies.'))
@@ -2766,7 +3141,7 @@ def Main():
   logging.basicConfig(
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
-  if options.build_target == 'dpkg':
+  if options.build_target in ['dpkg', 'dpkg-source']:
     missing_packages = DpkgBuildHelper.CheckBuildDependencies()
     if missing_packages:
       print (u'Required build package(s) missing. Please install: '
