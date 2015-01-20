@@ -49,10 +49,10 @@ class BaseEngine(object):
     self._event_queue_producer = queue.ItemQueueProducer(storage_queue)
     self._filter_object = None
     self._mount_path = None
-    self._open_files = False
     self._parse_error_queue = parse_error_queue
     self._parse_error_queue_producer = queue.ItemQueueProducer(
         parse_error_queue)
+    self._process_archive_files = False
     self._profiling_sample_rate = 1000
     self._source = None
     self._source_path_spec = None
@@ -201,15 +201,14 @@ class BaseEngine(object):
     """
     self._mount_path = mount_path
 
-  # TODO: rename this mode.
-  def SetOpenFiles(self, open_files):
-    """Sets the open files mode.
+  def SetProcessArchiveFiles(self, process_archive_files):
+    """Sets the process archive files mode.
 
     Args:
-      open_files: boolean value to indicate if the worker should scan for
-                  file entries inside files.
+      process_archive_files: boolean value to indicate if the worker should
+                             scan for file entries inside files.
     """
-    self._open_files = open_files
+    self._process_archive_files = process_archive_files
 
   def SetSource(self, source_path_spec, resolver_context=None):
     """Sets the source.
