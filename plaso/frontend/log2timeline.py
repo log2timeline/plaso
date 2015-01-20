@@ -27,7 +27,7 @@ import textwrap
 import plaso
 
 # Registering output modules so that output bypass works.
-from plaso import output as _   # pylint: disable=unused-import
+from plaso import output as _  # pylint: disable=unused-import
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -82,8 +82,8 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
     # TODO: remove this hack includes should be a the top if this does not work
     # remove the need for implicit behavior on import.
     from plaso import filters
-    from plaso import parsers as _
-    from plaso import output as _
+    from plaso import parsers as _  # pylint: disable=redefined-outer-name
+    from plaso import output as _  # pylint: disable=redefined-outer-name
     from plaso.frontend import presets
     from plaso.lib import output
 
@@ -274,8 +274,8 @@ def Main():
           u'stage or a regular expression.'))
 
   deep_group.add_argument(
-      '--scan_archives', dest='open_files', action='store_true', default=False,
-      help=argparse.SUPPRESS)
+      '--scan_archives', dest='scan_archives', action='store_true',
+      default=False, help=argparse.SUPPRESS)
 
   # This option is "hidden" for the time being, still left in there for testing
   # purposes, but hidden from the tool usage and help messages.

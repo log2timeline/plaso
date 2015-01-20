@@ -47,7 +47,6 @@ from plaso import output
 from plaso import parsers
 from plaso import preprocessors
 
-from plaso.classifier import scanner
 
 from plaso.engine import collector
 from plaso.engine import engine
@@ -322,13 +321,13 @@ def Main():
   options.image_offset = None
   options.image_offset_bytes = None
   options.old_preprocess = False
-  options.open_files = False
   options.output = os.path.join(temp_location, 'wheredidmytimelinego.dump')
   options.output_module = ''
   options.parsers = ''
   options.parse_vss = False
   options.preprocess = False
   options.recursive = False
+  options.scan_archives = False
   options.single_process = False
   options.timezone = 'UTC'
   options.workers = 5
