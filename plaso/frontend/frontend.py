@@ -855,11 +855,11 @@ class ExtractionFrontend(StorageMediaFrontend):
     self._mount_path = None
     self._number_of_worker_processes = 0
     self._old_preprocess = False
-    self._open_files = False
     self._operating_system = None
     self._output_module = None
     self._parser_names = None
     self._preprocess = False
+    self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._run_foreman = True
@@ -1110,7 +1110,7 @@ class ExtractionFrontend(StorageMediaFrontend):
     self._engine.SetEnableProfiling(
         self._enable_profiling,
         profiling_sample_rate=self._profiling_sample_rate)
-    self._engine.SetOpenFiles(self._open_files)
+    self._engine.SetProcessArchiveFiles(self._process_archive_files)
 
     if self._filter_object:
       self._engine.SetFilterObject(self._filter_object)
@@ -1228,7 +1228,7 @@ class ExtractionFrontend(StorageMediaFrontend):
     self._engine.SetEnableProfiling(
         self._enable_profiling,
         profiling_sample_rate=self._profiling_sample_rate)
-    self._engine.SetOpenFiles(self._open_files)
+    self._engine.SetProcessArchiveFiles(self._process_archive_files)
 
     if self._filter_object:
       self._engine.SetFilterObject(self._filter_object)
@@ -1445,7 +1445,7 @@ class ExtractionFrontend(StorageMediaFrontend):
     self._output_module = getattr(options, 'output_module', None)
 
     self._operating_system = getattr(options, 'os', None)
-    self._open_files = getattr(options, 'open_files', False)
+    self._process_archive_files = getattr(options, 'scan_archives', False)
     self._text_prepend = getattr(options, 'text_prepend', None)
 
     if self._operating_system:
