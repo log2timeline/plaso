@@ -368,6 +368,9 @@ if __name__ == '__main__':
       ('pyvshadow', 20131209),
   ])
 
+  if not libyal_check_result:
+    check_result = False
+
   if not check_result:
     build_instructions_url = (
         u'https://sites.google.com/a/kiddaland.net/plaso/developer'
@@ -375,13 +378,5 @@ if __name__ == '__main__':
 
     print u'See: {0:s} on how to set up plaso.'.format(
         build_instructions_url)
-
-  if not libyal_check_result:
-    libyal_downloads_url = (
-        u'https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg'
-        u'/libyal.html')
-
-    print u'Libyal libraries can be downloaded from here: {0:s}'.format(
-        libyal_downloads_url)
 
   print u''
