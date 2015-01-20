@@ -20,6 +20,9 @@
 import logging
 import os
 
+from dfvfs.analyzer import analyzer
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -28,7 +31,7 @@ try:
 except ImportError:
   hpy = None
 
-from plaso.engine import classifier
+from plaso.engine import collector
 from plaso.engine import queue
 from plaso.lib import errors
 from plaso.parsers import manager as parsers_manager
@@ -63,10 +66,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     super(BaseEventExtractionWorker, self).__init__(process_queue)
     self._enable_debug_output = False
     self._identifier = identifier
-    self._open_files = False
-    self._parser_context = parser_context
     self._filestat_parser_object = None
+    self._parser_context = parser_context
     self._parser_objects = None
+    self._process_archive_files = False
 
     # We need a resolver context per process to prevent multi processing
     # issues with file objects stored in images.
@@ -151,6 +154,108 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       if self._enable_debug_output:
         self._DebugParseFileEntry()
 
+  def _ProcessArchiveFile(self, file_entry):
+    """Processes an archive file (file that contains file entries).
+
+    Args:
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file is an archive file.
+    """
+    type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
+        file_entry.path_spec)
+
+    number_of_type_indicators = len(type_indicators)
+    if number_of_type_indicators == 0:
+      return False
+
+    if number_of_type_indicators > 1:
+      logging.debug((
+          u'Found multiple format type indicators: {0:s} for '
+          u'archive file: {1:s}').format(
+              type_indicators, file_entry.path_spec.comparable))
+
+    for type_indicator in type_indicators:
+      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR:
+        archive_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TAR, location=u'/',
+            parent=file_entry.path_spec)
+
+      elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_ZIP:
+        archive_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_ZIP, location=u'/',
+            parent=file_entry.path_spec)
+
+      else:
+        logging.debug((
+            u'Unsupported archive format type indicator: {0:s} for '
+            u'archive file: {1:s}').format(
+                type_indicator, archive_path_spec.comparable))
+
+        archive_path_spec = None
+
+      if archive_path_spec and self._process_archive_files:
+        try:
+          file_system = path_spec_resolver.Resolver.OpenFileSystem(
+              archive_path_spec, resolver_context=self._resolver_context)
+
+          # TODO: change this to pass the archive file path spec to
+          # the collector process and have the collector implement a maximum
+          # path spec "depth" to prevent ZIP bombs and equiv.
+          file_system_collector = collector.FileSystemCollector(self._queue)
+          file_system_collector.Collect(file_system, archive_path_spec)
+
+        except IOError:
+          logging.warning(u'Unable to process archive file:\n{0:s}'.format(
+              archive_path_spec.comparable))
+
+    return True
+
+  def _ProcessCompressedStreamFile(self, file_entry):
+    """Processes an compressed stream file (file that contains file entries).
+
+    Args:
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file is a compressed stream file.
+    """
+    type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
+        file_entry.path_spec)
+
+    number_of_type_indicators = len(type_indicators)
+    if number_of_type_indicators == 0:
+      return False
+
+    if number_of_type_indicators > 1:
+      logging.debug((
+          u'Found multiple format type indicators: {0:s} for '
+          u'compressed stream file: {1:s}').format(
+              type_indicators, file_entry.path_spec.comparable))
+
+    for type_indicator in type_indicators:
+      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_BZIP2:
+        # TODO: add bzip2 support.
+        compressed_stream_path_spec = None
+
+      elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
+        compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=file_entry.path_spec)
+
+      else:
+        logging.debug((
+            u'Unsupported compressed stream format type indicators: {0:s} for '
+            u'compressed stream file: {1:s}').format(
+                type_indicator, compressed_stream_path_spec.comparable))
+
+        compressed_stream_path_spec = None
+
+      if compressed_stream_path_spec:
+        self._queue.PushItem(compressed_stream_path_spec)
+
+    return True
+
   def _ProfilingStart(self):
     """Starts the profiling."""
     self._heapy.setrelheap()
@@ -220,37 +325,34 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._current_working_file = getattr(
         file_entry.path_spec, u'location', file_entry.name)
 
-    if file_entry.IsDirectory() and self._filestat_parser_object:
-      self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
+    is_archive = False
+    is_compressed_stream = False
+    is_file = file_entry.IsFile()
 
-    elif file_entry.IsFile():
+    if is_file:
+      is_compressed_stream = self._ProcessCompressedStreamFile(file_entry)
+      if not is_compressed_stream:
+        is_archive = self._ProcessArchiveFile(file_entry)
+
+    if is_file and not is_archive and not is_compressed_stream:
       # TODO: Not go through all parsers, just the ones
       # that the classifier classifies the file as.
-
       for parser_object in self._parser_objects:
         logging.debug(u'Trying to parse: {0:s} with parser: {1:s}'.format(
             file_entry.name, parser_object.NAME))
 
         self._ParseFileEntryWithParser(parser_object, file_entry)
 
+    elif self._filestat_parser_object:
+      # TODO: for archive and compressed stream files is the desired behavior
+      # to only apply the filestat parser?
+      self._ParseFileEntryWithParser(self._filestat_parser_object, file_entry)
+
     logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
 
     if self._enable_profiling:
       self._ProfilingUpdate()
-
-    if self._open_files:
-      try:
-        for sub_file_entry in classifier.Classifier.SmartOpenFiles(file_entry):
-          if self._abort:
-            break
-
-          self.ParseFileEntry(sub_file_entry)
-
-      except IOError as exception:
-        logging.warning(
-            u'Unable to parse file: {0:s} with error: {1:s}'.format(
-                file_entry.path_spec.comparable, exception))
 
   def Run(self):
     """Extracts event objects from file entries."""
@@ -322,15 +424,14 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """
     self._parser_context.SetMountPath(mount_path)
 
-  # TODO: rename this mode.
-  def SetOpenFiles(self, open_files):
-    """Sets the open files mode.
+  def SetProcessArchiveFiles(self, process_archive_files):
+    """Sets the process archive files mode.
 
     Args:
-      open_files: boolean value to indicate if the worker should scan for
-                  file entries inside files.
+      process_archive_files: boolean value to indicate if the worker should
+                             scan for file entries inside files.
     """
-    self._open_files = open_files
+    self._process_archive_files = process_archive_files
 
   def SetTextPrepend(self, text_prepend):
     """Sets the text prepend.

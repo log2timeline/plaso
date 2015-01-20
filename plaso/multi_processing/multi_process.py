@@ -203,8 +203,8 @@ class MultiProcessEngine(engine.BaseEngine):
         self._enable_profiling,
         profiling_sample_rate=self._profiling_sample_rate)
 
-    if self._open_files:
-      extraction_worker.SetOpenFiles(self._open_files)
+    if self._process_archive_files:
+      extraction_worker.SetProcessArchiveFiles(self._process_archive_files)
 
     if self._filter_object:
       extraction_worker.SetFilterObject(self._filter_object)
