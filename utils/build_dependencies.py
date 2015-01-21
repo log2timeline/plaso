@@ -1038,7 +1038,6 @@ class PythonModuleDpkgBuildFilesGenerator(object):
     else:
       project_name = self._project_name
 
-
     depends = []
     if self._dependency_definition.dpkg_dependencies:
       depends.append(self._dependency_definition.dpkg_dependencies)
@@ -1554,7 +1553,7 @@ class LibyalSourceDpkgBuildHelper(DpkgBuildHelper):
     Returns:
       A filename of one of the resulting dpkg packages.
     """
-    return u'{0:s}_{1!s}-1{2:s}~{3:s}_{4:s}.deb'.format(
+    return u'{0:s}_{1!s}-1{2:s}~{3:s}_{4:s}.changes'.format(
         source_helper.project_name, source_helper.project_version,
         self.version_suffix, self.distribution, self.architecture)
 
@@ -1657,13 +1656,18 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
     Args:
       source_helper: the source helper (instance of SourceHelper).
     """
+    if self._dependency_definition.dpkg_name:
+      project_name = self._dependency_definition.dpkg_name
+    else:
+      project_name = source_helper.project_name
+
     filenames_to_ignore = re.compile(u'^python-{0:s}_{1!s}.orig.tar.gz'.format(
-        source_helper.project_name, source_helper.project_version))
+        project_name, source_helper.project_version))
 
     # Remove files of previous versions in the format:
     # python-project_version.orig.tar.gz
     filenames = glob.glob(u'python-{0:s}_*.orig.tar.gz'.format(
-        source_helper.project_name, self.architecture))
+        project_name, self.architecture))
 
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -1671,13 +1675,12 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
         os.remove(filename)
 
     filenames_to_ignore = re.compile(u'^python-{0:s}[-_].*{1!s}'.format(
-        source_helper.project_name, source_helper.project_version))
+        project_name, source_helper.project_version))
 
     # Remove files of previous versions in the format:
-    # python-{project name}[-_]{project version}-1_architecture.*
+    # python-project[-_]*version-1_architecture.*
     filenames = glob.glob(
-        u'python-{0:s}[-_]*-1_{1:s}.*'.format(
-            source_helper.project_name, self.architecture))
+        u'python-{0:s}[-_]*-1_{1:s}.*'.format(project_name, self.architecture))
 
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -1685,9 +1688,8 @@ class PythonModuleDpkgBuildHelper(DpkgBuildHelper):
         os.remove(filename)
 
     # Remove files of previous versions in the format:
-    # python-{project name}[-_]*version-1.*
-    filenames = glob.glob(
-        u'python-{0:s}[-_]*-1.*'.format(source_helper.project_name))
+    # python-project[-_]*version-1.*
+    filenames = glob.glob(u'python-{0:s}[-_]*-1.*'.format(project_name))
 
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -1811,13 +1813,18 @@ class PythonModuleSourceDpkgBuildHelper(DpkgBuildHelper):
     Args:
       source_helper: the source helper (instance of SourceHelper).
     """
+    if self._dependency_definition.dpkg_name:
+      project_name = self._dependency_definition.dpkg_name
+    else:
+      project_name = source_helper.project_name
+
     filenames_to_ignore = re.compile(u'^python-{0:s}_{1!s}.orig.tar.gz'.format(
-        source_helper.project_name, source_helper.project_version))
+        project_name, source_helper.project_version))
 
     # Remove files of previous versions in the format:
     # python-project_version.orig.tar.gz
     filenames = glob.glob(u'python-{0:s}_*.orig.tar.gz'.format(
-        source_helper.project_name, self.architecture))
+        project_name, self.architecture))
 
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -1825,13 +1832,13 @@ class PythonModuleSourceDpkgBuildHelper(DpkgBuildHelper):
         os.remove(filename)
 
     filenames_to_ignore = re.compile(u'^python-{0:s}[-_].*{1!s}'.format(
-        source_helper.project_name, source_helper.project_version))
+        project_name, source_helper.project_version))
 
     # Remove files of previous versions in the format:
-    # project[-_]version-1suffix~distribution_architecture.*
+    # python-project[-_]*version-1suffix~distribution_architecture.*
     filenames = glob.glob((
         u'python-{0:s}[-_]*-1{1:s}~{2:s}_{3:s}.*').format(
-            source_helper.project_name, self.version_suffix, self.distribution,
+            project_name, self.version_suffix, self.distribution,
             self.architecture))
 
     for filename in filenames:
@@ -1840,10 +1847,10 @@ class PythonModuleSourceDpkgBuildHelper(DpkgBuildHelper):
         os.remove(filename)
 
     # Remove files of previous versions in the format:
-    # project[-_]*version-1suffix~distribution.*
+    # python-project[-_]*version-1suffix~distribution.*
     filenames = glob.glob((
         u'python-{0:s}[-_]*-1{1:s}~{2:s}.*').format(
-            source_helper.project_name, self.version_suffix, self.distribution))
+            project_name, self.version_suffix, self.distribution))
 
     for filename in filenames:
       if not filenames_to_ignore.match(filename):
@@ -1859,8 +1866,13 @@ class PythonModuleSourceDpkgBuildHelper(DpkgBuildHelper):
     Returns:
       A filename of one of the resulting dpkg packages.
     """
-    return u'python-{0:s}_{1!s}-1{2:s}~{3:s}_{4:s}.deb'.format(
-        source_helper.project_name, source_helper.project_version,
+    if self._dependency_definition.dpkg_name:
+      project_name = self._dependency_definition.dpkg_name
+    else:
+      project_name = source_helper.project_name
+
+    return u'python-{0:s}_{1!s}-1{2:s}~{3:s}_{4:s}.changes'.format(
+        project_name, source_helper.project_version,
         self.version_suffix, self.distribution, self.architecture)
 
 
