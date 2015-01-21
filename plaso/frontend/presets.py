@@ -35,10 +35,10 @@ categories = {
         'hachoir', 'win7'],
     'webhist': [
         'binary_cookies', 'chrome_cache', 'chrome_cookies',
-        'chrome_extension_activity', 'chrome_history', 'firefox_cache',
-        'firefox_cookies', 'firefox_downloads', 'firefox_history', 'java_idx',
-        'msie_webcache', 'msiecf', 'opera_global', 'opera_typed_history',
-        'safari_history'],
+        'chrome_extension_activity', 'chrome_history', 'chrome_preferences',
+        'firefox_cache', 'firefox_cookies', 'firefox_downloads',
+        'firefox_history', 'java_idx', 'msie_webcache', 'msiecf',
+        'opera_global', 'opera_typed_history', 'safari_history'],
     'linux': [
         'bencode', 'filestat', 'google_drive', 'java_idx', 'olecf', 'openxml',
         'pls_recall', 'popularity_contest', 'selinux', 'skype', 'syslog',
