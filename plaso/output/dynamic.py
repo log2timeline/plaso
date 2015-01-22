@@ -22,12 +22,12 @@ import re
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
+from plaso.output import interface
 
 
-class Dynamic(output.FileLogOutputFormatter):
+class Dynamic(interface.FileLogOutputFormatter):
   """Dynamic selection of fields for a separated value output format."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')

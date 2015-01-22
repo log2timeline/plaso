@@ -26,10 +26,10 @@ from plaso.formatters import manager as formatters_manager
 from plaso.frontend import psort
 from plaso.frontend import test_lib
 from plaso.lib import event
-from plaso.lib import output
 from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.lib import timelib_test
+from plaso.output import interface as output_interface
 
 
 class TestEvent1(event.EventObject):
@@ -68,7 +68,7 @@ class TestEvent2Formatter(formatters_interface.EventFormatter):
 formatters_manager.FormattersManager.RegisterFormatter(TestEvent2Formatter)
 
 
-class TestFormatter(output.LogOutputFormatter):
+class TestFormatter(output_interface.LogOutputFormatter):
   """Dummy formatter."""
 
   def FetchEntry(self, store_number=-1, store_index=-1):
@@ -93,7 +93,7 @@ class TestFormatter(output.LogOutputFormatter):
         source_short, source_long, msg))
 
 
-class TestEventBuffer(output.EventBuffer):
+class TestEventBuffer(output_interface.EventBuffer):
   """A test event buffer."""
 
   def __init__(self, store, formatter=None):

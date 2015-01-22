@@ -25,12 +25,12 @@ import uuid
 import pyelasticsearch
 
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
+from plaso.output import interface
 
 
-class Elastic(output.LogOutputFormatter):
+class Elastic(interface.LogOutputFormatter):
   """Saves the events into an ElasticSearch database."""
 
   # Add configuration data for this output module.

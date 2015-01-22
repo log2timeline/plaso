@@ -26,16 +26,16 @@ from plaso import formatters
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import output
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.output import helper
+from plaso.output import interface
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Mysql4n6(output.LogOutputFormatter):
+class Mysql4n6(interface.LogOutputFormatter):
   """Contains functions for outputting as 4n6time MySQL database."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
