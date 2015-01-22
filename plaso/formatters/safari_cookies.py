@@ -18,6 +18,7 @@
 """This file contains a formatter for the Safari Binary cookie."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class SafaryCookieFormatter(interface.ConditionalEventFormatter):
@@ -37,3 +38,6 @@ class SafaryCookieFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Safari Cookies'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatter(SafaryCookieFormatter)

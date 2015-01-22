@@ -21,6 +21,7 @@ import StringIO
 import unittest
 
 from plaso.formatters import interface as formatters_interface
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.output import tln
 
@@ -48,6 +49,9 @@ class L2TTlnTestEventFormatter(formatters_interface.EventFormatter):
   FORMAT_STRING = u'{text}'
   SOURCE_SHORT = 'LOG'
   SOURCE_LONG = 'Syslog'
+
+
+formatters_manager.FormattersManager.RegisterFormatter(L2TTlnTestEventFormatter)
 
 
 class TlnTest(unittest.TestCase):

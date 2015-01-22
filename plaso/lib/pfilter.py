@@ -89,24 +89,34 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
   def __init__(self):
     """Initialize an attribue value expander."""
     super(PlasoValueExpander, self).__init__()
-    self._formatters_manager = formatters_manager.EventFormatterManager
 
-  def _GetMessage(self, obj):
-    """Return a properly formatted message string."""
+  def _GetMessage(self, event_object):
+    """Returns a properly formatted message string.
+
+    Args:
+      event_object: the event object (instance od EventObject).
+    """
     ret = u''
 
     try:
-      ret, _ = self._formatters_manager.GetMessageStrings(obj)
+      ret, _ = formatters_manager.FormattersManager.GetMessageStrings(
+          event_object)
     except KeyError as exception:
       logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))
 
     return ret
 
-  def _GetSources(self, obj):
-    """Return a properly formatted source strings."""
+  def _GetSources(self, event_object):
+    """Returns properly formatted source strings.
+
+    Args:
+      event_object: the event object (instance od EventObject).
+    """
+    manager_object = formatters_manager.FormattersManager
     try:
-      source_short, source_long = self._formatters_manager.GetSourceStrings(obj)
+      source_short, source_long = manager_object.GetSourceStrings(
+          event_object)
     except KeyError as exception:
       logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))

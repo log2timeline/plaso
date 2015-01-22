@@ -43,12 +43,34 @@ class WrongEventFormatter(interface.EventFormatter):
   SOURCE_LONG = 'Weird Log File'
 
 
-class EventFormatterUnitTest(unittest.TestCase):
-  """The unit test for the event formatter."""
+class FormattersManagerTest(unittest.TestCase):
+  """Tests for the formatters manager."""
+
+  def testFormatterRegistration(self):
+    """Tests the RegisterFormatter and DeregisterFormatter functions."""
+    # pylint: disable=protected-access
+    number_of_formatters = len(manager.FormattersManager._formatter_classes)
+
+    manager.FormattersManager.RegisterFormatter(TestEvent1Formatter)
+    self.assertEquals(
+        len(manager.FormattersManager._formatter_classes),
+        number_of_formatters + 1)
+
+    with self.assertRaises(KeyError):
+      manager.FormattersManager.RegisterFormatter(TestEvent1Formatter)
+
+    manager.FormattersManager.DeregisterFormatter(TestEvent1Formatter)
+    self.assertEquals(
+        len(manager.FormattersManager._formatter_classes),
+        number_of_formatters)
+
+
+class EventFormatterTest(unittest.TestCase):
+  """Tests for the event formatter."""
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._formatters_manager = manager.EventFormatterManager
+    self._formatters_manager = manager.FormattersManager
     self.event_objects = event_test.GetEventObjects()
 
   def GetCSVLine(self, event_object):
@@ -68,6 +90,8 @@ class EventFormatterUnitTest(unittest.TestCase):
 
   def testAttributes(self):
     """Test if we can read the event attributes correctly."""
+    manager.FormattersManager.RegisterFormatter(TestEvent1Formatter)
+
     events = {}
     for event_object in self.event_objects:
       events[self.GetCSVLine(event_object)] = True
@@ -88,6 +112,8 @@ class EventFormatterUnitTest(unittest.TestCase):
                    u' here, move on.'), events)
     self.assertIn((u'1335791207939596,FILE,Weird Log File,Mr. Evil just logged'
                    u' into the machine and got root.'), events)
+
+    manager.FormattersManager.DeregisterFormatter(TestEvent1Formatter)
 
   def testTextBasedEvent(self):
     """Test a text based event."""

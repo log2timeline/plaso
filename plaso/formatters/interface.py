@@ -20,7 +20,6 @@
 import re
 
 from plaso.lib import errors
-from plaso.lib import registry
 
 
 class EventFormatter(object):
@@ -31,8 +30,6 @@ class EventFormatter(object):
      is similar to that of format() where the place holder for a certain
      event object attribute is defined as {attribute_name}.
   """
-  __metaclass__ = registry.MetaclassRegistry
-  __abstract = True
 
   # The data type is a unique identifier for the event data. The current
   # approach is to define it as human readable string in the format
@@ -70,8 +67,7 @@ class EventFormatter(object):
     formatted string that can be used for display.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      event_object: the event object (instance of EventObject).
 
     Returns:
       A list that contains both the longer and shorter version of the message

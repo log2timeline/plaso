@@ -18,6 +18,7 @@
 """Formatter for bencode parser events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class uTorrentFormatter(interface.ConditionalEventFormatter):
@@ -30,9 +31,10 @@ class uTorrentFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SEPARATOR = u'; '
 
-  FORMAT_STRING_PIECES = [u'Torrent {caption}',
-                          u'Saved to {path}',
-                          u'Minutes seeded: {seedtime}']
+  FORMAT_STRING_PIECES = [
+      u'Torrent {caption}',
+      u'Saved to {path}',
+      u'Minutes seeded: {seedtime}']
 
 
 class TransmissionFormatter(interface.ConditionalEventFormatter):
@@ -45,5 +47,10 @@ class TransmissionFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SEPARATOR = u'; '
 
-  FORMAT_STRING_PIECES = [u'Saved to {destination}',
-                          u'Minutes seeded: {seedtime}']
+  FORMAT_STRING_PIECES = [
+      u'Saved to {destination}',
+      u'Minutes seeded: {seedtime}']
+
+
+manager.FormattersManager.RegisterFormatters([
+    uTorrentFormatter, TransmissionFormatter])

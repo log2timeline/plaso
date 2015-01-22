@@ -17,8 +17,9 @@
 # limitations under the License.
 """Formatter for Windows EventLog (EVT) files."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class WinEvtFormatter(interface.ConditionalEventFormatter):
@@ -111,3 +112,6 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
     event_object.severity_string = self.GetSeverityString(event_object.severity)
 
     return super(WinEvtFormatter, self).GetMessages(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(WinEvtFormatter)

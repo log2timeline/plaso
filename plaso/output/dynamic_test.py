@@ -21,6 +21,7 @@ import StringIO
 import unittest
 
 from plaso.formatters import interface as formatters_interface
+from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.output import dynamic
@@ -46,6 +47,9 @@ class TestEventFormatter(formatters_interface.EventFormatter):
 
   SOURCE_SHORT = 'LOG'
   SOURCE_LONG = 'Syslog'
+
+
+formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
 
 
 class FakeFilter(object):

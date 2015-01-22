@@ -74,8 +74,6 @@ class Elastic(output.LogOutputFormatter):
     super(Elastic, self).__init__(store, filehandle, config, filter_use)
     self._counter = 0
     self._data = []
-    # TODO: move this to an output module interface.
-    self._formatters_manager = formatters_manager.EventFormatterManager
 
     elastic_host = getattr(config, 'elastic_server', '127.0.0.1')
     elastic_port = getattr(config, 'elastic_port', 9200)
@@ -129,10 +127,11 @@ class Elastic(output.LogOutputFormatter):
     ret_dict['datetime'] = timelib.Timestamp.CopyToIsoFormat(
         timelib.Timestamp.RoundToSeconds(event_object.timestamp),
         timezone=self.zone)
-    msg, _ = self._formatters_manager.GetMessageStrings(event_object)
+    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
+        event_object)
     ret_dict['message'] = msg
 
-    source_type, source = self._formatters_manager.GetSourceStrings(
+    source_type, source = formatters_manager.FormattersManager.GetSourceStrings(
         event_object)
 
     ret_dict['source_short'] = source_type

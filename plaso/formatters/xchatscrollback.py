@@ -18,6 +18,7 @@
 """This file contains a xchatscrollback formatter in plaso."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class XChatScrollbackFormatter(interface.ConditionalEventFormatter):
@@ -27,7 +28,14 @@ class XChatScrollbackFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SEPARATOR = u''
 
-  FORMAT_STRING_PIECES = [u'[', u'nickname: {nickname}', u']', u' {text}']
+  FORMAT_STRING_PIECES = [
+      u'[',
+      u'nickname: {nickname}',
+      u']',
+      u' {text}']
 
   SOURCE_LONG = 'XChat Scrollback File'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(XChatScrollbackFormatter)

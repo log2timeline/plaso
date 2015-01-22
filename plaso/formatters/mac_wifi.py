@@ -18,6 +18,7 @@
 """Formatter for Mac wifi.log file."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class MacWifiLogFormatter(interface.ConditionalEventFormatter):
@@ -36,3 +37,6 @@ class MacWifiLogFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Mac Wifi Log'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(MacWifiLogFormatter)

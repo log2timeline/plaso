@@ -57,7 +57,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     expected_msg = (
         u'GET /some/image/path/something.jpg '
         u'[ 10.10.10.100 > 10.10.10.100 : 80 ] '
-        u'Http Status: 200 '
+        u'HTTP Status: 200 '
         u'User Agent: Mozilla/4.0+(compatible;+Win32;'
         u'+WinHttp.WinHttpRequest.5)')
     expected_msg_short = (
@@ -82,7 +82,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     expected_msg = (
         u'GET /some/image/path/something.htm '
         u'[ 22.22.22.200 > 10.10.10.100 : 80 ] '
-        u'Http Status: 404 '
+        u'HTTP Status: 404 '
         u'User Agent: Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_6_8)'
         u'+AppleWebKit/534.57.2+(KHTML,+like+Gecko)+Version/5.1.7'
         u'+Safari/534.57.2')

@@ -80,12 +80,12 @@ class L2ttln(output.FileLogOutputFormatter):
       return
 
     # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
-        event_object)
+    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_object.data_type)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
-              event_object.DATA_TYPE))
+              event_object.data_type))
 
     msg, _ = event_formatter.GetMessages(event_object)
     source_short, _ = event_formatter.GetSources(event_object)

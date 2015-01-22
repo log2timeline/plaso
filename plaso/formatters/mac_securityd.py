@@ -18,6 +18,7 @@
 """Formatter for ASL securityd log file."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class MacSecuritydLogFormatter(interface.ConditionalEventFormatter):
@@ -37,3 +38,5 @@ class MacSecuritydLogFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Mac ASL Securityd Log'
   SOURCE_SHORT = 'LOG'
 
+
+manager.FormattersManager.RegisterFormatter(MacSecuritydLogFormatter)

@@ -18,6 +18,7 @@
 """Formatter for the AppCompatCache entries inside the Windows Registry."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class AppCompatCacheFormatter(interface.ConditionalEventFormatter):
@@ -34,3 +35,6 @@ class AppCompatCacheFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'AppCompatCache Registry Entry'
   SOURCE_SHORT = 'REG'
+
+
+manager.FormattersManager.RegisterFormatter(AppCompatCacheFormatter)

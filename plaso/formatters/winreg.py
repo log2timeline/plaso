@@ -17,8 +17,9 @@
 # limitations under the License.
 """Formatter for Windows NT Registry (REGF) files."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class WinRegistryGenericFormatter(interface.EventFormatter):
@@ -79,3 +80,6 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
       self.source_string += u' {0:s}'.format(event_object.source_append)
 
     return super(WinRegistryGenericFormatter, self).GetSources(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(WinRegistryGenericFormatter)

@@ -18,6 +18,7 @@
 """This file contains a formatter for Plist Events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class PlistFormatter(interface.ConditionalEventFormatter):
@@ -34,3 +35,6 @@ class PlistFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Plist Entry'
   SOURCE_SHORT = 'PLIST'
+
+
+manager.FormattersManager.RegisterFormatter(PlistFormatter)

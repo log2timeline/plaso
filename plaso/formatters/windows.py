@@ -18,6 +18,7 @@
 """Formatter for the Windows events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
@@ -36,3 +37,6 @@ class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'System'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(WindowsVolumeCreationEventFormatter)

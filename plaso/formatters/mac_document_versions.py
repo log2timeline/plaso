@@ -18,6 +18,7 @@
 """This file contains a formatter for the Mac OS X Document Versions files."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class MacDocumentVersionsFormatter(interface.ConditionalEventFormatter):
@@ -36,3 +37,6 @@ class MacDocumentVersionsFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Document Versions'
   SOURCE_SHORT = 'HISTORY'
+
+
+manager.FormattersManager.RegisterFormatter(MacDocumentVersionsFormatter)

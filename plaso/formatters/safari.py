@@ -18,6 +18,7 @@
 """Formatter for the Safari History events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class SafariHistoryFormatter(interface.ConditionalEventFormatter):
@@ -31,3 +32,6 @@ class SafariHistoryFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Safari History'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatter(SafariHistoryFormatter)

@@ -18,6 +18,7 @@
 """Formatter for the Mac OS X launch services quarantine events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class LSQuarantineFormatter(interface.ConditionalEventFormatter):
@@ -34,3 +35,6 @@ class LSQuarantineFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'LS Quarantine Event'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(LSQuarantineFormatter)

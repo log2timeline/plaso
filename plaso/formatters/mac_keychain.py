@@ -18,6 +18,7 @@
 """Formatter for the Keychain password database file."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
@@ -51,3 +52,7 @@ class KeychainInternetRecordFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Keychain Internet password'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatters([
+    KeychainApplicationRecordFormatter, KeychainInternetRecordFormatter])
