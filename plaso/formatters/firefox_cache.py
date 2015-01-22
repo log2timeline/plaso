@@ -18,6 +18,7 @@
 """Formatter for Firefox cache records."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 class FirefoxCacheFormatter(interface.ConditionalEventFormatter):
   """Formatter for Firefox cache record."""
@@ -37,3 +38,6 @@ class FirefoxCacheFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Firefox Cache'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatter(FirefoxCacheFormatter)

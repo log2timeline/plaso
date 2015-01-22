@@ -18,6 +18,7 @@
 """Formatter for Windows Scheduled Task job events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class WinJobFormatter(interface.ConditionalEventFormatter):
@@ -34,3 +35,6 @@ class WinJobFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Windows Scheduled Task Job'
   SOURCE_SHORT = 'JOB'
+
+
+manager.FormattersManager.RegisterFormatter(WinJobFormatter)

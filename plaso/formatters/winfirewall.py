@@ -18,6 +18,7 @@
 """Formatter for Windows firewall log files."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class WinFirewallFormatter(interface.ConditionalEventFormatter):
@@ -61,3 +62,6 @@ class WinFirewallFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Windows Firewall Log'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(WinFirewallFormatter)

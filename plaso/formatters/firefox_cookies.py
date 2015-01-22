@@ -18,6 +18,7 @@
 """This file contains a formatter for the Firefox cookie."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class FirefoxCookieFormatter(interface.ConditionalEventFormatter):
@@ -38,3 +39,6 @@ class FirefoxCookieFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Firefox Cookies'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatter(FirefoxCookieFormatter)

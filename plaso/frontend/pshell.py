@@ -126,7 +126,7 @@ def GetEventData(event_proto, before=0):
 
 
 def GetFileEntryFromEventObject(event_object):
-  """Return a file entry object from a pathspec object.
+  """Returns a file entry object from an event object.
 
   Args:
     event_object: An event object (an instance of EventObject).
@@ -141,6 +141,19 @@ def GetFileEntryFromEventObject(event_object):
     return
 
   return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+
+def GetMessageStringsForEventObject(event_object):
+  """Returns the formatter message strings for the event object.
+
+  Args:
+    event_object: An event object (an instance of EventObject).
+
+  Returns:
+    A list that contains both the longer and shorter version of the message
+    string.
+  """
+  return formatters.manager.FormattersManager.GetMessageStrings(event_object)
 
 
 def GetParserNames(parser_filter_string=None):
@@ -363,7 +376,7 @@ def Main():
       'find_all_output': FindAllOutputs,
       'parse_file': ParseFile,
       'timestamp_from_event': PrintTimestampFromEvent,
-      'message': formatters.manager.EventFormatterManager.GetMessageStrings})
+      'message': GetMessageStringsForEventObject})
 
   # Include few random phrases that get thrown in once the user exists the
   # shell.

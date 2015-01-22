@@ -18,6 +18,7 @@
 """Formatter for the McAfee AV Logs files."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class McafeeAccessProtectionLogEventFormatter(interface.EventFormatter):
@@ -32,3 +33,7 @@ class McafeeAccessProtectionLogEventFormatter(interface.EventFormatter):
 
   SOURCE_LONG = 'McAfee Access Protection Log'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(
+    McafeeAccessProtectionLogEventFormatter)

@@ -18,6 +18,7 @@
 """Formatter for the Google extension activity database events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class ChromeExtensionActivityEventFormatter(
@@ -45,3 +46,7 @@ class ChromeExtensionActivityEventFormatter(
   SOURCE_SHORT = 'WEBHIST'
 
   # TODO: add action_type string representation.
+
+
+manager.FormattersManager.RegisterFormatter(
+    ChromeExtensionActivityEventFormatter)

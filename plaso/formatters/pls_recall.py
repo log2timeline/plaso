@@ -18,6 +18,7 @@
 """Formatter for PL-Sql Recall events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class PlsRecallFormatter(interface.EventFormatter):
@@ -27,7 +28,10 @@ class PlsRecallFormatter(interface.EventFormatter):
   SOURCE_SHORT = 'PLSRecall'
 
   # The format string.
-  FORMAT_STRING = (u'Sequence #{sequence} User: {username} '
-                   u'Database Name: {database_name} Query: {query}')
+  FORMAT_STRING = (
+      u'Sequence #{sequence} User: {username} Database Name: {database_name} '
+      u'Query: {query}')
   FORMAT_STRING_SHORT = u'{sequence} {username} {database_name} {query}'
 
+
+manager.FormattersManager.RegisterFormatter(PlsRecallFormatter)

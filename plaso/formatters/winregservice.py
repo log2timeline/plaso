@@ -17,6 +17,7 @@
 # limitations under the License.
 """Formatter for service entries derived from Windows Registry files."""
 
+from plaso.formatters import manager
 from plaso.formatters import winreg
 from plaso.winnt import human_readable_service_enums
 
@@ -56,3 +57,6 @@ class WinRegistryServiceFormatter(winreg.WinRegistryGenericFormatter):
         regvalue[service_value_name] = human_readable_value
 
     return super(WinRegistryServiceFormatter, self).GetMessages(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(WinRegistryServiceFormatter)

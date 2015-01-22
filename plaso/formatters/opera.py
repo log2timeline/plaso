@@ -18,6 +18,7 @@
 """Formatter for Opera history events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class OperaGlobalHistoryFormatter(interface.ConditionalEventFormatter):
@@ -45,3 +46,7 @@ class OperaTypedHistoryFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Opera Browser History'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatters([
+    OperaGlobalHistoryFormatter, OperaTypedHistoryFormatter])

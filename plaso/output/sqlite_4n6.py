@@ -58,7 +58,6 @@ class Sql4n6(output.LogOutputFormatter):
     # TODO: Add a unit test for this output module.
     super(Sql4n6, self).__init__(store, filehandle, config, filter_use)
     # TODO: move this to an output module interface.
-    self._formatters_manager = formatters_manager.EventFormatterManager
     self.set_status = getattr(config, 'set_status', None)
 
     # TODO: Revisit handling this outside of plaso.
@@ -206,7 +205,8 @@ class Sql4n6(output.LogOutputFormatter):
     if 'timestamp' not in event_object.GetAttributes():
       return
 
-    event_formatter = self._formatters_manager.GetFormatter(event_object)
+    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_object.data_type)
     if not event_formatter:
       raise errors.NoFormatterFound(
           'Unable to output event, no event formatter found.')

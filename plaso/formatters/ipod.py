@@ -18,6 +18,7 @@
 """Formatter for the iPod device events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class IPodDeviceFormatter(interface.ConditionalEventFormatter):
@@ -35,3 +36,6 @@ class IPodDeviceFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'iPod Connections'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(IPodDeviceFormatter)

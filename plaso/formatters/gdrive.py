@@ -18,6 +18,7 @@
 """This file contains a formatter for the Google Drive snaphots."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -53,3 +54,7 @@ class GDriveLocalEntryFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Google Drive (local entry)'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatters([
+    GDriveCloudEntryFormatter, GDriveLocalEntryFormatter])

@@ -17,17 +17,19 @@
 # limitations under the License.
 """This file contains a formatter for the Stat object of a PFile."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
-class PfileStatFormatter(interface.ConditionalEventFormatter):
+class FileStatFormatter(interface.ConditionalEventFormatter):
   """Define the formatting for PFileStat."""
 
   DATA_TYPE = 'fs:stat'
 
-  FORMAT_STRING_PIECES = [u'{display_name}',
-                          u'({unallocated})']
+  FORMAT_STRING_PIECES = [
+      u'{display_name}',
+      u'({unallocated})']
 
   FORMAT_STRING_SHORT_PIECES = [u'{filename}']
 
@@ -43,7 +45,7 @@ class PfileStatFormatter(interface.ConditionalEventFormatter):
         getattr(event_object, 'fs_type', u'Unknown FS'),
         getattr(event_object, 'timestamp_desc', u'Time'))
 
-    return super(PfileStatFormatter, self).GetSources(event_object)
+    return super(FileStatFormatter, self).GetSources(event_object)
 
   def GetMessages(self, event_object):
     """Returns a list of messages extracted from an event object.
@@ -63,4 +65,7 @@ class PfileStatFormatter(interface.ConditionalEventFormatter):
     if not getattr(event_object, 'allocated', True):
       event_object.unallocated = u'unallocated'
 
-    return super(PfileStatFormatter, self).GetMessages(event_object)
+    return super(FileStatFormatter, self).GetMessages(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(FileStatFormatter)
