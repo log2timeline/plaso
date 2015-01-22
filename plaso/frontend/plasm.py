@@ -32,8 +32,8 @@ from plaso import filters
 from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import output as output_lib
 from plaso.lib import storage
+from plaso.output import interface as output_interface
 from plaso.output import pstorage  # pylint: disable=unused-import
 
 
@@ -542,10 +542,10 @@ class ClusteringEngine(object):
       with SetupStorage(dump_filename) as store:
         total_events = store.GetNumberOfEvents()
         events_per_dot = operator.floordiv(total_events, 80)
-        formatter_cls = output_lib.GetOutputFormatter('Pstorage')
+        formatter_cls = output_interface.GetOutputFormatter('Pstorage')
         store_dedup = open(nodup_filename, 'wb')
         formatter = formatter_cls(store, store_dedup)
-        with output_lib.EventBuffer(
+        with output_interface.EventBuffer(
             formatter, check_dedups=True) as output_buffer:
           event_object = formatter.FetchEntry()
           counter = 0

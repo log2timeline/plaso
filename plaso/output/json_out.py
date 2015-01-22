@@ -17,12 +17,36 @@
 # limitations under the License.
 """An output module that saves data into a simple JSON format."""
 
-from plaso.lib import output
+import sys
+
+from plaso.output import interface
 from plaso.serializer import json_serializer
 
 
-class Json(output.FileLogOutputFormatter):
+class Json(interface.FileLogOutputFormatter):
   """Saves the events into a JSON format."""
+
+  def __init__(self, store, filehandle=sys.stdout, config=None,
+               filter_use=None):
+    """Constructor for the output module.
+
+    Args:
+      store: A StorageFile object that defines the storage.
+      filehandle: A file-like object that can be written to.
+      config: The configuration object, containing config information.
+      filter_use: A filter_interface.FilterObject object.
+    """
+    super(Json, self).__init__(store, filehandle, config, filter_use)
+    self._event_counter = 0
+
+  def End(self):
+    """Provide a footer."""
+    # Adding a label for "event_foo" due to JSON expecting a label
+    # after a comma. The only way to provide that is to either know
+    # what the last event is going to be (which we don't) or to add
+    # a dummy event in the end that has no data in it.
+    self.filehandle.WriteLine(u'"event_foo": "{}"}')
+    super(Json, self).End()
 
   def EventBody(self, event_object):
     """Prints out to a filehandle string representation of an EventObject.
@@ -36,5 +60,14 @@ class Json(output.FileLogOutputFormatter):
       event_object: The event object (instance of EventObject).
     """
     self.filehandle.WriteLine(
-        json_serializer.JsonEventObjectSerializer.WriteSerialized(event_object))
-    self.filehandle.WriteLine(u'\n')
+        u'"event_{0:d}": {1:s},\n'.format(
+            self._event_counter,
+            json_serializer.JsonEventObjectSerializer.WriteSerialized(
+                event_object)))
+
+    self._event_counter += 1
+
+  def Start(self):
+    """Provide a header to the file."""
+    self.filehandle.WriteLine(u'{')
+    self._event_counter = 0

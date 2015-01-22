@@ -21,7 +21,7 @@ import sys
 import tempfile
 import unittest
 
-from plaso.lib import output
+from plaso.output import interface
 
 
 class DummyEvent(object):
@@ -38,7 +38,7 @@ class DummyEvent(object):
     return u';'.join(map(str, [self.timestamp, self.entry]))
 
 
-class TestOutput(output.LogOutputFormatter):
+class TestOutput(interface.LogOutputFormatter):
   """This is a test output module that provides a simple XML."""
 
   def __init__(self, filehandle):
@@ -107,7 +107,7 @@ class PlasoOutputUnitTest(unittest.TestCase):
   def testOutputList(self):
     """Test listing up all available registered modules."""
     module_seen = False
-    for name, description in output.ListOutputFormatters():
+    for name, description in interface.ListOutputFormatters():
       if 'TestOutput' in name:
         module_seen = True
         self.assertEquals(description, (
@@ -130,7 +130,7 @@ class EventBufferTest(unittest.TestCase):
         self.assertEquals(len(event_buffer._buffer_dict), expected)
 
       formatter = TestOutput(fh)
-      event_buffer = output.EventBuffer(formatter, False)
+      event_buffer = interface.EventBuffer(formatter, False)
 
       event_buffer.Append(DummyEvent(123456, u'Now is now'))
       CheckBufferLength(event_buffer, 1)
@@ -168,7 +168,7 @@ class OutputFilehandleTest(unittest.TestCase):
     with tempfile.NamedTemporaryFile(delete=True) as temp_file:
       temp_path = temp_file.name
 
-    with output.OutputFilehandle(self.preferred_encoding) as fh:
+    with interface.OutputFilehandle(self.preferred_encoding) as fh:
       fh.Open(path=temp_path)
       fh.WriteLine(self._GetLine())
 
@@ -180,7 +180,7 @@ class OutputFilehandleTest(unittest.TestCase):
     self.assertEquals(line_read, self._GetLine().encode('utf-8'))
 
   def testStdOut(self):
-    with output.OutputFilehandle(self.preferred_encoding) as fh:
+    with interface.OutputFilehandle(self.preferred_encoding) as fh:
       fh.Open(sys.stdout)
       try:
         fh.WriteLine(self._GetLine())

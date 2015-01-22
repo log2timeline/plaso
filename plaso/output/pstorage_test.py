@@ -22,9 +22,9 @@ import shutil
 import tempfile
 import unittest
 
-from plaso.lib import output
 from plaso.lib import pfilter
 from plaso.lib import storage
+from plaso.output import interface
 from plaso.output import pstorage   # pylint: disable=unused-import
 
 
@@ -60,9 +60,10 @@ class PstorageTest(unittest.TestCase):
       dump_file = os.path.join(dirname, 'plaso.db')
       # Copy events to pstorage dump.
       with storage.StorageFile(self.test_filename, read_only=True) as store:
-        formatter_cls = output.GetOutputFormatter('Pstorage')
+        formatter_cls = interface.GetOutputFormatter('Pstorage')
         formatter = formatter_cls(store, dump_file)
-        with output.EventBuffer(formatter, check_dedups=False) as output_buffer:
+        with interface.EventBuffer(
+            formatter, check_dedups=False) as output_buffer:
           event_object = formatter.FetchEntry()
           while event_object:
             output_buffer.Append(event_object)

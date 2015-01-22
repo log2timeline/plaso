@@ -32,12 +32,12 @@ import logging
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
+from plaso.output import interface
 
 
-class Tln(output.FileLogOutputFormatter):
+class Tln(interface.FileLogOutputFormatter):
   """Five field TLN pipe delimited outputter."""
 
   DELIMITER = u'|'
