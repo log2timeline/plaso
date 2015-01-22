@@ -46,10 +46,10 @@ from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import bufferlib
 from plaso.lib import errors
-from plaso.lib import output as output_lib
 from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
+from plaso.output import interface as output_interface
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
 
@@ -125,11 +125,11 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
     modules_list = set([name.lower() for name in module_names])
 
-    for output_module_string, _ in output_lib.ListOutputFormatters():
+    for output_module_string, _ in output_interface.ListOutputFormatters():
       if not output_module_string.lower() in modules_list:
         continue
 
-      output_module = output_lib.GetOutputFormatter(output_module_string)
+      output_module = output_interface.GetOutputFormatter(output_module_string)
       if output_module.ARGUMENTS:
         for parameter, config in output_module.ARGUMENTS:
           argument_group.add_argument(parameter, **config)
@@ -161,7 +161,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
   def ListOutputModules(self):
     """Lists the output modules."""
     self.PrintHeader('Output Modules')
-    for name, description in output_lib.ListOutputFormatters():
+    for name, description in output_interface.ListOutputFormatters():
       self.PrintColumnValue(name, description, 10)
     self.PrintSeparatorLine()
 
@@ -201,7 +201,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
     if not output_format:
       raise errors.BadConfigOption(u'Missing output format.')
 
-    self._output_module_class = output_lib.GetOutputFormatter(output_format)
+    self._output_module_class = output_interface.GetOutputFormatter(
+        output_format)
     if not self._output_module_class:
       raise errors.BadConfigOption(
           u'Invalid output format: {0:s}.'.format(output_format))
@@ -354,7 +355,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
       else:
         event_queue_producers = []
 
-      output_buffer = output_lib.EventBuffer(output_module, options.dedup)
+      output_buffer = output_interface.EventBuffer(output_module, options.dedup)
       with output_buffer:
         counter = ProcessOutput(
             output_buffer, output_module, self._filter_object,

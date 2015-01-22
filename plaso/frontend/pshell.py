@@ -65,7 +65,6 @@ from plaso.lib import eventdata
 from plaso.lib import filter_interface
 from plaso.lib import lexer
 from plaso.lib import objectfilter
-from plaso.lib import output as output_lib
 from plaso.lib import pfilter
 from plaso.lib import proxy
 from plaso.lib import putils
@@ -79,6 +78,7 @@ from plaso.multi_processing import rpc_proxy
 from plaso.multi_processing import process_info
 
 from plaso.output import helper as output_helper
+from plaso.output import interface as output_interface
 
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import plugins

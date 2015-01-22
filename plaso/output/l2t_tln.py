@@ -35,12 +35,12 @@ import logging
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import output
 from plaso.lib import timelib
 from plaso.output import helper
+from plaso.output import interface
 
 
-class L2ttln(output.FileLogOutputFormatter):
+class L2ttln(interface.FileLogOutputFormatter):
   """Extended seven field pipe delimited TLN; L2T 0.65 style."""
 
   DELIMITER = u'|'

@@ -46,6 +46,7 @@ class LogOutputFormatter(object):
   override the relevant methods to act on the callbacks.
   """
 
+  # TODO: Remove this registration system.
   __metaclass__ = registry.MetaclassRegistry
   __abstract = True
 
@@ -61,6 +62,8 @@ class LogOutputFormatter(object):
   # Where all arguments into the dict object have a direct translation
   # into the argparse parser.
   ARGUMENTS = []
+
+  # TODO: Add a NAME attribute to get rid of using class names.
 
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
@@ -375,6 +378,8 @@ class OutputFilehandle(object):
     return self
 
 
+# TODO: Move these functions into output.manager and change the
+# output module registration system to mirror parser registration.
 def GetOutputFormatter(output_string):
   """Return an output formatter that matches the provided string."""
   # Format the output string (make the input case in-sensitive).

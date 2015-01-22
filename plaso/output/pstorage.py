@@ -18,12 +18,12 @@
 """Implements a StorageFile output formatter."""
 
 from plaso.lib import event
-from plaso.lib import output
 from plaso.lib import storage
 from plaso.lib import timelib
+from plaso.output import interface
 
 
-class Pstorage(output.LogOutputFormatter):
+class Pstorage(interface.LogOutputFormatter):
   """Dumps event objects to a plaso storage file."""
 
   def Start(self):
