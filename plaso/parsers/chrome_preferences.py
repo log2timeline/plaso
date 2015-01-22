@@ -61,7 +61,7 @@ class ChromePreferencesParser(interface.BaseParser):
     """
     for extension_id, extension in settings_dict.iteritems():
       try:
-        install_time = int(extension.get(u'install_time', 0), 10)
+        install_time = int(extension.get(u'install_time', u'0'), 10)
       except ValueError as exception:
         logging.warning(
             u'Extension ID {0:s} is missing timestamp: {1:s}'.format(
