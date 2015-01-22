@@ -17,8 +17,9 @@
 # limitations under the License.
 """Formatter for the Windows recycle files."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class WinRecyclerFormatter(interface.ConditionalEventFormatter):
@@ -26,7 +27,7 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
 
   DATA_TYPE = 'windows:metadata:deleted_item'
 
-  DRIVE_LIST = {
+  DRIVE_LETTER = {
       0x00: 'A',
       0x01: 'B',
       0x02: 'C',
@@ -75,8 +76,10 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
           event_object.data_type))
 
     if hasattr(event_object, 'drive_number'):
-      event_object.drive_letter = self.DRIVE_LIST.get(
+      event_object.drive_letter = self.DRIVE_LETTER.get(
           event_object.drive_number, 'C?')
 
     return super(WinRecyclerFormatter, self).GetMessages(event_object)
 
+
+manager.FormattersManager.RegisterFormatter(WinRecyclerFormatter)

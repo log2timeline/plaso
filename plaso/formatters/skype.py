@@ -18,6 +18,7 @@
 """Formatter for the Skype Main database events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class SkypeAccountFormatter(interface.ConditionalEventFormatter):
@@ -86,3 +87,8 @@ class SkypeTransferFileFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Skype Transfer Files'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatters([
+    SkypeAccountFormatter, SkypeChatFormatter, SkypeSMSFormatter,
+    SkypeCallFormatter, SkypeTransferFileFormatter])

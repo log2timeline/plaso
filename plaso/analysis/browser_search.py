@@ -235,7 +235,7 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
 
     # TODO: refactor this the source should be used in formatting only.
     # Check if we are dealing with a web history event.
-    source, _ = formatters_manager.EventFormatterManager.GetSourceStrings(
+    source, _ = formatters_manager.FormattersManager.GetSourceStrings(
         event_object)
 
     if source != 'WEBHIST':

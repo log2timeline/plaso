@@ -18,6 +18,7 @@
 """This file contains a syslog formatter in plaso."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class SyslogLineFormatter(interface.ConditionalEventFormatter):
@@ -27,7 +28,14 @@ class SyslogLineFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SEPARATOR = u''
 
-  FORMAT_STRING_PIECES = [u'[', u'{reporter}', u', pid: {pid}', u'] {body}']
+  FORMAT_STRING_PIECES = [
+      u'[',
+      u'{reporter}',
+      u', pid: {pid}',
+      u'] {body}']
 
   SOURCE_LONG = 'Log File'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(SyslogLineFormatter)

@@ -18,6 +18,7 @@
 """Formatter for text file-based events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class TextEventFormatter(interface.EventFormatter):
@@ -28,3 +29,6 @@ class TextEventFormatter(interface.EventFormatter):
 
   SOURCE_SHORT = u'LOG'
   SOURCE_LONG = u'Text File'
+
+
+manager.FormattersManager.RegisterFormatter(TextEventFormatter)

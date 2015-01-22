@@ -18,6 +18,7 @@
 """Formatter for the Popularity Contest parser events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class PopularityContestSessionFormatter(interface.ConditionalEventFormatter):
@@ -53,3 +54,7 @@ class PopularityContestLogFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Popularity Contest Log'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatters([
+    PopularityContestSessionFormatter, PopularityContestLogFormatter])

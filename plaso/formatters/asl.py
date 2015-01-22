@@ -18,6 +18,7 @@
 """Formatter for the Apple System Log binary files."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class AslFormatter(interface.ConditionalEventFormatter):
@@ -45,3 +46,6 @@ class AslFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'ASL entry'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(AslFormatter)

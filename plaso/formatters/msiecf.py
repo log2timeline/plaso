@@ -17,8 +17,9 @@
 # limitations under the License.
 """Formatter for Microsoft Internet Explorer (MSIE) Cache Files (CF) events."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
@@ -63,3 +64,6 @@ class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
       event_object.recovered_string = '[Recovered Entry]'
 
     return super(MsiecfUrlFormatter, self).GetMessages(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(MsiecfUrlFormatter)

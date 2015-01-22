@@ -18,6 +18,7 @@
 """Formatter for CUPS IPP file."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class CupsIppFormatter(interface.ConditionalEventFormatter):
@@ -40,3 +41,6 @@ class CupsIppFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'CUPS IPP Log'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(CupsIppFormatter)

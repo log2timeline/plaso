@@ -18,6 +18,7 @@
 """Formatters for the MSIE WebCache ESE database events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class MsieWebCacheContainerEventFormatter(interface.ConditionalEventFormatter):
@@ -97,3 +98,8 @@ class MsieWebCachePartitionsEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'MSIE WebCache partitions record'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatters([
+    MsieWebCacheContainerEventFormatter, MsieWebCacheContainersEventFormatter,
+    MsieWebCacheLeakFilesEventFormatter, MsieWebCachePartitionsEventFormatter])

@@ -17,8 +17,9 @@
 # limitations under the License.
 """Formatter for Windows Shortcut (LNK) files."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
@@ -99,3 +100,6 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
     event_object.linked_path = self._GetLinkedPath(event_object)
 
     return super(WinLnkLinkFormatter, self).GetMessages(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(WinLnkLinkFormatter)

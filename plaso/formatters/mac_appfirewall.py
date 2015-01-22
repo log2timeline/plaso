@@ -18,6 +18,8 @@
 """Formatter for the Mac appfirewall.log file."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
+
 
 class MacAppFirewallLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for Mac appfirewall.log file."""
@@ -37,3 +39,6 @@ class MacAppFirewallLogFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Mac AppFirewall Log'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(MacAppFirewallLogFormatter)

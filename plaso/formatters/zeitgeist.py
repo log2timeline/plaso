@@ -18,6 +18,7 @@
 """This file contains a formatter for Zeitgeist."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class ZeitgeistEventFormatter(interface.EventFormatter):
@@ -29,3 +30,6 @@ class ZeitgeistEventFormatter(interface.EventFormatter):
 
   SOURCE_LONG = 'Zeitgeist activity log'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(ZeitgeistEventFormatter)

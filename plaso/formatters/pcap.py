@@ -18,6 +18,7 @@
 """Formatter for PCAP files."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
@@ -48,3 +49,6 @@ class PCAPFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Packet Capture File (pcap)'
   SOURCE_SHORT = 'PCAP'
+
+
+manager.FormattersManager.RegisterFormatter(PCAPFormatter)

@@ -273,8 +273,8 @@ class EventObject(object):
     out_write.append(u'\n[Message Strings]:')
 
     # TODO: move formatting testing to a formatters (manager) test.
-    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
-        self)
+    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        self.data_type)
     if not event_formatter:
       out_write.append(u'None')
     else:

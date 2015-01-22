@@ -17,8 +17,9 @@
 # limitations under the License.
 """This file contains a formatter for Symantec logs."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -195,3 +196,6 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
       event_object.action0_map = self.ACTION_0_NAMES.get(
           event_object.action0, 'Unknown')
     return super(SymantecFormatter, self).GetMessages(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(SymantecFormatter)

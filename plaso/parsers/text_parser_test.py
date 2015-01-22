@@ -44,6 +44,9 @@ class TestTextEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Test Text Parser'
 
 
+formatters_manager.FormattersManager.RegisterFormatter(TestTextEventFormatter)
+
+
 class TestTextParser(text_parser.SlowLexicalTextParser):
   """Implement a text parser object that can successfully parse a text file.
 
@@ -102,7 +105,7 @@ class TextParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    msg1, _ = formatters_manager.EventFormatterManager.GetMessageStrings(
+    msg1, _ = formatters_manager.FormattersManager.GetMessageStrings(
         event_object)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
@@ -115,7 +118,7 @@ class TextParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    msg2, _ = formatters_manager.EventFormatterManager.GetMessageStrings(
+    msg2, _ = formatters_manager.FormattersManager.GetMessageStrings(
         event_object)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(

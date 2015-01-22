@@ -18,6 +18,7 @@
 """Formatter for Task Scheduler events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class TaskCacheEventFormatter(interface.ConditionalEventFormatter):
@@ -34,3 +35,6 @@ class TaskCacheEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Task Cache'
   SOURCE_SHORT = 'REG'
+
+
+manager.FormattersManager.RegisterFormatter(TaskCacheEventFormatter)

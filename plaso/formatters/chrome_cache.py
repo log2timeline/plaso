@@ -18,6 +18,7 @@
 """Formatter for Chrome Cache files based-events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class ChromeCacheEntryEventFormatter(interface.ConditionalEventFormatter):
@@ -30,3 +31,6 @@ class ChromeCacheEntryEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Chrome Cache'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatter(ChromeCacheEntryEventFormatter)
