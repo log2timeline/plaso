@@ -112,9 +112,9 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import limit
 from plaso.lib import pfilter
-from plaso.lib import output
 from plaso.lib import timelib
 from plaso.lib import utils
+from plaso.output import interface as output_interface
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
@@ -1552,9 +1552,10 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
 
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
-    output_class = output.GetOutputFormatter(self._output_module_string)
+    output_class = output_interface.GetOutputFormatter(
+        self._output_module_string)
     if not output_class:
-      output_class = output.GetOutputFormatter('L2tcsv')
+      output_class = output_interface.GetOutputFormatter('L2tcsv')
 
     self._output_module = output_class(
         self, self._output_file, config=self._pre_obj)

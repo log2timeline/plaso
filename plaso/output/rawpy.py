@@ -15,10 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Represents an EventObject as a string."""
-from plaso.lib import output
+
+from plaso.output import interface
 
 
-class Rawpy(output.FileLogOutputFormatter):
+class Rawpy(interface.FileLogOutputFormatter):
   """Prints out a "raw" interpretation of the EventObject."""
   # TODO: Revisit the name of this class, perhaps rename it to
   # something more closely similar to what it is doing now, as in

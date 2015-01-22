@@ -19,7 +19,7 @@
 
 import logging
 
-from plaso.lib import output
+from plaso.output import interface as output_interface
 
 
 # TODO: Refactor the putils library so it does not end up being a trash can
@@ -55,4 +55,4 @@ def _FindClasses(class_object, *args):
 
 def FindAllOutputs():
   """Find all available output modules."""
-  return _FindClasses(output.LogOutputFormatter, None)
+  return _FindClasses(output_interface.LogOutputFormatter, None)

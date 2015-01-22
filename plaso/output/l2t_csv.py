@@ -25,13 +25,13 @@ import re
 
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
-from plaso.lib import output
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.output import helper
+from plaso.output import interface
 
 
-class L2tcsv(output.FileLogOutputFormatter):
+class L2tcsv(interface.FileLogOutputFormatter):
   """CSV format used by log2timeline, with 17 fixed fields."""
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
