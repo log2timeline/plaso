@@ -18,6 +18,7 @@
 """This file contains a formatter for the Google Analytics cookie."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class AnalyticsUtmaCookieFormatter(interface.ConditionalEventFormatter):
@@ -68,3 +69,8 @@ class AnalyticsUtmzCookieFormatter(AnalyticsUtmaCookieFormatter):
       u'Last type of visit: {utmcmd}',
       u'Keywords used to find site: {utmctr}',
       u'Path to the page of referring link: {utmcct}']
+
+
+manager.FormattersManager.RegisterFormatters([
+    AnalyticsUtmaCookieFormatter, AnalyticsUtmbCookieFormatter,
+    AnalyticsUtmzCookieFormatter])

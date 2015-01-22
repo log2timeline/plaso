@@ -18,6 +18,7 @@
 """Formatter for the Sleuthkit (TSK) bodyfile or mactime format."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class MactimeFormatter(interface.EventFormatter):
@@ -30,3 +31,6 @@ class MactimeFormatter(interface.EventFormatter):
 
   SOURCE_LONG = 'Mactime Bodyfile'
   SOURCE_SHORT = 'FILE'
+
+
+manager.FormattersManager.RegisterFormatter(MactimeFormatter)

@@ -18,6 +18,7 @@
 """Formatter for Windows IIS log files."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 __author__ = 'Ashley Holtz (ashley.a.holtz@gmail.com)'
@@ -38,7 +39,7 @@ class WinIISFormatter(interface.ConditionalEventFormatter):
       u':',
       u'{dest_port}',
       u']',
-      u'Http Status: {http_status}',
+      u'HTTP Status: {http_status}',
       u'Bytes Sent: {sent_bytes}',
       u'Bytes Received: {received_bytes}',
       u'User Agent: {user_agent}',
@@ -57,3 +58,6 @@ class WinIISFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'IIS Log'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(WinIISFormatter)

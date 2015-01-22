@@ -18,6 +18,7 @@
 """Formatter for the shell item events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
@@ -39,3 +40,6 @@ class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'File entry shell item'
   SOURCE_SHORT = 'FILE'
+
+
+manager.FormattersManager.RegisterFormatter(ShellItemFileEntryEventFormatter)

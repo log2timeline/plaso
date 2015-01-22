@@ -18,6 +18,7 @@
 """This file contains a skydrivelog formatter in plaso."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class SkyDriveLogFormatter(interface.ConditionalEventFormatter):
@@ -34,3 +35,6 @@ class SkyDriveLogFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'SkyDrive Log File'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(SkyDriveLogFormatter)

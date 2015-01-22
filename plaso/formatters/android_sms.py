@@ -18,6 +18,7 @@
 """Formatter for Android mmssms.db database events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class AndroidSmsFormatter(interface.ConditionalEventFormatter):
@@ -35,3 +36,6 @@ class AndroidSmsFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Android SMS messages'
   SOURCE_SHORT = 'SMS'
+
+
+manager.FormattersManager.RegisterFormatter(AndroidSmsFormatter)

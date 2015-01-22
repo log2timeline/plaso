@@ -17,8 +17,9 @@
 # limitations under the License.
 """This file contains a formatter for the Mozilla Firefox history."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class FirefoxBookmarkAnnotationFormatter(interface.ConditionalEventFormatter):
@@ -134,3 +135,9 @@ class FirefoxDowloadFormatter(interface.EventFormatter):
 
   SOURCE_LONG = 'Firefox History'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatters([
+    FirefoxBookmarkAnnotationFormatter, FirefoxBookmarkFolderFormatter,
+    FirefoxBookmarkFormatter, FirefoxPageVisitFormatter,
+    FirefoxDowloadFormatter])

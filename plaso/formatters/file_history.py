@@ -18,6 +18,7 @@
 """Formatters for the file history ESE database events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class FileHistoryNamespaceEventFormatter(interface.ConditionalEventFormatter):
@@ -37,3 +38,6 @@ class FileHistoryNamespaceEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'File History Namespace'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(FileHistoryNamespaceEventFormatter)

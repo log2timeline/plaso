@@ -18,6 +18,8 @@
 """Formatter for OpenXML events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
+
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
@@ -65,3 +67,6 @@ class OpenXMLParserFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Open XML Metadata'
   SOURCE_SHORT = 'META'
+
+
+manager.FormattersManager.RegisterFormatter(OpenXMLParserFormatter)

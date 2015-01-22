@@ -65,6 +65,9 @@ class TestEvent2Formatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'None in Particular'
 
 
+formatters_manager.FormattersManager.RegisterFormatter(TestEvent2Formatter)
+
+
 class TestFormatter(output.LogOutputFormatter):
   """Dummy formatter."""
 
@@ -82,8 +85,8 @@ class TestFormatter(output.LogOutputFormatter):
     Args:
       event_object: The event object (instance of EventObject).
     """
-    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
-        event_object)
+    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_object.data_type)
     msg, _ = event_formatter.GetMessages(event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
     self.filehandle.write(u'{0:s}/{1:s} {2:s}\n'.format(

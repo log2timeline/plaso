@@ -18,6 +18,7 @@
 """Formatter for the UTMP binary files."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class UtmpSessionFormatter(interface.ConditionalEventFormatter):
@@ -39,3 +40,6 @@ class UtmpSessionFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'UTMP session'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(UtmpSessionFormatter)

@@ -18,6 +18,7 @@
 """Formatters for OLE Compound File (OLECF) events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 from plaso.lib import errors
 
 
@@ -147,3 +148,7 @@ class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
       0x00000008: 'Locked for annotations',
   }
 
+
+manager.FormattersManager.RegisterFormatters([
+    OleCfItemFormatter, OleCfDestListEntryFormatter,
+    OleCfDocumentSummaryInfoFormatter, OleCfSummaryInfoFormatter])

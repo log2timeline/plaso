@@ -18,6 +18,7 @@
 """This file contains a formatter for the Google Chrome history."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
@@ -59,3 +60,7 @@ class ChromeFileDownloadFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Chrome History'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatters([
+    ChromePageVisitedFormatter, ChromeFileDownloadFormatter])

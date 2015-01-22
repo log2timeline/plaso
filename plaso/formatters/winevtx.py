@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Formatters for Windows XML EventLog (EVTX) related events."""
+
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class WinEvtxFormatter(interface.ConditionalEventFormatter):
@@ -39,3 +41,6 @@ class WinEvtxFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'WinEVTX'
   SOURCE_SHORT = 'EVT'
+
+
+manager.FormattersManager.RegisterFormatter(WinEvtxFormatter)

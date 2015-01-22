@@ -18,6 +18,7 @@
 """Formatter for Android contacts2.db database events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class AndroidCallFormatter(interface.ConditionalEventFormatter):
@@ -35,3 +36,6 @@ class AndroidCallFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Android Call History'
   SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatter(AndroidCallFormatter)

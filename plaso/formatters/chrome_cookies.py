@@ -18,6 +18,7 @@
 """This file contains a formatter for the Google Chrome cookie."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class ChromeCookieFormatter(interface.ConditionalEventFormatter):
@@ -38,3 +39,6 @@ class ChromeCookieFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Chrome Cookies'
   SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatter(ChromeCookieFormatter)

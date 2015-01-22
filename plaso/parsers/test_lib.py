@@ -208,7 +208,7 @@ class ParserTestCase(unittest.TestCase):
       expected_message: the expected message string.
       expected_message_short: the expected short message string.
     """
-    manager_object = formatters_manager.EventFormatterManager
+    manager_object = formatters_manager.FormattersManager
     message, message_short = manager_object.GetMessageStrings(event_object)
     self.assertEquals(message, expected_message)
     self.assertEquals(message_short, expected_message_short)
@@ -226,7 +226,7 @@ class ParserTestCase(unittest.TestCase):
       expected_source: the expected source string.
       expected_source_short: the expected short source string.
     """
-    manager_object = formatters_manager.EventFormatterManager
+    manager_object = formatters_manager.FormattersManager
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
     source_short, source = manager_object.GetSourceStrings(event_object)

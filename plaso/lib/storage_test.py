@@ -252,11 +252,11 @@ class StorageFileTest(unittest.TestCase):
     self.assertEquals(tags[0].tag.comment, u'My comment')
     self.assertEquals(tags[0].tag.color, u'blue')
 
-    msg, _ = formatters_manager.EventFormatterManager.GetMessageStrings(tags[0])
+    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(tags[0])
     self.assertEquals(msg[0:10], u'This is a ')
 
     self.assertEquals(tags[1].tag.tags[0], 'Malware')
-    msg, _ = formatters_manager.EventFormatterManager.GetMessageStrings(tags[1])
+    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(tags[1])
     self.assertEquals(msg[0:15], u'[\\HKCU\\Windows\\')
 
     self.assertEquals(tags[2].tag.comment, u'This is interesting')

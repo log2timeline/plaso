@@ -17,8 +17,9 @@
 # limitations under the License.
 """Formatter for Hachoir events."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
@@ -55,3 +56,6 @@ class HachoirFormatter(interface.EventFormatter):
     event_object.data = u' '.join(string_parts)
 
     return super(HachoirFormatter, self).GetMessages(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(HachoirFormatter)

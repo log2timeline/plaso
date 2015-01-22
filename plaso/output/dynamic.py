@@ -75,12 +75,12 @@ class Dynamic(output.FileLogOutputFormatter):
   def ParseSource(self, event_object):
     """Return the source string."""
     # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
-        event_object)
+    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_object.data_type)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find no event formatter for: {0:s}.'.format(
-              event_object.DATA_TYPE))
+              event_object.data_type))
 
     _, source = event_formatter.GetSources(event_object)
     return source
@@ -88,12 +88,12 @@ class Dynamic(output.FileLogOutputFormatter):
   def ParseSourceShort(self, event_object):
     """Return the source string."""
     # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
-        event_object)
+    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_object.data_type)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find no event formatter for: {0:s}.'.format(
-              event_object.DATA_TYPE))
+              event_object.data_type))
 
     source, _ = event_formatter.GetSources(event_object)
     return source
@@ -199,12 +199,12 @@ class Dynamic(output.FileLogOutputFormatter):
       errors.NoFormatterFound: If no formatter for that event is found.
     """
     # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
-        event_object)
+    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_object.data_type)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find no event formatter for: {0:s}.'.format(
-              event_object.DATA_TYPE))
+              event_object.data_type))
 
     msg, _ = event_formatter.GetMessages(event_object)
     return msg
@@ -219,12 +219,12 @@ class Dynamic(output.FileLogOutputFormatter):
       errors.NoFormatterFound: If no formatter for that event is found.
     """
     # TODO: move this to an output module interface.
-    event_formatter = formatters_manager.EventFormatterManager.GetFormatter(
-        event_object)
+    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
+        event_object.data_type)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find no event formatter for: {0:s}.'.format(
-              event_object.DATA_TYPE))
+              event_object.data_type))
 
     _, msg_short = event_formatter.GetMessages(event_object)
     return msg_short

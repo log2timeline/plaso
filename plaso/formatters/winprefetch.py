@@ -17,8 +17,9 @@
 # limitations under the License.
 """Formatter for the Windows Prefetch events."""
 
-from plaso.lib import errors
 from plaso.formatters import interface
+from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
@@ -74,3 +75,6 @@ class WinPrefetchExecutionFormatter(interface.ConditionalEventFormatter):
       event_object.volumes_string = u', '.join(volumes_strings)
 
     return super(WinPrefetchExecutionFormatter, self).GetMessages(event_object)
+
+
+manager.FormattersManager.RegisterFormatter(WinPrefetchExecutionFormatter)

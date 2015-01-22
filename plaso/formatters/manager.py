@@ -52,81 +52,82 @@ class DefaultFormatter(interface.EventFormatter):
     return msg, msg_short
 
 
-class EventFormatterManager(object):
-  """Class to manage the event formatters."""
+class FormattersManager(object):
+  """Class that implements the formatters manager."""
+
+  _formatter_classes = {}
+  _formatter_objects = {}
 
   @classmethod
-  def GetFormatter(cls, event_object):
-    """Retrieves the formatter for a specific event object.
+  def DeregisterFormatter(cls, formatter_class):
+    """Deregisters a formatter class.
 
-       This function builds a map of data types and the corresponding event
-       formatters. At the moment this map is only build once.
+    The formatter classes are identified based on their lower case data type.
 
     Args:
-      event_object: The event object (EventObject) which is used to identify
-                    the formatter.
-
-    Returns:
-      The corresponding formatter (EventFormatter) if available or None.
+      formatter_class: the class object of the formatter.
 
     Raises:
-      RuntimeError if a duplicate event formatter is found while building
-      the map of event formatters.
+      KeyError: if formatter class is not set for the corresponding data type.
     """
-    if not hasattr(cls, 'event_formatters'):
-      cls.event_formatters = {}
-      cls.default_formatter = DefaultFormatter()
-      for cls_formatter in interface.EventFormatter.classes:
-        try:
-          formatter = interface.EventFormatter.classes[cls_formatter]()
+    formatter_data_type = formatter_class.DATA_TYPE.lower()
+    if formatter_data_type not in cls._formatter_classes:
+      raise KeyError(
+          u'Formatter class not set for data type: {0:s}.'.format(
+              formatter_class.DATA_TYPE))
 
-          # Raise on duplicate formatters.
-          if formatter.DATA_TYPE in cls.event_formatters:
-            raise RuntimeError((
-                u'event formatter for data type: {0:s} defined in: {1:s} and '
-                u'{2:s}.').format(
-                    formatter.DATA_TYPE, cls_formatter,
-                    cls.event_formatters[
-                        formatter.DATA_TYPE].__class__.__name__))
-          cls.event_formatters[formatter.DATA_TYPE] = formatter
-        except RuntimeError as exeception:
-          # Ignore broken formatters.
-          logging.warning(u'{0:s}'.format(exeception))
+    del cls._formatter_classes[formatter_data_type]
 
-      cls.event_formatters.setdefault(None)
+  @classmethod
+  def GetFormatterObject(cls, data_type):
+    """Retrieves the formatter object for a specific data type.
 
-    if event_object.data_type in cls.event_formatters:
-      return cls.event_formatters[event_object.data_type]
-    else:
-      logging.warning(
-          u'Using default formatter for data type: {0:s}'.format(
-              event_object.data_type))
-      return cls.default_formatter
+    Args:
+      data_type: The data type.
+
+    Returns:
+      The corresponding formatter (instance of EventFormatter) or
+      the default formatter (instance of DefaultFormatter) if not available.
+    """
+    data_type = data_type.lower()
+    if data_type not in cls._formatter_objects:
+      formatter_object = None
+
+      if data_type in cls._formatter_classes:
+        formatter_class = cls._formatter_classes[data_type]
+        # TODO: remove the need to instantiate the Formatter classes
+        # and use class methods only.
+        formatter_object = formatter_class()
+
+      if not formatter_object:
+        logging.warning(
+            u'Using default formatter for data type: {0:s}'.format(data_type))
+        formatter_object = DefaultFormatter()
+
+      cls._formatter_objects[data_type] = formatter_object
+
+    return cls._formatter_objects[data_type]
 
   @classmethod
   def GetMessageStrings(cls, event_object):
     """Retrieves the formatted message strings for a specific event object.
 
     Args:
-      event_object: The event object (EventObject) which is used to identify
-                    the formatter.
+      event_object: the event object (instance of EventObject).
 
     Returns:
       A list that contains both the longer and shorter version of the message
       string.
     """
-    formatter = cls.GetFormatter(event_object)
-    if not formatter:
-      return u'', u''
-    return formatter.GetMessages(event_object)
+    formatter_object = cls.GetFormatterObject(event_object.data_type)
+    return formatter_object.GetMessages(event_object)
 
   @classmethod
   def GetSourceStrings(cls, event_object):
-    """Retrieves the formatted source long and short strings for an event.
+    """Retrieves the formatted source strings for a specific event object.
 
     Args:
-      event_object: The event object (EventObject) which is used to identify
-                    the formatter.
+      event_object: the event object (instance of EventObject).
 
     Returns:
       A list that contains the source_short and source_long version of the
@@ -134,7 +135,41 @@ class EventFormatterManager(object):
     """
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
-    formatter = cls.GetFormatter(event_object)
-    if not formatter:
-      return u'', u''
-    return formatter.GetSources(event_object)
+    formatter_object = cls.GetFormatterObject(event_object.data_type)
+    return formatter_object.GetSources(event_object)
+
+  @classmethod
+  def RegisterFormatter(cls, formatter_class):
+    """Registers a formatter class.
+
+    The formatter classes are identified based on their lower case data type.
+
+    Args:
+      formatter_class: the class object of the formatter.
+
+    Raises:
+      KeyError: if formatter class is already set for the corresponding
+                data type.
+    """
+    formatter_data_type = formatter_class.DATA_TYPE.lower()
+    if formatter_data_type in cls._formatter_classes:
+      raise KeyError((
+          u'Formatter class already set for data type: {0:s}.').format(
+              formatter_class.DATA_TYPE))
+
+    cls._formatter_classes[formatter_data_type] = formatter_class
+
+  @classmethod
+  def RegisterFormatters(cls, formatter_classes):
+    """Registers formatter classes.
+
+    The formatter classes are identified based on their lower case name.
+
+    Args:
+      formatter_classes: a list of class objects of the formatters.
+
+    Raises:
+      KeyError: if formatter class is already set for the corresponding name.
+    """
+    for formatter_class in formatter_classes:
+      cls.RegisterFormatter(formatter_class)

@@ -18,6 +18,7 @@
 """Formatter for Java Cache IDX events."""
 
 from plaso.formatters import interface
+from plaso.formatters import manager
 
 
 class JavaIDXFormatter(interface.ConditionalEventFormatter):
@@ -32,3 +33,6 @@ class JavaIDXFormatter(interface.ConditionalEventFormatter):
       u'IDX Version: {idx_version}',
       u'Host IP address: ({ip_address})',
       u'Download URL: {url}']
+
+
+manager.FormattersManager.RegisterFormatter(JavaIDXFormatter)
