@@ -11,15 +11,6 @@ export DH_OPTIONS
 %:
 	dh  $@ --with python2
 
-.PHONY: override_dh_auto_build
-override_dh_auto_build:
-
-.PHONY: override_dh_auto_clean
-override_dh_auto_clean:
-
-.PHONY: override_dh_auto_install
-override_dh_auto_install:
-
 .PHONY: override_dh_auto_test
 override_dh_auto_test:
 
