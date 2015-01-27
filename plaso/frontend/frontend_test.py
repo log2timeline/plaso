@@ -40,7 +40,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end = frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = test_file
 
     test_front_end.ParseOptions(options)
@@ -63,7 +63,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end = frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = test_file
 
     test_front_end.ParseOptions(options)
@@ -85,7 +85,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end = frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = test_file
     options.image_offset_bytes = 0x0002c000
 
@@ -99,7 +99,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     # pylint: disable=protected-access
     self.assertEquals(test_front_end._partition_offset, 180224)
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = test_file
     options.image_offset = 352
     options.bytes_per_sector = 512
@@ -114,7 +114,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     # pylint: disable=protected-access
     self.assertEquals(test_front_end._partition_offset, 180224)
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = test_file
     options.partition_number = 2
 
@@ -137,7 +137,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end = frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = test_file
     options.vss_stores = '1,2'
 
@@ -152,7 +152,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     self.assertEquals(test_front_end._partition_offset, 0)
     self.assertEquals(test_front_end._vss_stores, [1, 2])
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = test_file
     options.vss_stores = '1'
 
@@ -167,7 +167,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     self.assertEquals(test_front_end._partition_offset, 0)
     self.assertEquals(test_front_end._vss_stores, [1])
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = test_file
     options.vss_stores = 'all'
 
@@ -192,7 +192,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end = frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
-    options = test_lib.Options()
+    options = frontend.Options()
 
     with self.assertRaises(errors.BadConfigOption):
       test_front_end.ParseOptions(options)
@@ -245,7 +245,7 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
     test_front_end = frontend.AnalysisFrontend(
         self._input_reader, self._output_writer)
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.storage_file = self._GetTestFilePath([u'psort_test.out'])
 
     test_front_end.ParseOptions(options)
@@ -260,7 +260,7 @@ class AnalysisFrontendTests(test_lib.FrontendTestCase):
     test_front_end = frontend.AnalysisFrontend(
         self._input_reader, self._output_writer)
 
-    options = test_lib.Options()
+    options = frontend.Options()
 
     with self.assertRaises(errors.BadConfigOption):
       test_front_end.ParseOptions(options)

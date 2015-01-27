@@ -34,6 +34,7 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import storage
 from plaso.output import interface as output_interface
+from plaso.output import manager as output_manager
 from plaso.output import pstorage  # pylint: disable=unused-import
 
 
@@ -542,7 +543,11 @@ class ClusteringEngine(object):
       with SetupStorage(dump_filename) as store:
         total_events = store.GetNumberOfEvents()
         events_per_dot = operator.floordiv(total_events, 80)
-        formatter_cls = output_interface.GetOutputFormatter('Pstorage')
+        # TODO: When storage refactor is done change this so that we do not
+        # always choose pstorage but whatever storage mechanism that was used
+        # to begin with (as in if the storage is SQLite then use SQLite for
+        # output).
+        formatter_cls = output_manager.OutputManager.GetOutputClass('pstorage')
         store_dedup = open(nodup_filename, 'wb')
         formatter = formatter_cls(store, store_dedup)
         with output_interface.EventBuffer(

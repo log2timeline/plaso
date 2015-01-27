@@ -23,6 +23,7 @@ import unittest
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.frontend import frontend
 from plaso.frontend import preg
 from plaso.frontend import test_lib
 
@@ -67,7 +68,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
   def _GetHelperAndOutputWriter(self):
     """Return a helper object (instance of PregHelper) and an output writer."""
     hive_storage = preg.PregStorage()
-    options = test_lib.Options()
+    options = frontend.Options()
 
     output_writer = StringIOOutputWriter()
     test_front_end = preg.PregFrontend(output_writer)
@@ -80,7 +81,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     """Test few functions that should raise exceptions."""
     shell_helper, _ = self._GetHelperAndOutputWriter()
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.foo = u'bar'
 
     with self.assertRaises(errors.BadConfigOption):
@@ -95,7 +96,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     shell_helper, _ = self._GetHelperAndOutputWriter()
     front_end = shell_helper.tool_front_end
 
-    options = test_lib.Options()
+    options = frontend.Options()
     hive_path = self._GetTestFilePath([u'NTUSER.DAT'])
     options.regfile = hive_path
 

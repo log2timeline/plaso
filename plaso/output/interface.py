@@ -33,7 +33,6 @@ import logging
 import sys
 
 from plaso.lib import errors
-from plaso.lib import registry
 from plaso.lib import utils
 
 import pytz
@@ -45,10 +44,6 @@ class LogOutputFormatter(object):
   This class exists mostly for documentation purposes. Subclasses should
   override the relevant methods to act on the callbacks.
   """
-
-  # TODO: Remove this registration system.
-  __metaclass__ = registry.MetaclassRegistry
-  __abstract = True
 
   # Optional arguments to be added to the argument parser.
   # An example would be:
@@ -63,7 +58,8 @@ class LogOutputFormatter(object):
   # into the argparse parser.
   ARGUMENTS = []
 
-  # TODO: Add a NAME attribute to get rid of using class names.
+  NAME = u''
+  DESCRIPTION = u''
 
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
@@ -376,24 +372,3 @@ class OutputFilehandle(object):
   def __enter__(self):
     """Make usable with "with" statement."""
     return self
-
-
-# TODO: Move these functions into output.manager and change the
-# output module registration system to mirror parser registration.
-def GetOutputFormatter(output_string):
-  """Return an output formatter that matches the provided string."""
-  # Format the output string (make the input case in-sensitive).
-  if type(output_string) not in (str, unicode):
-    return None
-
-  format_str = ''.join(
-      [output_string[0].upper(), output_string[1:].lower()])
-  return LogOutputFormatter.classes.get(format_str, None)
-
-
-def ListOutputFormatters():
-  """Generate a list of all available output formatters."""
-  for cl in LogOutputFormatter.classes:
-    formatter_class = LogOutputFormatter.classes[cl](None)
-    doc_string, _, _ = formatter_class.__doc__.partition('\n')
-    yield cl, doc_string

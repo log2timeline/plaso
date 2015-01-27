@@ -60,7 +60,7 @@ class L2TTlnTest(unittest.TestCase):
   def setUp(self):
     """Sets up the objects needed for this test."""
     self.output = StringIO.StringIO()
-    self.formatter = l2t_tln.L2ttln(None, self.output)
+    self.formatter = l2t_tln.L2tTlnOutputFormatter(None, self.output)
     self.event_object = TlnTestEvent()
 
   def testStart(self):

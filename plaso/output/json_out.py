@@ -20,11 +20,15 @@
 import sys
 
 from plaso.output import interface
+from plaso.output import manager
 from plaso.serializer import json_serializer
 
 
-class Json(interface.FileLogOutputFormatter):
-  """Saves the events into a JSON format."""
+class JsonOutputFormatter(interface.FileLogOutputFormatter):
+  """Defines the JSON output formatter class."""
+
+  NAME = u'json'
+  DESCRIPTION = u'Saves the events into a JSON format.'
 
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
@@ -36,7 +40,8 @@ class Json(interface.FileLogOutputFormatter):
       config: The configuration object, containing config information.
       filter_use: A filter_interface.FilterObject object.
     """
-    super(Json, self).__init__(store, filehandle, config, filter_use)
+    super(JsonOutputFormatter, self).__init__(
+        store, filehandle, config, filter_use)
     self._event_counter = 0
 
   def End(self):
@@ -46,7 +51,7 @@ class Json(interface.FileLogOutputFormatter):
     # what the last event is going to be (which we don't) or to add
     # a dummy event in the end that has no data in it.
     self.filehandle.WriteLine(u'"event_foo": "{}"}')
-    super(Json, self).End()
+    super(JsonOutputFormatter, self).End()
 
   def EventBody(self, event_object):
     """Prints out to a filehandle string representation of an EventObject.
@@ -71,3 +76,6 @@ class Json(interface.FileLogOutputFormatter):
     """Provide a header to the file."""
     self.filehandle.WriteLine(u'{')
     self._event_counter = 0
+
+
+manager.OutputManager.RegisterOutput(JsonOutputFormatter)

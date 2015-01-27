@@ -38,10 +38,15 @@ from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import helper
 from plaso.output import interface
+from plaso.output import manager
 
 
-class L2ttln(interface.FileLogOutputFormatter):
+class L2tTlnOutputFormatter(interface.FileLogOutputFormatter):
   """Extended seven field pipe delimited TLN; L2T 0.65 style."""
+
+  NAME = u'l2ttln'
+  DESCRIPTION = (
+      u'Extended seven field pipe delimited TLN, used in legacy log2timeline.')
 
   DELIMITER = u'|'
 
@@ -120,3 +125,6 @@ class L2ttln(interface.FileLogOutputFormatter):
         notes.replace(self.DELIMITER, u' '))
 
     self.filehandle.WriteLine(out_write)
+
+
+manager.OutputManager.RegisterOutput(L2tTlnOutputFormatter)
