@@ -14,7 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This file contains tests for the output formatter."""
+"""This file contains tests for the output interface."""
+
 import os
 import locale
 import sys
@@ -22,6 +23,7 @@ import tempfile
 import unittest
 
 from plaso.output import interface
+from plaso.output import manager
 
 
 class DummyEvent(object):
@@ -40,6 +42,9 @@ class DummyEvent(object):
 
 class TestOutput(interface.LogOutputFormatter):
   """This is a test output module that provides a simple XML."""
+
+  NAME = u'testoutput'
+  DESCRIPTION = u'Test output that provides a simple mocked XML.'
 
   def __init__(self, filehandle):
     """Fake the store."""
@@ -65,6 +70,9 @@ class TestOutput(interface.LogOutputFormatter):
 
   def End(self):
     self.filehandle.write(u'</EventFile>\n')
+
+
+manager.OutputManager.RegisterOutput(TestOutput)
 
 
 class PlasoOutputUnitTest(unittest.TestCase):
@@ -107,11 +115,11 @@ class PlasoOutputUnitTest(unittest.TestCase):
   def testOutputList(self):
     """Test listing up all available registered modules."""
     module_seen = False
-    for name, description in interface.ListOutputFormatters():
-      if 'TestOutput' in name:
+    for name, description in manager.OutputManager.GetOutputs():
+      if name == 'testoutput':
         module_seen = True
         self.assertEquals(description, (
-            u'This is a test output module that provides a simple XML.'))
+            u'Test output that provides a simple mocked XML.'))
 
     self.assertTrue(module_seen)
 

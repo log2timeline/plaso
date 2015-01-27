@@ -35,10 +35,14 @@ from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import helper
 from plaso.output import interface
+from plaso.output import manager
 
 
-class Tln(interface.FileLogOutputFormatter):
+class TlnOutputFormatter(interface.FileLogOutputFormatter):
   """Five field TLN pipe delimited outputter."""
+
+  NAME = u'tln'
+  DESCRIPTION = u'Five field TLN pipe delimited output formatter.'
 
   DELIMITER = u'|'
 
@@ -108,3 +112,6 @@ class Tln(interface.FileLogOutputFormatter):
         username.replace(self.DELIMITER, u' '),
         msg.replace(self.DELIMITER, u' '))
     self.filehandle.WriteLine(out_write)
+
+
+manager.OutputManager.RegisterOutput(TlnOutputFormatter)

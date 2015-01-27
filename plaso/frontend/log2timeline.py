@@ -85,7 +85,7 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
     from plaso import parsers as _  # pylint: disable=redefined-outer-name
     from plaso import output as _  # pylint: disable=redefined-outer-name
     from plaso.frontend import presets
-    from plaso.output import interface as output_interface
+    from plaso.output import manager as output_manager
 
     return_dict['Versions'] = [
         ('plaso engine', plaso.GetVersion()),
@@ -101,7 +101,8 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
       return_dict['Parser Lists'].append((category, ', '.join(parsers)))
 
     return_dict['Output Modules'] = []
-    for name, description in sorted(output_interface.ListOutputFormatters()):
+    for name, description in sorted(
+        output_manager.OutputManager.GetOutputs()):
       return_dict['Output Modules'].append((name, description))
 
     return_dict['Plugins'] = []

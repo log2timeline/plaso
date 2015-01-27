@@ -15,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Defines the output formatter for the MySQL database used by 4n6time."""
 
 import logging
 import re
@@ -30,13 +31,17 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.output import helper
 from plaso.output import interface
+from plaso.output import manager
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Mysql4n6(interface.LogOutputFormatter):
-  """Contains functions for outputting as 4n6time MySQL database."""
+class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
+  """Class defining the MySQL database output formatter for 4n6time."""
+
+  NAME = 'mysql4n6'
+  DESCRIPTION = u'MySQL database output for the 4n6time tool.'
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -109,7 +114,8 @@ class Mysql4n6(interface.LogOutputFormatter):
       filter_use: The filter object used.
     """
     # TODO: Add a unit test for this output module.
-    super(Mysql4n6, self).__init__(store, filehandle, config, filter_use)
+    super(Mysql4n6OutputFormatter, self).__init__(
+        store, filehandle, config, filter_use)
 
     self.set_status = getattr(config, 'set_status', None)
 
@@ -399,3 +405,6 @@ class Mysql4n6(interface.LogOutputFormatter):
       return -1
 
     return getattr(event_object.pathspec, 'vss_store_number', -1)
+
+
+manager.OutputManager.RegisterOutput(Mysql4n6OutputFormatter)

@@ -22,6 +22,7 @@ import shutil
 import tempfile
 import unittest
 
+from plaso.frontend import frontend
 from plaso.frontend import log2timeline
 from plaso.frontend import test_lib
 from plaso.lib import pfilter
@@ -47,7 +48,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     """Tests the get storage information function."""
     test_front_end = log2timeline.Log2TimelineFrontend()
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     storage_file_path = os.path.join(self._temp_directory, u'plaso.db')
