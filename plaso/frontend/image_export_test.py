@@ -27,6 +27,7 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.frontend import frontend
 from plaso.frontend import image_export
 from plaso.frontend import test_lib
 from plaso.lib import errors
@@ -47,7 +48,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     """Tests extract with file filter and date filter functionality."""
     test_front_end = image_export.ImageExportFrontend()
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.path = self._temp_directory
     options.include_duplicates = True
@@ -87,7 +88,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     """Tests extract with extensions process source functionality."""
     test_front_end = image_export.ImageExportFrontend()
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.path = self._temp_directory
     options.extension_string = u'txt'
@@ -107,7 +108,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     """Tests extract with filter process source functionality."""
     test_front_end = image_export.ImageExportFrontend()
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.path = self._temp_directory
 

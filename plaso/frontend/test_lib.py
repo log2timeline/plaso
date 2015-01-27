@@ -23,10 +23,6 @@ import tempfile
 import unittest
 
 
-class Options(object):
-  """A simple configuration object."""
-
-
 class TempDirectory(object):
   """A self cleaning temporary directory."""
 

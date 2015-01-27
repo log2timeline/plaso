@@ -25,10 +25,15 @@ from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import helper
 from plaso.output import interface
+from plaso.output import manager
 
 
-class Dynamic(interface.FileLogOutputFormatter):
+class DynamicOutput(interface.FileLogOutputFormatter):
   """Dynamic selection of fields for a separated value output format."""
+
+  NAME = u'dynamic'
+  DESCRIPTION = (
+      u'Dynamic selection of fields for a separated value output format.')
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -298,3 +303,6 @@ class Dynamic(interface.FileLogOutputFormatter):
         self.separator.join(unicode(x).replace(
             self.separator, u' ') for x in row))
     self.filehandle.WriteLine(out_write)
+
+
+manager.OutputManager.RegisterOutput(DynamicOutput)

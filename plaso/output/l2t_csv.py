@@ -29,10 +29,14 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.output import helper
 from plaso.output import interface
+from plaso.output import manager
 
 
-class L2tcsv(interface.FileLogOutputFormatter):
+class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
   """CSV format used by log2timeline, with 17 fixed fields."""
+
+  NAME = u'l2tcsv'
+  DESCRIPTION = u'CSV format used by legacy log2timeline, with 17 fixed fields.'
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -142,3 +146,6 @@ class L2tcsv(interface.FileLogOutputFormatter):
     out_write = u'{0:s}\n'.format(
         u','.join(unicode(x).replace(',', u' ') for x in row))
     self.filehandle.WriteLine(out_write)
+
+
+manager.OutputManager.RegisterOutput(L2tCsvOutputFormatter)

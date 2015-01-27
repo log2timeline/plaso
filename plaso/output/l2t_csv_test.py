@@ -62,7 +62,7 @@ class L2tCsvTest(unittest.TestCase):
   """Contains tests to validate the L2tCSV outputter."""
   def setUp(self):
     self.output = StringIO.StringIO()
-    self.formatter = l2t_csv.L2tcsv(None, self.output)
+    self.formatter = l2t_csv.L2tCsvOutputFormatter(None, self.output)
     self.event_object = L2tTestEvent()
 
   def testStart(self):

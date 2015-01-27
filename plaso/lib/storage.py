@@ -114,7 +114,9 @@ from plaso.lib import limit
 from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.lib import utils
-from plaso.output import interface as output_interface
+# TODO: This creates cyclic dependencies. Fix it when splitting the storage
+# library.
+# from plaso.output import manager as output_manager
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import json_serializer
 from plaso.serializer import protobuf_serializer
@@ -1552,14 +1554,17 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
 
   def WriteEventObjects(self):
     """Writes the event objects that are pushed on the queue."""
-    output_class = output_interface.GetOutputFormatter(
+    # TODO: Re-enable this when storage library has been split up.
+    # pylint: disable-msg=pointless-string-statement
+    """
+    output_class = output_manager.OutputManager.GetOutputClass(
         self._output_module_string)
     if not output_class:
-      output_class = output_interface.GetOutputFormatter('L2tcsv')
-
+      output_class = output_manager.OutputManager.GetOutputClass('l2tcsv')
     self._output_module = output_class(
         self, self._output_file, config=self._pre_obj)
 
     self._output_module.Start()
     self.ConsumeEventObjects()
     self._output_module.End()
+    """

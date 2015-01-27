@@ -67,7 +67,6 @@ from plaso.lib import lexer
 from plaso.lib import objectfilter
 from plaso.lib import pfilter
 from plaso.lib import proxy
-from plaso.lib import putils
 from plaso.lib import registry as class_registry
 from plaso.lib import storage
 from plaso.lib import timelib
@@ -79,6 +78,7 @@ from plaso.multi_processing import process_info
 
 from plaso.output import helper as output_helper
 from plaso.output import interface as output_interface
+from plaso.output import manager as output_manager
 
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import plugins
@@ -117,7 +117,8 @@ class PshellFrontend(frontend.ExtractionFrontend):
 
 def FindAllOutputs():
   """FindAllOutputs() - All available outputs."""
-  return putils.FindAllOutputs()
+  for name, description in output_manager.OutputManager.GetOutputs():
+    print u'{0:s}: {1:s}'.format(name, description)
 
 
 def GetEventData(event_proto, before=0):
@@ -322,7 +323,7 @@ def Main():
   """Start the tool."""
   temp_location = tempfile.gettempdir()
 
-  options = putils.Options()
+  options = frontend.Options()
 
   # Set the default options.
   options.buffer_size = 0

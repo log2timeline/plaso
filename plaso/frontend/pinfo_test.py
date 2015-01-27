@@ -20,6 +20,7 @@
 import os
 import unittest
 
+from plaso.frontend import frontend
 from plaso.frontend import pinfo
 from plaso.frontend import test_lib
 
@@ -31,7 +32,7 @@ class PinfoFrontendTest(test_lib.FrontendTestCase):
     """Tests the get storage information function."""
     test_front_end = pinfo.PinfoFrontend()
 
-    options = test_lib.Options()
+    options = frontend.Options()
     options.storage_file = os.path.join(self._TEST_DATA_PATH, 'psort_test.out')
 
     test_front_end.ParseOptions(options)
