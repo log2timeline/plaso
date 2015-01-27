@@ -28,9 +28,10 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import timelib
 from plaso.output import helper
 from plaso.output import interface
+from plaso.output import manager
 
 
-class Elastic(interface.LogOutputFormatter):
+class ElasticSearchOutput(interface.LogOutputFormatter):
   """Saves the events into an ElasticSearch database."""
 
   # Add configuration data for this output module.
@@ -68,10 +69,14 @@ class Elastic(interface.LogOutputFormatter):
           'action': 'store',
           'default': 9200})]
 
+  NAME = u'elastic'
+  DESCRIPTION = u'Saves the events into an ElasticSearch database.'
+
   def __init__(
       self, store, filehandle=sys.stdout, config=None, filter_use=None):
     """Initializes the Elastic output module."""
-    super(Elastic, self).__init__(store, filehandle, config, filter_use)
+    super(ElasticSearchOutput, self).__init__(
+        store, filehandle, config, filter_use)
     self._counter = 0
     self._data = []
 
@@ -232,3 +237,6 @@ class Elastic(interface.LogOutputFormatter):
     sys.stdout.write('ElasticSearch index name: {0:s}\n'.format(
         self._index_name))
     sys.stdout.flush()
+
+
+manager.OutputManager.RegisterOutput(ElasticSearchOutput)

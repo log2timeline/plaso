@@ -58,7 +58,7 @@ class JsonOutputTest(unittest.TestCase):
   def setUp(self):
     """Sets up the objects needed for this test."""
     self.output = StringIO.StringIO()
-    self.formatter = json_out.Json(None, self.output)
+    self.formatter = json_out.JsonOutputFormatter(None, self.output)
     self.event_object = JsonTestEvent()
 
   def testStartAndEnd(self):

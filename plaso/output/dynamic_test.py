@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for plaso.output.l2t_csv."""
+"""Tests for the dynamic output formatter for plaso."""
 
 import StringIO
 import unittest
@@ -65,7 +65,7 @@ class DynamicTest(unittest.TestCase):
 
   def testHeader(self):
     output = StringIO.StringIO()
-    formatter = dynamic.Dynamic(None, output)
+    formatter = dynamic.DynamicOutput(None, output)
     correct_line = (
         'datetime,timestamp_desc,source,source_long,message,parser,'
         'display_name,tag,store_number,store_index\n')
@@ -74,7 +74,7 @@ class DynamicTest(unittest.TestCase):
     self.assertEquals(output.getvalue(), correct_line)
 
     output = StringIO.StringIO()
-    formatter = dynamic.Dynamic(None, output, filter_use=FakeFilter(
+    formatter = dynamic.DynamicOutput(None, output, filter_use=FakeFilter(
         ['date', 'time', 'message', 'hostname', 'filename', 'some_stuff']))
 
     correct_line = 'date,time,message,hostname,filename,some_stuff\n'
@@ -82,7 +82,7 @@ class DynamicTest(unittest.TestCase):
     self.assertEquals(output.getvalue(), correct_line)
 
     output = StringIO.StringIO()
-    formatter = dynamic.Dynamic(None, output, filter_use=FakeFilter(
+    formatter = dynamic.DynamicOutput(None, output, filter_use=FakeFilter(
         ['date', 'time', 'message', 'hostname', 'filename', 'some_stuff'],
         '@'))
 
@@ -95,7 +95,7 @@ class DynamicTest(unittest.TestCase):
     event_object = TestEvent()
     output = StringIO.StringIO()
 
-    formatter = dynamic.Dynamic(None, output, filter_use=FakeFilter(
+    formatter = dynamic.DynamicOutput(None, output, filter_use=FakeFilter(
         ['date', 'time', 'timezone', 'macb', 'source', 'sourcetype', 'type',
          'user', 'host', 'message_short', 'message', 'filename',
          'inode', 'notes', 'format', 'extra']))
@@ -116,7 +116,7 @@ class DynamicTest(unittest.TestCase):
     self.assertEquals(output.getvalue(), header + correct)
 
     output = StringIO.StringIO()
-    formatter = dynamic.Dynamic(None, output, filter_use=FakeFilter(
+    formatter = dynamic.DynamicOutput(None, output, filter_use=FakeFilter(
         ['datetime', 'nonsense', 'hostname', 'message']))
 
     header = 'datetime,nonsense,hostname,message\n'

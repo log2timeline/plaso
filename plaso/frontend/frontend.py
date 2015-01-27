@@ -1691,3 +1691,7 @@ class AnalysisFrontend(Frontend):
     if not os.path.isfile(self._storage_file_path):
       raise errors.BadConfigOption(
           u'No such storage file {0:s}.'.format(self._storage_file_path))
+
+
+class Options(object):
+  """A simple configuration object."""

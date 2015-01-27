@@ -17,13 +17,17 @@
 """Represents an EventObject as a string."""
 
 from plaso.output import interface
+from plaso.output import manager
 
 
-class Rawpy(interface.FileLogOutputFormatter):
+class NativePythonOutputFormatter(interface.FileLogOutputFormatter):
   """Prints out a "raw" interpretation of the EventObject."""
+
   # TODO: Revisit the name of this class, perhaps rename it to
   # something more closely similar to what it is doing now, as in
   # "native" or something else.
+  NAME = u'rawpy'
+  DESCRIPTION = u'Prints out a "raw" interpretation of the EventObject.'
 
   def EventBody(self, event_object):
     """Prints out to a filehandle string representation of an EventObject.
@@ -40,3 +44,6 @@ class Rawpy(interface.FileLogOutputFormatter):
     # a ToString function or something similar that will send back the
     # unicode string.
     self.filehandle.WriteLine(unicode(event_object))
+
+
+manager.OutputManager.RegisterOutput(NativePythonOutputFormatter)

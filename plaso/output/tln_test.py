@@ -60,7 +60,7 @@ class TlnTest(unittest.TestCase):
   def setUp(self):
     """Sets up the objects needed for this test."""
     self.output = StringIO.StringIO()
-    self.formatter = tln.Tln(None, self.output)
+    self.formatter = tln.TlnOutputFormatter(None, self.output)
     self.event_object = TlnTestEvent()
 
   def testStart(self):

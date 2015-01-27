@@ -10,3 +10,6 @@ script:
   - coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py
 after_success:
   - coveralls
+notifications:
+  email:
+    - log2timeline-dev@googlegroups.com

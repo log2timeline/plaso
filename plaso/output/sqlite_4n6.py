@@ -31,13 +31,18 @@ from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.output import helper
 from plaso.output import interface
+from plaso.output import manager
 
 
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class Sql4n6(interface.LogOutputFormatter):
+class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
   """Saves the data in a SQLite database, used by the tool 4n6Time."""
+
+  NAME = u'sql4n6'
+  DESCRIPTION = (
+      u'Saves the data in a SQLite database, used by the tool 4n6Time.')
 
   FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
 
@@ -56,7 +61,8 @@ class Sql4n6(interface.LogOutputFormatter):
       filter_use: The filter object used.
     """
     # TODO: Add a unit test for this output module.
-    super(Sql4n6, self).__init__(store, filehandle, config, filter_use)
+    super(SQLite4n6OutputFormatter, self).__init__(
+        store, filehandle, config, filter_use)
     # TODO: move this to an output module interface.
     self.set_status = getattr(config, 'set_status', None)
 
@@ -314,3 +320,6 @@ def GetVSSNumber(event_object):
     return -1
 
   return getattr(event_object.pathspec, 'vss_store_number', -1)
+
+
+manager.OutputManager.RegisterOutput(SQLite4n6OutputFormatter)

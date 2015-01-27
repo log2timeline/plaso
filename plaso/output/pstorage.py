@@ -21,10 +21,14 @@ from plaso.lib import event
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.output import interface
+from plaso.output import manager
 
 
-class Pstorage(interface.LogOutputFormatter):
+class PlasoStorageOutputFormatter(interface.LogOutputFormatter):
   """Dumps event objects to a plaso storage file."""
+
+  NAME = u'pstorage'
+  DESCRIPTION = u'Dumps event objects to a plaso storage file.'
 
   def Start(self):
     """Sets up the output storage file."""
@@ -60,3 +64,6 @@ class Pstorage(interface.LogOutputFormatter):
   def End(self):
     """Closes the storage file."""
     self._storage.Close()
+
+
+manager.OutputManager.RegisterOutput(PlasoStorageOutputFormatter)

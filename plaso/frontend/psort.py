@@ -50,6 +50,7 @@ from plaso.lib import pfilter
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.output import interface as output_interface
+from plaso.output import manager as output_manager
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
 
@@ -125,11 +126,12 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
     modules_list = set([name.lower() for name in module_names])
 
-    for output_module_string, _ in output_interface.ListOutputFormatters():
+    manager = output_manager.OutputManager
+    for output_module_string, _ in manager.GetOutputs():
       if not output_module_string.lower() in modules_list:
         continue
 
-      output_module = output_interface.GetOutputFormatter(output_module_string)
+      output_module = manager.GetOutputClass(output_module_string)
       if output_module.ARGUMENTS:
         for parameter, config in output_module.ARGUMENTS:
           argument_group.add_argument(parameter, **config)
@@ -161,7 +163,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
   def ListOutputModules(self):
     """Lists the output modules."""
     self.PrintHeader('Output Modules')
-    for name, description in output_interface.ListOutputFormatters():
+    manager = output_manager.OutputManager
+    for name, description in manager.GetOutputs():
       self.PrintColumnValue(name, description, 10)
     self.PrintSeparatorLine()
 
@@ -201,7 +204,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
     if not output_format:
       raise errors.BadConfigOption(u'Missing output format.')
 
-    self._output_module_class = output_interface.GetOutputFormatter(
+    self._output_module_class = output_manager.OutputManager.GetOutputClass(
         output_format)
     if not self._output_module_class:
       raise errors.BadConfigOption(
