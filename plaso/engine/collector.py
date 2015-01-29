@@ -208,25 +208,25 @@ class Collector(queue.ItemQueueProducer):
               self._source_path))
 
     type_indicator = self._source_path_spec.type_indicator
-    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
-      if source_file_entry.IsFile():
-        self.ProduceItem(self._source_path_spec)
 
-      else:
-        file_system = path_spec_resolver.Resolver.OpenFileSystem(
-            self._source_path_spec, resolver_context=self._resolver_context)
-
-        try:
-          self._fs_collector.Collect(
-              file_system, self._source_path_spec,
-              find_specs=self._filter_find_specs)
-        except (dfvfs_errors.AccessError,
-                dfvfs_errors.BackEndError) as exception:
-          logging.warning(u'{0:s}'.format(exception))
-
-    else:
+    if not path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
       self._ProcessImage(
           self._source_path_spec.parent, find_specs=self._filter_find_specs)
+
+    elif source_file_entry.IsFile():
+      self.ProduceItem(self._source_path_spec)
+
+    else:
+      file_system = path_spec_resolver.Resolver.OpenFileSystem(
+          self._source_path_spec, resolver_context=self._resolver_context)
+
+      try:
+        self._fs_collector.Collect(
+            file_system, self._source_path_spec,
+            find_specs=self._filter_find_specs)
+      except (dfvfs_errors.AccessError,
+              dfvfs_errors.BackEndError) as exception:
+        logging.warning(u'{0:s}'.format(exception))
 
     self.SignalEndOfInput()
 
