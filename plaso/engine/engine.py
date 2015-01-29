@@ -21,7 +21,7 @@ import abc
 import logging
 
 from dfvfs.helpers import file_system_searcher
-from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.artifacts import knowledge_base
@@ -138,7 +138,7 @@ class BaseEngine(object):
         self._source_path_spec, resolver_context=resolver_context)
 
     type_indicator = self._source_path_spec.type_indicator
-    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
+    if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
       mount_point = self._source_path_spec
     else:
       mount_point = self._source_path_spec.parent
@@ -246,9 +246,8 @@ class BaseEngine(object):
           u'Source path: {0:s} not a device, file or directory.'.format(
               self._source))
 
-    if self._source_path_spec.type_indicator in [
-        dfvfs_definitions.TYPE_INDICATOR_OS,
-        dfvfs_definitions.TYPE_INDICATOR_FAKE]:
+    if path_spec_factory.Factory.IsSystemLevelTypeIndicator(
+        self._source_path_spec.type_indicator):
 
       if self._source_file_entry.IsFile():
         logging.debug(u'Starting a collection on a single file.')
@@ -313,6 +312,5 @@ class BaseEngine(object):
     if not self._source_path_spec:
       raise RuntimeError(u'Missing source.')
 
-    return self._source_path_spec.type_indicator not in [
-        dfvfs_definitions.TYPE_INDICATOR_OS,
-        dfvfs_definitions.TYPE_INDICATOR_FAKE]
+    return not path_spec_factory.Factory.IsSystemLevelTypeIndicator(
+        self._source_path_spec.type_indicator)
