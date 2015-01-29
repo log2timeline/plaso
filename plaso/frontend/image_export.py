@@ -490,7 +490,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         self._source_path_spec, resolver_context=resolver_context)
 
     type_indicator = self._source_path_spec.type_indicator
-    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
+    if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
       mount_point = self._source_path_spec
     else:
       mount_point = self._source_path_spec.parent
