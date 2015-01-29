@@ -23,7 +23,6 @@ import os
 from dfvfs.analyzer import analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
-from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 try:
@@ -50,7 +49,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
   def __init__(
       self, identifier, process_queue, event_queue_producer,
-      parse_error_queue_producer, parser_context):
+      parse_error_queue_producer, parser_context, resolver_context=None):
     """Initializes the event extraction worker object.
 
     Args:
@@ -62,6 +61,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       parse_error_queue_producer: The parse error queue producer (instance of
                                   ItemQueueProducer).
       parser_context: A parser context object (instance of ParserContext).
+      resolver_context: Optional resolver context (instance of dfvfs.Context).
+                        The default is None.
     """
     super(BaseEventExtractionWorker, self).__init__(process_queue)
     self._enable_debug_output = False
@@ -70,10 +71,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._parser_context = parser_context
     self._parser_objects = None
     self._process_archive_files = False
+    self._resolver_context = resolver_context
 
-    # We need a resolver context per process to prevent multi processing
-    # issues with file objects stored in images.
-    self._resolver_context = context.Context()
     self._event_queue_producer = event_queue_producer
     self._parse_error_queue_producer = parse_error_queue_producer
 
@@ -164,7 +163,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       A boolean indicating if the file is an archive file.
     """
     type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
-        file_entry.path_spec)
+        file_entry.path_spec, resolver_context=self._resolver_context)
 
     number_of_type_indicators = len(type_indicators)
     if number_of_type_indicators == 0:
@@ -222,7 +221,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       A boolean indicating if the file is a compressed stream file.
     """
     type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
-        file_entry.path_spec)
+        file_entry.path_spec, resolver_context=self._resolver_context)
 
     number_of_type_indicators = len(type_indicators)
     if number_of_type_indicators == 0:
@@ -382,7 +381,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     if self._enable_profiling:
       self._ProfilingStop()
 
-    self._resolver_context.Empty()
+    if self._resolver_context:
+      self._resolver_context.Empty()
 
   def SetEnableDebugOutput(self, enable_debug_output):
     """Enables or disables debug output.
