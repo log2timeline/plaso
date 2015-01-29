@@ -21,6 +21,8 @@ import collections
 import logging
 import pdb
 
+from dfvfs.resolver import context
+
 from plaso.engine import collector
 from plaso.engine import engine
 from plaso.engine import queue
@@ -159,9 +161,12 @@ class SingleProcessEngine(engine.BaseEngine):
         self._event_queue_producer, self._parse_error_queue_producer,
         self.knowledge_base)
 
+    resolver_context = context.Context()
+
     extraction_worker = SingleProcessEventExtractionWorker(
         worker_number, self._collection_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_context)
+        self._parse_error_queue_producer, parser_context,
+        resolver_context=resolver_context)
 
     extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
 
