@@ -236,8 +236,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     for type_indicator in type_indicators:
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_BZIP2:
-        # TODO: add bzip2 support.
-        compressed_stream_path_spec = None
+        compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+            compression_method=dfvfs_definitions.COMPRESSION_METHOD_BZIP2,
+            parent=file_entry.path_spec)
 
       elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
         compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
