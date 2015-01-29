@@ -21,6 +21,7 @@ import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import context
 
 from plaso.artifacts import knowledge_base
 from plaso.engine import single_process
@@ -49,9 +50,11 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
         event_queue_producer, parse_error_queue_producer,
         knowledge_base_object)
 
+    resolver_context = context.Context()
+
     extraction_worker = worker.BaseEventExtractionWorker(
         0, collection_queue, event_queue_producer, parse_error_queue_producer,
-        parser_context)
+        parser_context, resolver_context=resolver_context)
 
     self.assertNotEquals(extraction_worker, None)
 

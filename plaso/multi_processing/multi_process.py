@@ -25,6 +25,8 @@ import signal
 import sys
 import threading
 
+from dfvfs.resolver import context
+
 from plaso.engine import collector
 from plaso.engine import engine
 from plaso.engine import queue
@@ -192,9 +194,14 @@ class MultiProcessEngine(engine.BaseEngine):
         self._event_queue_producer, self._parse_error_queue_producer,
         self.knowledge_base)
 
+    # We need a resolver context per process to prevent multi processing
+    # issues with file objects stored in images.
+    resolver_context = context.Context()
+
     extraction_worker = worker.BaseEventExtractionWorker(
         worker_number, self._collection_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_context)
+        self._parse_error_queue_producer, parser_context,
+        resolver_context=resolver_context)
 
     extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
 
