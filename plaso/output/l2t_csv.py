@@ -69,7 +69,7 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
     """Formats data as l2t_csv and writes to the filehandle from OutputFormater.
 
     Args:
-      event_object: The event object (EventObject).
+      event_object: The event object (instance of EventObject).
 
     Raises:
       errors.NoFormatterFound: If no formatter for that event is found.
@@ -91,6 +91,7 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
     date_use = timelib.Timestamp.CopyToDatetime(
         event_object.timestamp, self.zone)
     extras = []
+
     format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
         event_formatter.format_string)
     for key in event_object.GetAttributes():

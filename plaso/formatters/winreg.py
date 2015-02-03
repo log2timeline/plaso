@@ -58,11 +58,13 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
     event_object.text = text
     if hasattr(event_object, 'keyname'):
-      self.format_string = self.FORMAT_STRING
+      format_string = self.FORMAT_STRING
     else:
-      self.format_string = self.FORMAT_STRING_ALTERNATIVE
+      format_string = self.FORMAT_STRING_ALTERNATIVE
 
-    return super(WinRegistryGenericFormatter, self).GetMessages(event_object)
+    event_values = event_object.GetValues()
+    return self._FormatMessages(
+        format_string, self.FORMAT_STRING_SHORT, event_values)
 
   def GetSources(self, event_object):
     """Returns a list of source short and long messages for the event."""

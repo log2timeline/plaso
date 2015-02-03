@@ -17,6 +17,7 @@
 # limitations under the License.
 """This file contains the event formatters interface classes."""
 
+import logging
 import re
 
 from plaso.lib import errors
@@ -47,12 +48,84 @@ class EventFormatter(object):
 
   def __init__(self):
     """Set up the formatter and determine if this is the right formatter."""
-    # Forcing the format string to be unicode to make sure we don't
+    super(EventFormatter, self).__init__()
+
+    # TODO: currently the output code directly accesses the format string
+    # attribute. Remove this.
+    self.format_string = None
+
+    # Forcing the format string to be Unicode to make sure we don't
     # try to format it as an ASCII string.
-    self.format_string = unicode(self.FORMAT_STRING)
-    self.format_string_short = unicode(self.FORMAT_STRING_SHORT)
     self.source_string = unicode(self.SOURCE_LONG)
     self.source_string_short = unicode(self.SOURCE_SHORT)
+
+  def _FormatMessage(self, format_string, event_values):
+    """Determines the formatted message string.
+
+    Args:
+      format_string: a Unicode string containing the message format string.
+      event_values: a dictionary object containing the event (object) values.
+
+    Returns:
+      The formatted message string.
+    """
+    # TODO: this does not work in Python 3.
+    if not isinstance(format_string, unicode):
+      logging.warning(u'Format string: {0:s} is non-Unicode.'.format(
+          format_string))
+
+      # Plaso code files should be in UTF-8 any thus binary strings are
+      # assumed UTF-8. If this is not the case this should be fixed.
+      format_string = format_string.decode(u'utf-8', errors=u'ignore')
+
+    try:
+      message_string = format_string.format(**event_values)
+
+    except KeyError as exception:
+      logging.warning(
+          u'Unable to format string: {0:s} with error: {1:s}'.format(
+              format_string, exception))
+
+      attribute_values = []
+      for attribute, value in event_values.iteritems():
+        attribute_values.append(u'{0:s}: {1!s}'.format(attribute, value))
+
+      message_string = u' '.join(attribute_values)
+
+    # Strip carriage return and linefeed form the message strings.
+    # Using replace function here because it is faster than re.sub() or
+    # string.strip().
+    return message_string.replace('\r', u'').replace('\n', u'')
+
+  def _FormatMessages(self, format_string, short_format_string, event_values):
+    """Determines the formatted message strings.
+
+    Args:
+      format_string: a Unicode string containing the message format string.
+      short_format_string: a Unicode string containing the short message
+                           format string.
+      event_values: a dictionary object containing the event (object) values.
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+    """
+    message_string = self._FormatMessage(format_string, event_values)
+
+    if short_format_string:
+      short_message_string = self._FormatMessage(
+          short_format_string, event_values)
+    else:
+      short_message_string = message_string
+
+    # Truncate the short message string if necessary.
+    if len(short_message_string) > 80:
+      short_message_string = u'{0:s}...'.format(short_message_string[0:77])
+
+    # TODO: currently the output code directly accesses the format string
+    # attribute. Remove this.
+    self.format_string = format_string
+
+    return message_string, short_message_string
 
   def GetMessages(self, event_object):
     """Return a list of messages extracted from an event object.
@@ -70,8 +143,7 @@ class EventFormatter(object):
       event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
 
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
@@ -82,39 +154,8 @@ class EventFormatter(object):
 
     event_values = event_object.GetValues()
 
-    try:
-      msg = self.format_string.format(**event_values)
-    except KeyError as exception:
-      msgs = []
-      msgs.append(u'Format error: [{0:s}] for: <{1:s}>'.format(
-          exception, self.format_string))
-      for attr, value in event_object.GetValues().iteritems():
-        msgs.append(u'{0}: {1}'.format(attr, value))
-
-      msg = u' '.join(msgs)
-
-    # Strip carriage return and linefeed form the message strings.
-    # Using replace function here because it is faster
-    # than re.sub() or string.strip().
-    msg = msg.replace('\r', u'').replace('\n', u'')
-
-    if not self.format_string_short:
-      msg_short = msg
-    else:
-      try:
-        msg_short = self.format_string_short.format(**event_values)
-        # Using replace function here because it is faster
-        # than re.sub() or string.strip().
-        msg_short = msg_short.replace('\r', u'').replace('\n', u'')
-      except KeyError:
-        msg_short = u'Unable to format short message string: {0:s}'.format(
-            self.format_string_short)
-
-    # Truncate the short message string if necessary.
-    if len(msg_short) > 80:
-      msg_short = u'{0:s}...'.format(msg_short[0:77])
-
-    return msg, msg_short
+    return self._FormatMessages(
+        self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
 
   def GetSources(self, event_object):
     """Return a list containing source short and long."""
@@ -137,8 +178,6 @@ class ConditionalEventFormatter(EventFormatter):
      FORMAT_STRING_SEPARATOR is used to control the string which the separate
      string pieces should be joined. It contains a space by default.
   """
-  __abstract = True
-
   # The format string pieces.
   FORMAT_STRING_PIECES = [u'']
   FORMAT_STRING_SHORT_PIECES = [u'']
@@ -226,7 +265,7 @@ class ConditionalEventFormatter(EventFormatter):
           if type(attribute) not in (bool, int, long, float) and not attribute:
             continue
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
-    self.format_string = unicode(
+    format_string = unicode(
         self.FORMAT_STRING_SEPARATOR.join(string_pieces))
 
     string_pieces = []
@@ -234,7 +273,9 @@ class ConditionalEventFormatter(EventFormatter):
         self._format_string_short_pieces_map):
       if not attribute_name or getattr(event_object, attribute_name, None):
         string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
-    self.format_string_short = unicode(
+    short_format_string = unicode(
         self.FORMAT_STRING_SEPARATOR.join(string_pieces))
 
-    return super(ConditionalEventFormatter, self).GetMessages(event_object)
+    event_values = event_object.GetValues()
+    return self._FormatMessages(
+        format_string, short_format_string, event_values)
