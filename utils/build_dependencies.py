@@ -2896,7 +2896,7 @@ class DependencyBuilder(object):
 
   _LIBYAL_LIBRARIES = frozenset([
       'libbde', 'libesedb', 'libevt', 'libevtx', 'libewf', 'libfwsi', 'liblnk',
-      'libmsiecf', 'libolecf', 'libqcow', 'libregf', 'libsmdev', 'libsmraw',
+      'libmsiecf', 'libolecf', 'libqcow', 'libregf', 'libsigscan', 'libsmdev', 'libsmraw',
       'libvhdi', 'libvmdk', 'libvshadow'])
 
   _PATCHES_URL = (
