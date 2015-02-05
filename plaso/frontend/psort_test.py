@@ -46,23 +46,23 @@ class TestEvent2(event.EventObject):
   def __init__(self, timestamp):
     super(TestEvent2, self).__init__()
     self.timestamp = timestamp
-    self.timestamp_desc = 'Last Written'
+    self.timestamp_desc = u'Last Written'
 
-    self.parser = 'TestEvent'
+    self.parser = u'TestEvent'
 
-    self.display_name = '/dev/none'
-    self.filename = '/dev/none'
+    self.display_name = u'/dev/none'
+    self.filename = u'/dev/none'
     self.some = u'My text dude.'
-    self.var = {'Issue': False, 'Closed': True}
+    self.var = {u'Issue': False, u'Closed': True}
 
 
 class TestEvent2Formatter(formatters_interface.EventFormatter):
   DATA_TYPE = 'test:psort:2'
 
-  FORMAT_STRING = 'My text goes along: {some} lines'
+  FORMAT_STRING = u'My text goes along: {some} lines'
 
-  SOURCE_SHORT = 'LOG'
-  SOURCE_LONG = 'None in Particular'
+  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = u'None in Particular'
 
 
 formatters_manager.FormattersManager.RegisterFormatter(TestEvent2Formatter)
@@ -76,8 +76,8 @@ class TestFormatter(output_interface.LogOutputFormatter):
 
   def Start(self):
     self.filehandle.write((
-        'date,time,timezone,MACB,source,sourcetype,type,user,host,'
-        'short,desc,version,filename,inode,notes,format,extra\n'))
+        u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
+        u'short,desc,version,filename,inode,notes,format,extra\n'))
 
   def EventBody(self, event_object):
     """Writes the event body.
@@ -124,9 +124,9 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     self._front_end = psort.PsortFrontend()
 
     # TODO: have sample output generated from the test.
-    self._test_file = os.path.join(self._TEST_DATA_PATH, 'psort_test.out')
-    self.first = timelib_test.CopyStringToTimestamp('2012-07-24 21:45:24')
-    self.last = timelib_test.CopyStringToTimestamp('2016-11-18 01:15:43')
+    self._test_file = os.path.join(self._TEST_DATA_PATH, u'psort_test.out')
+    self.first = timelib_test.CopyStringToTimestamp(u'2012-07-24 21:45:24')
+    self.last = timelib_test.CopyStringToTimestamp(u'2016-11-18 01:15:43')
 
   def testReadEntries(self):
     """Ensure returned EventObjects from the storage are within timebounds."""
@@ -162,7 +162,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     output_fd = StringIO.StringIO()
 
     with test_lib.TempDirectory() as dirname:
-      temp_file = os.path.join(dirname, 'plaso.db')
+      temp_file = os.path.join(dirname, u'plaso.db')
 
       storage_file = storage.StorageFile(temp_file, read_only=False)
       pfilter.TimeRangeCache.ResetTimeConstraints()
@@ -176,24 +176,24 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         formatter = TestFormatter(storage_file, output_fd)
         event_buffer = TestEventBuffer(storage_file, formatter)
 
-        psort.ProcessOutput(event_buffer, formatter, None)
+        self._front_end.ProcessOutput(event_buffer, formatter)
 
     event_buffer.Flush()
     lines = []
-    for line in output_fd.getvalue().split('\n'):
-      if line == '.':
+    for line in output_fd.getvalue().split(u'\n'):
+      if line == u'.':
         continue
       if line:
         lines.append(line)
 
     # One more line than events (header row).
     self.assertEquals(len(lines), 7)
-    self.assertTrue('My text goes along: My text dude. lines' in lines[2])
-    self.assertTrue('LOG/' in lines[2])
-    self.assertTrue('None in Particular' in lines[2])
+    self.assertTrue(u'My text goes along: My text dude. lines' in lines[2])
+    self.assertTrue(u'LOG/' in lines[2])
+    self.assertTrue(u'None in Particular' in lines[2])
     self.assertEquals(lines[0], (
-        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        'version,filename,inode,notes,format,extra'))
+        u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        u'version,filename,inode,notes,format,extra'))
 
 
 if __name__ == '__main__':
