@@ -86,11 +86,11 @@ class PsortFrontend(frontend.AnalysisFrontend):
     Raises:
       BadConfigOption: if non-existing analysis plugin names are specified.
     """
-    if plugin_names == 'list':
+    if plugin_names == u'list':
       return
 
     plugin_list = set([
-        name.strip().lower() for name in plugin_names.split(',')])
+        name.strip().lower() for name in plugin_names.split(u',')])
 
     # Get a list of all available plugins.
     analysis_plugins = set([
@@ -121,7 +121,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
                       argparse._ArgumentGroup).
       module_names: a string containing comma separated output module names.
     """
-    if module_names == 'list':
+    if module_names == u'list':
       return
 
     modules_list = set([name.lower() for name in module_names])
@@ -138,7 +138,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
-    self.PrintHeader('Analysis Modules')
+    self.PrintHeader(u'Analysis Modules')
     format_length = 10
     for name, _, _ in analysis.ListAllPluginNames():
       if len(name) > format_length:
@@ -146,15 +146,15 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
     for name, description, plugin_type in analysis.ListAllPluginNames():
       if plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANNOTATION:
-        type_string = 'Annotation/tagging plugin'
+        type_string = u'Annotation/tagging plugin'
       elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_ANOMALY:
-        type_string = 'Anomaly plugin'
+        type_string = u'Anomaly plugin'
       elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_REPORT:
-        type_string = 'Summary/Report plugin'
+        type_string = u'Summary/Report plugin'
       elif plugin_type == analysis_interface.AnalysisPlugin.TYPE_STATISTICS:
-        type_string = 'Statistics plugin'
+        type_string = u'Statistics plugin'
       else:
-        type_string = 'Unknown type'
+        type_string = u'Unknown type'
 
       description = u'{0:s} [{1:s}]'.format(description, type_string)
       self.PrintColumnValue(name, description, format_length)
@@ -162,7 +162,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
   def ListOutputModules(self):
     """Lists the output modules."""
-    self.PrintHeader('Output Modules')
+    self.PrintHeader(u'Output Modules')
     manager = output_manager.OutputManager
     for name, description in manager.GetOutputs():
       self.PrintColumnValue(name, description, 10)
@@ -170,21 +170,21 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
   def ListTimeZones(self):
     """Lists the timezones."""
-    self.PrintHeader('Zones')
+    self.PrintHeader(u'Zones')
     max_length = 0
     for zone in pytz.all_timezones:
       if len(zone) > max_length:
         max_length = len(zone)
 
-    self.PrintColumnValue('Timezone', 'UTC Offset', max_length)
+    self.PrintColumnValue(u'Timezone', u'UTC Offset', max_length)
     for zone in pytz.all_timezones:
       zone_obj = pytz.timezone(zone)
       date_str = unicode(zone_obj.localize(datetime.datetime.utcnow()))
-      if '+' in date_str:
-        _, _, diff = date_str.rpartition('+')
+      if u'+' in date_str:
+        _, _, diff = date_str.rpartition(u'+')
         diff_string = u'+{0:s}'.format(diff)
       else:
-        _, _, diff = date_str.rpartition('-')
+        _, _, diff = date_str.rpartition(u'-')
         diff_string = u'-{0:s}'.format(diff)
       self.PrintColumnValue(zone, diff_string, max_length)
     self.PrintSeparatorLine()
@@ -200,7 +200,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
     """
     super(PsortFrontend, self).ParseOptions(options)
 
-    output_format = getattr(options, 'output_format', None)
+    output_format = getattr(options, u'output_format', None)
     if not output_format:
       raise errors.BadConfigOption(u'Missing output format.')
 
@@ -210,11 +210,11 @@ class PsortFrontend(frontend.AnalysisFrontend):
       raise errors.BadConfigOption(
           u'Invalid output format: {0:s}.'.format(output_format))
 
-    self._output_stream = getattr(options, 'write', None)
+    self._output_stream = getattr(options, u'write', None)
     if not self._output_stream:
       self._output_stream = sys.stdout
 
-    self._filter_expression = getattr(options, 'filter', None)
+    self._filter_expression = getattr(options, u'filter', None)
     if self._filter_expression:
       self._filter_object = filters.GetFilter(self._filter_expression)
       if not self._filter_object:
@@ -222,8 +222,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
             u'Invalid filter expression: {0:s}'.format(self._filter_expression))
 
       # Check to see if we need to create a circular buffer.
-      if getattr(options, 'slicer', None):
-        self._slice_size = getattr(options, 'slice_size', 5)
+      if getattr(options, u'slicer', None):
+        self._slice_size = getattr(options, u'slice_size', 5)
         self._filter_buffer = bufferlib.CircularBuffer(self._slice_size)
 
   def ParseStorage(self, options):
@@ -241,7 +241,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
     counter = None
 
     if options.slice:
-      if options.timezone == 'UTC':
+      if options.timezone == u'UTC':
         zone = pytz.utc
       else:
         zone = pytz.timezone(options.timezone)
@@ -290,25 +290,25 @@ class PsortFrontend(frontend.AnalysisFrontend):
         pre_objs = storage_file.GetStorageInformation()
         pre_obj = pre_objs[-1]
         for obj in pre_objs:
-          if getattr(obj, 'time_zone_str', ''):
+          if getattr(obj, u'time_zone_str', u''):
             pre_obj = obj
 
         # Fill in the collection information.
         pre_obj.collection_information = {}
-        encoding = getattr(pre_obj, 'preferred_encoding', None)
+        encoding = getattr(pre_obj, u'preferred_encoding', None)
         if encoding:
-          cmd_line = ' '.join(sys.argv)
+          cmd_line = u' '.join(sys.argv)
           try:
-            pre_obj.collection_information['cmd_line'] = cmd_line.decode(
+            pre_obj.collection_information[u'cmd_line'] = cmd_line.decode(
                 encoding)
           except UnicodeDecodeError:
             pass
-        pre_obj.collection_information['file_processed'] = (
+        pre_obj.collection_information[u'file_processed'] = (
             self._storage_file_path)
-        pre_obj.collection_information['method'] = 'Running Analysis Plugins'
-        pre_obj.collection_information['plugins'] = options.analysis_plugins
+        pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
+        pre_obj.collection_information[u'plugins'] = options.analysis_plugins
         time_of_run = timelib.Timestamp.GetNow()
-        pre_obj.collection_information['time_of_run'] = time_of_run
+        pre_obj.collection_information[u'time_of_run'] = time_of_run
 
         pre_obj.counter = collections.Counter()
 
@@ -327,7 +327,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
         event_queue_producers = []
         event_queues = []
         analysis_plugins_list = [
-            x.strip() for x in options.analysis_plugins.split(',')]
+            x.strip() for x in options.analysis_plugins.split(u',')]
 
         for _ in xrange(0, len(analysis_plugins_list)):
           # TODO: add upper queue limit.
@@ -348,7 +348,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
           analysis_context_object = analysis_context.AnalysisContext(
               analysis_report_queue_producer, knowledge_base_object)
           analysis_process = multiprocessing.Process(
-              name='Analysis {0:s}'.format(analysis_plugin.plugin_name),
+              name=u'Analysis {0:s}'.format(analysis_plugin.plugin_name),
               target=analysis_plugin.RunPlugin, args=(analysis_context_object,))
           self._analysis_processes.append(analysis_process)
 
@@ -360,13 +360,14 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
       output_buffer = output_interface.EventBuffer(output_module, options.dedup)
       with output_buffer:
-        counter = ProcessOutput(
-            output_buffer, output_module, self._filter_object,
-            self._filter_buffer, event_queue_producers)
+        counter = self._ProcessOutput(
+            output_buffer, output_module, my_filter=self._filter_object,
+            filter_buffer=self._filter_buffer,
+            analysis_queues=event_queue_producers)
 
       for information in storage_file.GetStorageInformation():
-        if hasattr(information, 'counter'):
-          counter['Stored Events'] += information.counter['total']
+        if hasattr(information, u'counter'):
+          counter[u'Stored Events'] += information.counter[u'total']
 
       if not options.quiet:
         logging.info(u'Output processing is done.')
@@ -406,11 +407,111 @@ class PsortFrontend(frontend.AnalysisFrontend):
         for item, value in analysis_queue_consumer.counter.iteritems():
           counter[item] = value
 
-    if self._filter_object and not counter['Limited By']:
-      counter['Filter By Date'] = (
-          counter['Stored Events'] - counter['Events Included'] -
-          counter['Events Filtered Out'])
+    if self._filter_object and not counter[u'Limited By']:
+      counter[u'Filter By Date'] = (
+          counter[u'Stored Events'] - counter[u'Events Included'] -
+          counter[u'Events Filtered Out'])
 
+    return counter
+
+  def _AppendEvent(self, event_object, output_buffer, event_queues):
+    """Appends an event object to an output buffer and queues.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+      output_buffer: the output buffer.
+      event_queues: a list of event queues that serve as input for
+                    the analysis plugins.
+    """
+    output_buffer.Append(event_object)
+
+    # Needed due to duplicate removals, if two events
+    # are merged then we'll just pick the first inode value.
+    inode = getattr(event_object, u'inode', None)
+    if isinstance(inode, basestring):
+      inode_list = inode.split(u';')
+      try:
+        new_inode = int(inode_list[0], 10)
+      except (ValueError, IndexError):
+        new_inode = 0
+
+      event_object.inode = new_inode
+
+    for event_queue in event_queues:
+      event_queue.ProduceItem(event_object)
+
+  def ProcessOutput(
+      self, output_buffer, output_module, my_filter=None, filter_buffer=None,
+      analysis_queues=None):
+    """Reads event objects from the storage to process and filter them.
+
+    Args:
+      output_buffer: output.EventBuffer object.
+      output_module: The output module (instance of OutputFormatter).
+      my_filter: Optional filter object (instance of PFilter).
+                 The default is None.
+      filter_buffer: Optional filter buffer used to store previously discarded
+                     events to store time slice history. The default is None.
+      analysis_queues: Optional list of analysis queues. The default is None.
+    """
+    counter = collections.Counter()
+    my_limit = getattr(my_filter, u'limit', 0)
+    forward_entries = 0
+    if not analysis_queues:
+      analysis_queues = []
+
+    event_object = output_module.FetchEntry()
+    while event_object:
+      if my_filter:
+        event_match = event_object
+        if isinstance(event_object, plaso_storage_pb2.EventObject):
+          # TODO: move serialization to storage, if low-level filtering is
+          # needed storage should provide functions for it.
+          serializer = protobuf_serializer.ProtobufEventObjectSerializer
+          event_match = serializer.ReadSerialized(event_object)
+
+        if my_filter.Match(event_match):
+          counter[u'Events Included'] += 1
+          if filter_buffer:
+            # Indicate we want forward buffering.
+            forward_entries = 1
+            # Empty the buffer.
+            for event_in_buffer in filter_buffer.Flush():
+              counter[u'Events Added From Slice'] += 1
+              counter[u'Events Included'] += 1
+              counter[u'Events Filtered Out'] -= 1
+              self._AppendEvent(event_in_buffer, output_buffer, analysis_queues)
+          self._AppendEvent(event_object, output_buffer, analysis_queues)
+          if my_limit:
+            if counter[u'Events Included'] == my_limit:
+              break
+        else:
+          if filter_buffer and forward_entries:
+            if forward_entries <= filter_buffer.size:
+              self._AppendEvent(event_object, output_buffer, analysis_queues)
+              forward_entries += 1
+              counter[u'Events Added From Slice'] += 1
+              counter[u'Events Included'] += 1
+            else:
+              # Reached the max, don't include other entries.
+              forward_entries = 0
+              counter[u'Events Filtered Out'] += 1
+          elif filter_buffer:
+            filter_buffer.Append(event_object)
+            counter[u'Events Filtered Out'] += 1
+          else:
+            counter[u'Events Filtered Out'] += 1
+      else:
+        counter[u'Events Included'] += 1
+        self._AppendEvent(event_object, output_buffer, analysis_queues)
+
+      event_object = output_module.FetchEntry()
+
+    if output_buffer.duplicate_counter:
+      counter[u'Duplicate Removals'] = output_buffer.duplicate_counter
+
+    if my_limit:
+      counter[u'Limited By'] = my_limit
     return counter
 
 
@@ -445,7 +546,7 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
     Args:
       analysis_report: the analysis report (instance of AnalysisReport).
     """
-    self.counter['Total Reports'] += 1
+    self.counter[u'Total Reports'] += 1
     self.counter[u'Report: {0:s}'.format(analysis_report.plugin_name)] += 1
 
     self.anomalies.extend(analysis_report.GetAnomalies())
@@ -471,107 +572,6 @@ class PsortAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
           u'bug report https://github.com/log2timeline/plaso/issues')
 
 
-def _AppendEvent(event_object, output_buffer, event_queues):
-  """Appends an event object to an output buffer and queues.
-
-  Args:
-    event_object: an event object (instance of EventObject).
-    output_buffer: the output buffer.
-    event_queues: a list of event queues that serve as input for
-                  the analysis plugins.
-  """
-  output_buffer.Append(event_object)
-
-  # Needed due to duplicate removals, if two events
-  # are merged then we'll just pick the first inode value.
-  inode = getattr(event_object, 'inode', None)
-  if isinstance(inode, basestring):
-    inode_list = inode.split(';')
-    try:
-      new_inode = int(inode_list[0], 10)
-    except (ValueError, IndexError):
-      new_inode = 0
-
-    event_object.inode = new_inode
-
-  for event_queue in event_queues:
-    event_queue.ProduceItem(event_object)
-
-
-def ProcessOutput(
-    output_buffer, output_module, my_filter=None, filter_buffer=None,
-    analysis_queues=None):
-  """Fetch EventObjects from storage and process and filter them.
-
-  Args:
-    output_buffer: output.EventBuffer object.
-    output_module: The output module (instance of OutputFormatter).
-    my_filter: A filter object.
-    filter_buffer: A filter buffer used to store previously discarded
-    events to store time slice history.
-    analysis_queues: A list of analysis queues.
-  """
-  counter = collections.Counter()
-  my_limit = getattr(my_filter, 'limit', 0)
-  forward_entries = 0
-  if not analysis_queues:
-    analysis_queues = []
-
-  event_object = output_module.FetchEntry()
-  while event_object:
-    if my_filter:
-      event_match = event_object
-      if isinstance(event_object, plaso_storage_pb2.EventObject):
-        # TODO: move serialization to storage, if low-level filtering is needed
-        # storage should provide functions for it.
-        serializer = protobuf_serializer.ProtobufEventObjectSerializer
-        event_match = serializer.ReadSerialized(event_object)
-
-      if my_filter.Match(event_match):
-        counter['Events Included'] += 1
-        if filter_buffer:
-          # Indicate we want forward buffering.
-          forward_entries = 1
-          # Empty the buffer.
-          for event_in_buffer in filter_buffer.Flush():
-            counter['Events Added From Slice'] += 1
-            counter['Events Included'] += 1
-            counter['Events Filtered Out'] -= 1
-            _AppendEvent(event_in_buffer, output_buffer, analysis_queues)
-        _AppendEvent(event_object, output_buffer, analysis_queues)
-        if my_limit:
-          if counter['Events Included'] == my_limit:
-            break
-      else:
-        if filter_buffer and forward_entries:
-          if forward_entries <= filter_buffer.size:
-            _AppendEvent(event_object, output_buffer, analysis_queues)
-            forward_entries += 1
-            counter['Events Added From Slice'] += 1
-            counter['Events Included'] += 1
-          else:
-            # Reached the max, don't include other entries.
-            forward_entries = 0
-            counter['Events Filtered Out'] += 1
-        elif filter_buffer:
-          filter_buffer.Append(event_object)
-          counter['Events Filtered Out'] += 1
-        else:
-          counter['Events Filtered Out'] += 1
-    else:
-      counter['Events Included'] += 1
-      _AppendEvent(event_object, output_buffer, analysis_queues)
-
-    event_object = output_module.FetchEntry()
-
-  if output_buffer.duplicate_counter:
-    counter['Duplicate Removals'] = output_buffer.duplicate_counter
-
-  if my_limit:
-    counter['Limited By'] = my_limit
-  return counter
-
-
 def Main(arguments=None):
   """Start the tool."""
   multiprocessing.freeze_support()
@@ -583,99 +583,101 @@ def Main(arguments=None):
           u'PSORT - Application to read, filter and process '
           u'output from a plaso storage file.'), add_help=False)
 
-  tool_group = arg_parser.add_argument_group('Optional Arguments For Psort')
+  tool_group = arg_parser.add_argument_group(u'Optional arguments For psort')
   output_group = arg_parser.add_argument_group(
-      'Optional Arguments For Output Modules')
+      u'Optional arguments for output modules')
   analysis_group = arg_parser.add_argument_group(
-      'Optional Arguments For Analysis Modules')
+      u'Optional arguments for analysis modules')
 
   tool_group.add_argument(
-      '-d', '--debug', action='store_true', dest='debug', default=False,
-      help='Fall back to debug shell if psort fails.')
+      u'-d', u'--debug', action=u'store_true', dest=u'debug', default=False,
+      help=u'Fall back to debug shell if psort fails.')
 
   tool_group.add_argument(
-      '-q', '--quiet', action='store_true', dest='quiet', default=False,
-      help='Don\'t print out counter information after processing.')
+      u'-q', u'--quiet', action=u'store_true', dest=u'quiet', default=False,
+      help=u'Do not print a summary after processing.')
 
   tool_group.add_argument(
-      '-h', '--help', action='help', help='Show this help message and exit.')
+      u'-h', u'--help', action=u'help',
+      help=u'Show this help message and exit.')
 
   tool_group.add_argument(
-      '-a', '--include_all', action='store_false', dest='dedup', default=True,
+      u'-a', u'--include_all', action=u'store_false', dest=u'dedup',
+      default=True, help=(
+          u'By default the psort removes duplicate entries from the output. '
+          u'This parameter changes that behavior so all events are included.'))
+
+  tool_group.add_argument(
+      u'-o', u'--output_format', u'--output-format', metavar=u'FORMAT',
+      dest=u'output_format', default=u'dynamic', help=(
+          u'The output format or "-o list" to see a list of available '
+          u'output formats.'))
+
+  tool_group.add_argument(
+      u'--analysis', metavar=u'PLUGIN_LIST', dest=u'analysis_plugins',
+      default=u'', action=u'store', type=unicode, help=(
+          u'A comma separated list of analysis plugin names to be loaded '
+          u'or "--analysis list" to see a list of available plugins.'))
+
+  tool_group.add_argument(
+      u'-z', u'--zone', metavar=u'TIMEZONE', default=u'UTC', dest=u'timezone',
       help=(
-          'By default the tool removes duplicate entries from the output. '
-          'This parameter changes that behavior so all events are included.'))
+          u'The timezone of the output or "-z list" to see a list of available '
+          u'timezones.'))
 
   tool_group.add_argument(
-      '-o', '--output_format', '--output-format', metavar='FORMAT',
-      dest='output_format', default='dynamic', help=(
-          'The output format or "-o list" to see a list of available '
-          'output formats.'))
+      u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
+      help=u'Output filename, defaults to stdout.')
 
   tool_group.add_argument(
-      '--analysis', metavar='PLUGIN_LIST', dest='analysis_plugins',
-      default='', action='store', type=unicode, help=(
-          'A comma separated list of analysis plugin names to be loaded '
-          'or "--analysis list" to see a list of available plugins.'))
+      u'--slice', metavar=u'DATE', dest=u'slice', type=str,
+      default=u'', action=u'store', help=(
+          u'Create a time slice around a certain date. This parameter, if '
+          u'defined will display all events that happened X minutes before and '
+          u'after the defined date. X is controlled by the parameter '
+          u'--slice_size but defaults to 5 minutes.'))
 
   tool_group.add_argument(
-      '-z', '--zone', metavar='TIMEZONE', default='UTC', dest='timezone', help=(
-          'The timezone of the output or "-z list" to see a list of available '
-          'timezones.'))
+      u'--slicer', dest=u'slicer', action=u'store_true', default=False, help=(
+          u'Create a time slice around every filter match. This parameter, if '
+          u'defined will save all X events before and after a filter match has '
+          u'been made. X is defined by the --slice_size parameter.'))
 
   tool_group.add_argument(
-      '-w', '--write', metavar='OUTPUTFILE', dest='write',
-      help='Output filename.  Defaults to stdout.')
-
-  tool_group.add_argument(
-      '--slice', metavar='DATE', dest='slice', type=str,
-      default='', action='store', help=(
-          'Create a time slice around a certain date. This parameter, if '
-          'defined will display all events that happened X minutes before and '
-          'after the defined date. X is controlled by the parameter '
-          '--slice_size but defaults to 5 minutes.'))
-
-  tool_group.add_argument(
-      '--slicer', dest='slicer', action='store_true', default=False, help=(
-          'Create a time slice around every filter match. This parameter, if '
-          'defined will save all X events before and after a filter match has '
-          'been made. X is defined by the --slice_size parameter.'))
-
-  tool_group.add_argument(
-      '--slice_size', dest='slice_size', type=int, default=5, action='store',
+      u'--slice_size', dest=u'slice_size', type=int, default=5, action=u'store',
       help=(
-          'Defines the slice size. In the case of a regular time slice it '
-          'defines the number of minutes the slice size should be. In the '
-          'case of the --slicer it determines the number of events before '
-          'and after a filter match has been made that will be included in '
-          'the result set. The default value is 5]. See --slice or --slicer '
-          'for more details about this option.'))
+          u'Defines the slice size. In the case of a regular time slice it '
+          u'defines the number of minutes the slice size should be. In the '
+          u'case of the --slicer it determines the number of events before '
+          u'and after a filter match has been made that will be included in '
+          u'the result set. The default value is 5]. See --slice or --slicer '
+          u'for more details about this option.'))
 
   tool_group.add_argument(
-      '-v', '--version', dest='version', action='version',
-      version='log2timeline - psort version {0:s}'.format(plaso.GetVersion()),
-      help='Show the current version of psort.')
+      u'-v', u'--version', dest=u'version', action=u'version',
+      version=u'log2timeline - psort version {0:s}'.format(plaso.GetVersion()),
+      help=u'Show the current version of psort.')
 
   front_end.AddStorageFileOptions(tool_group)
 
   tool_group.add_argument(
-      'filter', nargs='?', action='store', metavar='FILTER', default=None,
+      u'filter', nargs=u'?', action=u'store', metavar=u'FILTER', default=None,
       type=unicode, help=(
-          'A filter that can be used to filter the dataset before it '
-          'is written into storage. More information about the filters'
-          ' and it\'s usage can be found here: http://plaso.kiddaland.'
-          'net/usage/filters'))
+          u'A filter that can be used to filter the dataset before it '
+          u'is written into storage. More information about the filters'
+          u' and it\'s usage can be found here: http://plaso.kiddaland.'
+          u'net/usage/filters'))
 
   if arguments is None:
     arguments = sys.argv[1:]
 
   # Add the output module options.
-  if '-o' in arguments:
-    argument_index = arguments.index('-o') + 1
-  elif '--output_format' in arguments:
-    argument_index = arguments.index('--output_format') + 1
-  elif '--output-format' in arguments:
-    argument_index = arguments.index('--output-format') + 1
+  if u'-o' in arguments:
+    argument_index = arguments.index(u'-o') + 1
+  elif u'--output_format' in arguments:
+    argument_index = arguments.index(u'--output_format') + 1
+  elif u'--output-format' in arguments:
+    argument_index = arguments.index(u'--output-format') + 1
   else:
     argument_index = 0
 
@@ -684,8 +686,8 @@ def Main(arguments=None):
     front_end.AddOutputModuleOptions(output_group, [module_names])
 
   # Add the analysis plugin options.
-  if '--analysis' in arguments:
-    argument_index = arguments.index('--analysis') + 1
+  if u'--analysis' in arguments:
+    argument_index = arguments.index(u'--analysis') + 1
 
     # Get the names of the analysis plugins that should be loaded.
     plugin_names = arguments[argument_index]
@@ -694,26 +696,26 @@ def Main(arguments=None):
     except errors.BadConfigOption as exception:
       arg_parser.print_help()
       print u''
-      logging.error('{0:s}'.format(exception))
+      logging.error(u'{0:s}'.format(exception))
       return False
 
   options = arg_parser.parse_args(args=arguments)
 
-  format_str = '[%(levelname)s] %(message)s'
-  if getattr(options, 'debug', False):
+  format_str = u'[%(levelname)s] %(message)s'
+  if getattr(options, u'debug', False):
     logging.basicConfig(level=logging.DEBUG, format=format_str)
   else:
     logging.basicConfig(level=logging.INFO, format=format_str)
 
-  if options.timezone == 'list':
+  if options.timezone == u'list':
     front_end.ListTimeZones()
     return True
 
-  if options.analysis_plugins == 'list':
+  if options.analysis_plugins == u'list':
     front_end.ListAnalysisPlugins()
     return True
 
-  if options.output_format == 'list':
+  if options.output_format == u'list':
     front_end.ListOutputModules()
     return True
 
@@ -725,7 +727,7 @@ def Main(arguments=None):
     logging.error(u'{0:s}'.format(exception))
     return False
 
-  if front_end.preferred_encoding == 'ascii':
+  if front_end.preferred_encoding == u'ascii':
     logging.warning(
         u'The preferred encoding of your system is ASCII, which is not optimal '
         u'for the typically non-ASCII characters that need to be parsed and '
@@ -739,7 +741,7 @@ def Main(arguments=None):
     counter = front_end.ParseStorage(options)
 
     if not options.quiet:
-      logging.info(frontend_utils.FormatHeader('Counter'))
+      logging.info(frontend_utils.FormatHeader(u'Counter'))
       for element, count in counter.most_common():
         logging.info(frontend_utils.FormatOutputString(element, count))
 

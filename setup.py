@@ -62,12 +62,6 @@ def GetTools():
   for filename in tool_filenames:
     tools.append(os.path.join(u'plaso', u'frontend', filename))
 
-  tool_filenames = frozenset([
-      u'plaso_extract_search_history.py'])
-
-  for filename in tool_filenames:
-    tools.append(os.path.join(u'tools', filename))
-
   return tools
 
 
