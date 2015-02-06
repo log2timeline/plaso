@@ -36,7 +36,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
-    test_file = self._GetTestFilePath(['CMD.EXE-087B4001.pf'])
+    test_file = self._GetTestFilePath([u'CMD.EXE-087B4001.pf'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -47,7 +47,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEquals(event_object.version, 17)
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-03-10 10:11:49.281250')
+        u'2013-03-10 10:11:49.281250')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
@@ -101,7 +101,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-03-10 10:19:46.234375')
+        u'2013-03-10 10:19:46.234375')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
@@ -119,7 +119,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
-    test_file = self._GetTestFilePath(['PING.EXE-B29F6629.pf'])
+    test_file = self._GetTestFilePath([u'PING.EXE-B29F6629.pf'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -130,7 +130,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.version, 23)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-04-06 19:00:55.932955')
+        u'2012-04-06 19:00:55.932955')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
@@ -159,14 +159,14 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2010-11-10 17:37:26.484375')
+        u'2010-11-10 17:37:26.484375')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
   def testParse23MultiVolume(self):
-    """Tests the Parse function on a mulit volume version 23 Prefetch file."""
-    test_file = self._GetTestFilePath(['WUAUCLT.EXE-830BCC14.pf'])
+    """Tests the Parse function on a multi volume version 23 Prefetch file."""
+    test_file = self._GetTestFilePath([u'WUAUCLT.EXE-830BCC14.pf'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -177,7 +177,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.version, 23)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-03-15 21:17:39.807996')
+        u'2012-03-15 21:17:39.807996')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
@@ -214,7 +214,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2010-11-10 17:37:26.484375')
+        u'2010-11-10 17:37:26.484375')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
@@ -232,7 +232,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
-    test_file = self._GetTestFilePath(['TASKHOST.EXE-3AE259FC.pf'])
+    test_file = self._GetTestFilePath([u'TASKHOST.EXE-3AE259FC.pf'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -243,7 +243,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEquals(event_object.version, 26)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-10-04 15:40:09.037833')
+        u'2013-10-04 15:40:09.037833')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
@@ -254,7 +254,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_object = event_objects[2]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-10-04 15:28:09.010356')
+        u'2013-10-04 15:28:09.010356')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc,
@@ -368,11 +368,11 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-10-04 15:57:26.146547')
+        u'2013-10-04 15:57:26.146547')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
   unittest.main()
