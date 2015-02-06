@@ -173,8 +173,11 @@ fi
 
 # Update the version information.
 echo "Updating version information to match today's date."
-DATE_NOW=`date +"%Y%m%d"`
-sed -i -e "s/^VERSION_DATE.*$/VERSION_DATE = '${DATE_NOW}'/g" plaso/__init__.py
+
+if test -f "utils/update_version.sh";
+then
+  . utils/update_version.sh
+fi
 
 COMMIT_DESCRIPTION="Code review: ${CL_NUMBER}: ${DESCRIPTION}";
 echo "Submitting ${COMMIT_DESCRIPTION}";
