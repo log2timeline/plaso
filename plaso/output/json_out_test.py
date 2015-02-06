@@ -72,15 +72,15 @@ class JsonOutputTest(unittest.TestCase):
     """Test ensures that returned lines returned are formatted as JSON."""
 
     expected_string = (
-        '"event_0": {{"username": "root", "display_name": "OS: '
+        '"event_0": {"username": "root", "display_name": "OS: '
         '/var/log/syslog.1", "uuid": "{0:s}", "data_type": "test:l2tjson", '
         '"timestamp": 1340821021000000, "hostname": "ubuntu", "text": '
         '"Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\\n '
-        'closed for user root)", "pathspec": {"type_indicator": '
-        '"TSK", "inode": 15, "location": "/var/log/syslog.1", '
+        'closed for user root)", "pathspec": {"inode": 15, '
+        '"type_indicator": "TSK", "location": "/var/log/syslog.1", '
         '"parent": {"type_indicator": "OS", '
         '"location": "/cases/image.dd"}}, '
-        '"inode": 12345678}},\n').format(self.event_object.uuid)
+        '"inode": 12345678},\n').format(self.event_object.uuid)
 
     self.formatter.EventBody(self.event_object)
     self.assertEquals(self.output.getvalue(), expected_string)
