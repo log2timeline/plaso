@@ -60,7 +60,7 @@ Keith Wall (kwallster@gmail.com)
     out_file.write(header)
 
     for path, folders, files in os.walk('.'):
-      if path in ('utils', 'tools', 'build'):
+      if path in ('utils', 'build', 'dist'):
         continue
       for filematch in fnmatch.filter(files, '*.py'):
         author = ProcessFile(os.path.join(path, filematch))
