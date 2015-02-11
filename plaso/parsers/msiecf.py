@@ -74,20 +74,14 @@ class MsiecfParser(interface.BaseParser):
   NAME = 'msiecf'
   DESCRIPTION = u'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
 
-  def _ParseUrl(
-      self, parser_context, msiecf_item, file_entry=None, parser_chain=None,
-      recovered=False):
+  def _ParseUrl(self, parser_mediator, msiecf_item, recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) URL item.
 
        Every item is stored as an event object, one for each timestamp.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       msiecf_item: An item (pymsiecf.url).
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       recovered: Boolean value to indicate the item was recovered, False
                  by default.
     """
@@ -123,26 +117,24 @@ class MsiecfParser(interface.BaseParser):
         secondary_timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
         # The secondary_timestamp is in localtime normalize it to be in UTC.
         secondary_timestamp = timelib.Timestamp.LocaltimeToUTC(
-            secondary_timestamp, parser_context.timezone)
+            secondary_timestamp, parser_mediator.timezone)
 
       elif msiecf_item.type == u'history-weekly':
         primary_timestamp_desc = eventdata.EventTimestamp.CREATION_TIME
         secondary_timestamp_desc = eventdata.EventTimestamp.LAST_VISITED_TIME
         # The secondary_timestamp is in localtime normalize it to be in UTC.
         secondary_timestamp = timelib.Timestamp.LocaltimeToUTC(
-            secondary_timestamp, parser_context.timezone)
+            secondary_timestamp, parser_mediator.timezone)
 
     event_object = MsiecfUrlEvent(
         primary_timestamp, primary_timestamp_desc, msiecf_item, recovered)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
     if secondary_timestamp > 0:
       event_object = MsiecfUrlEvent(
           secondary_timestamp, secondary_timestamp_desc, msiecf_item,
           recovered)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     expiration_timestamp = msiecf_item.get_expiration_time_as_integer()
     if expiration_timestamp > 0:
@@ -159,29 +151,24 @@ class MsiecfParser(interface.BaseParser):
             timelib.Timestamp.FromFatDateTime(expiration_timestamp),
             eventdata.EventTimestamp.EXPIRATION_TIME, msiecf_item, recovered)
 
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     last_checked_timestamp = msiecf_item.get_last_checked_time_as_integer()
     if last_checked_timestamp > 0:
       event_object = MsiecfUrlEvent(
           timelib.Timestamp.FromFatDateTime(last_checked_timestamp),
           eventdata.EventTimestamp.LAST_CHECKED_TIME, msiecf_item, recovered)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a MSIE Cache File (MSIECF).
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     msiecf_file = pymsiecf.file()
-    msiecf_file.set_ascii_codepage(parser_context.codepage)
+    msiecf_file.set_ascii_codepage(parser_mediator.codepage)
 
     try:
       msiecf_file.open_file_object(file_object)
@@ -190,34 +177,30 @@ class MsiecfParser(interface.BaseParser):
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, parser_mediator.GetDisplayName(), exception))
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     for item_index in range(0, msiecf_file.number_of_items):
       try:
         msiecf_item = msiecf_file.get_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
-          self._ParseUrl(
-              parser_context, msiecf_item, file_entry=file_entry,
-              parser_chain=parser_chain)
+          self._ParseUrl(parser_mediator, msiecf_item)
 
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
       except IOError as exception:
         logging.warning(
             u'[{0:s}] unable to parse item: {1:d} in file: {2:s}: {3:s}'.format(
-                self.NAME, item_index, file_entry.name, exception))
+                self.NAME, item_index, parser_mediator.GetDisplayName(),
+                exception))
 
     for item_index in range(0, msiecf_file.number_of_recovered_items):
       try:
         msiecf_item = msiecf_file.get_recovered_item(item_index)
         if isinstance(msiecf_item, pymsiecf.url):
           self._ParseUrl(
-              parser_context, msiecf_item, file_entry=file_entry,
-              parser_chain=parser_chain, recovered=True)
+              parser_mediator, msiecf_item, recovered=True)
 
         # TODO: implement support for pymsiecf.leak, pymsiecf.redirected,
         # pymsiecf.item.
@@ -225,7 +208,8 @@ class MsiecfParser(interface.BaseParser):
         logging.info((
             u'[{0:s}] unable to parse recovered item: {1:d} in file: {2:s}: '
             u'{3:s}').format(
-                self.NAME, item_index, file_entry.name, exception))
+                self.NAME, item_index, parser_mediator.GetDisplayName(),
+                exception))
 
     file_object.close()
 

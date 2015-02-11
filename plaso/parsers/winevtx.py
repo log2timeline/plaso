@@ -107,23 +107,20 @@ class WinEvtxParser(interface.BaseParser):
   NAME = 'winevtx'
   DESCRIPTION = u'Parser for Windows XML EventLog (EVTX) files.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a Windows XML EventLog (EVTX) file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    parser_chain = self._BuildParserChain(parser_chain)
 
-    file_object = file_entry.GetFileObject()
+
+    file_object = parser_mediator.GetFileObject()
     evtx_file = pyevtx.file()
-    evtx_file.set_ascii_codepage(parser_context.codepage)
+    evtx_file.set_ascii_codepage(parser_mediator.codepage)
 
     try:
       evtx_file.open_file_object(file_object)
@@ -132,31 +129,31 @@ class WinEvtxParser(interface.BaseParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, parser_mediator.GetDisplayName(), exception))
 
     for record_index in range(0, evtx_file.number_of_records):
       try:
         evtx_record = evtx_file.get_record(record_index)
         event_object = WinEvtxRecordEvent(evtx_record)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
       except IOError as exception:
         logging.warning((
             u'[{0:s}] unable to parse event record: {1:d} in file: {2:s} '
             u'with error: {3:s}').format(
-                self.NAME, record_index, file_entry.name, exception))
+                self.NAME, record_index, parser_mediator.GetDisplayName(),
+                exception))
 
     for record_index in range(0, evtx_file.number_of_recovered_records):
       try:
         evtx_record = evtx_file.get_recovered_record(record_index)
         event_object = WinEvtxRecordEvent(evtx_record, recovered=True)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
       except IOError as exception:
         logging.debug((
             u'[{0:s}] unable to parse recovered event record: {1:d} in file: '
             u'{2:s} with error: {3:s}').format(
-                self.NAME, record_index, file_entry.name, exception))
+                self.NAME, record_index, parser_mediator.GetDisplayName(),
+                exception))
 
     evtx_file.close()
     file_object.close()

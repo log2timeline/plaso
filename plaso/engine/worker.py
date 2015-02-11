@@ -49,7 +49,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
   def __init__(
       self, identifier, process_queue, event_queue_producer,
-      parse_error_queue_producer, parser_context, resolver_context=None):
+      parse_error_queue_producer, parser_mediator, resolver_context=None):
     """Initializes the event extraction worker object.
 
     Args:
@@ -60,15 +60,16 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
                             ItemQueueProducer).
       parse_error_queue_producer: The parse error queue producer (instance of
                                   ItemQueueProducer).
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       resolver_context: Optional resolver context (instance of dfvfs.Context).
                         The default is None.
     """
     super(BaseEventExtractionWorker, self).__init__(process_queue)
     self._enable_debug_output = False
     self._identifier = identifier
+    self._open_files = False
+    self._parser_mediator = parser_mediator
     self._filestat_parser_object = None
-    self._parser_context = parser_context
     self._parser_objects = None
     self._process_archive_files = False
     self._resolver_context = resolver_context
@@ -121,8 +122,12 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Raises:
       QueueFull: If a queue is full.
     """
+    # We need to reset the parser chain before each file, in case there's a
+    # stale entry there due a bug in a parser.
+    self._parser_mediator.ClearParserChain()
+    self._parser_mediator.SetFileEntry(file_entry)
     try:
-      parser_object.Parse(self._parser_context, file_entry)
+      parser_object.UpdateChainAndParse(self._parser_mediator)
 
     except errors.UnableToParseFile as exception:
       logging.debug(u'Not a {0:s} file ({1:s}) - {2:s}'.format(
@@ -149,6 +154,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'The path specification that caused the error: {0:s}'.format(
               file_entry.path_spec.comparable))
       logging.exception(exception)
+
+    finally:
+      self._parser_mediator.SetFileEntry(None)
 
       if self._enable_debug_output:
         self._DebugParseFileEntry()
@@ -290,9 +298,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         'is_running': self._is_running,
         'identifier': u'Worker_{0:d}'.format(self._identifier),
         'current_file': self._current_working_file,
-        'counter': self._parser_context.number_of_events}
+        'counter': self._parser_mediator.number_of_events}
 
-  def InitalizeParserObjects(self, parser_filter_string=None):
+  def InitializeParserObjects(self, parser_filter_string=None):
     """Initializes the parser objects.
 
     The parser_filter_string is a simple comma separated value string that
@@ -357,7 +365,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
   def Run(self):
     """Extracts event objects from file entries."""
-    self._parser_context.ResetCounters()
+    self._parser_mediator.ResetCounters()
 
     if self._enable_profiling:
       self._ProfilingStart()
@@ -416,7 +424,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Args:
       filter_object: the filter object (instance of objectfilter.Filter).
     """
-    self._parser_context.SetFilterObject(filter_object)
+    self._parser_mediator.SetFilterObject(filter_object)
 
   def SetMountPath(self, mount_path):
     """Sets the mount path.
@@ -424,7 +432,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Args:
       mount_path: string containing the mount path.
     """
-    self._parser_context.SetMountPath(mount_path)
+    self._parser_mediator.SetMountPath(mount_path)
 
   def SetProcessArchiveFiles(self, process_archive_files):
     """Sets the process archive files mode.
@@ -442,12 +450,12 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       text_prepend: string that contains the text to prepend to every
                     event object.
     """
-    self._parser_context.SetTextPrepend(text_prepend)
+    self._parser_mediator.SetTextPrepend(text_prepend)
 
   def SignalAbort(self):
     """Signals the worker to abort."""
     super(BaseEventExtractionWorker, self).SignalAbort()
-    self._parser_context.SignalAbort()
+    self._parser_mediator.SignalAbort()
 
   @classmethod
   def SupportsProfiling(cls):

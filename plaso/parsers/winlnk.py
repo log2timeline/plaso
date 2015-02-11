@@ -73,47 +73,36 @@ class WinLnkParser(interface.BaseParser):
   NAME = 'lnk'
   DESCRIPTION = u'Parser for Windows Shortcut (LNK) files.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a Windows Shortcut (LNK) file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
-    self.ParseFileObject(
-        parser_context, file_object, file_entry=file_entry,
-        parser_chain=parser_chain)
+    file_object = parser_mediator.GetFileObject()
+    self.ParseFileObject(parser_mediator, file_object)
     file_object.close()
 
   def ParseFileObject(
-      self, parser_context, file_object, file_entry=None, parser_chain=None,
-      display_name=None):
+      self, parser_mediator, file_object, display_name=None):
     """Parses a Windows Shortcut (LNK) file.
 
     The file entry is used to determine the display name if it was not provided.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       display_name: Optional display name.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    parser_chain = self._BuildParserChain(parser_chain)
 
-    if not display_name and file_entry:
-      display_name = parser_context.GetDisplayName(file_entry)
+    if not display_name:
+      display_name = parser_mediator.GetDisplayName()
 
     lnk_file = pylnk.file()
-    lnk_file.set_ascii_codepage(parser_context.codepage)
+    lnk_file.set_ascii_codepage(parser_mediator.codepage)
 
     try:
       lnk_file.open_file_object(file_object)
@@ -126,18 +115,19 @@ class WinLnkParser(interface.BaseParser):
     if lnk_file.link_target_identifier_data:
       # TODO: change file_entry.name to display name once it is generated
       # correctly.
-      if file_entry:
-        display_name = file_entry.name
-
+      display_name = parser_mediator.GetFileEntry().name
       shell_items_parser = shell_items.ShellItemsParser(display_name)
-      shell_items_parser.Parse(
-          parser_context, lnk_file.link_target_identifier_data,
-          codepage=parser_context.codepage, file_entry=file_entry,
-          parser_chain=parser_chain)
+      parser_mediator.AppendToParserChain(shell_items_parser)
+      try:
+        shell_items_parser.Parse(
+            parser_mediator, lnk_file.link_target_identifier_data,
+            codepage=parser_mediator.codepage)
+      finally:
+        parser_mediator.PopFromParserChain()
 
       link_target = shell_items_parser.CopyToPath()
 
-    parser_context.ProduceEvents(
+    parser_mediator.ProduceEvents(
         [WinLnkLinkEvent(
             lnk_file.get_file_access_time_as_integer(),
             eventdata.EventTimestamp.ACCESS_TIME, lnk_file, link_target),
@@ -147,12 +137,26 @@ class WinLnkParser(interface.BaseParser):
          WinLnkLinkEvent(
              lnk_file.get_file_modification_time_as_integer(),
              eventdata.EventTimestamp.MODIFICATION_TIME, lnk_file,
-             link_target)],
-        parser_chain=parser_chain, file_entry=file_entry)
+             link_target)])
 
     # TODO: add support for the distributed link tracker.
 
     lnk_file.close()
+
+  def UpdateChainAndParseFileObject(
+      self, parser_mediator, file_object, display_name=None):
+    """Wrapper for ParseFileObject to synchronize the parser chain.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+      display_name: Optional display name.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    parser_mediator.AppendToParserChain(self)
+    self.ParseFileObject(parser_mediator, file_object, display_name)
 
 
 manager.ParsersManager.RegisterParser(WinLnkParser)

@@ -150,14 +150,14 @@ class SELinuxParser(text_parser.SlowLexicalTextParser):
     """Entry parsing failed callback."""
     raise lexer.ParseError(u'Unable to parse SELinux log line.')
 
-  def ParseLine(self, parser_context):
+  def ParseLine(self, parser_mediator):
     """Parse a single line from the SELinux audit file.
 
     This method extends the one from TextParser slightly, creating a
     SELinux event with the timestamp (UTC) taken from log entries.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Returns:
       An event object (instance of EventObject) that is constructed

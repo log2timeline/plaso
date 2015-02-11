@@ -29,7 +29,7 @@ from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
-from plaso.parsers import context
+from plaso.parsers import mediator
 
 
 class TestEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
@@ -73,6 +73,10 @@ class ParserTestCase(unittest.TestCase):
 
     for event_object in event_generator:
       self.assertIsInstance(event_object, event.EventObject)
+      # Every event needs to have its parser and pathspec fields set, so that
+      # it's possible to trace its provenance.
+      self.assertIsNotNone(event_object.pathspec)
+      self.assertIsNotNone(event_object.parser)
       event_objects.append(event_object)
 
     return event_objects
@@ -96,8 +100,9 @@ class ParserTestCase(unittest.TestCase):
 
     return event_objects
 
-  def _GetParserContext(
-      self, event_queue, parse_error_queue, knowledge_base_values=None):
+  def _GetParserMediator(
+      self, event_queue, parse_error_queue, knowledge_base_values=None,
+      file_entry=None, parser_chain=None):
     """Retrieves a parser context object.
 
     Args:
@@ -105,9 +110,13 @@ class ParserTestCase(unittest.TestCase):
       parse_error_queue: the parse error queue (instance of Queue).
       knowledge_base_values: optional dict containing the knowledge base
                              values. The default is None.
+      file_entry: optional dfVFS file_entry object (instance of dfvfs.FileEntry)
+                  being parsed.
+      parser_chain: Optional string containing the parsing chain up to this
+                    point. The default is None.
 
     Returns:
-      A parser context object (instance of ParserContext).
+      A parser context object (instance of ParserMediator).
     """
     event_queue_producer = queue.ItemQueueProducer(event_queue)
     parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
@@ -117,9 +126,14 @@ class ParserTestCase(unittest.TestCase):
       for identifier, value in knowledge_base_values.iteritems():
         knowledge_base_object.SetValue(identifier, value)
 
-    return context.ParserContext(
+    new_mediator = mediator.ParserMediator(
         event_queue_producer, parse_error_queue_producer,
         knowledge_base_object)
+    if file_entry:
+      new_mediator.SetFileEntry(file_entry)
+    if parser_chain:
+      new_mediator.parser_chain = parser_chain
+    return new_mediator
 
   def _GetTestFilePath(self, path_segments):
     """Retrieves the path of a test file relative to the test data directory.
@@ -187,11 +201,13 @@ class ParserTestCase(unittest.TestCase):
 
     parse_error_queue = single_process.SingleProcessQueue()
 
-    parser_context = self._GetParserContext(
+    parser_mediator = self._GetParserMediator(
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    parser_object.Parse(parser_context, file_entry)
+    parser_mediator.SetFileEntry(file_entry)
+    parser_mediator.AppendToParserChain(parser_object)
+    parser_object.Parse(parser_mediator)
 
     return event_queue_consumer
 

@@ -66,63 +66,59 @@ class HachoirParser(interface.BaseParser):
   NAME = 'hachoir'
   DESCRIPTION = u'Parser that wraps Hachoir.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a file using Hachoir.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_name = parser_mediator.GetDisplayName()
+    file_object = parser_mediator.GetFileObject()
 
     try:
       fstream = hachoir_core.stream.InputIOStream(file_object, None, tags=[])
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, file_name, exception))
 
     if not fstream:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, 'Not fstream'))
+              self.NAME, file_name, 'Not fstream'))
 
     try:
       doc_parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, file_name, exception))
 
     if not doc_parser:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, 'Not parser'))
+              self.NAME, file_name, 'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(doc_parser)
     except (AssertionError, AttributeError) as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, file_name, exception))
 
     try:
       metatext = metadata.exportPlaintext(human=False)
     except AttributeError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, file_name, exception))
 
     if not metatext:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: No metadata'.format(
-              self.NAME, file_entry.name))
+              self.NAME, file_name))
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     attributes = {}
     extracted_events = []
@@ -138,7 +134,7 @@ class HachoirParser(interface.BaseParser):
       key2, _, value2 = value.partition(': ')
       if key2 == 'LastPrinted' and value2 != 'False':
         date_object = timelib.StringToDatetime(
-            value2, timezone=parser_context.timezone)
+            value2, timezone=parser_mediator.timezone)
         if isinstance(date_object, datetime.datetime):
           extracted_events.append((date_object, key2))
 
@@ -161,12 +157,11 @@ class HachoirParser(interface.BaseParser):
     if not extracted_events:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_entry.name, 'No events discovered'))
+              self.NAME, file_name, 'No events discovered'))
 
     for date, key in extracted_events:
       event_object = HachoirEvent(date, key, attributes)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(HachoirParser)

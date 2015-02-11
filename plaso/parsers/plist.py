@@ -87,7 +87,7 @@ class PlistParser(interface.BasePluginsParser):
               self.NAME, utils.GetUnicodeString(file_name)))
 
     # Since we are using readPlist from binplist now instead of manually
-    # opening up the BinarPlist file we loose this option. Keep it commented
+    # opening  the binary plist file we loose this option. Keep it commented
     # out for now but this needs to be tested a bit more.
     # TODO: Re-evaluate if we can delete this or still require it.
     #if bpl.is_corrupt:
@@ -97,17 +97,15 @@ class PlistParser(interface.BasePluginsParser):
 
     return top_level_object
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parse and extract values from a plist file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     # TODO: Should we rather query the stats object to get the size here?
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
+    file_entry = parser_mediator.GetFileEntry()
     file_size = file_object.get_size()
 
     if file_size <= 0:
@@ -123,9 +121,7 @@ class PlistParser(interface.BasePluginsParser):
           u'[{0:s}] file size: {1:d} bytes is larger than 50 MB.'.format(
               self.NAME, file_size))
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     top_level_object = None
     try:
@@ -145,13 +141,11 @@ class PlistParser(interface.BasePluginsParser):
 
     for plugin_object in self._plugins:
       try:
-        plugin_object.Process(
-            parser_context, file_entry=file_entry, parser_chain=parser_chain,
-            plist_name=plist_name, top_level=top_level_object)
-
+        plugin_object.UpdateChainAndProcess(
+            parser_mediator, plist_name=plist_name, top_level=top_level_object)
       except errors.WrongPlistPlugin as exception:
         logging.debug(u'[{0:s}] Wrong plugin: {1:s} for: {2:s}'.format(
-            self.NAME, exception[0], exception[1]))
+            self.NAME, exception.args[0], exception.args[1]))
 
     file_object.close()
 

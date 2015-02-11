@@ -28,7 +28,7 @@ from plaso.engine import engine
 from plaso.engine import queue
 from plaso.engine import worker
 from plaso.lib import errors
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 
 
 class SingleProcessCollector(collector.Collector):
@@ -98,7 +98,7 @@ class SingleProcessEngine(engine.BaseEngine):
         maximum_number_of_queued_items=maximum_number_of_queued_items)
 
     super(SingleProcessEngine, self).__init__(
-      collection_queue, storage_queue, parse_error_queue)
+        collection_queue, storage_queue, parse_error_queue)
 
     self._event_queue_producer = SingleProcessItemQueueProducer(storage_queue)
     self._parse_error_queue_producer = SingleProcessItemQueueProducer(
@@ -157,7 +157,7 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       An extraction worker (instance of worker.ExtractionWorker).
     """
-    parser_context = parsers_context.ParserContext(
+    parser_mediator = parsers_mediator.ParserMediator(
         self._event_queue_producer, self._parse_error_queue_producer,
         self.knowledge_base)
 
@@ -165,7 +165,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     extraction_worker = SingleProcessEventExtractionWorker(
         worker_number, self._collection_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_context,
+        self._parse_error_queue_producer, parser_mediator,
         resolver_context=resolver_context)
 
     extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
@@ -200,8 +200,8 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     extraction_worker = self.CreateExtractionWorker(0)
 
-    extraction_worker.InitalizeParserObjects(
-         parser_filter_string=parser_filter_string)
+    extraction_worker.InitializeParserObjects(
+        parser_filter_string=parser_filter_string)
 
     # Set the extraction worker and storage writer values so that they
     # can be accessed if the QueueFull exception is raised. This is

@@ -33,23 +33,8 @@ class BaseParser(object):
   NAME = 'base_parser'
   DESCRIPTION = u''
 
-  def _BuildParserChain(self, parser_chain=None):
-    """Return the parser chain with the addition of the current parser.
-
-    Args:
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-
-    Returns:
-      The parser chain, with the addition of the current parser.
-    """
-    if not parser_chain:
-      return self.NAME
-
-    return u'/'.join([parser_chain, self.NAME])
-
   @abc.abstractmethod
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
 
     This is the main function of the class, the one that actually
@@ -65,15 +50,24 @@ class BaseParser(object):
     the reason why the class does not parse it.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       NotImplementedError when not implemented.
     """
     raise NotImplementedError
+
+  def UpdateChainAndParse(self, parser_mediator, **kwargs):
+    """Wrapper for Parse() to synchronize the parser chain.
+
+    This convenience method updates the parser chain object held by the
+    mediator, transfers control to the parser-specific Parse() method,
+    and updates the chain again once the parsing is complete. It provides a
+    simpler parser API in most cases.
+    """
+    parser_mediator.AppendToParserChain(self)
+    self.Parse(parser_mediator, **kwargs)
+    parser_mediator.PopFromParserChain()
 
   @classmethod
   def SupportsPlugins(cls):
@@ -182,7 +176,7 @@ class BasePluginsParser(BaseParser):
       yield plugin_name, plugin_class
 
   @abc.abstractmethod
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
 
     This is the main function of the class, the one that actually
@@ -198,10 +192,7 @@ class BasePluginsParser(BaseParser):
     the reason why the class does not parse it.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserMediator).
 
     Raises:
       NotImplementedError when not implemented.

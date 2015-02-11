@@ -80,7 +80,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     if not time:
       current_year = timelib.GetCurrentYear()
       logging.error((
-          u'Unable to determine year of syslog file.\nDefautling to: '
+          u'Unable to determine year of syslog file.\nDefaulting to: '
           u'{0:d}').format(current_year))
       return current_year
 
@@ -95,7 +95,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
 
     return timestamp.year
 
-  def ParseLine(self, parser_context):
+  def ParseLine(self, parser_mediator):
     """Parse a single line from the syslog file.
 
     This method extends the one from TextParser slightly, adding
@@ -103,7 +103,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     files.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Returns:
       An event object (instance of TextEvent).
@@ -112,13 +112,13 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
     # the init function.
     # TODO: this is a HACK to get the tests working let's discuss this.
     if not self._year_use:
-      self._year_use = parser_context.year
+      self._year_use = parser_mediator.year
 
     if not self._year_use:
       # TODO: Find a decent way to actually calculate the correct year
       # from the syslog file, instead of relying on stats object.
       stat = self.file_entry.GetStat()
-      self._year_use = self._GetYear(stat, parser_context.timezone)
+      self._year_use = self._GetYear(stat, parser_mediator.timezone)
 
       if not self._year_use:
         # TODO: Make this sensible, not have the year permanent.
@@ -132,7 +132,7 @@ class SyslogParser(text_parser.SlowLexicalTextParser):
 
     self.attributes['iyear'] = self._year_use
 
-    return super(SyslogParser, self).ParseLine(parser_context)
+    return super(SyslogParser, self).ParseLine(parser_mediator)
 
   def ParseHostname(self, match=None, **unused_kwargs):
     """Parses the hostname.

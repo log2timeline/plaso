@@ -50,14 +50,16 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
 
     parse_error_queue = single_process.SingleProcessQueue()
 
-    parser_context = self._GetParserContext(
+    parser_mediator = self._GetParserMediator(
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
+    parser_mediator.AppendToParserChain(plugin_object)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    parser_mediator.SetFileEntry(file_entry)
 
     with sqlite.SQLiteDatabase(file_entry) as database:
-      plugin_object.Process(parser_context, cache=cache, database=database)
+      plugin_object.Process(parser_mediator, cache=cache, database=database)
 
     return event_queue_consumer

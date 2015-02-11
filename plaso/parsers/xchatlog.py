@@ -184,11 +184,11 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hour, minute, second, timezone=timezone)
 
-  def VerifyStructure(self, parser_context, line):
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a XChat log file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       line: A single line from the text file.
 
     Returns:
@@ -199,7 +199,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     except pyparsing.ParseException:
       logging.debug(u'Unable to parse, not a valid XChat log file header')
       return False
-    timestamp = self._GetTimestamp(parse_result, parser_context.timezone)
+    timestamp = self._GetTimestamp(parse_result, parser_mediator.timezone)
     if not timestamp:
       logging.debug(u'Wrong XChat timestamp: {0:s}'.format(parse_result))
       return False
@@ -208,11 +208,11 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     self.xchat_year = 0
     return True
 
-  def ParseRecord(self, parser_context, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parse each record structure and return an event object if applicable.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: An identification string indicating the name of the parsed
            structure.
       structure: A pyparsing.ParseResults object from a line in the
@@ -226,7 +226,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
         logging.debug(u'XChatLogParser, missing year information.')
         return
       timestamp = self._GetTimestamp(
-          structure, parser_context.timezone, year=self.xchat_year)
+          structure, parser_mediator.timezone, year=self.xchat_year)
       if not timestamp:
         logging.debug(u'XChatLogParser, cannot get timestamp from line.')
         return
@@ -235,7 +235,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       return XChatLogEvent(
           timestamp, u' '.join(structure.text.split()), structure.nickname)
     elif key == 'header':
-      timestamp = self._GetTimestamp(structure, parser_context.timezone)
+      timestamp = self._GetTimestamp(structure, parser_mediator.timezone)
       if not timestamp:
         logging.warning(u'XChatLogParser, cannot get timestamp from header.')
         return

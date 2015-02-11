@@ -66,7 +66,7 @@ from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import timelib
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import winreg as winreg_parser
 from plaso.parsers import winreg_plugins    # pylint: disable=unused-import
@@ -148,8 +148,8 @@ class PregCache(object):
 
   knowledge_base_object = knowledge_base.KnowledgeBase()
 
-  # Parser context, used when parsing Registry keys.
-  parser_context = None
+  # Parser mediator, used when parsing Registry keys.
+  parser_mediator = None
 
   hive_storage = None
   shell_helper = None
@@ -395,7 +395,7 @@ class PregFrontend(frontend.ExtractionFrontend):
     hive_paths = []
     file_path, _, file_name = pattern.rpartition(u'/')
 
-    # The path is split in segments to make it path segement separator
+    # The path is split in segments to make it path segment separator
     # independent (and thus platform independent).
     path_segments = file_path.split(u'/')
     if not path_segments[0]:
@@ -501,12 +501,12 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     return expanded_paths
 
-  def _GetRegistryKeysFromHive(self, hive_helper, parser_context):
+  def _GetRegistryKeysFromHive(self, hive_helper, parser_mediator):
     """Retrieves a list of all key plugins for a given Registry type.
 
     Args:
       hive_helper: A hive object (instance of PregHiveHelper).
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Returns:
       A list of Windows Registry keys.
@@ -517,7 +517,7 @@ class PregFrontend(frontend.ExtractionFrontend):
     for key_plugin_cls in self.plugins.GetAllKeyPlugins():
       temp_obj = key_plugin_cls(reg_cache=hive_helper.reg_cache)
       if temp_obj.REG_TYPE == hive_helper.type:
-        temp_obj.ExpandKeys(parser_context)
+        temp_obj.ExpandKeys(parser_mediator)
         keys.extend(temp_obj.expanded_keys)
 
     return keys
@@ -782,11 +782,11 @@ class PregFrontend(frontend.ExtractionFrontend):
     hive_storage = PregStorage()
     shell_helper = PregHelper(options, self, hive_storage)
     hive_helper = shell_helper.OpenHive(hives[0], hive_collector)
-    parser_context = shell_helper.BuildParserContext()
+    parser_mediator = shell_helper.BuildParserMediator()
 
     # Get all the appropriate keys from these plugins.
     key_paths = self.plugins.GetExpandedKeyPaths(
-        parser_context, reg_cache=hive_helper.reg_cache,
+        parser_mediator, reg_cache=hive_helper.reg_cache,
         plugin_names=plugin_list)
 
     for hive in hives:
@@ -816,7 +816,7 @@ class PregFrontend(frontend.ExtractionFrontend):
 
     hive_storage = PregStorage()
     shell_helper = PregHelper(options, self, hive_storage)
-    parser_context = shell_helper.BuildParserContext()
+    parser_mediator = shell_helper.BuildParserMediator()
 
     for hive in hives:
       for collector_name, hive_collector in hive_collectors:
@@ -825,7 +825,7 @@ class PregFrontend(frontend.ExtractionFrontend):
             hive_collector_name=collector_name)
         hive_type = hive_helper.type
 
-        key_paths = self._GetRegistryKeysFromHive(hive_helper, parser_context)
+        key_paths = self._GetRegistryKeysFromHive(hive_helper, parser_mediator)
         self._ExpandKeysRedirect(key_paths)
 
         plugins_to_run = self._GetRegistryPlugins(hive_type)
@@ -856,7 +856,7 @@ class PregHelper(object):
     self.tool_front_end = tool_front_end
     self.hive_storage = hive_storage
 
-  def BuildParserContext(self, event_queue=None):
+  def BuildParserMediator(self, event_queue=None):
     """Build the parser object.
 
     Args:
@@ -865,7 +865,7 @@ class PregHelper(object):
                    one will be provided.
 
     Returns:
-      A parser context object (instance of parsers_context.ParserContext).
+      A parser mediator object (instance of parsers_mediator.ParserMediator).
     """
     if event_queue is None:
       event_queue = single_process.SingleProcessQueue()
@@ -874,7 +874,7 @@ class PregHelper(object):
     parse_error_queue = single_process.SingleProcessQueue()
     parse_error_queue_producer = queue.ItemQueueProducer(parse_error_queue)
 
-    return parsers_context.ParserContext(
+    return parsers_mediator.ParserMediator(
         event_queue_producer, parse_error_queue_producer,
         PregCache.knowledge_base_object)
 
@@ -1519,7 +1519,7 @@ class MyMagics(magic.Magics):
       return
 
     if not plugin.expanded_keys:
-      plugin.ExpandKeys(PregCache.parser_context)
+      plugin.ExpandKeys(PregCache.parser_mediator)
 
     # Clear the last results from parse key.
     PregCache.events_from_last_parse = []
@@ -1759,7 +1759,7 @@ def ParseKey(key, shell_helper, hive_helper, verbose=False, use_plugins=None):
   """Parse a single Registry key and return parsed information.
 
   Parses the Registry key either using the supplied plugin or trying against
-  all avilable plugins.
+  all available plugins.
 
   Args:
     key: The Registry key to parse, WinRegKey object or a string.
@@ -1803,13 +1803,13 @@ def ParseKey(key, shell_helper, hive_helper, verbose=False, use_plugins=None):
   event_queue = single_process.SingleProcessQueue()
   event_queue_consumer = PregEventObjectQueueConsumer(event_queue)
 
-  # Build a parser context.
-  parser_context = shell_helper.BuildParserContext(event_queue)
+  # Build a parser mediator.
+  parser_mediator = shell_helper.BuildParserMediator(event_queue)
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:
     for plugin in plugins[weight]:
-      plugin.Process(parser_context, key=key)
+      plugin.Process(parser_mediator, key=key)
       event_queue_consumer.ConsumeEventObjects()
       if not event_queue_consumer.event_objects:
         continue
@@ -1954,9 +1954,9 @@ def RunModeConsole(front_end, options):
   # Build the global cache and prepare the tool.
   hive_storage = PregStorage()
   shell_helper = PregHelper(options, front_end, hive_storage)
-  parser_context = shell_helper.BuildParserContext()
+  parser_mediator = shell_helper.BuildParserMediator()
 
-  PregCache.parser_context = parser_context
+  PregCache.parser_mediator = parser_mediator
   PregCache.shell_helper = shell_helper
   PregCache.hive_storage = hive_storage
 
@@ -2023,7 +2023,7 @@ def RunModeConsole(front_end, options):
   ipshell.register_magics(MyMagics)
   # Set autocall to two, making parenthesis not necessary when calling
   # function names (although they can be used and are necessary sometimes,
-  # like in variable assignements, etc).
+  # like in variable assignments, etc).
   ipshell.autocall = 2
   # Registering command completion for the magic commands.
   ipshell.set_hook('complete_command', CdCompleter, str_key='%cd')

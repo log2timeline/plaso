@@ -37,19 +37,15 @@ class MountPoints2Plugin(interface.KeyPlugin):
   URLS = [u'http://support.microsoft.com/kb/932463']
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Retrieves information from the MountPoints2 registry key.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-              point. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-            The default is None.
     """
     for subkey in key.GetSubkeys():
       name = subkey.name
@@ -81,8 +77,7 @@ class MountPoints2Plugin(interface.KeyPlugin):
       event_object = windows_events.WindowsRegistryEvent(
           subkey.last_written_timestamp, key.path, text_dict,
           offset=subkey.offset, registry_type=registry_type, urls=self.URLS)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(MountPoints2Plugin)

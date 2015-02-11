@@ -36,10 +36,9 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['com.apple.airport.preferences.plist'])
     plist_name = 'com.apple.airport.preferences.plist'
     event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, test_file, plist_name)
+        self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 4)

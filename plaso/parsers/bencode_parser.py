@@ -86,31 +86,24 @@ class BencodeParser(interface.BasePluginsParser):
 
     return data_object
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parse and extract values from a bencoded file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     data_object = self.GetTopLevel(file_object)
 
     if not data_object:
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse: {1:s}. Skipping.'.format(
-              self.NAME, file_entry.name))
+              self.NAME, parser_mediator.GetDisplayName()))
 
-    parser_chain = self._BuildParserChain(parser_chain)
     for plugin_object in self._plugins:
       try:
-        plugin_object.Process(
-            parser_context, data=data_object, file_entry=file_entry,
-            parser_chain=parser_chain)
-
+        plugin_object.UpdateChainAndProcess(parser_mediator, data=data_object)
       except errors.WrongBencodePlugin as exception:
         logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
             self.NAME, exception))

@@ -68,38 +68,27 @@ class CustomDestinationsParser(interface.BaseParser):
       'file_footer',
       construct.ULInt32('signature'))
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from an *.customDestinations-ms file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
-    self.ParseFileObject(
-        parser_context, file_object, file_entry=file_entry,
-        parser_chain=parser_chain)
+    file_object = parser_mediator.GetFileObject()
+    self.ParseFileObject(parser_mediator, file_object)
     file_object.close()
 
   def ParseFileObject(
-      self, parser_context, file_object, file_entry=None, parser_chain=None):
+      self, parser_mediator, file_object):
     """Extract data from an *.customDestinations-ms file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    parser_chain = self._BuildParserChain(parser_chain)
-
     try:
       file_header = self._FILE_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
@@ -166,7 +155,8 @@ class CustomDestinationsParser(interface.BaseParser):
 
       path_spec = path_spec_factory.Factory.NewPathSpec(
           definitions.TYPE_INDICATOR_DATA_RANGE, range_offset=file_offset,
-          range_size=remaining_file_size, parent=file_entry.path_spec)
+          range_size=remaining_file_size,
+          parent=parser_mediator.GetFileEntry().path_spec)
 
       try:
         lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
@@ -174,17 +164,15 @@ class CustomDestinationsParser(interface.BaseParser):
         logging.error((
             u'[{0:s}] Unable to open LNK file from {1:s} with error: '
             u'{2:s}').format(
-                parser_chain,
-                file_entry.path_spec.comparable.replace(u'\n', u';'),
+                parser_mediator.parser_chain, parser_mediator.GetDisplayName(),
                 exception))
         return
 
       display_name = u'{0:s} # 0x{1:08x}'.format(
-          parser_context.GetDisplayName(file_entry), file_offset)
+          parser_mediator.GetFileEntry().name, file_offset)
 
-      self._WINLNK_PARSER.ParseFileObject(
-          parser_context, lnk_file_object, file_entry=file_entry,
-          parser_chain=parser_chain, display_name=display_name)
+      self._WINLNK_PARSER.UpdateChainAndParseFileObject(
+          parser_mediator, lnk_file_object, display_name=display_name)
 
       # We cannot trust the file size in the LNK data so we get the last offset
       # that was read instead.

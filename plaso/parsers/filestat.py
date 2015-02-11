@@ -80,22 +80,16 @@ class FileStatParser(interface.BaseParser):
       if type_string.startswith('TSK_FS_TYPE'):
         return type_string[12:]
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extracts event objects from a file system stat entry.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
+    file_entry = parser_mediator.GetFileEntry()
     stat_object = file_entry.GetStat()
     if not stat_object:
       return
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
@@ -122,8 +116,7 @@ class FileStatParser(interface.BaseParser):
 
       event_object = FileStatEvent(
           timestamp, time_attribute, is_allocated, file_size, file_system_type)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(FileStatParser)

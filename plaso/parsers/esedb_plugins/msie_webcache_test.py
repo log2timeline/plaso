@@ -36,9 +36,9 @@ class MsieWebCacheEseDbPluginTest(test_lib.EseDbPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['WebCacheV01.dat'])
+    test_file_name = 'WebCacheV01.dat'
     event_queue_consumer = self._ParseEseDbFileWithPlugin(
-        test_file, self._plugin)
+        [test_file_name], self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 1354)
