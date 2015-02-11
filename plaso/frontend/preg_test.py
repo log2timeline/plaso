@@ -139,7 +139,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     preg.PregCache.shell_helper = shell_helper
     preg.PregCache.hive_storage = shell_helper.hive_storage
-    preg.PregCache.parser_context = shell_helper.BuildParserContext()
+    preg.PregCache.parser_mediator = shell_helper.BuildParserMediator()
 
     # Mark this hive as the currently opened one.
     preg.PregCache.hive_storage.AppendHive(hive_helper)
@@ -302,7 +302,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     # Set the cache.
     preg.PregCache.shell_helper = shell_helper
     preg.PregCache.hive_storage = shell_helper.hive_storage
-    preg.PregCache.parser_context = shell_helper.BuildParserContext()
+    preg.PregCache.parser_mediator = shell_helper.BuildParserMediator()
 
     # Open up a hive.
     hive_path = self._GetTestFilePath([u'NTUSER.DAT'])

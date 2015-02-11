@@ -90,18 +90,18 @@ class SymantecParser(text_parser.TextCSVParser):
     return timelib.Timestamp.FromTimeParts(
         year + 1970, month + 1, day, hours, minutes, seconds, timezone=timezone)
 
-  def VerifyRow(self, parser_context, row):
+  def VerifyRow(self, parser_mediator, row):
     """Verify a single line of a Symantec log file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: A single row from the CSV file.
 
     Returns:
       True if this is the correct parser, False otherwise.
     """
     try:
-      timestamp = self._GetTimestamp(row['time'], parser_context.timezone)
+      timestamp = self._GetTimestamp(row['time'], parser_mediator.timezone)
     except (TypeError, ValueError):
       return False
 
@@ -127,27 +127,20 @@ class SymantecParser(text_parser.TextCSVParser):
 
     return True
 
-  def ParseRow(
-      self, parser_context, row_offset, row, file_entry=None,
-      parser_chain=None):
+  def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a row and extract event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
-    timestamp = self._GetTimestamp(row['time'], parser_context.timezone)
+    timestamp = self._GetTimestamp(row['time'], parser_mediator.timezone)
 
     # TODO: Create new dict object that only contains valuable attributes.
     event_object = SymantecEvent(timestamp, row_offset, row)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(SymantecParser)

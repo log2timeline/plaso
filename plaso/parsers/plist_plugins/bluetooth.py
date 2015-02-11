@@ -41,17 +41,11 @@ class BluetoothPlugin(interface.PlistPlugin):
   # LastServicesUpdate = Time set when device was polled to determine what it
   #   is.  Usually done at setup or manually requested via advanced menu.
 
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, match=None,
-      **unused_kwargs):
+  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant BT entries.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing extracted keys from PLIST_KEYS.
              The default is None.
     """
@@ -68,32 +62,28 @@ class BluetoothPlugin(interface.PlistPlugin):
         if 'LastInquiryUpdate' in value:
           event_object = plist_event.PlistEvent(
               root, key, value['LastInquiryUpdate'], desc)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
       if value.get('LastInquiryUpdate'):
         desc = u' '.join(filter(None, ('Bluetooth Discovery', name)))
         key = u''.join((device, '/LastInquiryUpdate'))
         event_object = plist_event.PlistEvent(
             root, key, value['LastInquiryUpdate'], desc)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if value.get('LastNameUpdate'):
         desc = u' '.join(filter(None, ('Device Name Set', name)))
         key = u''.join((device, '/LastNameUpdate'))
         event_object = plist_event.PlistEvent(
             root, key, value['LastNameUpdate'], desc)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if value.get('LastServicesUpdate'):
         desc = desc = u' '.join(filter(None, ('Services Updated', name)))
         key = ''.join((device, '/LastServicesUpdate'))
         event_object = plist_event.PlistEvent(
             root, key, value['LastServicesUpdate'], desc)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
 
 plist.PlistParser.RegisterPlugin(BluetoothPlugin)

@@ -87,19 +87,15 @@ class UserAssistPlugin(interface.KeyPlugin):
       construct.Padding(4))
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **kwargs):
     """Parses a UserAssist Registry key.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     version_value = key.GetValue('Version')
     count_subkey = key.GetSubkey('Count')
@@ -150,7 +146,7 @@ class UserAssistPlugin(interface.KeyPlugin):
           if '%' in value_name:
             # TODO: deprecate direct use of pre_obj.
             value_name = environ_expand.ExpandWindowsEnvironmentVariables(
-                value_name, parser_context.knowledge_base.pre_obj)
+                value_name, parser_mediator.knowledge_base.pre_obj)
 
         if not value.DataIsBinaryData():
           logging.error(u'unsupported value data type: {0:s}'.format(
@@ -174,8 +170,7 @@ class UserAssistPlugin(interface.KeyPlugin):
             event_object = windows_events.WindowsRegistryEvent(
                 timelib.Timestamp.FromFiletime(filetime), count_subkey.path,
                 text_dict, offset=value.offset, registry_type=registry_type)
-            parser_context.ProduceEvent(
-                event_object, parser_chain=parser_chain, file_entry=file_entry)
+            parser_mediator.ProduceEvent(event_object)
 
         elif version_value.data == 5:
           if len(value.data) != self.USERASSIST_V5_STRUCT.sizeof():
@@ -201,8 +196,7 @@ class UserAssistPlugin(interface.KeyPlugin):
               timelib.Timestamp.FromFiletime(timestamp), count_subkey.path,
               text_dict, offset=count_subkey.offset,
               registry_type=registry_type)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

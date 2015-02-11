@@ -35,11 +35,11 @@ class MockPlugin(interface.PlistPlugin):
   PLIST_PATH = 'plist_binary'
   PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
-  def GetEntries(self, parser_context, **unused_kwargs):
+  def GetEntries(self, parser_mediator, **unused_kwargs):
     event_object = plist_event.PlistEvent(
         u'/DeviceCache/44-00-00-00-00-00', u'LastInquiryUpdate',
         1351827808261762)
-    parser_context.ProduceEvent(event_object, parser_chain=self.NAME)
+    parser_mediator.ProduceEvent(event_object)
 
 
 class TestPlistPlugin(test_lib.PlistPluginTestCase):
@@ -111,7 +111,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     my_keys = []
     for unused_root, key, unused_value in result:
       my_keys.append(key)
-    expected = set(['DeviceCache', '44-00-00-00-00-04', '44-00-00-00-00-02'])
+    expected = {'DeviceCache', '44-00-00-00-00-04', '44-00-00-00-00-02'}
     self.assertTrue(expected == set(my_keys))
 
   def testGetKeys(self):

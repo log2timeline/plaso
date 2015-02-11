@@ -160,21 +160,19 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     """
     self.attributes['iyear'] = int(match.group(1))
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a text file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_entry = parser_mediator.GetFileEntry()
     path_spec_printable = u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, file_entry.name)
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
 
     self.file_entry = file_entry
     # TODO: this is necessary since we inherit from lexer.SelfFeederMixIn.
@@ -195,9 +193,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     self.error = 0
     self.buffer = ''
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     while True:
       _ = self.NextToken()
@@ -217,9 +213,8 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 
       if self.line_ready:
         try:
-          event_object = self.ParseLine(parser_context)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          event_object = self.ParseLine(parser_mediator)
+          parser_mediator.ProduceEvent(event_object)
 
           file_verified = True
 
@@ -319,11 +314,11 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 
     return line
 
-  def ParseLine(self, parser_context):
+  def ParseLine(self, parser_mediator):
     """Return an event object extracted from the current line.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Returns:
       An event object (instance of TextEvent).
@@ -338,7 +333,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 
     times = self.attributes['time'].split(':')
     if self.local_zone:
-      timezone = parser_context.timezone
+      timezone = parser_mediator.timezone
     else:
       timezone = pytz.UTC
 
@@ -409,11 +404,11 @@ class TextCSVParser(interface.BaseParser):
   # file to see if it confirms to standards.
   MAGIC_TEST_STRING = 'RegnThvotturMeistarans'
 
-  def VerifyRow(self, unused_parser_context, unused_row):
+  def VerifyRow(self, unused_parser_mediator, unused_row):
     """Return a bool indicating whether or not this is the correct parser.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: A single row from the CSV file.
 
     Returns:
@@ -421,39 +416,30 @@ class TextCSVParser(interface.BaseParser):
     """
     pass
 
-  def ParseRow(
-      self, parser_context, row_offset, row, file_entry=None,
-      parser_chain=None):
+  def ParseRow(self, parser_mediator, row_offset, row):
     """Parse a line of the log file and extract event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     event_object = event.EventObject()
     if row_offset is not None:
       event_object.offset = row_offset
     event_object.row_dict = row
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a CVS file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
+    file_entry = parser_mediator.GetFileEntry()
     path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', u';')
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -493,24 +479,16 @@ class TextCSVParser(interface.BaseParser):
             u'[{0:s}] Unable to parse CSV file: {1:s}. Signature '
             u'mismatch.').format(self.NAME, path_spec_printable))
 
-    if not self.VerifyRow(parser_context, row):
+    if not self.VerifyRow(parser_mediator, row):
       file_object.close()
       raise errors.UnableToParseFile((
           u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
           u'failed.').format(self.NAME, path_spec_printable))
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
-    self.ParseRow(
-        parser_context, text_file_object.tell(), row, file_entry=file_entry,
-        parser_chain=parser_chain)
+    self.ParseRow(parser_mediator, text_file_object.tell(), row)
 
     for row in reader:
-      self.ParseRow(
-          parser_context, text_file_object.tell(), row, file_entry=file_entry,
-          parser_chain=parser_chain)
+      self.ParseRow(parser_mediator, text_file_object.tell(), row)
 
     file_object.close()
 
@@ -702,12 +680,12 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     self._line_structures = self.LINE_STRUCTURES
 
   def _ReadLine(
-      self, parser_context, file_entry, text_file_object, max_len=0,
+      self, parser_mediator, file_entry, text_file_object, max_len=0,
       quiet=False, depth=0):
     """Read a single line from a text file and return it back.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
       text_file_object: A text file object (instance of dfvfs.TextFile).
       max_len: If defined determines the maximum number of bytes a single line
@@ -735,7 +713,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
         return ''
 
       return self._ReadLine(
-          parser_context, file_entry, text_file_object, max_len=max_len,
+          parser_mediator, file_entry, text_file_object, max_len=max_len,
           depth=depth + 1)
 
     if not self.encoding:
@@ -750,26 +728,24 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
             u'Unable to decode line [{0:s}...] with encoding: {1:s} in '
             u'file: {2:s}').format(
                 repr(line[1:30]), self.encoding,
-                parser_context.GetDisplayName(file_entry)))
+                parser_mediator.GetDisplayName(file_entry)))
       return line.strip()
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a text file using a pyparsing definition.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_entry = parser_mediator.GetFileEntry()
     # TODO: find a more elegant way for this; currently the mac_wifi and
     # syslog parser seem to rely on this member.
     self.file_entry = file_entry
 
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
 
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
@@ -781,7 +757,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     text_file_object = text_file.TextFile(file_object)
 
     line = self._ReadLine(
-        parser_context, file_entry, text_file_object,
+        parser_mediator, file_entry, text_file_object,
         max_len=self.MAX_LINE_LENGTH, quiet=True)
     if not line:
       raise errors.UnableToParseFile(u'Not a text file.')
@@ -797,12 +773,10 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     if not utils.IsText(line):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
-    if not self.VerifyStructure(parser_context, line):
+    if not self.VerifyStructure(parser_mediator, line):
       raise errors.UnableToParseFile('Wrong file structure.')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     # Set the offset to the beginning of the file.
     self._current_offset = 0
@@ -822,28 +796,27 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
 
       if parsed_structure:
         parsed_event = self.ParseRecord(
-            parser_context, use_key, parsed_structure)
+            parser_mediator, use_key, parsed_structure)
         if parsed_event:
           parsed_event.offset = self._current_offset
-          parser_context.ProduceEvent(
-              parsed_event, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(parsed_event)
       else:
         logging.warning(u'Unable to parse log line: {0:s}'.format(line))
 
       self._current_offset = text_file_object.get_offset()
-      line = self._ReadLine(parser_context, file_entry, text_file_object)
+      line = self._ReadLine(parser_mediator, file_entry, text_file_object)
 
     file_object.close()
 
   @abc.abstractmethod
-  def ParseRecord(self, parser_context, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parse a single extracted pyparsing structure.
 
     This function takes as an input a parsed pyparsing structure
     and produces an EventObject if possible from that structure.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: An identification string indicating the name of the parsed
            structure.
       structure: A pyparsing.ParseResults object from a line in the
@@ -854,14 +827,14 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     """
 
   @abc.abstractmethod
-  def VerifyStructure(self, parser_context, line):
+  def VerifyStructure(self, parser_mediator, line):
     """Verify the structure of the file and return boolean based on that check.
 
     This function should read enough text from the text file to confirm
     that the file is the correct one for this particular parser.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       line: A single line from the text file.
 
     Returns:
@@ -1009,14 +982,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     self._text_reader = EncodedTextReader(
         buffer_size=self.BUFFER_SIZE, encoding=self.ENCODING)
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parse a text file using a pyparsing definition.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       UnableToParseFile: if the line structures are missing.
@@ -1026,7 +996,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     self._text_reader.Reset()
 
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:
@@ -1038,12 +1008,9 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     if not utils.IsText(self._text_reader.lines):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
-    if not self.VerifyStructure(parser_context, self._text_reader.lines):
+    if not self.VerifyStructure(parser_mediator, self._text_reader.lines):
       raise errors.UnableToParseFile(u'Wrong file structure.')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     # Read every line in the text file.
     while self._text_reader.lines:
@@ -1073,12 +1040,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           break
 
       if tokens and start == 0:
-        parsed_event = self.ParseRecord(parser_context, key, tokens)
+        parsed_event = self.ParseRecord(parser_mediator, key, tokens)
         if parsed_event:
           # TODO: need a reliable way to handle this.
           # parsed_event.offset = self._text_reader.line_offset
-          parser_context.ProduceEvent(
-              parsed_event, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(parsed_event)
 
         self._text_reader.SkipAhead(file_object, end)
 
@@ -1094,6 +1060,5 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         logging.error(
             u'[{0:s}] Unable to read lines from file: {1:s} with error: '
             u'{2:s}'.format(
-                parser_chain,
-                file_entry.path_spec.comparable.replace(u'\n', u';'),
+                parser_mediator.parser_chain, parser_mediator.GetDisplayName(),
                 exception))

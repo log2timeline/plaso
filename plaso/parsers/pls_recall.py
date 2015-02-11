@@ -13,7 +13,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specifiSc language governing permissions and
+# See the License for the specific language governing permissions and
 # limitations under the License.
 """Parser for PL-SQL Developer Recall files."""
 
@@ -40,7 +40,7 @@ class PlsRecallEvent(event.EventObject):
       timestamp: The timestamp when the entry was created.
       sequence: Sequence indicates the order of execution.
       username: The username that made the query.
-      database_name: String containing the databe name.
+      database_name: String containing the database name.
       query: String containing the PL-SQL query.
     """
     super(PlsRecallEvent, self).__init__()
@@ -78,16 +78,13 @@ class PlsRecallParser(interface.BaseParser):
       construct.String('Database', 81, None, '\x00'),
       construct.String('Query', 4001, None, '\x00'))
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract entries from a PLSRecall.dat file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
 
     try:
       is_pls = self.VerifyFile(file_object)
@@ -105,17 +102,14 @@ class PlsRecallParser(interface.BaseParser):
     file_object.seek(0, os.SEEK_SET)
     pls_record = self.PLS_STRUCT.parse_stream(file_object)
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     while pls_record:
       event_object = PlsRecallEvent(
           timelib.Timestamp.FromDelphiTime(pls_record.TimeStamp),
           pls_record.Sequence, pls_record.Username,
           pls_record.Database, pls_record.Query)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
       try:
         pls_record = self.PLS_STRUCT.parse_stream(file_object)

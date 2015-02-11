@@ -192,11 +192,11 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       return timelib.GetCurrentYear()
     return timestamp.year
 
-  def _ParseLogLine(self, parser_context, structure):
+  def _ParseLogLine(self, parser_mediator, structure):
     """Parse a logline and store appropriate attributes.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
 
@@ -205,12 +205,12 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: improving this to get a valid year.
     if not self._year_use:
-      self._year_use = parser_context.year
+      self._year_use = parser_mediator.year
 
     if not self._year_use:
       # Get from the creation time of the file.
       self._year_use = self._GetYear(
-          self.file_entry.GetStat(), parser_context.timezone)
+          self.file_entry.GetStat(), parser_mediator.timezone)
       # If fail, get from the current time.
       if not self._year_use:
         self._year_use = timelib.GetCurrentYear()
@@ -240,11 +240,11 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     return MacWifiLogEvent(
         timestamp, structure.agent, function, text, action)
 
-  def ParseRecord(self, parser_context, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parse each record structure and return an EventObject if applicable.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: An identification string indicating the name of the parsed
            structure.
       structure: A pyparsing.ParseResults object from a line in the
@@ -254,16 +254,16 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       An event object (instance of EventObject) or None.
     """
     if key == 'logline':
-      return self._ParseLogLine(parser_context, structure)
+      return self._ParseLogLine(parser_mediator, structure)
     elif key != 'header':
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def VerifyStructure(self, parser_context, line):
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a Mac Wifi log file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       line: A single line from the text file.
 
     Returns:

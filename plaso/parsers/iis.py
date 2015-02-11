@@ -149,11 +149,11 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     self.version = None
     self.software = None
 
-  def VerifyStructure(self, unused_parser_context, line):
+  def VerifyStructure(self, unused_parser_mediator, line):
     """Verify that this file is an IIS log file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       line: A single line from the text file.
 
     Returns:
@@ -166,11 +166,11 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
     return False
 
-  def ParseRecord(self, unused_parser_context, key, structure):
+  def ParseRecord(self, unused_parser_mediator, key, structure):
     """Parse each record structure and return an event object if applicable.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: An identification string indicating the name of the parsed
            structure.
       structure: A pyparsing.ParseResults object from a line in the

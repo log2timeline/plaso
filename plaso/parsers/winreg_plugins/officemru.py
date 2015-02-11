@@ -57,12 +57,12 @@ class OfficeMRUPlugin(interface.KeyPlugin):
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Collect Values under Office 2010 MRUs and return events for each one.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
@@ -109,8 +109,7 @@ class OfficeMRUPlugin(interface.KeyPlugin):
           timestamp, key.path, text_dict, offset=key.offset,
           registry_type=registry_type,
           source_append=': Microsoft Office MRU')
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 winreg.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)

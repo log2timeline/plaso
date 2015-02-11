@@ -51,23 +51,16 @@ class MacUserPlugin(interface.PlistPlugin):
 
   _ROOT = u'/'
 
-  def Process(
-      self, parser_context, file_entry=None, parser_chain=None, plist_name=None,
-      top_level=None, **kwargs):
+  def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Check if it is a valid Mac OS X system  account plist file name.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       plist_name: name of the plist file.
       top_level: dictionary with the plist file parsed.
     """
     super(MacUserPlugin, self).Process(
-        parser_context, file_entry=file_entry, parser_chain=parser_chain,
-        plist_name=self.PLIST_PATH, top_level=top_level, **kwargs)
+        parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
   # Generated events:
   # name: string with the system user.
@@ -81,17 +74,11 @@ class MacUserPlugin(interface.PlistPlugin):
   #        It is translated by the library as a 2001-01-01 00:00:00 (COCAO
   #        zero time representation). If this happens, the event is not yield.
 
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, match=None,
-      **unused_kwargs):
+  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant user timestamp entries.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
@@ -112,7 +99,7 @@ class MacUserPlugin(interface.PlistPlugin):
             policy_dict.get('passwordLastSetTime', '0'))
         if timestamp > cocoa_zero:
           # Extract the hash password information.
-          # It is store in the attribure ShadowHasData which is
+          # It is store in the attribute ShadowHasData which is
           # a binary plist data; However binplist only extract one
           # level of binary plist, then it returns this information
           # as a string.
@@ -143,8 +130,7 @@ class MacUserPlugin(interface.PlistPlugin):
                   account, uid, password_hash)
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'passwordLastSetTime', timestamp, description)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
       if policy_dict.get('lastLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
@@ -153,8 +139,7 @@ class MacUserPlugin(interface.PlistPlugin):
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'lastLoginTimestamp', timestamp, description)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
       if policy_dict.get('failedLoginTimestamp', 0):
         timestamp = timelib.Timestamp.FromTimeString(
@@ -165,8 +150,7 @@ class MacUserPlugin(interface.PlistPlugin):
         if timestamp > cocoa_zero:
           event_object = plist_event.PlistTimeEvent(
               self._ROOT, u'failedLoginTimestamp', timestamp, description)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
 
 plist.PlistParser.RegisterPlugin(MacUserPlugin)

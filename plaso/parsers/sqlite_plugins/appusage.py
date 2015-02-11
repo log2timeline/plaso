@@ -80,17 +80,12 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset(['application_usage'])
 
   def ParseApplicationUsageRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
-      **unused_kwargs):
+      self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses an application usage row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: The row resulting from the query.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     # TODO: replace usage by definition(s) in eventdata. Not sure which values
@@ -100,9 +95,7 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
     event_object = MacOSXApplicationUsageEvent(
         row['last_time'], usage, row['app_path'], row['app_version'],
         row['bundle_id'], row['number_times'])
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ApplicationUsagePlugin)

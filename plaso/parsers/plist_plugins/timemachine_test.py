@@ -36,10 +36,9 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['com.apple.TimeMachine.plist'])
-    plist_name = 'com.apple.timemachine.plist'
+    plist_name = 'com.apple.TimeMachine.plist'
     event_object_generator = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, test_file, plist_name)
+        self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
     self.assertEquals(len(event_objects), 13)

@@ -56,7 +56,7 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
   """Plugin to parse Chrome extension activity database files."""
 
   NAME = 'chrome_extension_activity'
-  DESCRIPTION = u'Parser for Chrome exention activitiy SQLite database files.'
+  DESCRIPTION = u'Parser for Chrome extension activity SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
@@ -69,23 +69,17 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
       'activitylog_compressed', 'string_ids', 'url_ids'])
 
   def ParseActivityLogUncompressedRow(
-      self, parser_context, row, file_entry=None, parser_chain=None, query=None,
+      self, parser_mediator, row, query=None,
       **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser context object (instance of ParserContext).
       row: The row resulting from the query (instance of sqlite3.Row).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       query: Optional query string. The default is None.
     """
     event_object = ChromeExtensionActivityEvent(row)
-    parser_context.ProduceEvent(
-        event_object, query=query, parser_chain=parser_chain,
-        file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object, query=query)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ChromeExtensionActivityPlugin)

@@ -58,17 +58,11 @@ class IPodPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.iPod.plist'
   PLIST_KEYS = frozenset(['Devices'])
 
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, match=None,
-      **unused_kwargs):
+  def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extract device information from the iPod plist.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       match: Optional dictionary containing keys extracted from PLIST_KEYS.
              The default is None.
     """
@@ -84,8 +78,7 @@ class IPodPlugin(interface.PlistPlugin):
         continue
       event_object = IPodPlistEvent(
           device_info.get('Connected'), device, device_info)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 plist.PlistParser.RegisterPlugin(IPodPlugin)

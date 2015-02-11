@@ -198,7 +198,7 @@ def ProcessFile(options):
   # Create a worker.
   worker_object = engine_object.CreateExtractionWorker('0')
   # TODO: add support for parser_filter_string.
-  worker_object.InitalizeParserObjects()
+  worker_object.InitializeParserObjects()
 
   if options.verbose:
     profiler = cProfile.Profile()

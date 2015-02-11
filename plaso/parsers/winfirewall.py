@@ -82,11 +82,11 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     self.use_local_zone = False
     self.software = None
 
-  def VerifyStructure(self, parser_context, line):
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a firewall log file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       line: A single line from the text file.
 
     Returns:
@@ -99,11 +99,11 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     return False
 
-  def ParseRecord(self, parser_context, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parse each record structure and return an event object if applicable.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: An identification string indicating the name of the parsed
            structure.
       structure: A pyparsing.ParseResults object from a line in the
@@ -115,7 +115,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     if key == 'comment':
       self._ParseCommentRecord(structure)
     elif key == 'logline':
-      return self._ParseLogLine(parser_context, structure)
+      return self._ParseLogLine(parser_mediator, structure)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
@@ -137,11 +137,11 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       if 'local' in time_format.lower():
         self.use_local_zone = True
 
-  def _ParseLogLine(self, parser_context, structure):
+  def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and return an event object.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
 
@@ -160,7 +160,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     year, month, day = date
     hour, minute, second = time
     if self.use_local_zone:
-      zone = parser_context.timezone
+      zone = parser_mediator.timezone
     else:
       zone = pytz.utc
 

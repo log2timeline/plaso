@@ -199,11 +199,11 @@ class KeychainParser(interface.BaseParser):
       u'imap': u'imap',
       u'http': u'http'}
 
-  def _GetTimestampFromEntry(self, parser_context, file_entry, structure):
+  def _GetTimestampFromEntry(self, parser_mediator, structure):
     """Parse a time entry structure into a microseconds since Epoch in UTC.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
       structure: TIME entry structure:
                  year: String with the number of the year.
@@ -224,20 +224,15 @@ class KeychainParser(interface.BaseParser):
     except ValueError:
       logging.warning(
           u'[{0:s}] Invalid keychain time {1!s} in file: {2:s}'.format(
-              self.NAME, parser_context.GetDisplayName(file_entry), structure))
+              self.NAME, parser_mediator.GetDisplayName(), structure))
       return 0
 
-  def _ReadEntryApplication(
-      self, parser_context, file_object, file_entry=None, parser_chain=None):
+  def _ReadEntryApplication(self, parser_mediator, file_object):
     """Extracts the information from an application password entry.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object that points to an Keychain file.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     offset = file_object.tell()
     try:
@@ -246,12 +241,12 @@ class KeychainParser(interface.BaseParser):
       logging.warning((
           u'[{0:s}] Unsupported record header at 0x{1:08x} in file: '
           u'{2:s}').format(
-              self.NAME, offset, parser_context.GetDisplayName(file_entry)))
+              self.NAME, offset, parser_mediator.GetDisplayName()))
       return
 
     (ssgp_hash, creation_time, last_mod_time, text_description,
      comments, entry_name, account_name) = self._ReadEntryHeader(
-         parser_context, file_entry, file_object, record.record_header, offset)
+         parser_mediator, file_object, record.record_header, offset)
 
     # Move to the end of the record, and then, prepared for the next record.
     file_object.seek(
@@ -260,22 +255,20 @@ class KeychainParser(interface.BaseParser):
     event_object = KeychainApplicationRecordEvent(
         creation_time, eventdata.EventTimestamp.CREATION_TIME,
         entry_name, account_name, text_description, comments, ssgp_hash)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
     if creation_time != last_mod_time:
       event_object = KeychainApplicationRecordEvent(
           last_mod_time, eventdata.EventTimestamp.MODIFICATION_TIME,
           entry_name, account_name, text_description, comments, ssgp_hash)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
   def _ReadEntryHeader(
-      self, parser_context, file_entry, file_object, record, offset):
+      self, parser_mediator, file_object, record, offset):
     """Read the common record attributes.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
       file_object: A file-like object that points to an Keychain file.
       record: Structure with the header of the record.
@@ -298,12 +291,12 @@ class KeychainParser(interface.BaseParser):
     file_object.seek(
         record.creation_time - file_object.tell() + offset - 1, os.SEEK_CUR)
     creation_time = self._GetTimestampFromEntry(
-        parser_context, file_entry, self.TIME.parse_stream(file_object))
+        parser_mediator, self.TIME.parse_stream(file_object))
 
     file_object.seek(
         record.last_mod_time - file_object.tell() + offset - 1, os.SEEK_CUR)
     last_mod_time = self._GetTimestampFromEntry(
-        parser_context, file_entry, self.TIME.parse_stream(file_object))
+        parser_mediator, self.TIME.parse_stream(file_object))
 
     # The comment field does not always contain data.
     if record.text_description:
@@ -348,16 +341,12 @@ class KeychainParser(interface.BaseParser):
         text_description, comments, entry_name, account_name)
 
   def _ReadEntryInternet(
-      self, parser_context, file_object, file_entry=None, parser_chain=None):
+      self, parser_mediator, file_object):
     """Extracts the information from an Internet password entry.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: A file-like object that points to an Keychain file.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     offset = file_object.tell()
     try:
@@ -366,12 +355,12 @@ class KeychainParser(interface.BaseParser):
       logging.warning((
           u'[{0:s}] Unsupported record header at 0x{1:08x} in file: '
           u'{2:s}').format(
-              self.NAME, offset, parser_context.GetDisplayName(file_entry)))
+              self.NAME, offset, parser_mediator.GetDisplayName()))
       return
 
     (ssgp_hash, creation_time, last_mod_time, text_description,
      comments, entry_name, account_name) = self._ReadEntryHeader(
-         parser_context, file_entry, file_object, record.record_header, offset)
+         parser_mediator, file_object, record.record_header, offset)
     if not record.where:
       where = u'N/A'
       protocol = u'N/A'
@@ -403,16 +392,14 @@ class KeychainParser(interface.BaseParser):
         creation_time, eventdata.EventTimestamp.CREATION_TIME,
         entry_name, account_name, text_description,
         comments, where, protocol, type_protocol, ssgp_hash)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
     if creation_time != last_mod_time:
       event_object = KeychainInternetRecordEvent(
           last_mod_time, eventdata.EventTimestamp.MODIFICATION_TIME,
           entry_name, account_name, text_description,
           comments, where, protocol, type_protocol, ssgp_hash)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
   def _VerifyStructure(self, file_object):
     """Verify that we are dealing with an Keychain entry.
@@ -451,24 +438,17 @@ class KeychainParser(interface.BaseParser):
       table_offsets.append(table_offset + self.KEYCHAIN_DB_HEADER.sizeof())
     return table_offsets
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a Keychain file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     table_offsets = self._VerifyStructure(file_object)
     if not table_offsets:
       file_object.close()
       raise errors.UnableToParseFile(u'The file is not a Keychain file.')
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     for table_offset in table_offsets:
       # Skipping X bytes, unknown data at this point.
@@ -479,7 +459,7 @@ class KeychainParser(interface.BaseParser):
         logging.warning((
             u'[{0:s}] Unable to parse table header in file: {1:s} '
             u'with error: {2:s}.').format(
-                self.NAME, parser_context.GetDisplayName(file_entry),
+                self.NAME, parser_mediator.GetDisplayName(),
                 exception))
         continue
 
@@ -491,15 +471,11 @@ class KeychainParser(interface.BaseParser):
 
       if table.record_type == self.RECORD_TYPE_INTERNET:
         for _ in range(table.number_of_records):
-          self._ReadEntryInternet(
-              parser_context, file_object, file_entry=file_entry,
-              parser_chain=parser_chain)
+          self._ReadEntryInternet(parser_mediator, file_object)
 
       elif table.record_type == self.RECORD_TYPE_APPLICATION:
         for _ in range(table.number_of_records):
-          self._ReadEntryApplication(
-              parser_context, file_object, file_entry=file_entry,
-              parser_chain=parser_chain)
+          self._ReadEntryApplication(parser_mediator, file_object)
 
     file_object.close()
 

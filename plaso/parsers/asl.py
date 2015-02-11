@@ -184,7 +184,7 @@ class AslParser(interface.BaseParser):
   ASL_POINTER = construct.UBInt64('pointer')
 
   # Dynamic data structure pointed by a pointer that contains a String:
-  # [2 bytes padding][4 bytes lenght of String][String].
+  # [2 bytes padding][4 bytes length of String][String].
   ASL_RECORD_DYN_VALUE = construct.Struct(
       'asl_record_dyn_value',
       construct.Padding(2),
@@ -192,16 +192,13 @@ class AslParser(interface.BaseParser):
           'value',
           length_field=construct.UBInt32('length')))
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract entries from an ASL file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:
@@ -220,16 +217,11 @@ class AslParser(interface.BaseParser):
     old_offset = header.offset
     last_offset_header = header.last_offset
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
     # If the ASL file has entries.
     if offset:
       event_object, offset = self.ReadAslEvent(file_object, offset)
       while event_object:
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
         # TODO: an anomaly object must be emitted once that is implemented.
         # Sanity check, the last read element must be the same as
@@ -285,8 +277,8 @@ class AslParser(interface.BaseParser):
     # After the four first fields, the entry might have extra ASL_Fields.
     # For each extra ASL_field, it has a pair of 8-byte fields where the first
     # 8 bytes contains the name of the extra ASL_field and the second 8 bytes
-    # contains the text of the exta field.
-    # All of this 8-byte field can be saved using one of these three differents
+    # contains the text of the extra field.
+    # All of this 8-byte field can be saved using one of these three different
     # types:
     # - Null value ('0000000000000000'): nothing to do.
     # - String: It is string if first bit = 1 or first nibble = 8 (1000).

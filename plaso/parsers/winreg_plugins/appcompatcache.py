@@ -540,18 +540,17 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     return cached_entry_object
 
-  def GetEntries(self, parser_context, key=None, file_entry=None,
-                 parser_chain=None, **unused_kwargs):
+  def GetEntries(self, parser_mediator, key=None, registry_type=None,
+                 codepage='cp1252', **unused_kwargs):
     """Extracts event objects from a Application Compatibility Cache key.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
                   The default is None.
+      codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     value = key.GetValue('AppCompatCache')
     if not value:
@@ -600,8 +599,7 @@ class AppCompatCachePlugin(interface.KeyPlugin):
             u'File Last Modification Time', key.path,
             cached_entry_index + 1, cached_entry_object.path,
             cached_entry_offset)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       if cached_entry_object.last_update_time is not None:
         # TODO: refactor to process run event.
@@ -610,8 +608,7 @@ class AppCompatCachePlugin(interface.KeyPlugin):
             eventdata.EventTimestamp.LAST_RUNTIME, key.path,
             cached_entry_index + 1, cached_entry_object.path,
             cached_entry_offset)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       cached_entry_offset += cached_entry_object.cached_entry_size
       cached_entry_index += 1
