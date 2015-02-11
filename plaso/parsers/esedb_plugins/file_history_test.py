@@ -36,9 +36,9 @@ class FileHistoryEseDbPluginTest(test_lib.EseDbPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['Catalog1.edb'])
+    test_file_name = 'Catalog1.edb'
     event_queue_consumer = self._ParseEseDbFileWithPlugin(
-        test_file, self._plugin)
+        [test_file_name], self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 2680)

@@ -84,39 +84,33 @@ class OpenXMLParser(interface.BaseParser):
     fix_key = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from an OXML file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
+    file_name = parser_mediator.GetDisplayName
 
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, 'Not a Zip file.'))
+              self.NAME, file_name, 'Not a Zip file.'))
 
     try:
       zip_container = zipfile.ZipFile(file_object, 'r')
     except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, 'Bad Zip file.'))
+              self.NAME, file_name, 'Bad Zip file.'))
 
     zip_name_list = set(zip_container.namelist())
 
     if not self._FILES_REQUIRED.issubset(zip_name_list):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, 'OXML element(s) missing.'))
-
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+              self.NAME, file_name, 'OXML element(s) missing.'))
 
     metadata = {}
     timestamps = {}
@@ -126,7 +120,7 @@ class OpenXMLParser(interface.BaseParser):
     except zipfile.BadZipfile as exception:
       logging.error(
           u'Unable to parse file {0:s} with error: {1:s}'.format(
-              file_entry.name, exception))
+              file_name, exception))
       return
 
     rels_root = ElementTree.fromstring(rels_xml)
@@ -162,22 +156,19 @@ class OpenXMLParser(interface.BaseParser):
       event_object = OpenXMLParserEvent(
           timestamps.get('created'), eventdata.EventTimestamp.CREATION_TIME,
           metadata)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if timestamps.get('modified', None):
       event_object = OpenXMLParserEvent(
           timestamps.get('modified'),
           eventdata.EventTimestamp.MODIFICATION_TIME, metadata)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if timestamps.get('lastPrinted', None):
       event_object = OpenXMLParserEvent(
           timestamps.get('lastPrinted'), eventdata.EventTimestamp.LAST_PRINTED,
           metadata)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(OpenXMLParser)

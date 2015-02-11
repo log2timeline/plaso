@@ -35,7 +35,7 @@ class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
 
     Args:
       timestamp: The FILETIME timestamp value.
-      usage: The usage string, describing the timdestamp value.
+      usage: The usage string, describing the timestamp value.
       filename: The name of the file.
       record_values: A dict object containing the record values.
     """
@@ -90,16 +90,12 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
     return return_dict
 
   def ParseNameSpace(
-      self, parser_context, file_entry=None, parser_chain=None, database=None,
-      cache=None, table=None, **unused_kwargs):
+      self, parser_mediator, database=None, cache=None, table=None,
+      **unused_kwargs):
     """Parses the namespace table.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserContext).
       database: Optional database object (instance of pyesedb.file).
                 The default is None.
       cache: Optional cache object (instance of EseDbCache).
@@ -130,16 +126,14 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
         event_object = FileHistoryNamespaceEventObject(
             created_timestamp, eventdata.EventTimestamp.CREATION_TIME,
             filename, record_values)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
       modified_timestamp = record_values.get(u'fileModified')
       if modified_timestamp:
         event_object = FileHistoryNamespaceEventObject(
             modified_timestamp, eventdata.EventTimestamp.MODIFICATION_TIME,
             filename, record_values)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
 
 esedb.EseDbParser.RegisterPlugin(FileHistoryEseDbPlugin)

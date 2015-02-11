@@ -191,11 +191,11 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       ('footer', FOOTER),
   ]
 
-  def VerifyStructure(self, parser_context, line):
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a Popularity Contest log file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       line: A single line from the text file.
 
     Returns:
@@ -211,11 +211,11 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       return False
     return True
 
-  def ParseRecord(self, parser_context, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parse each record structure and return an EventObject if applicable.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: An identification string indicating the name of the parsed
            structure.
       structure: A pyparsing.ParseResults object from a line in the

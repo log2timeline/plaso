@@ -34,7 +34,7 @@ class BencodeTest(test_lib.ParserTestCase):
     """Sets up the needed objects used throughout the test."""
     self._parser = bencode_parser.BencodeParser()
 
-  # TODO: Move this to bencode_plugins/tranmission_test.py
+  # TODO: Move this to bencode_plugins/transmission_test.py
   def testTransmissionPlugin(self):
     """Read Transmission activity files and make few tests."""
     test_file = self._GetTestFilePath(['bencode_transmission'])

@@ -42,7 +42,8 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_queue_consumer = self._ParseKeyWithPlugin(
         self._plugin, winreg_key,
-        knowledge_base_values=knowledge_base_values, file_entry=test_file_entry)
+        knowledge_base_values=knowledge_base_values,
+        file_entry=test_file_entry, parser_chain=self._plugin.plugin_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 330)

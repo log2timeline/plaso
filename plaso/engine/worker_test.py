@@ -27,7 +27,7 @@ from plaso.artifacts import knowledge_base
 from plaso.engine import single_process
 from plaso.engine import test_lib
 from plaso.engine import worker
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 
 
 class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
@@ -46,7 +46,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    parser_context = parsers_context.ParserContext(
+    parser_mediator = parsers_mediator.ParserMediator(
         event_queue_producer, parse_error_queue_producer,
         knowledge_base_object)
 
@@ -54,11 +54,11 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
 
     extraction_worker = worker.BaseEventExtractionWorker(
         0, collection_queue, event_queue_producer, parse_error_queue_producer,
-        parser_context, resolver_context=resolver_context)
+        parser_mediator, resolver_context=resolver_context)
 
     self.assertNotEquals(extraction_worker, None)
 
-    extraction_worker.InitalizeParserObjects()
+    extraction_worker.InitializeParserObjects()
 
     # Process a file.
     source_path = self._GetTestFilePath([u'syslog'])

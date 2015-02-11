@@ -210,18 +210,14 @@ class CupsIppParser(interface.BaseParser):
       'com.apple.print.JobInfo.PMApplicationName': u'application',
       'com.apple.print.JobInfo.PMJobOwner': u'owner'}
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract a entry from an CUPS IPP file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    parser_chain = self._BuildParserChain(parser_chain)
 
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:
@@ -243,46 +239,42 @@ class CupsIppParser(interface.BaseParser):
       # able to parse the file nonetheless.
       logging.debug(
           u'[{0:s}] Unsupported operation identifier in file: {1:s}.'.format(
-              self.NAME, parser_context.GetDisplayName(file_entry)))
+              self.NAME, parser_mediator.GetDisplayName()))
 
     # Read the pairs extracting the name and the value.
     data_dict = {}
-    name, value = self.ReadPair(parser_context, file_entry, file_object)
+    name, value = self.ReadPair(parser_mediator, file_object)
     while name or value:
       # Translate the known "name" CUPS IPP to a generic name value.
       pretty_name = self.NAME_PAIR_TRANSLATION.get(name, name)
       data_dict.setdefault(pretty_name, []).append(value)
-      name, value = self.ReadPair(parser_context, file_entry, file_object)
+      name, value = self.ReadPair(parser_mediator, file_object)
 
     if u'time-at-creation' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-creation'][0],
           eventdata.EventTimestamp.CREATION_TIME, data_dict)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if u'time-at-processing' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-processing'][0],
           eventdata.EventTimestamp.START_TIME, data_dict)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if u'time-at-completed' in data_dict:
       event_object = CupsIppEvent(
           data_dict['time-at-completed'][0],
           eventdata.EventTimestamp.END_TIME, data_dict)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     file_object.close()
 
-  def ReadPair(self, parser_context, file_entry, file_object):
+  def ReadPair(self, parser_mediator, file_object):
     """Reads an attribute name and value pair from a CUPS IPP event.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: a file-like object that points to a file.
 
     Returns:
@@ -309,7 +301,7 @@ class CupsIppParser(interface.BaseParser):
     except (IOError, construct.FieldError):
       logging.warning(
           u'[{0:s}] Unsupported identifier in file: {1:s}.'.format(
-              self.NAME, parser_context.GetDisplayName(file_entry)))
+              self.NAME, parser_mediator.GetDisplayName()))
       return None, None
 
     # Name = Length name + name + 0x00
@@ -318,7 +310,7 @@ class CupsIppParser(interface.BaseParser):
     except (IOError, construct.FieldError):
       logging.warning(
           u'[{0:s}] Unsupported name in file: {1:s}.'.format(
-              self.NAME, parser_context.GetDisplayName(file_entry)))
+              self.NAME, parser_mediator.GetDisplayName()))
       return None, None
 
     # Value: can be integer, boolean or text select by Type ID.
@@ -336,7 +328,7 @@ class CupsIppParser(interface.BaseParser):
     except (IOError, construct.FieldError):
       logging.warning(
           u'[{0:s}] Unsupported value in file: {1:s}.'.format(
-              self.NAME, parser_context.GetDisplayName(file_entry)))
+              self.NAME, parser_mediator.GetDisplayName()))
       return None, None
 
     return name, value

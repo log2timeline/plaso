@@ -36,17 +36,11 @@ class InstallHistoryPlugin(interface.PlistPlugin):
       'date', 'displayName', 'displayVersion',
       'processName', 'packageIdentifiers'])
 
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, top_level=None,
-      **unused_kwargs):
+  def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts relevant install history entries.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       top_level: Optional plist in dictionary form. The default is None.
     """
     for entry in top_level:
@@ -60,8 +54,7 @@ class InstallHistoryPlugin(interface.PlistPlugin):
               entry.get('processName'), u', '.join(packages))
       event_object = plist_event.PlistEvent(
           u'/item', u'', entry.get('date'), description)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 plist.PlistParser.RegisterPlugin(InstallHistoryPlugin)

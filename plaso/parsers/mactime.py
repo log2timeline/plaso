@@ -92,11 +92,11 @@ class MactimeParser(text_parser.TextCSVParser):
       'mtime': eventdata.EventTimestamp.MODIFICATION_TIME,
   }
 
-  def VerifyRow(self, unused_parser_context, row):
+  def VerifyRow(self, unused_parser_mediator, row):
     """Verify we are dealing with a mactime bodyfile.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: A single row from the CSV file.
 
     Returns:
@@ -118,20 +118,14 @@ class MactimeParser(text_parser.TextCSVParser):
     # TODO: Add additional verification.
     return True
 
-  def ParseRow(
-      self, parser_context, row_offset, row, file_entry=None,
-      parser_chain=None):
+  def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a row and extract event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     for key, value in row.iteritems():
       if isinstance(row[key], basestring):
@@ -146,8 +140,7 @@ class MactimeParser(text_parser.TextCSVParser):
         continue
       event_object = MactimeEvent(
           value, timestamp_description, row_offset, row)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(MactimeParser)

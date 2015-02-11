@@ -327,16 +327,14 @@ class ChromeCacheParser(interface.BaseParser):
   NAME = 'chrome_cache'
   DESCRIPTION = u'Parser for Chrome Cache files.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract event objects from Chrome Cache files.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
+    file_entry = parser_mediator.GetFileEntry()
     index_file = IndexFile()
     try:
       index_file.Open(file_object)
@@ -350,9 +348,6 @@ class ChromeCacheParser(interface.BaseParser):
     file_system = file_entry.GetFileSystem()
     path_segments = file_system.SplitPath(file_entry.path_spec.location)
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     data_block_files = {}
     for cache_address in index_file.index_table:
@@ -379,7 +374,7 @@ class ChromeCacheParser(interface.BaseParser):
           logging.error((
               u'[{0:s}] Unable to open data block file: {1:s} while parsing '
               u'{2:s} with error: {3:s}').format(
-                  parser_chain, kwargs['location'],
+                  parser_mediator.parser_chain, kwargs['location'],
                   file_entry.path_spec.comparable, exception))
           data_block_file_entry = None
 
@@ -425,8 +420,7 @@ class ChromeCacheParser(interface.BaseParser):
           break
 
         event_object = ChromeCacheEntryEvent(cache_entry)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+        parser_mediator.ProduceEvent(event_object)
 
         cache_address = cache_entry.next
         cache_address_chain_length += 1

@@ -36,10 +36,10 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['plist_binary'])
+    test_file_name = 'plist_binary'
     plist_name = 'com.apple.bluetooth.plist'
     event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, test_file, plist_name)
+        self._parser, self._plugin, [test_file_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEquals(len(event_objects), 14)

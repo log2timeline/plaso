@@ -108,11 +108,11 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     self._last_month = None
     self.previous_structure = None
 
-  def VerifyStructure(self, parser_context, line):
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a Mac AppFirewall log file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       line: A single line from the text file.
 
     Returns:
@@ -128,11 +128,11 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       return False
     return True
 
-  def ParseRecord(self, parser_context, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parses each record structure and return an event object if applicable.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: An identification string indicating the name of the parsed
            structure.
       structure: A pyparsing.ParseResults object from a line in the
@@ -142,16 +142,16 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       An event object (instance of EventObject) or None.
     """
     if key == 'logline' or key == 'repeated':
-      return self._ParseLogLine(parser_context, structure, key)
+      return self._ParseLogLine(parser_mediator, structure, key)
     else:
       logging.warning(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def _ParseLogLine(self, parser_context, structure, key):
+  def _ParseLogLine(self, parser_mediator, structure, key):
     """Parse a logline and store appropriate attributes.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       structure: log line of structure.
       key: type of line log (normal or repeated).
 
@@ -160,12 +160,12 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: improve this to get a valid year.
     if not self._year_use:
-      self._year_use = parser_context.year
+      self._year_use = parser_mediator.year
 
     if not self._year_use:
       # Get from the creation time of the file.
       self._year_use = self._GetYear(
-          self.file_entry.GetStat(), parser_context.timezone)
+          self.file_entry.GetStat(), parser_mediator.timezone)
       # If fail, get from the current time.
       if not self._year_use:
         self._year_use = timelib.GetCurrentYear()

@@ -115,16 +115,14 @@ class UtmpParser(interface.BaseParser):
   # it can be a free flowing text field.
   _DEFAULT_TEST_VALUE = u'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from an UTMP file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     try:
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
@@ -171,16 +169,13 @@ class UtmpParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not an UTMP file, no timestamp set in the first record.')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     file_object.seek(0, os.SEEK_SET)
     event_object = self._ReadUtmpEvent(file_object)
     while event_object:
       event_object.offset = file_object.tell()
-      parser_context.ProduceEvent(
-          event_object, file_entry=file_entry, parser_chain=None)
+      parser_mediator.ProduceEvent(event_object)
 
       event_object = self._ReadUtmpEvent(file_object)
 
@@ -219,7 +214,7 @@ class UtmpParser(interface.BaseParser):
     except (IOError, construct.FieldError):
       logging.warning((
           u'UTMP entry at 0x{:x} couldn\'t be parsed.').format(offset))
-      return self.__ReadUtmpEvent(file_object)
+      return self._ReadUtmpEvent(file_object)
 
     user = self._GetTextFromNullTerminatedString(entry.username)
     terminal = self._GetTextFromNullTerminatedString(entry.terminal)

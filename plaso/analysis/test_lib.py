@@ -29,7 +29,7 @@ from plaso.artifacts import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.lib import event
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 
 
 class TestAnalysisReportQueueConsumer(queue.ItemQueueConsumer):
@@ -117,13 +117,14 @@ class AnalysisPluginTestCase(unittest.TestCase):
 
     parse_error_queue = single_process.SingleProcessQueue()
 
-    parser_context = parsers_context.ParserContext(
+    parser_mediator = parsers_mediator.ParserMediator(
         event_queue_producer, parse_error_queue, knowledge_base_object)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    parser_mediator.SetFileEntry(file_entry)
 
-    parser_object.Parse(parser_context, file_entry)
+    parser_object.Parse(parser_mediator)
     event_queue.SignalEndOfInput()
 
     return event_queue

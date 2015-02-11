@@ -30,14 +30,11 @@ class TestParser(interface.BaseParser):
   NAME = 'test_parser'
   DESCRIPTION = u'Test parser.'
 
-  def Parse(self, unused_parser_context, unused_file_entry, parser_chain=None):
+  def Parse(self, unused_parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserContext).
     """
     return
 
@@ -50,14 +47,12 @@ class TestParserWithPlugins(interface.BasePluginsParser):
 
   _plugin_classes = {}
 
-  def Parse(self, unused_parser_context, unused_file_entry, parser_chain=None):
+  # pylint: disable=unused-argument
+  def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserContext).
     """
     return
 
@@ -68,13 +63,12 @@ class TestPlugin(plugins.BasePlugin):
   NAME = 'test_plugin'
   DESCRIPTION = u'Test plugin.'
 
-  def Process(self, unused_parser_context, unused_parser_chain=None, **kwargs):
+  # pylint: disable=unused-argument
+  def Process(self, parser_mediator, **kwargs):
     """Evaluates if this is the correct plugin and processes data accordingly.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser context object (instance of ParserContext).
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
               the correct plugin.

@@ -52,9 +52,7 @@ class TransmissionPlugin(interface.BencodePlugin):
       'activity-date', 'done-date', 'added-date', 'destination',
       'seeding-time-seconds'])
 
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, data=None,
-      **unused_kwargs):
+  def GetEntries(self, parser_mediator, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 
     This is the main parsing engine for the parser. It determines if
@@ -65,11 +63,7 @@ class TransmissionPlugin(interface.BencodePlugin):
     in a folder named resume under the user's application data folder.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       data: Optional bencode data in dictionary form. The default is None.
     """
     # Place the obtained values into the event.
@@ -81,22 +75,19 @@ class TransmissionPlugin(interface.BencodePlugin):
       event_object = TransmissionEvent(
           data.get('added-date'), eventdata.EventTimestamp.ADDED_TIME,
           destination, seeding_time)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if data.get('done-date', 0):
       event_object = TransmissionEvent(
           data.get('done-date'), eventdata.EventTimestamp.FILE_DOWNLOADED,
           destination, seeding_time)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if data.get('activity-date', None):
       event_object = TransmissionEvent(
           data.get('activity-date'), eventdata.EventTimestamp.ACCESS_TIME,
           destination, seeding_time)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 bencode_parser.BencodeParser.RegisterPlugin(TransmissionPlugin)

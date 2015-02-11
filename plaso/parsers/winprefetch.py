@@ -377,19 +377,17 @@ class WinPrefetchParser(interface.BaseParser):
 
     return device_path
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extracts events from a Windows Prefetch file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
+    file_name = parser_mediator.GetDisplayName()
+    file_object = parser_mediator.GetFileObject()
     file_header = self._ParseFileHeader(file_object)
 
     format_version = file_header.get('version', None)
@@ -397,9 +395,6 @@ class WinPrefetchParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Unsupported format version: {0:d}'.format(format_version))
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     file_information = self._ParseFileInformation(file_object, format_version)
     metrics_array = self._ParseMetricsArray(
@@ -411,9 +406,7 @@ class WinPrefetchParser(interface.BaseParser):
       logging.warning((
           u'[{0:s}] Unable to parse filename information from file {1:s} '
           u'with error: {2:s}').format(
-              parser_chain,
-              file_entry.path_spec.comparable.replace(u'\n', u';'),
-              exception))
+              parser_mediator.parser_chain, file_name, exception))
       filename_strings = {}
 
     if len(metrics_array) != len(filename_strings):
@@ -440,9 +433,8 @@ class WinPrefetchParser(interface.BaseParser):
       if timestamp:
         event_object = windows_events.WindowsVolumeCreationEvent(
             timestamp, volume_device_path, volume_serial_number,
-            file_entry.name)
-        parser_context.ProduceEvent(
-            event_object, parser_chain=parser_chain, file_entry=file_entry)
+            parser_mediator.GetFileEntry().name)
+        parser_mediator.ProduceEvent(event_object)
 
       for filename in filename_strings.itervalues():
         if not filename:
@@ -479,8 +471,7 @@ class WinPrefetchParser(interface.BaseParser):
           timestamp, eventdata.EventTimestamp.LAST_RUNTIME, file_header,
           file_information, mapped_files, path, volume_serial_numbers,
           volume_device_paths)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     # Check for the 7 older last run time values available in v26.
     if format_version == 26:
@@ -495,8 +486,7 @@ class WinPrefetchParser(interface.BaseParser):
               u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME),
               file_header, file_information, mapped_files, path,
               volume_serial_numbers, volume_device_paths)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
     file_object.close()
 
