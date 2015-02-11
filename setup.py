@@ -1,20 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#
-# Copyright 2012 The Plaso Project Authors.
-# Please see the AUTHORS file for details on individual authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """This is the setup file for the project. The standard setup rules apply:
 
    python setup.py build
@@ -33,23 +18,24 @@ try:
 except ImportError:
   from distutils.core import find_packages, setup, Command
 
+# Change PYTHONPATH to include plaso so that we can get the version.
+sys.path.insert(0, u'.')
+
+import plaso
+
+
 version_tuple = (sys.version_info[0], sys.version_info[1])
 if version_tuple < (2, 7) or version_tuple >= (3, 0):
   print (u'Unsupported Python version: {0:s}, version 2.7 or higher and '
          u'lower than 3.x required.').format(sys.version)
   sys.exit(1)
 
-# Change PYTHONPATH to include plaso so that we can get the version.
-sys.path.insert(0, '.')
 
-import plaso
-
-
-def GetTools():
+def GetScripts():
   """List up all scripts that should be runable from the command line."""
-  tools = []
+  scripts = []
 
-  tool_filenames = frozenset([
+  script_filenames = frozenset([
       u'image_export.py',
       u'log2timeline.py',
       u'pinfo.py',
@@ -59,10 +45,10 @@ def GetTools():
       u'pshell.py',
       u'psort.py'])
 
-  for filename in tool_filenames:
-    tools.append(os.path.join(u'plaso', u'frontend', filename))
+  for filename in script_filenames:
+    scripts.append(os.path.join(u'plaso', u'frontend', filename))
 
-  return tools
+  return scripts
 
 
 class TestCommand(Command):
@@ -77,6 +63,7 @@ class TestCommand(Command):
 
   def run(self):
     test_results = run_tests.RunTests()
+
 
 encoding = sys.stdin.encoding
 
@@ -104,7 +91,7 @@ setup(
     url='https://sites.google.com/a/kiddaland.net/plaso',
     maintainer='Plaso development team',
     maintainer_email='log2timeline-dev@googlegroups.com',
-    scripts=GetTools(),
+    scripts=GetScripts(),
     cmdclass={'test': TestCommand},
     classifiers=[
         'Development Status :: 4 - Beta',
