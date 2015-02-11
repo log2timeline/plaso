@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2014 The Plaso Project Authors.
+# Copyright 2015 The Plaso Project Authors.
 # Please see the AUTHORS file for details on individual authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The parser context object."""
+"""The parser mediator object."""
 
 import os
 
@@ -25,12 +25,12 @@ from plaso.lib import event
 from plaso.lib import utils
 
 
-class ParserContext(object):
-  """Class that implements the parser context."""
+class ParserMediator(object):
+  """Class that implements the parser mediator."""
 
   def __init__(
       self, event_queue_producer, parse_error_queue_producer, knowledge_base):
-    """Initializes a parser context object.
+    """Initializes a parser mediator object.
 
     Args:
       event_queue_producer: the event object queue producer (instance of
@@ -41,13 +41,15 @@ class ParserContext(object):
                       which contains information from the source data needed
                       for parsing.
     """
-    super(ParserContext, self).__init__()
+    super(ParserMediator, self).__init__()
     self._abort = False
     self._event_queue_producer = event_queue_producer
+    self._file_entry = None
     self._filter_object = None
     self._knowledge_base = knowledge_base
     self._mount_path = None
     self._parse_error_queue_producer = parse_error_queue_producer
+    self._parser_chain_components = []
     self._text_prepend = None
 
     self.number_of_events = 0
@@ -88,21 +90,49 @@ class ParserContext(object):
     """The year."""
     return self._knowledge_base.year
 
-  def GetDisplayName(self, file_entry):
+  def AppendToParserChain(self, plugin_or_parser):
+    """Add a parser or plugin to the chain to the chain."""
+    self._parser_chain_components.append(plugin_or_parser.NAME)
+
+  def ClearParserChain(self):
+    """Reset the parser chain to an empty value."""
+    self._parser_chain_components = []
+
+  def GetDisplayName(self, file_entry=None):
     """Retrieves the display name for the file entry.
 
     Args:
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      file_entry: optional file entry object (instance of dfvfs.FileEntry).
+                  If none is provided, the display name of self._file_entry
+                  will be returned.
 
     Returns:
-      A string containing the display name.
+      A human readable string that describes the path to the file entry.
     """
+    if file_entry is None:
+      file_entry = self._file_entry
+      if file_entry is None:
+        raise KeyError(u'No file entry set in mediator')
     relative_path = self.GetRelativePath(file_entry)
     if not relative_path:
       return file_entry.name
 
     return u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, relative_path)
+
+  def GetFileEntry(self):
+    """The dfVFS FileEntry object for the file being parsed."""
+    return self._file_entry
+
+  def GetFileObject(self):
+    """Provides a dfVFS FileObject referencing file being parsed."""
+    if not self._file_entry:
+      raise KeyError(u'No file entry available')
+    return self._file_entry.GetFileObject()
+
+  def GetParserChain(self):
+    """The parser chain up to this point."""
+    return u'/'.join(self._parser_chain_components)
 
   def GetRelativePath(self, file_entry):
     """Retrieves the relative path of the file entry.
@@ -133,7 +163,7 @@ class ParserContext(object):
     return file_path
 
   def MatchesFilter(self, event_object):
-    """Checks if the event object matces the filter.
+    """Checks if the event object matches the filter.
 
     Args:
       event_object: the event object (instance of EventObject).
@@ -142,6 +172,10 @@ class ParserContext(object):
       A boolean value indicating if the event object matches the filter.
     """
     return self._filter_object and self._filter_object.Matches(event_object)
+
+  def PopFromParserChain(self):
+    """Remove the last added parser or plugin from the chain."""
+    self._parser_chain_components.pop()
 
   def ProcessEvent(
       self, event_object, parser_chain=None, file_entry=None, query=None):
@@ -195,21 +229,16 @@ class ParserContext(object):
     if not getattr(event_object, 'query', None) and query:
       event_object.query = query
 
-  def ProduceEvent(
-      self, event_object, parser_chain=None, file_entry=None, query=None):
+  def ProduceEvent(self, event_object, query=None):
     """Produces an event onto the queue.
 
     Args:
       event_object: the event object (instance of EventObject).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
       query: Optional query string. The default is None.
     """
     self.ProcessEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry,
-        query=query)
+        event_object, parser_chain=self.GetParserChain(),
+        file_entry=self._file_entry, query=query)
 
     if self.MatchesFilter(event_object):
       return
@@ -217,43 +246,39 @@ class ParserContext(object):
     self._event_queue_producer.ProduceItem(event_object)
     self.number_of_events += 1
 
-  def ProduceEvents(
-      self, event_objects, parser_chain=None, file_entry=None, query=None):
+  def ProduceEvents(self, event_objects, query=None):
     """Produces events onto the queue.
 
     Args:
       event_objects: a list or generator of event objects (instances of
                      EventObject).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
       query: Optional query string. The default is None.
     """
     for event_object in event_objects:
-      self.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry,
-          query=query)
+      self.ProduceEvent(event_object, query=query)
 
-  def ProduceParseError(self, name, description, file_entry=None):
+  def ProduceParseError(self, name, description):
     """Produces a parse error.
 
     Args:
       name: The parser or plugin name.
       description: The description of the error.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
     """
     if self._parse_error_queue_producer:
-      path_spec = getattr(file_entry, 'path_spec', None)
+      path_spec = getattr(self._file_entry, 'path_spec', None)
       parse_error = event.ParseError(name, description, path_spec=path_spec)
       self._parse_error_queue_producer.ProduceItem(parse_error)
       self.number_of_parse_errors += 1
+
 
   def ResetCounters(self):
     """Resets the counters."""
     self.number_of_events = 0
     self.number_of_parse_errors = 0
+
+  def SetFileEntry(self, file_entry):
+    """Set the dfVFS FileEntry object for the file being parsed."""
+    self._file_entry = file_entry
 
   def SetFilterObject(self, filter_object):
     """Sets the filter object.

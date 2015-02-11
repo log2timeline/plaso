@@ -34,7 +34,7 @@ from plaso.engine import worker
 from plaso.lib import errors
 from plaso.multi_processing import foreman
 from plaso.multi_processing import rpc_proxy
-from plaso.parsers import context as parsers_context
+from plaso.parsers import mediator as parsers_mediator
 
 
 def SigKill(pid):
@@ -190,7 +190,7 @@ class MultiProcessEngine(engine.BaseEngine):
     Returns:
       An extraction worker (instance of worker.ExtractionWorker).
     """
-    parser_context = parsers_context.ParserContext(
+    parser_mediator = parsers_mediator.ParserMediator(
         self._event_queue_producer, self._parse_error_queue_producer,
         self.knowledge_base)
 
@@ -200,7 +200,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     extraction_worker = worker.BaseEventExtractionWorker(
         worker_number, self._collection_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_context,
+        self._parse_error_queue_producer, parser_mediator,
         resolver_context=resolver_context)
 
     extraction_worker.SetEnableDebugOutput(self._enable_debug_output)
@@ -595,14 +595,14 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
   def run(self):
     """The main loop."""
     # Prevent the KeyboardInterrupt being raised inside the worker process.
-    # This will prevent a worker process to generate a traceback
+    # This will prevent a worker process generating a traceback
     # when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     # We need to initialize the parser object after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
-    self._extraction_worker.InitalizeParserObjects(
+    self._extraction_worker.InitializeParserObjects(
         parser_filter_string=self._parser_filter_string)
 
     logging.debug(u'Worker process: {0!s} started'.format(self._name))

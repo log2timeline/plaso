@@ -31,32 +31,23 @@ class DefaultPlugin(interface.PlistPlugin):
   NAME = 'plist_default'
   DESCRIPTION = u'Parser for plist files.'
 
-  def GetEntries(
-      self, parser_context, file_entry=None, parser_chain=None, top_level=None,
-      **unused_kwargs):
+  def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Simple method to exact date values from a Plist.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       top_level: Plist in dictionary form.
     """
     for root, key, value in interface.RecurseKey(top_level):
       if isinstance(value, datetime.datetime):
         event_object = plist_event.PlistEvent(root, key, value)
-        parser_context.ProduceEvent(
-            event_object, file_entry=file_entry, parser_chain=parser_chain)
+        parser_mediator.ProduceEvent(event_object)
 
       # TODO: Binplist keeps a list of offsets but not mapped to a key.
       # adjust code when there is a way to map keys to offsets.
 
   # TODO: move this into the parser as with the olecf plugins.
-  def Process(
-      self, parser_context, file_entry=None, parser_chain=None, plist_name=None,
-      top_level=None, **kwargs):
+  def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Overwrite the default Process function so it always triggers.
 
     Process() checks if the current plist being processed is a match for a
@@ -68,19 +59,13 @@ class DefaultPlugin(interface.PlistPlugin):
     and KEY.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
     """
     logging.debug(u'Plist {0:s} plugin used for: {1:s}'.format(
         self.NAME, plist_name))
-    self.GetEntries(
-        parser_context, file_entry=file_entry, parser_chain=parser_chain,
-        top_level=top_level, **kwargs)
+    self.GetEntries(parser_mediator, top_level=top_level, **kwargs)
 
 
 plist.PlistParser.RegisterPlugin(DefaultPlugin)

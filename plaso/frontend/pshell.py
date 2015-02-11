@@ -284,7 +284,7 @@ def ParseFile(file_entry):
   # Create a worker.
   worker_object = engine_object.CreateExtractionWorker(0)
   # TODO: add support for parser_filter_string.
-  worker_object.InitalizeParserObjects()
+  worker_object.InitializeParserObjects()
   worker_object.ParseFileEntry(file_entry)
 
   collection_queue.SignalEndOfInput()

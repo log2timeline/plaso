@@ -59,16 +59,13 @@ class AndroidAppUsageParser(interface.BaseParser):
   NAME = 'android_app_usage'
   DESCRIPTION = u'Parser for the Android usage-history.xml file.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract the Android usage-history file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -100,10 +97,6 @@ class AndroidAppUsageParser(interface.BaseParser):
     xml = ElementTree.parse(file_object)
     root = xml.getroot()
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
     for app in root:
       for part in app.iter():
         if part.tag == 'comp':
@@ -117,8 +110,7 @@ class AndroidAppUsageParser(interface.BaseParser):
 
           event_object = AndroidAppUsageEvent(
               last_resume_time, package, component)
-          parser_context.ProduceEvent(
-              event_object, parser_chain=parser_chain, file_entry=file_entry)
+          parser_mediator.ProduceEvent(event_object)
 
     file_object.close()
 

@@ -84,12 +84,25 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     parse_error_queue = single_process.SingleProcessQueue()
 
-    parser_context = self._GetParserContext(
+    parser_mediator = self._GetParserMediator(
         event_queue, parse_error_queue,
         knowledge_base_values=knowledge_base_values)
-    plugin_object.Process(
-        parser_context, key=winreg_key, parser_chain=parser_chain,
-        file_entry=file_entry)
+
+    # Most tests aren't explicitly checking for parser chain values,
+    # or setting them, so we'll just append the plugin name if no explicit
+    # parser chain argument is supplied.
+    # pylint: disable=protected-access
+    if parser_chain is None:
+      parser_mediator.AppendToParserChain(plugin_object)
+    else:
+      # In the rare case that a test is checking for a particular chain, we
+      # provide a way set it directly. There's no public API for this,
+      # as access to the parser chain should be very infrequent.
+      parser_mediator._parser_chain_components = parser_chain.split(u'/')
+
+    parser_mediator.SetFileEntry(file_entry)
+
+    plugin_object.Process(parser_mediator, key=winreg_key)
 
     return event_queue_consumer
 

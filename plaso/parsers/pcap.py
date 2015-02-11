@@ -725,32 +725,25 @@ class PcapParser(interface.BaseParser):
 
     return other_streams
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Parses a PCAP file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       file_entry: A file entry object (instance of dfvfs.FileEntry).
       parser_chain: Optional string containing the parsing chain up to this
                     point. The default is None.
     """
-    file_object = file_entry.GetFileObject()
-    self.ParseFileObject(
-        parser_context, file_object, file_entry=file_entry,
-        parser_chain=parser_chain)
+    file_object = parser_mediator.GetFileObject()
+    self.ParseFileObject(parser_mediator, file_object)
     file_object.close()
 
-  def ParseFileObject(
-      self, parser_context, file_object, file_entry=None, parser_chain=None):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a PCAP file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser context object (instance of ParserContext).
       file_object: A file-like object.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -764,7 +757,7 @@ class PcapParser(interface.BaseParser):
     except (dpkt.NeedData, dpkt.UnpackError) as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, parser_mediator.GetDisplayName(), exception))
 
     if file_header.magic == dpkt.pcap.PMUDPCT_MAGIC:
       try:
@@ -774,14 +767,11 @@ class PcapParser(interface.BaseParser):
       except (dpkt.NeedData, dpkt.UnpackError) as exception:
         raise errors.UnableToParseFile(
             u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-                self.NAME, file_entry.name, exception))
+                self.NAME, parser_mediator.GetDisplayName(), exception))
 
     elif file_header.magic != dpkt.pcap.TCPDUMP_MAGIC:
       raise errors.UnableToParseFile(u'Unsupported file signature')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     packet_number = 1
     connections = {}
@@ -825,8 +815,7 @@ class PcapParser(interface.BaseParser):
               max(stream_object.timestamps),
               eventdata.EventTimestamp.END_TIME, stream_object)]
 
-      parser_context.ProduceEvents(
-          event_objects, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvents(event_objects)
 
     for stream_object in other_streams:
       event_objects = [
@@ -836,8 +825,7 @@ class PcapParser(interface.BaseParser):
           PcapEvent(
               max(stream_object.timestamps),
               eventdata.EventTimestamp.END_TIME, stream_object)]
-      parser_context.ProduceEvents(
-          event_objects, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvents(event_objects)
 
 
 manager.ParsersManager.RegisterParser(PcapParser)

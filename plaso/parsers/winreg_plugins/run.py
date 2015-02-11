@@ -37,19 +37,15 @@ class RunUserPlugin(interface.KeyPlugin):
   URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
 
   def GetEntries(
-      self, parser_context, key=None, registry_type=None, file_entry=None,
-      parser_chain=None, **unused_kwargs):
+      self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
+      **unused_kwargs):
     """Collect the Values under the Run Key and return an event for each one.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       key: Optional Registry key (instance of winreg.WinRegKey).
            The default is None.
       registry_type: Optional Registry type string. The default is None.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     for value in key.GetValues():
       # Ignore the default value.
@@ -67,8 +63,7 @@ class RunUserPlugin(interface.KeyPlugin):
           key.last_written_timestamp, key.path, text_dict, offset=key.offset,
           urls=self.URLS, registry_type=registry_type,
           source_append=': Run Key')
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
 
 class RunSoftwarePlugin(RunUserPlugin):
@@ -86,5 +81,4 @@ class RunSoftwarePlugin(RunUserPlugin):
       u'\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce']
 
 
-winreg.WinRegistryParser.RegisterPlugins([
-    RunUserPlugin, RunSoftwarePlugin])
+winreg.WinRegistryParser.RegisterPlugins([RunUserPlugin, RunSoftwarePlugin])

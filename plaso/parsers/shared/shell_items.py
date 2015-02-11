@@ -44,33 +44,13 @@ class ShellItemsParser(object):
     self._origin = origin
     self._path_segments = []
 
-  def _BuildParserChain(self, parser_chain=None):
-    """Return the parser chain with the addition of the current parser.
-
-    Args:
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-
-    Returns:
-      The parser chain, with the addition of the current parser.
-    """
-    if not parser_chain:
-      return self.NAME
-
-    return u'/'.join([parser_chain, self.NAME])
-
-
   def _ParseShellItem(
-      self, parser_context, shell_item, file_entry=None, parser_chain=None):
+      self, parser_mediator, shell_item):
     """Parses a shell item.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       shell_item: the shell item (instance of pyfwsi.item).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     path_segment = None
 
@@ -108,9 +88,7 @@ class ShellItemsParser(object):
                 fat_date_time, eventdata.EventTimestamp.CREATION_TIME,
                 shell_item.name, long_name, localized_name, file_reference,
                 self._origin)
-            parser_context.ProduceEvent(
-                event_object, file_entry=file_entry,
-                parser_chain=parser_chain)
+            parser_mediator.ProduceEvent(event_object)
 
           fat_date_time = extension_block.get_access_time_as_integer()
           if fat_date_time:
@@ -118,9 +96,7 @@ class ShellItemsParser(object):
                 fat_date_time, eventdata.EventTimestamp.ACCESS_TIME,
                 shell_item.name, long_name, localized_name, file_reference,
                 self._origin)
-            parser_context.ProduceEvent(
-                event_object, file_entry=file_entry,
-                parser_chain=parser_chain)
+            parser_mediator.ProduceEvent(event_object)
 
       fat_date_time = shell_item.get_modification_time_as_integer()
       if fat_date_time:
@@ -128,9 +104,7 @@ class ShellItemsParser(object):
             fat_date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             shell_item.name, long_name, localized_name, file_reference,
             self._origin)
-        parser_context.ProduceEvent(
-            event_object, file_entry=file_entry,
-            parser_chain=parser_chain)
+        parser_mediator.ProduceEvent(event_object)
 
       if long_name:
         path_segment = long_name
@@ -161,28 +135,30 @@ class ShellItemsParser(object):
 
     return u', '.join(self._path_segments)
 
-  def Parse(
-      self, parser_context, byte_stream, codepage='cp1252',
-      file_entry=None, parser_chain=None):
+  def Parse(self, parser_mediator, byte_stream, codepage='cp1252'):
     """Parses the shell items from the byte stream.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       byte_stream: a string holding the shell items data.
       codepage: Optional byte stream codepage. The default is cp1252.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     self._path_segments = []
     shell_item_list = pyfwsi.item_list()
     shell_item_list.copy_from_byte_stream(byte_stream, ascii_codepage=codepage)
-    # Add ourselves to the parser chain, so it is used for subsequent object
-    # creation.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     for shell_item in shell_item_list.items:
-      self._ParseShellItem(
-          parser_context, shell_item, file_entry=file_entry,
-          parser_chain=parser_chain)
+      self._ParseShellItem(parser_mediator, shell_item)
+
+  def UpdateChainAndParse(
+      self, parser_mediator, byte_stream, codepage='cp1252'):
+    """Wrapper for Parse() to synchronize the parser chain.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      byte_stream: a string holding the shell items data.
+      codepage: Optional byte stream codepage. The default is cp1252.
+    """
+    parser_mediator.AppendToParserChain(self)
+    self.Parse(parser_mediator, byte_stream, codepage)
+    parser_mediator.PopFromParserChain()

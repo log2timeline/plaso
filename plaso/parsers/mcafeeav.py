@@ -83,11 +83,11 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     return timelib.Timestamp.FromTimeString(
         u'{0:s} {1:s}'.format(date, time), timezone=timezone)
 
-  def VerifyRow(self, parser_context, row):
+  def VerifyRow(self, parser_mediator, row):
     """Verify that this is a McAfee AV Access Protection Log file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row: A single row from the CSV file.
 
     Returns:
@@ -105,7 +105,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # Check the date format!
     # If it doesn't pass, then this isn't a McAfee AV Access Protection Log
     try:
-      self._GetTimestamp(row['date'], row['time'], parser_context.timezone)
+      self._GetTimestamp(row['date'], row['time'], parser_mediator.timezone)
     except (TypeError, ValueError):
       return False
 
@@ -116,26 +116,19 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
 
     return True
 
-  def ParseRow(
-      self, parser_context, row_offset, row, file_entry=None,
-      parser_chain=None):
+  def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a row and extract event objects.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       row_offset: The offset of the row.
       row: A dictionary containing all the fields as denoted in the
            COLUMNS class list.
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
     """
     timestamp = self._GetTimestamp(
-        row['date'], row['time'], parser_context.timezone)
+        row['date'], row['time'], parser_mediator.timezone)
     event_object = McafeeAVEvent(timestamp, row_offset, row)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
 
 manager.ParsersManager.RegisterParser(McafeeAccessProtectionParser)

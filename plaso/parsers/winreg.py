@@ -89,11 +89,11 @@ class PluginList(object):
     return ret
 
   def GetExpandedKeyPaths(
-      self, parser_context, reg_cache=None, plugin_names=None):
+      self, parser_mediator, reg_cache=None, plugin_names=None):
     """Retrieves a list of expanded Windows Registry key paths.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       reg_cache: Optional Windows Registry objects cache (instance of
                  WinRegistryCache). The default is None.
       plugin_names: Optional list of plugin names, if defined only keys from
@@ -109,7 +109,7 @@ class PluginList(object):
 
       if plugin_names and key_plugin.NAME not in plugin_names:
         continue
-      key_plugin.ExpandKeys(parser_context)
+      key_plugin.ExpandKeys(parser_mediator)
       if not key_plugin.expanded_keys:
         continue
 
@@ -234,21 +234,19 @@ class WinRegistryParser(interface.BasePluginsParser):
       plugins_list.AddPlugin(plugin_class.REG_TYPE, plugin_class)
     return plugins_list
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a Windows Registry file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     # TODO: Remove this magic reads when the classifier has been
     # implemented, until then we need to make sure we are dealing with
     # a Windows NT Registry file before proceeding.
     magic = 'regf'
 
-    file_object = file_entry.GetFileObject()
+    file_entry = parser_mediator.GetFileEntry()
+    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
     data = file_object.read(len(magic))
     file_object.close()
@@ -264,7 +262,7 @@ class WinRegistryParser(interface.BasePluginsParser):
     # Determine type, find all parsers
     try:
       winreg_file = registry.OpenFile(
-          file_entry, codepage=parser_context.codepage)
+          file_entry, codepage=parser_mediator.codepage)
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
@@ -315,20 +313,17 @@ class WinRegistryParser(interface.BasePluginsParser):
     # 4. generic value-based plugins.
     root_key = winreg_file.GetKeyByPath(u'\\')
 
-    parser_chain = self._BuildParserChain(parser_chain)
-
     for key in self._RecurseKey(root_key):
       for weight in plugins.iterkeys():
         # TODO: determine if the plugin matches the key and continue
         # to the next key.
         for plugin in plugins[weight]:
-          if parser_context.abort:
+          if parser_mediator.abort:
             break
+          plugin.UpdateChainAndProcess(
+              parser_mediator, key=key, registry_type=self._registry_type,
+              codepage=parser_mediator.codepage)
 
-          plugin.Process(
-              parser_context, file_entry=file_entry, key=key,
-              registry_type=self._registry_type,
-              codepage=parser_context.codepage, parser_chain=parser_chain)
 
     winreg_file.Close()
 

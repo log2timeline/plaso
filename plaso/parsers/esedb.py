@@ -57,19 +57,16 @@ class EseDbParser(interface.BasePluginsParser):
     super(EseDbParser, self).__init__()
     self._plugins = EseDbParser.GetPluginObjects()
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extracts data from an ESE database File.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     esedb_file = pyesedb.file()
 
     try:
@@ -78,25 +75,21 @@ class EseDbParser(interface.BasePluginsParser):
       file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
-              self.NAME, file_entry.name, exception))
+              self.NAME, parser_mediator.GetDisplayName(), exception))
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
 
     # Compare the list of available plugins.
     cache = EseDbCache()
     for plugin_object in self._plugins:
       try:
-        plugin_object.Process(
-            parser_context, file_entry=file_entry, parser_chain=parser_chain,
-            database=esedb_file, cache=cache)
-
+        plugin_object.UpdateChainAndProcess(
+           parser_mediator, database=esedb_file, cache=cache)
       except errors.WrongPlugin:
         logging.debug((
             u'[{0:s}] plugin: {1:s} cannot parse the ESE database: '
             u'{2:s}').format(
-                self.NAME, plugin_object.NAME, file_entry.name))
+                self.NAME, plugin_object.NAME,
+                parser_mediator.GetDisplayName()))
 
     # TODO: explicitly clean up cache.
 

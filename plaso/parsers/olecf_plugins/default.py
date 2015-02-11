@@ -54,18 +54,12 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
   NAME = 'olecf_default'
   DESCRIPTION = u'Parser for a generic OLECF item.'
 
-  def _ParseItem(
-      self, parser_context, file_entry=None, parser_chain=None,
-      olecf_item=None):
+  def _ParseItem(self, parser_mediator, olecf_item):
     """Parses an OLECF item.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-      olecf_item: An optional OLECF item (instance of pyolecf.item).
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      olecf_item: An OLECF item (instance of pyolecf.item).
 
     Returns:
       A boolean value indicating if an event object was produced.
@@ -79,53 +73,38 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
       event_object = OleCfItemEvent(
           creation_time, eventdata.EventTimestamp.CREATION_TIME,
           olecf_item)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if modification_time:
       event_object = OleCfItemEvent(
           modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
           olecf_item)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     if event_object:
       result = True
 
     for sub_item in olecf_item.sub_items:
-      if self._ParseItem(
-          parser_context, file_entry=file_entry, parser_chain=parser_chain,
-          olecf_item=sub_item):
+      if self._ParseItem(parser_mediator, sub_item):
         result = True
 
     return result
 
-  def ParseItems(
-      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
-      **unused_kwargs):
+  def ParseItems(self, parser_mediator, root_item=None, **unused_kwargs):
     """Parses OLECF items.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       root_item: Optional root item of the OLECF file. The default is None.
     """
-    if not self._ParseItem(
-        parser_context, file_entry=file_entry, parser_chain=parser_chain,
-        olecf_item=root_item):
+    if not self._ParseItem(parser_mediator, root_item):
       # If no event object was produced, produce at least one for
       # the root item.
       event_object = OleCfItemEvent(
           0, eventdata.EventTimestamp.CREATION_TIME, root_item)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
-  def Process(
-      self, parser_context, file_entry=None, parser_chain=None, root_item=None,
-      item_names=None, **kwargs):
+  def Process(self, parser_mediator, root_item=None, item_names=None, **kwargs):
     """Determine if this is the right plugin for this OLECF file.
 
     This function takes a list of sub items found in the root of a
@@ -133,11 +112,7 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     in this plugin.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
       root_item: Optional root item of the OLECF file. The default is None.
       item_names: Optional list of all items discovered in the root.
                   The default is None.
@@ -150,13 +125,7 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     if root_item is None or item_names is None:
       raise ValueError(u'Root item or items are not set.')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
-    self.ParseItems(
-        parser_context, file_entry=file_entry, parser_chain=parser_chain,
-        root_item=root_item)
+    self.ParseItems(parser_mediator, root_item=root_item)
 
 
 olecf.OleCfParser.RegisterPlugin(DefaultOleCFPlugin)

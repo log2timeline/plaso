@@ -169,7 +169,7 @@ class WinJobParser(interface.BaseParser):
       construct.ULInt16('trigger_reserved2'),
       construct.ULInt16('trigger_reserved3'))
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from a Windows job file.
 
     This is the main parsing engine for the parser. It determines if
@@ -177,17 +177,12 @@ class WinJobParser(interface.BaseParser):
     the scheduled task data.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    parser_chain = self._BuildParserChain(parser_chain)
-
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     try:
       header = self.JOB_FIXED_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
@@ -209,10 +204,6 @@ class WinJobParser(interface.BaseParser):
           u'Unable to parse Windows Task Job file with error: {0:s}'.format(
               exception))
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
-
     trigger_type = self.TRIGGER_TYPES.get(data.trigger_type, u'Unknown')
 
     last_run_date = timelib.Timestamp.FromTimeParts(
@@ -223,7 +214,7 @@ class WinJobParser(interface.BaseParser):
         header.ran_minute,
         header.ran_second,
         microseconds=(header.ran_millisecond * 1000),
-        timezone=parser_context.timezone)
+        timezone=parser_mediator.timezone)
 
     scheduled_date = timelib.Timestamp.FromTimeParts(
         data.sched_start_year,
@@ -232,11 +223,11 @@ class WinJobParser(interface.BaseParser):
         data.sched_start_hour,
         data.sched_start_minute,
         0,  # Seconds are not stored.
-        timezone=parser_context.timezone)
+        timezone=parser_mediator.timezone)
 
     # Create two timeline events, one for created date and the other for last
     # run.
-    parser_context.ProduceEvents(
+    parser_mediator.ProduceEvents(
         [WinJobEvent(
             last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, data.app_name,
             data.parameter, data.working_dir, data.username, trigger_type,
@@ -244,8 +235,7 @@ class WinJobParser(interface.BaseParser):
          WinJobEvent(
              scheduled_date, u'Scheduled To Start', data.app_name,
              data.parameter, data.working_dir, data.username, trigger_type,
-             data.comment)],
-        parser_chain=parser_chain, file_entry=file_entry)
+             data.comment)])
 
     # A scheduled end date is optional.
     if data.sched_end_year:
@@ -256,13 +246,12 @@ class WinJobParser(interface.BaseParser):
           0,  # Hours are not stored.
           0,  # Minutes are not stored.
           0,  # Seconds are not stored.
-          timezone=parser_context.timezone)
+          timezone=parser_mediator.timezone)
 
       event_object = WinJobEvent(
           scheduled_end_date, 'Scheduled To End', data.app_name, data.parameter,
           data.working_dir, data.username, trigger_type, data.comment)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     file_object.close()
 

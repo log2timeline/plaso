@@ -91,16 +91,13 @@ class OperaTypedHistoryParser(interface.BaseParser):
   NAME = 'opera_typed_history'
   DESCRIPTION = u'Parser for Opera typed_history.xml files.'
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from an Opera typed history file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -131,9 +128,7 @@ class OperaTypedHistoryParser(interface.BaseParser):
 
     xml = ElementTree.parse(file_object)
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     for history_item in xml.iterfind('typed_history_item'):
       content = history_item.get('content', '')
@@ -141,8 +136,7 @@ class OperaTypedHistoryParser(interface.BaseParser):
       entry_type = history_item.get('type', '')
 
       event_object = OperaTypedHistoryEvent(last_typed, content, entry_type)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     file_object.close()
 
@@ -265,16 +259,13 @@ class OperaGlobalHistoryParser(interface.BaseParser):
 
       yield title, url, timestamp, popularity_index
 
-  def Parse(self, parser_context, file_entry, parser_chain=None):
+  def Parse(self, parser_mediator, **kwargs):
     """Extract data from an Opera global history file.
 
     Args:
-      parser_context: A parser context object (instance of ParserContext).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
+      parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_object = file_entry.GetFileObject()
+    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -302,22 +293,18 @@ class OperaGlobalHistoryParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not an Opera history file [timestamp does not exist].')
 
-    # Add ourselves to the parser chain, which will be used in all subsequent
-    # event creation in this parser.
-    parser_chain = self._BuildParserChain(parser_chain)
+
 
     event_object = OperaGlobalHistoryEvent(
         timestamp, url, title, popularity_index)
-    parser_context.ProduceEvent(
-        event_object, parser_chain=parser_chain, file_entry=file_entry)
+    parser_mediator.ProduceEvent(event_object)
 
     # Read in the rest of the history file.
     for title, url, timestamp, popularity_index in self._ReadRecords(
         text_file_object):
       event_object = OperaGlobalHistoryEvent(
           timestamp, url, title, popularity_index)
-      parser_context.ProduceEvent(
-          event_object, parser_chain=parser_chain, file_entry=file_entry)
+      parser_mediator.ProduceEvent(event_object)
 
     file_object.close()
 
