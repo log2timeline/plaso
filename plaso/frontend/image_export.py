@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """The image export front-end."""
 
+import abc
 import argparse
 import collections
 import hashlib
@@ -27,19 +28,93 @@ from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
 
-def CalculateHash(file_object):
-  """Return a hash for a given file object."""
-  md5 = hashlib.md5()
-  file_object.seek(0)
+class FileEntryFilter(object):
+  """Class that implements the file entry filter interface."""
 
-  data = file_object.read(4098)
-  while data:
-    md5.update(data)
-    data = file_object.read(4098)
+  @abc.abstractmethod
+  def Matches(self, file_entry):
+    """Compares the file entry against the filter.
 
-  return md5.hexdigest()
+    Args:
+      file_entry: The file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file entry matches the filter.
+    """
 
 
+class ExtensionsFileEntryFilter(FileEntryFilter):
+  """Class that implements extensions-based file entry filter."""
+
+  def __init__(self, extensions):
+    """Initializes the extensions-based file entry filter.
+
+    An extension is defined as "pdf" as in "document.pdf".
+
+    Args:
+      extensions: a list of extension strings.
+    """
+    super(ExtensionsFileEntryFilter, self).__init__()
+    self._extensions = extensions
+
+  def Matches(self, file_entry):
+    """Compares the file entry against the filter.
+
+    Args:
+      file_entry: The file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file entry matches the filter.
+    """
+    location = getattr(file_entry.path_spec, u'location', None)
+    if not location:
+      return False
+
+    _, _, extension = location.rpartition(u'.')
+    if not extension:
+      return False
+
+    return extension.lower() in self._extensions
+
+
+class FileEntryFilterCollection(object):
+  """Class that implements a collection of file entry filters."""
+
+  def __init__(self):
+    """Initializes the file entry filter collection object."""
+    super(FileEntryFilterCollection, self).__init__()
+    self._filters = []
+
+  def AddFilter(self, file_entry_filter):
+    """Adds a file entry filter to the collection.
+
+    Args:
+      file_entry_filter: a file entry filter (instance of FileEntryFilter).
+    """
+    self._filters.append(file_entry_filter)
+
+  def Matches(self, file_entry):
+    """Compares the file entry against the filter collection.
+
+    Args:
+      file_entry: The file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file entry matches one of the filters.
+    """
+    if not self._filters:
+      return False
+
+    result = False
+    for file_entry_filter in self._filters:
+      result = file_entry_filter.Matches(file_entry)
+      if result:
+        break
+
+    return result
+
+
+# TODO: migrate to FileEntryFilter in a follow up CL.
 class DateFilter(object):
   """Class that implements a date filter for file entries."""
 
@@ -218,10 +293,34 @@ class DateFilter(object):
 class FileSaver(object):
   """A simple class that is used to save files."""
 
+  _READ_BUFFER_SIZE = 4096
+
   md5_dict = {}
   calc_md5 = False
+
   # TODO: Move this functionality into the frontend as a state attribute.
   _date_filter = None
+
+  # TODO: combine write and hash in one function.
+  @classmethod
+  def _CalculateHash(cls, file_object):
+    """Calculates a MD5 hash of the contents of given file object.
+
+    Args:
+      file_object: a file-like object.
+
+    Returns:
+      A hexadecimal string of the MD5 hash.
+    """
+    md5 = hashlib.md5()
+    file_object.seek(0)
+
+    data = file_object.read(cls._READ_BUFFER_SIZE)
+    while data:
+      md5.update(data)
+      data = file_object.read(cls._READ_BUFFER_SIZE)
+
+    return md5.hexdigest()
 
   @classmethod
   def SetDateFilter(cls, date_filter):
@@ -246,8 +345,8 @@ class FileSaver(object):
                        empty string.
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
-    directory = u''
-    filename = getattr(source_path_spec, 'location', None)
+
+    filename = getattr(source_path_spec, u'location', None)
     if not filename:
       filename = source_path_spec.file_path
 
@@ -256,6 +355,7 @@ class FileSaver(object):
     if os.path.sep != u'/':
       filename = filename.replace(u'/', os.path.sep)
 
+    directory = u''
     if os.path.sep in filename:
       directory_string, _, filename = filename.rpartition(os.path.sep)
       if directory_string:
@@ -276,11 +376,11 @@ class FileSaver(object):
     else:
       directory = destination_path
 
-    if cls.calc_md5:
+    if cls.calc_md5 and file_entry.IsFile():
       stat = file_entry.GetStat()
-      inode = getattr(stat, 'ino', 0)
+      inode = getattr(stat, u'ino', 0)
       file_object = file_entry.GetFileObject()
-      md5sum = CalculateHash(file_object)
+      md5sum = cls._CalculateHash(file_object)
       if inode in cls.md5_dict:
         if md5sum in cls.md5_dict[inode]:
           return
@@ -305,17 +405,18 @@ class FileSaver(object):
 class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
   """Class that implements an image extractor queue consumer."""
 
-  def __init__(self, process_queue, extensions, destination_path):
+  def __init__(self, process_queue, destination_path, filter_collection):
     """Initializes the image extractor queue consumer.
 
     Args:
       process_queue: the process queue (instance of Queue).
-      extensions: a list of extensions.
       destination_path: the path where the extracted files should be stored.
+      filter_collection: the file entry filter collection (instance of
+                         FileEntryFilterCollection)
     """
     super(ImageExtractorQueueConsumer, self).__init__(process_queue)
     self._destination_path = destination_path
-    self._extensions = extensions
+    self._filter_collection = filter_collection
 
   def _ConsumeItem(self, path_spec):
     """Consumes an item callback for ConsumeItems.
@@ -323,20 +424,18 @@ class ImageExtractorQueueConsumer(queue.ItemQueueConsumer):
     Args:
       path_spec: a path specification (instance of dfvfs.PathSpec).
     """
-    # TODO: move this into a function of path spec e.g. GetExtension().
-    location = getattr(path_spec, 'location', None)
-    if not location:
-      location = path_spec.file_path
-    _, _, extension = location.rpartition('.')
-    if extension.lower() in self._extensions:
-      vss_store_number = getattr(path_spec, 'vss_store_number', None)
-      if vss_store_number is not None:
-        filename_prefix = 'vss_{0:d}'.format(vss_store_number + 1)
-      else:
-        filename_prefix = ''
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    if not self._filter_collection.Matches(file_entry):
+      return
 
-      FileSaver.WriteFile(
-          path_spec, self._destination_path, filename_prefix=filename_prefix)
+    vss_store_number = getattr(path_spec, u'vss_store_number', None)
+    if vss_store_number is not None:
+      filename_prefix = u'vss_{0:d}'.format(vss_store_number + 1)
+    else:
+      filename_prefix = u''
+
+    FileSaver.WriteFile(
+        path_spec, self._destination_path, filename_prefix=filename_prefix)
 
 
 class ImageExportFrontend(frontend.StorageMediaFrontend):
@@ -378,8 +477,12 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     FileSaver.calc_md5 = self._remove_duplicates
 
+    filter_collection = FileEntryFilterCollection()
+    file_entry_filter = ExtensionsFileEntryFilter(extensions)
+    filter_collection.AddFilter(file_entry_filter)
+
     input_queue_consumer = ImageExtractorQueueConsumer(
-        input_queue, extensions, destination_path)
+        input_queue, destination_path, filter_collection)
     input_queue_consumer.ConsumeItems()
 
   # TODO: merge with collector and/or engine.
@@ -442,7 +545,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
             dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
             parent=vss_path_spec)
 
-        filename_prefix = 'vss_{0:d}'.format(store_index)
+        filename_prefix = u'vss_{0:d}'.format(store_index)
 
         file_system = path_spec_resolver.Resolver.OpenFileSystem(
             path_spec, resolver_context=self._resolver_context)
@@ -506,7 +609,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     logging.info(u'Preprocess done, saving files from image.')
 
-  def ParseOptions(self, options, source_option='source'):
+  def ParseOptions(self, options, source_option=u'source'):
     """Parses the options and initializes the front-end.
 
     Args:
@@ -519,8 +622,8 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     super(ImageExportFrontend, self).ParseOptions(
         options, source_option=source_option)
 
-    filter_file = getattr(options, 'filter', None)
-    if not filter_file and not getattr(options, 'extension_string', None):
+    filter_file = getattr(options, u'filter', None)
+    if not filter_file and not getattr(options, u'extension_string', None):
       raise errors.BadConfigOption(
           u'Neither an extension string or a filter is defined.')
 
@@ -529,17 +632,17 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
           u'Unable to proceed, filter file: {0:s} does not exist.'.format(
               filter_file))
 
-    if (getattr(options, 'no_vss', False) or
-        getattr(options, 'include_duplicates', False)):
+    if (getattr(options, u'no_vss', False) or
+        getattr(options, u'include_duplicates', False)):
       self._remove_duplicates = False
 
     # Process date filter.
-    date_filters = getattr(options, 'date_filters', [])
+    date_filters = getattr(options, u'date_filters', [])
     if date_filters:
       date_filter_object = DateFilter()
 
       for date_filter in date_filters:
-        date_filter_pieces = date_filter.split(',')
+        date_filter_pieces = date_filter.split(u',')
         if len(date_filter_pieces) != 3:
           raise errors.BadConfigOption(
               u'Date filter badly formed: {0:s}'.format(date_filter))
@@ -565,13 +668,13 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     """
     self.ScanSource(options)
 
-    filter_file = getattr(options, 'filter', None)
+    filter_file = getattr(options, u'filter', None)
     if filter_file:
       self._ExtractWithFilter(filter_file, options.path)
 
-    extension_string = getattr(options, 'extension_string', None)
+    extension_string = getattr(options, u'extension_string', None)
     if extension_string:
-      extensions = [x.strip() for x in extension_string.split(',')]
+      extensions = [x.strip() for x in extension_string.split(u',')]
 
       self._ExtractWithExtensions(extensions, options.path)
       logging.info(u'Files based on extension extracted.')
@@ -583,66 +686,68 @@ def Main():
 
   arg_parser = argparse.ArgumentParser(
       description=(
-          'This is a simple collector designed to export files inside an '
-          'image, both within a regular RAW image as well as inside a VSS. '
-          'The tool uses a collection filter that uses the same syntax as a '
-          'targeted plaso filter.'),
-      epilog='And that\'s how you export files, plaso style.')
+          u'This is a simple collector designed to export files inside an '
+          u'image, both within a regular RAW image as well as inside a VSS. '
+          u'The tool uses a collection filter that uses the same syntax as a '
+          u'targeted plaso filter.'),
+      epilog=u'And that\'s how you export files, plaso style.')
 
   arg_parser.add_argument(
-      '-d', '--debug', dest='debug', action='store_true', default=False,
-      help='Turn on debugging information.')
+      u'-d', u'--debug', dest=u'debug', action=u'store_true', default=False,
+      help=u'Turn on debugging information.')
 
   arg_parser.add_argument(
-      '-w', '--write', dest='path', action='store', default='.', type=str,
-      help='The directory in which extracted files should be stored in.')
+      u'-w', u'--write', dest=u'path', action=u'store', default=u'.', type=str,
+      help=u'The directory in which extracted files should be stored in.')
 
   arg_parser.add_argument(
-      '-x', '--extensions', dest='extension_string', action='store',
-      type=str, metavar='EXTENSION_STRING', help=(
-          'If the purpose is to find all files given a certain extension '
-          'this options should be used. This option accepts a comma separated '
-          'string denoting all file extensions, eg: -x "csv,docx,pst".'))
+      u'-x', u'--extensions', dest=u'extension_string', action=u'store',
+      type=str, metavar=u'EXTENSION_STRING', help=(
+          u'If the purpose is to find all files given a certain extension '
+          u'this options should be used. This option accepts a comma separated '
+          u'string denoting all file extensions, eg: -x "csv,docx,pst".'))
 
   arg_parser.add_argument(
-      '-f', '--filter', action='store', dest='filter', metavar='FILTER_FILE',
-      type=str, help=(
-          'Full path to the file that contains the collection filter, '
-          'the file can use variables that are defined in preprocesing, '
-          'just like any other log2timeline/plaso collection filter.'))
+      u'-f', u'--filter', action=u'store', dest=u'filter',
+      metavar=u'FILTER_FILE', type=str, help=(
+          u'Full path to the file that contains the collection filter, '
+          u'the file can use variables that are defined in preprocesing, '
+          u'just like any other log2timeline/plaso collection filter.'))
 
   arg_parser.add_argument(
-      '--date-filter', '--date_filter', action='append', type=str,
-      dest='date_filters', metavar="TYPE_START_END", default=None, help=(
-          'Add a date based filter to the export criteria. If a date based '
-          'filter is set no file is saved unless it\'s within the date '
-          'boundary. This parameter should be in the form of "TYPE,START,END" '
-          'where TYPE defines which timestamp this date filter affects, eg: '
-          'atime, ctime, crtime, bkup, etc. START defines the start date and '
-          'time of the boundary and END defines the end time. Both timestamps '
-          'are optional and should be set as - if not needed. The correct form '
-          'of the timestamp value is in the form of "YYYY-MM-DD HH:MM:SS" or '
-          '"YYYY-MM-DD". Examples are "atime, 2013-01-01 23:12:14, 2013-02-23" '
-          'This parameter can be repeated as needed to add additional date '
-          'date boundaries, eg: once for atime, once for crtime, etc.'))
+      u'--date-filter', u'--date_filter', action=u'append', type=str,
+      dest=u'date_filters', metavar=u'TYPE_START_END', default=None, help=(
+          u'Add a date based filter to the export criteria. If a date based '
+          u'filter is set no file is saved unless it\'s within the date '
+          u'boundary. This parameter should be in the form of "TYPE,START,END" '
+          u'where TYPE defines which timestamp this date filter affects, eg: '
+          u'atime, ctime, crtime, bkup, etc. START defines the start date and '
+          u'time of the boundary and END defines the end time. Both timestamps '
+          u'are optional and should be set as - if not needed. The correct '
+          u'form of the timestamp value is in the form of "YYYY-MM-DD '
+          u'HH:MM:SS" or "YYYY-MM-DD". Examples are "atime, 2013-01-01 '
+          u'23:12:14, 2013-02-23". This parameter can be repeated as needed '
+          u'to add additional date date boundaries, eg: once for atime, once '
+          u'for crtime, etc.'))
 
   arg_parser.add_argument(
-      '--include_duplicates', dest='include_duplicates', action='store_true',
+      u'--include_duplicates', dest=u'include_duplicates', action=u'store_true',
       default=False, help=(
-          'By default if VSS is turned on all files saved will have their '
-          'MD5 sum calculated and compared to other files already saved '
-          'with the same inode value. If the MD5 sum is the same the file '
-          'does not get saved again. This option turns off that behavior '
-          'so that all files will get stored, even if they are duplicates.'))
+          u'By default if VSS is turned on all files saved will have their '
+          u'MD5 sum calculated and compared to other files already saved '
+          u'with the same inode value. If the MD5 sum is the same the file '
+          u'does not get saved again. This option turns off that behavior '
+          u'so that all files will get stored, even if they are duplicates.'))
 
   front_end.AddImageOptions(arg_parser)
   front_end.AddVssProcessingOptions(arg_parser)
 
   arg_parser.add_argument(
-      'image', action='store', metavar='IMAGE', default=None, type=str, help=(
-          'The full path to the image file that we are about to extract files '
-          'from, it should be a raw image or another image that plaso '
-          'supports.'))
+      u'image', action=u'store', metavar=u'IMAGE', default=None, type=str,
+      help=(
+          u'The full path to the image file that we are about to extract files '
+          u'from, it should be a raw image or another image that plaso '
+          u'supports.'))
 
   options = arg_parser.parse_args()
 
