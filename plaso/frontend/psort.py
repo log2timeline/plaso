@@ -345,7 +345,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
 
       output_buffer = output_interface.EventBuffer(output_module, options.dedup)
       with output_buffer:
-        counter = self._ProcessOutput(
+        counter = self.ProcessOutput(
             output_buffer, output_module, my_filter=self._filter_object,
             filter_buffer=self._filter_buffer,
             analysis_queues=event_queue_producers)
