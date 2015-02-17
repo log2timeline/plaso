@@ -17,19 +17,11 @@ from plaso.lib import timelib_test
 from plaso.output import interface as output_interface
 
 
-class TestEvent1(event.EventObject):
-  DATA_TYPE = 'test:psort:1'
-
-  def __init__(self):
-    super(TestEvent1, self).__init__()
-    self.timestamp = 123456
-
-
-class TestEvent2(event.EventObject):
-  DATA_TYPE = 'test:psort:2'
+class PsortTestEvent(event.EventObject):
+  DATA_TYPE = 'test:event:psort'
 
   def __init__(self, timestamp):
-    super(TestEvent2, self).__init__()
+    super(PsortTestEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = u'Last Written'
 
@@ -41,8 +33,8 @@ class TestEvent2(event.EventObject):
     self.var = {u'Issue': False, u'Closed': True}
 
 
-class TestEvent2Formatter(formatters_interface.EventFormatter):
-  DATA_TYPE = 'test:psort:2'
+class PsortTestEventFormatter(formatters_interface.EventFormatter):
+  DATA_TYPE = 'test:event:psort'
 
   FORMAT_STRING = u'My text goes along: {some} lines'
 
@@ -50,7 +42,7 @@ class TestEvent2Formatter(formatters_interface.EventFormatter):
   SOURCE_LONG = u'None in Particular'
 
 
-formatters_manager.FormattersManager.RegisterFormatter(TestEvent2Formatter)
+formatters_manager.FormattersManager.RegisterFormatter(PsortTestEventFormatter)
 
 
 class TestFormatter(output_interface.LogOutputFormatter):
@@ -137,12 +129,12 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
   def testOutput(self):
     """Testing if psort can output data."""
     events = []
-    events.append(TestEvent2(5134324321))
-    events.append(TestEvent2(2134324321))
-    events.append(TestEvent2(9134324321))
-    events.append(TestEvent2(15134324321))
-    events.append(TestEvent2(5134324322))
-    events.append(TestEvent2(5134024321))
+    events.append(PsortTestEvent(5134324321))
+    events.append(PsortTestEvent(2134324321))
+    events.append(PsortTestEvent(9134324321))
+    events.append(PsortTestEvent(15134324321))
+    events.append(PsortTestEvent(5134324322))
+    events.append(PsortTestEvent(5134024321))
 
     output_fd = StringIO.StringIO()
 
