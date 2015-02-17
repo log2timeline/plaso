@@ -138,12 +138,11 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           u'The path specification that caused the error: {0:s}'.format(
               file_entry.path_spec.comparable))
       logging.exception(exception)
+      if self._enable_debug_output:
+        self._DebugParseFileEntry()
 
     finally:
       self._parser_mediator.SetFileEntry(None)
-
-      if self._enable_debug_output:
-        self._DebugParseFileEntry()
 
   def _ProcessArchiveFile(self, file_entry):
     """Processes an archive file (file that contains file entries).
@@ -240,7 +239,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         logging.debug((
             u'Unsupported compressed stream format type indicators: {0:s} for '
             u'compressed stream file: {1:s}').format(
-                type_indicator, compressed_stream_path_spec.comparable))
+                type_indicator, file_entry.path_spec.comparable))
 
         compressed_stream_path_spec = None
 
