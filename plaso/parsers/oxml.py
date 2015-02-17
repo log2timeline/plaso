@@ -75,7 +75,7 @@ class OpenXMLParser(interface.BaseParser):
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     file_object = parser_mediator.GetFileObject()
-    file_name = parser_mediator.GetDisplayName
+    file_name = parser_mediator.GetDisplayName()
 
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
