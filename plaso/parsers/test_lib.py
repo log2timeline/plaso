@@ -36,7 +36,7 @@ class TestEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
 class ParserTestCase(unittest.TestCase):
   """The unit test case for a parser."""
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.

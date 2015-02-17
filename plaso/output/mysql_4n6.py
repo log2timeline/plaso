@@ -2,7 +2,6 @@
 """Defines the output formatter for the MySQL database used by 4n6time."""
 
 import logging
-import re
 import sys
 
 import MySQLdb
@@ -27,10 +26,9 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
   NAME = 'mysql4n6'
   DESCRIPTION = u'MySQL database output for the 4n6time tool.'
 
-  FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
-
-  META_FIELDS = ['sourcetype', 'source', 'user', 'host', 'MACB',
-                 'color', 'type', 'record_number']
+  META_FIELDS = frozenset([
+      'sourcetype', 'source', 'user', 'host', 'MACB', 'color', 'type',
+      'record_number'])
 
   ARGUMENTS = [
       ('--db_user', {
@@ -276,6 +274,8 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
       raise errors.NoFormatterFound(
           u'Unable to output event, no event formatter found.')
 
+    # TODO: remove this hack part of the storage/output refactor.
+    # The event formatter class constants should not be changed directly.
     if (isinstance(
         event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
         event_formatter.FORMAT_STRING.find('<|>') == -1):
@@ -286,7 +286,7 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
       event_formatter.FORMAT_STRING_SEPARATOR = u'<|>'
 
     elif isinstance(event_formatter, formatters_interface.EventFormatter):
-      event_formatter.format_string = event_formatter.format_string.replace(
+      event_formatter.FORMAT_STRING = event_formatter.FORMAT_STRING.replace(
           '}', '}<|>')
 
     msg, _ = event_formatter.GetMessages(event_object)
@@ -298,8 +298,7 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
       logging.error(u'Unable to process date for entry: {0:s}'.format(msg))
       return
     extra = []
-    format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
-        event_formatter.format_string)
+    format_variables = event_formatter.GetFormatStringAttributeNames()
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
