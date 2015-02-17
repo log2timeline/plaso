@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Windows Shortcut (LNK) files."""
+"""The Windows Shortcut (LNK) event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -48,36 +48,37 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
     if hasattr(event_object, 'local_path'):
       return event_object.local_path
 
-    if hasattr(event_object, 'network_path'):
+    if hasattr(event_object, u'network_path'):
       return event_object.network_path
 
-    if hasattr(event_object, 'relative_path'):
+    if hasattr(event_object, u'relative_path'):
       paths = []
-      if hasattr(event_object, 'working_directory'):
+      if hasattr(event_object, u'working_directory'):
         paths.append(event_object.working_directory)
       paths.append(event_object.relative_path)
 
       return u'\\'.join(paths)
 
-    return 'Unknown'
+    return u'Unknown'
 
   def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
     # Update event object with a description if necessary.
-    if not hasattr(event_object, 'description'):
+    if not hasattr(event_object, u'description'):
       event_object.description = u'Empty description'
 
     # Update event object with the linked path.
