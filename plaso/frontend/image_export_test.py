@@ -15,7 +15,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.frontend import frontend
 from plaso.frontend import image_export
 from plaso.frontend import test_lib
-from plaso.lib import errors
 
 
 class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
@@ -40,19 +39,12 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
 
     options.filter = os.path.join(self._temp_directory, u'filter.txt')
     with open(options.filter, 'wb') as file_object:
-      file_object.write('/a_directory/.+_file\n')
+      file_object.write(b'/a_directory/.+_file\n')
 
-    test_front_end.ParseOptions(options, source_option='image')
+    options.date_filters = [u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20']
 
-    # Set the date filter.
-    filter_start = '2012-05-25 15:59:00'
-    filter_end = '2012-05-25 15:59:20'
-
-    date_filter_object = image_export.DateFilter()
-    date_filter_object.Add(
-        filter_start=filter_start, filter_end=filter_end,
-        filter_type='ctime')
-    image_export.FileSaver.SetDateFilter(date_filter_object)
+    test_front_end.ParseOptions(options, source_option=u'image')
+    test_front_end.PrintFilterCollection()
 
     test_front_end.ProcessSource(options)
 
@@ -78,7 +70,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     options.path = self._temp_directory
     options.extension_string = u'txt'
 
-    test_front_end.ParseOptions(options, source_option='image')
+    test_front_end.ParseOptions(options, source_option=u'image')
 
     test_front_end.ProcessSource(options)
 
@@ -99,9 +91,9 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
 
     options.filter = os.path.join(self._temp_directory, u'filter.txt')
     with open(options.filter, 'wb') as file_object:
-      file_object.write('/a_directory/.+_file\n')
+      file_object.write(b'/a_directory/.+_file\n')
 
-    test_front_end.ParseOptions(options, source_option='image')
+    test_front_end.ParseOptions(options, source_option=u'image')
 
     test_front_end.ProcessSource(options)
 
@@ -114,7 +106,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
 
     self.assertEquals(sorted(text_files), expected_text_files)
 
-  def testDateFilter(self):
+  def testDateTimeFileEntryFilter(self):
     """Test the save file based on date filter function."""
     # Open up a file entry.
     path = self._GetTestFilePath([u'ímynd.dd'])
@@ -131,92 +123,72 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     #   Accessed: 2012-05-25T15:59:23+00:00
     #    Created: 2012-05-25T15:59:23+00:00
 
-    # Create the date filter object.
-    date_filter = image_export.DateFilter()
+    date_filter = image_export.DateTimeFileEntryFilter()
 
-    # No date filter set
-    self.assertTrue(
-        date_filter.CompareFileEntry(file_entry))
+    self.assertTrue(date_filter.Matches(file_entry))
 
     # Add a date to the date filter.
-    date_filter.Add(
-        filter_start='2012-05-25 15:59:20', filter_end='2012-05-25 15:59:25',
-        filter_type='ctime')
+    date_filter.AddDateTimeRange(
+        u'ctime', start_time_string=u'2012-05-25 15:59:20',
+        end_time_string=u'2012-05-25 15:59:25')
 
-    self.assertTrue(date_filter.CompareFileEntry(file_entry))
-    date_filter.Reset()
+    self.assertTrue(date_filter.Matches(file_entry))
 
-    date_filter.Add(
-        filter_start='2012-05-25 15:59:24', filter_end='2012-05-25 15:59:55',
-        filter_type='ctime')
-    self.assertFalse(date_filter.CompareFileEntry(file_entry))
-    date_filter.Reset()
+    date_filter = image_export.DateTimeFileEntryFilter()
+    date_filter.AddDateTimeRange(
+        u'ctime', start_time_string=u'2012-05-25 15:59:24',
+        end_time_string=u'2012-05-25 15:59:55')
+    self.assertFalse(date_filter.Matches(file_entry))
 
     # Testing a timestamp that does not exist in the stat object.
-    date_filter.Add(filter_type='bkup', filter_start='2012-02-02 12:12:12')
-    with self.assertRaises(errors.WrongFilterOption):
-      date_filter.CompareFileEntry(file_entry)
+    date_filter = image_export.DateTimeFileEntryFilter()
+    date_filter.AddDateTimeRange(
+        u'bkup', start_time_string=u'2012-02-02 12:12:12')
+    self.assertTrue(date_filter.Matches(file_entry))
 
     # Testing adding a badly formatter filter.
-    with self.assertRaises(errors.WrongFilterOption):
-      date_filter.Add(filter_type='foobar', filter_start='2012-02-01 01:01:01')
-    date_filter.Reset()
+    with self.assertRaises(ValueError):
+      date_filter.AddDateTimeRange(
+          u'foobar', start_time_string=u'2012-02-01 01:01:01')
 
     # Testing adding a badly formatter filter, no date set.
-    with self.assertRaises(errors.WrongFilterOption):
-      date_filter.Add(filter_type='atime')
-    date_filter.Reset()
+    date_filter = image_export.DateTimeFileEntryFilter()
+    with self.assertRaises(ValueError):
+      date_filter.AddDateTimeRange(u'atime')
 
     # Just end date set.
-    date_filter.Add(
-        filter_end='2012-05-25 15:59:55', filter_type='mtime')
-    self.assertTrue(date_filter.CompareFileEntry(file_entry))
-    date_filter.Reset()
+    date_filter = image_export.DateTimeFileEntryFilter()
+    date_filter.AddDateTimeRange(
+        u'mtime', end_time_string=u'2012-05-25 15:59:55')
+    self.assertTrue(date_filter.Matches(file_entry))
 
     # Just with a start date but within range.
-    date_filter.Add(
-        filter_start='2012-03-25 15:59:55', filter_type='atime')
-    self.assertTrue(date_filter.CompareFileEntry(file_entry))
-    date_filter.Reset()
+    date_filter = image_export.DateTimeFileEntryFilter()
+    date_filter.AddDateTimeRange(
+        u'atime', start_time_string=u'2012-03-25 15:59:55')
+    self.assertTrue(date_filter.Matches(file_entry))
 
     # And now with a start date, but out of range.
-    date_filter.Add(
-        filter_start='2012-05-25 15:59:55', filter_type='ctime')
-    self.assertFalse(date_filter.CompareFileEntry(file_entry))
-    date_filter.Reset()
+    date_filter = image_export.DateTimeFileEntryFilter()
+    date_filter.AddDateTimeRange(
+        u'ctime', start_time_string=u'2012-05-25 15:59:55')
+    self.assertFalse(date_filter.Matches(file_entry))
 
     # Test with more than one date filter.
-    date_filter.Add(
-        filter_start='2012-05-25 15:59:55', filter_type='ctime',
-        filter_end='2012-05-25 17:34:12')
-    date_filter.Add(
-        filter_start='2012-05-25 15:59:20', filter_end='2012-05-25 15:59:25',
-        filter_type='atime')
-    date_filter.Add(
-        filter_start='2012-05-25 15:59:24', filter_end='2012-05-25 15:59:55',
-        filter_type='mtime')
-    self.assertFalse(date_filter.CompareFileEntry(file_entry))
-    self.assertEquals(date_filter.number_of_filters, 3)
-    # Remove a filter.
-    date_filter.Remove(
-        filter_start='2012-05-25 15:59:55', filter_type='ctime',
-        filter_end='2012-05-25 17:34:12')
-    self.assertEquals(date_filter.number_of_filters, 2)
+    date_filter = image_export.DateTimeFileEntryFilter()
+    date_filter.AddDateTimeRange(
+        u'ctime', start_time_string=u'2012-05-25 15:59:55',
+        end_time_string=u'2012-05-25 17:34:12')
+    date_filter.AddDateTimeRange(
+        u'atime', start_time_string=u'2012-05-25 15:59:20',
+        end_time_string=u'2012-05-25 15:59:25')
+    date_filter.AddDateTimeRange(
+        u'mtime', start_time_string=u'2012-05-25 15:59:24',
+        end_time_string=u'2012-05-25 15:59:55')
 
-    # Remove a date filter that does not exist.
-    date_filter.Remove(
-        filter_start='2012-05-25 11:59:55', filter_type='ctime',
-        filter_end='2012-05-25 17:34:12')
-    self.assertEquals(date_filter.number_of_filters, 2)
-
-    date_filter.Add(
-        filter_end='2012-05-25 15:59:25', filter_type='atime')
-    self.assertEquals(date_filter.number_of_filters, 3)
-    date_filter.Remove(
-        filter_end='2012-05-25 15:59:25', filter_type='atime')
-    self.assertEquals(date_filter.number_of_filters, 2)
-
-    date_filter.Reset()
+    self.assertFalse(date_filter.Matches(file_entry))
+    # pylint: disable=protected-access
+    self.assertEquals(len(date_filter._date_time_ranges), 3)
 
 
 if __name__ == '__main__':
