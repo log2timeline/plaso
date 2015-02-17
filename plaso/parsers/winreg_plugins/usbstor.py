@@ -33,44 +33,48 @@ class USBStorPlugin(interface.KeyPlugin):
     """
     for subkey in key.GetSubkeys():
       text_dict = {}
-      text_dict['subkey_name'] = subkey.name
+      text_dict[u'subkey_name'] = subkey.name
 
       # Time last USB device of this class was first inserted.
       event_object = windows_events.WindowsRegistryEvent(
           subkey.last_written_timestamp, key.path, text_dict,
           usage=eventdata.EventTimestamp.FIRST_CONNECTED, offset=key.offset,
           registry_type=registry_type,
-          source_append=': USBStor Entries')
+          source_append=u': USBStor Entries')
       parser_mediator.ProduceEvent(event_object)
 
-      # TODO: Determine if these 4 fields always exist.
-      try:
-        device_type, vendor, product, revision = subkey.name.split('&')
-      except ValueError as exception:
-        logging.warning(
-            u'Unable to split string: {0:s} with error: {1:s}'.format(
-                subkey.name, exception))
+      name_values = subkey.name.split(u'&')
+      number_of_name_values = len(name_values)
 
-      text_dict['device_type'] = device_type
-      text_dict['vendor'] = vendor
-      text_dict['product'] = product
-      text_dict['revision'] = revision
+      # Normally we expect 4 fields here however that is not always the case.
+      if number_of_name_values != 4:
+        logging.warning(
+            u'Expected 4 &-separated values in: {0:s}'.format(subkey.name))
+
+      if number_of_name_values >= 1:
+        text_dict[u'device_type'] = name_values[0]
+      if number_of_name_values >= 2:
+        text_dict[u'vendor'] = name_values[1]
+      if number_of_name_values >= 3:
+        text_dict[u'product'] = name_values[2]
+      if number_of_name_values >= 4:
+        text_dict[u'revision'] = name_values[3]
 
       for devicekey in subkey.GetSubkeys():
-        text_dict['serial'] = devicekey.name
+        text_dict[u'serial'] = devicekey.name
 
-        friendly_name_value = devicekey.GetValue('FriendlyName')
+        friendly_name_value = devicekey.GetValue(u'FriendlyName')
         if friendly_name_value:
-          text_dict['friendly_name'] = friendly_name_value.data
+          text_dict[u'friendly_name'] = friendly_name_value.data
         else:
-          text_dict.pop('friendly_name', None)
+          text_dict.pop(u'friendly_name', None)
 
         # ParentIdPrefix applies to Windows XP Only.
-        parent_id_prefix_value = devicekey.GetValue('ParentIdPrefix')
+        parent_id_prefix_value = devicekey.GetValue(u'ParentIdPrefix')
         if parent_id_prefix_value:
-          text_dict['parent_id_prefix'] = parent_id_prefix_value.data
+          text_dict[u'parent_id_prefix'] = parent_id_prefix_value.data
         else:
-          text_dict.pop('parent_id_prefix', None)
+          text_dict.pop(u'parent_id_prefix', None)
 
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
@@ -78,21 +82,21 @@ class USBStorPlugin(interface.KeyPlugin):
             devicekey.last_written_timestamp, key.path, text_dict,
             usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
             registry_type=registry_type,
-            source_append=': USBStor Entries')
+            source_append=u': USBStor Entries')
         parser_mediator.ProduceEvent(event_object)
 
         # Build list of first Insertion times.
         first_insert = []
-        device_parameter_key = devicekey.GetSubkey('Device Parameters')
+        device_parameter_key = devicekey.GetSubkey(u'Device Parameters')
         if device_parameter_key:
           first_insert.append(device_parameter_key.last_written_timestamp)
 
-        log_configuration_key = devicekey.GetSubkey('LogConf')
+        log_configuration_key = devicekey.GetSubkey(u'LogConf')
         if (log_configuration_key and
             log_configuration_key.last_written_timestamp not in first_insert):
           first_insert.append(log_configuration_key.last_written_timestamp)
 
-        properties_key = devicekey.GetSubkey('Properties')
+        properties_key = devicekey.GetSubkey(u'Properties')
         if (properties_key and
             properties_key.last_written_timestamp not in first_insert):
           first_insert.append(properties_key.last_written_timestamp)
@@ -103,7 +107,7 @@ class USBStorPlugin(interface.KeyPlugin):
               timestamp, key.path, text_dict,
               usage=eventdata.EventTimestamp.LAST_CONNECTED, offset=key.offset,
               registry_type=registry_type,
-              source_append=': USBStor Entries')
+              source_append=u': USBStor Entries')
           parser_mediator.ProduceEvent(event_object)
 
 

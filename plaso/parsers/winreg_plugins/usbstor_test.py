@@ -6,6 +6,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
+from plaso.lib import timelib_test
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import usbstor
 
@@ -19,8 +20,8 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    knowledge_base_values = {'current_control_set': u'ControlSet001'}
-    test_file_entry = self._GetTestFileEntryFromPath(['SYSTEM'])
+    knowledge_base_values = {u'current_control_set': u'ControlSet001'}
+    test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Enum\\USBSTOR'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
@@ -37,7 +38,9 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEquals(event_object.parser, self._plugin.plugin_name)
 
-    self.assertEquals(event_object.timestamp, 1333794697640871)
+    expected_timestamp = timelib_test.CopyStringToTimestamp(
+        u'2012-04-07 10:31:37.640871')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_value = u'Disk&Ven_HP&Prod_v100w&Rev_1024'
     self._TestRegvalue(event_object, u'subkey_name', expected_value)
