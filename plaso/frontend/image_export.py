@@ -4,6 +4,7 @@
 
 import abc
 import argparse
+import calendar
 import collections
 import hashlib
 import logging
@@ -42,6 +43,15 @@ class FileEntryFilter(object):
       A boolean indicating if the file entry matches the filter.
     """
 
+  @abc.abstractmethod
+  def Print(self, output_writer):
+    """Prints a human readable version of the filter.
+
+    Args:
+      output_writer: the output writer object (instance of
+                     StdoutFrontendOutputWriter).
+    """
+
 
 class ExtensionsFileEntryFilter(FileEntryFilter):
   """Class that implements extensions-based file entry filter."""
@@ -76,6 +86,296 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
 
     return extension.lower() in self._extensions
 
+  def Print(self, output_writer):
+    """Prints a human readable version of the filter.
+
+    Args:
+      output_writer: the output writer object (instance of
+                     StdoutFrontendOutputWriter).
+    """
+    if self._extensions:
+      output_writer.Write(u'\textensions: {0:s}\n'.format(
+          u', '.join(self._extensions)))
+
+
+class DateTimeFileEntryFilter(FileEntryFilter):
+  """Class that implements date time-based file entry filter."""
+
+  _DATE_TIME_RANGE_TUPLE = collections.namedtuple(
+      u'date_time_range_tuple', u'time_value start_timestamp end_timestamp')
+
+  _SUPPORTED_TIME_VALUES = frozenset([
+      u'atime', u'bkup', u'ctime', u'crtime', u'dtime', u'mtime'])
+
+  def __init__(self):
+    """Initializes the date time-based file entry filter."""
+    super(DateTimeFileEntryFilter, self).__init__()
+    self._date_time_ranges = []
+
+  def _CopyStringToTimestamp(self, time_string):
+    """Copies a string containing a date and time value to a timestamp.
+
+    Args:
+      time_string: A string containing a date and time value formatted as:
+                   YYYY-MM-DD hh:mm:ss.######[+-]##:##
+                   Where # are numeric digits ranging from 0 to 9 and the
+                   seconds fraction can be either 3 or 6 digits. The time
+                   of day, seconds fraction and timezone offset are optional.
+                   The default timezone is UTC.
+
+    Returns:
+      An integer containing the timestamp.
+
+    Raises:
+      ValueError: if the time string is invalid or not supported.
+    """
+    time_string_length = len(time_string)
+
+    # The time string should at least contain 'YYYY-MM-DD'.
+    if (time_string_length < 10 or time_string[4] != u'-' or
+        time_string[7] != u'-'):
+      raise ValueError(u'Invalid time string.')
+
+    # If a time of day is specified the time string it should at least
+    # contain 'YYYY-MM-DD hh:mm:ss'.
+    if (time_string_length > 10 and (
+        time_string_length < 19 or time_string[10] != u' ' or
+        time_string[13] != u':' or time_string[16] != u':')):
+      raise ValueError(u'Invalid time string.')
+
+    try:
+      year = int(time_string[0:4], 10)
+    except ValueError:
+      raise ValueError(u'Unable to parse year.')
+
+    try:
+      month = int(time_string[5:7], 10)
+    except ValueError:
+      raise ValueError(u'Unable to parse month.')
+
+    if month not in range(1, 13):
+      raise ValueError(u'Month value out of bounds.')
+
+    try:
+      day_of_month = int(time_string[8:10], 10)
+    except ValueError:
+      raise ValueError(u'Unable to parse day of month.')
+
+    if day_of_month not in range(1, 32):
+      raise ValueError(u'Day of month value out of bounds.')
+
+    hours = 0
+    minutes = 0
+    seconds = 0
+
+    if time_string_length > 10:
+      try:
+        hours = int(time_string[11:13], 10)
+      except ValueError:
+        raise ValueError(u'Unable to parse hours.')
+
+      if hours not in range(0, 24):
+        raise ValueError(u'Hours value out of bounds.')
+
+      try:
+        minutes = int(time_string[14:16], 10)
+      except ValueError:
+        raise ValueError(u'Unable to parse minutes.')
+
+      if minutes not in range(0, 60):
+        raise ValueError(u'Minutes value out of bounds.')
+
+      try:
+        seconds = int(time_string[17:19], 10)
+      except ValueError:
+        raise ValueError(u'Unable to parse day of seconds.')
+
+      if seconds not in range(0, 60):
+        raise ValueError(u'Seconds value out of bounds.')
+
+    micro_seconds = 0
+    timezone_offset = 0
+
+    if time_string_length > 19:
+      if time_string[19] != u'.':
+        timezone_index = 19
+      else:
+        for timezone_index in range(19, time_string_length):
+          if time_string[timezone_index] in [u'+', u'-']:
+            break
+
+          # The calculation that follow rely on the timezone index to point
+          # beyond the string in case no timezone offset was defined.
+          if timezone_index == time_string_length - 1:
+            timezone_index += 1
+
+      if timezone_index > 19:
+        fraction_of_seconds_length = timezone_index - 20
+        if fraction_of_seconds_length not in [3, 6]:
+          raise ValueError(u'Invalid time string.')
+
+        try:
+          micro_seconds = int(time_string[20:timezone_index], 10)
+        except ValueError:
+          raise ValueError(u'Unable to parse fraction of seconds.')
+
+        if fraction_of_seconds_length == 3:
+          micro_seconds *= 1000
+
+      if timezone_index < time_string_length:
+        if (time_string_length - timezone_index != 6 or
+            time_string[timezone_index + 3] != u':'):
+          raise ValueError(u'Invalid time string.')
+
+        try:
+          timezone_offset = int(time_string[
+              timezone_index + 1:timezone_index + 3])
+        except ValueError:
+          raise ValueError(u'Unable to parse timezone hours offset.')
+
+        if timezone_offset not in range(0, 24):
+          raise ValueError(u'Timezone hours offset value out of bounds.')
+
+        # Note that when the sign of the timezone offset is negative
+        # the difference needs to be added. We do so by flipping the sign.
+        if time_string[timezone_index] == u'-':
+          timezone_offset *= 60
+        else:
+          timezone_offset *= -60
+
+        try:
+          timezone_offset += int(time_string[
+              timezone_index + 4:timezone_index + 6])
+        except ValueError:
+          raise ValueError(u'Unable to parse timezone minutes offset.')
+
+        timezone_offset *= 60
+
+    timestamp = int(calendar.timegm((
+        year, month, day_of_month, hours, minutes, seconds)))
+
+    return ((timestamp + timezone_offset) * 1000000) + micro_seconds
+
+  def AddDateTimeRange(
+      self, time_value, start_time_string=None, end_time_string=None):
+    """Add a date time filter range.
+
+    The time strings are formatted as:
+    YYYY-MM-DD hh:mm:ss.######[+-]##:##
+    Where # are numeric digits ranging from 0 to 9 and the seconds
+    fraction can be either 3 or 6 digits. The time of day, seconds fraction
+    and timezone offset are optional. The default timezone is UTC.
+
+    Args:
+      time_value: the time value strting e.g. atime, ctime, crtime, dtime,
+                  bkup and mtime.
+      start_time_string: the start date and time value string.
+      end_time_string: the end date and time value string.
+
+    Raises:
+      ValueError: If the filter is badly formed.
+    """
+    if not isinstance(time_value, basestring):
+      raise ValueError(u'Filter type must be a string.')
+
+    if start_time_string is None and end_time_string is None:
+      raise ValueError(
+          u'Filter must have either a start or an end date time value.')
+
+    time_value_lower = time_value.lower()
+    if time_value_lower not in self._SUPPORTED_TIME_VALUES:
+      raise ValueError(
+          u'Unsupported time value: {0:s}.'.format(time_value))
+
+    if start_time_string:
+      start_timestamp = self._CopyStringToTimestamp(start_time_string)
+    else:
+      start_timestamp = None
+
+    if end_time_string:
+      end_timestamp = self._CopyStringToTimestamp(end_time_string)
+    else:
+      end_timestamp = None
+
+    # Make sure that the end timestamp occurs after the beginning.
+    # If not then we need to reverse the time range.
+    if (None not in [start_timestamp, end_timestamp] and
+        start_timestamp > end_timestamp):
+      raise ValueError(
+          u'Invalid date time value start must be earlier than end.')
+
+    self._date_time_ranges.append(self._DATE_TIME_RANGE_TUPLE(
+        time_value_lower, start_timestamp, end_timestamp))
+
+  def Matches(self, file_entry):
+    """Compares the file entry against the filter.
+
+    Args:
+      file_entry: The file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file entry matches the filter. If no
+      date time ranges are provided the result will be True.
+    """
+    if not self._date_time_ranges:
+      return True
+
+    stat_object = file_entry.GetStat()
+    for date_time_range in self._date_time_ranges:
+      time_value = date_time_range.time_value
+      timestamp = getattr(stat_object, time_value, None)
+      if timestamp is None:
+        continue
+
+      nano_time_value = u'{0:s}_nano'.format(time_value)
+      nano_time_value = getattr(stat_object, nano_time_value, None)
+
+      timestamp = timelib.Timestamp.FromPosixTime(timestamp)
+      if nano_time_value is not None:
+        # Note that the _nano values are in intervals of 100th nano seconds.
+        nano_time_value, _ = divmod(nano_time_value, 10)
+        timestamp += nano_time_value 
+
+      if (date_time_range.start_timestamp is not None and
+          timestamp < date_time_range.start_timestamp):
+        return False
+
+      if (date_time_range.end_timestamp is not None and
+          timestamp > date_time_range.end_timestamp):
+        return False
+
+    return True
+
+  def Print(self, output_writer):
+    """Prints a human readable version of the filter.
+
+    Args:
+      output_writer: the output writer object (instance of
+                     StdoutFrontendOutputWriter).
+    """
+    if self._date_time_ranges:
+      for date_time_range in self._date_time_ranges:
+        if date_time_range.start_timestamp is None:
+          start_time_string = timelib.Timestamp.CopyToIsoFormat(
+              date_time_range.start_timestamp)
+          output_writer.Write(u'\t{0:s} before {1:s}\n'.format(
+              date_time_range.time_value, start_time_string))
+
+        elif date_time_range.end_timestamp is None:
+          end_time_string = timelib.Timestamp.CopyToIsoFormat(
+              date_time_range.end_timestamp)
+          output_writer.Write(u'\t{0:s} after {1:s}\n'.format(
+              date_time_range.time_value, end_time_string))
+
+        else:
+          start_time_string = timelib.Timestamp.CopyToIsoFormat(
+              date_time_range.start_timestamp)
+          end_time_string = timelib.Timestamp.CopyToIsoFormat(
+              date_time_range.end_timestamp)
+          output_writer.Write(u'\t{0:s} between {1:s} and {2:s}\n'.format(
+              date_time_range.time_value, start_time_string, 
+              end_time_string))
+
 
 class FileEntryFilterCollection(object):
   """Class that implements a collection of file entry filters."""
@@ -101,9 +401,10 @@ class FileEntryFilterCollection(object):
 
     Returns:
       A boolean indicating if the file entry matches one of the filters.
+      If not filters are provided the result will be True.
     """
     if not self._filters:
-      return False
+      return True
 
     result = False
     for file_entry_filter in self._filters:
@@ -113,181 +414,17 @@ class FileEntryFilterCollection(object):
 
     return result
 
-
-# TODO: migrate to FileEntryFilter in a follow up CL.
-class DateFilter(object):
-  """Class that implements a date filter for file entries."""
-
-  DATE_FILTER_INSTANCE = collections.namedtuple(
-      'date_filter_instance', 'type start end')
-
-  DATE_FILTER_TYPES = frozenset([
-      u'atime', u'bkup', u'ctime', u'crtime', u'dtime', u'mtime'])
-
-  def __init__(self):
-    """Initialize the date filter object."""
-    super(DateFilter, self).__init__()
-    self._filters = []
-
-  @property
-  def number_of_filters(self):
-    """Return back the filter count."""
-    return len(self._filters)
-
-  def Add(self, filter_type, filter_start=None, filter_end=None):
-    """Add a date filter.
+  def Print(self, output_writer):
+    """Prints a human readable version of the filter.
 
     Args:
-      filter_type: String that defines what timestamp is affected by the
-                    date filter, valid values are atime, ctime, crtime,
-                    dtime, bkup and mtime.
-      filter_start: Optional start date of the filter. This is a string
-                    in the form of "YYYY-MM-DD HH:MM:SS", or "YYYY-MM-DD".
-                    If not supplied there will be no limitation to the initial
-                    timeframe.
-      filter_end: Optional end date of the filter. This is a string
-                  in the form of "YYYY-MM-DD HH:MM:SS", or "YYYY-MM-DD".
-                  If not supplied there will be no limitation to the initial
-                  timeframe.
-
-    Raises:
-      errors.WrongFilterOption: If the filter is badly formed.
+      output_writer: the output writer object (instance of
+                     StdoutFrontendOutputWriter).
     """
-    if not isinstance(filter_type, basestring):
-      raise errors.WrongFilterOption(u'Filter type must be a string.')
-
-    if filter_start is None and filter_end is None:
-      raise errors.WrongFilterOption(
-          u'A date filter has to have either a start or an end date.')
-
-    filter_type_lower = filter_type.lower()
-    if filter_type_lower not in self.DATE_FILTER_TYPES:
-      raise errors.WrongFilterOption(u'Unknown filter type: {0:s}.'.format(
-          filter_type))
-
-    date_filter_type = filter_type_lower
-    date_filter_start = None
-    date_filter_end = None
-
-    if filter_start is not None:
-      # If the date string is invalid the timestamp will be set to zero,
-      # which is also a valid date. Thus all invalid timestamp strings
-      # will be set to filter from the POSIX epoch time.
-      # Thus the actual value of the filter is printed out so that the user
-      # may catch this potentially unwanted behavior.
-      date_filter_start = timelib.Timestamp.FromTimeString(filter_start)
-      logging.info(
-          u'Date filter for start date configured: [{0:s}] {1:s}'.format(
-              date_filter_type,
-              timelib.Timestamp.CopyToIsoFormat(date_filter_start)))
-
-    if filter_end is not None:
-      date_filter_end = timelib.Timestamp.FromTimeString(filter_end)
-      logging.info(
-          u'Date filter for end date configured: [{0:s}] {1:s}'.format(
-              date_filter_type,
-              timelib.Timestamp.CopyToIsoFormat(date_filter_end)))
-
-      # Make sure that the end timestamp occurs after the beginning.
-      # If not then we need to reverse the time range.
-      if (date_filter_start is not None and
-          date_filter_start > date_filter_end):
-        temporary_placeholder = date_filter_end
-        date_filter_end = date_filter_start
-        date_filter_start = temporary_placeholder
-
-    self._filters.append(self.DATE_FILTER_INSTANCE(
-        date_filter_type, date_filter_start, date_filter_end))
-
-  def CompareFileEntry(self, file_entry):
-    """Compare the set date filters against timestamps of a file entry.
-
-    Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
-
-    Returns:
-      True, if there are no date filters set. Otherwise the date filters are
-      compared and True only returned if the timestamps are outside of the time
-      range.
-
-    Raises:
-        errors.WrongFilterOption: If an attempt is made to filter against
-                                  a date type that is not stored in the stat
-                                  object.
-    """
-    if not self._filters:
-      return True
-
-    # Compare timestamps of the file entry.
-    stat = file_entry.GetStat()
-
-    # Go over each filter.
-    for date_filter in self._filters:
-      posix_time = getattr(stat, date_filter.type, None)
-
-      if posix_time is None:
-        # Trying to filter against a date type that is not saved in the stat
-        # object.
-        raise errors.WrongFilterOption(
-            u'Date type: {0:s} is not stored in the file entry'.format(
-                date_filter.type))
-
-      timestamp = timelib.Timestamp.FromPosixTime(posix_time)
-
-      if date_filter.start is not None and (timestamp < date_filter.start):
-        logging.debug((
-            u'[skipping] Not saving file: {0:s}, timestamp out of '
-            u'range.').format(file_entry.path_spec.location))
-        return False
-
-      if date_filter.end is not None and (timestamp > date_filter.end):
-        logging.debug((
-            u'[skipping] Not saving file: {0:s}, timestamp out of '
-            u'range.').format(file_entry.path_spec.location))
-        return False
-
-    return True
-
-  def Remove(self, filter_type, filter_start=None, filter_end=None):
-    """Remove a date filter from the set of defined date filters.
-
-    Args:
-      filter_type: String that defines what timestamp is affected by the
-                    date filter, valid values are atime, ctime, crtime,
-                    dtime, bkup and mtime.
-      filter_start: Optional start date of the filter. This is a string
-                    in the form of "YYYY-MM-DD HH:MM:SS", or "YYYY-MM-DD".
-                    If not supplied there will be no limitation to the initial
-                    timeframe.
-      filter_end: Optional end date of the filter. This is a string
-                  in the form of "YYYY-MM-DD HH:MM:SS", or "YYYY-MM-DD".
-                  If not supplied there will be no limitation to the initial
-                  timeframe.
-    """
-    if not self._filters:
-      return
-
-    # TODO: Instead of doing it this way calculate a hash for every filter
-    # that is stored and use that for removals.
-    for date_filter_index, date_filter in enumerate(self._filters):
-      if filter_start is None:
-        date_filter_start = filter_start
-      else:
-        date_filter_start = timelib.Timestamp.FromTimeString(filter_start)
-      if filter_end is None:
-        date_filter_end = filter_end
-      else:
-        date_filter_end = timelib.Timestamp.FromTimeString(filter_end)
-
-      if (date_filter.type == filter_type and
-          date_filter.start == date_filter_start and
-          date_filter.end == date_filter_end):
-        del self._filters[date_filter_index]
-        return
-
-  def Reset(self):
-    """Resets the date filter."""
-    self._filters = []
+    if self._filters:
+      output_writer.Write(u'Filters:\n')
+      for file_entry_filter in self._filters:
+        file_entry_filter.Print(output_writer)
 
 
 class FileSaver(object):
@@ -297,9 +434,6 @@ class FileSaver(object):
 
   md5_dict = {}
   calc_md5 = False
-
-  # TODO: Move this functionality into the frontend as a state attribute.
-  _date_filter = None
 
   # TODO: combine write and hash in one function.
   @classmethod
@@ -321,18 +455,6 @@ class FileSaver(object):
       data = file_object.read(cls._READ_BUFFER_SIZE)
 
     return md5.hexdigest()
-
-  @classmethod
-  def SetDateFilter(cls, date_filter):
-    """Set a date filter for the file saver.
-
-    If a date filter is set files will not be saved unless they are within
-    the time boundaries.
-
-    Args:
-      date_filter: A date filter object (instance of DateFilter).
-    """
-    cls._date_filter = date_filter
 
   @classmethod
   def WriteFile(cls, source_path_spec, destination_path, filename_prefix=''):
@@ -387,10 +509,6 @@ class FileSaver(object):
         cls.md5_dict[inode].append(md5sum)
       else:
         cls.md5_dict[inode] = [md5sum]
-
-    # Check if we do not want to save the file.
-    if cls._date_filter and not cls._date_filter.CompareFileEntry(file_entry):
-      return
 
     try:
       file_object = file_entry.GetFileObject()
@@ -447,21 +565,18 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     output_writer = frontend.StdoutFrontendOutputWriter()
 
     super(ImageExportFrontend, self).__init__(input_reader, output_writer)
-
+    self._filter_collection = FileEntryFilterCollection()
     self._knowledge_base = None
     self._remove_duplicates = True
     self._source_path_spec = None
 
   # TODO: merge with collector and/or engine.
-  def _ExtractWithExtensions(self, extensions, destination_path):
-    """Extracts files using extensions.
+  def _Extract(self, destination_path):
+    """Extracts files.
 
     Args:
-      extensions: a list of extensions.
       destination_path: the path where the extracted files should be stored.
     """
-    logging.info(u'Finding files with extensions: {0:s}'.format(extensions))
-
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
 
@@ -477,25 +592,41 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     FileSaver.calc_md5 = self._remove_duplicates
 
-    filter_collection = FileEntryFilterCollection()
-    file_entry_filter = ExtensionsFileEntryFilter(extensions)
-    filter_collection.AddFilter(file_entry_filter)
-
     input_queue_consumer = ImageExtractorQueueConsumer(
-        input_queue, destination_path, filter_collection)
+        input_queue, destination_path, self._filter_collection)
     input_queue_consumer.ConsumeItems()
 
+  def _ExtractFile(self, path_spec, destination_path):
+    """Extracts a file.
+
+    Args:
+      path_spec: a path specification (instance of dfvfs.PathSpec).
+      destination_path: the path where the extracted files should be stored.
+    """
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    if not self._filter_collection.Matches(file_entry):
+      return
+
+    vss_store_number = getattr(path_spec, u'vss_store_number', None)
+    if vss_store_number is not None:
+      filename_prefix = u'vss_{0:d}'.format(vss_store_number + 1)
+    else:
+      filename_prefix = u''
+
+    FileSaver.WriteFile(
+        path_spec, destination_path, filename_prefix=filename_prefix)
+
   # TODO: merge with collector and/or engine.
-  def _ExtractWithFilter(self, filter_file_path, destination_path):
+  def _ExtractWithFilter(self, destination_path, filter_file_path):
     """Extracts files using a filter expression.
 
     This method runs the file extraction process on the image and
     potentially on every VSS if that is wanted.
 
     Args:
+      destination_path: The path where the extracted files should be stored.
       filter_file_path: The path of the file that contains the filter
                         expressions.
-      destination_path: The path where the extracted files should be stored.
     """
     # TODO: add support to handle multiple partitions.
     self._source_path_spec = self.GetSourcePathSpec()
@@ -516,7 +647,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     FileSaver.calc_md5 = self._remove_duplicates
 
     for path_spec in searcher.Find(find_specs=find_specs):
-      FileSaver.WriteFile(path_spec, destination_path)
+      self._ExtractFile(path_spec, destination_path)
 
     if self._process_vss and self._vss_stores:
       volume_path_spec = self._source_path_spec.parent
@@ -545,16 +676,13 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
             dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
             parent=vss_path_spec)
 
-        filename_prefix = u'vss_{0:d}'.format(store_index)
-
         file_system = path_spec_resolver.Resolver.OpenFileSystem(
             path_spec, resolver_context=self._resolver_context)
         searcher = file_system_searcher.FileSystemSearcher(
             file_system, vss_path_spec)
 
         for path_spec in searcher.Find(find_specs=find_specs):
-          FileSaver.WriteFile(
-              path_spec, destination_path, filename_prefix=filename_prefix)
+          self._ExtractFile(path_spec, destination_path)
 
   # TODO: refactor, this is a duplicate of the function in engine.
   def _GetSourceFileSystemSearcher(self, resolver_context=None):
@@ -584,6 +712,60 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
       mount_point = self._source_path_spec.parent
 
     return file_system_searcher.FileSystemSearcher(file_system, mount_point)
+
+  def _ParseExtensionStringOption(self, options):
+    """Parses the extension string option.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    extension_string = getattr(options, u'extension_string', None)
+    if not extension_string:
+      return
+
+    extensions = [
+        extension.strip() for extension in extension_string.split(u',')]
+    file_entry_filter = ExtensionsFileEntryFilter(extensions)
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def _ParseDateFiltersOption(self, options):
+    """Parses the date filters option.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    date_filters = getattr(options, u'date_filters', None)
+    if not date_filters:
+      return
+
+    file_entry_filter = DateTimeFileEntryFilter()
+
+    for date_filter in date_filters:
+      date_filter_pieces = date_filter.split(u',')
+      if len(date_filter_pieces) != 3:
+        raise errors.BadConfigOption(
+            u'Date filter badly formed: {0:s}'.format(date_filter))
+
+      time_value, start_time_string, end_time_string = date_filter_pieces
+      time_value = time_value.strip()
+      start_time_string = start_time_string.strip()
+      end_time_string = end_time_string.strip()
+
+      try:
+        file_entry_filter.AddDateTimeRange(
+            time_value, start_time_string=start_time_string,
+            end_time_string=end_time_string)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Date filter badly formed: {0:s}'.format(date_filter))
+
+    self._filter_collection.AddFilter(file_entry_filter)
 
   def _Preprocess(self, searcher):
     """Preprocesses the image.
@@ -636,24 +818,12 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         getattr(options, u'include_duplicates', False)):
       self._remove_duplicates = False
 
-    # Process date filter.
-    date_filters = getattr(options, u'date_filters', [])
-    if date_filters:
-      date_filter_object = DateFilter()
+    self._ParseExtensionStringOption(options)
+    self._ParseDateFiltersOption(options)
 
-      for date_filter in date_filters:
-        date_filter_pieces = date_filter.split(u',')
-        if len(date_filter_pieces) != 3:
-          raise errors.BadConfigOption(
-              u'Date filter badly formed: {0:s}'.format(date_filter))
-
-        filter_type, filter_start, filter_end = date_filter_pieces
-        date_filter_object.Add(
-            filter_type=filter_type.strip(), filter_start=filter_start.strip(),
-            filter_end=filter_end.strip())
-
-      # TODO: Move the date filter to the front-end as an attribute.
-      FileSaver.SetDateFilter(date_filter_object)
+  def PrintFilterCollection(self):
+    """Prints the filter collection."""
+    self._filter_collection.Print(self._output_writer)
 
   def ProcessSource(self, options):
     """Processes the source.
@@ -670,14 +840,9 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     filter_file = getattr(options, u'filter', None)
     if filter_file:
-      self._ExtractWithFilter(filter_file, options.path)
-
-    extension_string = getattr(options, u'extension_string', None)
-    if extension_string:
-      extensions = [x.strip() for x in extension_string.split(u',')]
-
-      self._ExtractWithExtensions(extensions, options.path)
-      logging.info(u'Files based on extension extracted.')
+      self._ExtractWithFilter(options.path, filter_file)
+    else:
+      self._Extract(options.path)
 
 
 def Main():
@@ -764,6 +929,9 @@ def Main():
     print u''
     logging.error(u'{0:s}'.format(exception))
     return False
+
+  # TODO: print more status information like PrintOptions.
+  front_end.PrintFilterCollection()
 
   try:
     front_end.ProcessSource(options)

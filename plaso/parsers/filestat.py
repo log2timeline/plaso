@@ -91,7 +91,8 @@ class FileStatParser(interface.BaseParser):
       timestamp = timelib.Timestamp.FromPosixTime(timestamp)
       if nano_time_attribute is not None:
         # Note that the _nano values are in intervals of 100th nano seconds.
-        timestamp += nano_time_attribute / 10
+        nano_time_attribute, _ = divmod(nano_time_attribute, 10)
+        timestamp += nano_time_attribute
 
       # TODO: this also ignores any timestamp that equals 0.
       # Is this the desired behavior?
