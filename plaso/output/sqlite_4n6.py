@@ -2,7 +2,6 @@
 
 import logging
 import os
-import re
 import sys
 
 import sqlite3
@@ -28,11 +27,9 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
   DESCRIPTION = (
       u'Saves the data in a SQLite database, used by the tool 4n6Time.')
 
-  FORMAT_ATTRIBUTE_RE = re.compile('{([^}]+)}')
-
-  META_FIELDS = [
+  META_FIELDS = frozenset([
       'sourcetype', 'source', 'user', 'host', 'MACB', 'color', 'type',
-      'record_number']
+      'record_number'])
 
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
@@ -201,6 +198,8 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
       raise errors.NoFormatterFound(
           'Unable to output event, no event formatter found.')
 
+    # TODO: remove this hack part of the storage/output refactor.
+    # The event formatter class constants should not be changed directly.
     if (isinstance(
         event_formatter, formatters.winreg.WinRegistryGenericFormatter) and
         event_formatter.FORMAT_STRING.find('<|>') == -1):
@@ -211,7 +210,7 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
       event_formatter.FORMAT_STRING_SEPARATOR = u'<|>'
 
     elif isinstance(event_formatter, formatters_interface.EventFormatter):
-      event_formatter.format_string = event_formatter.format_string.replace(
+      event_formatter.FORMAT_STRING = event_formatter.FORMAT_STRING.replace(
           '}', '}<|>')
 
     msg, _ = event_formatter.GetMessages(event_object)
@@ -223,8 +222,7 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
       logging.error(u'Unable to process date for entry: {0:s}'.format(msg))
       return
     extra = []
-    format_variables = self.FORMAT_ATTRIBUTE_RE.findall(
-        event_formatter.format_string)
+    format_variables = event_formatter.GetFormatStringAttributeNames()
     for key in event_object.GetAttributes():
       if key in utils.RESERVED_VARIABLES or key in format_variables:
         continue
