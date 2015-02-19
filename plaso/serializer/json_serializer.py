@@ -8,6 +8,7 @@ from dfvfs.serializer import json_serializer as dfvfs_json_serializer
 
 from plaso.lib import event
 from plaso.serializer import interface
+from plaso.storage import collection
 
 
 class _EventTypeJsonEncoder(json.JSONEncoder):
@@ -214,3 +215,58 @@ class JsonPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
     """
     # TODO: implement.
     pass
+
+
+class JsonCollectionInformationObjectSerializer(
+    interface.CollectionInformationObjectSerializer):
+  """Class that implements the collection information serializer interface."""
+
+  @classmethod
+  def ReadSerialized(cls, serialized):
+    """Reads a path filter from serialized form.
+
+    Args:
+      serialized: an object containing the serialized form.
+
+    Returns:
+      A collection information object (instance of CollectionInformation).
+    """
+    json_dict = json.loads(serialized)
+    collection_information_object = collection.CollectionInformation()
+
+    for key, value in json_dict.iteritems():
+      if key == collection_information_object.RESERVED_COUNTER_KEYWORD:
+        for identifier, value_dict in value.iteritems():
+          collection_information_object.AddCounterDict(identifier, value_dict)
+      else:
+        collection_information_object.SetValue(key, value)
+
+    return collection_information_object
+
+  @classmethod
+  def WriteSerialized(cls, collection_information_object):
+    """Writes a collection information object to serialized form.
+
+    Args:
+      collection_information_object: a collection information object (instance
+                                     of CollectionInformation).
+
+    Returns:
+      An object containing the serialized form.
+    """
+    if not hasattr(collection_information_object, u'GetValues'):
+      raise RuntimeError(
+          u'Unable to serialize collection information, missing value getting.')
+
+    if not hasattr(collection_information_object, u'AddCounter'):
+      raise RuntimeError(
+          u'Unable to serialize collection information, missing counters.')
+
+    full_dict = dict(collection_information_object.GetValueDict())
+
+    if collection_information_object.HasCounters():
+      counter_dict = dict(collection_information_object.GetCounters())
+      full_dict[
+          collection_information_object.RESERVED_COUNTER_KEYWORD] = counter_dict
+
+    return json.dumps(full_dict)

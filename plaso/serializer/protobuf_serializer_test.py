@@ -7,6 +7,7 @@ import unittest
 from plaso.lib import event
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
+from plaso.storage import collection
 
 
 class ProtobufAnalysisReportSerializerTest(unittest.TestCase):
@@ -190,6 +191,61 @@ class ProtobufPreprocessObjectSerializerTest(unittest.TestCase):
     """Test the write serialized functionality."""
     # TODO: add a preprocess object test.
     pass
+
+
+class ProtobufCollectionInformationObjectSerializerTest(unittest.TestCase):
+  """Tests for the collection information object protobuf serializer."""
+
+  def setUp(self):
+    """Sets up the necessary objects used throughout the test."""
+    self._collection_object = collection.CollectionInformation()
+    self._collection_object.AddCounter(u'foobar')
+    self._collection_object.IncrementCounter(
+        u'foobar', u'random', value=532)
+    self._collection_object.IncrementCounter(
+        u'foobar', u'hat', value=12)
+    self._collection_object.SetValue(u'foo', u'bar')
+    self._collection_object.SetValue(u'bar', u'vitleysa')
+
+    self._proto_string = (
+        b'\n\n\n\x03foo\x12\x03bar\n\x0f\n\x03bar\x12\x08vitleysa\n2\n\x0c'
+        b'__COUNTERS__*"\n \n\x06foobar*\x16\n\x0b\n\x06random'
+        b'\x18\x94\x04\n\x07\n\x03hat\x18\x0c')
+
+    # Rename the protobuf serializer import in order to fit in a single line.
+    module = protobuf_serializer
+    self._serializer = module.ProtobufCollectionInformationObjectSerializer
+
+  def testReadSerialized(self):
+    """Test the read serialized functionality."""
+    collection_object = self._serializer.ReadSerialized(self._proto_string)
+
+    for identifier, counter in collection_object.GetCounters():
+      compare_counter = self._collection_object.GetCounter(identifier)
+      for key, value in counter.iteritems():
+        self.assertEquals(value, compare_counter[key])
+
+    for identifier, value in collection_object.GetValueDict().iteritems():
+      self.assertEquals(value, self._collection_object.GetValue(identifier))
+
+  def testWriteSerialized(self):
+    """Test the write serialized functionality."""
+    proto_string = self._serializer.WriteSerialized(self._collection_object)
+    self.assertEquals(proto_string, self._proto_string)
+
+    proto = self._serializer.WriteSerializedObject(self._collection_object)
+    attribute_serializer = protobuf_serializer.ProtobufEventAttributeSerializer
+    for attribute in proto.attributes:
+      if attribute.key == self._collection_object.RESERVED_COUNTER_KEYWORD:
+        _, value = attribute_serializer.ReadSerializedObject(attribute)
+        for identifier, value_dict in value.iteritems():
+          self.assertEquals(set(value_dict.items()), set(
+              self._collection_object.GetCounter(identifier).items()))
+
+      else:
+        _, value = attribute_serializer.ReadSerializedObject(attribute)
+        self.assertEquals(value, self._collection_object.GetValue(
+            attribute.key))
 
 
 if __name__ == '__main__':
