@@ -7,6 +7,7 @@ import unittest
 
 from plaso.lib import event
 from plaso.serializer import json_serializer
+from plaso.storage import collection
 
 # TODO: add tests for the non implemented serializer objects when implemented.
 
@@ -105,6 +106,45 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
 
     # A None (or Null) value should not get stored.
     # self.assertFalse(hasattr(event_object, 'null_value'))
+
+
+class JsonCollectionInformationSerializerTest(unittest.TestCase):
+  """Tests serialization of the collection information object."""
+
+  def setUp(self):
+    """Set up the necessary objects."""
+    self._json_string = (
+        u'{"foo": "bar", "__COUNTERS__": {"foobar": {"stuff": 1245}}, '
+        u'"foo2": "randombar"}')
+
+    self._collection_information_object = collection.CollectionInformation()
+    self._collection_information_object.AddCounter(u'foobar')
+    self._collection_information_object.IncrementCounter(
+        u'foobar', u'stuff', value=1245)
+    self._collection_information_object.SetValue(u'foo', u'bar')
+    self._collection_information_object.SetValue(u'foo2', u'randombar')
+    self._serializer = json_serializer.JsonCollectionInformationObjectSerializer
+
+  def testReadSerialized(self):
+    """Test the read serialized functionality."""
+    collection_object = self._serializer.ReadSerialized(self._json_string)
+
+    for key, value in collection_object.GetValueDict().iteritems():
+      self.assertEquals(
+          value, self._collection_information_object.GetValue(key))
+
+    for identifier, counter in collection_object.GetCounters():
+      compare_counter = self._collection_information_object.GetCounter(
+          identifier)
+
+      for key, value in counter.iteritems():
+        self.assertEquals(value, compare_counter[key])
+
+  def testWriteSerialized(self):
+    """Test the write serialized functionality."""
+    json_string = self._serializer.WriteSerialized(
+        self._collection_information_object)
+    self.assertEquals(json_string, self._json_string)
 
 
 if __name__ == '__main__':
