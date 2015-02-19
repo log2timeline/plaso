@@ -10,6 +10,7 @@ from plaso.lib import event
 from plaso.lib import utils
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import interface
+from plaso.storage import collection
 
 
 class ProtobufEventAttributeSerializer(object):
@@ -718,4 +719,99 @@ class ProtobufPreprocessObjectSerializer(interface.PreprocessObjectSerializer):
       A protobuf string containing the serialized form.
     """
     proto = cls.WriteSerializedObject(pre_obj)
+    return proto.SerializeToString()
+
+
+class ProtobufCollectionInformationObjectSerializer(
+    interface.CollectionInformationObjectSerializer):
+  """Class that implements the collection information serializer interface."""
+
+  @classmethod
+  def ReadSerializedObject(cls, proto):
+    """Reads a collection information object from serialized form."""
+    collection_information_object = collection.CollectionInformation()
+
+    for attribute in proto.attributes:
+      key = attribute.key
+      if key == collection_information_object.RESERVED_COUNTER_KEYWORD:
+        _, counter_dict = ProtobufEventAttributeSerializer.ReadSerializedObject(
+            attribute)
+        for identifier, value_dict in counter_dict.iteritems():
+          collection_information_object.AddCounterDict(identifier, value_dict)
+      else:
+        _, value = ProtobufEventAttributeSerializer.ReadSerializedObject(
+            attribute)
+        collection_information_object.SetValue(key, value)
+
+    return collection_information_object
+
+  @classmethod
+  def ReadSerialized(cls, serialized):
+    """Reads a path filter from serialized form.
+
+    Args:
+      serialized: an object containing the serialized form.
+
+    Returns:
+      A collection information object (instance of CollectionInformation).
+    """
+    proto = plaso_storage_pb2.Dict()
+    proto.ParseFromString(serialized)
+
+    return cls.ReadSerializedObject(proto)
+
+  @classmethod
+  def WriteSerializedObject(cls, collection_information_object):
+    """Writes a collection information object to serialized form.
+
+    Args:
+      collection_information_object: a collection information object (instance
+                                     of CollectionInformation).
+
+    Returns:
+      A protobuf object containing the serialized form (instance of
+      plaso_storage_pb2.Dict).
+
+    Raises:
+      RuntimeError: when the collection information object is malformed.
+    """
+    if not hasattr(collection_information_object, u'GetValues'):
+      raise RuntimeError(
+          u'Unable to serialize collection information, missing value getting.')
+
+    if not hasattr(collection_information_object, u'AddCounter'):
+      raise RuntimeError(
+          u'Unable to serialize collection information, missing counters.')
+
+    proto = plaso_storage_pb2.Dict()
+
+    for key, value in collection_information_object.GetValueDict().iteritems():
+      attribute = proto.attributes.add()
+      if 'zone' in key and not isinstance(value, basestring):
+        value = getattr(value, 'zone', unicode(value))
+
+      ProtobufEventAttributeSerializer.WriteSerializedObject(
+          attribute, key, value)
+
+    if collection_information_object.HasCounters():
+      attribute = proto.attributes.add()
+      counter_dict = dict(collection_information_object.GetCounters())
+      ProtobufEventAttributeSerializer.WriteSerializedObject(
+          attribute, collection_information_object.RESERVED_COUNTER_KEYWORD,
+          counter_dict)
+
+    return proto
+
+  @classmethod
+  def WriteSerialized(cls, collection_information_object):
+    """Writes a collection information object to serialized form.
+
+    Args:
+      collection_information_object: a collection information object (instance
+                                     of CollectionInformation).
+
+    Returns:
+      A protobuf string containing the serialized form.
+    """
+    proto = cls.WriteSerializedObject(collection_information_object)
     return proto.SerializeToString()
