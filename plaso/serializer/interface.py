@@ -163,3 +163,30 @@ class PreprocessObjectSerializer(object):
     Returns:
       An object containing the serialized form.
     """
+
+
+class CollectionInformationObjectSerializer(object):
+  """Class that implements the collection information serializer interface."""
+
+  @abc.abstractmethod
+  def ReadSerialized(cls, serialized):
+    """Reads a path filter from serialized form.
+
+    Args:
+      serialized: an object containing the serialized form.
+
+    Returns:
+      A collection information object (instance of CollectionInformation).
+    """
+
+  @abc.abstractmethod
+  def WriteSerialized(cls, collection_information_object):
+    """Writes a collection information object to serialized form.
+
+    Args:
+      collection_information_object: a collection information object (instance
+                                     of CollectionInformation).
+
+    Returns:
+      An object containing the serialized form.
+    """
