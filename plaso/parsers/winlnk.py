@@ -6,6 +6,7 @@ import pylnk
 from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers.shared import shell_items
@@ -54,8 +55,17 @@ class WinLnkLinkEvent(time_events.FiletimeEvent):
 class WinLnkParser(interface.BaseParser):
   """Parses Windows Shortcut (LNK) files."""
 
-  NAME = 'lnk'
+  NAME = u'lnk'
   DESCRIPTION = u'Parser for Windows Shortcut (LNK) files.'
+
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(
+        b'\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46',
+        offset=4)
+    return format_specification
 
   def Parse(self, parser_mediator, **kwargs):
     """Extract data from a Windows Shortcut (LNK) file.
@@ -64,14 +74,13 @@ class WinLnkParser(interface.BaseParser):
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     file_object = parser_mediator.GetFileObject()
-    self.ParseFileObject(parser_mediator, file_object)
-    file_object.close()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
 
-  def ParseFileObject(
-      self, parser_mediator, file_object, display_name=None):
-    """Parses a Windows Shortcut (LNK) file.
-
-    The file entry is used to determine the display name if it was not provided.
+  def ParseFileObject(self, parser_mediator, file_object, display_name=None):
+    """Parses a Windows Shortcut (LNK) file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -81,7 +90,6 @@ class WinLnkParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-
     if not display_name:
       display_name = parser_mediator.GetDisplayName()
 
@@ -99,7 +107,8 @@ class WinLnkParser(interface.BaseParser):
     if lnk_file.link_target_identifier_data:
       # TODO: change file_entry.name to display name once it is generated
       # correctly.
-      display_name = parser_mediator.GetFileEntry().name
+      file_entry = parser_mediator.GetFileEntry()
+      display_name = file_entry.name
       shell_items_parser = shell_items.ShellItemsParser(display_name)
       parser_mediator.AppendToParserChain(shell_items_parser)
       try:

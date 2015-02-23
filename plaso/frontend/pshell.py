@@ -164,8 +164,9 @@ def GetParserObjects(parser_filter_string=None):
   Returns:
     A list of parser objects (instances of BaseParser).
   """
-  return parsers_manager.ParsersManager.GetParserObjects(
+  parser_objects = parsers_manager.ParsersManager.GetParserObjects(
       parser_filter_string=parser_filter_string)
+  return parser_objects.values()
 
 
 def OpenOSFile(path):

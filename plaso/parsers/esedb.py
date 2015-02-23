@@ -6,6 +6,7 @@ import logging
 import pyesedb
 
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers import plugins
@@ -31,7 +32,7 @@ class EseDbCache(plugins.BasePluginCache):
 class EseDbParser(interface.BasePluginsParser):
   """Parses Extensible Storage Engine (ESE) database files (EDB)."""
 
-  NAME = 'esedb'
+  NAME = u'esedb'
   DESCRIPTION = u'Parser for Extensible Storage Engine (ESE) database files.'
 
   _plugin_classes = {}
@@ -41,8 +42,15 @@ class EseDbParser(interface.BasePluginsParser):
     super(EseDbParser, self).__init__()
     self._plugins = EseDbParser.GetPluginObjects()
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'\xef\xcd\xab\x89', offset=4)
+    return format_specification
+
   def Parse(self, parser_mediator, **kwargs):
-    """Extracts data from an ESE database File.
+    """Parses an ESE database file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -51,16 +59,29 @@ class EseDbParser(interface.BasePluginsParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses an ESE database file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     esedb_file = pyesedb.file()
 
     try:
       esedb_file.open_file_object(file_object)
     except IOError as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
-
 
     # Compare the list of available plugins.
     cache = EseDbCache()
@@ -78,7 +99,6 @@ class EseDbParser(interface.BasePluginsParser):
     # TODO: explicitly clean up cache.
 
     esedb_file.close()
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(EseDbParser)

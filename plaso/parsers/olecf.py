@@ -6,18 +6,19 @@ import logging
 import pyolecf
 
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
 if pyolecf.get_version() < '20131012':
-  raise ImportWarning('OleCfParser requires at least pyolecf 20131012.')
+  raise ImportWarning(u'OleCfParser requires at least pyolecf 20131012.')
 
 
 class OleCfParser(interface.BasePluginsParser):
   """Parses OLE Compound Files (OLECF)."""
 
-  NAME = 'olecf'
+  NAME = u'olecf'
   DESCRIPTION = u'Parser for OLE Compound Files (OLECF).'
 
   _plugin_classes = {}
@@ -28,22 +29,50 @@ class OleCfParser(interface.BasePluginsParser):
     self._plugins = OleCfParser.GetPluginObjects()
 
     for list_index, plugin_object in enumerate(self._plugins):
-      if plugin_object.NAME == 'olecf_default':
+      if plugin_object.NAME == u'olecf_default':
         self._default_plugin = self._plugins.pop(list_index)
         break
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+
+    # OLECF
+    format_specification.AddNewSignature(
+        b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1', offset=0)
+
+    # OLECF beta
+    format_specification.AddNewSignature(
+        b'\x0e\x11\xfc\x0d\xd0\xcf\x11\x0e', offset=0)
+
+    return format_specification
+
   def Parse(self, parser_mediator, **kwargs):
-    """Extracts data from an OLE Compound File (OLECF).
+    """Parses an OLE Compound File (OLECF).
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses an OLE Compound File (OLECF) file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     olecf_file = pyolecf.file()
     olecf_file.set_ascii_codepage(parser_mediator.codepage)
 
@@ -80,7 +109,6 @@ class OleCfParser(interface.BasePluginsParser):
           parser_mediator, root_item=root_item, item_names=item_names)
 
     olecf_file.close()
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(OleCfParser)
