@@ -17,6 +17,15 @@ class BaseParser(object):
   NAME = 'base_parser'
   DESCRIPTION = u''
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
+
+    Returns:
+      The format specification (instance of FormatSpecification) or
+      None if not available."""
+    return
+
   @abc.abstractmethod
   def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
@@ -41,6 +50,15 @@ class BaseParser(object):
     """
     raise NotImplementedError
 
+  @classmethod
+  def SupportsPlugins(cls):
+    """Determines if a parser supports plugins.
+
+    Returns:
+      A boolean value indicating whether the parser supports plugins.
+    """
+    return False
+
   def UpdateChainAndParse(self, parser_mediator, **kwargs):
     """Wrapper for Parse() to synchronize the parser chain.
 
@@ -52,15 +70,6 @@ class BaseParser(object):
     parser_mediator.AppendToParserChain(self)
     self.Parse(parser_mediator, **kwargs)
     parser_mediator.PopFromParserChain()
-
-  @classmethod
-  def SupportsPlugins(cls):
-    """Determines if a parser supports plugins.
-
-    Returns:
-      A boolean value indicating whether the parser supports plugins.
-    """
-    return False
 
 
 class BasePluginsParser(BaseParser):
