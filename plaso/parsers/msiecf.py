@@ -9,6 +9,7 @@ from plaso.events import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -46,7 +47,7 @@ class MsiecfUrlEvent(time_events.TimestampEvent):
 
     if msiecf_item.type and msiecf_item.data:
       if msiecf_item.type == u'cache':
-        if msiecf_item.data[:4] == 'HTTP':
+        if msiecf_item.data[:4] == b'HTTP':
           self.http_headers = msiecf_item.data[:-1]
       # TODO: parse data of other URL item type like history which requires
       # OLE VT parsing.
@@ -55,7 +56,7 @@ class MsiecfUrlEvent(time_events.TimestampEvent):
 class MsiecfParser(interface.BaseParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
-  NAME = 'msiecf'
+  NAME = u'msiecf'
   DESCRIPTION = u'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
 
   def _ParseUrl(self, parser_mediator, msiecf_item, recovered=False):
@@ -75,13 +76,13 @@ class MsiecfParser(interface.BaseParser):
     # between the different type of files.
     primary_timestamp = timelib.Timestamp.FromFiletime(
         msiecf_item.get_primary_time_as_integer())
-    primary_timestamp_desc = 'Primary Time'
+    primary_timestamp_desc = u'Primary Time'
 
     # Need to convert the FILETIME to the internal timestamp here to
     # do the from localtime conversion.
     secondary_timestamp = timelib.Timestamp.FromFiletime(
         msiecf_item.get_secondary_time_as_integer())
-    secondary_timestamp_desc = 'Secondary Time'
+    secondary_timestamp_desc = u'Secondary Time'
 
     if msiecf_item.type:
       if msiecf_item.type == u'cache':
@@ -144,27 +145,50 @@ class MsiecfParser(interface.BaseParser):
           eventdata.EventTimestamp.LAST_CHECKED_TIME, msiecf_item, recovered)
       parser_mediator.ProduceEvent(event_object)
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(
+        b'Client\x20UrlCache\x20MMF\x20Ver\x20', offset=0)
+    return format_specification
+
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a MSIE Cache File (MSIECF).
+    """Parses a MSIE Cache File (MSIECF).
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a MSIE Cache File (MSIECF) file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     msiecf_file = pymsiecf.file()
     msiecf_file.set_ascii_codepage(parser_mediator.codepage)
 
     try:
       msiecf_file.open_file_object(file_object)
-
-      self.version = msiecf_file.format_version
     except IOError as exception:
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
-
-
+    self.version = msiecf_file.format_version
     for item_index in range(0, msiecf_file.number_of_items):
       try:
         msiecf_item = msiecf_file.get_item(item_index)
@@ -195,7 +219,7 @@ class MsiecfParser(interface.BaseParser):
                 self.NAME, item_index, parser_mediator.GetDisplayName(),
                 exception))
 
-    file_object.close()
+    msiecf_file.close()
 
 
 manager.ParsersManager.RegisterParser(MsiecfParser)
