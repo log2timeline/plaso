@@ -14,6 +14,8 @@ try:
 except ImportError:
   hpy = None
 
+import pysigscan
+
 from plaso.engine import collector
 from plaso.engine import queue
 from plaso.lib import errors
@@ -51,12 +53,15 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     super(BaseEventExtractionWorker, self).__init__(process_queue)
     self._enable_debug_output = False
     self._identifier = identifier
+    self._file_scanner = None
+    self._filestat_parser_object = None
+    self._non_sigscan_parser_names = None
     self._open_files = False
     self._parser_mediator = parser_mediator
-    self._filestat_parser_object = None
     self._parser_objects = None
     self._process_archive_files = False
     self._resolver_context = resolver_context
+    self._specification_store = None
 
     self._event_queue_producer = event_queue_producer
     self._parse_error_queue_producer = parse_error_queue_producer
@@ -95,6 +100,33 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   def _DebugParseFileEntry(self):
     """Callback for debugging file entry parsing failures."""
     return
+
+  def _GetSignatureMatchParserNames(self, file_entry):
+    """Determines if a file matches one of the known signatures.
+
+    Args:
+      file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Returns:
+      A list of parser names for which the file entry matches their
+      known signatures.
+    """
+    parser_name_list = []
+
+    file_object = file_entry.GetFileObject()
+    scan_state = pysigscan.scan_state()
+    self._file_scanner.scan_file_object(scan_state, file_object)
+
+    for scan_result in scan_state.scan_results:
+      format_specification = (
+          self._specification_store.GetSpecificationBySignature(
+              scan_result.identifier))
+
+      if format_specification.identifier not in parser_name_list:
+        parser_name_list.append(format_specification.identifier)
+
+    file_object.close()
+    return parser_name_list
 
   def _ParseFileEntryWithParser(self, parser_object, file_entry):
     """Parses a file entry with a specific parser.
@@ -278,10 +310,10 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   def GetStatus(self):
     """Returns a status dictionary."""
     return {
-        'is_running': self._is_running,
-        'identifier': u'Worker_{0:d}'.format(self._identifier),
-        'current_file': self._current_working_file,
-        'counter': self._parser_mediator.number_of_events}
+        u'is_running': self._is_running,
+        u'identifier': u'Worker_{0:d}'.format(self._identifier),
+        u'current_file': self._current_working_file,
+        u'counter': self._parser_mediator.number_of_events}
 
   def InitializeParserObjects(self, parser_filter_string=None):
     """Initializes the parser objects.
@@ -297,19 +329,26 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Args:
       parser_filter_string: Optional parser filter string. The default is None.
     """
+    self._specification_store, self._non_sigscan_parser_names = (
+        parsers_manager.ParsersManager.GetSpecificationStore(
+            parser_filter_string=parser_filter_string))
+
+    self._file_scanner = parsers_manager.ParsersManager.GetScanner(
+        self._specification_store)
+
     self._parser_objects = parsers_manager.ParsersManager.GetParserObjects(
         parser_filter_string=parser_filter_string)
 
-    for parser_object in self._parser_objects:
-      if parser_object.NAME == 'filestat':
-        self._filestat_parser_object = parser_object
-        break
+    self._filestat_parser_object = self._parser_objects.get(u'filestat', None)
 
   def ParseFileEntry(self, file_entry):
     """Parses a file entry.
 
     Args:
       file_entry: A file entry object (instance of dfvfs.FileEntry).
+
+    Raises:
+      RuntimeError: if the parser object is missing.
     """
     logging.debug(u'[ParseFileEntry] Parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
@@ -327,11 +366,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         is_archive = self._ProcessArchiveFile(file_entry)
 
     if is_file and not is_archive and not is_compressed_stream:
-      # TODO: Not go through all parsers, just the ones
-      # that the classifier classifies the file as.
-      for parser_object in self._parser_objects:
+      parser_name_list = self._GetSignatureMatchParserNames(file_entry)
+      if not parser_name_list:
+        parser_name_list = self._non_sigscan_parser_names
+
+      for parser_name in parser_name_list:
+        parser_object = self._parser_objects.get(parser_name, None)
+        if not parser_object:
+          raise RuntimeError(u'No such parser: {0:s}'.format(parser_name))
+
         logging.debug(u'Trying to parse: {0:s} with parser: {1:s}'.format(
-            file_entry.name, parser_object.NAME))
+            file_entry.name, parser_name))
 
         self._ParseFileEntryWithParser(parser_object, file_entry)
 

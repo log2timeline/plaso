@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """The parsers and plugins manager objects."""
 
+import pysigscan
+
 from plaso.frontend import presets
+from plaso.lib import specification
 
 
 class ParsersManager(object):
@@ -23,9 +26,8 @@ class ParsersManager(object):
     """
     parser_name = parser_class.NAME.lower()
     if parser_name not in cls._parser_classes:
-      raise KeyError(
-          u'Parser class not set for name: {0:s}.'.format(
-              parser_class.NAME))
+      raise KeyError(u'Parser class not set for name: {0:s}.'.format(
+          parser_class.NAME))
 
     del cls._parser_classes[parser_name]
 
@@ -49,12 +51,12 @@ class ParsersManager(object):
 
     preset_categories = presets.categories.keys()
 
-    for filter_string in parser_filter_string.split(','):
+    for filter_string in parser_filter_string.split(u','):
       filter_string = filter_string.strip()
       if not filter_string:
         continue
 
-      if filter_string.startswith('-'):
+      if filter_string.startswith(u'-'):
         active_list = excludes
         filter_string = filter_string[1:]
       else:
@@ -103,14 +105,14 @@ class ParsersManager(object):
       parser_filter_string: Optional parser filter string. The default is None.
 
     Returns:
-      A list of parser objects (instances of BaseParser).
+      A dictionary mapping parser names to parsers objects (instances of
+      BaseParser).
     """
-    parser_objects = []
+    parser_objects = {}
 
-    for _, parser_class in cls.GetParsers(
+    for parser_name, parser_class in cls.GetParsers(
         parser_filter_string=parser_filter_string):
-      parser_object = parser_class()
-      parser_objects.append(parser_object)
+      parser_objects[parser_name] = parser_class()
 
     return parser_objects
 
@@ -141,13 +143,73 @@ class ParsersManager(object):
       yield parser_name, parser_class
 
   @classmethod
+  def GetScanner(cls, specification_store):
+    """Initializes the scanner object form the specification store.
+
+    Args:
+      specification_store: a specification store (instance of
+                           FormatSpecificationStore).
+
+    Returns:
+      A scanner object (instance of pysigscan.scanner).
+    """
+    scanner_object = pysigscan.scanner()
+
+    for format_specification in specification_store.specifications:
+      for signature in format_specification.signatures:
+        pattern_offset = signature.offset
+
+        if pattern_offset is None:
+          signature_flags = pysigscan.signature_flags.NO_OFFSET
+        elif pattern_offset < 0:
+          pattern_offset *= -1
+          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_END
+        else:
+          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_START
+
+        scanner_object.add_signature(
+            signature.identifier, pattern_offset, signature.pattern,
+            signature_flags)
+
+    return scanner_object
+
+  @classmethod
+  def GetSpecificationStore(cls, parser_filter_string=None):
+    """Retrieves the specification store for the parsers.
+
+    This method will create a specification store for parsers that define
+    a format specification and a list of parser names for those that do not.
+
+    Args:
+      parser_filter_string: Optional parser filter string. The default is None.
+
+    Returns:
+      A tuple of a format specification store (instance of
+      FormatSpecificationStore) and the list of remaining parser names
+      that do not have a format specification.
+    """
+    specification_store = specification.FormatSpecificationStore()
+    remainder_list = []
+
+    for parser_name, parser_class in cls.GetParsers(
+        parser_filter_string=parser_filter_string):
+      format_specification = parser_class.GetFormatSpecification()
+
+      if format_specification is not None:
+        specification_store.AddSpecification(format_specification)
+      else:
+        remainder_list.append(parser_name)
+
+    return specification_store, remainder_list
+
+  @classmethod
   def GetWindowsRegistryPlugins(cls):
     """Build a list of all available Windows Registry plugins.
 
     Returns:
       A plugins list (instance of PluginList).
     """
-    parser_class = cls._parser_classes.get('winreg', None)
+    parser_class = cls._parser_classes.get(u'winreg', None)
     if not parser_class:
       return
 
@@ -167,9 +229,8 @@ class ParsersManager(object):
     """
     parser_name = parser_class.NAME.lower()
     if parser_name in cls._parser_classes:
-      raise KeyError((
-          u'Parser class already set for name: {0:s}.').format(
-              parser_class.NAME))
+      raise KeyError((u'Parser class already set for name: {0:s}.').format(
+          parser_class.NAME))
 
     cls._parser_classes[parser_name] = parser_class
 
