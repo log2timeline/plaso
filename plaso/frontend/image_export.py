@@ -10,11 +10,14 @@ import hashlib
 import logging
 import os
 import sys
+import textwrap
 
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
+
+import pysigscan
 
 from plaso.artifacts import knowledge_base
 from plaso.engine import collector
@@ -24,6 +27,7 @@ from plaso.engine import single_process
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.lib import timelib
 from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
@@ -40,7 +44,8 @@ class FileEntryFilter(object):
       file_entry: The file entry (instance of dfvfs.FileEntry).
 
     Returns:
-      A boolean indicating if the file entry matches the filter.
+      A boolean indicating if the file entry matches the filter or
+      None if the filter does not apply
     """
 
   @abc.abstractmethod
@@ -74,11 +79,12 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
       file_entry: The file entry (instance of dfvfs.FileEntry).
 
     Returns:
-      A boolean indicating if the file entry matches the filter.
+      A boolean indicating if the file entry matches the filter or
+      None if the filter does not apply
     """
     location = getattr(file_entry.path_spec, u'location', None)
     if not location:
-      return False
+      return
 
     _, _, extension = location.rpartition(u'.')
     if not extension:
@@ -314,11 +320,11 @@ class DateTimeFileEntryFilter(FileEntryFilter):
       file_entry: The file entry (instance of dfvfs.FileEntry).
 
     Returns:
-      A boolean indicating if the file entry matches the filter. If no
-      date time ranges are provided the result will be True.
+      A boolean indicating if the file entry matches the filter or
+      None if the filter does not apply.
     """
     if not self._date_time_ranges:
-      return True
+      return
 
     stat_object = file_entry.GetStat()
     for date_time_range in self._date_time_ranges:
@@ -334,7 +340,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
       if nano_time_value is not None:
         # Note that the _nano values are in intervals of 100th nano seconds.
         nano_time_value, _ = divmod(nano_time_value, 10)
-        timestamp += nano_time_value 
+        timestamp += nano_time_value
 
       if (date_time_range.start_timestamp is not None and
           timestamp < date_time_range.start_timestamp):
@@ -373,8 +379,98 @@ class DateTimeFileEntryFilter(FileEntryFilter):
           end_time_string = timelib.Timestamp.CopyToIsoFormat(
               date_time_range.end_timestamp)
           output_writer.Write(u'\t{0:s} between {1:s} and {2:s}\n'.format(
-              date_time_range.time_value, start_time_string, 
+              date_time_range.time_value, start_time_string,
               end_time_string))
+
+
+class SignaturesFileEntryFilter(FileEntryFilter):
+  """Class that implements signature-based file entry filter."""
+
+  def __init__(self, specification_store, signature_identifiers):
+    """Initializes the signature-based file entry filter.
+
+    Args:
+      specification_store: a specification store (instance of
+                           FormatSpecificationStore).
+      signature_identifiers: a list of signature identifiers.
+    """
+    super(SignaturesFileEntryFilter, self).__init__()
+    self._signature_identifiers = []
+
+    if specification_store:
+      self._file_scanner = self._GetScanner(
+          specification_store, signature_identifiers)
+    else:
+      self._file_scanner = None
+
+  def _GetScanner(self, specification_store, signature_identifiers):
+    """Initializes the scanner object form the specification store.
+
+    Args:
+      specification_store: a specification store (instance of
+                           FormatSpecificationStore).
+      signature_identifiers: a list of signature identifiers.
+
+    Returns:
+      A scanner object (instance of pysigscan.scanner).
+    """
+    scanner_object = pysigscan.scanner()
+
+    for format_specification in specification_store.specifications:
+      if format_specification.identifier not in signature_identifiers:
+        continue
+
+      for signature in format_specification.signatures:
+        pattern_offset = signature.offset
+        if pattern_offset is None:
+          signature_flags = pysigscan.signature_flags.NO_OFFSET
+        elif pattern_offset < 0:
+          pattern_offset *= -1
+          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_END
+        else:
+          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_START
+
+        scanner_object.add_signature(
+            signature.identifier, pattern_offset, signature.pattern,
+            signature_flags)
+
+      self._signature_identifiers.append(format_specification.identifier)
+
+    return scanner_object
+
+  def Matches(self, file_entry):
+    """Compares the file entry against the filter.
+
+    Args:
+      file_entry: The file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file entry matches the filter or
+      None if the filter does not apply
+    """
+    if not self._file_scanner or not file_entry.IsFile():
+      return
+
+    file_object = file_entry.GetFileObject()
+    scan_state = pysigscan.scan_state()
+
+    try:
+      self._file_scanner.scan_file_object(scan_state, file_object)
+    finally:
+      file_object.close()
+
+    return scan_state.number_of_scan_results > 0
+
+  def Print(self, output_writer):
+    """Prints a human readable version of the filter.
+
+    Args:
+      output_writer: the output writer object (instance of
+                     StdoutFrontendOutputWriter).
+    """
+    if self._file_scanner:
+      output_writer.Write(u'\tsignature identifiers: {0:s}\n'.format(
+          u', '.join(self._signature_identifiers)))
 
 
 class FileEntryFilterCollection(object):
@@ -401,18 +497,17 @@ class FileEntryFilterCollection(object):
 
     Returns:
       A boolean indicating if the file entry matches one of the filters.
-      If not filters are provided the result will be True.
+      If no filters are provided or applicable the result will be True.
     """
     if not self._filters:
       return True
 
-    result = False
+    results = []
     for file_entry_filter in self._filters:
       result = file_entry_filter.Matches(file_entry)
-      if result:
-        break
+      results.append(result)
 
-    return result
+    return True in results or False not in results
 
   def Print(self, output_writer):
     """Prints a human readable version of the filter.
@@ -447,7 +542,7 @@ class FileSaver(object):
       A hexadecimal string of the MD5 hash.
     """
     md5 = hashlib.md5()
-    file_object.seek(0)
+    file_object.seek(0, os.SEEK_SET)
 
     data = file_object.read(cls._READ_BUFFER_SIZE)
     while data:
@@ -467,6 +562,8 @@ class FileSaver(object):
                        empty string.
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
+    if not file_entry.IsFile():
+      return
 
     filename = getattr(source_path_spec, u'location', None)
     if not filename:
@@ -716,24 +813,6 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     # TODO: add explicit close of file_system.
     return file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
-  def _ParseExtensionStringOption(self, options):
-    """Parses the extension string option.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    extension_string = getattr(options, u'extension_string', None)
-    if not extension_string:
-      return
-
-    extensions = [
-        extension.strip() for extension in extension_string.split(u',')]
-    file_entry_filter = ExtensionsFileEntryFilter(extensions)
-    self._filter_collection.AddFilter(file_entry_filter)
-
   def _ParseDateFiltersOption(self, options):
     """Parses the date filters option.
 
@@ -770,6 +849,58 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     self._filter_collection.AddFilter(file_entry_filter)
 
+  def _ParseExtensionsStringOption(self, options):
+    """Parses the extensions string option.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    extensions_string = getattr(options, u'extensions_string', None)
+    if not extensions_string:
+      return
+
+    extensions = [
+        extension.strip() for extension in extensions_string.split(u',')]
+    file_entry_filter = ExtensionsFileEntryFilter(extensions)
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def _ParseSignatureIdentifiersOptions(self, options):
+    """Parses the signature identifiers option.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    signature_identifiers = getattr(options, u'signature_identifiers', None)
+    if not signature_identifiers:
+      return
+
+    if not self._data_location:
+      raise errors.BadConfigOption(u'Missing data location.')
+
+    path = os.path.join(self._data_location, u'signatures.conf')
+    if not os.path.exists(path):
+      raise errors.BadConfigOption(
+          u'No such format specification file: {0:s}'.format(path))
+
+    try:
+      specification_store = self._ReadSpecificationFile(path)
+    except IOError as exception:
+      raise errors.BadConfigOption((
+          u'Unable to read format specification file: {0:s} with error: '
+          u'{1:s}').format(path, exception))
+
+    signature_identifiers = [
+        identifier.strip() for identifier in signature_identifiers.split(u',')]
+    file_entry_filter = SignaturesFileEntryFilter(
+        specification_store, signature_identifiers)
+    self._filter_collection.AddFilter(file_entry_filter)
+
   def _Preprocess(self, searcher):
     """Preprocesses the image.
 
@@ -794,6 +925,86 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     logging.info(u'Preprocess done, saving files from image.')
 
+  def _ReadSpecificationFile(self, path):
+    """Reads the format specification file.
+
+    Args:
+      path: the path of the format specification file.
+
+    Returns:
+      The format specification store (instance of FormatSpecificationStore).
+    """
+    specification_store = specification.FormatSpecificationStore()
+
+    with open(path, 'rb') as file_object:
+      for line in file_object.readlines():
+        line = line.strip()
+        if not line or line.startswith(b'#'):
+          continue
+
+        try:
+          identifier, offset, pattern = line.split()
+        except ValueError:
+          logging.error(u'[skipping] invalid line: {0:s}'.format(
+              line.decode(u'utf-8')))
+          continue
+
+        try:
+          offset = int(offset, 10)
+        except ValueError:
+          logging.error(u'[skipping] invalid offset in line: {0:s}'.format(
+              line.decode(u'utf-8')))
+          continue
+
+        try:
+          pattern = pattern.decode(u'string_escape')
+        # ValueError is raised e.g. when the patterns contains "\xg1".
+        except ValueError:
+          logging.error(
+              u'[skipping] invalid pattern in line: {0:s}'.format(
+                  line.decode(u'utf-8')))
+          continue
+
+        format_specification = specification.FormatSpecification(identifier)
+        format_specification.AddNewSignature(pattern, offset=offset)
+        specification_store.AddSpecification(format_specification)
+
+    return specification_store
+
+  def ListSignatureIdentifiers(self, options):
+    """Lists the signature identifier.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    data_location = getattr(options, u'data_location', None)
+    if not data_location:
+      raise errors.BadConfigOption(u'Missing data location.')
+
+    path = os.path.join(data_location, u'signatures.conf')
+    if not os.path.exists(path):
+      raise errors.BadConfigOption(
+          u'No such format specification file: {0:s}'.format(path))
+
+    try:
+      specification_store = self._ReadSpecificationFile(path)
+    except IOError as exception:
+      raise errors.BadConfigOption((
+          u'Unable to read format specification file: {0:s} with error: '
+          u'{1:s}').format(path, exception))
+
+    identifiers = []
+    for format_specification in specification_store.specifications:
+      identifiers.append(format_specification.identifier)
+
+    self._output_writer.Write(u'Available signature identifiers:\n')
+    self._output_writer.Write(
+        u'\n'.join(textwrap.wrap(u', '.join(sorted(identifiers)), 79)))
+    self._output_writer.Write(u'\n\n')
+
   def ParseOptions(self, options, source_option=u'source'):
     """Parses the options and initializes the front-end.
 
@@ -808,10 +1019,6 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         options, source_option=source_option)
 
     filter_file = getattr(options, u'filter', None)
-    if not filter_file and not getattr(options, u'extension_string', None):
-      raise errors.BadConfigOption(
-          u'Neither an extension string or a filter is defined.')
-
     if filter_file and not os.path.isfile(filter_file):
       raise errors.BadConfigOption(
           u'Unable to proceed, filter file: {0:s} does not exist.'.format(
@@ -821,8 +1028,11 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         getattr(options, u'include_duplicates', False)):
       self._remove_duplicates = False
 
-    self._ParseExtensionStringOption(options)
+    self._data_location = getattr(options, u'data_location', None)
+
     self._ParseDateFiltersOption(options)
+    self._ParseExtensionsStringOption(options)
+    self._ParseSignatureIdentifiersOptions(options)
 
   def PrintFilterCollection(self):
     """Prints the filter collection."""
@@ -865,38 +1075,53 @@ def Main():
       help=u'Turn on debugging information.')
 
   arg_parser.add_argument(
-      u'-w', u'--write', dest=u'path', action=u'store', default=u'.', type=str,
-      help=u'The directory in which extracted files should be stored in.')
+      u'-w', u'--write', action=u'store', dest=u'path', type=unicode,
+      metavar=u'PATH', default=u'.', help=(
+          u'The directory in which extracted files should be stored in.'))
 
   arg_parser.add_argument(
-      u'-x', u'--extensions', dest=u'extension_string', action=u'store',
-      type=str, metavar=u'EXTENSION_STRING', help=(
-          u'If the purpose is to find all files given a certain extension '
-          u'this options should be used. This option accepts a comma separated '
-          u'string denoting all file extensions, eg: -x "csv,docx,pst".'))
-
-  arg_parser.add_argument(
-      u'-f', u'--filter', action=u'store', dest=u'filter',
-      metavar=u'FILTER_FILE', type=str, help=(
+      u'-f', u'--filter', action=u'store', dest=u'filter', type=unicode,
+      metavar=u'FILTER_FILE', help=(
           u'Full path to the file that contains the collection filter, '
           u'the file can use variables that are defined in preprocesing, '
           u'just like any other log2timeline/plaso collection filter.'))
 
   arg_parser.add_argument(
-      u'--date-filter', u'--date_filter', action=u'append', type=str,
+      u'--data', action=u'store', dest=u'data_location', type=unicode,
+      metavar=u'PATH', default=None, help=u'the location of the data files.')
+
+  arg_parser.add_argument(
+      u'--date-filter', u'--date_filter', action=u'append', type=unicode,
       dest=u'date_filters', metavar=u'TYPE_START_END', default=None, help=(
-          u'Add a date based filter to the export criteria. If a date based '
-          u'filter is set no file is saved unless it\'s within the date '
-          u'boundary. This parameter should be in the form of "TYPE,START,END" '
-          u'where TYPE defines which timestamp this date filter affects, eg: '
-          u'atime, ctime, crtime, bkup, etc. START defines the start date and '
+          u'Filter based on file entry date and time ranges. This parameter '
+          u'is formatted as "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" where '
+          u'TIME_VALUE defines which file entry timestamp the filter applies '
+          u'to e.g. atime, ctime, crtime, bkup, etc. START_DATE_TIME and '
+          u'END_DATE_TIME define respectively the start and end of the date '
+          u'time range. A date time range requires at minimum start or end to '
           u'time of the boundary and END defines the end time. Both timestamps '
-          u'are optional and should be set as - if not needed. The correct '
-          u'form of the timestamp value is in the form of "YYYY-MM-DD '
-          u'HH:MM:SS" or "YYYY-MM-DD". Examples are "atime, 2013-01-01 '
-          u'23:12:14, 2013-02-23". This parameter can be repeated as needed '
-          u'to add additional date date boundaries, eg: once for atime, once '
-          u'for crtime, etc.'))
+          u'be set. The date time values are formatted as: YYYY-MM-DD '
+          u'hh:mm:ss.######[+-]##:## Where # are numeric digits ranging from '
+          u'0 to 9 and the seconds fraction can be either 3 or 6 digits. The '
+          u'time of day, seconds fraction and timezone offset are optional. '
+          u'The default timezone is UTC. E.g. "atime, 2013-01-01 23:12:14, '
+          u'2013-02-23". This parameter can be repeated as needed to add '
+          u'additional date date boundaries, eg: once for atime, once for '
+          u'crtime, etc.'))
+
+  arg_parser.add_argument(
+      u'-x', u'--extensions', dest=u'extensions_string', action=u'store',
+      type=unicode, metavar=u'EXTENSIONS', help=(
+          u'Filter based on file name extensions. This option accepts '
+          u'multiple multiple comma separated values e.g. "csv,docx,pst".'))
+
+  arg_parser.add_argument(
+      u'--signatures', dest=u'signature_identifiers', action=u'store',
+      type=unicode, metavar=u'IDENTIFIERS', help=(
+          u'Filter based on file format signature identifiers. This option '
+          u'accepts multiple comma separated values e.g. "esedb,lnk". '
+          u'Use "list" to show an overview of the supported file format '
+          u'signatures.'))
 
   arg_parser.add_argument(
       u'--include_duplicates', dest=u'include_duplicates', action=u'store_true',
@@ -911,8 +1136,8 @@ def Main():
   front_end.AddVssProcessingOptions(arg_parser)
 
   arg_parser.add_argument(
-      u'image', action=u'store', metavar=u'IMAGE', default=None, type=str,
-      help=(
+      u'image', nargs='?', action=u'store', metavar=u'IMAGE', default=None,
+      type=unicode, help=(
           u'The full path to the image file that we are about to extract files '
           u'from, it should be a raw image or another image that plaso '
           u'supports.'))
@@ -924,6 +1149,31 @@ def Main():
     logging.basicConfig(level=logging.DEBUG, format=format_str)
   else:
     logging.basicConfig(level=logging.INFO, format=format_str)
+
+  if not getattr(options, u'data_location', None):
+    # TODO: improve handling of data location, for now default to:
+    # <path image_export.py> .. .. data
+    options.data_location = os.path.dirname(__file__)
+    options.data_location = os.path.dirname(options.data_location)
+    options.data_location = os.path.dirname(options.data_location)
+    options.data_location = os.path.join(options.data_location, u'data')
+
+  if getattr(options, u'signature_identifiers', u'') == u'list':
+    front_end.ListSignatureIdentifiers(options)
+    return True
+
+  has_filter = False
+  if getattr(options, u'date_filters', []):
+    has_filter = True
+  if getattr(options, u'extensions_string', u''):
+    has_filter = True
+  if getattr(options, u'filter', u''):
+    has_filter = True
+  if getattr(options, u'signature_identifiers', u''):
+    has_filter = True
+
+  if not has_filter:
+    logging.warning(u'No filter defined exporting all files.')
 
   try:
     front_end.ParseOptions(options, source_option='image')
