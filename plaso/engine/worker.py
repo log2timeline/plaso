@@ -228,6 +228,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           file_system_collector = collector.FileSystemCollector(self._queue)
           file_system_collector.Collect(file_system, archive_path_spec)
 
+          file_system.Close()
+
         except IOError:
           logging.warning(u'Unable to process archive file:\n{0:s}'.format(
               archive_path_spec.comparable))
@@ -387,6 +389,12 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
+
+    # Clean up after parsers that do not call close explicitly.
+    if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
+      logging.debug((
+          u'File-object not explicitly closed for path specification: '
+          u'{0:s}.').format(file_entry.path_spec.comparable))
 
     if self._enable_profiling:
       self._ProfilingUpdate()
