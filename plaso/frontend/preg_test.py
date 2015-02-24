@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the preg front-end."""
 
-import StringIO
 import unittest
 
 from dfvfs.lib import definitions
@@ -15,38 +14,6 @@ from plaso.frontend import test_lib
 from plaso.lib import errors
 
 
-class StringIOOutputWriter(object):
-  """Class that implements a StringIO output writer."""
-
-  def __init__(self):
-    """Initialize the string output writer."""
-    super(StringIOOutputWriter, self).__init__()
-    self._string_obj = StringIO.StringIO()
-
-    # Make the output writer compatible with a filehandle interface.
-    self.write = self.Write
-
-  def flush(self):
-    """Flush the internal buffer."""
-    self._string_obj.flush()
-
-  def GetValue(self):
-    """Returns the write buffer from the output writer."""
-    return self._string_obj.getvalue()
-
-  def GetLine(self):
-    """Returns a single line read from the output buffer."""
-    return self._string_obj.readline()
-
-  def SeekToBeginning(self):
-    """Seeks the output buffer to the beginning of the buffer."""
-    self._string_obj.seek(0)
-
-  def Write(self, string):
-    """Writes a string to the StringIO object."""
-    self._string_obj.write(string)
-
-
 class PregFrontendTest(test_lib.FrontendTestCase):
   """Tests for the preg front-end."""
 
@@ -55,7 +22,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     hive_storage = preg.PregStorage()
     options = frontend.Options()
 
-    output_writer = StringIOOutputWriter()
+    output_writer = test_lib.StringIOOutputWriter()
     test_front_end = preg.PregFrontend(output_writer)
 
     shell_helper = preg.PregHelper(options, test_front_end, hive_storage)
@@ -142,7 +109,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
         hive_helper.GetCurrentRegistryKey().path, registry_key_path)
 
     # List the directory content.
-    output_string = StringIOOutputWriter()
+    output_string = test_lib.StringIOOutputWriter()
     magic_obj.RedirectOutput(output_string)
     magic_obj.ListDirectoryContent(u'')
     expected_strings = [
@@ -152,7 +119,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self.assertEquals(output_string.GetValue(), u'\n'.join(expected_strings))
 
     # Parse the current key.
-    output_string = StringIOOutputWriter()
+    output_string = test_lib.StringIOOutputWriter()
     magic_obj.RedirectOutput(output_string)
     magic_obj.ParseCurrentKey(u'')
     partial_string = (
@@ -160,7 +127,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self.assertTrue(partial_string in output_string.GetValue())
 
     # Parse using a plugin.
-    output_string = StringIOOutputWriter()
+    output_string = test_lib.StringIOOutputWriter()
     magic_obj.RedirectOutput(output_string)
     magic_obj.ParseWithPlugin(u'userassist')
 
@@ -170,7 +137,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     self.assertTrue(partial_string in output_string.GetValue())
 
     # Let's see where we are at the moment.
-    output_string = StringIOOutputWriter()
+    output_string = test_lib.StringIOOutputWriter()
     magic_obj.RedirectOutput(output_string)
     magic_obj.PrintCurrentWorkingDirectory(u'')
 
