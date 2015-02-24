@@ -94,6 +94,8 @@ class Collector(queue.ItemQueueProducer):
         logging.debug(u'Collection from image FAILED.')
       return
 
+    file_system.Close()
+
     if self._abort:
       return
 
@@ -151,28 +153,23 @@ class Collector(queue.ItemQueueProducer):
       file_system = path_spec_resolver.Resolver.OpenFileSystem(
           path_spec, resolver_context=self._resolver_context)
 
+      result_string = u'COMPLETED'
       try:
         self._fs_collector.Collect(
             file_system, path_spec, find_specs=find_specs)
       except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError) as exception:
         logging.warning(u'{0:s}'.format(exception))
+        result_string = u'FAILED'
 
-        if find_specs:
-          logging.debug(
-              u'Collection from VSS store: {0:d} with filter FAILED.'.format(
-                  store_index + 1))
-        else:
-          logging.debug(u'Collection from VSS store: {0:d} FAILED.'.format(
-              store_index + 1))
-        return
+      file_system.Close()
 
       if find_specs:
         logging.debug(
-            u'Collection from VSS store: {0:d} with filter COMPLETED.'.format(
-                store_index + 1))
+            u'Collection from VSS store: {0:d} with filter {1:s}.'.format(
+                store_index + 1, result_string))
       else:
-        logging.debug(u'Collection from VSS store: {0:d} COMPLETED.'.format(
-            store_index + 1))
+        logging.debug(u'Collection from VSS store: {0:d} {1:s}.'.format(
+            store_index + 1, result_string))
 
   def Collect(self):
     """Collects files from the source."""
@@ -211,6 +208,8 @@ class Collector(queue.ItemQueueProducer):
       except (dfvfs_errors.AccessError,
               dfvfs_errors.BackEndError) as exception:
         logging.warning(u'{0:s}'.format(exception))
+
+      file_system.Close()
 
     self.SignalEndOfInput()
 
