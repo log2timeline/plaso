@@ -334,6 +334,8 @@ class BuildFindSpecsFromFileTest(unittest.TestCase):
     with self.assertRaises(IOError):
       _ = engine_utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
 
+    file_system.Close()
+
 
 if __name__ == '__main__':
   unittest.main()

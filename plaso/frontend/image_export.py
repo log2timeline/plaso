@@ -684,6 +684,8 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
         for path_spec in searcher.Find(find_specs=find_specs):
           self._ExtractFile(path_spec, destination_path)
 
+        file_system.Close()
+
   # TODO: refactor, this is a duplicate of the function in engine.
   def _GetSourceFileSystemSearcher(self, resolver_context=None):
     """Retrieves the file system searcher of the source.
@@ -711,6 +713,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     else:
       mount_point = self._source_path_spec.parent
 
+    # TODO: add explicit close of file_system.
     return file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
   def _ParseExtensionStringOption(self, options):

@@ -39,7 +39,7 @@ class FileStatParser(interface.BaseParser):
   DESCRIPTION = u'Parser for file system stat information.'
 
   _TIME_ATTRIBUTES = frozenset([
-      'atime', 'bkup_time', 'ctime', 'crtime', 'dtime', 'mtime'])
+      u'atime', u'bkup_time', u'ctime', u'crtime', u'dtime', u'mtime'])
 
   def _GetFileSystemTypeFromFileEntry(self, file_entry):
     """Return a filesystem type string from a file entry object.
@@ -61,7 +61,7 @@ class FileStatParser(interface.BaseParser):
     fs_info = file_system.GetFsInfo()
     if fs_info.info:
       type_string = unicode(fs_info.info.ftype)
-      if type_string.startswith('TSK_FS_TYPE'):
+      if type_string.startswith(u'TSK_FS_TYPE'):
         return type_string[12:]
 
   def Parse(self, parser_mediator, **kwargs):
@@ -77,8 +77,8 @@ class FileStatParser(interface.BaseParser):
 
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
-    is_allocated = getattr(stat_object, 'allocated', True)
-    file_size = getattr(stat_object, 'size', None),
+    is_allocated = getattr(stat_object, u'allocated', True)
+    file_size = getattr(stat_object, u'size', None),
 
     for time_attribute in self._TIME_ATTRIBUTES:
       timestamp = getattr(stat_object, time_attribute, None)
@@ -91,8 +91,8 @@ class FileStatParser(interface.BaseParser):
       timestamp = timelib.Timestamp.FromPosixTime(timestamp)
       if nano_time_attribute is not None:
         # Note that the _nano values are in intervals of 100th nano seconds.
-        nano_time_attribute, _ = divmod(nano_time_attribute, 10)
-        timestamp += nano_time_attribute
+        micro_time_attribute, _ = divmod(nano_time_attribute, 10)
+        timestamp += micro_time_attribute
 
       # TODO: this also ignores any timestamp that equals 0.
       # Is this the desired behavior?
