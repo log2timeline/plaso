@@ -9,6 +9,7 @@ import unittest
 
 from plaso.output import interface
 from plaso.output import manager
+from plaso.output import test_lib
 
 
 class DummyEvent(object):
@@ -31,21 +32,26 @@ class TestOutput(interface.LogOutputFormatter):
   NAME = u'testoutput'
   DESCRIPTION = u'Test output that provides a simple mocked XML.'
 
-  def __init__(self, filehandle):
-    """Fake the store."""
-    super(TestOutput, self).__init__(store=None, filehandle=filehandle)
+  def __init__(
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
+      filter_use=None):
+    """Initializes the log output formatter object.
 
-  def StartEvent(self):
-    self.filehandle.write(u'<Event>\n')
-
-  def EventBody(self, event_object):
-    self.filehandle.write((
-        u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
-        u'\t<Entry>{2:s}</Entry>\n').format(
-            event_object.date, event_object.timestamp, event_object.entry))
-
-  def EndEvent(self):
-    self.filehandle.write(u'</Event>\n')
+    Args:
+      store: A storage file object (instance of StorageFile) that defines
+             the storage.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+      config: Optional configuration object, containing config information.
+              The default is None.
+      filter_use: Optional filter object (instance of FilterObject).
+                  The default is None.
+    """
+    super(TestOutput, self).__init__(
+        store, formatter_mediator, filehandle=filehandle, config=config,
+        filter_use=filter_use)
 
   def Start(self):
     self.filehandle.write(u'<EventFile>\n')
@@ -53,23 +59,48 @@ class TestOutput(interface.LogOutputFormatter):
   def End(self):
     self.filehandle.write(u'</EventFile>\n')
 
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
+
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
+    self.filehandle.write((
+        u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
+        u'\t<Entry>{2:s}</Entry>\n').format(
+            event_object.date, event_object.timestamp, event_object.entry))
+
+  def WriteEventEnd(self):
+    """Writes the end of an event object to the output."""
+    self.filehandle.write(u'</Event>\n')
+
+  def WriteEventStart(self):
+    """Writes the start of an event object to the output."""
+    self.filehandle.write(u'<Event>\n')
+
 
 manager.OutputManager.RegisterOutput(TestOutput)
 
 
-class PlasoOutputUnitTest(unittest.TestCase):
+class PlasoOutputUnitTest(test_lib.LogOutputFormatterTestCase):
   """The unit test for plaso output formatting."""
 
   def testOutput(self):
     """Test a test implementation of the output formatter."""
-    events = [DummyEvent(123456, u'My Event Is Now!'),
-              DummyEvent(123458, u'There is no tomorrow.'),
-              DummyEvent(123462, u'Tomorrow is now.'),
-              DummyEvent(123489, u'This is just some stuff to fill the line.')]
+    events = [
+        DummyEvent(123456, u'My Event Is Now!'),
+        DummyEvent(123458, u'There is no tomorrow.'),
+        DummyEvent(123462, u'Tomorrow is now.'),
+        DummyEvent(123489, u'This is just some stuff to fill the line.')]
 
     lines = []
     with tempfile.NamedTemporaryFile() as fh:
-      formatter = TestOutput(fh)
+      formatter = TestOutput(None, self._formatter_mediator, filehandle=fh)
       formatter.Start()
       for event_object in events:
         formatter.WriteEvent(event_object)
@@ -106,7 +137,7 @@ class PlasoOutputUnitTest(unittest.TestCase):
     self.assertTrue(module_seen)
 
 
-class EventBufferTest(unittest.TestCase):
+class EventBufferTest(test_lib.LogOutputFormatterTestCase):
   """Few unit tests for the EventBuffer class."""
 
   def testFlush(self):
@@ -119,7 +150,7 @@ class EventBufferTest(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertEquals(len(event_buffer._buffer_dict), expected)
 
-      formatter = TestOutput(fh)
+      formatter = TestOutput(None, self._formatter_mediator, filehandle=fh)
       event_buffer = interface.EventBuffer(formatter, False)
 
       event_buffer.Append(DummyEvent(123456, u'Now is now'))
@@ -146,6 +177,7 @@ class OutputFilehandleTest(unittest.TestCase):
   """Few unit tests for the OutputFilehandle."""
 
   def setUp(self):
+    """Sets up the objects needed for this test."""
     self.preferred_encoding = locale.getpreferredencoding()
 
   def _GetLine(self):

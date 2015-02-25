@@ -21,6 +21,7 @@ from plaso import parsers   # pylint: disable=unused-import
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.engine import worker
+from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfilter
@@ -1630,6 +1631,7 @@ class AnalysisFrontend(Frontend):
     """
     super(AnalysisFrontend, self).__init__(input_reader, output_writer)
 
+    self._formatter_mediator = formatters_mediator.FormatterMediator()
     self._storage_file_path = None
 
   def AddStorageFileOptions(self, argument_group):

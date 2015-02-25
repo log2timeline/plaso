@@ -44,16 +44,28 @@ class LogOutputFormatter(object):
   NAME = u''
   DESCRIPTION = u''
 
-  def __init__(self, store, filehandle=sys.stdout, config=None,
-               filter_use=None):
+  def __init__(
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
+      filter_use=None):
     """Initializes the log output formatter object.
 
     Args:
-      store: A StorageFile object that defines the storage.
-      filehandle: A file-like object that can be written to.
-      config: The configuration object, containing config information.
-      filter_use: A filter_interface.FilterObject object.
+      store: A storage file object (instance of StorageFile) that defines
+             the storage.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+      config: Optional configuration object, containing config information.
+              The default is None.
+      filter_use: Optional filter object (instance of FilterObject).
+                  The default is None.
     """
+    super(LogOutputFormatter, self).__init__()
+    self._config = config
+    self._filter = filter_use
+    self._formatter_mediator = formatter_mediator
+
     zone = getattr(config, 'timezone', 'UTC')
     try:
       self.zone = pytz.timezone(zone)
@@ -62,54 +74,9 @@ class LogOutputFormatter(object):
           zone))
       self.zone = pytz.utc
 
+    self.encoding = getattr(config, 'preferred_encoding', 'utf-8')
     self.filehandle = filehandle
     self.store = store
-    self._filter = filter_use
-    self._config = config
-
-    self.encoding = getattr(config, 'preferred_encoding', 'utf-8')
-
-  def WriteEvent(self, evt):
-    """Write the output of a single entry to the output filehandle.
-
-    This method takes care of actually outputting each event in
-    question. It does so by first prepending it with potential
-    start of event, then processes the main body before appending
-    a potential end of event.
-
-    Args:
-      evt: An EventObject, defined in the event library.
-    """
-    self.StartEvent()
-    self.EventBody(evt)
-    self.EndEvent()
-
-  @abc.abstractmethod
-  def EventBody(self, evt):
-    """Writes the main body of an event to the output filehandle.
-
-    Args:
-      evt: An EventObject, defined in the event library.
-
-    Raises:
-      NotImplementedError: When not implemented.
-    """
-
-  def StartEvent(self):
-    """This should be extended by specific implementations.
-
-    This method does all preprocessing or output before each event
-    is printed, for instance to surround XML events with tags, etc.
-    """
-    pass
-
-  def EndEvent(self):
-    """This should be extended by specific implementations.
-
-    This method does all the post-processing or output after
-    each event has been printed, such as closing XML tags, etc.
-    """
-    pass
 
   def Start(self):
     """This should be extended by specific implementations.
@@ -119,7 +86,7 @@ class LogOutputFormatter(object):
     defined in that output format.
     """
     pass
-
+ 
   def End(self):
     """This should be extended by specific implementations.
 
@@ -129,45 +96,103 @@ class LogOutputFormatter(object):
     """
     pass
 
+  def WriteEvent(self, event_object):
+    """Write the output of a single entry to the output filehandle.
+
+    This method takes care of actually outputting each event in
+    question. It does so by first prepending it with potential
+    start of event, then processes the main body before appending
+    a potential end of event.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
+    self.WriteEventStart()
+
+    try:
+      self.WriteEventBody(event_object)
+    except errors.NoFormatterFound:
+      logging.error(
+          u'Unable to retrieve formatter for event object: {0:s}:'.format(
+              event_object.GetString()))
+
+    self.WriteEventEnd()
+
+  @abc.abstractmethod
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
+
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
+
+  def WriteEventEnd(self):
+    """Writes the end of an event object to the output.
+
+    This method does all the post-processing or output after
+    each event has been printed, such as closing XML tags, etc.
+    """
+    pass
+
+  def WriteEventStart(self):
+    """Writes the start of an event object to the output.
+
+    This method does all preprocessing or output before each event
+    is printed, for instance to surround XML events with tags, etc.
+    """
+    pass
+
 
 # Need to suppress this since these classes do not implement the
-# abstract method EventBody, classes that inherit from one of these
+# abstract method WriteEventBody, classes that inherit from one of these
 # classes need to implement that function.
 # pylint: disable=abstract-method
 class FileLogOutputFormatter(LogOutputFormatter):
   """A simple file based output formatter."""
 
-  def __init__(self, store, filehandle=sys.stdout, config=None,
-               filter_use=None):
-    """Initializes the file log output formatter object.
+  def __init__(
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None, 
+      filter_use=None):
+    """Initializes the log output formatter object.
 
     Args:
-      store: A StorageFile object that defines the storage.
-      filehandle: A file-like object that can be written to.
-      config: The configuration object, containing config information.
-      filter_use: A filter_interface.FilterObject object.
+      store: A storage file object (instance of StorageFile) that defines
+             the storage.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+      config: Optional configuration object, containing config information.
+              The default is None.
+      filter_use: Optional filter object (instance of FilterObject).
+                  The default is None.
+
+    Raises:
+      ValueError: if the filehandle value is not supported.
     """
     super(FileLogOutputFormatter, self).__init__(
-        store, filehandle=filehandle, config=config, filter_use=filter_use)
+        store, formatter_mediator, config=config, filter_use=filter_use)
 
     if isinstance(filehandle, basestring):
       open_filehandle = open(filehandle, 'wb')
 
     # Check if the filehandle object has a write method.
-    elif hasattr(filehandle, 'write'):
+    elif hasattr(filehandle, u'write'):
       open_filehandle = filehandle
 
     else:
-      raise IOError(
-          u'Unable to determine how to use filehandle passed in: {0:s}'.format(
-              type(filehandle)))
+      raise ValueError(u'Unsupported file handle.')
 
     self.filehandle = OutputFilehandle(self.encoding)
     self.filehandle.Open(open_filehandle)
 
   def End(self):
     """Close the open filehandle after the last output."""
-    super(FileLogOutputFormatter, self).End()
     self.filehandle.Close()
 
 
@@ -185,8 +210,8 @@ class EventBuffer(object):
 
     Args:
       formatter: An OutputFormatter object.
-      check_dedups: Boolean value indicating whether or not the buffer should
-      check and merge duplicate entries or not.
+      check_dedups: Optional boolean value indicating whether or not the buffer
+                    should check and merge duplicate entries or not.
     """
     self._buffer_dict = {}
     self._current_timestamp = 0

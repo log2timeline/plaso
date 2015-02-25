@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""Defines the output formatter for the SQLite database used by 4n6time."""
+
+# TODO: Add a unit test for this output module.
 
 import logging
 import os
@@ -9,9 +12,9 @@ import sqlite3
 from plaso import formatters
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
@@ -31,19 +34,27 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
       'sourcetype', 'source', 'user', 'host', 'MACB', 'color', 'type',
       'record_number'])
 
-  def __init__(self, store, filehandle=sys.stdout, config=None,
-               filter_use=None):
-    """Constructor for the output module.
+  def __init__(
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
+      filter_use=None):
+    """Initializes the log output formatter object.
 
     Args:
-      store: The storage object.
-      filehandle: A file-like object that can be written to.
-      config: The configuration object for the module.
-      filter_use: The filter object used.
+      store: A storage file object (instance of StorageFile) that defines
+             the storage.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      filehandle: Optional file-like object that can be written to.
+                  The default is sys.stdout.
+      config: Optional configuration object, containing config information.
+              The default is None.
+      filter_use: Optional filter object (instance of FilterObject).
+                  The default is None.
     """
-    # TODO: Add a unit test for this output module.
     super(SQLite4n6OutputFormatter, self).__init__(
-        store, filehandle, config, filter_use)
+        store, formatter_mediator, filehandle=filehandle, config=config,
+        filter_use=filter_use)
+
     # TODO: move this to an output module interface.
     self.set_status = getattr(config, 'set_status', None)
 
@@ -172,19 +183,16 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
             all_tags.append(tag)
     return all_tags
 
-  def StartEvent(self):
-    """Do nothing, just override the parent's StartEvent method."""
-    pass
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
 
-  def EndEvent(self):
-    """Do nothing, just override the parent's EndEvent method."""
-    pass
-
-  def EventBody(self, event_object):
-    """Formats data as the 4n6time table format and writes it to the database.
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
 
     Args:
-      event_object: The event object (EventObject).
+      event_object: the event object (instance of EventObject).
 
     Raises:
       raise errors.NoFormatterFound: If no event formatter was found.
@@ -213,7 +221,7 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
       event_formatter.FORMAT_STRING = event_formatter.FORMAT_STRING.replace(
           '}', '}<|>')
 
-    msg, _ = event_formatter.GetMessages(event_object)
+    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
@@ -224,7 +232,8 @@ class SQLite4n6OutputFormatter(interface.LogOutputFormatter):
     extra = []
     format_variables = event_formatter.GetFormatStringAttributeNames()
     for key in event_object.GetAttributes():
-      if key in utils.RESERVED_VARIABLES or key in format_variables:
+      if (key in definitions.RESERVED_VARIABLE_NAMES or
+          key in format_variables):
         continue
       extra.append(u'{0:s}: {1!s} '.format(
           key, getattr(event_object, key, None)))

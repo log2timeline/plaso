@@ -86,26 +86,41 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Firefox History'
   SOURCE_SHORT = 'WEBHIST'
 
-  def GetMessages(self, event_object):
-    """Return the message strings."""
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    transition = self._URL_TRANSITIONS.get(
-        getattr(event_object, 'visit_type', 0), None)
+    event_values = event_object.GetValues()
 
+    visit_type = event_values.get(u'visit_type', 0)
+    transition = self._URL_TRANSITIONS.get(visit_type, None)
     if transition:
       transition_str = u'Transition: {0!s}'.format(transition)
 
-    if hasattr(event_object, 'extra'):
+    extra = event_values.get(u'extra', None)
+    if extra:
       if transition:
-        event_object.extra.append(transition_str)
-      event_object.extra_string = u' '.join(event_object.extra)
-    elif transition:
-      event_object.extra_string = transition_str
+        extra.append(transition_str)
+      event_values[u'extra_string'] = u' '.join(extra)
 
-    return super(FirefoxPageVisitFormatter, self).GetMessages(event_object)
+    elif transition:
+      event_values[u'extra_string'] = transition_str
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 class FirefoxDowloadFormatter(interface.EventFormatter):

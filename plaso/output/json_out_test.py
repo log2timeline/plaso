@@ -11,6 +11,7 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.lib import event
 from plaso.lib import timelib_test
 from plaso.output import json_out
+from plaso.output import test_lib
 
 
 class JsonTestEvent(event.EventObject):
@@ -37,13 +38,15 @@ class JsonTestEvent(event.EventObject):
         parent=os_path_spec)
 
 
-class JsonOutputTest(unittest.TestCase):
+class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
   """Tests for the JSON outputter."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
+    super(JsonOutputTest, self).setUp()
     self.output = StringIO.StringIO()
-    self.formatter = json_out.JsonOutputFormatter(None, self.output)
+    self.formatter = json_out.JsonOutputFormatter(
+        None, self._formatter_mediator, filehandle=self.output)
     self.event_object = JsonTestEvent()
 
   def testStartAndEnd(self):
@@ -53,10 +56,11 @@ class JsonOutputTest(unittest.TestCase):
     self.formatter.End()
     self.assertEquals(self.output.getvalue(), u'{"event_foo": "{}"}')
 
-  def testEventBody(self):
-    """Test ensures that returned lines returned are formatted as JSON."""
+  def testWriteEventBody(self):
+    """Tests the WriteEventBody function."""
+    self.formatter.WriteEventBody(self.event_object)
 
-    expected_string = (
+    expected_event_body = (
         '"event_0": {{"username": "root", "display_name": "OS: '
         '/var/log/syslog.1", "uuid": "{0:s}", "data_type": "test:l2tjson", '
         '"timestamp": 1340821021000000, "hostname": "ubuntu", "text": '
@@ -67,8 +71,8 @@ class JsonOutputTest(unittest.TestCase):
         '\\\\\\"location\\\\\\": \\\\\\"/cases/image.dd\\\\\\"}}\\"}}", '
         '"inode": 12345678}},\n').format(self.event_object.uuid)
 
-    self.formatter.EventBody(self.event_object)
-    self.assertEquals(self.output.getvalue(), expected_string)
+    event_body = self.output.getvalue()
+    self.assertEquals(event_body, expected_event_body)
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ from plaso.artifacts import knowledge_base
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
 from plaso.parsers import mediator
 
@@ -208,8 +209,10 @@ class ParserTestCase(unittest.TestCase):
       expected_message: the expected message string.
       expected_message_short: the expected short message string.
     """
-    manager_object = formatters_manager.FormattersManager
-    message, message_short = manager_object.GetMessageStrings(event_object)
+    formatter_mediator = formatters_mediator.FormatterMediator()
+    message, message_short = (
+        formatters_manager.FormattersManager.GetMessageStrings(
+            formatter_mediator, event_object))
     self.assertEquals(message, expected_message)
     self.assertEquals(message_short, expected_message_short)
 
@@ -226,9 +229,9 @@ class ParserTestCase(unittest.TestCase):
       expected_source: the expected source string.
       expected_source_short: the expected short source string.
     """
-    manager_object = formatters_manager.FormattersManager
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
-    source_short, source = manager_object.GetSourceStrings(event_object)
+    source_short, source = (
+        formatters_manager.FormattersManager.GetSourceStrings(event_object))
     self.assertEquals(source, expected_source)
     self.assertEquals(source_short, expected_source_short)

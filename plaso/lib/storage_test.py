@@ -12,6 +12,7 @@ from plaso.engine import queue
 from plaso.events import text_events
 from plaso.events import windows_events
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import pfilter
@@ -107,6 +108,8 @@ class StorageFileTest(unittest.TestCase):
     self._event_objects.append(event_2)
     self._event_objects.append(event_3)
     self._event_objects.append(event_4)
+
+    self._formatter_mediator = formatters_mediator.FormatterMediator()
 
   def testStorageWriter(self):
     """Test the storage writer."""
@@ -237,11 +240,13 @@ class StorageFileTest(unittest.TestCase):
     self.assertEquals(tags[0].tag.comment, u'My comment')
     self.assertEquals(tags[0].tag.color, u'blue')
 
-    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(tags[0])
+    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
+        self._formatter_mediator, tags[0])
     self.assertEquals(msg[0:10], u'This is a ')
 
     self.assertEquals(tags[1].tag.tags[0], 'Malware')
-    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(tags[1])
+    msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
+        self._formatter_mediator, tags[1])
     self.assertEquals(msg[0:15], u'[\\HKCU\\Windows\\')
 
     self.assertEquals(tags[2].tag.comment, u'This is interesting')

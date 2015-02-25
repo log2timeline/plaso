@@ -18,28 +18,35 @@ class HachoirFormatter(interface.EventFormatter):
   SOURCE_LONG = 'Hachoir Metadata'
   SOURCE_SHORT = 'META'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
+    event_values = event_object.GetValues()
+
     string_parts = []
-    for key, value in sorted(event_object.metadata.items()):
-      string_parts.append(u'{0:s}: {1:s}'.format(key, value))
+    metadata = event_values.get(u'metadata', None)
+    if metadata:
+      for key, value in sorted(metadata.items()):
+        string_parts.append(u'{0:s}: {1:s}'.format(key, value))
+    event_values[u'data'] = u' '.join(string_parts)
 
-    event_object.data = u' '.join(string_parts)
-
-    return super(HachoirFormatter, self).GetMessages(event_object)
+    return self._FormatMessages(
+        self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
 
 
 manager.FormattersManager.RegisterFormatter(HachoirFormatter)

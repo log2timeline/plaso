@@ -11,6 +11,7 @@ from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.output import interface
 from plaso.output import pstorage
+from plaso.output import test_lib
 
 
 class TempDirectory(object):
@@ -31,21 +32,25 @@ class TempDirectory(object):
     shutil.rmtree(self.name, True)
 
 
-class PstorageTest(unittest.TestCase):
+class PstorageTest(test_lib.LogOutputFormatterTestCase):
+  """Tests for the plaso storage outputter."""
+
   def setUp(self):
-    self.test_filename = os.path.join('test_data', 'psort_test.out')
+    """Sets up the objects needed for this test."""
+    super(PstorageTest, self).setUp()
+    self.test_filename = os.path.join(u'test_data', u'psort_test.out')
 
     # Show full diff results, part of TestCase so does not follow our naming
     # conventions.
-    self.maxDiff = None
     pfilter.TimeRangeCache.ResetTimeConstraints()
 
   def testOutput(self):
     with TempDirectory() as dirname:
-      dump_file = os.path.join(dirname, 'plaso.db')
+      dump_file = os.path.join(dirname, u'plaso.db')
       # Copy events to pstorage dump.
       with storage.StorageFile(self.test_filename, read_only=True) as store:
-        formatter = pstorage.PlasoStorageOutputFormatter(store, dump_file)
+        formatter = pstorage.PlasoStorageOutputFormatter(
+            store, self._formatter_mediator, filehandle=dump_file)
         with interface.EventBuffer(
             formatter, check_dedups=False) as output_buffer:
           event_object = store.GetSortedEntry()

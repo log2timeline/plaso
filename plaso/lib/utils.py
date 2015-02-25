@@ -7,14 +7,6 @@ from plaso.lib import errors
 from plaso.lib import lexer
 
 
-RESERVED_VARIABLES = frozenset(
-    ['username', 'inode', 'hostname', 'body', 'parser', 'regvalue', 'timestamp',
-     'timestamp_desc', 'source_short', 'source_long', 'timezone', 'filename',
-     'display_name', 'pathspec', 'offset', 'store_number', 'store_index',
-     'tag', 'data_type', 'metadata', 'http_headers', 'query', 'mapped_files',
-     'uuid'])
-
-
 def IsText(bytes_in, encoding=None):
   """Examine the bytes in and determine if they are indicative of a text.
 

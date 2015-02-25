@@ -195,7 +195,7 @@ class DynamicOutput(interface.FileLogOutputFormatter):
           u'Unable to find no event formatter for: {0:s}.'.format(
               event_object.data_type))
 
-    msg, _ = event_formatter.GetMessages(event_object)
+    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
     return msg
 
   def ParseMessageShort(self, event_object):
@@ -215,7 +215,8 @@ class DynamicOutput(interface.FileLogOutputFormatter):
           u'Unable to find no event formatter for: {0:s}.'.format(
               event_object.data_type))
 
-    _, msg_short = event_formatter.GetMessages(event_object)
+    _, msg_short = event_formatter.GetMessages(
+        self._formatter_mediator, event_object)
     return msg_short
 
   def ParseInode(self, event_object):
@@ -261,16 +262,17 @@ class DynamicOutput(interface.FileLogOutputFormatter):
     self.filehandle.WriteLine('{0:s}\n'.format(
         self.separator.join(self.fields)))
 
-  def WriteEvent(self, event_object):
-    """Write a single event."""
-    try:
-      self.EventBody(event_object)
-    except errors.NoFormatterFound:
-      logging.error(u'Unable to output line, no formatter found.')
-      logging.error(event_object)
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
 
-  def EventBody(self, event_object):
-    """Formats data as "dynamic" CSV and writes to the filehandle."""
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
     row = []
     for field in self.fields:
       has_call_back = self.SPECIAL_HANDLING.get(field, None)
