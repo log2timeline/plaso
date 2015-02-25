@@ -56,8 +56,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
     self._filter_buffer = None
     self._filter_expression = None
     self._filter_object = None
+    self._output_filename = None
     self._output_format = None
-    self._output_stream = None
     self._slice_size = 5
 
   def AddAnalysisPluginOptions(self, argument_group, plugin_names):
@@ -193,9 +193,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
       raise errors.BadConfigOption(
           u'Unsupported output format: {0:s}.'.format(self._output_format))
 
-    self._output_stream = getattr(options, u'write', None)
-    if not self._output_stream:
-      self._output_stream = sys.stdout
+    self._output_filename = getattr(options, u'write', None)
 
     self._filter_expression = getattr(options, u'filter', None)
     if self._filter_expression:
@@ -223,13 +221,15 @@ class PsortFrontend(frontend.AnalysisFrontend):
     """
     counter = None
 
-    if options.slice:
-      if options.timezone == u'UTC':
+    slice_option = getattr(options, u'slice', None)
+    if slice_option:
+      timezone = getattr(options, u'timezone', u'UTC')
+      if timezone == u'UTC':
         zone = pytz.utc
       else:
-        zone = pytz.timezone(options.timezone)
+        zone = pytz.timezone(timezone)
 
-      timestamp = timelib.Timestamp.FromTimeString(options.slice, timezone=zone)
+      timestamp = timelib.Timestamp.FromTimeString(slice_option, timezone=zone)
 
       # Convert number of minutes to microseconds.
       range_operator = self._slice_size * 60 * 1000000
@@ -238,7 +238,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
       pfilter.TimeRangeCache.SetLowerTimestamp(timestamp - range_operator)
       pfilter.TimeRangeCache.SetUpperTimestamp(timestamp + range_operator)
 
-    if options.analysis_plugins:
+    analysis_plugins = getattr(options, u'analysis_plugins', u'')
+    if analysis_plugins:
       read_only = False
     else:
       read_only = True
@@ -253,12 +254,18 @@ class PsortFrontend(frontend.AnalysisFrontend):
     with storage_file:
       storage_file.SetStoreLimit(self._filter_object)
 
+      if self._output_filename:
+        output_stream = self._output_filename
+      else:
+        output_stream = sys.stdout
+
       try:
         # TODO: move this into a factory function?
         output_module_class = output_manager.OutputManager.GetOutputClass(
             self._output_format)
         output_module = output_module_class(
-            storage_file, self._output_stream, options, self._filter_object)
+            storage_file, filehandle=output_stream, config=options,
+            filter_use=self._filter_object)
       except IOError as exception:
         raise RuntimeError(
             u'Unable to create output module with error: {0:s}'.format(
@@ -267,7 +274,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
       if not output_module:
         raise RuntimeError(u'Missing output module.')
 
-      if options.analysis_plugins:
+      if analysis_plugins:
         logging.info(u'Starting analysis plugins.')
         # Within all preprocessing objects, try to get the last one that has
         # time zone information stored in it, the highest chance of it
@@ -292,7 +299,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
         pre_obj.collection_information[u'file_processed'] = (
             self._storage_file_path)
         pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
-        pre_obj.collection_information[u'plugins'] = options.analysis_plugins
+        pre_obj.collection_information[u'plugins'] = analysis_plugins
         time_of_run = timelib.Timestamp.GetNow()
         pre_obj.collection_information[u'time_of_run'] = time_of_run
 
@@ -313,7 +320,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
         event_queue_producers = []
         event_queues = []
         analysis_plugins_list = [
-            x.strip() for x in options.analysis_plugins.split(u',')]
+            name.strip() for name in analysis_plugins.split(u',')]
 
         for _ in xrange(0, len(analysis_plugins_list)):
           # TODO: add upper queue limit.
@@ -344,7 +351,9 @@ class PsortFrontend(frontend.AnalysisFrontend):
       else:
         event_queue_producers = []
 
-      output_buffer = output_interface.EventBuffer(output_module, options.dedup)
+      deduplicate_events = getattr(options, u'dedup', True)
+      output_buffer = output_interface.EventBuffer(
+          output_module, deduplicate_events)
       with output_buffer:
         counter = self.ProcessOutput(
             storage_file, output_buffer, my_filter=self._filter_object,
@@ -355,11 +364,11 @@ class PsortFrontend(frontend.AnalysisFrontend):
         if hasattr(information, u'counter'):
           counter[u'Stored Events'] += information.counter[u'total']
 
-      if not options.quiet:
+      if not getattr(options, u'quiet', False):
         logging.info(u'Output processing is done.')
 
       # Get all reports and tags from analysis plugins.
-      if options.analysis_plugins:
+      if analysis_plugins:
         logging.info(u'Processing data from analysis plugins.')
         for event_queue_producer in event_queue_producers:
           event_queue_producer.SignalEndOfInput()
