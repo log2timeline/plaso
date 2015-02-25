@@ -9,7 +9,6 @@ After the timeline is collected and stored another tool can read, filter,
 sort and process the output inside the storage, and send each processed
 entry to an output formatter that takes care of parsing the output into
 a human readable format for easy human consumption/analysis.
-
 """
 
 import abc
@@ -69,27 +68,6 @@ class LogOutputFormatter(object):
     self._config = config
 
     self.encoding = getattr(config, 'preferred_encoding', 'utf-8')
-
-  # TODO: this function seems to be only called with the default arguments,
-  # so refactor this function away.
-  def FetchEntry(self, store_number=-1, store_index=-1):
-    """Fetches an entry from the storage.
-
-    Fetches the next entry in the storage file, except if location
-    is explicitly indicated.
-
-    Args:
-      store_number: The store number if explicit location is to be read.
-      store_index: The index into the store, if explicit location is to be
-      read.
-
-    Returns:
-      An EventObject, either the next one or from a specific location.
-    """
-    if store_number > 0:
-      return self.store.GetEventObject(store_number, store_index)
-    else:
-      return self.store.GetSortedEntry()
 
   def WriteEvent(self, evt):
     """Write the output of a single entry to the output filehandle.
