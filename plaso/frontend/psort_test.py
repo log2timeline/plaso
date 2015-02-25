@@ -48,9 +48,6 @@ formatters_manager.FormattersManager.RegisterFormatter(PsortTestEventFormatter)
 class TestFormatter(output_interface.LogOutputFormatter):
   """Dummy formatter."""
 
-  def FetchEntry(self, store_number=-1, store_index=-1):
-    return self.store.GetSortedEntry()
-
   def Start(self):
     self.filehandle.write((
         u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
@@ -147,13 +144,12 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       storage_file.AddEventObjects(events)
       storage_file.Close()
 
-      storage_file = storage.StorageFile(temp_file)
-      with storage_file:
+      with storage.StorageFile(temp_file) as storage_file:
         storage_file.store_range = [1]
         formatter = TestFormatter(storage_file, output_fd)
         event_buffer = TestEventBuffer(storage_file, formatter)
 
-        self._front_end.ProcessOutput(event_buffer, formatter)
+        self._front_end.ProcessOutput(storage_file, event_buffer)
 
     event_buffer.Flush()
     lines = []
