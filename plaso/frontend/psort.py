@@ -56,7 +56,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
     self._filter_buffer = None
     self._filter_expression = None
     self._filter_object = None
-    self._output_module_class = None
+    self._output_format = None
     self._output_stream = None
     self._slice_size = 5
 
@@ -185,15 +185,13 @@ class PsortFrontend(frontend.AnalysisFrontend):
     """
     super(PsortFrontend, self).ParseOptions(options)
 
-    output_format = getattr(options, u'output_format', None)
-    if not output_format:
+    self._output_format = getattr(options, u'output_format', None)
+    if not self._output_format:
       raise errors.BadConfigOption(u'Missing output format.')
 
-    self._output_module_class = output_manager.OutputManager.GetOutputClass(
-        output_format)
-    if not self._output_module_class:
+    if not output_manager.OutputManager.HasOutputClass(self._output_format):
       raise errors.BadConfigOption(
-          u'Invalid output format: {0:s}.'.format(output_format))
+          u'Unsupported output format: {0:s}.'.format(self._output_format))
 
     self._output_stream = getattr(options, u'write', None)
     if not self._output_stream:
@@ -256,7 +254,10 @@ class PsortFrontend(frontend.AnalysisFrontend):
       storage_file.SetStoreLimit(self._filter_object)
 
       try:
-        output_module = self._output_module_class(
+        # TODO: move this into a factory function?
+        output_module_class = output_manager.OutputManager.GetOutputClass(
+            self._output_format)
+        output_module = output_module_class(
             storage_file, self._output_stream, options, self._filter_object)
       except IOError as exception:
         raise RuntimeError(

@@ -26,7 +26,7 @@ class TestOutput(interface.LogOutputFormatter):
 class OutputManagerTest(unittest.TestCase):
   """Tests for the output manager."""
 
-  def testOutputRegistration(self):
+  def testRegistration(self):
     """Tests the RegisterOutput and DeregisterOutput functions."""
     # pylint: disable=protected-access
     number_of_parsers = len(manager.OutputManager._output_classes)
@@ -48,6 +48,31 @@ class OutputManagerTest(unittest.TestCase):
         len(manager.OutputManager._output_classes),
         number_of_parsers)
 
+  def testGetOutputClass(self):
+    """Tests the GetOutputClass function."""
+    manager.OutputManager.RegisterOutput(TestOutput)
+
+    output_class = manager.OutputManager.GetOutputClass('test_output')
+    self.assertEquals(output_class, TestOutput)
+
+    with self.assertRaises(ValueError):
+      _ = manager.OutputManager.GetOutputClass(1)
+
+    with self.assertRaises(KeyError):
+      _ = manager.OutputManager.GetOutputClass('bogus')
+
+    manager.OutputManager.DeregisterOutput(TestOutput)
+
+  def testHasOutputClass(self):
+    """Tests the HasOutputClass function."""
+    manager.OutputManager.RegisterOutput(TestOutput)
+
+    self.assertTrue(manager.OutputManager.HasOutputClass('test_output'))
+    self.assertFalse(manager.OutputManager.HasOutputClass('bogus'))
+    self.assertFalse(manager.OutputManager.HasOutputClass(1))
+
+    manager.OutputManager.DeregisterOutput(TestOutput)
+
   def testGetOutputs(self):
     """Tests the GetOtputs function."""
     manager.OutputManager.RegisterOutput(TestOutput)
@@ -61,6 +86,7 @@ class OutputManagerTest(unittest.TestCase):
 
     self.assertIn('test_output', names)
     self.assertIn(u'This is a test output module.', descriptions)
+
     manager.OutputManager.DeregisterOutput(TestOutput)
 
 
