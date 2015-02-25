@@ -537,7 +537,7 @@ class ClusteringEngine(object):
         formatter = formatter_cls(store, store_dedup)
         with output_interface.EventBuffer(
             formatter, check_dedups=True) as output_buffer:
-          event_object = formatter.FetchEntry()
+          event_object = store.GetSortedEntry()
           counter = 0
           while event_object:
             output_buffer.Append(event_object)
@@ -545,7 +545,7 @@ class ClusteringEngine(object):
             if counter % events_per_dot == 0:
               sys.stdout.write(u'.')
               sys.stdout.flush()
-            event_object = formatter.FetchEntry()
+            event_object = store.GetSortedEntry()
       sys.stdout.write(u'\n')
     return nodup_filename
 
