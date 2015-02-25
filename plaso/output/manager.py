@@ -38,11 +38,12 @@ class OutputManager(object):
       The corresponding output (instance of LogOutputFormatter).
 
     Raises:
+      ValueError: if name is not a string.
       KeyError: if there is no output object found with the
                 supplied name or if the name is not a string.
     """
     if not isinstance(name, basestring):
-      raise KeyError(u'Name attribute is not a string.')
+      raise ValueError(u'Name attribute is not a string.')
 
     name = name.lower()
     if name not in cls._output_classes:
@@ -55,6 +56,21 @@ class OutputManager(object):
     """Generate a list of all available output formatter classes."""
     for output_class in cls._output_classes.itervalues():
       yield output_class.NAME, output_class.DESCRIPTION
+
+  @classmethod
+  def HasOutputClass(cls, name):
+    """Determines if a specific output class is registered with the manager.
+
+    Args:
+      name: The name of the output.
+
+    Returns:
+      A boolean indicating if the output class is registered.
+    """
+    if not isinstance(name, basestring):
+      return False
+
+    return name.lower() in cls._output_classes
 
   @classmethod
   def RegisterOutput(cls, output_class):
