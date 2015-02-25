@@ -346,7 +346,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
       output_buffer = output_interface.EventBuffer(output_module, options.dedup)
       with output_buffer:
         counter = self.ProcessOutput(
-            output_buffer, output_module, my_filter=self._filter_object,
+            storage_file, output_buffer, my_filter=self._filter_object,
             filter_buffer=self._filter_buffer,
             analysis_queues=event_queue_producers)
 
@@ -426,13 +426,13 @@ class PsortFrontend(frontend.AnalysisFrontend):
       event_queue.ProduceItem(event_object)
 
   def ProcessOutput(
-      self, output_buffer, output_module, my_filter=None, filter_buffer=None,
+      self, storage_file, output_buffer, my_filter=None, filter_buffer=None,
       analysis_queues=None):
     """Reads event objects from the storage to process and filter them.
 
     Args:
-      output_buffer: output.EventBuffer object.
-      output_module: The output module (instance of OutputFormatter).
+      storage_file: The storage file object (instance of StorageFile).
+      output_buffer: The output buffer object (instance of EventBuffer).
       my_filter: Optional filter object (instance of PFilter).
                  The default is None.
       filter_buffer: Optional filter buffer used to store previously discarded
@@ -445,7 +445,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
     if not analysis_queues:
       analysis_queues = []
 
-    event_object = output_module.FetchEntry()
+    event_object = storage_file.GetSortedEntry()
     while event_object:
       if my_filter:
         event_match = event_object
@@ -490,7 +490,7 @@ class PsortFrontend(frontend.AnalysisFrontend):
         counter[u'Events Included'] += 1
         self._AppendEvent(event_object, output_buffer, analysis_queues)
 
-      event_object = output_module.FetchEntry()
+      event_object = storage_file.GetSortedEntry()
 
     if output_buffer.duplicate_counter:
       counter[u'Duplicate Removals'] = output_buffer.duplicate_counter

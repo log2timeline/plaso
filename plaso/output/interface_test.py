@@ -47,9 +47,6 @@ class TestOutput(interface.LogOutputFormatter):
   def EndEvent(self):
     self.filehandle.write(u'</Event>\n')
 
-  def FetchEntry(self, **_):
-    pass
-
   def Start(self):
     self.filehandle.write(u'<EventFile>\n')
 

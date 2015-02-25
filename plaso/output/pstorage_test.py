@@ -48,10 +48,10 @@ class PstorageTest(unittest.TestCase):
         formatter = pstorage.PlasoStorageOutputFormatter(store, dump_file)
         with interface.EventBuffer(
             formatter, check_dedups=False) as output_buffer:
-          event_object = formatter.FetchEntry()
+          event_object = store.GetSortedEntry()
           while event_object:
             output_buffer.Append(event_object)
-            event_object = formatter.FetchEntry()
+            event_object = store.GetSortedEntry()
 
       # Make sure original and dump have the same events.
       original = storage.StorageFile(self.test_filename, read_only=True)
