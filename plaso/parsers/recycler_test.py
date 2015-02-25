@@ -39,7 +39,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     expected_msg = (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip '
-        u'(from drive C?)')
+        u'(from drive: UNKNOWN)')
     expected_msg_short = (
         u'Deleted file: C:\\Users\\nfury\\Documents\\Alloy Research\\'
         u'StarFury.zip')
@@ -80,7 +80,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
         u'DC2 -> C:\\Documents and Settings\\Mr. Evil\\Desktop'
         u'\\netstumblerinstaller_0_4_0.exe [C:\\Documents and '
         u'Settings\\Mr. Evil\\Desktop\\netstumblerinstaller_0_4_0.exe] '
-        u'(from drive C)')
+        u'(from drive: C)')
     expected_msg_short = (
         u'Deleted file: C:\\Documents and Settings\\Mr. Evil\\Desktop'
         u'\\netstumblerinstaller...')

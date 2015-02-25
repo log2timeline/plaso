@@ -9,6 +9,7 @@ import pyparsing
 from plaso.events import text_events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.lib import lexer
 from plaso.lib import timelib_test
@@ -27,9 +28,6 @@ class TestTextEventFormatter(formatters_interface.EventFormatter):
   FORMAT_STRING = u'{body}'
 
   SOURCE_LONG = 'Test Text Parser'
-
-
-formatters_manager.FormattersManager.RegisterFormatter(TestTextEventFormatter)
 
 
 class TestTextParser(text_parser.SlowLexicalTextParser):
@@ -77,24 +75,29 @@ class TextParserTest(test_lib.ParserTestCase):
 
   def testTextParserFail(self):
     """Test a text parser that will not match against content."""
-    test_file = self._GetTestFilePath(['text_parser', 'test1.txt'])
+    test_file = self._GetTestFilePath([u'text_parser', u'test1.txt'])
 
     with self.assertRaises(errors.UnableToParseFile):
       _ = self._ParseFile(self._parser, test_file)
 
   def testTextParserSuccess(self):
     """Test a text parser that will match against content."""
-    test_file = self._GetTestFilePath(['text_parser', 'test2.txt'])
+    formatters_manager.FormattersManager.RegisterFormatter(
+        TestTextEventFormatter)
+
+    formatter_mediator = formatters_mediator.FormatterMediator()
+
+    test_file = self._GetTestFilePath([u'text_parser', u'test2.txt'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     event_object = event_objects[0]
 
     msg1, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        event_object)
+        formatter_mediator, event_object)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-01-01 05:23:15')
+        u'2011-01-01 05:23:15')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEquals(msg1, 'first line.')
@@ -104,15 +107,18 @@ class TextParserTest(test_lib.ParserTestCase):
     event_object = event_objects[1]
 
     msg2, _ = formatters_manager.FormattersManager.GetMessageStrings(
-        event_object)
+        formatter_mediator, event_object)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '1991-12-24 19:58:06')
+        u'1991-12-24 19:58:06')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEquals(msg2, 'second line.')
     self.assertEquals(event_object.hostname, 'myhost')
     self.assertEquals(event_object.username, 'myuser')
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        TestTextEventFormatter)
 
 
 class PyParserTest(test_lib.ParserTestCase):

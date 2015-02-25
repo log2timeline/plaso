@@ -1546,7 +1546,8 @@ class BypassStorageWriter(queue.EventObjectQueueConsumer):
     if not output_class:
       output_class = output_manager.OutputManager.GetOutputClass('l2tcsv')
     self._output_module = output_class(
-        self, self._output_file, config=self._pre_obj)
+        self, formatter_mediator, filehandle=self._output_file,
+        config=self._pre_obj)
 
     self._output_module.Start()
     self.ConsumeEventObjects()

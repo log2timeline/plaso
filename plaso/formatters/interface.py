@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
-"""This file contains the event formatters interface classes."""
+"""This file contains the event formatters interface classes.
+
+The l2t_csv and other formats are dependent on a message field,
+referred to as description_long and description_short in l2t_csv.
+
+Plaso no longer stores these field explicitly.
+
+A formatter, with a format string definition, is used to convert
+the event object values into a formatted string that is similar
+to the description_long and description_short field.
+"""
 
 import logging
 import re
@@ -117,19 +127,12 @@ class EventFormatter(object):
 
     return self._format_string_attribute_names
 
-  def GetMessages(self, event_object):
+  def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
 
-    The l2t_csv and other formats are dependent on a message field,
-    referred to as description_long and description_short in l2t_csv.
-
-    Plaso does not store this field explicitly, it only contains a format
-    string and the appropriate attributes.
-
-    This method takes the format string and converts that back into a
-    formatted string that can be used for display.
-
     Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
       event_object: the event object (instance of EventObject).
 
     Returns:
@@ -236,6 +239,41 @@ class ConditionalEventFormatter(EventFormatter):
             u'Invalid short format string piece: [{0:s}] contains more '
             u'than 1 attribute name.').format(format_string_piece))
 
+  def _ConditionalFormatMessages(self, event_values):
+    """Determines the conditional formatted message strings.
+
+    Args:
+      event_values: a dictionary object containing the event (object) values.
+
+    Returns:
+      A tuple containing the formatted message string and short message string.
+    """
+    # Using getattr here to make sure the attribute is not set to None.
+    # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
+    string_pieces = []
+    for map_index, attribute_name in enumerate(self._format_string_pieces_map):
+      if not attribute_name or attribute_name in event_values:
+        if attribute_name:
+          attribute = event_values.get(attribute_name, None)
+          # If an attribute is an int, yet has zero value we want to include
+          # that in the format string, since that is still potentially valid
+          # information. Otherwise we would like to skip it.
+          if type(attribute) not in (bool, int, long, float) and not attribute:
+            continue
+        string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
+    format_string = unicode(self.FORMAT_STRING_SEPARATOR.join(string_pieces))
+
+    string_pieces = []
+    for map_index, attribute_name in enumerate(
+        self._format_string_short_pieces_map):
+      if not attribute_name or event_values.get(attribute_name, None):
+        string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
+    short_format_string = unicode(
+        self.FORMAT_STRING_SEPARATOR.join(string_pieces))
+
+    return self._FormatMessages(
+        format_string, short_format_string, event_values)
+
   def GetFormatStringAttributeNames(self):
     """Retrieves the attribute names in the format string.
 
@@ -253,10 +291,12 @@ class ConditionalEventFormatter(EventFormatter):
 
     return self._format_string_attribute_names
 
-  def GetMessages(self, event_object):
+  def GetMessages(self, unused_ormatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
 
     Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
       event_object: the event object (instance of EventObject).
 
     Returns:
@@ -269,30 +309,5 @@ class ConditionalEventFormatter(EventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    # Using getattr here to make sure the attribute is not set to None.
-    # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
-    string_pieces = []
-    for map_index, attribute_name in enumerate(self._format_string_pieces_map):
-      if not attribute_name or hasattr(event_object, attribute_name):
-        if attribute_name:
-          attribute = getattr(event_object, attribute_name, None)
-          # If an attribute is an int, yet has zero value we want to include
-          # that in the format string, since that is still potentially valid
-          # information. Otherwise we would like to skip it.
-          if type(attribute) not in (bool, int, long, float) and not attribute:
-            continue
-        string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
-    format_string = unicode(
-        self.FORMAT_STRING_SEPARATOR.join(string_pieces))
-
-    string_pieces = []
-    for map_index, attribute_name in enumerate(
-        self._format_string_short_pieces_map):
-      if not attribute_name or getattr(event_object, attribute_name, None):
-        string_pieces.append(self.FORMAT_STRING_SHORT_PIECES[map_index])
-    short_format_string = unicode(
-        self.FORMAT_STRING_SEPARATOR.join(string_pieces))
-
     event_values = event_object.GetValues()
-    return self._FormatMessages(
-        format_string, short_format_string, event_values)
+    return self._ConditionalFormatMessages(event_values)

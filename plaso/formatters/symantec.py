@@ -149,37 +149,50 @@ class SymantecFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Symantec AV Log'
   SOURCE_SHORT = 'LOG'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    if hasattr(event_object, 'event'):
-      event_object.event_map = self.EVENT_NAMES.get(
-          event_object.event, 'Unknown')
-    if hasattr(event_object, 'cat'):
-      event_object.category_map = self.CATEGORY_NAMES.get(
-          event_object.cat, 'Unknown')
-    if hasattr(event_object, 'action1'):
-      event_object.action1_map = self.ACTION_1_2_NAMES.get(
-          event_object.action1, 'Unknown')
-    if hasattr(event_object, 'action2'):
-      event_object.action2_map = self.ACTION_1_2_NAMES.get(
-          event_object.action2, 'Unknown')
-    if hasattr(event_object, 'action0'):
-      event_object.action0_map = self.ACTION_0_NAMES.get(
-          event_object.action0, 'Unknown')
-    return super(SymantecFormatter, self).GetMessages(event_object)
+    event_values = event_object.GetValues()
+
+    event = event_values.get(u'event', None)
+    if event:
+      event_values[u'event_map'] = self.EVENT_NAMES.get(event, u'Unknown')
+
+    category = event_values.get(u'cat', None)
+    if category:
+      event_values[u'category_map'] = self.CATEGORY_NAMES.get(
+          category, u'Unknown')
+
+    action = event_values.get(u'action0', None)
+    if action:
+      event_values[u'action0_map'] = self.ACTION_0_NAMES.get(action, u'Unknown')
+
+    action = event_values.get(u'action1', None)
+    if action:
+      event_values[u'action1_map'] = self.ACTION_1_2_NAMES.get(
+          action, u'Unknown')
+
+    action = event_values.get(u'action2', None)
+    if action:
+      event_values[u'action2_map'] = self.ACTION_1_2_NAMES.get(
+          action, u'Unknown')
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(SymantecFormatter)

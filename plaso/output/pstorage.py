@@ -25,11 +25,16 @@ class PlasoStorageOutputFormatter(interface.LogOutputFormatter):
           'file_processed'] = self._config.storagefile
     self._storage = storage.StorageFile(self.filehandle, pre_obj=pre_obj)
 
-  def EventBody(self, event_object):
-    """Add an EventObject protobuf to the storage file.
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
+
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
 
     Args:
-      proto: The EventObject protobuf.
+      event_object: the event object (instance of EventObject).
     """
     # Needed due to duplicate removals, if two events
     # are merged then we'll just pick the first inode value.

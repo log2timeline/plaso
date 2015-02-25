@@ -532,9 +532,11 @@ class ClusteringEngine(object):
         # always choose pstorage but whatever storage mechanism that was used
         # to begin with (as in if the storage is SQLite then use SQLite for
         # output).
-        formatter_cls = output_manager.OutputManager.GetOutputClass('pstorage')
+        formatter_cls = output_manager.OutputManager.GetOutputClass(u'pstorage')
         store_dedup = open(nodup_filename, 'wb')
-        formatter = formatter_cls(store, store_dedup)
+        formatter = formatter_cls(
+            store, self._formatter_mediator, filehandle=store_dedup)
+
         with output_interface.EventBuffer(
             formatter, check_dedups=True) as output_buffer:
           event_object = store.GetSortedEntry()

@@ -264,8 +264,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
         output_module_class = output_manager.OutputManager.GetOutputClass(
             self._output_format)
         output_module = output_module_class(
-            storage_file, filehandle=output_stream, config=options,
-            filter_use=self._filter_object)
+            storage_file, self._formatter_mediator, filehandle=output_stream,
+            config=options, filter_use=self._filter_object)
       except IOError as exception:
         raise RuntimeError(
             u'Unable to create output module with error: {0:s}'.format(

@@ -15,7 +15,7 @@ class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
       u'Location: {url}',
       u'Number of hits: {number_of_hits}',
       u'Cached file size: {cached_file_size}',
-      u'HTTP headers: {http_headers_cleaned}',
+      u'HTTP headers: {http_headers}',
       u'{recovered_string}']
 
   FORMAT_STRING_SHORT_PIECES = [
@@ -24,30 +24,34 @@ class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'MSIE Cache File URL record'
   SOURCE_SHORT = 'WEBHIST'
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    if hasattr(event_object, 'http_headers'):
-      event_object.http_headers_cleaned = event_object.http_headers.replace(
-          '\r\n', ' - ')
-    # TODO: Could this be moved upstream since this is done in other parsers
-    # as well?
-    if getattr(event_object, 'recovered', None):
-      event_object.recovered_string = '[Recovered Entry]'
+    event_values = event_object.GetValues()
 
-    return super(MsiecfUrlFormatter, self).GetMessages(event_object)
+    http_headers = event_values.get(u'http_headers', None)
+    if http_headers:
+      event_values[u'http_headers'] = http_headers.replace(u'\r\n', u' - ')
+
+    if event_values.get(u'recovered', None):
+      event_values[u'recovered_string'] = '[Recovered Entry]'
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(MsiecfUrlFormatter)

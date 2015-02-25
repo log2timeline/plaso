@@ -61,10 +61,12 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
 
     return u'Unknown'
 
-  def GetMessages(self, event_object):
+  def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
 
     Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
       event_object: the event object (instance of EventObject).
 
     Returns:
@@ -77,14 +79,13 @@ class WinLnkLinkFormatter(interface.ConditionalEventFormatter):
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    # Update event object with a description if necessary.
-    if not hasattr(event_object, u'description'):
-      event_object.description = u'Empty description'
+    event_values = event_object.GetValues()
+    if u'description' not in event_values:
+      event_values[u'description'] = u'Empty description'
 
-    # Update event object with the linked path.
-    event_object.linked_path = self._GetLinkedPath(event_object)
+    event_values[u'linked_path'] = self._GetLinkedPath(event_object)
 
-    return super(WinLnkLinkFormatter, self).GetMessages(event_object)
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(WinLnkLinkFormatter)

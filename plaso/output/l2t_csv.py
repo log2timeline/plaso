@@ -4,12 +4,10 @@
 Author description at: http://code.google.com/p/log2timeline/wiki/l2t_csv
 """
 
-import logging
-
 from plaso.formatters import manager as formatters_manager
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.output import helper
 from plaso.output import interface
 from plaso.output import manager
@@ -38,19 +36,16 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
         u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         u'version,filename,inode,notes,format,extra\n')
 
-  def WriteEvent(self, event_object):
-    """Write a single event."""
-    try:
-      self.EventBody(event_object)
-    except errors.NoFormatterFound:
-      logging.error(u'Unable to output line, no formatter found.')
-      logging.error(event_object)
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
 
-  def EventBody(self, event_object):
-    """Formats data as l2t_csv and writes to the filehandle from OutputFormater.
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
 
     Args:
-      event_object: The event object (instance of EventObject).
+      event_object: the event object (instance of EventObject).
 
     Raises:
       errors.NoFormatterFound: If no formatter for that event is found.
@@ -66,7 +61,8 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
           u'Unable to find event formatter for: {0:s}.'.format(
               event_object.data_type))
 
-    msg, msg_short = event_formatter.GetMessages(event_object)
+    msg, msg_short = event_formatter.GetMessages(
+        self._formatter_mediator, event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToDatetime(
@@ -75,7 +71,8 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
 
     format_variables = event_formatter.GetFormatStringAttributeNames()
     for key in event_object.GetAttributes():
-      if key in utils.RESERVED_VARIABLES or key in format_variables:
+      if (key in definitions.RESERVED_VARIABLE_NAMES or
+          key in format_variables):
         continue
       value = getattr(event_object, key)
 
