@@ -9,6 +9,7 @@ from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.output import l2t_tln
+from plaso.output import test_lib
 
 
 class TlnTestEvent(event.EventObject):
@@ -39,13 +40,15 @@ class TlnTestEventFormatter(formatters_interface.EventFormatter):
 formatters_manager.FormattersManager.RegisterFormatter(TlnTestEventFormatter)
 
 
-class L2TTlnTest(unittest.TestCase):
+class L2TTlnTest(test_lib.LogOutputFormatterTestCase):
   """Tests for the TLN outputter."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
+    super(L2TTlnTest, self).setUp()
     self.output = StringIO.StringIO()
-    self.formatter = l2t_tln.L2tTlnOutputFormatter(None, self.output)
+    self.formatter = l2t_tln.L2tTlnOutputFormatter(
+        None, self._formatter_mediator, filehandle=self.output)
     self.event_object = TlnTestEvent()
 
   def testStart(self):
@@ -55,20 +58,19 @@ class L2TTlnTest(unittest.TestCase):
     self.formatter.Start()
     self.assertEquals(self.output.getvalue(), correct_line)
 
-  def testEventBody(self):
-    """Test ensures that returned lines returned are formatted as TLN."""
+  def testWriteEventBody(self):
+    """Tests the WriteEventBody function."""
+    self.formatter.WriteEventBody(self.event_object)
 
-    self.formatter.EventBody(self.event_object)
-    correct = (u'1340821021|LOG|ubuntu|root|Reporter <CRON> PID:  8442  '
-               u'(pam_unix(cron:session): session closed for user root)|UTC'
-               u'|File: OS: log/syslog.1 inode: 12345678\n')
-    self.assertEquals(self.output.getvalue(), correct)
+    expected_event_body = (
+        u'1340821021|LOG|ubuntu|root|Reporter <CRON> PID:  8442  '
+        u'(pam_unix(cron:session): session closed for user root)|UTC'
+        u'|File: OS: log/syslog.1 inode: 12345678\n')
 
-  def testEventBodyNoStrayPipes(self):
-    """Test ensures that the only pipes are the six field delimiters."""
+    event_body = self.output.getvalue()
+    self.assertEquals(event_body, expected_event_body)
 
-    self.formatter.EventBody(self.event_object)
-    self.assertEquals(self.output.getvalue().count(u'|'), 6)
+    self.assertEquals(event_body.count(u'|'), 6)
 
 
 if __name__ == '__main__':

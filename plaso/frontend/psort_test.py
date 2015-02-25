@@ -8,6 +8,7 @@ import unittest
 
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import psort
 from plaso.frontend import test_lib
 from plaso.lib import event
@@ -53,15 +54,20 @@ class TestFormatter(output_interface.LogOutputFormatter):
         u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
         u'short,desc,version,filename,inode,notes,format,extra\n'))
 
-  def EventBody(self, event_object):
-    """Writes the event body.
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
+
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The "raw" representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
 
     Args:
-      event_object: The event object (instance of EventObject).
+      event_object: the event object (instance of EventObject).
     """
     event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
         event_object.data_type)
-    msg, _ = event_formatter.GetMessages(event_object)
+    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
     source_short, source_long = event_formatter.GetSources(event_object)
     self.filehandle.write(u'{0:s}/{1:s} {2:s}\n'.format(
         source_short, source_long, msg))
@@ -70,12 +76,23 @@ class TestFormatter(output_interface.LogOutputFormatter):
 class TestEventBuffer(output_interface.EventBuffer):
   """A test event buffer."""
 
-  def __init__(self, store, formatter=None):
+  def __init__(self, formatter, check_dedups=True, store=None):
+    """Initialize the EventBuffer.
+
+    This class is used for buffering up events for duplicate removals
+    and for other post-processing/analysis of events before being presented
+    by the appropriate output module.
+
+    Args:
+      formatter: An OutputFormatter object.
+      check_dedups: Optional boolean value indicating whether or not the buffer
+                    should check and merge duplicate entries or not.
+      store: Optional storage file object (instance of StorageFile) that defines
+             the storage.
+    """
+    super(TestEventBuffer, self).__init__(formatter, check_dedups=check_dedups)
     self.record_count = 0
     self.store = store
-    if not formatter:
-      formatter = TestFormatter(store)
-    super(TestEventBuffer, self).__init__(formatter, False)
 
   def Append(self, event_object):
     self._buffer_dict[event_object.EqualityString()] = event_object
@@ -83,7 +100,7 @@ class TestEventBuffer(output_interface.EventBuffer):
 
   def Flush(self):
     for event_object_key in self._buffer_dict:
-      self.formatter.EventBody(self._buffer_dict[event_object_key])
+      self.formatter.WriteEventBody(self._buffer_dict[event_object_key])
     self._buffer_dict = {}
 
   def End(self):
@@ -95,6 +112,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
   def setUp(self):
     """Setup sets parameters that will be reused throughout this test."""
+    self._formatter_mediator = formatters_mediator.FormatterMediator()
     self._front_end = psort.PsortFrontend()
 
     # TODO: have sample output generated from the test.
@@ -146,8 +164,10 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
       with storage.StorageFile(temp_file) as storage_file:
         storage_file.store_range = [1]
-        formatter = TestFormatter(storage_file, output_fd)
-        event_buffer = TestEventBuffer(storage_file, formatter)
+        formatter = TestFormatter(
+            storage_file, self._formatter_mediator, filehandle=output_fd)
+        event_buffer = TestEventBuffer(
+            formatter, check_dedups=False, store=storage_file)
 
         self._front_end.ProcessOutput(storage_file, event_buffer)
 

@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.formatters import interface
+from plaso.formatters import mediator
 from plaso.formatters import test_lib
 from plaso.lib import event_test
 
@@ -99,13 +100,15 @@ class ConditionalEventFormatterTest(unittest.TestCase):
 
   def testGetMessages(self):
     """Tests the GetMessages function."""
+    formatter_mediator = mediator.FormatterMediator()
     event_formatter = ConditionalTestEventFormatter()
 
     expected_message = (
         u'Description: this is beyond words Comment Value: 0x0c '
         u'Text: but we\'re still trying to say something about the event')
 
-    message, _ = event_formatter.GetMessages(self._event_object)
+    message, _ = event_formatter.GetMessages(
+        formatter_mediator, self._event_object)
     self.assertEquals(message, expected_message)
 
   # TODO: add test for GetSources.

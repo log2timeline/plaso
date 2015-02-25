@@ -3,37 +3,7 @@
 
 import logging
 
-from plaso.formatters import interface
-from plaso.lib import utils
-
-
-class DefaultFormatter(interface.EventFormatter):
-  """Default formatter for events that do not have any defined formatter."""
-
-  DATA_TYPE = u'event'
-  FORMAT_STRING = u'<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'
-  FORMAT_STRING_SHORT = u'<DEFAULT> {attribute_driven}'
-
-  def GetMessages(self, event_object):
-    """Return a list of messages extracted from an event object."""
-    text_pieces = []
-
-    for key, value in event_object.GetValues().items():
-      if key in utils.RESERVED_VARIABLES:
-        continue
-      text_pieces.append(u'{0:s}: {1!s}'.format(key, value))
-
-    event_object.attribute_driven = u' '.join(text_pieces)
-    # Due to the way the default formatter behaves it requires the data_type
-    # to be set as 'event', otherwise it will complain and deny processing
-    # the event.
-    # TODO: Change this behavior and allow the default formatter to accept
-    # arbitrary data types (as it should).
-    old_data_type = getattr(event_object, 'data_type', None)
-    event_object.data_type = self.DATA_TYPE
-    msg, msg_short = super(DefaultFormatter, self).GetMessages(event_object)
-    event_object.data_type = old_data_type
-    return msg, msg_short
+from plaso.formatters import default
 
 
 class FormattersManager(object):
@@ -86,17 +56,19 @@ class FormattersManager(object):
       if not formatter_object:
         logging.warning(
             u'Using default formatter for data type: {0:s}'.format(data_type))
-        formatter_object = DefaultFormatter()
+        formatter_object = default.DefaultFormatter()
 
       cls._formatter_objects[data_type] = formatter_object
 
     return cls._formatter_objects[data_type]
 
   @classmethod
-  def GetMessageStrings(cls, event_object):
+  def GetMessageStrings(cls, formatter_mediator, event_object):
     """Retrieves the formatted message strings for a specific event object.
 
     Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
       event_object: the event object (instance of EventObject).
 
     Returns:
@@ -104,7 +76,7 @@ class FormattersManager(object):
       string.
     """
     formatter_object = cls.GetFormatterObject(event_object.data_type)
-    return formatter_object.GetMessages(event_object)
+    return formatter_object.GetMessages(formatter_mediator, event_object)
 
   @classmethod
   def GetSourceStrings(cls, event_object):

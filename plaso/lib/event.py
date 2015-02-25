@@ -6,6 +6,7 @@ import logging
 import uuid
 
 from plaso.formatters import manager as formatters_manager
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.lib import utils
 
@@ -281,7 +282,7 @@ class EventObject(object):
     out_additional.append(u'[Additional attributes]:')
 
     for attr_key, attr_value in sorted(self.GetValues().items()):
-      if attr_key in utils.RESERVED_VARIABLES:
+      if attr_key in definitions.RESERVED_VARIABLE_NAMES:
         if attr_key == 'pathspec':
           continue
         else:

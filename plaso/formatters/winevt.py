@@ -15,9 +15,9 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'[{event_identifier} /',
       u'0x{event_identifier:04x}]',
-      u'Severity: {severity_string}',
+      u'Severity: {severity}',
       u'Record Number: {record_number}',
-      u'Event Type: {event_type_string}',
+      u'Event Type: {event_type}',
       u'Event Category: {event_category}',
       u'Source Name: {source_name}',
       u'Computer Name: {computer_name}',
@@ -71,31 +71,37 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
       return self._SEVERITY[severity]
     return u'Unknown {0:d}'.format(severity)
 
-  def GetMessages(self, event_object):
-    """Returns a list of messages extracted from an event object.
+  def GetMessages(self, unused_formatter_mediator, event_object):
+    """Determines the formatted message strings for an event object.
 
     Args:
-      event_object: The event object (EventObject) containing the event
-                    specific data.
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
+      event_object: the event object (instance of EventObject).
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      A tuple containing the formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_object.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
           event_object.data_type))
 
-    # Update event object with the event type string.
-    event_object.event_type_string = self.GetEventTypeString(
-        event_object.event_type)
+    event_values = event_object.GetValues()
+
+    event_type = event_values.get(u'event_type', None)
+    if event_type is not None:
+      event_values[u'event_type'] = self.GetEventTypeString(event_type)
 
     # TODO: add string representation of facility.
 
-    # Update event object with the severity string.
-    event_object.severity_string = self.GetSeverityString(event_object.severity)
+    severity = event_values.get(u'severity', None)
+    if severity is not None:
+      event_values[u'severity'] = self.GetSeverityString(severity)
 
-    return super(WinEvtFormatter, self).GetMessages(event_object)
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(WinEvtFormatter)

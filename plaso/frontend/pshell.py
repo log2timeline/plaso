@@ -32,12 +32,14 @@ from plaso import output
 from plaso import parsers
 from plaso import preprocessors
 
-
 from plaso.engine import collector
 from plaso.engine import engine
 from plaso.engine import queue
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
+
+from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
@@ -139,7 +141,10 @@ def GetMessageStringsForEventObject(event_object):
     A list that contains both the longer and shorter version of the message
     string.
   """
-  return formatters.manager.FormattersManager.GetMessageStrings(event_object)
+  # TODO: move this somewhere where the mediator can be instantiated once.
+  formatter_mediator = formatters_mediator.FormatterMediator()
+  return formatters_manager.FormattersManager.GetMessageStrings(
+      formatter_mediator, event_object)
 
 
 def GetParserNames(parser_filter_string=None):
