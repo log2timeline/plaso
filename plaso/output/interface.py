@@ -46,7 +46,7 @@ class LogOutputFormatter(object):
 
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
-    """Constructor for the output module.
+    """Initializes the log output formatter object.
 
     Args:
       store: A StorageFile object that defines the storage.
@@ -137,20 +137,29 @@ class LogOutputFormatter(object):
 class FileLogOutputFormatter(LogOutputFormatter):
   """A simple file based output formatter."""
 
-  __abstract = True
-
   def __init__(self, store, filehandle=sys.stdout, config=None,
                filter_use=None):
-    """Set up the formatter."""
+    """Initializes the file log output formatter object.
+
+    Args:
+      store: A StorageFile object that defines the storage.
+      filehandle: A file-like object that can be written to.
+      config: The configuration object, containing config information.
+      filter_use: A filter_interface.FilterObject object.
+    """
     super(FileLogOutputFormatter, self).__init__(
-        store, filehandle, config, filter_use)
+        store, filehandle=filehandle, config=config, filter_use=filter_use)
+
     if isinstance(filehandle, basestring):
       open_filehandle = open(filehandle, 'wb')
+
+    # Check if the filehandle object has a write method.
     elif hasattr(filehandle, 'write'):
       open_filehandle = filehandle
+
     else:
       raise IOError(
-          u'Unable to determine how to use filehandle passed in: {}'.format(
+          u'Unable to determine how to use filehandle passed in: {0:s}'.format(
               type(filehandle)))
 
     self.filehandle = OutputFilehandle(self.encoding)
@@ -278,10 +287,11 @@ class OutputFilehandle(object):
 
     Args:
       encoding: The default terminal encoding, only used if attempted to write
-      to the terminal.
+                to the terminal.
     """
-    self._filehandle = None
+    super(OutputFilehandle, self).__init__()
     self._encoding = encoding
+    self._filehandle = None
     # An attribute stating whether or not this is STDOUT.
     self._standard_out = False
 
@@ -289,9 +299,9 @@ class OutputFilehandle(object):
     """Open a filehandle to an output file.
 
     Args:
-      filehandle: A file-like-object that is used to write data to.
+      filehandle: A file-like object that is used to write data to.
       path: If a file like object is not passed in it is possible
-      to pass in a path to a file, and a file-like-objec will be created.
+            to pass in a path to a file, and a file-like object will be created.
     """
     if path:
       self._filehandle = open(path, 'wb')
