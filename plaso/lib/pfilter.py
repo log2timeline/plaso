@@ -5,6 +5,7 @@ import datetime
 import logging
 
 from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
@@ -79,17 +80,22 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
 
     Args:
       event_object: the event object (instance od EventObject).
-    """
-    ret = u''
 
+    Returns:
+      A formatted message string.
+    """
+    # TODO: move this somewhere where the mediator can be instantiated once.
+    formatter_mediator = formatters_mediator.FormatterMediator()
+
+    result = u''
     try:
-      ret, _ = formatters_manager.FormattersManager.GetMessageStrings(
-          event_object)
+      result, _ = formatters_manager.FormattersManager.GetMessageStrings(
+          formatter_mediator, event_object)
     except KeyError as exception:
       logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))
 
-    return ret
+    return result
 
   def _GetSources(self, event_object):
     """Returns properly formatted source strings.
@@ -97,10 +103,9 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     Args:
       event_object: the event object (instance od EventObject).
     """
-    manager_object = formatters_manager.FormattersManager
     try:
-      source_short, source_long = manager_object.GetSourceStrings(
-          event_object)
+      source_short, source_long = (
+          formatters_manager.FormattersManager.GetSourceStrings(event_object))
     except KeyError as exception:
       logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))

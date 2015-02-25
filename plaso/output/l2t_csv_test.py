@@ -10,6 +10,7 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.output import l2t_csv
+from plaso.output import test_lib
 
 
 class L2tTestEvent(event.EventObject):
@@ -43,11 +44,15 @@ class L2tTestEventFormatter(formatters_interface.EventFormatter):
 formatters_manager.FormattersManager.RegisterFormatter(L2tTestEventFormatter)
 
 
-class L2tCsvTest(unittest.TestCase):
+class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
   """Contains tests to validate the L2tCSV outputter."""
+
   def setUp(self):
+    """Sets up the objects needed for this test."""
+    super(L2tCsvTest, self).setUp()
     self.output = StringIO.StringIO()
-    self.formatter = l2t_csv.L2tCsvOutputFormatter(None, self.output)
+    self.formatter = l2t_csv.L2tCsvOutputFormatter(
+        None, self._formatter_mediator, filehandle=self.output)
     self.event_object = L2tTestEvent()
 
   def testStart(self):
@@ -60,24 +65,23 @@ class L2tCsvTest(unittest.TestCase):
     self.formatter.Start()
     self.assertEquals(self.output.getvalue(), correct_line)
 
-  def testEventBody(self):
-    """Test ensures that returned lines returned are formatted as L2tCSV."""
+  def testWriteEventBody(self):
+    """Tests the WriteEventBody function."""
+    self.formatter.WriteEventBody(self.event_object)
 
-    self.formatter.EventBody(self.event_object)
-    correct = (
+    expected_event_body = (
         u'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
         u'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         u'closed for user root),Reporter <CRON> PID: 8442 '
         u'(pam_unix(cron:session): '
         u'session closed for user root),2,log/syslog.1,-,-,-,my_number: 123  '
         u'some_additional_foo: True \n')
-    self.assertEquals(self.output.getvalue(), correct)
 
-  def testEventBodyNoExtraCommas(self):
-    """Test ensures that the only commas returned are the 16 delimeters."""
+    event_body = self.output.getvalue()
+    self.assertEquals(event_body, expected_event_body)
 
-    self.formatter.EventBody(self.event_object)
-    self.assertEquals(self.output.getvalue().count(u','), 16)
+    # Ensure that the only commas returned are the 16 delimeters.
+    self.assertEquals(event_body.count(u','), 16)
 
 
 if __name__ == '__main__':

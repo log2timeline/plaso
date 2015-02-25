@@ -15,8 +15,6 @@ Fields:
   Notes - L2T 0.65 field. Optional notes field or filename and inode.
 """
 
-import logging
-
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -48,19 +46,16 @@ class L2tTlnOutputFormatter(interface.FileLogOutputFormatter):
             self._preprocesses[store_number] = info
     self.filehandle.WriteLine(u'Time|Source|Host|User|Description|TZ|Notes\n')
 
-  def WriteEvent(self, event_object):
-    """Write a single event."""
-    try:
-      self.EventBody(event_object)
-    except errors.NoFormatterFound:
-      logging.error(u'Unable to output line, no formatter found.')
-      logging.error(event_object.GetString())
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
 
-  def EventBody(self, event_object):
-    """Formats data as TLN and writes to the filehandle from OutputFormater.
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
 
     Args:
-      event_object: The event object (EventObject).
+      event_object: the event object (instance of EventObject).
 
     Raises:
       errors.NoFormatterFound: If no formatter for that event is found.
@@ -76,7 +71,7 @@ class L2tTlnOutputFormatter(interface.FileLogOutputFormatter):
           u'Unable to find event formatter for: {0:s}.'.format(
               event_object.data_type))
 
-    msg, _ = event_formatter.GetMessages(event_object)
+    msg, _ = event_formatter.GetMessages(self._formatter_mediator, event_object)
     source_short, _ = event_formatter.GetSources(event_object)
 
     date_use = timelib.Timestamp.CopyToPosix(event_object.timestamp)

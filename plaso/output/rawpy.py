@@ -13,16 +13,16 @@ class NativePythonOutputFormatter(interface.FileLogOutputFormatter):
   NAME = u'rawpy'
   DESCRIPTION = u'Prints out a "raw" interpretation of the EventObject.'
 
-  def EventBody(self, event_object):
-    """Prints out to a filehandle string representation of an EventObject.
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
 
-    Each EventObject contains both attributes that are considered "reserved"
+    Each event object contains both attributes that are considered "reserved"
     and others that aren't. The 'raw' representation of the object makes a
     distinction between these two types as well as extracting the format
     strings from the object.
 
     Args:
-      event_object: The EventObject.
+      event_object: the event object (instance of EventObject).
     """
     # TODO: Move the unicode cast into the event object itself, expose
     # a ToString function or something similar that will send back the

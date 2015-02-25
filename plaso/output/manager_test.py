@@ -14,11 +14,16 @@ class TestOutput(interface.LogOutputFormatter):
   NAME = 'test_output'
   DESCRIPTION = u'This is a test output module.'
 
-  def EventBody(self, event_object):
-    """Writes the main body of an event to the output filehandle.
+  def WriteEventBody(self, unused_event_object):
+    """Writes the body of an event object to the output.
+
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
 
     Args:
-      event_object: An event object (instance of EventObject).
+      event_object: the event object (instance of EventObject).
     """
     pass
 

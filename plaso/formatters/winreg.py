@@ -17,10 +17,12 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
   SOURCE_LONG = 'Registry Key'
   SOURCE_SHORT = 'REG'
 
-  def GetMessages(self, event_object):
+  def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
 
     Args:
+      formatter_mediator: the formatter mediator object (instance of
+                          FormatterMediator).
       event_object: the event object (instance of EventObject).
 
     Returns:

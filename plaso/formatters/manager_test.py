@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.formatters import manager
+from plaso.formatters import mediator
 from plaso.formatters import test_lib
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import event_test
@@ -39,12 +40,14 @@ class FormattersManagerTest(unittest.TestCase):
     """Tests the GetMessageStrings and GetSourceStrings functions."""
     manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
 
+    formatter_mediator = mediator.FormatterMediator()
+
     message_strings = []
     text_message = None
     text_message_short = None
     for event_object in self._event_objects:
-      message, message_short = (
-          manager.FormattersManager.GetMessageStrings(event_object))
+      message, message_short = manager.FormattersManager.GetMessageStrings(
+          formatter_mediator, event_object)
       source_short, source_long = manager.FormattersManager.GetSourceStrings(
           event_object)
 
