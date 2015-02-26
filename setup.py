@@ -99,6 +99,15 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    package_dir={'plaso': 'plaso'},
     packages=find_packages('.'),
+    package_dir={
+        'plaso': 'plaso',
+    },
+    data_files=[
+        ('share/plaso', glob.glob(os.path.join('data', '*'))),
+        ('share/doc/plaso', glob.glob(os.path.join('doc', '*'))),
+    ],
+    install_requires=[
+        'dfvfs >= 20150224',
+    ],
 )

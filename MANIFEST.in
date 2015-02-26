@@ -1,11 +1,11 @@
 include ACKNOWLEDGEMENTS AUTHORS LICENSE README
 include run_tests.py
 include utils/check_dependencies.py
-exclude .gitignore
-exclude *.pyc
 recursive-include config *
 recursive-include data *
-recursive-include extra *
+recursive-include doc *
 recursive-include plaso *.proto
-recursive-exclude plaso *.pyc
 recursive-include test_data *
+exclude .gitignore
+exclude *.pyc
+recursive-exclude plaso *.pyc

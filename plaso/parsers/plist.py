@@ -6,6 +6,7 @@ Plaso's engine calls PlistParser when it encounters Plist files to be processed.
 
 import binascii
 import logging
+import os
 
 from binplist import binplist
 
@@ -49,6 +50,9 @@ class PlistParser(interface.BasePluginsParser):
     Returns:
       A dictionary object representing the contents of the plist.
     """
+    # Since binplist.readPlist does not set the offset to 0 we have to
+    # do it explicitly here.
+    file_object.seek(0, os.SEEK_SET)
     try:
       top_level_object = binplist.readPlist(file_object)
     except binplist.FormatError as exception:
@@ -82,56 +86,61 @@ class PlistParser(interface.BasePluginsParser):
     return top_level_object
 
   def Parse(self, parser_mediator, **kwargs):
-    """Parse and extract values from a plist file.
+    """Parses a plist file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    # TODO: Should we rather query the stats object to get the size here?
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a plist file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    # TODO: Should we rather query the stats object to get the size here?
     file_entry = parser_mediator.GetFileEntry()
     file_size = file_object.get_size()
 
     if file_size <= 0:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] file size: {1:d} bytes is less equal 0.'.format(
               self.NAME, file_size))
 
     # 50MB is 10x larger than any plist seen to date.
     if file_size > 50000000:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] file size: {1:d} bytes is larger than 50 MB.'.format(
               self.NAME, file_size))
-
-
 
     top_level_object = None
     try:
       top_level_object = self.GetTopLevel(file_object, file_entry.name)
     except errors.UnableToParseFile:
-      file_object.close()
       raise
 
     if not top_level_object:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse: {1:s} skipping.'.format(
               self.NAME, file_entry.name))
 
-    file_system = file_entry.GetFileSystem()
-    plist_name = file_system.BasenamePath(file_entry.name)
-
     for plugin_object in self._plugins:
       try:
         plugin_object.UpdateChainAndProcess(
-            parser_mediator, plist_name=plist_name, top_level=top_level_object)
+            parser_mediator, plist_name=file_entry.name,
+            top_level=top_level_object)
       except errors.WrongPlistPlugin as exception:
         logging.debug(u'[{0:s}] Wrong plugin: {1:s} for: {2:s}'.format(
             self.NAME, exception.args[0], exception.args[1]))
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(PlistParser)
