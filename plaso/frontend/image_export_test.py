@@ -136,6 +136,10 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
     """Sets up the objects used by an individual test."""
     self._temp_directory = tempfile.mkdtemp()
 
+    # TODO: do not use a class attribute here.
+    # We need to flush the MD5 dict in FileSaver before each test.
+    image_export.FileSaver.md5_dict = {}
+
   def tearDown(self):
     """Cleans up the objects used an individual test."""
     shutil.rmtree(self._temp_directory, True)
@@ -179,6 +183,27 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     expected_extracted_files = sorted([
         os.path.join(self._temp_directory, u'passwords.txt')])
+
+    extracted_files = self._RecursiveList(self._temp_directory)
+
+    self.assertEquals(sorted(extracted_files), expected_extracted_files)
+
+  def testProcessSourceExtractWithNamesFilter(self):
+    """Tests extract with a names filter."""
+    test_front_end = image_export.ImageExportFrontend()
+
+    options = frontend.Options()
+    options.image = self._GetTestFilePath([u'image.qcow2'])
+    options.path = self._temp_directory
+    options.names_string = u'another_file'
+
+    test_front_end.ParseOptions(options, source_option=u'image')
+
+    test_front_end.ProcessSource(options)
+
+    expected_extracted_files = sorted([
+        os.path.join(self._temp_directory, u'a_directory'),
+        os.path.join(self._temp_directory, u'a_directory', u'another_file')])
 
     extracted_files = self._RecursiveList(self._temp_directory)
 
