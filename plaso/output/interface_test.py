@@ -53,12 +53,6 @@ class TestOutput(interface.LogOutputFormatter):
         store, formatter_mediator, filehandle=filehandle, config=config,
         filter_use=filter_use)
 
-  def Start(self):
-    self.filehandle.write(u'<EventFile>\n')
-
-  def End(self):
-    self.filehandle.write(u'</EventFile>\n')
-
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -83,6 +77,14 @@ class TestOutput(interface.LogOutputFormatter):
     """Writes the start of an event object to the output."""
     self.filehandle.write(u'<Event>\n')
 
+  def WriteFooter(self):
+    """Writes the footer to the output."""
+    self.filehandle.write(u'</EventFile>\n')
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
+    self.filehandle.write(u'<EventFile>\n')
+
 
 manager.OutputManager.RegisterOutput(TestOutput)
 
@@ -101,10 +103,10 @@ class PlasoOutputUnitTest(test_lib.LogOutputFormatterTestCase):
     lines = []
     with tempfile.NamedTemporaryFile() as fh:
       formatter = TestOutput(None, self._formatter_mediator, filehandle=fh)
-      formatter.Start()
+      formatter.WriteHeader()
       for event_object in events:
         formatter.WriteEvent(event_object)
-      formatter.End()
+      formatter.WriteFooter()
 
       fh.seek(0)
       for line in fh:

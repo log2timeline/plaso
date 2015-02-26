@@ -14,8 +14,12 @@ class PlasoStorageOutputFormatter(interface.LogOutputFormatter):
   NAME = u'pstorage'
   DESCRIPTION = u'Dumps event objects to a plaso storage file.'
 
-  def Start(self):
-    """Sets up the output storage file."""
+  def Close(self):
+    """Closes the plaso storage file."""
+    self._storage.Close()
+
+  def Open(self):
+    """Opens the plaso storage file."""
     pre_obj = event.PreprocessObject()
     pre_obj.collection_information = {'time_of_run': timelib.Timestamp.GetNow()}
     if hasattr(self._config, 'filter') and self._config.filter:
@@ -49,10 +53,6 @@ class PlasoStorageOutputFormatter(interface.LogOutputFormatter):
       event_object.inode = new_inode
 
     self._storage.AddEventObject(event_object)
-
-  def End(self):
-    """Closes the storage file."""
-    self._storage.Close()
 
 
 manager.OutputManager.RegisterOutput(PlasoStorageOutputFormatter)

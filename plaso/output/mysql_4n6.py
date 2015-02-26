@@ -119,8 +119,78 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
     self.fields = getattr(config, 'fields', [
         'host', 'user', 'source', 'sourcetype', 'type', 'datetime', 'color'])
 
-  def Start(self):
-    """Connect to the database and create the table before inserting."""
+  def _GetDistinctValues(self, field_name):
+    """Query database for unique field types.
+
+    Args:
+      field_name: name of the filed to retrieve.
+    """
+    self.curs.execute(
+        u'SELECT {0}, COUNT({0}) FROM log2timeline GROUP BY {0}'.format(
+            field_name))
+    res = {}
+    for row in self.curs.fetchall():
+      if row[0] != '':
+        res[row[0]] = int(row[1])
+    return res
+
+  def _ListTags(self):
+    """Query database for unique tag types."""
+    all_tags = []
+    self.curs.execute(
+        u'SELECT DISTINCT tag FROM log2timeline')
+
+    # This cleans up the messy SQL return.
+    for tag_row in self.curs.fetchall():
+      tag_string = tag_row[0]
+      if tag_string:
+        tags = tag_string.split(',')
+        for tag in tags:
+          if tag not in all_tags:
+            all_tags.append(tag)
+    return all_tags
+
+  def Close(self):
+    """Disconnects from the database.
+
+    This method will create the necessary indices and commit outstanding
+    transactions before disconnecting.
+    """
+    # Build up indices for the fields specified in the args.
+    # It will commit the inserts automatically before creating index.
+    if not self.append:
+      for field_name in self.fields:
+        sql = u'CREATE INDEX {0}_idx ON log2timeline ({0:s})'.format(field_name)
+        self.curs.execute(sql)
+        if self.set_status:
+          self.set_status(u'Created index: {0:s}'.format(field_name))
+
+    # Get meta info and save into their tables.
+    if self.set_status:
+      self.set_status(u'Creating metadata...')
+
+    for field in self.META_FIELDS:
+      vals = self._GetDistinctValues(field)
+      self.curs.execute(u'DELETE FROM l2t_{0:s}s'.format(field))
+      for name, freq in vals.items():
+        self.curs.execute((
+            u'INSERT INTO l2t_{0:s}s ({1:s}s, frequency) '
+            u'VALUES("{2:s}", {3:d}) ').format(field, field, name, freq))
+
+    self.curs.execute(u'DELETE FROM l2t_tags')
+    for tag in self._ListTags():
+      self.curs.execute(
+          u'INSERT INTO l2t_tags (tag) VALUES ("{0:s}")'.format(tag))
+
+    if self.set_status:
+      self.set_status(u'Database created.')
+
+    self.conn.commit()
+    self.curs.close()
+    self.conn.close()
+
+  def Open(self):
+    """Connects to the database and creates the required tables."""
     if self.dbname == '':
       raise IOError(u'Specify a database name.')
 
@@ -202,68 +272,6 @@ class Mysql4n6OutputFormatter(interface.LogOutputFormatter):
           exception))
 
     self.count = 0
-
-  def End(self):
-    """Create indices and commit the transaction."""
-    # Build up indices for the fields specified in the args.
-    # It will commit the inserts automatically before creating index.
-    if not self.append:
-      for field_name in self.fields:
-        sql = u'CREATE INDEX {0}_idx ON log2timeline ({0:s})'.format(field_name)
-        self.curs.execute(sql)
-        if self.set_status:
-          self.set_status(u'Created index: {0:s}'.format(field_name))
-
-    # Get meta info and save into their tables.
-    if self.set_status:
-      self.set_status(u'Creating metadata...')
-
-    for field in self.META_FIELDS:
-      vals = self._GetDistinctValues(field)
-      self.curs.execute(u'DELETE FROM l2t_{0:s}s'.format(field))
-      for name, freq in vals.items():
-        self.curs.execute((
-            u'INSERT INTO l2t_{0:s}s ({1:s}s, frequency) '
-            u'VALUES("{2:s}", {3:d}) ').format(field, field, name, freq))
-
-    self.curs.execute(u'DELETE FROM l2t_tags')
-    for tag in self._ListTags():
-      self.curs.execute(
-          u'INSERT INTO l2t_tags (tag) VALUES ("{0:s}")'.format(tag))
-
-    if self.set_status:
-      self.set_status(u'Database created.')
-
-    self.conn.commit()
-    self.curs.close()
-    self.conn.close()
-
-  def _GetDistinctValues(self, field_name):
-    """Query database for unique field types."""
-    self.curs.execute(
-        u'SELECT {0}, COUNT({0}) FROM log2timeline GROUP BY {0}'.format(
-            field_name))
-    res = {}
-    for row in self.curs.fetchall():
-      if row[0] != '':
-        res[row[0]] = int(row[1])
-    return res
-
-  def _ListTags(self):
-    """Query database for unique tag types."""
-    all_tags = []
-    self.curs.execute(
-        u'SELECT DISTINCT tag FROM log2timeline')
-
-    # This cleans up the messy SQL return.
-    for tag_row in self.curs.fetchall():
-      tag_string = tag_row[0]
-      if tag_string:
-        tags = tag_string.split(',')
-        for tag in tags:
-          if tag not in all_tags:
-            all_tags.append(tag)
-    return all_tags
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
