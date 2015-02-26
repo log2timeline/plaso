@@ -50,7 +50,7 @@ class KnowledgeBase(object):
   @platform.setter
   def platform(self, value):
     """The platform."""
-    return setattr(self._pre_obj, 'guessed_os', value)
+    setattr(self._pre_obj, 'guessed_os', value)
 
   @property
   def timezone(self):

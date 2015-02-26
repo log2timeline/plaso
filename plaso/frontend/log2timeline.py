@@ -41,8 +41,6 @@ class LoggingFilter(logging.Filter):
 class Log2TimelineFrontend(frontend.ExtractionFrontend):
   """Class that implements the log2timeline front-end."""
 
-  _BYTES_IN_A_MIB = 1024 * 1024
-
   def __init__(self):
     """Initializes the front-end object."""
     input_reader = frontend.StdinFrontendInputReader()

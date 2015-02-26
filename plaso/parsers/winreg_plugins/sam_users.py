@@ -58,7 +58,7 @@ class UsersPlugin(interface.KeyPlugin):
       text_dict['user_guid'] = subkey.name
       parsed_v_value = self._ParseVValue(subkey)
       if not parsed_v_value:
-        logging.error(u'V Value was not succesfully parsed by ParseVValue.')
+        logging.error(u'V Value was not successfully parsed by ParseVValue.')
         return
       username = parsed_v_value[0]
       full_name = parsed_v_value[1]
