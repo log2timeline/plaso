@@ -57,7 +57,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
         'datetime,timestamp_desc,source,source_long,message,parser,'
         'display_name,tag,store_number,store_index\n')
 
-    formatter.Start()
+    formatter.WriteHeader()
     self.assertEquals(output.getvalue(), correct_line)
 
     output = StringIO.StringIO()
@@ -68,7 +68,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
         filter_use=filter_object)
 
     correct_line = 'date,time,message,hostname,filename,some_stuff\n'
-    formatter.Start()
+    formatter.WriteHeader()
     self.assertEquals(output.getvalue(), correct_line)
 
     output = StringIO.StringIO()
@@ -80,7 +80,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
         filter_use=filter_object)
 
     correct_line = 'date@time@message@hostname@filename@some_stuff\n'
-    formatter.Start()
+    formatter.WriteHeader()
     self.assertEquals(output.getvalue(), correct_line)
 
   def testWriteEventBody(self):
@@ -96,7 +96,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
         None, self._formatter_mediator, filehandle=output,
         filter_use=filter_object)
 
-    formatter.Start()
+    formatter.WriteHeader()
     header = (
         'date,time,timezone,macb,source,sourcetype,type,user,host,'
         'message_short,message,filename,inode,notes,format,extra\n')
@@ -118,7 +118,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
         filter_use=filter_object)
 
     header = 'datetime,nonsense,hostname,message\n'
-    formatter.Start()
+    formatter.WriteHeader()
     self.assertEquals(output.getvalue(), header)
 
     correct = (

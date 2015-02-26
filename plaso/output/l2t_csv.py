@@ -19,23 +19,6 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
   NAME = u'l2tcsv'
   DESCRIPTION = u'CSV format used by legacy log2timeline, with 17 fixed fields.'
 
-  def Start(self):
-    """Returns a header for the output."""
-    # Build a hostname and username dict objects.
-    self._hostnames = {}
-    if self.store:
-      self._hostnames = helper.BuildHostDict(self.store)
-      self._preprocesses = {}
-      for info in self.store.GetStorageInformation():
-        if hasattr(info, u'store_range'):
-          for store_number in range(
-              info.store_range[0], info.store_range[1] + 1):
-            self._preprocesses[store_number] = info
-
-    self.filehandle.WriteLine(
-        u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        u'version,filename,inode,notes,format,extra\n')
-
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -126,6 +109,23 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
     out_write = u'{0:s}\n'.format(
         u','.join(unicode(x).replace(u',', u' ') for x in row))
     self.filehandle.WriteLine(out_write)
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
+    # Build a hostname and username dict objects.
+    self._hostnames = {}
+    if self.store:
+      self._hostnames = helper.BuildHostDict(self.store)
+      self._preprocesses = {}
+      for info in self.store.GetStorageInformation():
+        if hasattr(info, u'store_range'):
+          for store_number in range(
+              info.store_range[0], info.store_range[1] + 1):
+            self._preprocesses[store_number] = info
+
+    self.filehandle.WriteLine(
+        u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        u'version,filename,inode,notes,format,extra\n')
 
 
 manager.OutputManager.RegisterOutput(L2tCsvOutputFormatter)
