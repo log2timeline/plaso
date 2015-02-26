@@ -58,52 +58,6 @@ class FileEntryFilter(object):
     """
 
 
-class ExtensionsFileEntryFilter(FileEntryFilter):
-  """Class that implements extensions-based file entry filter."""
-
-  def __init__(self, extensions):
-    """Initializes the extensions-based file entry filter.
-
-    An extension is defined as "pdf" as in "document.pdf".
-
-    Args:
-      extensions: a list of extension strings.
-    """
-    super(ExtensionsFileEntryFilter, self).__init__()
-    self._extensions = extensions
-
-  def Matches(self, file_entry):
-    """Compares the file entry against the filter.
-
-    Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
-
-    Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply
-    """
-    location = getattr(file_entry.path_spec, u'location', None)
-    if not location:
-      return
-
-    _, _, extension = location.rpartition(u'.')
-    if not extension:
-      return False
-
-    return extension.lower() in self._extensions
-
-  def Print(self, output_writer):
-    """Prints a human readable version of the filter.
-
-    Args:
-      output_writer: the output writer object (instance of
-                     StdoutFrontendOutputWriter).
-    """
-    if self._extensions:
-      output_writer.Write(u'\textensions: {0:s}\n'.format(
-          u', '.join(self._extensions)))
-
-
 class DateTimeFileEntryFilter(FileEntryFilter):
   """Class that implements date time-based file entry filter."""
 
@@ -383,6 +337,90 @@ class DateTimeFileEntryFilter(FileEntryFilter):
               end_time_string))
 
 
+class ExtensionsFileEntryFilter(FileEntryFilter):
+  """Class that implements extensions-based file entry filter."""
+
+  def __init__(self, extensions):
+    """Initializes the extensions-based file entry filter.
+
+    An extension is defined as "pdf" as in "document.pdf".
+
+    Args:
+      extensions: a list of extension strings.
+    """
+    super(ExtensionsFileEntryFilter, self).__init__()
+    self._extensions = extensions
+
+  def Matches(self, file_entry):
+    """Compares the file entry against the filter.
+
+    Args:
+      file_entry: The file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file entry matches the filter or
+      None if the filter does not apply
+    """
+    location = getattr(file_entry.path_spec, u'location', None)
+    if not location:
+      return
+
+    _, _, extension = location.rpartition(u'.')
+    if not extension:
+      return False
+
+    return extension.lower() in self._extensions
+
+  def Print(self, output_writer):
+    """Prints a human readable version of the filter.
+
+    Args:
+      output_writer: the output writer object (instance of
+                     StdoutFrontendOutputWriter).
+    """
+    if self._extensions:
+      output_writer.Write(u'\textensions: {0:s}\n'.format(
+          u', '.join(self._extensions)))
+
+
+class NamesFileEntryFilter(FileEntryFilter):
+  """Class that implements names-based file entry filter."""
+
+  def __init__(self, names):
+    """Initializes the names-based file entry filter.
+
+    Args:
+      names: a list of name strings.
+    """
+    super(NamesFileEntryFilter, self).__init__()
+    self._names = names
+
+  def Matches(self, file_entry):
+    """Compares the file entry against the filter.
+
+    Args:
+      file_entry: The file entry (instance of dfvfs.FileEntry).
+
+    Returns:
+      A boolean indicating if the file entry matches the filter.
+    """
+    if not self._names or not file_entry.IsFile():
+      return
+
+    return file_entry.name.lower() in self._names
+
+  def Print(self, output_writer):
+    """Prints a human readable version of the filter.
+
+    Args:
+      output_writer: the output writer object (instance of
+                     StdoutFrontendOutputWriter).
+    """
+    if self._names:
+      output_writer.Write(u'\tnames: {0:s}\n'.format(
+          u', '.join(self._names)))
+
+
 class SignaturesFileEntryFilter(FileEntryFilter):
   """Class that implements signature-based file entry filter."""
 
@@ -568,6 +606,8 @@ class FileSaver(object):
     filename = getattr(source_path_spec, u'location', None)
     if not filename:
       filename = source_path_spec.file_path
+
+    # TODO: this does not hold for Windows fix this.
 
     # There will be issues on systems that use a different separator than a
     # forward slash. However a forward slash is always used in the pathspec.
@@ -862,9 +902,28 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
     if not extensions_string:
       return
 
+    extensions_string = extensions_string.lower()
     extensions = [
         extension.strip() for extension in extensions_string.split(u',')]
     file_entry_filter = ExtensionsFileEntryFilter(extensions)
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def _ParseNamesStringOption(self, options):
+    """Parses the name string option.
+
+    Args:
+      options: the command line arguments (instance of argparse.Namespace).
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    names_string = getattr(options, u'names_string', None)
+    if not names_string:
+      return
+
+    names_string = names_string.lower()
+    names = [name.strip() for name in names_string.split(u',')]
+    file_entry_filter = NamesFileEntryFilter(names)
     self._filter_collection.AddFilter(file_entry_filter)
 
   def _ParseSignatureIdentifiersOptions(self, options):
@@ -895,6 +954,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
           u'Unable to read format specification file: {0:s} with error: '
           u'{1:s}').format(path, exception))
 
+    signature_identifiers = signature_identifiers.lower()
     signature_identifiers = [
         identifier.strip() for identifier in signature_identifiers.split(u',')]
     file_entry_filter = SignaturesFileEntryFilter(
@@ -1032,6 +1092,7 @@ class ImageExportFrontend(frontend.StorageMediaFrontend):
 
     self._ParseDateFiltersOption(options)
     self._ParseExtensionsStringOption(options)
+    self._ParseNamesStringOption(options)
     self._ParseSignatureIdentifiersOptions(options)
 
   def PrintFilterCollection(self):
@@ -1114,6 +1175,13 @@ def Main():
       type=unicode, metavar=u'EXTENSIONS', help=(
           u'Filter based on file name extensions. This option accepts '
           u'multiple multiple comma separated values e.g. "csv,docx,pst".'))
+
+  arg_parser.add_argument(
+      u'--names', dest=u'names_string', action=u'store',
+      type=str, metavar=u'NAMES', help=(
+          u'If the purpose is to find all files given a certain names '
+          u'this options should be used. This option accepts a comma separated '
+          u'string denoting all file names, eg: -x "NTUSER.DAT,UsrClass.dat".'))
 
   arg_parser.add_argument(
       u'--signatures', dest=u'signature_identifiers', action=u'store',
