@@ -233,7 +233,7 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport()
+    report = event.AnalysisReport(self.NAME)
 
     if self._output_mode == 'yaml':
       lines_of_text = []
