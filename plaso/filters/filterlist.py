@@ -7,6 +7,7 @@ from plaso.lib import errors
 from plaso.lib import filter_interface
 from plaso.lib import pfilter
 
+# TODO: This file requires a cleanup to confirm with project style etc..
 
 def IncludeKeyword(loader, node):
   """A constructor for the include keyword in YAML."""
@@ -44,19 +45,20 @@ class ObjectFilterList(filter_interface.FilterObject):
             u'Unable to parse YAML file with error: {0:s}.'.format(exception))
 
     self.filters = []
-    if type(results) is dict:
+    results_type = type(results)
+    if results_type is dict:
       self._ParseEntry(results)
-    elif type(results) is list:
+    elif results_type is list:
       for result in results:
         if type(result) is not dict:
           raise errors.WrongPlugin(
               u'Wrong format of YAML file, entry not a dict ({})'.format(
-                  type(result)))
+                  results_type))
         self._ParseEntry(result)
     else:
       raise errors.WrongPlugin(
           u'Wrong format of YAML file, entry not a dict ({})'.format(
-              type(result)))
+              results_type))
 
   def _ParseEntry(self, entry):
     """Parse a single YAML filter entry."""
@@ -88,6 +90,4 @@ class ObjectFilterList(filter_interface.FilterObject):
                 meta.get('urls', [])))
         return True
 
-    return False
-
-
+    return

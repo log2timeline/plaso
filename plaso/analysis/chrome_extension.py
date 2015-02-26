@@ -107,7 +107,7 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport()
+    report = event.AnalysisReport(self.NAME)
 
     report.report_dict = self._results
 

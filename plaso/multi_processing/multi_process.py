@@ -222,10 +222,10 @@ class MultiProcessEngine(engine.BaseEngine):
                                     processes. The default is 0 which means
                                     the function will determine the suitable
                                     number.
-      have_collection_process: Optional boolean value to indidate a separate
+      have_collection_process: Optional boolean value to indicate a separate
                                collection process should be run. The default
                                is true.
-      have_foreman_process: Optional boolean value to indidate a separate
+      have_foreman_process: Optional boolean value to indicate a separate
                             foreman process should be run to make sure the
                             workers are extracting event objects. The default
                             is true.
@@ -558,7 +558,7 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
       logging.error((
           u'Unable to setup a RPC server for the worker: {0:d} [PID {1:d}] '
           u'with error: {2:s}').format(
-              self._identifier, os.getpid(), exception))
+              self._identity, os.getpid(), exception))
 
   def _StopRPCProxyServerThread(self):
     """Stops the RPC proxy server thread."""

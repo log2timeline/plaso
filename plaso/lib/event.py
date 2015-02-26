@@ -16,10 +16,15 @@ import pytz
 class AnalysisReport(object):
   """Class that defines an analysis report."""
 
-  def __init__(self):
-    """Initializes the analysis report."""
+  def __init__(self, plugin_name):
+    """Initializes the analysis report.
+
+    Args:
+      plugin_name: The name of the plugin that's generating this report.
+    """
     super(AnalysisReport, self).__init__()
     self._anomalies = []
+    self.plugin_name = plugin_name
     self._tags = []
 
   def __unicode__(self):
