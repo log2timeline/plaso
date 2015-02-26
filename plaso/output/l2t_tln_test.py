@@ -51,12 +51,14 @@ class L2TTlnTest(test_lib.LogOutputFormatterTestCase):
         None, self._formatter_mediator, filehandle=self.output)
     self.event_object = TlnTestEvent()
 
-  def testStart(self):
-    """Test ensures header line is outputted as expected."""
-    correct_line = u'Time|Source|Host|User|Description|TZ|Notes\n'
+  def testWriteHeader(self):
+    """Tests the WriteHeader function."""
+    expected_header = u'Time|Source|Host|User|Description|TZ|Notes\n'
 
-    self.formatter.Start()
-    self.assertEquals(self.output.getvalue(), correct_line)
+    self.formatter.WriteHeader()
+
+    header = self.output.getvalue()
+    self.assertEquals(header, expected_header)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""

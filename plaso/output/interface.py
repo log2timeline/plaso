@@ -78,26 +78,16 @@ class LogOutputFormatter(object):
     self.filehandle = filehandle
     self.store = store
 
-  def Start(self):
-    """This should be extended by specific implementations.
-
-    Depending on the file format of the output it may need
-    a header. This method should return a header if one is
-    defined in that output format.
-    """
+  def Close(self):
+    """Closes the output."""
     pass
- 
-  def End(self):
-    """This should be extended by specific implementations.
 
-    Depending on the file format of the output it may need
-    a footer. This method should return a footer if one is
-    defined in that output format.
-    """
+  def Open(self):
+    """Opens the output."""
     pass
 
   def WriteEvent(self, event_object):
-    """Write the output of a single entry to the output filehandle.
+    """Writes the event object to the output.
 
     This method takes care of actually outputting each event in
     question. It does so by first prepending it with potential
@@ -135,15 +125,31 @@ class LogOutputFormatter(object):
     """Writes the end of an event object to the output.
 
     This method does all the post-processing or output after
-    each event has been printed, such as closing XML tags, etc.
+    an individual event has been written, such as closing XML tags, etc.
     """
     pass
 
   def WriteEventStart(self):
     """Writes the start of an event object to the output.
 
-    This method does all preprocessing or output before each event
-    is printed, for instance to surround XML events with tags, etc.
+    This method does all preprocessing or output before an individual event
+    is written, for instance to surround XML events with tags, etc.
+    """
+    pass
+
+  def WriteFooter(self):
+    """Writes the footer to the output.
+
+    This method does all post-processing or output after the last event
+    is written, for instance to write a file footer.
+    """
+    pass
+
+  def WriteHeader(self):
+    """Writes the header to the output.
+
+    This method does all preprocessing or output before the first event
+    is written, for instance to write a file header.
     """
     pass
 
@@ -156,7 +162,7 @@ class FileLogOutputFormatter(LogOutputFormatter):
   """A simple file based output formatter."""
 
   def __init__(
-      self, store, formatter_mediator, filehandle=sys.stdout, config=None, 
+      self, store, formatter_mediator, filehandle=sys.stdout, config=None,
       filter_use=None):
     """Initializes the log output formatter object.
 
@@ -191,8 +197,8 @@ class FileLogOutputFormatter(LogOutputFormatter):
     self.filehandle = OutputFilehandle(self.encoding)
     self.filehandle.Open(open_filehandle)
 
-  def End(self):
-    """Close the open filehandle after the last output."""
+  def Close(self):
+    """Closes the output."""
     self.filehandle.Close()
 
 
@@ -219,7 +225,8 @@ class EventBuffer(object):
     self.check_dedups = check_dedups
 
     self.formatter = formatter
-    self.formatter.Start()
+    self.formatter.Open()
+    self.formatter.WriteHeader()
 
   def Append(self, event_object):
     """Append an EventObject into the processing pipeline.
@@ -283,7 +290,8 @@ class EventBuffer(object):
     self.Flush()
 
     if self.formatter:
-      self.formatter.End()
+      self.formatter.WriteFooter()
+      self.formatter.Close()
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""

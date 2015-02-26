@@ -49,12 +49,20 @@ class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
         None, self._formatter_mediator, filehandle=self.output)
     self.event_object = JsonTestEvent()
 
-  def testStartAndEnd(self):
-    """Test to ensure start and end functions do not add text."""
-    self.formatter.Start()
-    self.assertEquals(self.output.getvalue(), u'{')
-    self.formatter.End()
-    self.assertEquals(self.output.getvalue(), u'{"event_foo": "{}"}')
+  def testWriteHeaderAndfooter(self):
+    """Tests the WriteHeader and WriteFooter functions."""
+    expected_header = u'{'
+    expected_footer = u'{"event_foo": "{}"}'
+
+    self.formatter.WriteHeader()
+
+    header = self.output.getvalue()
+    self.assertEquals(header, expected_header)
+
+    self.formatter.WriteFooter()
+
+    footer = self.output.getvalue()
+    self.assertEquals(footer, expected_footer)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""

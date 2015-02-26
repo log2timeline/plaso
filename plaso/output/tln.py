@@ -28,20 +28,6 @@ class TlnOutputFormatter(interface.FileLogOutputFormatter):
 
   DELIMITER = u'|'
 
-  def Start(self):
-    """Returns a header for the output."""
-    # Build a hostname and username dict objects.
-    self._hostnames = {}
-    if self.store:
-      self._hostnames = helper.BuildHostDict(self.store)
-      self._preprocesses = {}
-      for info in self.store.GetStorageInformation():
-        if hasattr(info, 'store_range'):
-          for store_number in range(
-              info.store_range[0], info.store_range[1] + 1):
-            self._preprocesses[store_number] = info
-    self.filehandle.WriteLine(u'Time|Source|Host|User|Description\n')
-
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -91,6 +77,20 @@ class TlnOutputFormatter(interface.FileLogOutputFormatter):
         username.replace(self.DELIMITER, u' '),
         msg.replace(self.DELIMITER, u' '))
     self.filehandle.WriteLine(out_write)
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
+    # Build a hostname and username dict objects.
+    self._hostnames = {}
+    if self.store:
+      self._hostnames = helper.BuildHostDict(self.store)
+      self._preprocesses = {}
+      for info in self.store.GetStorageInformation():
+        if hasattr(info, 'store_range'):
+          for store_number in range(
+              info.store_range[0], info.store_range[1] + 1):
+            self._preprocesses[store_number] = info
+    self.filehandle.WriteLine(u'Time|Source|Host|User|Description\n')
 
 
 manager.OutputManager.RegisterOutput(TlnOutputFormatter)
