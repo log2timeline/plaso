@@ -85,7 +85,7 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-12-26 19:11:59')
-    self.assertEqual(event_object.timestamp, 1388085119000000)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.sender, u'secd')
     self.assertEqual(event_object.sender_pid, 1111)

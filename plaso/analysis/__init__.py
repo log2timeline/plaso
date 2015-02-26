@@ -13,7 +13,7 @@ from plaso.analysis import windows_services
 # TODO: move these functions to a manager class. And add a test for this
 # function.
 def ListAllPluginNames(show_all=True):
-  """Return a list of all available plugin names and it's doc string."""
+  """Return a list of all available plugin names and their docstrings."""
   results = []
   for cls_obj in interface.AnalysisPlugin.classes.itervalues():
     doc_string, _, _ = cls_obj.__doc__.partition('\n')

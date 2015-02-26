@@ -817,6 +817,8 @@ class ExtractionFrontend(StorageMediaFrontend):
   _EVENT_SERIALIZER_FORMAT_PROTO = u'proto'
   _EVENT_SERIALIZER_FORMAT_JSON = u'json'
 
+  _BYTES_IN_A_MIB = 1024 * 1024
+
   def __init__(self, input_reader, output_writer):
     """Initializes the front-end object.
 

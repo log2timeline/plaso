@@ -97,7 +97,7 @@ class PlsRecallParser(interface.BaseParser):
 
       try:
         pls_record = self.PLS_STRUCT.parse_stream(file_object)
-      except construct.FieldError as exception:
+      except construct.FieldError:
         # The code has reached the end of file (EOF).
         break
 

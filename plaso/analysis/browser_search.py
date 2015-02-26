@@ -177,7 +177,7 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    report = event.AnalysisReport()
+    report = event.AnalysisReport(self.NAME)
 
     results = {}
     for key, count in self._counter.iteritems():

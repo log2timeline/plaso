@@ -88,7 +88,7 @@ class ChromePreferencesParser(interface.BaseParser):
               self.NAME, parser_mediator.GetDisplayName(), exception))
     except IOError as exception:
       file_object.close()
-      raise errors.errors.UnableToParseFile(
+      raise errors.UnableToParseFile(
           u'[{0:s}] Unable to open file {1:s} for parsing as'
           u'JSON: {2:s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
