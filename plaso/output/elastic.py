@@ -168,8 +168,38 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
 
     return ret_dict
 
-  def Start(self):
-    """Create the necessary mapping."""
+  def Close(self):
+    """Disconnects from the elastic search server."""
+    self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
+    self._data = []
+    sys.stdout.write('. [DONE]\n')
+    sys.stdout.write('ElasticSearch index name: {0:s}\n'.format(
+        self._index_name))
+    sys.stdout.flush()
+
+  def WriteEventBody(self, event_object):
+    """Writes the body of an event object to the output.
+
+    Each event object contains both attributes that are considered "reserved"
+    and others that aren't. The 'raw' representation of the object makes a
+    distinction between these two types as well as extracting the format
+    strings from the object.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
+    self._data.append(self._EventToDict(event_object))
+    self._counter += 1
+
+    # Check if we need to flush.
+    if self._counter % 5000 == 0:
+      self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
+      self._data = []
+      sys.stdout.write('.')
+      sys.stdout.flush()
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
     if self.store:
       self._hostnames = helper.BuildHostDict(self.store)
       for info in self.store.GetStorageInformation():
@@ -210,36 +240,6 @@ class ElasticSearchOutput(interface.LogOutputFormatter):
 
     sys.stdout.write('Inserting data')
     sys.stdout.flush()
-
-  def End(self):
-    """Flush on last time."""
-    self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
-    self._data = []
-    sys.stdout.write('. [DONE]\n')
-    sys.stdout.write('ElasticSearch index name: {0:s}\n'.format(
-        self._index_name))
-    sys.stdout.flush()
-
-  def WriteEventBody(self, event_object):
-    """Writes the body of an event object to the output.
-
-    Each event object contains both attributes that are considered "reserved"
-    and others that aren't. The 'raw' representation of the object makes a
-    distinction between these two types as well as extracting the format
-    strings from the object.
-
-    Args:
-      event_object: the event object (instance of EventObject).
-    """
-    self._data.append(self._EventToDict(event_object))
-    self._counter += 1
-
-    # Check if we need to flush.
-    if self._counter % 5000 == 0:
-      self._elastic_db.bulk_index(self._index_name, self._doc_type, self._data)
-      self._data = []
-      sys.stdout.write('.')
-      sys.stdout.flush()
 
 
 manager.OutputManager.RegisterOutput(ElasticSearchOutput)

@@ -32,22 +32,8 @@ class JsonOutputFormatter(interface.FileLogOutputFormatter):
                   The default is None.
     """
     super(JsonOutputFormatter, self).__init__(
-        store, formatter_mediator, filehandle=filehandle, config=config, 
+        store, formatter_mediator, filehandle=filehandle, config=config,
         filter_use=filter_use)
-    self._event_counter = 0
-
-  def End(self):
-    """Provide a footer."""
-    # Adding a label for "event_foo" due to JSON expecting a label
-    # after a comma. The only way to provide that is to either know
-    # what the last event is going to be (which we don't) or to add
-    # a dummy event in the end that has no data in it.
-    self.filehandle.WriteLine(u'"event_foo": "{}"}')
-    super(JsonOutputFormatter, self).End()
-
-  def Start(self):
-    """Provide a header to the file."""
-    self.filehandle.WriteLine(u'{')
     self._event_counter = 0
 
   def WriteEventBody(self, event_object):
@@ -68,6 +54,19 @@ class JsonOutputFormatter(interface.FileLogOutputFormatter):
                 event_object)))
 
     self._event_counter += 1
+
+  def WriteFooter(self):
+    """Writes the footer to the output."""
+    # Adding a label for "event_foo" due to JSON expecting a label
+    # after a comma. The only way to provide that is to either know
+    # what the last event is going to be (which we don't) or to add
+    # a dummy event in the end that has no data in it.
+    self.filehandle.WriteLine(u'"event_foo": "{}"}')
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
+    self.filehandle.WriteLine(u'{')
+    self._event_counter = 0
 
 
 manager.OutputManager.RegisterOutput(JsonOutputFormatter)

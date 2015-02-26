@@ -233,35 +233,6 @@ class DynamicOutput(interface.FileLogOutputFormatter):
     """Return a legacy MACB representation."""
     return helper.GetLegacy(event_object)
 
-  def Start(self):
-    """Returns a header for the output."""
-    # Start by finding out which fields are to be used.
-    self.fields = []
-
-    if self._filter:
-      self.fields = self._filter.fields
-      self.separator = self._filter.separator
-    else:
-      self.separator = u','
-
-    if not self.fields:
-      # TODO: Evaluate which fields should be included by default.
-      self.fields = [
-          'datetime', 'timestamp_desc', 'source', 'source_long',
-          'message', 'parser', 'display_name', 'tag', 'store_number',
-          'store_index']
-
-    if self.store:
-      self._hostnames = helper.BuildHostDict(self.store)
-      self._preprocesses = {}
-      for info in self.store.GetStorageInformation():
-        if hasattr(info, 'store_range'):
-          for store_number in range(info.store_range[0], info.store_range[1]):
-            self._preprocesses[store_number] = info
-
-    self.filehandle.WriteLine('{0:s}\n'.format(
-        self.separator.join(self.fields)))
-
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -289,6 +260,35 @@ class DynamicOutput(interface.FileLogOutputFormatter):
         self.separator.join(unicode(x).replace(
             self.separator, u' ') for x in row))
     self.filehandle.WriteLine(out_write)
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
+    # Start by finding out which fields are to be used.
+    self.fields = []
+
+    if self._filter:
+      self.fields = self._filter.fields
+      self.separator = self._filter.separator
+    else:
+      self.separator = u','
+
+    if not self.fields:
+      # TODO: Evaluate which fields should be included by default.
+      self.fields = [
+          'datetime', 'timestamp_desc', 'source', 'source_long',
+          'message', 'parser', 'display_name', 'tag', 'store_number',
+          'store_index']
+
+    if self.store:
+      self._hostnames = helper.BuildHostDict(self.store)
+      self._preprocesses = {}
+      for info in self.store.GetStorageInformation():
+        if hasattr(info, 'store_range'):
+          for store_number in range(info.store_range[0], info.store_range[1]):
+            self._preprocesses[store_number] = info
+
+    self.filehandle.WriteLine('{0:s}\n'.format(
+        self.separator.join(self.fields)))
 
 
 manager.OutputManager.RegisterOutput(DynamicOutput)

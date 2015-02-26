@@ -55,15 +55,16 @@ class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
         None, self._formatter_mediator, filehandle=self.output)
     self.event_object = L2tTestEvent()
 
-  def testStart(self):
-    """Test ensures header line is outputted as expected."""
-
-    correct_line = (
+  def testWriteHeader(self):
+    """Tests the WriteHeader function."""
+    expected_header = (
         u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         u'version,filename,inode,notes,format,extra\n')
 
-    self.formatter.Start()
-    self.assertEquals(self.output.getvalue(), correct_line)
+    self.formatter.WriteHeader()
+
+    header = self.output.getvalue()
+    self.assertEquals(header, expected_header)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
