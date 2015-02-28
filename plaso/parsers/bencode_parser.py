@@ -20,9 +20,9 @@ class BencodeParser(interface.BasePluginsParser):
   """Deserializes bencoded file; produces a dictionary containing bencoded data.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
-  Parse() has GetTopLevel() which deserializes bencoded files using the
-  BitTorrent-bencode library and calls plugins (BencodePlugin) registered
-  through the interface by their Process() to produce event objects.
+  Parse() deserializes bencoded files using the BitTorrent-bencode library
+  and calls plugins (BencodePlugin) registered through the interface by their
+  Process() to produce event objects.
 
   Plugins are how this parser understands the content inside a bencoded file,
   each plugin holds logic specific to a particular bencoded file. See the
@@ -43,46 +43,45 @@ class BencodeParser(interface.BasePluginsParser):
     super(BencodeParser, self).__init__()
     self._plugins = BencodeParser.GetPluginObjects()
 
-  def GetTopLevel(self, file_object):
-    """Returns deserialized content of a bencoded file as a dictionary object.
-
-    Args:
-      file_object: A file-like object.
-
-    Returns:
-      Dictionary object representing the contents of the bencoded file.
-    """
-    header = file_object.read(2)
-    file_object.seek(0, os.SEEK_SET)
-
-    if not self.BENCODE_RE.match(header):
-      raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
-
-    try:
-      data_object = bencode.bdecode(file_object.read())
-    except (IOError, bencode.BTFailure) as exception:
-      raise errors.UnableToParseFile(
-          u'Unable to parse invalid Bencoded file with error: {0:s}'.format(
-              exception))
-
-    if not data_object:
-      raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
-
-    return data_object
-
   def Parse(self, parser_mediator, **kwargs):
-    """Parse and extract values from a bencoded file.
+    """Parses a bencoded file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     file_object = parser_mediator.GetFileObject()
-    data_object = self.GetTopLevel(file_object)
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a bencoded file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    file_object.seek(0, os.SEEK_SET)
+    header = file_object.read(2)
+    if not self.BENCODE_RE.match(header):
+      raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
+
+    file_object.seek(0, os.SEEK_SET)
+    try:
+      data_object = bencode.bdecode(file_object.read())
+
+    except (IOError, bencode.BTFailure) as exception:
+      raise errors.UnableToParseFile(
+          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.NAME, parser_mediator.GetDisplayName(), exception))
 
     if not data_object:
-      file_object.close()
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse: {1:s}. Skipping.'.format(
+          u'[{0:s}] missing decoded data for file: {1:s}'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
     for plugin_object in self._plugins:
@@ -91,8 +90,6 @@ class BencodeParser(interface.BasePluginsParser):
       except errors.WrongBencodePlugin as exception:
         logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
             self.NAME, exception))
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(BencodeParser)

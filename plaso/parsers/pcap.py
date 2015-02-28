@@ -3,6 +3,7 @@
 
 import binascii
 import operator
+import os
 import socket
 
 import dpkt
@@ -719,11 +720,13 @@ class PcapParser(interface.BaseParser):
                     point. The default is None.
     """
     file_object = parser_mediator.GetFileObject()
-    self.ParseFileObject(parser_mediator, file_object)
-    file_object.close()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a PCAP file.
+    """Parses a PCAP file-like object.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
@@ -732,6 +735,7 @@ class PcapParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_object.seek(0, os.SEEK_SET)
     data = file_object.read(dpkt.pcap.FileHdr.__hdr_len__)
 
     try:
@@ -755,7 +759,6 @@ class PcapParser(interface.BaseParser):
 
     elif file_header.magic != dpkt.pcap.TCPDUMP_MAGIC:
       raise errors.UnableToParseFile(u'Unsupported file signature')
-
 
     packet_number = 1
     connections = {}

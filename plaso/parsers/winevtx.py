@@ -92,7 +92,7 @@ class WinEvtxParser(interface.BaseParser):
   DESCRIPTION = u'Parser for Windows XML EventLog (EVTX) files.'
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a Windows XML EventLog (EVTX) file.
+    """Parses a Windows XML EventLog (EVTX) file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -100,9 +100,22 @@ class WinEvtxParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-
-
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Windows XML EventLog (EVTX) file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     evtx_file = pyevtx.file()
     evtx_file.set_ascii_codepage(parser_mediator.codepage)
 
@@ -110,7 +123,6 @@ class WinEvtxParser(interface.BaseParser):
       evtx_file.open_file_object(file_object)
     except IOError as exception:
       evtx_file.close()
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
@@ -140,7 +152,6 @@ class WinEvtxParser(interface.BaseParser):
                 exception))
 
     evtx_file.close()
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(WinEvtxParser)

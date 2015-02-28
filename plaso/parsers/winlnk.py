@@ -68,7 +68,7 @@ class WinLnkParser(interface.BaseParser):
     return format_specification
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a Windows Shortcut (LNK) file.
+    """Parses a Windows Shortcut (LNK) file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).

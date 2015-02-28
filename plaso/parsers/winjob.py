@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Scheduled Task job files."""
 
+import os
+
 import construct
 
 from plaso.events import time_events
@@ -154,19 +156,28 @@ class WinJobParser(interface.BaseParser):
       construct.ULInt16('trigger_reserved3'))
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a Windows job file.
-
-    This is the main parsing engine for the parser. It determines if
-    the selected file is a proper Scheduled task job file and extracts
-    the scheduled task data.
+    """Parses a Windows job file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+    """
+    file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Windows job file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = parser_mediator.GetFileObject()
+    file_object.seek(0, os.SEEK_SET)
     try:
       header = self.JOB_FIXED_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
@@ -236,8 +247,6 @@ class WinJobParser(interface.BaseParser):
           scheduled_end_date, 'Scheduled To End', data.app_name, data.parameter,
           data.working_dir, data.username, trigger_type, data.comment)
       parser_mediator.ProduceEvent(event_object)
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(WinJobParser)

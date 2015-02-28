@@ -9,32 +9,39 @@ from plaso.events import time_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import utils
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
 class WinRecycleEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows Recycle bin EventObject."""
+  """Convenience class for a Windows Recycle Bin event object."""
 
   DATA_TYPE = 'windows:metadata:deleted_item'
 
   def __init__(
       self, filename_ascii, filename_utf, record_information, record_size):
-    """Initializes the event object."""
-    timestamp = record_information.get('filetime', 0)
+    """Initializes the event object.
+
+    Args:
+      filename_ascii: the filename in ASCII.
+      filename_utf: the filename in UTF.
+      record_information: the record information (instance of
+                          construct.Struct).
+      record_size: the size of the record.
+    """
+    timestamp = record_information.get(u'filetime', 0)
 
     super(WinRecycleEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.DELETED_TIME)
 
-    if 'index' in record_information:
-      self.index = record_information.get('index', 0)
+    if u'index' in record_information:
+      self.index = record_information.get(u'index', 0)
       self.offset = record_size * self.index
     else:
       self.offset = 0
 
-    self.drive_number = record_information.get('drive', None)
-    self.file_size = record_information.get('filesize', 0)
+    self.drive_number = record_information.get(u'drive', None)
+    self.file_size = record_information.get(u'filesize', 0)
 
     if filename_utf:
       self.orig_filename = filename_utf
@@ -58,20 +65,35 @@ class WinRecycleBinParser(interface.BaseParser):
   # Struct read from:
   # https://code.google.com/p/rifiuti2/source/browse/trunk/src/rifiuti-vista.h
   RECORD_STRUCT = construct.Struct(
-      'record',
-      construct.ULInt64('filesize'),
-      construct.ULInt64('filetime'))
+      u'record',
+      construct.ULInt64(u'filesize'),
+      construct.ULInt64(u'filetime'))
 
-  MAGIC_STRUCT = construct.ULInt64('magic')
+  MAGIC_STRUCT = construct.ULInt64(u'magic')
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract entries from a Windows RecycleBin $Ixx file.
+    """Parses a Windows RecycleBin $Ixx file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_entry = parser_mediator.GetFileEntry()
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Windows RecycleBin $Ixx file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    file_entry = parser_mediator.GetFileEntry()
     try:
       magic_header = self.MAGIC_STRUCT.parse_stream(file_object)
     except (construct.FieldError, IOError) as exception:
@@ -82,24 +104,20 @@ class WinRecycleBinParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not an $Ixxx file, wrong magic header.')
 
-
-
     # We may have to rely on filenames since this header is very generic.
     # TODO: Rethink this and potentially make a better test.
-    base_filename = utils.GetBaseName(file_entry.name)
-    if not base_filename.startswith('$I'):
+    if not file_entry.name.startswith('$I'):
       raise errors.UnableToParseFile(
           u'Not an $Ixxx file, filename doesn\'t start with $I.')
 
     record = self.RECORD_STRUCT.parse_stream(file_object)
     filename_utf = binary.ReadUtf16Stream(file_object)
 
-    file_object.close()
     event_object = WinRecycleEvent(u'', filename_utf, record, 0)
     parser_mediator.ProduceEvent(event_object)
 
 
-class WinRecycleInfo2Parser(interface.BaseParser):
+class WinRecyclerInfo2Parser(interface.BaseParser):
   """Parses the Windows Recycler INFO2 file."""
 
   NAME = 'recycle_bin_info2'
@@ -109,55 +127,69 @@ class WinRecycleInfo2Parser(interface.BaseParser):
   INT32_LE = construct.ULInt32('my_int')
 
   FILE_HEADER_STRUCT = construct.Struct(
-      'file_header',
+      u'file_header',
       construct.Padding(8),
-      construct.ULInt32('record_size'))
+      construct.ULInt32(u'record_size'))
 
   # Struct based on (-both unicode and legacy string):
   # https://code.google.com/p/rifiuti2/source/browse/trunk/src/rifiuti.h
   RECORD_STRUCT = construct.Struct(
-      'record',
-      construct.ULInt32('index'),
-      construct.ULInt32('drive'),
-      construct.ULInt64('filetime'),
-      construct.ULInt32('filesize'))
+      u'record',
+      construct.ULInt32(u'index'),
+      construct.ULInt32(u'drive'),
+      construct.ULInt64(u'filetime'),
+      construct.ULInt32(u'filesize'))
 
-  STRING_STRUCT = construct.CString('legacy_filename')
+  STRING_STRUCT = construct.CString(u'legacy_filename')
 
   # Define a list of needed variables.
   UNICODE_FILENAME_OFFSET = 0x11C
   RECORD_INDEX_OFFSET = 0x108
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract entries from Windows Recycler INFO2 file.
+    """Parses a Windows Recycler INFO2 file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
-    file_entry = parser_mediator.GetFileEntry()
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Windows Recycler INFO2 file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    file_entry = parser_mediator.GetFileEntry()
     try:
       magic_header = self.INT32_LE.parse_stream(file_object)
     except (construct.FieldError, IOError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse INFO2 file with error: {0:s}'.format(exception))
 
-    if magic_header is not 5:
+    if magic_header != 5:
       raise errors.UnableToParseFile(
           u'Not an INFO2 file, wrong magic header.')
 
     # Since this header value is really generic it is hard not to use filename
     # as an indicator too.
     # TODO: Rethink this and potentially make a better test.
-    base_filename = utils.GetBaseName(file_entry.name)
-    if not base_filename.startswith('INFO2'):
+    if not file_entry.name.startswith(u'INFO2'):
       raise errors.UnableToParseFile(
           u'Not an INFO2 file, filename isn\'t INFO2.')
 
     file_header = self.FILE_HEADER_STRUCT.parse_stream(file_object)
 
     # Limit record size to 65536 to be on the safe side.
-    record_size = file_header['record_size']
+    record_size = file_header[u'record_size']
     if record_size > 65536:
       logging.error((
           u'Record size: {0:d} is too large for INFO2 reducing to: '
@@ -188,7 +220,6 @@ class WinRecycleInfo2Parser(interface.BaseParser):
 
       data = file_object.read(record_size)
 
-    file_object.close()
 
-
-manager.ParsersManager.RegisterParser(WinRecycleBinParser)
+manager.ParsersManager.RegisterParsers([
+    WinRecycleBinParser, WinRecyclerInfo2Parser])

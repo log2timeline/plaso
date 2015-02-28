@@ -44,14 +44,28 @@ class AndroidAppUsageParser(interface.BaseParser):
   DESCRIPTION = u'Parser for the Android usage-history.xml file.'
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract the Android usage-history file.
+    """Parses an Android usage-history file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     file_object = parser_mediator.GetFileObject()
-    file_object.seek(0, os.SEEK_SET)
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
 
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses an Android usage-history file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    file_object.seek(0, os.SEEK_SET)
     text_file_object = text_file.TextFile(file_object)
 
     # Need to verify the first line to make sure this is a) XML and
@@ -74,8 +88,8 @@ class AndroidAppUsageParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not an Android usage history file [wrong XML root key]')
 
-    # For ElementTree to work we need to work on a filehandle seeked
-    # to the beginning.
+    # The current offset of the file-like object needs to point at
+    # the start of the file for ElementTree to parse the XML data correctly.
     file_object.seek(0, os.SEEK_SET)
 
     xml = ElementTree.parse(file_object)
@@ -95,8 +109,6 @@ class AndroidAppUsageParser(interface.BaseParser):
           event_object = AndroidAppUsageEvent(
               last_resume_time, package, component)
           parser_mediator.ProduceEvent(event_object)
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(AndroidAppUsageParser)
