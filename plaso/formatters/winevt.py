@@ -21,6 +21,7 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
       u'Event Category: {event_category}',
       u'Source Name: {source_name}',
       u'Computer Name: {computer_name}',
+      u'Message string: {message_string}',
       u'Strings: {strings}']
 
   FORMAT_STRING_SHORT_PIECES = [
@@ -71,7 +72,7 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
       return self._SEVERITY[severity]
     return u'Unknown {0:d}'.format(severity)
 
-  def GetMessages(self, unused_formatter_mediator, event_object):
+  def GetMessages(self, formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
 
     Args:
@@ -100,6 +101,21 @@ class WinEvtFormatter(interface.ConditionalEventFormatter):
     severity = event_values.get(u'severity', None)
     if severity is not None:
       event_values[u'severity'] = self.GetSeverityString(severity)
+
+    source_name = event_values.get(u'source_name', None)
+    message_identifier = event_values.get(u'message_identifier', None)
+    strings = event_values.get(u'strings', [])
+    if source_name and message_identifier:
+      message_string = formatter_mediator.GetWindowsEventMessage(
+          source_name, message_identifier)
+      if message_string:
+        event_values[u'message_string'] = message_string.format(*strings)
+
+    message_strings = []
+    for string in strings:
+      message_strings.append(u'\'{0:s}\''.format(string))
+    message_string = u', '.join(message_strings)
+    event_values[u'strings'] = u'[{0:s}]'.format(message_string)
 
     return self._ConditionalFormatMessages(event_values)
 

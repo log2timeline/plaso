@@ -14,6 +14,7 @@ import textwrap
 
 from plaso import filters
 
+from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.lib import event
@@ -23,7 +24,7 @@ from plaso.output import manager as output_manager
 from plaso.output import pstorage  # pylint: disable=unused-import
 
 
-class PlasmFrontend(frontend.AnalysisFrontend):
+class PlasmFrontend(analysis_frontend.AnalysisFrontend):
   """Class that implements the psort front-end."""
 
   def __init__(self):

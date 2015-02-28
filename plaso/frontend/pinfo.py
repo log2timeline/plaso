@@ -11,12 +11,13 @@ import logging
 import pprint
 import sys
 
+from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.lib import timelib
 
 
-class PinfoFrontend(frontend.AnalysisFrontend):
+class PinfoFrontend(analysis_frontend.AnalysisFrontend):
   """Class that implements the pinfo front-end."""
 
   def __init__(self):
