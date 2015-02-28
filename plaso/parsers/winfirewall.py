@@ -66,44 +66,6 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     self.use_local_zone = False
     self.software = None
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a firewall log file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
-
-    Returns:
-      True if this is the correct parser, False otherwise.
-    """
-    # TODO: Examine other versions of the file format and if this parser should
-    # support them.
-    if line == '#Version: 1.5':
-      return True
-
-    return False
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an event object if applicable.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
-
-    Returns:
-      An event object (instance of EventObject) or None.
-    """
-    if key == 'comment':
-      self._ParseCommentRecord(structure)
-    elif key == 'logline':
-      return self._ParseLogLine(parser_mediator, structure)
-    else:
-      logging.warning(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
-
   def _ParseCommentRecord(self, structure):
     """Parse a comment and store appropriate attributes.
 
@@ -176,6 +138,44 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
         setattr(event_object, key, save_value)
 
     return event_object
+
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parse each record structure and return an event object if applicable.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      key: An identification string indicating the name of the parsed
+           structure.
+      structure: A pyparsing.ParseResults object from a line in the
+                 log file.
+
+    Returns:
+      An event object (instance of EventObject) or None.
+    """
+    if key == 'comment':
+      self._ParseCommentRecord(structure)
+    elif key == 'logline':
+      return self._ParseLogLine(parser_mediator, structure)
+    else:
+      logging.warning(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+  def VerifyStructure(self, parser_mediator, line):
+    """Verify that this file is a firewall log file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      line: A single line from the text file.
+
+    Returns:
+      True if this is the correct parser, False otherwise.
+    """
+    # TODO: Examine other versions of the file format and if this parser should
+    # support them.
+    if line == '#Version: 1.5':
+      return True
+
+    return False
 
 
 manager.ParsersManager.RegisterParser(WinFirewallParser)

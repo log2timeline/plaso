@@ -2,6 +2,7 @@
 """This file contains a parser for OXML files (i.e. MS Office 2007+)."""
 
 import logging
+import os
 import re
 import struct
 import zipfile
@@ -75,8 +76,24 @@ class OpenXMLParser(interface.BaseParser):
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Windows EventLog (EVT) file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     file_name = parser_mediator.GetDisplayName()
 
+    file_object.seek(0, os.SEEK_SET)
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
