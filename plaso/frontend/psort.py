@@ -27,6 +27,7 @@ from plaso.analysis import context as analysis_context
 from plaso.analysis import interface as analysis_interface
 from plaso.artifacts import knowledge_base
 from plaso.engine import queue
+from plaso.frontend import analysis_frontend
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import bufferlib
@@ -42,7 +43,7 @@ from plaso.serializer import protobuf_serializer
 import pytz
 
 
-class PsortFrontend(frontend.AnalysisFrontend):
+class PsortFrontend(analysis_frontend.AnalysisFrontend):
   """Class that implements the psort front-end."""
 
   def __init__(self):
@@ -59,6 +60,32 @@ class PsortFrontend(frontend.AnalysisFrontend):
     self._output_filename = None
     self._output_format = None
     self._slice_size = 5
+
+  def _AppendEvent(self, event_object, output_buffer, event_queues):
+    """Appends an event object to an output buffer and queues.
+
+    Args:
+      event_object: an event object (instance of EventObject).
+      output_buffer: the output buffer.
+      event_queues: a list of event queues that serve as input for
+                    the analysis plugins.
+    """
+    output_buffer.Append(event_object)
+
+    # Needed due to duplicate removals, if two events
+    # are merged then we'll just pick the first inode value.
+    inode = getattr(event_object, u'inode', None)
+    if isinstance(inode, basestring):
+      inode_list = inode.split(u';')
+      try:
+        new_inode = int(inode_list[0], 10)
+      except (ValueError, IndexError):
+        new_inode = 0
+
+      event_object.inode = new_inode
+
+    for event_queue in event_queues:
+      event_queue.ProduceItem(event_object)
 
   def AddAnalysisPluginOptions(self, argument_group, plugin_names):
     """Adds the analysis plugin options to the argument group
@@ -207,8 +234,8 @@ class PsortFrontend(frontend.AnalysisFrontend):
         self._slice_size = getattr(options, u'slice_size', 5)
         self._filter_buffer = bufferlib.CircularBuffer(self._slice_size)
 
-  def ParseStorage(self, options):
-    """Open a storage file and parse through it.
+  def ProcessStorage(self, options):
+    """Open a storage file and processes the events within.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
@@ -259,13 +286,16 @@ class PsortFrontend(frontend.AnalysisFrontend):
       else:
         output_stream = sys.stdout
 
+      formatter_mediator = self.GetFormatMediator()
+
       try:
         # TODO: move this into a factory function?
         output_module_class = output_manager.OutputManager.GetOutputClass(
             self._output_format)
         output_module = output_module_class(
-            storage_file, self._formatter_mediator, filehandle=output_stream,
+            storage_file, formatter_mediator, filehandle=output_stream,
             config=options, filter_use=self._filter_object)
+
       except IOError as exception:
         raise RuntimeError(
             u'Unable to create output module with error: {0:s}'.format(
@@ -408,32 +438,6 @@ class PsortFrontend(frontend.AnalysisFrontend):
           counter[u'Events Filtered Out'])
 
     return counter
-
-  def _AppendEvent(self, event_object, output_buffer, event_queues):
-    """Appends an event object to an output buffer and queues.
-
-    Args:
-      event_object: an event object (instance of EventObject).
-      output_buffer: the output buffer.
-      event_queues: a list of event queues that serve as input for
-                    the analysis plugins.
-    """
-    output_buffer.Append(event_object)
-
-    # Needed due to duplicate removals, if two events
-    # are merged then we'll just pick the first inode value.
-    inode = getattr(event_object, u'inode', None)
-    if isinstance(inode, basestring):
-      inode_list = inode.split(u';')
-      try:
-        new_inode = int(inode_list[0], 10)
-      except (ValueError, IndexError):
-        new_inode = 0
-
-      event_object.inode = new_inode
-
-    for event_queue in event_queues:
-      event_queue.ProduceItem(event_object)
 
   def ProcessOutput(
       self, storage_file, output_buffer, my_filter=None, filter_buffer=None,
@@ -615,6 +619,10 @@ def Main(arguments=None):
           u'or "--analysis list" to see a list of available plugins.'))
 
   tool_group.add_argument(
+      u'--data', metavar=u'PATH', dest=u'data_location', default=u'',
+      action=u'store', type=unicode, help=u'The location of the analysis data.')
+
+  tool_group.add_argument(
       u'-z', u'--zone', metavar=u'TIMEZONE', default=u'UTC', dest=u'timezone',
       help=(
           u'The timezone of the output or "-z list" to see a list of available '
@@ -733,7 +741,7 @@ def Main(arguments=None):
     time.sleep(5)
 
   try:
-    counter = front_end.ParseStorage(options)
+    counter = front_end.ProcessStorage(options)
 
     if not options.quiet:
       logging.info(frontend_utils.FormatHeader(u'Counter'))

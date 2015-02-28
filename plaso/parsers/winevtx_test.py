@@ -21,7 +21,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['System.evtx'])
+    test_file = self._GetTestFilePath([u'System.evtx'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -107,14 +107,16 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         u'Event Level: 4 '
         u'Source Name: Service Control Manager '
         u'Computer Name: WKS-WIN764BITB.shieldbase.local '
-        u'Strings: [u\'Windows Modules Installer\', '
-        u'u\'stopped\', u\'540072007500730074006500640049006E00'
+        u'Message string: The Windows Modules Installer service entered '
+        u'the stopped state. '
+        u'Strings: [\'Windows Modules Installer\', \'stopped\', '
+        u'\'540072007500730074006500640049006E00'
         u'7300740061006C006C00650072002F0031000000\']')
 
     expected_msg_short = (
         u'[7036 / 0x1b7c] '
-        u'Strings: [u\'Windows Modules Installer\', '
-        u'u\'stopped\', u\'5400720...')
+        u'Strings: [\'Windows Modules Installer\', \'stopped\', '
+        u'\'5400720075...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

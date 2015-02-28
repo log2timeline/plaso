@@ -37,6 +37,7 @@ class TestEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
 class ParserTestCase(unittest.TestCase):
   """The unit test case for a parser."""
 
+  _DATA_PATH = os.path.join(os.getcwd(), u'data')
   _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   # Show full diff results, part of TestCase so does not follow our naming
@@ -209,7 +210,8 @@ class ParserTestCase(unittest.TestCase):
       expected_message: the expected message string.
       expected_message_short: the expected short message string.
     """
-    formatter_mediator = formatters_mediator.FormatterMediator()
+    formatter_mediator = formatters_mediator.FormatterMediator(
+        data_location=self._DATA_PATH)
     message, message_short = (
         formatters_manager.FormattersManager.GetMessageStrings(
             formatter_mediator, event_object))

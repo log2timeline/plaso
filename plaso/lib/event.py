@@ -5,7 +5,6 @@ import collections
 import logging
 import uuid
 
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.lib import utils
@@ -260,22 +259,6 @@ class EventObject(object):
     out_write.append(u'+-' * 40)
     out_write.append(u'[Timestamp]:\n  {0:s}'.format(
         timelib.Timestamp.CopyToIsoFormat(self.timestamp)))
-    out_write.append(u'\n[Message Strings]:')
-
-    # TODO: move formatting testing to a formatters (manager) test.
-    event_formatter = formatters_manager.FormattersManager.GetFormatterObject(
-        self.data_type)
-    if not event_formatter:
-      out_write.append(u'None')
-    else:
-      msg, msg_short = event_formatter.GetMessages(self)
-      source_short, source_long = event_formatter.GetSources(self)
-      out_write.append(u'{2:>7}: {0}\n{3:>7}: {1}\n'.format(
-          utils.GetUnicodeString(msg_short), utils.GetUnicodeString(msg),
-          'Short', 'Long'))
-      out_write.append(u'{2:>7}: {0}\n{3:>7}: {1}\n'.format(
-          utils.GetUnicodeString(source_short),
-          utils.GetUnicodeString(source_long), 'Source Short', 'Source Long'))
 
     if hasattr(self, 'pathspec'):
       pathspec_string = self.pathspec.comparable
