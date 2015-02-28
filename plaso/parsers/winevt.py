@@ -111,7 +111,7 @@ class WinEvtParser(interface.BaseParser):
       parser_mediator.ProduceEvent(event_object)
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a Windows EventLog (EVT) file.
+    """Parses a Windows EventLog (EVT) file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -119,9 +119,23 @@ class WinEvtParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-
-    file_name = parser_mediator.GetDisplayName()
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Windows EventLog (EVT) file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    file_name = parser_mediator.GetDisplayName()
     evt_file = pyevt.file()
     evt_file.set_ascii_codepage(parser_mediator.codepage)
 
@@ -129,7 +143,6 @@ class WinEvtParser(interface.BaseParser):
       evt_file.open_file_object(file_object)
     except IOError as exception:
       evt_file.close()
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file {1:s} with error: {2:s}'.format(
               self.NAME, file_name, exception))
@@ -155,7 +168,6 @@ class WinEvtParser(interface.BaseParser):
                 self.NAME, record_index, file_name, exception))
 
     evt_file.close()
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(WinEvtParser)

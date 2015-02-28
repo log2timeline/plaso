@@ -28,43 +28,44 @@ class CustomDestinationsParser(interface.BaseParser):
   _LNK_GUID = '\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46'
 
   _FILE_HEADER = construct.Struct(
-      'file_header',
-      construct.ULInt32('unknown1'),
-      construct.ULInt32('unknown2'),
-      construct.ULInt32('unknown3'),
-      construct.ULInt32('header_values_type'))
+      u'file_header',
+      construct.ULInt32(u'unknown1'),
+      construct.ULInt32(u'unknown2'),
+      construct.ULInt32(u'unknown3'),
+      construct.ULInt32(u'header_values_type'))
 
   _HEADER_VALUE_TYPE_0 = construct.Struct(
-      'header_value_type_0',
-      construct.ULInt32('number_of_characters'),
-      construct.String('string', lambda ctx: ctx.number_of_characters * 2),
-      construct.ULInt32('unknown1'))
+      u'header_value_type_0',
+      construct.ULInt32(u'number_of_characters'),
+      construct.String(u'string', lambda ctx: ctx.number_of_characters * 2),
+      construct.ULInt32(u'unknown1'))
 
   _HEADER_VALUE_TYPE_1_OR_2 = construct.Struct(
-      'header_value_type_1_or_2',
-      construct.ULInt32('unknown1'))
+      u'header_value_type_1_or_2',
+      construct.ULInt32(u'unknown1'))
 
   _ENTRY_HEADER = construct.Struct(
-      'entry_header',
-      construct.String('guid', 16))
+      u'entry_header',
+      construct.String(u'guid', 16))
 
   _FILE_FOOTER = construct.Struct(
-      'file_footer',
-      construct.ULInt32('signature'))
+      u'file_footer',
+      construct.ULInt32(u'signature'))
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from an *.customDestinations-ms file.
+    """Parses a *.customDestinations-ms file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     file_object = parser_mediator.GetFileObject()
-    self.ParseFileObject(parser_mediator, file_object)
-    file_object.close()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
 
-  def ParseFileObject(
-      self, parser_mediator, file_object):
-    """Extract data from an *.customDestinations-ms file.
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a *.customDestinations-ms file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -73,6 +74,7 @@ class CustomDestinationsParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_object.seek(0, os.SEEK_SET)
     try:
       file_header = self._FILE_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:

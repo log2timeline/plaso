@@ -6,6 +6,9 @@
 #    deploy_resource_codebase header field may contain the host IP.
 #    This needs to be researched further, as that field may not always
 #    be present. 6.02 files will currently return 'Unknown'.
+
+import os
+
 import construct
 
 from plaso.events import time_events
@@ -39,7 +42,7 @@ class JavaIDXEvent(time_events.TimestampEvent):
 
 
 class JavaIDXParser(interface.BaseParser):
-  """Parse Java IDX files for download events.
+  """Parse Java WebStart Cache IDX files for download events.
 
   There are five structures defined. 6.02 files had one generic section
   that retained all data. From 6.03, the file went to a multi-section
@@ -52,7 +55,7 @@ class JavaIDXParser(interface.BaseParser):
   """
 
   NAME = 'java_idx'
-  DESCRIPTION = u'Parser for Java IDX files.'
+  DESCRIPTION = u'Parser for Java WebStart Cache IDX files.'
 
   IDX_SHORT_STRUCT = construct.Struct(
       'magic',
@@ -106,17 +109,28 @@ class JavaIDXParser(interface.BaseParser):
           'string', length_field=construct.UBInt16('length')))
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a Java cache IDX file.
-
-    This is the main parsing engine for the parser. It determines if
-    the selected file is a proper IDX file. It then checks the file
-    version to determine the correct structure to apply to extract
-    data.
+    """Parses a Java WebStart Cache IDX file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
     file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a Java WebStart Cache IDX file-like object.
+
+    Args:
+      parser_mediator: A parser context object (instance of ParserContext).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+    file_object.seek(0, os.SEEK_SET)
     try:
       magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
