@@ -145,7 +145,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     self.attributes['iyear'] = int(match.group(1))
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a text file.
+    """Parses a text file using a lexer.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -153,10 +153,25 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a text file-like object using a lexer.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     file_entry = parser_mediator.GetFileEntry()
     path_spec_printable = u'{0:s}:{1:s}'.format(
         file_entry.path_spec.type_indicator, file_entry.name)
-    file_object = parser_mediator.GetFileObject()
 
     self.file_entry = file_entry
     # TODO: this is necessary since we inherit from lexer.SelfFeederMixIn.
@@ -177,8 +192,6 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
     self.error = 0
     self.buffer = ''
 
-
-
     while True:
       _ = self.NextToken()
 
@@ -190,7 +203,6 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
         logging.debug(
             u'Lexer error count: {0:d} and current state {1:s}'.format(
                 self.error, self.state))
-        file_object.close()
         raise errors.UnableToParseFile(
             u'[{0:s}] unsupported file: {1:s}.'.format(
                 self.NAME, path_spec_printable))
@@ -218,7 +230,6 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
                 u'{2:d})').format(path_spec_printable, error_count, self.error))
 
             if error_count >= self.MAX_LINES:
-              file_object.close()
               raise errors.UnableToParseFile(
                   u'[{0:s}] unsupported file: {1:s}.'.format(
                       self.NAME, path_spec_printable))
@@ -234,7 +245,6 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
         break
 
     if not file_verified:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parser file: {1:s}.'.format(
               self.NAME, path_spec_printable))
@@ -245,7 +255,6 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
           u'{0:s} prematurely terminated parsing: {1:s} at offset: '
           u'0x{2:08x}.').format(
               self.NAME, path_spec_printable, file_offset))
-    file_object.close()
 
   def ParseString(self, match=None, **unused_kwargs):
     """Return a string with combined values from the lexer.
@@ -416,14 +425,29 @@ class TextCSVParser(interface.BaseParser):
     parser_mediator.ProduceEvent(event_object)
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a CVS file.
+    """Parses a CSV text file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
     """
+    file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a CSV text file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     file_entry = parser_mediator.GetFileEntry()
     path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', u';')
-    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -440,7 +464,6 @@ class TextCSVParser(interface.BaseParser):
     try:
       row = reader.next()
     except (csv.Error, StopIteration):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] Unable to parse CSV file: {1:s}.'.format(
               self.NAME, path_spec_printable))
@@ -449,7 +472,6 @@ class TextCSVParser(interface.BaseParser):
     number_of_records = len(row)
 
     if number_of_records != number_of_columns:
-      file_object.close()
       raise errors.UnableToParseFile((
           u'[{0:s}] Unable to parse CSV file: {1:s}. Wrong number of '
           u'records (expected: {2:d}, got: {3:d})').format(
@@ -458,13 +480,11 @@ class TextCSVParser(interface.BaseParser):
 
     for key, value in row.items():
       if key == self.MAGIC_TEST_STRING or value == self.MAGIC_TEST_STRING:
-        file_object.close()
         raise errors.UnableToParseFile((
             u'[{0:s}] Unable to parse CSV file: {1:s}. Signature '
             u'mismatch.').format(self.NAME, path_spec_printable))
 
     if not self.VerifyRow(parser_mediator, row):
-      file_object.close()
       raise errors.UnableToParseFile((
           u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
           u'failed.').format(self.NAME, path_spec_printable))
@@ -473,8 +493,6 @@ class TextCSVParser(interface.BaseParser):
 
     for row in reader:
       self.ParseRow(parser_mediator, text_file_object.tell(), row)
-
-    file_object.close()
 
 
 def PyParseRangeCheck(lower_bound, upper_bound):
@@ -716,7 +734,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
       return line.strip()
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a text file using a pyparsing definition.
+    """Parses a text file using a pyparsing definition.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -724,12 +742,27 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a text file-like object using a pyparsing definition.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     file_entry = parser_mediator.GetFileEntry()
+
     # TODO: find a more elegant way for this; currently the mac_wifi and
     # syslog parser seem to rely on this member.
     self.file_entry = file_entry
-
-    file_object = parser_mediator.GetFileObject()
 
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
@@ -758,9 +791,7 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
 
     if not self.VerifyStructure(parser_mediator, line):
-      raise errors.UnableToParseFile('Wrong file structure.')
-
-
+      raise errors.UnableToParseFile(u'Wrong file structure.')
 
     # Set the offset to the beginning of the file.
     self._current_offset = 0
@@ -789,8 +820,6 @@ class PyparsingSingleLineTextParser(interface.BaseParser):
 
       self._current_offset = text_file_object.get_offset()
       line = self._ReadLine(parser_mediator, file_entry, text_file_object)
-
-    file_object.close()
 
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
@@ -967,7 +996,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         buffer_size=self.BUFFER_SIZE, encoding=self.ENCODING)
 
   def Parse(self, parser_mediator, **kwargs):
-    """Parse a text file using a pyparsing definition.
+    """Parses a text file using a pyparsing definition.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -975,12 +1004,27 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     Raises:
       UnableToParseFile: if the line structures are missing.
     """
+    file_object = parser_mediator.GetFileObject()
+    try:
+      self.ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a text file-like object using a pyparsing definition.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     if not self.LINE_STRUCTURES:
       raise errors.UnableToParseFile(u'Missing line structures.')
 
     self._text_reader.Reset()
 
-    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:
@@ -994,7 +1038,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     if not self.VerifyStructure(parser_mediator, self._text_reader.lines):
       raise errors.UnableToParseFile(u'Wrong file structure.')
-
 
     # Read every line in the text file.
     while self._text_reader.lines:

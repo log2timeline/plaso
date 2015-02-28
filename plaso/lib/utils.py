@@ -75,30 +75,6 @@ def IsText(bytes_in, encoding=None):
   return False
 
 
-def GetBaseName(path):
-  """Returns back a basename for a path (could be Windows or *NIX separated)."""
-  # First check the case where both forward and backward slash are in the path.
-  if '/' and '\\' in path:
-    # Let's count slashes and guess which one is the right one.
-    forward_count = len(path.split('/'))
-    backward_count = len(path.split('\\'))
-
-    if forward_count > backward_count:
-      _, _, base = path.rpartition('/')
-    else:
-      _, _, base = path.rpartition('\\')
-
-    return base
-
-  # Now we are sure there is only one type of separators.
-  if '/' in path:
-    _, _, base = path.rpartition('/')
-  else:
-    _, _, base = path.rpartition('\\')
-
-  return base
-
-
 def GetUnicodeString(string):
   """Converts the string to Unicode if necessary."""
   if type(string) != unicode:

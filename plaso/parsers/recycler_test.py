@@ -21,7 +21,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['$II3DF3L.zip'])
+    test_file = self._GetTestFilePath([u'$II3DF3L.zip'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -33,7 +33,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip'))
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-03-12 20:49:58.633')
+        u'2012-03-12 20:49:58.633')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.file_size, 724919)
 
@@ -52,11 +52,11 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._parser = recycler.WinRecycleInfo2Parser()
+    self._parser = recycler.WinRecyclerInfo2Parser()
 
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
-    test_file = self._GetTestFilePath(['INFO2'])
+    test_file = self._GetTestFilePath([u'INFO2'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -65,7 +65,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2004-08-25 16:18:25.237')
+        u'2004-08-25 16:18:25.237')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(event_object.timestamp_desc,
                       eventdata.EventTimestamp.DELETED_TIME)
