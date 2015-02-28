@@ -21,7 +21,6 @@ from plaso import parsers   # pylint: disable=unused-import
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.engine import worker
-from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.lib import pfilter
@@ -1615,70 +1614,6 @@ class ExtractionFrontend(StorageMediaFrontend):
                    the worker monitoring.
     """
     self._show_worker_memory_information = show_memory
-
-
-class AnalysisFrontend(Frontend):
-  """Class that implements an analysis front-end."""
-
-  def __init__(self, input_reader, output_writer):
-    """Initializes the front-end object.
-
-    Args:
-      input_reader: the input reader (instance of FrontendInputReader).
-                    The default is None which indicates to use the stdin
-                    input reader.
-      output_writer: the output writer (instance of FrontendOutputWriter).
-                     The default is None which indicates to use the stdout
-                     output writer.
-    """
-    super(AnalysisFrontend, self).__init__(input_reader, output_writer)
-
-    self._formatter_mediator = formatters_mediator.FormatterMediator()
-    self._storage_file_path = None
-
-  def AddStorageFileOptions(self, argument_group):
-    """Adds the storage file options to the argument group.
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup) or argument parser (instance of
-                      argparse.ArgumentParser).
-    """
-    argument_group.add_argument(
-        'storage_file', metavar='STORAGE_FILE', action='store', nargs='?',
-        type=unicode, default=None, help='The path of the storage file.')
-
-  def OpenStorageFile(self, read_only=True):
-    """Opens the storage file.
-
-    Args:
-      read_only: Optional boolean value to indicate the storage file should
-                 be opened in read-only mode. The default is True.
-
-    Returns:
-      The storage file object (instance of StorageFile).
-    """
-    return storage.StorageFile(self._storage_file_path, read_only=read_only)
-
-  def ParseOptions(self, options):
-    """Parses the options and initializes the front-end.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    if not options:
-      raise errors.BadConfigOption(u'Missing options.')
-
-    self._storage_file_path = getattr(options, 'storage_file', None)
-    if not self._storage_file_path:
-      raise errors.BadConfigOption(u'Missing storage file.')
-
-    if not os.path.isfile(self._storage_file_path):
-      raise errors.BadConfigOption(
-          u'No such storage file {0:s}.'.format(self._storage_file_path))
 
 
 class Options(object):
