@@ -21,7 +21,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['SysEvent.Evt'])
+    test_file = self._GetTestFilePath([u'SysEvent.Evt'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -65,7 +65,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-07-27 06:41:47')
+        u'2011-07-27 06:41:47')
     self.assertEquals(event_object.timestamp, expected_timestamp)
     self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
@@ -73,7 +73,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     event_object = event_objects[1]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-07-27 06:41:47')
+        u'2011-07-27 06:41:47')
     self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEquals(
@@ -87,16 +87,15 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         u'Event Category: 3 '
         u'Source Name: LSASRV '
         u'Computer Name: WKS-WINXP32BIT '
-        u'Strings: [u\'cifs/CONTROLLER\', '
-        u'u\'"The system detected a possible attempt to '
+        u'Strings: [\'cifs/CONTROLLER\', '
+        u'\'"The system detected a possible attempt to '
         u'compromise security. Please ensure that you can '
-        u'contact the server that authenticated you.\\r\\n '
-        u'(0xc0000388)"\']')
+        u'contact the server that authenticated you. (0xc0000388)"\']')
 
     expected_msg_short = (
         u'[40961 / 0xa001] '
-        u'Strings: [u\'cifs/CONTROLLER\', '
-        u'u\'"The system detected a possi...')
+        u'Strings: [\'cifs/CONTROLLER\', '
+        u'\'"The system detected a possibl...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
