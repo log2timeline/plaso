@@ -81,8 +81,10 @@ class BasePlugin(object):
     simpler parser API in most cases.
     """
     parser_mediator.AppendToParserChain(self)
-    self.Process(parser_mediator, **kwargs)
-    parser_mediator.PopFromParserChain()
+    try:
+      self.Process(parser_mediator, **kwargs)
+    finally:
+      parser_mediator.PopFromParserChain()
 
 
 class BasePluginCache(object):

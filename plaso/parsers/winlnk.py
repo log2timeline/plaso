@@ -149,7 +149,10 @@ class WinLnkParser(interface.BaseParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     parser_mediator.AppendToParserChain(self)
-    self.ParseFileObject(parser_mediator, file_object, display_name)
+    try:
+      self.ParseFileObject(parser_mediator, file_object, display_name)
+    finally:
+      parser_mediator.PopFromParserChain()
 
 
 manager.ParsersManager.RegisterParser(WinLnkParser)
