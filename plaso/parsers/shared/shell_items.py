@@ -144,5 +144,7 @@ class ShellItemsParser(object):
       codepage: Optional byte stream codepage. The default is cp1252.
     """
     parser_mediator.AppendToParserChain(self)
-    self.Parse(parser_mediator, byte_stream, codepage)
-    parser_mediator.PopFromParserChain()
+    try:
+      self.Parse(parser_mediator, byte_stream, codepage)
+    finally:
+      parser_mediator.PopFromParserChain()
