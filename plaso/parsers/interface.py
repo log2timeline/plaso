@@ -68,8 +68,10 @@ class BaseParser(object):
     simpler parser API in most cases.
     """
     parser_mediator.AppendToParserChain(self)
-    self.Parse(parser_mediator, **kwargs)
-    parser_mediator.PopFromParserChain()
+    try:
+      self.Parse(parser_mediator, **kwargs)
+    finally:
+      parser_mediator.PopFromParserChain()
 
 
 class BasePluginsParser(BaseParser):
