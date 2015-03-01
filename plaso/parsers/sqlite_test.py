@@ -5,11 +5,12 @@
 import unittest
 
 from plaso.parsers import sqlite
+from plaso.parsers import test_lib
 # Register plugins.
 from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
 
 
-class SQLiteParserTest(unittest.TestCase):
+class SQLiteParserTest(test_lib.ParserTestCase):
   """Tests for the SQLite database parser."""
 
   def testGetPluginNames(self):
@@ -42,6 +43,17 @@ class SQLiteParserTest(unittest.TestCase):
     self.assertFalse('skype' in plugin_names)
     self.assertTrue('chrome_history' in plugin_names)
     self.assertTrue('firefox_history' in plugin_names)
+
+  def testFileParserChainMaintenance(self):
+    """Tests that the parser chain is correctly maintained by the parser."""
+    parser = sqlite.SQLiteParser()
+    test_file = self._GetTestFilePath([u'contacts2.db'])
+
+    event_queue_consumer = self._ParseFile(parser, test_file)
+    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    for event in event_objects:
+      chain = event.parser
+      self.assertEqual(1, chain.count(u'/'))
 
 
 if __name__ == '__main__':
