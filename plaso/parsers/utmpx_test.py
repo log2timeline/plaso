@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import utmpx as utmpx_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import utmpx as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import utmpx
 
@@ -27,7 +26,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(event_objects), 6)
 
     event_object = event_objects[0]
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-13 17:52:34')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -39,7 +38,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-13 17:52:41.736713')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -58,7 +57,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[4]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-14 04:32:56.641464')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

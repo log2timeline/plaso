@@ -7,7 +7,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import firefox_cache as firefox_cache_formatter
 from plaso.lib import errors
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import firefox_cache
 from plaso.parsers import test_lib
 
@@ -30,7 +30,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseCache_InvalidFile(self):
     """Verify that parser do not accept small, invalid files."""
 
-    test_file = self._GetTestFilePath(['firefox_cache', 'invalid_file'])
+    test_file = self._GetTestFilePath([u'firefox_cache', u'invalid_file'])
 
     with self.assertRaises(errors.UnableToParseFile):
       _ = self._ParseFile(self._parser, test_file)
@@ -38,8 +38,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseCache_001(self):
     """Test Firefox 28 cache file _CACHE_001_ parsing."""
 
-    test_file = self._GetTestFilePath(
-        ['firefox_cache', 'firefox28', '_CACHE_001_'])
+    test_file = self._GetTestFilePath([
+        u'firefox_cache', u'firefox28', u'_CACHE_001_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -47,8 +47,9 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_objects[1].url, 'HTTP:http://start.ubuntu.com/12.04/sprite.png')
 
-    self.assertEqual(event_objects[1].timestamp,
-                      timelib_test.CopyStringToTimestamp('2014-04-21 14:13:35'))
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-04-21 14:13:35')
+    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
 
     self.VerifyMajorMinor(event_objects)
 
@@ -66,8 +67,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseCache_002(self):
     """Test Firefox 28 cache file _CACHE_002_ parsing."""
 
-    test_file = self._GetTestFilePath(
-        ['firefox_cache', 'firefox28', '_CACHE_002_'])
+    test_file = self._GetTestFilePath([
+        u'firefox_cache', u'firefox28', u'_CACHE_002_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -83,16 +84,17 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
          '2B__utmz%3D68537988.1398089459.1.1.utmcsr%3D(direct)%7Cutmccn'
          '%3D(direct)%7Cutmcmd%3D(none)%3B&aip=1&utmu=qBQ~'))
 
-    self.assertEqual(event_objects[1].timestamp,
-                      timelib_test.CopyStringToTimestamp('2014-04-21 14:10:58'))
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-04-21 14:10:58')
+    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
 
     self.VerifyMajorMinor(event_objects)
 
   def testParseCache_003(self):
     """Test Firefox 28 cache file _CACHE_003_ parsing."""
 
-    test_file = self._GetTestFilePath(
-        ['firefox_cache', 'firefox28', '_CACHE_003_'])
+    test_file = self._GetTestFilePath([
+        u'firefox_cache', u'firefox28', u'_CACHE_003_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -102,17 +104,17 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
         event_objects[3].url,
         'HTTP:https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js')
 
-    self.assertEqual(
-        event_objects[3].timestamp,
-        timelib_test.CopyStringToTimestamp('2014-04-21 14:11:07'))
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-04-21 14:11:07')
+    self.assertEquals(event_objects[3].timestamp, expected_timestamp)
 
     self.VerifyMajorMinor(event_objects)
 
   def testParseAlternativeFilename(self):
     """Test Firefox 28 cache 003 file with alternative filename."""
 
-    test_file = self._GetTestFilePath(
-        ['firefox_cache', 'firefox28', 'E8D65m01'])
+    test_file = self._GetTestFilePath([
+        u'firefox_cache', u'firefox28', u'E8D65m01'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -121,15 +123,16 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseLegacyCache_001(self):
     """Test Firefox 3 cache file _CACHE_001_ parsing."""
 
-    test_file = self._GetTestFilePath(
-        ['firefox_cache', 'firefox3', '_CACHE_001_'])
+    test_file = self._GetTestFilePath([
+        u'firefox_cache', u'firefox3', u'_CACHE_001_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(25, len(event_objects))
 
-    self.assertEqual(event_objects[0].timestamp,
-                      timelib_test.CopyStringToTimestamp('2014-05-02 14:15:03'))
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-05-02 14:15:03')
+    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
 
     expected_msg = (
         u'Fetched 1 time(s) '
@@ -145,28 +148,30 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def testParseLegacyCache_002(self):
     """Test Firefox 3 cache file _CACHE_002_ parsing."""
 
-    test_file = self._GetTestFilePath(
-        ['firefox_cache', 'firefox3', '_CACHE_002_'])
+    test_file = self._GetTestFilePath([
+        u'firefox_cache', u'firefox3', u'_CACHE_002_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(3, len(event_objects))
 
-    self.assertEqual(event_objects[1].timestamp,
-                      timelib_test.CopyStringToTimestamp('2014-05-02 14:25:55'))
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-05-02 14:25:55')
+    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
 
   def testParseLegacyCache_003(self):
     """Test Firefox 3 cache file _CACHE_003_ parsing."""
 
-    test_file = self._GetTestFilePath(
-        ['firefox_cache', 'firefox3', '_CACHE_003_'])
+    test_file = self._GetTestFilePath([
+        u'firefox_cache', u'firefox3', u'_CACHE_003_'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(2, len(event_objects))
 
-    self.assertEqual(event_objects[1].timestamp,
-                      timelib_test.CopyStringToTimestamp('2014-05-02 14:15:07'))
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-05-02 14:15:07')
+    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

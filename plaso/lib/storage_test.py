@@ -17,7 +17,7 @@ from plaso.lib import event
 from plaso.lib import eventdata
 from plaso.lib import pfilter
 from plaso.lib import storage
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.multi_processing import multi_process
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.serializer import protobuf_serializer
@@ -82,18 +82,20 @@ class StorageFileTest(unittest.TestCase):
     """Sets up the needed objects used throughout the test."""
     self._event_objects = []
 
-    # TODO: replace hardcoded timestamps by timelib_test.CopyStringToTimestamp.
     event_1 = windows_events.WindowsRegistryEvent(
-        13349615269295969, u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'})
+        timelib.Timestamp.CopyFromString(u'2012-04-20 22:38:46.929596'),
+        u'MY AutoRun key', {u'Value': u'c:/Temp/evil.exe'})
     event_1.parser = 'UNKNOWN'
 
     event_2 = windows_events.WindowsRegistryEvent(
-        13359662069295961, u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
+        timelib.Timestamp.CopyFromString(u'2012-05-02 13:43:26.929596'),
+        u'\\HKCU\\Secret\\EvilEmpire\\Malicious_key',
         {u'Value': u'send all the exes to the other world'})
     event_2.parser = 'UNKNOWN'
 
     event_3 = windows_events.WindowsRegistryEvent(
-        13349402860000000, u'\\HKCU\\Windows\\Normal',
+        timelib.Timestamp.CopyFromString(u'2012-04-20 16:44:46.000000'),
+        u'\\HKCU\\Windows\\Normal',
         {u'Value': u'run all the benign stuff'})
     event_3.parser = 'UNKNOWN'
 
@@ -101,7 +103,9 @@ class StorageFileTest(unittest.TestCase):
         'This is a line by someone not reading the log line properly. And '
         'since this log line exceeds the accepted 80 chars it will be '
         'shortened.'), 'hostname': 'nomachine', 'username': 'johndoe'}
-    event_4 = text_events.TextEvent(12389344590000000, 12, text_dict)
+    event_4 = text_events.TextEvent(
+        timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39.000000'),
+        12, text_dict)
     event_4.parser = 'UNKNOWN'
 
     self._event_objects.append(event_1)
@@ -193,7 +197,7 @@ class StorageFileTest(unittest.TestCase):
 
       group_mock.AddGroup(
           'Malicious', [(1, 1), (1, 2)], desc='Events that are malicious',
-          color='red', first=13349402860000000, last=13349615269295969,
+          color='red', first=1334940286000000, last=1334961526929596,
           cat='Malware')
       store.StoreGrouping(group_mock)
       store.Close()
@@ -234,11 +238,11 @@ class StorageFileTest(unittest.TestCase):
     self.assertEqual(len(event_objects), 4)
     self.assertEqual(len(tags), 4)
 
-    self.assertEqual(tags[0].timestamp, 12389344590000000)
-    self.assertEqual(tags[0].store_number, 1)
-    self.assertEqual(tags[0].store_index, 0)
-    self.assertEqual(tags[0].tag.comment, u'My comment')
-    self.assertEqual(tags[0].tag.color, u'blue')
+    self.assertEquals(tags[0].timestamp, 1238934459000000)
+    self.assertEquals(tags[0].store_number, 1)
+    self.assertEquals(tags[0].store_index, 0)
+    self.assertEquals(tags[0].tag.comment, u'My comment')
+    self.assertEquals(tags[0].tag.color, u'blue')
 
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
         self._formatter_mediator, tags[0])
@@ -261,20 +265,19 @@ class StorageFileTest(unittest.TestCase):
     self.assertEqual(tags[3].tag.tags[1], 'Malware')
 
     expected_timestamps = [
-        12389344590000000, 13349402860000000, 13349615269295969,
-        13359662069295961]
-    self.assertEqual(timestamps, expected_timestamps)
+        1238934459000000, 1334940286000000, 1334961526929596, 1335966206929596]
+    self.assertEquals(timestamps, expected_timestamps)
 
-    self.assertEqual(groups[0].name, u'Malicious')
-    self.assertEqual(groups[0].category, u'Malware')
-    self.assertEqual(groups[0].color, u'red')
-    self.assertEqual(groups[0].description, u'Events that are malicious')
-    self.assertEqual(groups[0].first_timestamp, 13349402860000000)
-    self.assertEqual(groups[0].last_timestamp, 13349615269295969)
+    self.assertEquals(groups[0].name, u'Malicious')
+    self.assertEquals(groups[0].category, u'Malware')
+    self.assertEquals(groups[0].color, u'red')
+    self.assertEquals(groups[0].description, u'Events that are malicious')
+    self.assertEquals(groups[0].first_timestamp, 1334940286000000)
+    self.assertEquals(groups[0].last_timestamp, 1334961526929596)
 
-    self.assertEqual(len(group_events), 2)
-    self.assertEqual(group_events[0].timestamp, 13349402860000000)
-    self.assertEqual(group_events[1].timestamp, 13349615269295969L)
+    self.assertEquals(len(group_events), 2)
+    self.assertEquals(group_events[0].timestamp, 1334940286000000)
+    self.assertEquals(group_events[1].timestamp, 1334961526929596)
 
     proto_group_events = []
     for group_event in group_events:
@@ -292,9 +295,9 @@ class StoreStorageTest(unittest.TestCase):
     # TODO: have sample output generated from the test.
     # TODO: Use input data with a defined year.  syslog parser chooses a
     # year based on system clock; forcing updates to test file if regenerated.
-    self.test_file = os.path.join('test_data', 'psort_test.out')
-    self.first = timelib_test.CopyStringToTimestamp('2012-07-20 15:44:14')
-    self.last = timelib_test.CopyStringToTimestamp('2016-11-18 01:15:43')
+    self.test_file = os.path.join(u'test_data', u'psort_test.out')
+    self.first = timelib.Timestamp.CopyFromString(u'2012-07-20 15:44:14')
+    self.last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
 
   def testStorageSort(self):
     """This test ensures that items read and output are in the expected order.
@@ -320,8 +323,7 @@ class StoreStorageTest(unittest.TestCase):
       event_object = store.GetSortedEntry()
 
     expected_timestamps = [
-        1344270407000000L, 1392438730000000L, 1427151678000000L,
-        1451584472000000L]
+        1344270407000000, 1392438730000000, 1427151678000000, 1451584472000000]
 
     self.assertEqual(read_list, expected_timestamps)
 

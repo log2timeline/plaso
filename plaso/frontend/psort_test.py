@@ -14,7 +14,7 @@ from plaso.frontend import test_lib
 from plaso.lib import event
 from plaso.lib import pfilter
 from plaso.lib import storage
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.output import interface as output_interface
 
 
@@ -118,8 +118,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
 
     # TODO: have sample output generated from the test.
     self._test_file = os.path.join(self._TEST_DATA_PATH, u'psort_test.out')
-    self.first = timelib_test.CopyStringToTimestamp(u'2012-07-24 21:45:24')
-    self.last = timelib_test.CopyStringToTimestamp(u'2016-11-18 01:15:43')
+    self.first = timelib.Timestamp.CopyFromString(u'2012-07-24 21:45:24')
+    self.last = timelib.Timestamp.CopyFromString(u'2016-11-18 01:15:43')
 
   def testReadEntries(self):
     """Ensure returned EventObjects from the storage are within timebounds."""

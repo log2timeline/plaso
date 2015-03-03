@@ -21,8 +21,8 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_name = 'plist_binary'
-    plist_name = 'com.apple.bluetooth.plist'
+    test_file_name = u'plist_binary'
+    plist_name = u'com.apple.bluetooth.plist'
     event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, [test_file_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -56,7 +56,7 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
         event_object.desc for event_object in paired_event_objects]
 
     self.assertTrue(
-        'Paired:True Name:Apple Magic Trackpad 2' in paired_descriptions)
+        u'Paired:True Name:Apple Magic Trackpad 2' in paired_descriptions)
 
     expected_string = (
         u'/DeviceCache/44-00-00-00-00-04 '

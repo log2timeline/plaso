@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import terminal_server
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -28,7 +27,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
         'UsernameHint', 'DOMAIN\\username'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1892))
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
 
     server_key_path = (
@@ -78,7 +77,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
         'MRU1', 'computer.domain.com'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, 612))
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, expected_timestamp, values, 1456)

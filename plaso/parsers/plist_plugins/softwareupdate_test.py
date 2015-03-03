@@ -32,7 +32,7 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(event_object.root, u'/')
     expected_desc = u'Last Mac OS X 10.9.1 (13B42) full update.'
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'// {}'.format(expected_desc)
+    expected_string = u'// {0:s}'.format(expected_desc)
     self._TestGetMessageStrings(
         event_object, expected_string, expected_string)
 

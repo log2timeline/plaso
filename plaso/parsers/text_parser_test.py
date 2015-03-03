@@ -12,7 +12,7 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.lib import lexer
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import text_parser
 
@@ -96,7 +96,7 @@ class TextParserTest(test_lib.ParserTestCase):
     msg1, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-01-01 05:23:15')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -109,7 +109,7 @@ class TextParserTest(test_lib.ParserTestCase):
     msg2, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event_object)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'1991-12-24 19:58:06')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

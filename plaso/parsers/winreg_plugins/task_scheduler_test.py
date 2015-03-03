@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import task_scheduler
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -35,7 +34,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2009-07-14 04:53:25.811618')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -52,7 +51,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2009-07-14 05:08:50.811626')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

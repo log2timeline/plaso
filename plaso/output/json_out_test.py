@@ -9,7 +9,7 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.lib import event
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.output import json_out
 from plaso.output import test_lib
 
@@ -21,8 +21,7 @@ class JsonTestEvent(event.EventObject):
   def __init__(self):
     """Initialize event with data."""
     super(JsonTestEvent, self).__init__()
-    self.timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-06-27 18:17:01+00:00')
+    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.hostname = u'ubuntu'
     self.display_name = u'OS: /var/log/syslog.1'
     self.inode = 12345678

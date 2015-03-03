@@ -100,4 +100,4 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """
     self.assertTrue(hasattr(event_object, 'regvalue'))
     self.assertIn(identifier, event_object.regvalue)
-    self.assertEquals(event_object.regvalue[identifier], expected_value)
+    self.assertEqual(event_object.regvalue[identifier], expected_value)

@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import chrome as chrome_formatter
+from plaso.formatters import chrome as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import test_lib
@@ -22,7 +21,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
-    test_file = self._GetTestFilePath(['History'])
+    test_file = self._GetTestFilePath([u'History'])
     cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
@@ -37,9 +36,9 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.PAGE_VISITED)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-04-07 12:03:11')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-04-07 12:03:11')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = u'http://start.ubuntu.com/10.04/Google/'
     self.assertEqual(event_object.url, expected_url)
@@ -62,9 +61,9 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.FILE_DOWNLOADED)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-05-23 08:35:30')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-05-23 08:35:30')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'http://fatloss4idiotsx.com/download/funcats/'
@@ -75,9 +74,9 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.full_path, expected_full_path)
 
     expected_msg = (
-        u'{0:s} ({1:s}). Received: 1132155 bytes out of: '
-        u'1132155 bytes.').format(
-            expected_url, expected_full_path)
+        u'{0:s} ({1:s}). '
+        u'Received: 1132155 bytes out of: '
+        u'1132155 bytes.').format(expected_url, expected_full_path)
     expected_short = u'{0:s} downloaded (1132155 bytes)'.format(
         expected_full_path)
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)

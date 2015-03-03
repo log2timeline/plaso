@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import file_history as file_history_formatter
+from plaso.formatters import file_history as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import file_history
 from plaso.parsers.esedb_plugins import test_lib
 
@@ -21,7 +20,7 @@ class FileHistoryEseDbPluginTest(test_lib.EseDbPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_name = 'Catalog1.edb'
+    test_file_name = u'Catalog1.edb'
     event_queue_consumer = self._ParseEseDbFileWithPlugin(
         [test_file_name], self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -33,8 +32,8 @@ class FileHistoryEseDbPluginTest(test_lib.EseDbPluginTestCase):
     self.assertEqual(event_object.usn_number, 9251162904)
     self.assertEqual(event_object.identifier, 356)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-10-12 17:34:36.688580')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-10-12 17:34:36.688580')
 
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(

@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import mac_wifi as mac_wifi_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import mac_wifi as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import mac_wifi
 from plaso.parsers import test_lib
 
@@ -21,7 +20,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     knowledge_base_values = {'year': 2013}
-    test_file = self._GetTestFilePath(['wifi.log'])
+    test_file = self._GetTestFilePath([u'wifi.log'])
     event_queue_consumer = self._ParseFile(
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -30,8 +29,8 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-14 20:36:37.222')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-11-14 20:36:37.222')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.agent, u'airportd[88]')
@@ -50,8 +49,8 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-14 20:36:43.818')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-11-14 20:36:43.818')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.agent, u'airportd[88]')
@@ -64,8 +63,8 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[2]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-14 21:50:52.395')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-11-14 21:50:52.395')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.agent, u'airportd[88]')
@@ -80,8 +79,8 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[5]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-14 21:52:09.883')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-11-14 21:52:09.883')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(u'airportd[88]', event_object.agent)
@@ -104,14 +103,14 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[7]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-12-31 23:59:38.165')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-12-31 23:59:38.165')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = event_objects[8]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-01-01 01:12:17.311')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-01-01 01:12:17.311')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
 

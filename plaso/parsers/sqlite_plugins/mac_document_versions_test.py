@@ -7,7 +7,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import mac_document_versions as mac_doc_rev_formatter
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import mac_document_versions
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -21,7 +21,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Mac OS X Document Versions file."""
-    test_file = self._GetTestFilePath(['document_versions.sql'])
+    test_file = self._GetTestFilePath([u'document_versions.sql'])
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -33,9 +33,9 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-01-21 02:03:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-01-21 02:03:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.name, u'Spain is beautiful.rtf')
     self.assertEqual(event_object.path, u'/Users/moxilo/Documents')

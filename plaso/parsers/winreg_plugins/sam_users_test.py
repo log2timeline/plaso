@@ -4,10 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import event
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import sam_users
 
@@ -49,7 +47,7 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
         u'username: Administrator')
 
     # Match UTC timestamp.
-    time = long(timelib_test.CopyStringToTimestamp(
+    time = long(timelib.Timestamp.CopyFromString(
         u'2014-09-24 03:36:06.358837'))
     self.assertEqual(event_object.timestamp, time)
 

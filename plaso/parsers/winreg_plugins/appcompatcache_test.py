@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -21,7 +20,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     knowledge_base_values = {'current_control_set': u'ControlSet001'}
-    test_file_entry = self._GetTestFileEntryFromPath(['SYSTEM'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
     key_path = u'\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
 
@@ -35,7 +34,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[9]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-04 01:46:37.932964')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
