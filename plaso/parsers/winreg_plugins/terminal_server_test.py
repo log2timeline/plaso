@@ -42,15 +42,15 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = u'[{0:s}] UsernameHint: DOMAIN\\username'.format(key_path)
     expected_msg_short = (
@@ -86,15 +86,15 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 2)
 
     event_object = event_objects[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = u'[{0:s}] MRU0: 192.168.16.60'.format(key_path)
     expected_msg_short = u'[{0:s}] MRU0: 192.168.16.60'.format(key_path)
@@ -103,7 +103,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.timestamp, 0)
+    self.assertEqual(event_object.timestamp, 0)
 
     expected_msg = u'[{0:s}] MRU1: computer.domain.com'.format(key_path)
     expected_msg_short = u'[{0:s}] MRU1: computer.domain.com'.format(key_path)

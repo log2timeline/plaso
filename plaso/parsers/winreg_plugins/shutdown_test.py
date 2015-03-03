@@ -32,14 +32,14 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
         file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_value = u'ShutdownTime'
     self._TestRegvalue(event_object, u'Description', expected_value)
@@ -51,7 +51,7 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     # Match UTC timestamp.
     time = long(timelib_test.CopyStringToTimestamp(
         u'2012-04-04 01:58:40.839249'))
-    self.assertEquals(event_object.timestamp, time)
+    self.assertEqual(event_object.timestamp, time)
 
     expected_msg_short = (
         u'[\\ControlSet001\\Control\\Windows] '

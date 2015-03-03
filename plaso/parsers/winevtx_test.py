@@ -31,7 +31,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     #   Number of recovered records : 0
     #   Log type                    : System
 
-    self.assertEquals(len(event_objects), 1601)
+    self.assertEqual(len(event_objects), 1601)
 
     # Event number        : 12049
     # Written time        : Mar 14, 2012 04:17:43.354562700 UTC
@@ -47,27 +47,27 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.record_number, 12049)
+    self.assertEqual(event_object.record_number, 12049)
     expected_computer_name = u'WKS-WIN764BITB.shieldbase.local'
-    self.assertEquals(event_object.computer_name, expected_computer_name)
-    self.assertEquals(event_object.source_name, u'Microsoft-Windows-Eventlog')
-    self.assertEquals(event_object.event_level, 4)
-    self.assertEquals(event_object.event_identifier, 105)
+    self.assertEqual(event_object.computer_name, expected_computer_name)
+    self.assertEqual(event_object.source_name, u'Microsoft-Windows-Eventlog')
+    self.assertEqual(event_object.event_level, 4)
+    self.assertEqual(event_object.event_identifier, 105)
 
-    self.assertEquals(event_object.strings[0], u'System')
+    self.assertEqual(event_object.strings[0], u'System')
 
     expected_string = (
         u'C:\\Windows\\System32\\Winevt\\Logs\\'
         u'Archive-System-2012-03-14-04-17-39-932.evtx')
 
-    self.assertEquals(event_object.strings[1], expected_string)
+    self.assertEqual(event_object.strings[1], expected_string)
 
     event_object = event_objects[1]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-03-14 04:17:38.276340')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_xml_string = (
@@ -99,7 +99,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         u'  </EventData>\n'
         u'</Event>\n')
 
-    self.assertEquals(event_object.xml_string, expected_xml_string)
+    self.assertEqual(event_object.xml_string, expected_xml_string)
 
     expected_msg = (
         u'[7036 / 0x1b7c] '

@@ -55,11 +55,11 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
       if event_object.data_type == 'skype:event:chat':
         chats += 1
 
-    self.assertEquals(len(event_objects), 24)
-    self.assertEquals(files, 4)
-    self.assertEquals(sms, 1)
-    self.assertEquals(chats, 15)
-    self.assertEquals(calls, 3)
+    self.assertEqual(len(event_objects), 24)
+    self.assertEqual(files, 4)
+    self.assertEqual(sms, 1)
+    self.assertEqual(chats, 15)
+    self.assertEqual(calls, 3)
 
     # TODO: Split this up into separate functions for testing each type of
     # event, eg: testSMS, etc.
@@ -80,63 +80,63 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-01 22:14:22')
-    self.assertEquals(sms_event_object.timestamp, expected_timestamp)
+    self.assertEqual(sms_event_object.timestamp, expected_timestamp)
     text_sms = (u'If you want I can copy '
                 u'some documents for you, '
                 u'if you can pay it... ;)')
-    self.assertEquals(sms_event_object.text, text_sms)
+    self.assertEqual(sms_event_object.text, text_sms)
     number = u'+34123456789'
-    self.assertEquals(sms_event_object.number, number)
+    self.assertEqual(sms_event_object.number, number)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-10-24 21:49:35')
-    self.assertEquals(event_file.timestamp, expected_timestamp)
+    self.assertEqual(event_file.timestamp, expected_timestamp)
 
     action_type = u'GETSOLICITUDE'
-    self.assertEquals(event_file.action_type, action_type)
+    self.assertEqual(event_file.action_type, action_type)
     source = u'gen.beringer <Gen Beringer>'
-    self.assertEquals(event_file.source, source)
+    self.assertEqual(event_file.source, source)
     destination = u'european.bbq.competitor <European BBQ>'
-    self.assertEquals(event_file.destination, destination)
+    self.assertEqual(event_file.destination, destination)
     transferred_filename = u'secret-project.pdf'
-    self.assertEquals(event_file.transferred_filename, transferred_filename)
+    self.assertEqual(event_file.transferred_filename, transferred_filename)
     filepath = u'/Users/gberinger/Desktop/secret-project.pdf'
-    self.assertEquals(event_file.transferred_filepath, filepath)
-    self.assertEquals(event_file.transferred_filesize, 69986)
+    self.assertEqual(event_file.transferred_filepath, filepath)
+    self.assertEqual(event_file.transferred_filesize, 69986)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-30 21:27:11')
-    self.assertEquals(chat_event_object.timestamp, expected_timestamp)
+    self.assertEqual(chat_event_object.timestamp, expected_timestamp)
 
     title = u'European Competitor | need to know if you got it..'
-    self.assertEquals(chat_event_object.title, title)
+    self.assertEqual(chat_event_object.title, title)
     expected_msg = u'need to know if you got it this time.'
-    self.assertEquals(chat_event_object.text, expected_msg)
+    self.assertEqual(chat_event_object.text, expected_msg)
     from_account = u'Gen Beringer <gen.beringer>'
-    self.assertEquals(chat_event_object.from_account, from_account)
-    self.assertEquals(chat_event_object.to_account, u'european.bbq.competitor')
+    self.assertEqual(chat_event_object.from_account, from_account)
+    self.assertEqual(chat_event_object.to_account, u'european.bbq.competitor')
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-10-27 15:29:19')
-    self.assertEquals(chat_room_event_object.timestamp, expected_timestamp)
+    self.assertEqual(chat_room_event_object.timestamp, expected_timestamp)
 
     title = u'European Competitor, Echo123'
-    self.assertEquals(chat_room_event_object.title, title)
+    self.assertEqual(chat_room_event_object.title, title)
     expected_msg = u'He is our new employee'
-    self.assertEquals(chat_room_event_object.text, expected_msg)
+    self.assertEqual(chat_room_event_object.text, expected_msg)
     from_account = u'European Competitor <european.bbq.competitor>'
-    self.assertEquals(chat_room_event_object.from_account, from_account)
+    self.assertEqual(chat_room_event_object.from_account, from_account)
     to_account = u'gen.beringer, echo123'
-    self.assertEquals(chat_room_event_object.to_account, to_account)
+    self.assertEqual(chat_room_event_object.to_account, to_account)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-01 22:12:17')
-    self.assertEquals(call_event_object.timestamp, expected_timestamp)
+    self.assertEqual(call_event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(call_event_object.dst_call, u'european.bbq.competitor')
-    self.assertEquals(call_event_object.src_call, u'gen.beringer')
-    self.assertEquals(call_event_object.user_start_call, False)
-    self.assertEquals(call_event_object.video_conference, False)
+    self.assertEqual(call_event_object.dst_call, u'european.bbq.competitor')
+    self.assertEqual(call_event_object.src_call, u'gen.beringer')
+    self.assertEqual(call_event_object.user_start_call, False)
+    self.assertEqual(call_event_object.video_conference, False)
 
 
 if __name__ == '__main__':

@@ -93,7 +93,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     analysis_reports = self._GetAnalysisReportsFromQueue(
         analysis_report_queue_consumer)
 
-    self.assertEquals(len(analysis_reports), 1)
+    self.assertEqual(len(analysis_reports), 1)
 
     analysis_report = analysis_reports[0]
 
@@ -111,8 +111,8 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
         u'\t\tC:\\WINDOWS\\system32\\SYSTEM:'
         u'\\ControlSet003\\services\\TestbDriver\n\n')
 
-    self.assertEquals(expected_text, analysis_report.text)
-    self.assertEquals(analysis_report.plugin_name, 'windows_services')
+    self.assertEqual(expected_text, analysis_report.text)
+    self.assertEqual(analysis_report.plugin_name, 'windows_services')
 
   def testRealEvents(self):
     """Test the plugin with text output against real events from the parser."""

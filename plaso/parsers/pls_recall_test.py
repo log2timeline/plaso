@@ -25,7 +25,7 @@ class PlsRecallTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # There are two events in test file.
-    self.assertEquals(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 2)
 
     event_object = event_objects[0]
 

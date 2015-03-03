@@ -64,7 +64,7 @@ class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
     self.formatter.WriteHeader()
 
     header = self.output.getvalue()
-    self.assertEquals(header, expected_header)
+    self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
@@ -79,10 +79,10 @@ class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
         u'some_additional_foo: True \n')
 
     event_body = self.output.getvalue()
-    self.assertEquals(event_body, expected_event_body)
+    self.assertEqual(event_body, expected_event_body)
 
     # Ensure that the only commas returned are the 16 delimeters.
-    self.assertEquals(event_body.count(u','), 16)
+    self.assertEqual(event_body.count(u','), 16)
 
 
 if __name__ == '__main__':

@@ -62,27 +62,27 @@ class AnalysisContextTest(test_lib.AnalysisPluginTestCase):
     for path in self.MAC_PATHS:
       path_segment_separator = self._analysis_context.GetPathSegmentSeparator(
           path)
-      self.assertEquals(path_segment_separator, u'/')
+      self.assertEqual(path_segment_separator, u'/')
 
     for path in self.WIN_PATHS:
       path_segment_separator = self._analysis_context.GetPathSegmentSeparator(
           path)
-      self.assertEquals(path_segment_separator, u'\\')
+      self.assertEqual(path_segment_separator, u'\\')
 
   def testGetUserPaths(self):
     """Tests the GetUserPaths function."""
     user_paths = self._analysis_context.GetUserPaths(self.MAC_USERS)
-    self.assertEquals(
+    self.assertEqual(
         set(user_paths.keys()), set([u'frank', u'dude', u'hans', u'root']))
-    self.assertEquals(user_paths[u'frank'], u'/users/frank')
-    self.assertEquals(user_paths[u'dude'], u'/users/dude')
-    self.assertEquals(user_paths[u'hans'], u'/users/hans')
-    self.assertEquals(user_paths[u'root'], u'/var/root')
+    self.assertEqual(user_paths[u'frank'], u'/users/frank')
+    self.assertEqual(user_paths[u'dude'], u'/users/dude')
+    self.assertEqual(user_paths[u'hans'], u'/users/hans')
+    self.assertEqual(user_paths[u'root'], u'/var/root')
 
     user_paths = self._analysis_context.GetUserPaths(self.WIN_USERS)
-    self.assertEquals(set(user_paths.keys()), set([u'frank', u'dude']))
-    self.assertEquals(user_paths[u'frank'], u'/users/frank')
-    self.assertEquals(user_paths[u'dude'], u'/users/dude')
+    self.assertEqual(set(user_paths.keys()), set([u'frank', u'dude']))
+    self.assertEqual(user_paths[u'frank'], u'/users/frank')
+    self.assertEqual(user_paths[u'dude'], u'/users/dude')
 
   def testGetUsernameFromPath(self):
     """Tests the GetUsernameFromPath function."""
@@ -90,29 +90,29 @@ class AnalysisContextTest(test_lib.AnalysisPluginTestCase):
 
     username = self._analysis_context.GetUsernameFromPath(
         user_paths, self.MAC_PATHS[0], u'/')
-    self.assertEquals(username, u'dude')
+    self.assertEqual(username, u'dude')
 
     username = self._analysis_context.GetUsernameFromPath(
         user_paths, self.MAC_PATHS[4], u'/')
-    self.assertEquals(username, u'hans')
+    self.assertEqual(username, u'hans')
 
     username = self._analysis_context.GetUsernameFromPath(
         user_paths, self.WIN_PATHS[0], u'/')
-    self.assertEquals(username, None)
+    self.assertEqual(username, None)
 
     user_paths = self._analysis_context.GetUserPaths(self.WIN_USERS)
 
     username = self._analysis_context.GetUsernameFromPath(
         user_paths, self.WIN_PATHS[0], u'\\')
-    self.assertEquals(username, u'dude')
+    self.assertEqual(username, u'dude')
 
     username = self._analysis_context.GetUsernameFromPath(
         user_paths, self.WIN_PATHS[2], u'\\')
-    self.assertEquals(username, u'frank')
+    self.assertEqual(username, u'frank')
 
     username = self._analysis_context.GetUsernameFromPath(
         user_paths, self.MAC_PATHS[2], u'\\')
-    self.assertEquals(username, None)
+    self.assertEqual(username, None)
 
 
 if __name__ == '__main__':

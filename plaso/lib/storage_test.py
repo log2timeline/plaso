@@ -113,7 +113,7 @@ class StorageFileTest(unittest.TestCase):
 
   def testStorageWriter(self):
     """Test the storage writer."""
-    self.assertEquals(len(self._event_objects), 4)
+    self.assertEqual(len(self._event_objects), 4)
 
     # The storage writer is normally run in a separate thread.
     # For the purpose of this test it has to be run in sequence,
@@ -137,8 +137,8 @@ class StorageFileTest(unittest.TestCase):
           'plaso_timestamps.000001', 'serializer.txt']
 
       z_filename_list = sorted(z_file.namelist())
-      self.assertEquals(len(z_filename_list), 5)
-      self.assertEquals(z_filename_list, expected_z_filename_list)
+      self.assertEqual(len(z_filename_list), 5)
+      self.assertEqual(z_filename_list, expected_z_filename_list)
 
   def testStorage(self):
     """Test the storage object."""
@@ -207,10 +207,10 @@ class StorageFileTest(unittest.TestCase):
         event_objects.append(event_object)
         timestamps.append(event_object.timestamp)
         if event_object.data_type == 'windows:registry:key_value':
-          self.assertEquals(event_object.timestamp_desc,
+          self.assertEqual(event_object.timestamp_desc,
                             eventdata.EventTimestamp.WRITTEN_TIME)
         else:
-          self.assertEquals(event_object.timestamp_desc,
+          self.assertEqual(event_object.timestamp_desc,
                             eventdata.EventTimestamp.WRITTEN_TIME)
 
       for tag in read_store.GetTagging():
@@ -218,7 +218,7 @@ class StorageFileTest(unittest.TestCase):
         tags.append(event_object)
 
       groups = list(read_store.GetGrouping())
-      self.assertEquals(len(groups), 1)
+      self.assertEqual(len(groups), 1)
       group_events = list(read_store.GetEventsFromGroup(groups[0]))
 
       # Read the same events that were put in the group, just to compare
@@ -231,57 +231,57 @@ class StorageFileTest(unittest.TestCase):
       serialized_event_object = serializer.WriteSerialized(event_object)
       same_events.append(serialized_event_object)
 
-    self.assertEquals(len(event_objects), 4)
-    self.assertEquals(len(tags), 4)
+    self.assertEqual(len(event_objects), 4)
+    self.assertEqual(len(tags), 4)
 
-    self.assertEquals(tags[0].timestamp, 12389344590000000)
-    self.assertEquals(tags[0].store_number, 1)
-    self.assertEquals(tags[0].store_index, 0)
-    self.assertEquals(tags[0].tag.comment, u'My comment')
-    self.assertEquals(tags[0].tag.color, u'blue')
+    self.assertEqual(tags[0].timestamp, 12389344590000000)
+    self.assertEqual(tags[0].store_number, 1)
+    self.assertEqual(tags[0].store_index, 0)
+    self.assertEqual(tags[0].tag.comment, u'My comment')
+    self.assertEqual(tags[0].tag.color, u'blue')
 
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
         self._formatter_mediator, tags[0])
-    self.assertEquals(msg[0:10], u'This is a ')
+    self.assertEqual(msg[0:10], u'This is a ')
 
-    self.assertEquals(tags[1].tag.tags[0], 'Malware')
+    self.assertEqual(tags[1].tag.tags[0], 'Malware')
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
         self._formatter_mediator, tags[1])
-    self.assertEquals(msg[0:15], u'[\\HKCU\\Windows\\')
+    self.assertEqual(msg[0:15], u'[\\HKCU\\Windows\\')
 
-    self.assertEquals(tags[2].tag.comment, u'This is interesting')
-    self.assertEquals(tags[2].tag.tags[0], 'Malware')
-    self.assertEquals(tags[2].tag.tags[1], 'Benign')
+    self.assertEqual(tags[2].tag.comment, u'This is interesting')
+    self.assertEqual(tags[2].tag.tags[0], 'Malware')
+    self.assertEqual(tags[2].tag.tags[1], 'Benign')
 
-    self.assertEquals(tags[2].parser, 'UNKNOWN')
+    self.assertEqual(tags[2].parser, 'UNKNOWN')
 
     # Test the newly added fourth tag, which should include data from
     # the first version as well.
-    self.assertEquals(tags[3].tag.tags[0], 'Interesting')
-    self.assertEquals(tags[3].tag.tags[1], 'Malware')
+    self.assertEqual(tags[3].tag.tags[0], 'Interesting')
+    self.assertEqual(tags[3].tag.tags[1], 'Malware')
 
     expected_timestamps = [
         12389344590000000, 13349402860000000, 13349615269295969,
         13359662069295961]
-    self.assertEquals(timestamps, expected_timestamps)
+    self.assertEqual(timestamps, expected_timestamps)
 
-    self.assertEquals(groups[0].name, u'Malicious')
-    self.assertEquals(groups[0].category, u'Malware')
-    self.assertEquals(groups[0].color, u'red')
-    self.assertEquals(groups[0].description, u'Events that are malicious')
-    self.assertEquals(groups[0].first_timestamp, 13349402860000000)
-    self.assertEquals(groups[0].last_timestamp, 13349615269295969)
+    self.assertEqual(groups[0].name, u'Malicious')
+    self.assertEqual(groups[0].category, u'Malware')
+    self.assertEqual(groups[0].color, u'red')
+    self.assertEqual(groups[0].description, u'Events that are malicious')
+    self.assertEqual(groups[0].first_timestamp, 13349402860000000)
+    self.assertEqual(groups[0].last_timestamp, 13349615269295969)
 
-    self.assertEquals(len(group_events), 2)
-    self.assertEquals(group_events[0].timestamp, 13349402860000000)
-    self.assertEquals(group_events[1].timestamp, 13349615269295969L)
+    self.assertEqual(len(group_events), 2)
+    self.assertEqual(group_events[0].timestamp, 13349402860000000)
+    self.assertEqual(group_events[1].timestamp, 13349615269295969L)
 
     proto_group_events = []
     for group_event in group_events:
       serialized_event_object = serializer.WriteSerialized(group_event)
       proto_group_events.append(serialized_event_object)
 
-    self.assertEquals(same_events, proto_group_events)
+    self.assertEqual(same_events, proto_group_events)
 
 
 class StoreStorageTest(unittest.TestCase):
@@ -323,7 +323,7 @@ class StoreStorageTest(unittest.TestCase):
         1344270407000000L, 1392438730000000L, 1427151678000000L,
         1451584472000000L]
 
-    self.assertEquals(read_list, expected_timestamps)
+    self.assertEqual(read_list, expected_timestamps)
 
 
 if __name__ == '__main__':

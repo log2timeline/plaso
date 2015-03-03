@@ -28,23 +28,23 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
         self._plugin, test_file, cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 56)
+    self.assertEqual(len(event_objects), 56)
 
     event_object = event_objects[0]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.UNKNOWN)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2014-11-25 21:08:23.698737')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_extension_id = u'ognampngfcbddbfemdapefohjiobgbdl'
-    self.assertEquals(event_object.extension_id, expected_extension_id)
+    self.assertEqual(event_object.extension_id, expected_extension_id)
 
-    self.assertEquals(event_object.action_type, 1)
-    self.assertEquals(event_object.activity_id, 48)
-    self.assertEquals(event_object.api_name, u'browserAction.onClicked')
+    self.assertEqual(event_object.action_type, 1)
+    self.assertEqual(event_object.activity_id, 48)
+    self.assertEqual(event_object.api_name, u'browserAction.onClicked')
 
     expected_msg = (
         u'Chrome extension: ognampngfcbddbfemdapefohjiobgbdl '

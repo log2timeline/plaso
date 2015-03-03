@@ -40,15 +40,15 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 2)
 
     event_object = event_objects[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_string = (
         u'[{0:s}] 0: C:\\Downloads\\The Sleeping Dragon CD1.iso').format(
@@ -57,7 +57,7 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.timestamp, 0)
+    self.assertEqual(event_object.timestamp, 0)
 
     expected_string = u'[{0:s}] 1: C:\\Downloads\\plaso-static.rar'.format(
         key_path)

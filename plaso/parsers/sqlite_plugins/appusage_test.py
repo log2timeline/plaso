@@ -26,19 +26,19 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The sqlite database contains 5 events.
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
 
     # Check the first event.
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2014-05-07 18:52:02')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.application, u'/Applications/Safari.app')
-    self.assertEquals(event_object.app_version, u'9537.75.14')
-    self.assertEquals(event_object.bundle_id, u'com.apple.Safari')
-    self.assertEquals(event_object.count, 1)
+    self.assertEqual(event_object.application, u'/Applications/Safari.app')
+    self.assertEqual(event_object.app_version, u'9537.75.14')
+    self.assertEqual(event_object.bundle_id, u'com.apple.Safari')
+    self.assertEqual(event_object.count, 1)
 
     expected_msg = (
         u'/Applications/Safari.app v.9537.75.14 '

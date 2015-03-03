@@ -27,19 +27,19 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
         test_file, self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 44)
+    self.assertEqual(len(event_objects), 44)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
     event_object = event_objects[3]
 
-    self.assertEquals(event_object.offset, 32)
+    self.assertEqual(event_object.offset, 32)
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-04-01 13:52:38.997538')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Entry: 11 '
@@ -64,7 +64,7 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2010-11-10 07:51:16.749125')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'File size: 3545 '

@@ -24,26 +24,26 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 15)
+    self.assertEqual(len(event_objects), 15)
 
     event_object = event_objects[4]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2005-04-11 08:06:02')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.source_ip, '123.45.78.90')
-    self.assertEquals(event_object.dest_ip, '123.156.78.90')
+    self.assertEqual(event_object.source_ip, '123.45.78.90')
+    self.assertEqual(event_object.dest_ip, '123.156.78.90')
 
     event_object = event_objects[7]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2005-04-11 08:06:26')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.size, 576)
-    self.assertEquals(event_object.flags, 'A')
-    self.assertEquals(event_object.tcp_ack, 987654321)
+    self.assertEqual(event_object.size, 576)
+    self.assertEqual(event_object.flags, 'A')
+    self.assertEqual(event_object.tcp_ack, 987654321)
 
     expected_msg = (
         u'DROP [ TCP RECEIVE ] '
@@ -60,8 +60,8 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[9]
 
-    self.assertEquals(event_object.icmp_type, 8)
-    self.assertEquals(event_object.icmp_code, 0)
+    self.assertEqual(event_object.icmp_type, 8)
+    self.assertEqual(event_object.icmp_code, 0)
 
 
 if __name__ == '__main__':

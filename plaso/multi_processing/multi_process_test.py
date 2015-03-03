@@ -21,7 +21,7 @@ class MultiProcessingQueueTest(unittest.TestCase):
       test_queue.PushItem(item)
 
     try:
-      self.assertEquals(len(test_queue), len(self._ITEMS))
+      self.assertEqual(len(test_queue), len(self._ITEMS))
     except NotImplementedError:
       # On Mac OS X because of broken sem_getvalue()
       return
@@ -30,7 +30,7 @@ class MultiProcessingQueueTest(unittest.TestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, len(self._ITEMS))
+    self.assertEqual(test_queue_consumer.number_of_items, len(self._ITEMS))
 
 
 if __name__ == '__main__':

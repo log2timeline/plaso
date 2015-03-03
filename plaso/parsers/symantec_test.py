@@ -27,13 +27,13 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2002-11-19 08:01:34')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = self._parser._GetTimestamp('2A0A1E0A2F1D', timezone=pytz.UTC)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-11-30 10:47:29')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -42,18 +42,18 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The file contains 8 lines which should result in 8 event objects.
-    self.assertEquals(len(event_objects), 8)
+    self.assertEqual(len(event_objects), 8)
 
     # Test the second entry:
     event_object = event_objects[1]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-11-30 10:47:29')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.user, u'davnads')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.user, u'davnads')
     expected_file = (
         u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')
-    self.assertEquals(event_object.file, expected_file)
+    self.assertEqual(event_object.file, expected_file)
 
     expected_msg = (
         u'Event Name: GL_EVENT_INFECTION; '

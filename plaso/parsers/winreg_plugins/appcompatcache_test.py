@@ -31,20 +31,20 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         file_entry=test_file_entry, parser_chain=self._plugin.plugin_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 330)
+    self.assertEqual(len(event_objects), 330)
 
     event_object = event_objects[9]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-04-04 01:46:37.932964')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    self.assertEquals(event_object.keyname, key_path)
+    self.assertEqual(event_object.keyname, key_path)
     expected_msg = (
         u'[{0:s}] Cached entry: 10 Path: '
         u'\\??\\C:\\Windows\\PSEXESVC.EXE'.format(event_object.keyname))

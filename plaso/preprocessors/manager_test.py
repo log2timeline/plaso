@@ -39,7 +39,7 @@ class PreprocessPluginsManagerTest(unittest.TestCase):
     number_of_plugins = len(manager.PreprocessPluginsManager._plugin_classes)
 
     manager.PreprocessPluginsManager.RegisterPlugin(TestPreprocessPlugin)
-    self.assertEquals(
+    self.assertEqual(
         len(manager.PreprocessPluginsManager._plugin_classes),
         number_of_plugins + 1)
 
@@ -47,7 +47,7 @@ class PreprocessPluginsManagerTest(unittest.TestCase):
       manager.PreprocessPluginsManager.RegisterPlugin(TestPreprocessPlugin)
 
     manager.PreprocessPluginsManager.DeregisterPlugin(TestPreprocessPlugin)
-    self.assertEquals(
+    self.assertEqual(
         len(manager.PreprocessPluginsManager._plugin_classes),
         number_of_plugins)
 

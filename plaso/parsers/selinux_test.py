@@ -28,12 +28,12 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         self._parser, test_file, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
 
     # Test case: normal entry.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.timestamp, 1337845201174000)
+    self.assertEqual(event_object.timestamp, 1337845201174000)
 
     expected_msg = (
         u'[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
@@ -47,7 +47,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: short date.
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.timestamp, 1337845201000000)
+    self.assertEqual(event_object.timestamp, 1337845201000000)
 
     expected_string = u'[audit_type: SHORTDATE] check rounding'
 
@@ -56,7 +56,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: no msg.
     event_object = event_objects[2]
 
-    self.assertEquals(event_object.timestamp, 1337845222174000)
+    self.assertEqual(event_object.timestamp, 1337845222174000)
 
     expected_string = u'[audit_type: NOMSG]'
 
@@ -65,7 +65,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: under score.
     event_object = event_objects[3]
 
-    self.assertEquals(event_object.timestamp, 1337845666174000)
+    self.assertEqual(event_object.timestamp, 1337845666174000)
 
     expected_msg = (
         u'[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
