@@ -32,11 +32,11 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
-    self.assertEquals(path_spec.location, os.path.abspath(test_file))
-    self.assertEquals(
+    self.assertEqual(path_spec.location, os.path.abspath(test_file))
+    self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_OS)
     # pylint: disable=protected-access
-    self.assertEquals(test_front_end._partition_offset, None)
+    self.assertEqual(test_front_end._partition_offset, None)
 
   def _TestScanSourceImage(self, test_file):
     """Tests the ScanSource function on the test image.
@@ -55,10 +55,10 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
-    self.assertEquals(
+    self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
-    self.assertEquals(test_front_end._partition_offset, 0)
+    self.assertEqual(test_front_end._partition_offset, 0)
 
   def _TestScanSourcePartitionedImage(self, test_file):
     """Tests the ScanSource function on the partitioned test image.
@@ -78,10 +78,10 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
-    self.assertEquals(
+    self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
-    self.assertEquals(test_front_end._partition_offset, 180224)
+    self.assertEqual(test_front_end._partition_offset, 180224)
 
     options = frontend.Options()
     options.source = test_file
@@ -93,10 +93,10 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
-    self.assertEquals(
+    self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
-    self.assertEquals(test_front_end._partition_offset, 180224)
+    self.assertEqual(test_front_end._partition_offset, 180224)
 
     options = frontend.Options()
     options.source = test_file
@@ -107,10 +107,10 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
-    self.assertEquals(
+    self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
-    self.assertEquals(test_front_end._partition_offset, 180224)
+    self.assertEqual(test_front_end._partition_offset, 180224)
 
   def _TestScanSourceVssImage(self, test_file):
     """Tests the ScanSource function on the VSS test image.
@@ -130,11 +130,11 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
-    self.assertEquals(
+    self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
-    self.assertEquals(test_front_end._partition_offset, 0)
-    self.assertEquals(test_front_end._vss_stores, [1, 2])
+    self.assertEqual(test_front_end._partition_offset, 0)
+    self.assertEqual(test_front_end._vss_stores, [1, 2])
 
     options = frontend.Options()
     options.source = test_file
@@ -145,11 +145,11 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
-    self.assertEquals(
+    self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
-    self.assertEquals(test_front_end._partition_offset, 0)
-    self.assertEquals(test_front_end._vss_stores, [1])
+    self.assertEqual(test_front_end._partition_offset, 0)
+    self.assertEqual(test_front_end._vss_stores, [1])
 
     options = frontend.Options()
     options.source = test_file
@@ -160,11 +160,11 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
     self.assertNotEquals(path_spec, None)
-    self.assertEquals(
+    self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
-    self.assertEquals(test_front_end._partition_offset, 0)
-    self.assertEquals(test_front_end._vss_stores, [1, 2])
+    self.assertEqual(test_front_end._partition_offset, 0)
+    self.assertEqual(test_front_end._vss_stores, [1, 2])
 
   def setUp(self):
     """Sets up the objects used throughout the test."""

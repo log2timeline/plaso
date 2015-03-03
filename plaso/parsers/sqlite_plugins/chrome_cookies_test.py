@@ -43,7 +43,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Then there are extra events created by plugins:
     #      75 events created by Google Analytics cookies.
     # In total: 1755 events.
-    self.assertEquals(len(event_objects), 3 * 560)
+    self.assertEqual(len(event_objects), 3 * 560)
 
     # Double check that we've got at least the 75 Google Analytics sessions.
     self.assertGreaterEqual(len(extra_objects), 75)
@@ -52,16 +52,16 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Check one linkedin cookie.
     event_object = event_objects[124]
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
-    self.assertEquals(event_object.host, u'www.linkedin.com')
-    self.assertEquals(event_object.cookie_name, u'leo_auth_token')
+    self.assertEqual(event_object.host, u'www.linkedin.com')
+    self.assertEqual(event_object.cookie_name, u'leo_auth_token')
     self.assertFalse(event_object.httponly)
-    self.assertEquals(event_object.url, u'http://www.linkedin.com/')
+    self.assertEqual(event_object.url, u'http://www.linkedin.com/')
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-08-25 21:50:27.292367')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://www.linkedin.com/ (leo_auth_token) Flags: [HTTP only] = False '
@@ -71,15 +71,15 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Check one of the visits to rubiconproject.com.
     event_object = event_objects[379]
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-04-01 13:54:34.949210')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.url, u'http://rubiconproject.com/')
-    self.assertEquals(event_object.path, u'/')
+    self.assertEqual(event_object.url, u'http://rubiconproject.com/')
+    self.assertEqual(event_object.path, u'/')
     self.assertFalse(event_object.secure)
     self.assertTrue(event_object.persistent)
 
@@ -91,29 +91,29 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Examine an event for a visit to a political blog site.
     event_object = event_objects[444]
-    self.assertEquals(
+    self.assertEqual(
         event_object.path,
         u'/2012/03/21/romney-tries-to-clean-up-etch-a-sketch-mess/')
-    self.assertEquals(event_object.host, u'politicalticker.blogs.cnn.com')
+    self.assertEqual(event_object.host, u'politicalticker.blogs.cnn.com')
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-03-22 01:47:21.012022')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Examine a cookie that has an autologin entry.
     event_object = event_objects[1425]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-04-01 13:52:56.189444')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.host, u'marvel.com')
-    self.assertEquals(event_object.cookie_name, u'autologin[timeout]')
-    self.assertEquals(
+    self.assertEqual(event_object.host, u'marvel.com')
+    self.assertEqual(event_object.cookie_name, u'autologin[timeout]')
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     # This particular cookie value represents a timeout value that corresponds
     # to the expiration date of the cookie.
-    self.assertEquals(event_object.data, u'1364824322')
+    self.assertEqual(event_object.data, u'1364824322')
 
 
 if __name__ == '__main__':

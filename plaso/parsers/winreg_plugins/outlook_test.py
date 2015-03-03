@@ -42,15 +42,15 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     expected_msg_short = u'[{0:s}] C:\\Users\\username\\AppData\\Lo...'.format(
         key_path)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    self.assertEquals(event_object.timestamp, 1346145829002031)
+    self.assertEqual(event_object.timestamp, 1346145829002031)
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 

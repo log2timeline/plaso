@@ -26,25 +26,25 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
         self._plugin, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 4)
+    self.assertEqual(len(event_objects), 4)
 
     # Check the first page visited entry.
     event_object = event_objects[0]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2014-01-21 02:03:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.name, u'Spain is beautiful.rtf')
-    self.assertEquals(event_object.path, u'/Users/moxilo/Documents')
-    self.assertEquals(event_object.user_sid, u'501')
+    self.assertEqual(event_object.name, u'Spain is beautiful.rtf')
+    self.assertEqual(event_object.path, u'/Users/moxilo/Documents')
+    self.assertEqual(event_object.user_sid, u'501')
     expected_version_path = (
         u'/.DocumentRevisions-V100/PerUID/501/1/'
         u'com.apple.documentVersions/'
         u'08CFEB5A-5CDA-486F-AED5-EA35BF3EE4C2.rtf')
-    self.assertEquals(event_object.version_path, expected_version_path)
+    self.assertEqual(event_object.version_path, expected_version_path)
 
     expected_msg = (
         u'Version of [{0:s}] ({1:s}) stored in {2:s} by {3:s}'.format(

@@ -58,19 +58,19 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
     self.assertTrue(hasattr(event_object, 'zero_integer'))
 
     attribute_value = getattr(event_object, 'integer', 0)
-    self.assertEquals(attribute_value, 34)
+    self.assertEqual(attribute_value, 34)
 
     attribute_value = getattr(event_object, 'my_list', [])
-    self.assertEquals(len(attribute_value), 5)
+    self.assertEqual(len(attribute_value), 5)
 
     attribute_value = getattr(event_object, 'string', '')
-    self.assertEquals(attribute_value, 'Normal string')
+    self.assertEqual(attribute_value, 'Normal string')
 
     attribute_value = getattr(event_object, 'unicode_string', u'')
-    self.assertEquals(attribute_value, u'And I\'m a unicorn.')
+    self.assertEqual(attribute_value, u'And I\'m a unicorn.')
 
     attribute_value = getattr(event_object, 'a_tuple', ())
-    self.assertEquals(len(attribute_value), 4)
+    self.assertEqual(len(attribute_value), 4)
 
   def testWriteSerialized(self):
     """Test the write serialized functionality."""
@@ -96,7 +96,7 @@ class JsonEventObjectSerializerTest(unittest.TestCase):
 
     serializer = json_serializer.JsonEventObjectSerializer
     json_string = serializer.WriteSerialized(event_object)
-    self.assertEquals(sorted(json_string), sorted(self._json_string))
+    self.assertEqual(sorted(json_string), sorted(self._json_string))
 
     event_object = serializer.ReadSerialized(json_string)
 
@@ -130,7 +130,7 @@ class JsonCollectionInformationSerializerTest(unittest.TestCase):
     collection_object = self._serializer.ReadSerialized(self._json_string)
 
     for key, value in collection_object.GetValueDict().iteritems():
-      self.assertEquals(
+      self.assertEqual(
           value, self._collection_information_object.GetValue(key))
 
     for identifier, counter in collection_object.GetCounters():
@@ -138,13 +138,13 @@ class JsonCollectionInformationSerializerTest(unittest.TestCase):
           identifier)
 
       for key, value in counter.iteritems():
-        self.assertEquals(value, compare_counter[key])
+        self.assertEqual(value, compare_counter[key])
 
   def testWriteSerialized(self):
     """Test the write serialized functionality."""
     json_string = self._serializer.WriteSerialized(
         self._collection_information_object)
-    self.assertEquals(json_string, self._json_string)
+    self.assertEqual(json_string, self._json_string)
 
 
 if __name__ == '__main__':

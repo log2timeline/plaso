@@ -27,22 +27,22 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 18)
+    self.assertEqual(len(event_objects), 18)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-08-01 21:22:28.999')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-08-01 21:22:29.702')
-    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
-    self.assertEquals(event_objects[2].timestamp, expected_timestamp)
-    self.assertEquals(event_objects[3].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[1].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[2].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[3].timestamp, expected_timestamp)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-08-01 21:22:58.344')
-    self.assertEquals(event_objects[4].timestamp, expected_timestamp)
-    self.assertEquals(event_objects[5].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[4].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[5].timestamp, expected_timestamp)
 
     expected_msg = (
         u'[global.cpp:626!logVersionInfo] (DETAIL) 17.0.2011.0627 (Ship)')

@@ -35,25 +35,25 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # 2 x 8 bookmark folders).
     # However there are three events that do not have a timestamp
     # so the test file will show 202 extracted events.
-    self.assertEquals(len(event_objects), 202)
+    self.assertEqual(len(event_objects), 202)
 
     # Check the first page visited event.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.data_type, 'firefox:places:page_visited')
+    self.assertEqual(event_object.data_type, 'firefox:places:page_visited')
 
-    self.assertEquals(event_object.timestamp_desc,
+    self.assertEqual(event_object.timestamp_desc,
                       eventdata.EventTimestamp.PAGE_VISITED)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-07-01 11:16:21.371935')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = u'http://news.google.com/'
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_title = u'Google News'
-    self.assertEquals(event_object.title, expected_title)
+    self.assertEqual(event_object.title, expected_title)
 
     expected_msg = (
         u'{0:s} ({1:s}) [count: 1] Host: news.google.com '
@@ -66,35 +66,35 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first bookmark event.
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.data_type, 'firefox:places:bookmark')
+    self.assertEqual(event_object.data_type, 'firefox:places:bookmark')
 
-    self.assertEquals(event_object.timestamp_desc,
+    self.assertEqual(event_object.timestamp_desc,
                       eventdata.EventTimestamp.ADDED_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-07-01 11:13:59.266344+00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Check the second bookmark event.
     event_object = event_objects[2]
 
-    self.assertEquals(event_object.data_type, 'firefox:places:bookmark')
+    self.assertEqual(event_object.data_type, 'firefox:places:bookmark')
 
-    self.assertEquals(event_object.timestamp_desc,
+    self.assertEqual(event_object.timestamp_desc,
                       eventdata.EventTimestamp.MODIFICATION_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-07-01 11:13:59.267198+00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'place:folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder=TOOLBAR&'
         u'sort=12&excludeQueries=1&excludeItemIfParentHasAnnotation=livemark%2F'
         u'feedURI&maxResults=10&queryType=1')
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_title = u'Recently Bookmarked'
-    self.assertEquals(event_object.title, expected_title)
+    self.assertEqual(event_object.title, expected_title)
 
     expected_msg = (
         u'Bookmark URL {0:s} ({1:s}) [folder=BOOKMARKS_MENU&'
@@ -111,34 +111,34 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first bookmark annotation event.
     event_object = event_objects[183]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.data_type, 'firefox:places:bookmark_annotation')
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-07-01 11:13:59.267146+00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Check another bookmark annotation event.
     event_object = event_objects[184]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.data_type, 'firefox:places:bookmark_annotation')
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-07-01 11:13:59.267605+00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = u'place:sort=14&type=6&maxResults=10&queryType=1'
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_title = u'Recent Tags'
-    self.assertEquals(event_object.title, expected_title)
+    self.assertEqual(event_object.title, expected_title)
 
     expected_msg = (
         u'Bookmark Annotation: [RecentTags] to bookmark '
@@ -150,30 +150,30 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the second last bookmark folder event.
     event_object = event_objects[200]
 
-    self.assertEquals(event_object.data_type, 'firefox:places:bookmark_folder')
+    self.assertEqual(event_object.data_type, 'firefox:places:bookmark_folder')
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-03-21 10:05:01.553774+00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
     # Check the last bookmark folder event.
     event_object = event_objects[201]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.data_type, 'firefox:places:bookmark_folder')
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.MODIFICATION_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-07-01 11:14:11.766851+00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_title = u'Latest Headlines'
-    self.assertEquals(event_object.title, expected_title)
+    self.assertEqual(event_object.title, expected_title)
 
     expected_msg = expected_title
     expected_short = expected_title
@@ -192,21 +192,21 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     #     28 bookmarks
     #     14 bookmark folders
     #     8 annotations
-    self.assertEquals(len(event_objects), 84)
+    self.assertEqual(len(event_objects), 84)
     counter = collections.Counter()
     for event_object in event_objects:
       counter[event_object.data_type] += 1
 
-    self.assertEquals(counter['firefox:places:bookmark'], 28)
-    self.assertEquals(counter['firefox:places:page_visited'], 34)
-    self.assertEquals(counter['firefox:places:bookmark_folder'], 14)
-    self.assertEquals(counter['firefox:places:bookmark_annotation'], 8)
+    self.assertEqual(counter['firefox:places:bookmark'], 28)
+    self.assertEqual(counter['firefox:places:page_visited'], 34)
+    self.assertEqual(counter['firefox:places:bookmark_folder'], 14)
+    self.assertEqual(counter['firefox:places:bookmark_annotation'], 8)
 
     random_event = event_objects[10]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-10-30 21:57:11.281942')
-    self.assertEquals(random_event.timestamp, expected_timestamp)
+    self.assertEqual(random_event.timestamp, expected_timestamp)
 
     expected_short = u'URL: http://code.google.com/p/plaso'
     expected_msg = (
@@ -232,30 +232,30 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The downloads.sqlite file contains 2 events (1 download).
-    self.assertEquals(len(event_objects), 2)
+    self.assertEqual(len(event_objects), 2)
 
     # Check the first page visited event.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.data_type, 'firefox:downloads:download')
+    self.assertEqual(event_object.data_type, 'firefox:downloads:download')
 
-    self.assertEquals(event_object.timestamp_desc,
+    self.assertEqual(event_object.timestamp_desc,
                       eventdata.EventTimestamp.START_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2013-07-18 18:59:59.312000+00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'https://plaso.googlecode.com/files/'
         u'plaso-static-1.0.1-win32-vs2008.zip')
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_full_path = u'file:///D:/plaso-static-1.0.1-win32-vs2008.zip'
-    self.assertEquals(event_object.full_path, expected_full_path)
+    self.assertEqual(event_object.full_path, expected_full_path)
 
-    self.assertEquals(event_object.received_bytes, 15974599)
-    self.assertEquals(event_object.total_bytes, 15974599)
+    self.assertEqual(event_object.received_bytes, 15974599)
+    self.assertEqual(event_object.total_bytes, 15974599)
 
 
 if __name__ == '__main__':

@@ -82,19 +82,19 @@ class ProtobufEventObjectSerializerTest(unittest.TestCase):
     self.assertTrue(hasattr(event_object, 'zero_integer'))
 
     attribute_value = getattr(event_object, 'integer', 0)
-    self.assertEquals(attribute_value, 34)
+    self.assertEqual(attribute_value, 34)
 
     attribute_value = getattr(event_object, 'my_list', [])
-    self.assertEquals(len(attribute_value), 5)
+    self.assertEqual(len(attribute_value), 5)
 
     attribute_value = getattr(event_object, 'string', '')
-    self.assertEquals(attribute_value, 'Normal string')
+    self.assertEqual(attribute_value, 'Normal string')
 
     attribute_value = getattr(event_object, 'unicode_string', u'')
-    self.assertEquals(attribute_value, u'And I\'m a unicorn.')
+    self.assertEqual(attribute_value, u'And I\'m a unicorn.')
 
     attribute_value = getattr(event_object, 'a_tuple', ())
-    self.assertEquals(len(attribute_value), 4)
+    self.assertEqual(len(attribute_value), 4)
 
   def testWriteSerialized(self):
     """Test the write serialized functionality."""
@@ -120,7 +120,7 @@ class ProtobufEventObjectSerializerTest(unittest.TestCase):
 
     serializer = protobuf_serializer.ProtobufEventObjectSerializer
     proto_string = serializer.WriteSerialized(event_object)
-    self.assertEquals(proto_string, self._proto_string)
+    self.assertEqual(proto_string, self._proto_string)
 
     event_object = serializer.ReadSerialized(proto_string)
 
@@ -153,11 +153,11 @@ class ProtobufEventTagSerializerTest(unittest.TestCase):
     serializer = protobuf_serializer.ProtobufEventTagSerializer
     event_tag = serializer.ReadSerialized(self._proto_string)
 
-    self.assertEquals(event_tag.color, u'Red')
-    self.assertEquals(event_tag.comment, u'My first comment.')
-    self.assertEquals(event_tag.store_index, 18)
-    self.assertEquals(len(event_tag.tags), 2)
-    self.assertEquals(event_tag.tags, [u'Malware', u'Common'])
+    self.assertEqual(event_tag.color, u'Red')
+    self.assertEqual(event_tag.comment, u'My first comment.')
+    self.assertEqual(event_tag.store_index, 18)
+    self.assertEqual(len(event_tag.tags), 2)
+    self.assertEqual(event_tag.tags, [u'Malware', u'Common'])
 
   def testWriteSerialized(self):
     """Test the write serialized functionality."""
@@ -171,7 +171,7 @@ class ProtobufEventTagSerializerTest(unittest.TestCase):
 
     serializer = protobuf_serializer.ProtobufEventTagSerializer
     proto_string = serializer.WriteSerialized(event_tag)
-    self.assertEquals(proto_string, self._proto_string)
+    self.assertEqual(proto_string, self._proto_string)
 
 
 class ProtobufPreprocessObjectSerializerTest(unittest.TestCase):
@@ -223,15 +223,15 @@ class ProtobufCollectionInformationObjectSerializerTest(unittest.TestCase):
     for identifier, counter in collection_object.GetCounters():
       compare_counter = self._collection_object.GetCounter(identifier)
       for key, value in counter.iteritems():
-        self.assertEquals(value, compare_counter[key])
+        self.assertEqual(value, compare_counter[key])
 
     for identifier, value in collection_object.GetValueDict().iteritems():
-      self.assertEquals(value, self._collection_object.GetValue(identifier))
+      self.assertEqual(value, self._collection_object.GetValue(identifier))
 
   def testWriteSerialized(self):
     """Test the write serialized functionality."""
     proto_string = self._serializer.WriteSerialized(self._collection_object)
-    self.assertEquals(proto_string, self._proto_string)
+    self.assertEqual(proto_string, self._proto_string)
 
     proto = self._serializer.WriteSerializedObject(self._collection_object)
     attribute_serializer = protobuf_serializer.ProtobufEventAttributeSerializer
@@ -239,12 +239,12 @@ class ProtobufCollectionInformationObjectSerializerTest(unittest.TestCase):
       if attribute.key == self._collection_object.RESERVED_COUNTER_KEYWORD:
         _, value = attribute_serializer.ReadSerializedObject(attribute)
         for identifier, value_dict in value.iteritems():
-          self.assertEquals(set(value_dict.items()), set(
+          self.assertEqual(set(value_dict.items()), set(
               self._collection_object.GetCounter(identifier).items()))
 
       else:
         _, value = attribute_serializer.ReadSerializedObject(attribute)
-        self.assertEquals(value, self._collection_object.GetValue(
+        self.assertEqual(value, self._collection_object.GetValue(
             attribute.key))
 
 

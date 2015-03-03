@@ -72,7 +72,7 @@ class WindowsCodepageTest(WindowsSystemRegistryTest):
     plugin = windows.WindowsCodepage()
     plugin.Run(self._searcher, knowledge_base_object)
 
-    self.assertEquals(knowledge_base_object.codepage, u'cp1252')
+    self.assertEqual(knowledge_base_object.codepage, u'cp1252')
 
 
 class WindowsHostnameTest(WindowsSystemRegistryTest):
@@ -90,7 +90,7 @@ class WindowsHostnameTest(WindowsSystemRegistryTest):
     plugin = windows.WindowsHostname()
     plugin.Run(self._searcher, knowledge_base_object)
 
-    self.assertEquals(knowledge_base_object.hostname, u'WKS-WIN732BITA')
+    self.assertEqual(knowledge_base_object.hostname, u'WKS-WIN732BITA')
 
 
 class WindowsProgramFilesPath(WindowsSoftwareRegistryTest):
@@ -109,7 +109,7 @@ class WindowsProgramFilesPath(WindowsSoftwareRegistryTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     path = knowledge_base_object.GetValue('programfiles')
-    self.assertEquals(path, u'Program Files')
+    self.assertEqual(path, u'Program Files')
 
 
 class WindowsProgramFilesX86Path(WindowsSoftwareRegistryTest):
@@ -131,7 +131,7 @@ class WindowsProgramFilesX86Path(WindowsSoftwareRegistryTest):
     path = knowledge_base_object.GetValue('programfilesx86')
     # The test SOFTWARE Registry file does not contain a value for
     # the Program Files X86 path.
-    self.assertEquals(path, None)
+    self.assertEqual(path, None)
 
 
 class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
@@ -156,7 +156,7 @@ class WindowsSystemRegistryPathTest(test_lib.PreprocessPluginTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     path = knowledge_base_object.GetValue('sysregistry')
-    self.assertEquals(path, u'/Windows/System32/config')
+    self.assertEqual(path, u'/Windows/System32/config')
 
 
 class WindowsSystemRootPathTest(test_lib.PreprocessPluginTest):
@@ -181,7 +181,7 @@ class WindowsSystemRootPathTest(test_lib.PreprocessPluginTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     path = knowledge_base_object.GetValue('systemroot')
-    self.assertEquals(path, u'/Windows')
+    self.assertEqual(path, u'/Windows')
 
 
 class WindowsTimeZoneTest(WindowsSystemRegistryTest):
@@ -200,7 +200,7 @@ class WindowsTimeZoneTest(WindowsSystemRegistryTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     time_zone_str = knowledge_base_object.GetValue('time_zone_str')
-    self.assertEquals(time_zone_str, u'EST5EDT')
+    self.assertEqual(time_zone_str, u'EST5EDT')
 
 
 class WindowsUsersTest(WindowsSoftwareRegistryTest):
@@ -219,12 +219,12 @@ class WindowsUsersTest(WindowsSoftwareRegistryTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     users = knowledge_base_object.GetValue('users')
-    self.assertEquals(len(users), 11)
+    self.assertEqual(len(users), 11)
 
     expected_sid = u'S-1-5-21-2036804247-3058324640-2116585241-1114'
-    self.assertEquals(users[9].get('sid', None), expected_sid)
-    self.assertEquals(users[9].get('name', None), u'rsydow')
-    self.assertEquals(users[9].get('path', None), u'C:\\Users\\rsydow')
+    self.assertEqual(users[9].get('sid', None), expected_sid)
+    self.assertEqual(users[9].get('name', None), u'rsydow')
+    self.assertEqual(users[9].get('path', None), u'C:\\Users\\rsydow')
 
 
 class WindowsVersionTest(WindowsSoftwareRegistryTest):
@@ -243,7 +243,7 @@ class WindowsVersionTest(WindowsSoftwareRegistryTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     osversion = knowledge_base_object.GetValue('osversion')
-    self.assertEquals(osversion, u'Windows 7 Ultimate')
+    self.assertEqual(osversion, u'Windows 7 Ultimate')
 
 
 if __name__ == '__main__':

@@ -35,18 +35,18 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(plugin, test_file)
     event_objects = self._GetAnalyticsCookies(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 25)
+    self.assertEqual(len(event_objects), 25)
 
     event_object = event_objects[14]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.utmcct,
         u'/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/')
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp, timelib_test.CopyStringToTimestamp(
             '2013-10-30 21:56:06'))
-    self.assertEquals(event_object.url, u'http://ads.aha.is/')
-    self.assertEquals(event_object.utmcsr, u'mbl.is')
+    self.assertEqual(event_object.url, u'http://ads.aha.is/')
+    self.assertEqual(event_object.utmcsr, u'mbl.is')
 
     expected_msg = (
         u'http://ads.aha.is/ (__utmz) Sessions: 1 Domain Hash: 137167072 '
@@ -67,14 +67,14 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
 
     # The cookie database contains 560 entries in total. Out of them
     # there are 75 events created by the Google Analytics plugin.
-    self.assertEquals(len(event_objects), 75)
+    self.assertEqual(len(event_objects), 75)
     # Check few "random" events to verify.
 
     # Check an UTMZ Google Analytics event.
     event_object = event_objects[39]
-    self.assertEquals(event_object.utmctr, u'enders game')
-    self.assertEquals(event_object.domain_hash, u'68898382')
-    self.assertEquals(event_object.sessions, 1)
+    self.assertEqual(event_object.utmctr, u'enders game')
+    self.assertEqual(event_object.domain_hash, u'68898382')
+    self.assertEqual(event_object.sessions, 1)
 
     expected_msg = (
         u'http://imdb.com/ (__utmz) Sessions: 1 Domain Hash: 68898382 '
@@ -86,14 +86,14 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
 
     # Check the UTMA Google Analytics event.
     event_object = event_objects[41]
-    self.assertEquals(event_object.timestamp_desc, u'Analytics Previous Time')
-    self.assertEquals(event_object.cookie_name, u'__utma')
-    self.assertEquals(event_object.visitor_id, u'1827102436')
-    self.assertEquals(event_object.sessions, 2)
+    self.assertEqual(event_object.timestamp_desc, u'Analytics Previous Time')
+    self.assertEqual(event_object.cookie_name, u'__utma')
+    self.assertEqual(event_object.visitor_id, u'1827102436')
+    self.assertEqual(event_object.sessions, 2)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-03-22 01:55:29')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://assets.tumblr.com/ (__utma) Sessions: 2 Domain Hash: '
@@ -103,15 +103,15 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
 
     # Check the UTMB Google Analytics event.
     event_object = event_objects[34]
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
-    self.assertEquals(event_object.cookie_name, u'__utmb')
-    self.assertEquals(event_object.domain_hash, u'154523900')
-    self.assertEquals(event_object.pages_viewed, 1)
+    self.assertEqual(event_object.cookie_name, u'__utmb')
+    self.assertEqual(event_object.domain_hash, u'154523900')
+    self.assertEqual(event_object.pages_viewed, 1)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-03-22 01:48:30')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://upressonline.com/ (__utmb) Pages Viewed: 1 Domain Hash: '

@@ -186,9 +186,9 @@ class EventObjectTest(unittest.TestCase):
     event_e.strings = [
         u'This ', u'is a ', u'long string']
 
-    self.assertEquals(event_a, event_b)
+    self.assertEqual(event_a, event_b)
     self.assertNotEquals(event_a, event_c)
-    self.assertEquals(event_a, event_e)
+    self.assertEqual(event_a, event_e)
     self.assertNotEquals(event_c, event_d)
 
   def testEqualityString(self):
@@ -243,9 +243,9 @@ class EventObjectTest(unittest.TestCase):
     event_f.another_attribute = False
     event_f.weirdness = u'I am a potato'
 
-    self.assertEquals(event_a.EqualityString(), event_b.EqualityString())
+    self.assertEqual(event_a.EqualityString(), event_b.EqualityString())
     self.assertNotEquals(event_a.EqualityString(), event_c.EqualityString())
-    self.assertEquals(event_a.EqualityString(), event_e.EqualityString())
+    self.assertEqual(event_a.EqualityString(), event_e.EqualityString())
     self.assertNotEquals(event_c.EqualityString(), event_d.EqualityString())
     self.assertNotEquals(event_d.EqualityString(), event_f.EqualityString())
 

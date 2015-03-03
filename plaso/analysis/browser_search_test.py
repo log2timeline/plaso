@@ -33,7 +33,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     analysis_reports = self._GetAnalysisReportsFromQueue(
         analysis_report_queue_consumer)
 
-    self.assertEquals(len(analysis_reports), 1)
+    self.assertEqual(len(analysis_reports), 1)
 
     analysis_report = analysis_reports[0]
 
@@ -48,11 +48,11 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
         u'',
         u''])
 
-    self.assertEquals(analysis_report.text, expected_text)
-    self.assertEquals(analysis_report.plugin_name, 'browser_search')
+    self.assertEqual(analysis_report.text, expected_text)
+    self.assertEqual(analysis_report.plugin_name, 'browser_search')
 
     expected_keys = set([u'GoogleSearch'])
-    self.assertEquals(set(analysis_report.report_dict.keys()), expected_keys)
+    self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
 
 if __name__ == '__main__':

@@ -29,18 +29,18 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 3)
+    self.assertEqual(len(event_objects), 3)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2012-04-07 10:31:37.640871')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_value = u'Disk&Ven_HP&Prod_v100w&Rev_1024'
     self._TestRegvalue(event_object, u'subkey_name', expected_value)

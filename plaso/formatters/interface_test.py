@@ -65,7 +65,7 @@ class EventFormatterTest(unittest.TestCase):
     expected_attribute_names = [u'text']
 
     attribute_names = event_formatter.GetFormatStringAttributeNames()
-    self.assertEquals(sorted(attribute_names), expected_attribute_names)
+    self.assertEqual(sorted(attribute_names), expected_attribute_names)
 
   # TODO: add test for GetMessages.
   # TODO: add test for GetSources.
@@ -96,7 +96,7 @@ class ConditionalEventFormatterTest(unittest.TestCase):
         u'description', u'numeric', u'optional', u'text'])
 
     attribute_names = event_formatter.GetFormatStringAttributeNames()
-    self.assertEquals(sorted(attribute_names), expected_attribute_names)
+    self.assertEqual(sorted(attribute_names), expected_attribute_names)
 
   def testGetMessages(self):
     """Tests the GetMessages function."""
@@ -109,7 +109,7 @@ class ConditionalEventFormatterTest(unittest.TestCase):
 
     message, _ = event_formatter.GetMessages(
         formatter_mediator, self._event_object)
-    self.assertEquals(message, expected_message)
+    self.assertEqual(message, expected_message)
 
   # TODO: add test for GetSources.
 

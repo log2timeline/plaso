@@ -30,18 +30,18 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 17)
+    self.assertEqual(len(event_objects), 17)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-13 10:03:14')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     regvalue_identifier = u'UpdateKey'
     expected_value = u'07/13/2013 10:03:14 AM'
@@ -53,7 +53,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[2]
 
-    self.assertEquals(event_object.timestamp, 0)
+    self.assertEqual(event_object.timestamp, 0)
 
     regvalue_identifier = u'(App)Delete Index.dat files'
     expected_value = u'True'

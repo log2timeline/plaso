@@ -28,9 +28,9 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 13)
+    self.assertEqual(len(event_objects), 13)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[0].timestamp,
         timelib_test.CopyStringToTimestamp('2010-06-22 05:41:41.000'))
     expected_string = (
@@ -40,7 +40,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[0], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[1].timestamp,
         timelib_test.CopyStringToTimestamp('2010-06-22 07:34:42.000'))
     expected_string = u'mru [/usr/sbin/atd] package [at]'
@@ -48,7 +48,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[1], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[2].timestamp,
         timelib_test.CopyStringToTimestamp('2010-06-22 07:34:43.000'))
     expected_string = (
@@ -58,7 +58,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[2], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[3].timestamp,
         timelib_test.CopyStringToTimestamp('2010-05-30 05:26:20.000'))
     expected_string = (
@@ -67,7 +67,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[3], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[6].timestamp,
         timelib_test.CopyStringToTimestamp('2010-05-12 07:58:33.000'))
     expected_string = u'mru [/usr/bin/orca] package [gnome-orca] tag [OLD]'
@@ -75,7 +75,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[6], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[7].timestamp,
         timelib_test.CopyStringToTimestamp('2010-06-22 05:41:41.000'))
     expected_string = u'Session 0 end'
@@ -83,7 +83,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[7], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[8].timestamp,
         timelib_test.CopyStringToTimestamp('2010-06-22 05:41:41.000'))
     expected_string = (
@@ -93,7 +93,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[8], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[9].timestamp,
         timelib_test.CopyStringToTimestamp('2010-06-22 07:34:42.000'))
     expected_string = u'mru [/super/cool/plasuz] package [plaso]'
@@ -101,7 +101,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[9], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[10].timestamp,
         timelib_test.CopyStringToTimestamp('2010-04-06 12:25:42.000'))
     expected_string = u'mru [/super/cool/plasuz] package [miss_ctime]'
@@ -109,7 +109,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[10], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[11].timestamp,
         timelib_test.CopyStringToTimestamp('2010-05-12 07:58:33.000'))
     expected_string = u'mru [/super/cool] package [plaso] tag [WRONG_TAG]'
@@ -117,7 +117,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_objects[11], expected_string, expected_short_string)
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[12].timestamp,
         timelib_test.CopyStringToTimestamp('2010-06-22 05:41:41.000'))
     expected_string = u'Session 1 end'

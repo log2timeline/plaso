@@ -41,7 +41,7 @@ class OutputManagerTest(unittest.TestCase):
     with self.assertRaises(KeyError):
       manager.OutputManager.RegisterOutput(TestOutput)
 
-    self.assertEquals(
+    self.assertEqual(
         len(manager.OutputManager._output_classes),
         number_of_parsers + 1)
 
@@ -49,7 +49,7 @@ class OutputManagerTest(unittest.TestCase):
       manager.OutputManager.RegisterOutput(TestOutput)
 
     manager.OutputManager.DeregisterOutput(TestOutput)
-    self.assertEquals(
+    self.assertEqual(
         len(manager.OutputManager._output_classes),
         number_of_parsers)
 
@@ -58,7 +58,7 @@ class OutputManagerTest(unittest.TestCase):
     manager.OutputManager.RegisterOutput(TestOutput)
 
     output_class = manager.OutputManager.GetOutputClass('test_output')
-    self.assertEquals(output_class, TestOutput)
+    self.assertEqual(output_class, TestOutput)
 
     with self.assertRaises(ValueError):
       _ = manager.OutputManager.GetOutputClass(1)

@@ -26,16 +26,16 @@ class MsieWebCacheEseDbPluginTest(test_lib.EseDbPluginTestCase):
         [test_file_name], self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1354)
+    self.assertEqual(len(event_objects), 1354)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.container_identifier, 1)
+    self.assertEqual(event_object.container_identifier, 1)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2014-05-12 07:30:25.486198')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
     expected_msg = (

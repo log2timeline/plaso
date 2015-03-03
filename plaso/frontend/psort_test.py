@@ -136,7 +136,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
       timestamp_list.append(event_object.timestamp)
       event_object = storage_file.GetSortedEntry()
 
-    self.assertEquals(len(timestamp_list), 8)
+    self.assertEqual(len(timestamp_list), 8)
     self.assertTrue(
         timestamp_list[0] >= self.first and timestamp_list[-1] <= self.last)
 
@@ -181,11 +181,11 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         lines.append(line)
 
     # One more line than events (header row).
-    self.assertEquals(len(lines), 7)
+    self.assertEqual(len(lines), 7)
     self.assertTrue(u'My text goes along: My text dude. lines' in lines[2])
     self.assertTrue(u'LOG/' in lines[2])
     self.assertTrue(u'None in Particular' in lines[2])
-    self.assertEquals(lines[0], (
+    self.assertEqual(lines[0], (
         u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         u'version,filename,inode,notes,format,extra'))
 

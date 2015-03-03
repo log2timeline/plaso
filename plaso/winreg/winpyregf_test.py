@@ -19,7 +19,7 @@ class RegistryUnitTest(test_lib.WinRegTestCase):
       key_path: the key path to retrieve and compare.
     """
     key = winreg_file.GetKeyByPath(key_path)
-    self.assertEquals(key.path, key_path)
+    self.assertEqual(key.path, key_path)
 
   def testListKeys(self):
     test_file = self._GetTestFilePath(['NTUSER.DAT'])
@@ -28,7 +28,7 @@ class RegistryUnitTest(test_lib.WinRegTestCase):
     keys = list(winreg_file)
 
     # Count the number of Registry keys in the hive.
-    self.assertEquals(len(keys), 1126)
+    self.assertEqual(len(keys), 1126)
 
   def testWinPyregf(self):
     test_file = self._GetTestFilePath(['NTUSER.DAT'])

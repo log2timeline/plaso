@@ -26,18 +26,18 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 10)
+    self.assertEqual(len(event_objects), 10)
 
     # TODO: refactor this to use timelib_test.
-    self.assertEquals(event_objects[0].timestamp, 1232074579000000)
-    self.assertEquals(event_objects[1].timestamp, 1232074587000000)
-    self.assertEquals(event_objects[2].timestamp, 1232315916000000)
-    self.assertEquals(event_objects[3].timestamp, 1232315916000000)
-    self.assertEquals(event_objects[4].timestamp, 1232959856000000)
-    self.assertEquals(event_objects[5].timestamp, 0)
-    self.assertEquals(event_objects[7].timestamp, 1232959862000000)
-    self.assertEquals(event_objects[8].timestamp, 1232959932000000)
-    self.assertEquals(event_objects[9].timestamp, 1232959993000000)
+    self.assertEqual(event_objects[0].timestamp, 1232074579000000)
+    self.assertEqual(event_objects[1].timestamp, 1232074587000000)
+    self.assertEqual(event_objects[2].timestamp, 1232315916000000)
+    self.assertEqual(event_objects[3].timestamp, 1232315916000000)
+    self.assertEqual(event_objects[4].timestamp, 1232959856000000)
+    self.assertEqual(event_objects[5].timestamp, 0)
+    self.assertEqual(event_objects[7].timestamp, 1232959862000000)
+    self.assertEqual(event_objects[8].timestamp, 1232959932000000)
+    self.assertEqual(event_objects[9].timestamp, 1232959993000000)
 
     expected_string = u'[] * Speaking now on ##plaso##'
     self._TestGetMessageStrings(

@@ -112,20 +112,20 @@ class PlasoOutputUnitTest(test_lib.LogOutputFormatterTestCase):
       for line in fh:
         lines.append(line)
 
-    self.assertEquals(len(lines), 22)
-    self.assertEquals(lines[0], u'<EventFile>\n')
-    self.assertEquals(lines[1], u'<Event>\n')
-    self.assertEquals(lines[2], u'\t<Date>03/01/2012</Date>\n')
-    self.assertEquals(lines[3], u'\t<Time>123456</Time>\n')
-    self.assertEquals(lines[4], u'\t<Entry>My Event Is Now!</Entry>\n')
-    self.assertEquals(lines[5], u'</Event>\n')
-    self.assertEquals(lines[6], u'<Event>\n')
-    self.assertEquals(lines[7], u'\t<Date>03/01/2012</Date>\n')
-    self.assertEquals(lines[8], u'\t<Time>123458</Time>\n')
-    self.assertEquals(lines[9], u'\t<Entry>There is no tomorrow.</Entry>\n')
-    self.assertEquals(lines[10], u'</Event>\n')
-    self.assertEquals(lines[11], u'<Event>\n')
-    self.assertEquals(lines[-1], u'</EventFile>\n')
+    self.assertEqual(len(lines), 22)
+    self.assertEqual(lines[0], u'<EventFile>\n')
+    self.assertEqual(lines[1], u'<Event>\n')
+    self.assertEqual(lines[2], u'\t<Date>03/01/2012</Date>\n')
+    self.assertEqual(lines[3], u'\t<Time>123456</Time>\n')
+    self.assertEqual(lines[4], u'\t<Entry>My Event Is Now!</Entry>\n')
+    self.assertEqual(lines[5], u'</Event>\n')
+    self.assertEqual(lines[6], u'<Event>\n')
+    self.assertEqual(lines[7], u'\t<Date>03/01/2012</Date>\n')
+    self.assertEqual(lines[8], u'\t<Time>123458</Time>\n')
+    self.assertEqual(lines[9], u'\t<Entry>There is no tomorrow.</Entry>\n')
+    self.assertEqual(lines[10], u'</Event>\n')
+    self.assertEqual(lines[11], u'<Event>\n')
+    self.assertEqual(lines[-1], u'</EventFile>\n')
 
   def testOutputList(self):
     """Test listing up all available registered modules."""
@@ -133,7 +133,7 @@ class PlasoOutputUnitTest(test_lib.LogOutputFormatterTestCase):
     for name, description in manager.OutputManager.GetOutputs():
       if name == 'testoutput':
         module_seen = True
-        self.assertEquals(description, (
+        self.assertEqual(description, (
             u'Test output that provides a simple mocked XML.'))
 
     self.assertTrue(module_seen)
@@ -150,7 +150,7 @@ class EventBufferTest(test_lib.LogOutputFormatterTestCase):
         if not event_buffer.check_dedups:
           expected = 0
         # pylint: disable=protected-access
-        self.assertEquals(len(event_buffer._buffer_dict), expected)
+        self.assertEqual(len(event_buffer._buffer_dict), expected)
 
       formatter = TestOutput(None, self._formatter_mediator, filehandle=fh)
       event_buffer = interface.EventBuffer(formatter, False)
@@ -201,7 +201,7 @@ class OutputFilehandleTest(unittest.TestCase):
       line_read = output_file.read()
 
     os.remove(temp_path)
-    self.assertEquals(line_read, self._GetLine().encode('utf-8'))
+    self.assertEqual(line_read, self._GetLine().encode('utf-8'))
 
   def testStdOut(self):
     with interface.OutputFilehandle(self.preferred_encoding) as fh:

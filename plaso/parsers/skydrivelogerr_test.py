@@ -27,24 +27,24 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 19)
+    self.assertEqual(len(event_objects), 19)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-25 16:03:23.291')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-25 16:03:24.649')
-    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-08-01 21:27:44.124')
-    self.assertEquals(event_objects[18].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[18].timestamp, expected_timestamp)
 
     expected_detail = (
         u'StartLocalTime: 2013-07-25-180323.291 PID=0x8f4 TID=0x718 '
         u'ContinuedFrom=')
-    self.assertEquals(event_objects[0].detail, expected_detail)
+    self.assertEqual(event_objects[0].detail, expected_detail)
 
     expected_string = (
         u'Logging started. Version= 17.0.2011.0627 ({0:s})').format(
@@ -75,13 +75,13 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 19)
+    self.assertEqual(len(event_objects), 19)
 
     # TODO: check if this test passes because the encoding on my system
     # is UTF-8.
     expected_text = (
         u'No node found named Passport-Jméno-člena')
-    self.assertEquals(event_objects[3].text, expected_text)
+    self.assertEqual(event_objects[3].text, expected_text)
 
 
 if __name__ == '__main__':

@@ -26,17 +26,17 @@ class RunNtuserPlugintest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     # Timestamp is: 2012-04-05T17:03:53.992061+00:00
-    self.assertEquals(event_object.timestamp, 1333645433992061)
+    self.assertEqual(event_object.timestamp, 1333645433992061)
 
     expected_msg = (
         u'[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
@@ -63,17 +63,17 @@ class RunOnceNtuserPlugintest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     # Timestamp is: 2012-04-05T17:03:53.992061+00:00
-    self.assertEquals(event_object.timestamp, 1333645433992061)
+    self.assertEqual(event_object.timestamp, 1333645433992061)
 
     expected_msg = (
         u'[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
@@ -100,17 +100,17 @@ class RunSoftwarePluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 3)
+    self.assertEqual(len(event_objects), 3)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     # Timestamp is: 2011-09-16T20:57:09.067575+00:00
-    self.assertEquals(event_object.timestamp, 1316206629067575)
+    self.assertEqual(event_object.timestamp, 1316206629067575)
 
     expected_msg = (
         u'[{0:s}] VMware Tools: \"C:\\Program Files\\VMware\\VMware Tools'
@@ -120,7 +120,7 @@ class RunSoftwarePluginTest(test_lib.RegistryPluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    self.assertEquals(event_objects[1].timestamp, 1316206629067575)
+    self.assertEqual(event_objects[1].timestamp, 1316206629067575)
 
 
 class RunOnceSoftwarePluginTest(test_lib.RegistryPluginTestCase):
@@ -139,17 +139,17 @@ class RunOnceSoftwarePluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     # Timestamp is: 2012-04-06T14:07:27.750000+00:00
-    self.assertEquals(event_object.timestamp, 1333721247750000)
+    self.assertEqual(event_object.timestamp, 1333721247750000)
 
     expected_msg = (
         u'[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '

@@ -35,22 +35,22 @@ class BinaryTests(unittest.TestCase):
     with open(path, 'rb') as fh:
       # Read a null char terminated string.
       fh.seek(0x10)
-      self.assertEquals(binary.ReadUtf16Stream(fh), 'PING.EXE')
+      self.assertEqual(binary.ReadUtf16Stream(fh), 'PING.EXE')
 
       # Read a fixed size string.
       fh.seek(0x27f8)
       expected_string = u'\\DEVICE\\HARDDISKVOLUME'
       string = binary.ReadUtf16Stream(fh, byte_size=44)
-      self.assertEquals(string, expected_string)
+      self.assertEqual(string, expected_string)
 
       fh.seek(0x27f8)
       expected_string = u'\\DEVICE\\HARDDISKVOLUME1'
       string = binary.ReadUtf16Stream(fh, byte_size=46)
-      self.assertEquals(string, expected_string)
+      self.assertEqual(string, expected_string)
 
       # Read another null char terminated string.
       fh.seek(7236)
-      self.assertEquals(
+      self.assertEqual(
           binary.ReadUtf16Stream(fh),
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
@@ -61,26 +61,26 @@ class BinaryTests(unittest.TestCase):
       byte_stream = fh.read()
 
       # Read a null char terminated string.
-      self.assertEquals(
+      self.assertEqual(
           binary.Ut16StreamCopyToString(byte_stream[0x10:]), 'PING.EXE')
 
       # Read a fixed size string.
       expected_string = u'\\DEVICE\\HARDDISKVOLUME'
       string = binary.Ut16StreamCopyToString(
           byte_stream[0x27f8:], byte_stream_size=44)
-      self.assertEquals(string, expected_string)
+      self.assertEqual(string, expected_string)
 
       expected_string = u'\\DEVICE\\HARDDISKVOLUME1'
       string = binary.Ut16StreamCopyToString(
           byte_stream[0x27f8:], byte_stream_size=46)
-      self.assertEquals(string, expected_string)
+      self.assertEqual(string, expected_string)
 
       # Read another null char terminated string.
       expected_string = (
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
       string = binary.Ut16StreamCopyToString(byte_stream[7236:])
-      self.assertEquals(string, expected_string)
+      self.assertEqual(string, expected_string)
 
   def testArrayOfUt16StreamCopyToString(self):
     """Test copying an array of UTF-16 byte streams to strings."""
@@ -119,7 +119,7 @@ class BinaryTests(unittest.TestCase):
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WSHTCPIP.DLL',
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WSHIP6.DLL']
 
-      self.assertEquals(strings_array, expected_strings_array)
+      self.assertEqual(strings_array, expected_strings_array)
 
   def testArrayOfUt16StreamCopyToStringTable(self):
     """Test copying an array of UTF-16 byte streams to a string table."""
@@ -160,16 +160,16 @@ class BinaryTests(unittest.TestCase):
           2558: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WSHTCPIP.DLL',
           2666: u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\WSHIP6.DLL'}
 
-      self.assertEquals(string_table, expected_string_table)
+      self.assertEqual(string_table, expected_string_table)
 
   def testStringParsing(self):
     """Test parsing the ASCII string."""
-    self.assertEquals(binary.ReadUtf16(self._ascii_string_1), 'Whatis')
+    self.assertEqual(binary.ReadUtf16(self._ascii_string_1), 'Whatis')
 
-    self.assertEquals(binary.ReadUtf16(self._ascii_string_2), 'What is this?')
+    self.assertEqual(binary.ReadUtf16(self._ascii_string_2), 'What is this?')
 
     uni_text = binary.ReadUtf16(self._unicode_string_1)
-    self.assertEquals(uni_text, u'þrándur')
+    self.assertEqual(uni_text, u'þrándur')
 
   def testHex(self):
     """Test the hexadecimal representation of data."""
@@ -177,14 +177,14 @@ class BinaryTests(unittest.TestCase):
     hex_compare = (
         '\\x57\\x00\\x68\\x00\\x61\\x00\\x74\\x00\\x00\\x00\\x69\\x00'
         '\\x73\\x00')
-    self.assertEquals(hex_string_1, hex_compare)
+    self.assertEqual(hex_string_1, hex_compare)
 
     hex_string_2 = binary.HexifyBuffer(self._unicode_string_1)
     hex_compare_unicode = (
         '\\xff\\xfe\\xfe\\x00\\x72\\x00\\xe1\\x00\\x6e\\x00\\x64\\x00'
         '\\x75\\x00\\x72\\x00')
 
-    self.assertEquals(hex_string_2, hex_compare_unicode)
+    self.assertEqual(hex_string_2, hex_compare_unicode)
 
 
 if __name__ == '__main__':
