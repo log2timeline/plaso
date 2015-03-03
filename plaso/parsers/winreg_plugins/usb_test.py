@@ -4,10 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import event
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import usb
 
@@ -52,7 +50,7 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
         r'subkey_name: VID_0E0F&PID_0002 vendor: VID_0E0F')
 
     # Match UTC timestamp.
-    time = long(timelib_test.CopyStringToTimestamp(
+    time = long(timelib.Timestamp.CopyFromString(
         u'2012-04-07 10:31:37.625246'))
     self.assertEqual(event_object.timestamp, time)
 

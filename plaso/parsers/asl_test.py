@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import asl as asl_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import asl as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import asl
 from plaso.parsers import test_lib
 
@@ -28,7 +27,7 @@ class AslParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-25 09:45:35.705481')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

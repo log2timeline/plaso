@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import skydrivelog as skydrivelog_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import skydrivelog as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import skydrivelog
 from plaso.parsers import test_lib
 
@@ -29,17 +28,17 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(event_objects), 18)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-08-01 21:22:28.999')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-08-01 21:22:29.702')
     self.assertEqual(event_objects[1].timestamp, expected_timestamp)
     self.assertEqual(event_objects[2].timestamp, expected_timestamp)
     self.assertEqual(event_objects[3].timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-08-01 21:22:58.344')
     self.assertEqual(event_objects[4].timestamp, expected_timestamp)
     self.assertEqual(event_objects[5].timestamp, expected_timestamp)

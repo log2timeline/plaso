@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import lfu
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import cache
@@ -46,7 +45,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     values.append(winreg_test_lib.TestRegValue(
         'NumberOfInitialSessions', '2'.encode('utf_16_le'), 1, 243))
 
-    timestamp = timelib_test.CopyStringToTimestamp('2012-08-31 20:45:29')
+    timestamp = timelib.Timestamp.CopyFromString('2012-08-31 20:45:29')
     winreg_key = winreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
@@ -60,7 +59,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-31 20:45:29')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -107,7 +106,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
         'C:\\WINDOWS\\system32\\googleupdater.exe'.encode('utf_16_le'), 1,
         123))
 
-    timestamp = timelib_test.CopyStringToTimestamp('2012-08-31 20:45:29')
+    timestamp = timelib.Timestamp.CopyFromString('2012-08-31 20:45:29')
     winreg_key = winreg_test_lib.TestRegKey(key_path, timestamp, values, 153)
 
     event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
@@ -121,7 +120,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-31 20:45:29')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

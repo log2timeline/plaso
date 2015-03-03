@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import xchatlog as xchatlog_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import xchatlog as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import xchatlog
 
@@ -33,17 +32,17 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(event_objects), 9)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-12-31 21:11:55+01:00')
-    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-12-31 21:11:55+01:00')
+    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-12-31 23:00:00+01:00')
-    self.assertEqual(event_objects[7].timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-12-31 23:00:00+01:00')
+    self.assertEquals(event_objects[7].timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-12-31 23:59:00+01:00')
-    self.assertEqual(event_objects[8].timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-12-31 23:59:00+01:00')
+    self.assertEquals(event_objects[8].timestamp, expected_timestamp)
 
     expected_string = u'XChat start logging'
     self._TestGetMessageStrings(

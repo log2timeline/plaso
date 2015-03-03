@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import ls_quarantine as ls_quarantine_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import ls_quarantine as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import ls_quarantine
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -20,7 +19,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a LS Quarantine database file."""
-    test_file = self._GetTestFilePath(['quarantine.db'])
+    test_file = self._GetTestFilePath([u'quarantine.db'])
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -31,9 +30,9 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     # Examine a VLC event.
     event_object = event_objects[3]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-08 21:12:03')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-08 21:12:03')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.agent, u'Google Chrome')
     vlc_url = (
@@ -46,16 +45,16 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     # Examine a MacKeeper event.
     event_object = event_objects[9]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-12 19:28:58')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-12 19:28:58')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # Examine a SpeedTest event.
     event_object = event_objects[10]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-12 19:30:16')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-12 19:30:16')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     speedtest_message = (
         u'[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'

@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import bagmru
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -20,7 +19,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
     key_path = (
         u'\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
@@ -37,7 +36,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2009-08-04 15:19:16.997750')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -53,7 +52,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2009-08-04 15:19:10.669625')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -69,7 +68,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     event_object = event_objects[14]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2009-08-04 15:19:16.997750')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

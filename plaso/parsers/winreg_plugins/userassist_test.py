@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import userassist
 
@@ -38,7 +37,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2009-08-04 15:11:22.811067')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -75,7 +74,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2010-11-10 07:49:37.078067')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

@@ -6,7 +6,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import chrome_preferences as chrome_preferences_formatter
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import chrome_preferences
 
@@ -30,8 +30,8 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(
         event_object, chrome_preferences.ChromeExtensionInstallationEvent)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-11-05 18:31:24.154837')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-11-05 18:31:24.154837')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_id = u'mgndgikekgjfcpckkfioiadnlibdjbkf'

@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import chrome_cache as chrome_cache_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import chrome_cache as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import chrome_cache
 
@@ -28,7 +27,7 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2014-04-30 16:44:36.226091')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

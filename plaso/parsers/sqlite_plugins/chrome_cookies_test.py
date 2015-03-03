@@ -7,7 +7,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import chrome_cookies as chrome_cookies_formatter
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -21,7 +21,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Chrome cookie database file."""
-    test_file = self._GetTestFilePath(['cookies.db'])
+    test_file = self._GetTestFilePath([u'cookies.db'])
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file)
 
@@ -59,9 +59,9 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertFalse(event_object.httponly)
     self.assertEqual(event_object.url, u'http://www.linkedin.com/')
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-08-25 21:50:27.292367')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-08-25 21:50:27.292367')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://www.linkedin.com/ (leo_auth_token) Flags: [HTTP only] = False '
@@ -74,9 +74,9 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-04-01 13:54:34.949210')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-04-01 13:54:34.949210')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.url, u'http://rubiconproject.com/')
     self.assertEqual(event_object.path, u'/')
@@ -96,16 +96,16 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
         u'/2012/03/21/romney-tries-to-clean-up-etch-a-sketch-mess/')
     self.assertEqual(event_object.host, u'politicalticker.blogs.cnn.com')
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-03-22 01:47:21.012022')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-03-22 01:47:21.012022')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # Examine a cookie that has an autologin entry.
     event_object = event_objects[1425]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-04-01 13:52:56.189444')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-04-01 13:52:56.189444')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.host, u'marvel.com')
     self.assertEqual(event_object.cookie_name, u'autologin[timeout]')

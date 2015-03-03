@@ -21,7 +21,7 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = 'InstallHistory.plist'
+    plist_name = u'InstallHistory.plist'
     event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -51,7 +51,7 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
         u'com.apple.pkg.X11redirect, com.apple.pkg.OSInstall, '
         u'com.apple.pkg.update.compatibility.2013.001.')
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/item/ {}'.format(expected_desc)
+    expected_string = u'/item/ {0:s}'.format(expected_desc)
     expected_short = expected_string[:77] + u'...'
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short)

@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winjob as winjob_formatter
+from plaso.formatters import winjob as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import winjob
 
@@ -21,7 +20,7 @@ class WinJobTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['wintask.job'])
+    test_file = self._GetTestFilePath([u'wintask.job'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -50,8 +49,8 @@ class WinJobTest(test_lib.ParserTestCase):
         u'no Google software using it.')
     self.assertEqual(event_object.comment, comment_expected)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-08-24 12:42:00.112')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-08-24 12:42:00.112')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Parse second event. Same metadata; different timestamp event.
@@ -65,8 +64,8 @@ class WinJobTest(test_lib.ParserTestCase):
     description_expected = u'Scheduled To Start'
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-12 15:42:00')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-12 15:42:00')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
