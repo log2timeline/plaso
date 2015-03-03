@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import oxml as oxml_formatter
+from plaso.formatters import oxml as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import oxml
 from plaso.parsers import test_lib
 
@@ -29,10 +28,10 @@ class OXMLTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-11-07 23:29:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-11-07 23:29:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     event_object = event_objects[1]

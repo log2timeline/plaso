@@ -5,10 +5,9 @@
 import collections
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import firefox as firefox_formatter
+from plaso.formatters import firefox as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import firefox
 from plaso.parsers.sqlite_plugins import test_lib
@@ -24,7 +23,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessPriorTo24(self):
     """Tests the Process function on a Firefox History database file."""
     # This is probably version 23 but potentially an older version.
-    test_file = self._GetTestFilePath(['places.sqlite'])
+    test_file = self._GetTestFilePath([u'places.sqlite'])
     cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
@@ -45,9 +44,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.timestamp_desc,
                       eventdata.EventTimestamp.PAGE_VISITED)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-07-01 11:16:21.371935')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-07-01 11:16:21.371935')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = u'http://news.google.com/'
     self.assertEqual(event_object.url, expected_url)
@@ -59,7 +58,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         u'{0:s} ({1:s}) [count: 1] Host: news.google.com '
         u'(URL not typed directly) Transition: TYPED').format(
             expected_url, expected_title)
-    expected_short = u'URL: {}'.format(expected_url)
+    expected_short = u'URL: {0:s}'.format(expected_url)
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
@@ -71,21 +70,21 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.timestamp_desc,
                       eventdata.EventTimestamp.ADDED_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        u'2011-07-01 11:13:59.266344+00:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-07-01 11:13:59.266344')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # Check the second bookmark event.
     event_object = event_objects[2]
 
     self.assertEqual(event_object.data_type, 'firefox:places:bookmark')
 
-    self.assertEqual(event_object.timestamp_desc,
-                      eventdata.EventTimestamp.MODIFICATION_TIME)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        u'2011-07-01 11:13:59.267198+00:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-07-01 11:13:59.267198')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'place:folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder=TOOLBAR&'
@@ -117,9 +116,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        u'2011-07-01 11:13:59.267146+00:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-07-01 11:13:59.267146')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     # Check another bookmark annotation event.
     event_object = event_objects[184]
@@ -130,9 +129,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        u'2011-07-01 11:13:59.267605+00:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-07-01 11:13:59.267605')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = u'place:sort=14&type=6&maxResults=10&queryType=1'
     self.assertEqual(event_object.url, expected_url)
@@ -155,9 +154,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        u'2011-03-21 10:05:01.553774+00:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-03-21 10:05:01.553774')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
     # Check the last bookmark folder event.
     event_object = event_objects[201]
 
@@ -168,9 +167,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         event_object.timestamp_desc,
         eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        u'2011-07-01 11:14:11.766851+00:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-07-01 11:14:11.766851')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_title = u'Latest Headlines'
     self.assertEqual(event_object.title, expected_title)
@@ -181,7 +180,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
-    test_file = self._GetTestFilePath(['places_new.sqlite'])
+    test_file = self._GetTestFilePath([u'places_new.sqlite'])
     cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
@@ -204,9 +203,9 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     random_event = event_objects[10]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-10-30 21:57:11.281942')
-    self.assertEqual(random_event.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-10-30 21:57:11.281942')
+    self.assertEquals(random_event.timestamp, expected_timestamp)
 
     expected_short = u'URL: http://code.google.com/p/plaso'
     expected_msg = (
@@ -225,7 +224,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox Downloads database file."""
-    test_file = self._GetTestFilePath(['downloads.sqlite'])
+    test_file = self._GetTestFilePath([u'downloads.sqlite'])
     cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
@@ -242,9 +241,9 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.timestamp_desc,
                       eventdata.EventTimestamp.START_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        u'2013-07-18 18:59:59.312000+00:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-18 18:59:59.312000')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'https://plaso.googlecode.com/files/'

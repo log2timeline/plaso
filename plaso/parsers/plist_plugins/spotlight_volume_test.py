@@ -21,7 +21,7 @@ class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = 'VolumeConfiguration.plist'
+    plist_name = u'VolumeConfiguration.plist'
     event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -41,7 +41,7 @@ class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
     expected_desc = (u'Spotlight Volume 4D4BFEB5-7FE6-4033-AAAA-'
                      u'AAAABBBBCCCCDDDD (/.MobileBackups) activated.')
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/Stores/ {}'.format(expected_desc)
+    expected_string = u'/Stores/ {0:s}'.format(expected_desc)
     expected_short = expected_string[:77] + u'...'
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short)

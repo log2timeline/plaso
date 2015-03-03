@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import utmp as utmp_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import utmp as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import utmp
 
@@ -32,8 +31,8 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[2]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-12-13 14:45:09')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-12-13 14:45:09')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.user, u'LOGIN')
@@ -58,8 +57,8 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[12]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-12-18 22:46:56.305504')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-12-18 22:46:56.305504')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.user, u'moxilo')
@@ -91,8 +90,8 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-12-01 17:36:38.432935')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-12-01 17:36:38.432935')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.user, u'userA')

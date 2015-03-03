@@ -21,7 +21,7 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = 'com.apple.spotlight.plist'
+    plist_name = u'com.apple.spotlight.plist'
     event_queue_consumer = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -43,7 +43,7 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
     expected_desc = (u'Spotlight term searched "gr" associate to '
                      u'Grab (/Applications/Utilities/Grab.app)')
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/UserShortcuts/gr {}'.format(expected_desc)
+    expected_string = u'/UserShortcuts/gr {0:s}'.format(expected_desc)
     expected_short = expected_string[:77] + u'...'
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short)

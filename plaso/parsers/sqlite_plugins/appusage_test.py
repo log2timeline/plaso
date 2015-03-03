@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import appusage as appusage_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import appusage as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import test_lib
 from plaso.parsers.sqlite_plugins import appusage
 
@@ -20,7 +19,7 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath(['application_usage.sqlite'])
+    test_file = self._GetTestFilePath([u'application_usage.sqlite'])
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -31,9 +30,9 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
     # Check the first event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-05-07 18:52:02')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-05-07 18:52:02')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.application, u'/Applications/Safari.app')
     self.assertEqual(event_object.app_version, u'9537.75.14')

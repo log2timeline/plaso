@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import winrar
 from plaso.winreg import test_lib as winreg_test_lib
@@ -31,7 +30,7 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
         '1', 'C:\\Downloads\\plaso-static.rar'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=612))
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
 
     winreg_key = winreg_test_lib.TestRegKey(

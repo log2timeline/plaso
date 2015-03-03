@@ -215,8 +215,8 @@ class ParserTestCase(unittest.TestCase):
     message, message_short = (
         formatters_manager.FormattersManager.GetMessageStrings(
             formatter_mediator, event_object))
-    self.assertEquals(message, expected_message)
-    self.assertEquals(message_short, expected_message_short)
+    self.assertEqual(message, expected_message)
+    self.assertEqual(message_short, expected_message_short)
 
   def _TestGetSourceStrings(
       self, event_object, expected_source, expected_source_short):
@@ -235,5 +235,5 @@ class ParserTestCase(unittest.TestCase):
     # with GetMessageStrings.
     source_short, source = (
         formatters_manager.FormattersManager.GetSourceStrings(event_object))
-    self.assertEquals(source, expected_source)
-    self.assertEquals(source_short, expected_source_short)
+    self.assertEqual(source, expected_source)
+    self.assertEqual(source_short, expected_source_short)

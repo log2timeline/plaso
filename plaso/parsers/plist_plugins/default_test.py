@@ -5,9 +5,8 @@
 import datetime
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import plist as plist_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import plist as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.plist_plugins import default
 from plaso.parsers.plist_plugins import test_lib
 
@@ -37,11 +36,11 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-11-02 01:21:38.997672')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.root, u'/DE-00-AD-00-BE-EF')
-    self.assertEqual(event_object.key, u'LastUsed')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-11-02 01:21:38.997672')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(event_object.root, u'/DE-00-AD-00-BE-EF')
+    self.assertEquals(event_object.key, u'LastUsed')
 
     expected_string = (
         u'/DE-00-AD-00-BE-EF/LastUsed')
@@ -84,11 +83,11 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-04-07 17:56:53.524275')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
-    self.assertEqual(event_object.key, u'LastNameUpdate')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-04-07 17:56:53.524275')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
+    self.assertEquals(event_object.key, u'LastNameUpdate')
 
 
 if __name__ == '__main__':

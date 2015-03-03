@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winevt as winevt_formatter
+from plaso.formatters import winevt as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import winevt
 
@@ -64,7 +63,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-07-27 06:41:47')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -72,7 +71,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-07-27 06:41:47')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import recycler as recycler_formatter
+from plaso.formatters import recycler as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import recycler
 from plaso.parsers import test_lib
 
@@ -32,7 +31,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.orig_filename, (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip'))
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-12 20:49:58.633')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(event_object.file_size, 724919)
@@ -64,7 +63,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2004-08-25 16:18:25.237')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(event_object.timestamp_desc,

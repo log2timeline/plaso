@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winlnk as winlnk_formatter
+from plaso.formatters import winlnk as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import custom_destinations
 
@@ -32,27 +31,27 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # The last accessed timestamp.
     event_object = event_objects[105]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-13 23:55:56.248103')
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-13 23:55:56.248103')
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The creation timestamp.
     event_object = event_objects[106]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-13 23:55:56.248103')
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-13 23:55:56.248103')
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
     event_object = event_objects[107]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2009-07-14 01:39:11.388000')
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2009-07-14 01:39:11.388000')
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -79,9 +78,9 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # A shell item event object.
     event_object = event_objects[16]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2010-11-10 07:41:04')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2010-11-10 07:41:04')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: System32 '

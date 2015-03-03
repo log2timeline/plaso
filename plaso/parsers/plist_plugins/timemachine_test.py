@@ -21,7 +21,7 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = 'com.apple.TimeMachine.plist'
+    plist_name = u'com.apple.TimeMachine.plist'
     event_object_generator = self._ParsePlistFileWithPlugin(
         self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
@@ -45,7 +45,7 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
         u'TimeMachine Backup in BackUpFast '
         u'(5B33C22B-A4A1-4024-A2F5-C9979C4AAAAA)')
     self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/Destinations/item/SnapshotDates {}'.format(
+    expected_string = u'/Destinations/item/SnapshotDates {0:s}'.format(
         expected_desc)
     expected_short = expected_string[:77] + u'...'
     self._TestGetMessageStrings(

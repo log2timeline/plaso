@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import olecf as olecf_formatter
+from plaso.formatters import olecf as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import automatic_destinations
 from plaso.parsers.olecf_plugins import test_lib
 
@@ -37,9 +36,9 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-04-01 13:52:38.997538')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-04-01 13:52:38.997538')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Entry: 11 '
@@ -62,9 +61,9 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
     # Check a WinLnkLinkEvent.
     event_object = event_objects[1]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2010-11-10 07:51:16.749125')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2010-11-10 07:51:16.749125')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'File size: 3545 '

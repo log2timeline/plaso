@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import ccleaner
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -23,7 +22,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath(['NTUSER-CCLEANER.DAT'])
+    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-CCLEANER.DAT'])
     key_path = u'\\Software\\Piriform\\CCleaner'
     winreg_key = self._GetKeyFromFileEntry(test_file_entry, key_path)
     event_queue_consumer = self._ParseKeyWithPlugin(
@@ -39,7 +38,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-07-13 10:03:14')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

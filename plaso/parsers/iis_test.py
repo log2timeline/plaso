@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import iis as iis_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import iis as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import iis
 
@@ -23,7 +22,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['iis.log'])
+    test_file = self._GetTestFilePath([u'iis.log'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -31,9 +30,9 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-30 00:00:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-30 00:00:00')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.source_ip, u'10.10.10.100')
     self.assertEqual(event_object.dest_ip, u'10.10.10.100')
@@ -53,9 +52,9 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[5]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-07-30 00:00:05')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-07-30 00:00:05')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.http_method, 'GET')
     self.assertEqual(event_object.http_status, 200)

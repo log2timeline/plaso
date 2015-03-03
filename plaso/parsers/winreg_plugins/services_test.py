@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import services
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -41,7 +40,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     values.append(winreg_test_lib.TestRegValue(
         'ImagePath', 'C:\\Dell\\testdriver.sys'.encode('utf_16_le'), 1, 200))
 
-    timestamp = timelib_test.CopyStringToTimestamp(
+    timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
@@ -57,7 +56,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -116,7 +115,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-06 20:43:27.639075')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -130,7 +129,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = mc_task_manager_event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-09-16 20:49:16.877415')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -142,7 +141,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = rdp_video_miniport_event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-09-17 13:37:59.347157')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
