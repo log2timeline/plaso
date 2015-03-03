@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winprefetch as winprefetch_formatter
+from plaso.formatters import winprefetch as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import test_lib
 from plaso.parsers import winprefetch
 
@@ -30,8 +29,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The prefetch last run event.
     event_object = event_objects[1]
 
-    self.assertEqual(event_object.version, 17)
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    self.assertEquals(event_object.version, 17)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-10 10:11:49.281250')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -85,7 +84,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The volume creation event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-10 10:19:46.234375')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -114,7 +113,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_object = event_objects[1]
     self.assertEqual(event_object.version, 23)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-06 19:00:55.932955')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -143,7 +142,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The volume creation event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 17:37:26.484375')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -161,7 +160,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_object = event_objects[5]
     self.assertEqual(event_object.version, 23)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-15 21:17:39.807996')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -198,7 +197,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The volume creation event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 17:37:26.484375')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -227,7 +226,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_object = event_objects[1]
     self.assertEqual(event_object.version, 26)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:40:09.037833')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -238,7 +237,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The prefetch previous last run event.
     event_object = event_objects[2]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:28:09.010356')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
@@ -352,7 +351,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The volume creation event.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:57:26.146547')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(

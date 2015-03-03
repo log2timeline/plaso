@@ -6,8 +6,8 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import skydrivelogerr as skydrivelogerr_formatter
-from plaso.lib import timelib_test
-from plaso.parsers import skydrivelogerr as skydrivelogerr_parser
+from plaso.lib import timelib
+from plaso.parsers import skydrivelogerr
 from plaso.parsers import test_lib
 
 
@@ -19,7 +19,7 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._parser = skydrivelogerr_parser.SkyDriveLogErrorParser()
+    self._parser = skydrivelogerr.SkyDriveLogErrorParser()
 
   def testParse(self):
     """Tests the Parse function."""
@@ -29,15 +29,15 @@ class SkyDriveLogErrorUnitTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(event_objects), 19)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-07-25 16:03:23.291')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-07-25 16:03:24.649')
     self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-08-01 21:27:44.124')
     self.assertEqual(event_objects[18].timestamp, expected_timestamp)
 

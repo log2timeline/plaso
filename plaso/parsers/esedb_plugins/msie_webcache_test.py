@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import msie_webcache as msie_webcache_formatter
+from plaso.formatters import msie_webcache as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import msie_webcache
 from plaso.parsers.esedb_plugins import test_lib
 
@@ -21,7 +20,7 @@ class MsieWebCacheEseDbPluginTest(test_lib.EseDbPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_name = 'WebCacheV01.dat'
+    test_file_name = u'WebCacheV01.dat'
     event_queue_consumer = self._ParseEseDbFileWithPlugin(
         [test_file_name], self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
@@ -32,10 +31,10 @@ class MsieWebCacheEseDbPluginTest(test_lib.EseDbPluginTestCase):
 
     self.assertEqual(event_object.container_identifier, 1)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-05-12 07:30:25.486198')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-05-12 07:30:25.486198')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
     expected_msg = (

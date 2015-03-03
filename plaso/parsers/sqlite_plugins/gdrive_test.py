@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import gdrive as gdrive_formatter
+from plaso.formatters import gdrive as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import test_lib
@@ -22,7 +21,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Google Drive database file."""
-    test_file = self._GetTestFilePath(['snapshot.db'])
+    test_file = self._GetTestFilePath([u'snapshot.db'])
     cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache=cache)
@@ -53,13 +52,13 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
         u'leyndarm\xe1l/S\xfdnileiki - \xd6rverpi.gdoc')
     self.assertEqual(event_object.path, file_path)
 
-    expected_msg = u'File Path: {} Size: 184'.format(file_path)
+    expected_msg = u'File Path: {0:s} Size: 184'.format(file_path)
 
     self._TestGetMessageStrings(event_object, expected_msg, file_path)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-01-28 00:11:25')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-01-28 00:11:25')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     event_object = cloud_entries[16]
 
@@ -80,9 +79,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-01-28 00:12:27')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-01-28 00:12:27')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

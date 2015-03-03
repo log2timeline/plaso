@@ -132,7 +132,7 @@ class HachoirParser(interface.BaseParser):
 
       key2, _, value2 = value.partition(': ')
       if key2 == 'LastPrinted' and value2 != 'False':
-        date_object = timelib.StringToDatetime(
+        date_object = timelib.Timestamp.FromTimeString(
             value2, timezone=parser_mediator.timezone)
         if isinstance(date_object, datetime.datetime):
           extracted_events.append((date_object, key2))

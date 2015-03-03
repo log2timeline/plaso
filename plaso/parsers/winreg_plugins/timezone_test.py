@@ -4,7 +4,8 @@
 
 import unittest
 
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.parsers.winreg_plugins import timezone as winreg_timezone
 from plaso.winreg import test_lib as winreg_test_lib
@@ -75,7 +76,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(len(event_objects), 1)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-01-30 10:47:57.000000')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
@@ -112,7 +113,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(len(event_objects), 1)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-03-11 07:00:00.000642')
     self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 

@@ -6,7 +6,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import firefox_cookies as firefox_cookies_formatter
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import firefox_cookies
 from plaso.parsers.sqlite_plugins import test_lib
 
@@ -20,7 +20,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
-    test_file = self._GetTestFilePath(['firefox_cookies.sqlite'])
+    test_file = self._GetTestFilePath([u'firefox_cookies.sqlite'])
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file)
 
@@ -53,16 +53,15 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Check one greenqloud.com event
     event_object = event_objects[32]
-    self.assertEqual(
-        event_object.timestamp_desc, 'Cookie Expires')
-    self.assertEqual(event_object.host, u's.greenqloud.com')
-    self.assertEqual(event_object.cookie_name, u'__utma')
+    self.assertEquals(event_object.timestamp_desc, u'Cookie Expires')
+    self.assertEquals(event_object.host, u's.greenqloud.com')
+    self.assertEquals(event_object.cookie_name, u'__utma')
     self.assertFalse(event_object.httponly)
     self.assertEqual(event_object.url, u'http://s.greenqloud.com/')
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2015-10-30 21:56:03')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2015-10-30 21:56:03')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://s.greenqloud.com/ (__utma) Flags: [HTTP only]: False')
@@ -74,9 +73,9 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, u'Cookie Expires')
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-11-29 21:56:04')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        U'2013-11-29 21:56:04')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.url, u'http://pubmatic.com/')
     self.assertEqual(event_object.path, u'/')

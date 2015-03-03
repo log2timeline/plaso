@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import msie_zones
 from plaso.parsers.winreg_plugins import test_lib
 
@@ -17,7 +16,7 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._plugin = msie_zones.MsieZoneSettingsSoftwareZonesPlugin()
-    self._test_file = self._GetTestFilePath(['SOFTWARE'])
+    self._test_file = self._GetTestFilePath([u'SOFTWARE'])
 
   def testProcessForZone(self):
     """Tests the Process function."""
@@ -34,7 +33,7 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-08-28 21:32:44.937675')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -161,7 +160,7 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-08-28 21:32:44.937675')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -293,7 +292,7 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-09-16 21:12:40.145514')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -339,7 +338,7 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-09-16 21:12:40.145514')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

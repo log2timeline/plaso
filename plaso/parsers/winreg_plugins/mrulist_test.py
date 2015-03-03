@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulist
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import test_lib as winreg_test_lib
@@ -37,7 +36,8 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
         'c', 'C:/looks_legit.exe'.encode('utf_16_le'),
         winreg_test_lib.TestRegValue.REG_SZ, offset=1001))
 
-    timestamp = timelib_test.CopyStringToTimestamp('2012-08-28 09:23:49.002031')
+    timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
 
@@ -52,9 +52,9 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-08-28 09:23:49.002031')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -103,7 +103,8 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     values.append(winreg_test_lib.TestRegValue(
         'a', data, winreg_test_lib.TestRegValue.REG_BINARY, offset=612))
 
-    timestamp = timelib_test.CopyStringToTimestamp('2012-08-28 09:23:49.002031')
+    timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
     winreg_key = winreg_test_lib.TestRegKey(
         key_path, timestamp, values, 1456)
 
@@ -119,9 +120,9 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2012-08-28 09:23:49.002031')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-08-28 09:23:49.002031')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -136,9 +137,9 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # A shell item event object.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-01-14 12:03:52')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-01-14 12:03:52')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: Winnt '

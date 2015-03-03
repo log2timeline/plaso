@@ -4,9 +4,8 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import winreg as winreg_formatter
-from plaso.lib import timelib_test
+from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulistex
 from plaso.parsers.winreg_plugins import test_lib
 from plaso.winreg import interface as winreg_interface
@@ -54,7 +53,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-08-28 09:23:49.002031')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -98,7 +97,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2011-08-28 22:48:28.159308')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -119,7 +118,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # A shell item event object.
     event_object = event_objects[0]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-03-08 22:16:02')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -164,7 +163,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-01 13:52:39.113741')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -246,7 +245,7 @@ class TestMRUListExStringAndShellItemListPlugin(
     # and not through the parser.
     self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-01 13:52:38.966290')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 

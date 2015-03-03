@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import olecf as olecf_formatter
+from plaso.formatters import olecf as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import default
 from plaso.parsers.olecf_plugins import test_lib
 
@@ -36,9 +35,9 @@ class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-05-16 02:29:49.795')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-05-16 02:29:49.795')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_string = (
         u'Name: Root Entry')
@@ -51,9 +50,9 @@ class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
     expected_string = u'Name: MsoDataStore'
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2013-05-16 02:29:49.704')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-05-16 02:29:49.704')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

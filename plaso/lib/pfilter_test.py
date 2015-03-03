@@ -9,7 +9,7 @@ from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import objectfilter
 from plaso.lib import pfilter
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 
 import pytz
 
@@ -59,8 +59,8 @@ class PFilterTest(unittest.TestCase):
     """
     event_object = event.EventObject()
     event_object.data_type = 'Weirdo:Made up Source:Last Written'
-    event_object.timestamp = timelib_test.CopyStringToTimestamp(
-        '2015-11-18 01:15:43')
+    event_object.timestamp = timelib.Timestamp.CopyFromString(
+        u'2015-11-18 01:15:43')
     event_object.timestamp_desc = 'Last Written'
     event_object.text_short = 'This description is different than the long one.'
     event_object.text = (

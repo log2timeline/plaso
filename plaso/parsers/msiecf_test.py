@@ -4,10 +4,9 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import msiecf as msiecf_formatter
+from plaso.formatters import msiecf as _  # pylint: disable=unused-import
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import msiecf
 from plaso.parsers import test_lib
 
@@ -21,7 +20,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['index.dat'])
+    test_file = self._GetTestFilePath([u'index.dat'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -52,34 +51,34 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.url, expected_location)
     self.assertEqual(event_object.cache_directory_index, -2)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-06-23 18:02:10.066')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-06-23 18:02:10.066')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_objects[9]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-06-23 18:02:10.066')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-06-23 18:02:10.066')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_objects[10]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-06-29 17:55:02')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-06-29 17:55:02')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
 
     event_object = event_objects[11]
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2011-06-23 18:02:12')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-06-23 18:02:12')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEquals(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_CHECKED_TIME)
 
     expected_msg = (

@@ -7,7 +7,7 @@ import unittest
 # pylint: disable=unused-import
 from plaso.formatters import chrome_extension_activity as chrome_formatter
 from plaso.lib import eventdata
-from plaso.lib import timelib_test
+from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
 from plaso.parsers.sqlite_plugins import test_lib
@@ -22,7 +22,7 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Chrome extension activity database."""
-    test_file = self._GetTestFilePath(['Extension Activity'])
+    test_file = self._GetTestFilePath([u'Extension Activity'])
     cache = sqlite.SQLiteCache()
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(
         self._plugin, test_file, cache)
@@ -35,9 +35,9 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.UNKNOWN)
 
-    expected_timestamp = timelib_test.CopyStringToTimestamp(
-        '2014-11-25 21:08:23.698737')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-11-25 21:08:23.698737')
+    self.assertEquals(event_object.timestamp, expected_timestamp)
 
     expected_extension_id = u'ognampngfcbddbfemdapefohjiobgbdl'
     self.assertEqual(event_object.extension_id, expected_extension_id)
