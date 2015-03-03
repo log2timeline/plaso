@@ -71,7 +71,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     test_paths_for_userassist = set(
         front_end._GetRegistryFilePaths(u'userassist'))
 
-    self.assertEquals(hive_paths_for_usersassist, test_paths_for_userassist)
+    self.assertEqual(hive_paths_for_usersassist, test_paths_for_userassist)
 
     # Set the path to the system registry.
     preg.PregCache.knowledge_base_object.pre_obj.sysregistry = u'C:/Windows/Foo'
@@ -104,8 +104,8 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     registry_key_path = u'\\Software\\JavaSoft\\Java Update\\Policy'
     magic_obj.ChangeDirectory(registry_key_path)
     registry_key = preg.GetCurrentKey()
-    self.assertEquals(registry_key.path, registry_key_path)
-    self.assertEquals(
+    self.assertEqual(registry_key.path, registry_key_path)
+    self.assertEqual(
         hive_helper.GetCurrentRegistryKey().path, registry_key_path)
 
     # List the directory content.
@@ -116,7 +116,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
         u'-r-xr-xr-x                            [REG_SZ]  LastUpdateBeginTime',
         u'-r-xr-xr-x                            [REG_SZ]  LastUpdateFinishTime',
         u'-r-xr-xr-x                            [REG_SZ]  VersionXmlURL\n']
-    self.assertEquals(output_string.GetValue(), u'\n'.join(expected_strings))
+    self.assertEqual(output_string.GetValue(), u'\n'.join(expected_strings))
 
     # Parse the current key.
     output_string = test_lib.StringIOOutputWriter()
@@ -145,7 +145,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer'
         u'\\UserAssist\\{5E6AB780-7743-11CF-A12B-00AA004AE837}\n')
 
-    self.assertEquals(current_directory, output_string.GetValue())
+    self.assertEqual(current_directory, output_string.GetValue())
 
   def testParseHive(self):
     """Test the ParseHive function."""
@@ -274,16 +274,16 @@ class PregFrontendTest(test_lib.FrontendTestCase):
 
     registry_key = preg.GetCurrentKey()
     hive_helper = preg.PregCache.hive_storage.loaded_hive
-    self.assertEquals(registry_key.path, registry_key_path)
-    self.assertEquals(
+    self.assertEqual(registry_key.path, registry_key_path)
+    self.assertEqual(
         hive_helper.GetCurrentRegistryKey().path, registry_key_path)
 
     # Get a value out of the currently loaded Registry key.
     value = preg.GetValue(u'VersionXmlURL')
-    self.assertEquals(value.name, u'VersionXmlURL')
+    self.assertEqual(value.name, u'VersionXmlURL')
 
     value_data = preg.GetValueData(u'VersionXmlURL')
-    self.assertEquals(
+    self.assertEqual(
         value_data,
         u'http://javadl.sun.com/webapps/download/AutoDL?BundleId=33742')
 
@@ -295,7 +295,7 @@ class PregFrontendTest(test_lib.FrontendTestCase):
     # Change back to the root key.
     magic_obj.ChangeDirectory(u'')
     registry_key = preg.GetCurrentKey()
-    self.assertEquals(registry_key.path, u'\\')
+    self.assertEqual(registry_key.path, u'\\')
 
     # TODO: Add tests for formatting of events, eg: parse a key, get the event
     # objects and test the formatting of said event object.

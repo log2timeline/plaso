@@ -31,7 +31,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #	Number of recovered records : 437
     #	Log type                    : System
 
-    self.assertEquals(len(event_objects), (6063 + 437) * 2)
+    self.assertEqual(len(event_objects), (6063 + 437) * 2)
 
     # Event number      : 1392
     # Creation time     : Jul 27, 2011 06:41:47 UTC
@@ -47,36 +47,36 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #                     security. Please ensure that you can contact the
     #                     server that authenticated you.\r\n (0xc0000388)"
     event_object = event_objects[1]
-    self.assertEquals(event_object.record_number, 1392)
-    self.assertEquals(event_object.event_type, 2)
-    self.assertEquals(event_object.computer_name, u'WKS-WINXP32BIT')
-    self.assertEquals(event_object.source_name, u'LSASRV')
-    self.assertEquals(event_object.event_category, 3)
-    self.assertEquals(event_object.event_identifier, 40961)
-    self.assertEquals(event_object.strings[0], u'cifs/CONTROLLER')
+    self.assertEqual(event_object.record_number, 1392)
+    self.assertEqual(event_object.event_type, 2)
+    self.assertEqual(event_object.computer_name, u'WKS-WINXP32BIT')
+    self.assertEqual(event_object.source_name, u'LSASRV')
+    self.assertEqual(event_object.event_category, 3)
+    self.assertEqual(event_object.event_identifier, 40961)
+    self.assertEqual(event_object.strings[0], u'cifs/CONTROLLER')
 
     expected_string = (
         u'"The system detected a possible attempt to compromise security. '
         u'Please ensure that you can contact the server that authenticated you.'
         u'\r\n (0xc0000388)"')
 
-    self.assertEquals(event_object.strings[1], expected_string)
+    self.assertEqual(event_object.strings[1], expected_string)
 
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-07-27 06:41:47')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     event_object = event_objects[1]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-07-27 06:41:47')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_msg = (

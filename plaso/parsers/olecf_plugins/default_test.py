@@ -26,19 +26,19 @@ class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
         test_file, self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
 
     # Check the Root Entry event.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.name, u'Root Entry')
+    self.assertEqual(event_object.name, u'Root Entry')
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-05-16 02:29:49.795')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_string = (
         u'Name: Root Entry')
@@ -53,7 +53,7 @@ class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-05-16 02:29:49.704')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

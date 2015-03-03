@@ -57,12 +57,12 @@ class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
     self.formatter.WriteHeader()
 
     header = self.output.getvalue()
-    self.assertEquals(header, expected_header)
+    self.assertEqual(header, expected_header)
 
     self.formatter.WriteFooter()
 
     footer = self.output.getvalue()
-    self.assertEquals(footer, expected_footer)
+    self.assertEqual(footer, expected_footer)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
@@ -80,7 +80,7 @@ class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
         '"inode": 12345678}},\n').format(self.event_object.uuid)
 
     event_body = self.output.getvalue()
-    self.assertEquals(event_body, expected_event_body)
+    self.assertEqual(event_body, expected_event_body)
 
 
 if __name__ == '__main__':

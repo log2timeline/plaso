@@ -27,7 +27,7 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
         self._parser, self._plugin, [test_file_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 14)
+    self.assertEqual(len(event_objects), 14)
 
     paired_event_objects = []
     timestamps = []
@@ -37,7 +37,7 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
         paired_event_objects.append(event_object)
 
     # Ensure all 14 events and times from the plist are parsed correctly.
-    self.assertEquals(len(timestamps), 14)
+    self.assertEqual(len(timestamps), 14)
 
     expected_timestamps = frozenset([
         1341957896010535, 1341957896010535, 1350666385239661, 1350666391557044,
@@ -48,7 +48,7 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
     self.assertTrue(set(timestamps) == expected_timestamps)
 
     # Ensure two paired devices are matched.
-    self.assertEquals(len(paired_event_objects), 2)
+    self.assertEqual(len(paired_event_objects), 2)
 
     # One of the paired event object descriptions should contain the string:
     # Paired:True Name:Apple Magic Trackpad 2.

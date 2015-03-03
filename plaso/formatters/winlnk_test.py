@@ -27,7 +27,7 @@ class WinLnkLinkFormatterTest(unittest.TestCase):
         u'link_target'])
 
     attribute_names = event_formatter.GetFormatStringAttributeNames()
-    self.assertEquals(sorted(attribute_names), expected_attribute_names)
+    self.assertEqual(sorted(attribute_names), expected_attribute_names)
 
   # TODO: add test for GetMessages.
 

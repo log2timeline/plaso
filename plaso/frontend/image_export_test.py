@@ -55,7 +55,7 @@ class DateTimeFileEntryFilter(test_lib.FrontendTestCase):
     date_filter = image_export.DateTimeFileEntryFilter()
 
     # When no date time ranges are specified the filter returns None.
-    self.assertEquals(date_filter.Matches(file_entry), None)
+    self.assertEqual(date_filter.Matches(file_entry), None)
 
     # Add a date to the date filter.
     date_filter.AddDateTimeRange(
@@ -107,7 +107,7 @@ class DateTimeFileEntryFilter(test_lib.FrontendTestCase):
 
     self.assertFalse(date_filter.Matches(file_entry))
     # pylint: disable=protected-access
-    self.assertEquals(len(date_filter._date_time_ranges), 3)
+    self.assertEqual(len(date_filter._date_time_ranges), 3)
 
 
 class ImageExportFrontendTest(test_lib.FrontendTestCase):
@@ -166,7 +166,7 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     extracted_files = self._RecursiveList(self._temp_directory)
 
-    self.assertEquals(sorted(extracted_files), expected_extracted_files)
+    self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourceExtractWithExtensionsFilter(self):
     """Tests extract with an extensions filter."""
@@ -186,7 +186,7 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     extracted_files = self._RecursiveList(self._temp_directory)
 
-    self.assertEquals(sorted(extracted_files), expected_extracted_files)
+    self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourceExtractWithNamesFilter(self):
     """Tests extract with a names filter."""
@@ -207,7 +207,7 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     extracted_files = self._RecursiveList(self._temp_directory)
 
-    self.assertEquals(sorted(extracted_files), expected_extracted_files)
+    self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourceExtractWithFilter(self):
     """Tests extract with a filter file."""
@@ -233,7 +233,7 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     extracted_files = self._RecursiveList(self._temp_directory)
 
-    self.assertEquals(sorted(extracted_files), expected_extracted_files)
+    self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourceExtractWithSignaturesFilter(self):
     """Tests extract with a signatures filter."""
@@ -255,7 +255,7 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     extracted_files = self._RecursiveList(self._temp_directory)
 
-    self.assertEquals(sorted(extracted_files), expected_extracted_files)
+    self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
 
 if __name__ == '__main__':

@@ -26,17 +26,17 @@ class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The sqlite database contains 44 events.
-    self.assertEquals(len(event_objects), 44)
+    self.assertEqual(len(event_objects), 44)
 
     # Check the first event.
     event_object = event_objects[0]
 
     expected_subject_uri = u'application://rhythmbox.desktop'
-    self.assertEquals(event_object.subject_uri, expected_subject_uri)
+    self.assertEqual(event_object.subject_uri, expected_subject_uri)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-10-22 08:53:19.477')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = u'application://rhythmbox.desktop'
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg)

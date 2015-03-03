@@ -28,15 +28,15 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # 18 entries in timeline.
-    self.assertEquals(len(event_objects), 18)
+    self.assertEqual(len(event_objects), 18)
 
     event_object = event_objects[8]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-08 17:31:00')
-    self.assertEquals(event_objects[10].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[10].timestamp, expected_timestamp)
     expected_url = u'http://netverslun.sci-mx.is/aminosyrur'
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_string = (
         u'Visited: {0:s} (Am\xedn\xf3s\xfdrur ) Visit Count: 1').format(

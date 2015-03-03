@@ -71,9 +71,9 @@ class PlasmTest(test_lib.FrontendTestCase):
   def testTagParsing(self):
     """Test if plasm can parse Tagging Input files."""
     tags = plasm.ParseTaggingFile(self._tag_input_filename)
-    self.assertEquals(len(tags), 1)
+    self.assertEqual(len(tags), 1)
     self.assertTrue('Test Tag' in tags)
-    self.assertEquals(len(tags['Test Tag']), 2)
+    self.assertEqual(len(tags['Test Tag']), 2)
 
   def testInvalidTagParsing(self):
     """Test what happens when Tagging Input files contain invalid conditions."""
@@ -85,9 +85,9 @@ class PlasmTest(test_lib.FrontendTestCase):
     tag_input_file.close()
 
     tags = plasm.ParseTaggingFile(tag_input_filename)
-    self.assertEquals(len(tags), 1)
+    self.assertEqual(len(tags), 1)
     self.assertTrue('Invalid Tag' in tags)
-    self.assertEquals(len(tags['Invalid Tag']), 0)
+    self.assertEqual(len(tags['Invalid Tag']), 0)
 
   def testMixedValidityTagParsing(self):
     """Tagging Input file contains a mix of valid and invalid conditions."""
@@ -100,16 +100,16 @@ class PlasmTest(test_lib.FrontendTestCase):
     tag_input_file.close()
 
     tags = plasm.ParseTaggingFile(tag_input_filename)
-    self.assertEquals(len(tags), 1)
+    self.assertEqual(len(tags), 1)
     self.assertTrue('Semivalid Tag' in tags)
-    self.assertEquals(len(tags['Semivalid Tag']), 1)
+    self.assertEqual(len(tags['Semivalid Tag']), 1)
 
   def testIteratingOverPlasoStore(self):
     """Tests the plaso storage iterator"""
     counter = 0
     for _ in plasm.EventObjectGenerator(self._storage_file, quiet=True):
       counter += 1
-    self.assertEquals(counter, 5)
+    self.assertEqual(counter, 5)
 
     self._storage_file.Close()
 
@@ -120,7 +120,7 @@ class PlasmTest(test_lib.FrontendTestCase):
     counter = 0
     for _ in plasm.EventObjectGenerator(self._storage_file, quiet=False):
       counter += 1
-    self.assertEquals(counter, 5)
+    self.assertEqual(counter, 5)
 
   def testTaggingEngine(self):
     """Tests the Tagging engine's functionality."""
@@ -134,8 +134,8 @@ class PlasmTest(test_lib.FrontendTestCase):
     count = 0
     for tag_event in tagging:
       count += 1
-      self.assertEquals(tag_event.tags, ['Test Tag'])
-    self.assertEquals(count, 3)
+      self.assertEqual(tag_event.tags, ['Test Tag'])
+    self.assertEqual(count, 3)
 
   def testGroupingEngineUntagged(self):
     """Grouping engine should do nothing if dealing with untagged storage."""
@@ -170,8 +170,8 @@ class PlasmTest(test_lib.FrontendTestCase):
     count = 0
     for group_event in groups:
       count += 1
-      self.assertEquals(group_event.category, 'Test Tag')
-    self.assertEquals(count, 2)
+      self.assertEqual(group_event.category, 'Test Tag')
+    self.assertEqual(count, 2)
 
     storage_file.Close()
 

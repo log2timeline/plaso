@@ -34,7 +34,7 @@ class LinuxHostnameTest(test_lib.PreprocessPluginTest):
     plugin = linux.LinuxHostname()
     plugin.Run(self._searcher, knowledge_base_object)
 
-    self.assertEquals(knowledge_base_object.hostname, u'plaso.kiddaland.net')
+    self.assertEqual(knowledge_base_object.hostname, u'plaso.kiddaland.net')
 
 
 class LinuxUsernamesTest(test_lib.PreprocessPluginTest):
@@ -72,13 +72,13 @@ class LinuxUsernamesTest(test_lib.PreprocessPluginTest):
     plugin.Run(self._searcher, knowledge_base_object)
 
     users = knowledge_base_object.GetValue('users')
-    self.assertEquals(len(users), 13)
+    self.assertEqual(len(users), 13)
 
-    self.assertEquals(users[11].get('uid', None), u'14')
-    self.assertEquals(users[11].get('gid', None), u'50')
-    self.assertEquals(users[11].get('name', None), u'ftp')
-    self.assertEquals(users[11].get('path', None), u'/var/ftp')
-    self.assertEquals(users[11].get('shell', None), u'/sbin/nologin')
+    self.assertEqual(users[11].get('uid', None), u'14')
+    self.assertEqual(users[11].get('gid', None), u'50')
+    self.assertEqual(users[11].get('name', None), u'ftp')
+    self.assertEqual(users[11].get('path', None), u'/var/ftp')
+    self.assertEqual(users[11].get('shell', None), u'/sbin/nologin')
 
 
 if __name__ == '__main__':

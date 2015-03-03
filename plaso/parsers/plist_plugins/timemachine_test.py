@@ -26,7 +26,7 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
         self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
-    self.assertEquals(len(event_objects), 13)
+    self.assertEqual(len(event_objects), 13)
 
     timestamps = []
     for event_object in event_objects:

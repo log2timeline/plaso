@@ -33,7 +33,7 @@ class WinevtResourcesSqlite3DatabaseReaderTest(unittest.TestCase):
 
     message_string = database_reader.GetMessage(
         u'Microsoft-Windows-Dhcp-Client', 0x00000409, 0xb00003ed)
-    self.assertEquals(message_string, expected_message_string)
+    self.assertEqual(message_string, expected_message_string)
 
     database_reader.Close()
 

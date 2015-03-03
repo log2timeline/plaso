@@ -34,7 +34,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The TSK file entry has 3 event objects.
-    self.assertEquals(len(event_objects), 3)
+    self.assertEqual(len(event_objects), 3)
 
   def testZipFile(self):
     """Test a ZIP file."""
@@ -50,7 +50,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The ZIP file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
   def testGzipFile(self):
     """Test a GZIP file."""
@@ -65,7 +65,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The gzip file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
   def testTarFile(self):
     """Test a TAR file."""
@@ -81,7 +81,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The tar file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
   def testNestedFile(self):
     """Test a nested file."""
@@ -99,7 +99,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The tar file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     test_file = self._GetTestFilePath([u'syslog.tgz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -112,7 +112,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The gzip file has 1 event object.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
@@ -131,7 +131,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The ZIP file has 1 event objects.
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
 
 if __name__ == '__main__':

@@ -26,20 +26,20 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The quarantine database contains 14 event_objects.
-    self.assertEquals(len(event_objects), 14)
+    self.assertEqual(len(event_objects), 14)
 
     # Examine a VLC event.
     event_object = event_objects[3]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-08 21:12:03')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(event_object.agent, u'Google Chrome')
+    self.assertEqual(event_object.agent, u'Google Chrome')
     vlc_url = (
         u'http://download.cnet.com/VLC-Media-Player/3001-2139_4-10210434.html'
         u'?spi=40ab24d3c71594a5017d74be3b0c946c')
-    self.assertEquals(event_object.url, vlc_url)
+    self.assertEqual(event_object.url, vlc_url)
 
     self.assertTrue(u'vlc-2.0.7-intel64.dmg' in event_object.data)
 
@@ -48,14 +48,14 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-12 19:28:58')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Examine a SpeedTest event.
     event_object = event_objects[10]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-12 19:30:16')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     speedtest_message = (
         u'[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'

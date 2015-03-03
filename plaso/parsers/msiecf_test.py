@@ -31,7 +31,7 @@ class MsiecfParserTest(test_lib.ParserTestCase):
     # 	Number of recovered items:	11
     # 7 + 11 records, each with 4 records.
 
-    self.assertEquals(len(event_objects), (7 + 11) * 4)
+    self.assertEqual(len(event_objects), (7 + 11) * 4)
 
     # Record type             : URL
     # Offset range            : 21376 - 21632 (256)
@@ -48,38 +48,38 @@ class MsiecfParserTest(test_lib.ParserTestCase):
         u'Visited: testing@http://www.trafficfusionx.com/download/tfscrn2'
         u'/funnycats.exe')
 
-    self.assertEquals(event_object.offset, 21376)
-    self.assertEquals(event_object.url, expected_location)
-    self.assertEquals(event_object.cache_directory_index, -2)
+    self.assertEqual(event_object.offset, 21376)
+    self.assertEqual(event_object.url, expected_location)
+    self.assertEqual(event_object.cache_directory_index, -2)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-06-23 18:02:10.066')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_objects[9]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-06-23 18:02:10.066')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_objects[10]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-06-29 17:55:02')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
 
     event_object = event_objects[11]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-06-23 18:02:12')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_CHECKED_TIME)
 
     expected_msg = (

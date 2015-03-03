@@ -41,42 +41,42 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     event_object = event_objects[0]
 
     expected_string = u'@%windir%\\system32\\migwiz\\wet.dll,-590'
-    self.assertEquals(event_object.description, expected_string)
+    self.assertEqual(event_object.description, expected_string)
 
     expected_string = u'.\\migwiz\\migwiz.exe'
-    self.assertEquals(event_object.relative_path, expected_string)
+    self.assertEqual(event_object.relative_path, expected_string)
 
     expected_string = u'%windir%\\system32\\migwiz'
-    self.assertEquals(event_object.working_directory, expected_string)
+    self.assertEqual(event_object.working_directory, expected_string)
 
     expected_string = u'%windir%\\system32\\migwiz\\migwiz.exe'
-    self.assertEquals(event_object.icon_location, expected_string)
-    self.assertEquals(event_object.env_var_location, expected_string)
+    self.assertEqual(event_object.icon_location, expected_string)
+    self.assertEqual(event_object.env_var_location, expected_string)
 
     # The last accessed timestamp.
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-13 23:29:02.849131')
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The creation timestamp.
     event_object = event_objects[1]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-13 23:29:02.849131')
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
     event_object = event_objects[2]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-07-14 01:39:18.220000')
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[@%windir%\\system32\\migwiz\\wet.dll,-590] '
@@ -135,7 +135,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-06-05 20:13:20')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: InfoTool.exe '

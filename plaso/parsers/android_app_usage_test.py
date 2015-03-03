@@ -25,14 +25,14 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 28)
+    self.assertEqual(len(event_objects), 28)
 
     event_object = event_objects[22]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-12-09 19:28:33.047000')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.component,
         'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
 
@@ -51,8 +51,8 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-09-27 19:45:55.675000')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.package, 'com.google.android.gsf.login')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.package, 'com.google.android.gsf.login')
 
     expected_msg = (
         u'Package: '

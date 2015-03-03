@@ -24,7 +24,7 @@ class StorageFactoryTest(unittest.TestCase):
 
     factory.StorageFactory.RegisterStorage(TestStorage)
 
-    self.assertEquals(
+    self.assertEqual(
         len(factory.StorageFactory._storage_classes),
         number_of_storages + 1)
 
@@ -32,7 +32,7 @@ class StorageFactoryTest(unittest.TestCase):
       factory.StorageFactory.RegisterStorage(TestStorage)
 
     factory.StorageFactory.DeregisterStorage(TestStorage)
-    self.assertEquals(
+    self.assertEqual(
         len(factory.StorageFactory._storage_classes),
         number_of_storages)
 

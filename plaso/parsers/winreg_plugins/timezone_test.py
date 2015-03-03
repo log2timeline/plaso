@@ -73,11 +73,11 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-01-30 10:47:57.000000')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -110,11 +110,11 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, knowledge_base_values=knowledge_base_values)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-03-11 07:00:00.000642')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '

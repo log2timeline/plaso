@@ -24,8 +24,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
   def VerifyMajorMinor(self, events):
     """Verify that valid Firefox cahce version is extracted."""
     for event_object in events:
-      self.assertEquals(event_object.major, 1)
-      self.assertEquals(event_object.minor, 19)
+      self.assertEqual(event_object.major, 1)
+      self.assertEqual(event_object.minor, 19)
 
   def testParseCache_InvalidFile(self):
     """Verify that parser do not accept small, invalid files."""
@@ -43,11 +43,11 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(574, len(event_objects))
-    self.assertEquals(
+    self.assertEqual(574, len(event_objects))
+    self.assertEqual(
         event_objects[1].url, 'HTTP:http://start.ubuntu.com/12.04/sprite.png')
 
-    self.assertEquals(event_objects[1].timestamp,
+    self.assertEqual(event_objects[1].timestamp,
                       timelib_test.CopyStringToTimestamp('2014-04-21 14:13:35'))
 
     self.VerifyMajorMinor(event_objects)
@@ -71,8 +71,8 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(58, len(event_objects))
-    self.assertEquals(
+    self.assertEqual(58, len(event_objects))
+    self.assertEqual(
         event_objects[2].url,
         ('HTTP:http://www.google-analytics.com/__utm.gif?utmwv=5.5.0&utms='
          '1&utmn=1106893631&utmhn=www.dagbladet.no&utmcs=windows-1252&ut'
@@ -83,7 +83,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
          '2B__utmz%3D68537988.1398089459.1.1.utmcsr%3D(direct)%7Cutmccn'
          '%3D(direct)%7Cutmcmd%3D(none)%3B&aip=1&utmu=qBQ~'))
 
-    self.assertEquals(event_objects[1].timestamp,
+    self.assertEqual(event_objects[1].timestamp,
                       timelib_test.CopyStringToTimestamp('2014-04-21 14:10:58'))
 
     self.VerifyMajorMinor(event_objects)
@@ -96,13 +96,13 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(4, len(event_objects))
+    self.assertEqual(4, len(event_objects))
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[3].url,
         'HTTP:https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js')
 
-    self.assertEquals(
+    self.assertEqual(
         event_objects[3].timestamp,
         timelib_test.CopyStringToTimestamp('2014-04-21 14:11:07'))
 
@@ -116,7 +116,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(4, len(event_objects))
+    self.assertEqual(4, len(event_objects))
 
   def testParseLegacyCache_001(self):
     """Test Firefox 3 cache file _CACHE_001_ parsing."""
@@ -126,9 +126,9 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(25, len(event_objects))
+    self.assertEqual(25, len(event_objects))
 
-    self.assertEquals(event_objects[0].timestamp,
+    self.assertEqual(event_objects[0].timestamp,
                       timelib_test.CopyStringToTimestamp('2014-05-02 14:15:03'))
 
     expected_msg = (
@@ -150,9 +150,9 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(3, len(event_objects))
+    self.assertEqual(3, len(event_objects))
 
-    self.assertEquals(event_objects[1].timestamp,
+    self.assertEqual(event_objects[1].timestamp,
                       timelib_test.CopyStringToTimestamp('2014-05-02 14:25:55'))
 
   def testParseLegacyCache_003(self):
@@ -163,9 +163,9 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(2, len(event_objects))
+    self.assertEqual(2, len(event_objects))
 
-    self.assertEquals(event_objects[1].timestamp,
+    self.assertEqual(event_objects[1].timestamp,
                       timelib_test.CopyStringToTimestamp('2014-05-02 14:15:07'))
 
 
