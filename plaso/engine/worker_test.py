@@ -56,7 +56,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 16)
+    self.assertEqual(test_queue_consumer.number_of_items, 16)
 
     # Process a compressed file.
     source_path = self._GetTestFilePath([u'syslog.gz'])
@@ -69,7 +69,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 16)
+    self.assertEqual(test_queue_consumer.number_of_items, 16)
 
     source_path = self._GetTestFilePath([u'syslog.bz2'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -81,7 +81,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 15)
+    self.assertEqual(test_queue_consumer.number_of_items, 15)
 
     # Process a file in an archive.
     source_path = self._GetTestFilePath([u'syslog.tar'])
@@ -97,7 +97,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 13)
+    self.assertEqual(test_queue_consumer.number_of_items, 13)
 
     # Process an archive file without "process archive files" mode.
     extraction_worker.SetProcessArchiveFiles(False)
@@ -112,7 +112,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 3)
+    self.assertEqual(test_queue_consumer.number_of_items, 3)
 
     # Process an archive file with "process archive files" mode.
     extraction_worker.SetProcessArchiveFiles(True)
@@ -127,7 +127,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 16)
+    self.assertEqual(test_queue_consumer.number_of_items, 16)
 
     # Process a file in a compressed archive.
     source_path = self._GetTestFilePath([u'syslog.tgz'])
@@ -145,7 +145,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 13)
+    self.assertEqual(test_queue_consumer.number_of_items, 13)
 
     # Process an archive file with "process archive files" mode.
     extraction_worker.SetProcessArchiveFiles(True)
@@ -160,7 +160,7 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
     test_queue_consumer = test_lib.TestQueueConsumer(storage_queue)
     test_queue_consumer.ConsumeItems()
 
-    self.assertEquals(test_queue_consumer.number_of_items, 17)
+    self.assertEqual(test_queue_consumer.number_of_items, 17)
 
 
 if __name__ == '__main__':

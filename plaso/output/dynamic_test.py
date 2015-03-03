@@ -58,7 +58,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
         'display_name,tag,store_number,store_index\n')
 
     formatter.WriteHeader()
-    self.assertEquals(output.getvalue(), correct_line)
+    self.assertEqual(output.getvalue(), correct_line)
 
     output = StringIO.StringIO()
     filter_object = FakeFilter([
@@ -69,7 +69,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
 
     correct_line = 'date,time,message,hostname,filename,some_stuff\n'
     formatter.WriteHeader()
-    self.assertEquals(output.getvalue(), correct_line)
+    self.assertEqual(output.getvalue(), correct_line)
 
     output = StringIO.StringIO()
     filter_object = FakeFilter(
@@ -81,7 +81,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
 
     correct_line = 'date@time@message@hostname@filename@some_stuff\n'
     formatter.WriteHeader()
-    self.assertEquals(output.getvalue(), correct_line)
+    self.assertEqual(output.getvalue(), correct_line)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
@@ -100,7 +100,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
     header = (
         'date,time,timezone,macb,source,sourcetype,type,user,host,'
         'message_short,message,filename,inode,notes,format,extra\n')
-    self.assertEquals(output.getvalue(), header)
+    self.assertEqual(output.getvalue(), header)
 
     formatter.WriteEventBody(event_object)
     correct = (
@@ -109,7 +109,7 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
         'closed for user root),Reporter <CRON> PID: 8442 '
         '(pam_unix(cron:session): session closed for user root),log/syslog.1'
         ',-,-,-,-\n')
-    self.assertEquals(output.getvalue(), header + correct)
+    self.assertEqual(output.getvalue(), header + correct)
 
     output = StringIO.StringIO()
     filter_object = FakeFilter(['datetime', 'nonsense', 'hostname', 'message'])
@@ -119,14 +119,14 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
 
     header = 'datetime,nonsense,hostname,message\n'
     formatter.WriteHeader()
-    self.assertEquals(output.getvalue(), header)
+    self.assertEqual(output.getvalue(), header)
 
     correct = (
         '2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
         ' (pam_unix(cron:session): session closed for user root)\n')
 
     formatter.WriteEventBody(event_object)
-    self.assertEquals(output.getvalue(), header + correct)
+    self.assertEqual(output.getvalue(), header + correct)
 
 
 if __name__ == '__main__':

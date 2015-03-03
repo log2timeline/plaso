@@ -28,18 +28,18 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key, file_entry=test_file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 15)
+    self.assertEqual(len(event_objects), 15)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEquals(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, self._plugin.plugin_name)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-08-04 15:19:16.997750')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -55,7 +55,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-08-04 15:19:10.669625')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}\\0] '
@@ -71,7 +71,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2009-08-04 15:19:16.997750')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The winreg_formatter will add a space after the key path even when there
     # is not text.

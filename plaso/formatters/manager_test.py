@@ -24,7 +24,7 @@ class FormattersManagerTest(unittest.TestCase):
     number_of_formatters = len(manager.FormattersManager._formatter_classes)
 
     manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
-    self.assertEquals(
+    self.assertEqual(
         len(manager.FormattersManager._formatter_classes),
         number_of_formatters + 1)
 
@@ -32,7 +32,7 @@ class FormattersManagerTest(unittest.TestCase):
       manager.FormattersManager.RegisterFormatter(test_lib.TestEventFormatter)
 
     manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
-    self.assertEquals(
+    self.assertEqual(
         len(manager.FormattersManager._formatter_classes),
         number_of_formatters)
 
@@ -84,12 +84,12 @@ class FormattersManagerTest(unittest.TestCase):
         u'This is a line by someone not reading the log line properly. And '
         u'since this log line exceeds the accepted 80 chars it will be '
         u'shortened.')
-    self.assertEquals(text_message, expected_text_message)
+    self.assertEqual(text_message, expected_text_message)
 
     expected_text_message_short = (
         u'This is a line by someone not reading the log line properly. '
         u'And since this l...')
-    self.assertEquals(text_message_short, expected_text_message_short)
+    self.assertEqual(text_message_short, expected_text_message_short)
 
     manager.FormattersManager.DeregisterFormatter(test_lib.TestEventFormatter)
 

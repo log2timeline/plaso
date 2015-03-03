@@ -23,7 +23,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 12)
+    self.assertEqual(len(event_objects), 12)
 
     timestamps, roots, keys = zip(
         *[(evt.timestamp, evt.root, evt.key) for evt in event_objects])
@@ -35,7 +35,7 @@ class PlistParserTest(test_lib.ParserTestCase):
         1350666391557044, 1350666385239661, 1341957896010535])
 
     self.assertTrue(set(expected_timestamps) == set(timestamps))
-    self.assertEquals(12, len(set(timestamps)))
+    self.assertEqual(12, len(set(timestamps)))
 
     expected_roots = frozenset([
         '/DeviceCache/00-0d-fd-00-00-00',
@@ -45,14 +45,14 @@ class PlistParserTest(test_lib.ParserTestCase):
         '/DeviceCache/44-00-00-00-00-03',
         '/DeviceCache/44-00-00-00-00-04'])
     self.assertTrue(expected_roots == set(roots))
-    self.assertEquals(6, len(set(roots)))
+    self.assertEqual(6, len(set(roots)))
 
     expected_keys = frozenset([
         u'LastInquiryUpdate',
         u'LastServicesUpdate',
         u'LastNameUpdate'])
     self.assertTrue(expected_keys == set(keys))
-    self.assertEquals(3, len(set(keys)))
+    self.assertEqual(3, len(set(keys)))
 
 
 if __name__ == '__main__':

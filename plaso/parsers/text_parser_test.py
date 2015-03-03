@@ -98,11 +98,11 @@ class TextParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2011-01-01 05:23:15')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(msg1, 'first line.')
-    self.assertEquals(event_object.hostname, 'myhost')
-    self.assertEquals(event_object.username, 'myuser')
+    self.assertEqual(msg1, 'first line.')
+    self.assertEqual(event_object.hostname, 'myhost')
+    self.assertEqual(event_object.username, 'myuser')
 
     event_object = event_objects[1]
 
@@ -111,11 +111,11 @@ class TextParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'1991-12-24 19:58:06')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEquals(msg2, 'second line.')
-    self.assertEquals(event_object.hostname, 'myhost')
-    self.assertEquals(event_object.username, 'myuser')
+    self.assertEqual(msg2, 'second line.')
+    self.assertEqual(event_object.hostname, 'myhost')
+    self.assertEqual(event_object.username, 'myuser')
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         TestTextEventFormatter)
@@ -167,8 +167,8 @@ class PyParserTest(test_lib.ParserTestCase):
     line = '# This is a comment.'
     parsed_line = text_parser.PyparsingConstants.COMMENT_LINE_HASH.parseString(
         line)
-    self.assertEquals(parsed_line[-1], 'This is a comment.')
-    self.assertEquals(len(parsed_line), 2)
+    self.assertEqual(parsed_line[-1], 'This is a comment.')
+    self.assertEqual(len(parsed_line), 2)
 
 
 if __name__ == '__main__':

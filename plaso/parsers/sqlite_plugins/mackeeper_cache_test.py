@@ -26,13 +26,13 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The cache file contains 198 entries.
-    self.assertEquals(len(event_objects), 198)
+    self.assertEqual(len(event_objects), 198)
 
     event_object = event_objects[41]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-07-12 19:30:31')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Chat Outgoing Message : I have received your system scan report and '

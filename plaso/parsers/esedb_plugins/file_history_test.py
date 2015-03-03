@@ -26,22 +26,22 @@ class FileHistoryEseDbPluginTest(test_lib.EseDbPluginTestCase):
         [test_file_name], self._plugin)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 2680)
+    self.assertEqual(len(event_objects), 2680)
 
     event_object = event_objects[693]
 
-    self.assertEquals(event_object.usn_number, 9251162904)
-    self.assertEquals(event_object.identifier, 356)
+    self.assertEqual(event_object.usn_number, 9251162904)
+    self.assertEqual(event_object.identifier, 356)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-10-12 17:34:36.688580')
 
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
     filename = u'?UP\\Favorites\\Links\\Lenovo'
-    self.assertEquals(event_object.original_filename, filename)
+    self.assertEqual(event_object.original_filename, filename)
 
     expected_msg = (
         u'Filename: {0:s} Identifier: 356 Parent Identifier: 230 Attributes: '

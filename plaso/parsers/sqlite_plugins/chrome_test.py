@@ -29,23 +29,23 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
-    self.assertEquals(len(event_objects), 71)
+    self.assertEqual(len(event_objects), 71)
 
     # Check the first page visited entry.
     event_object = event_objects[0]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.PAGE_VISITED)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-04-07 12:03:11')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = u'http://start.ubuntu.com/10.04/Google/'
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_title = u'Ubuntu Start Page'
-    self.assertEquals(event_object.title, expected_title)
+    self.assertEqual(event_object.title, expected_title)
 
     expected_msg = (
         u'{0:s} ({1:s}) [count: 0] Host: start.ubuntu.com '
@@ -59,20 +59,20 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first file downloaded entry.
     event_object = event_objects[69]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.FILE_DOWNLOADED)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-05-23 08:35:30')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'http://fatloss4idiotsx.com/download/funcats/'
         u'funcats_scr.exe')
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_full_path = u'/home/john/Downloads/funcats_scr.exe'
-    self.assertEquals(event_object.full_path, expected_full_path)
+    self.assertEqual(event_object.full_path, expected_full_path)
 
     expected_msg = (
         u'{0:s} ({1:s}). Received: 1132155 bytes out of: '

@@ -28,7 +28,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
         self._plugin, test_file, cache=cache)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 30)
+    self.assertEqual(len(event_objects), 30)
 
     # Let's verify that we've got the correct balance of cloud and local
     # entry events.
@@ -42,8 +42,8 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
         local_entries.append(event_object)
       else:
         cloud_entries.append(event_object)
-    self.assertEquals(len(local_entries), 10)
-    self.assertEquals(len(cloud_entries), 20)
+    self.assertEqual(len(local_entries), 10)
+    self.assertEqual(len(cloud_entries), 20)
 
     # Test one local and one cloud entry.
     event_object = local_entries[5]
@@ -51,7 +51,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     file_path = (
         u'%local_sync_root%/Top Secret/Enn meiri '
         u'leyndarm\xe1l/S\xfdnileiki - \xd6rverpi.gdoc')
-    self.assertEquals(event_object.path, file_path)
+    self.assertEqual(event_object.path, file_path)
 
     expected_msg = u'File Path: {} Size: 184'.format(file_path)
 
@@ -59,15 +59,15 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2014-01-28 00:11:25')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = cloud_entries[16]
 
-    self.assertEquals(event_object.document_type, u'DOCUMENT')
-    self.assertEquals(
+    self.assertEqual(event_object.document_type, u'DOCUMENT')
+    self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.assertEquals(event_object.url, (
+    self.assertEqual(event_object.url, (
         u'https://docs.google.com/document/d/'
         u'1ypXwXhQWliiMSQN9S5M0K6Wh39XF4Uz4GmY-njMf-Z0/edit?usp=docslist_api'))
 
@@ -82,7 +82,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2014-01-28 00:12:27')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

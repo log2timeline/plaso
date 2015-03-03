@@ -31,7 +31,7 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
         self._plugin, winreg_key)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 7)
+    self.assertEqual(len(event_objects), 7)
 
     event_object = event_objects[0]
 
@@ -51,7 +51,7 @@ class UsersPluginTest(test_lib.RegistryPluginTestCase):
     # Match UTC timestamp.
     time = long(timelib_test.CopyStringToTimestamp(
         u'2014-09-24 03:36:06.358837'))
-    self.assertEquals(event_object.timestamp, time)
+    self.assertEqual(event_object.timestamp, time)
 
     expected_msg_short = (
         u'[\\SAM\\Domains\\Account\\Users] '

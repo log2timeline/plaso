@@ -27,23 +27,23 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
-    self.assertEquals(len(event_objects), 9)
+    self.assertEqual(len(event_objects), 9)
 
     # Check the first SMS sent.
     event_object = event_objects[0]
 
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2013-10-29 16:56:28.038')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_address = u'1 555-521-5554'
-    self.assertEquals(event_object.address, expected_address)
+    self.assertEqual(event_object.address, expected_address)
 
     expected_body = u'Yo Fred this is my new number.'
-    self.assertEquals(event_object.body, expected_body)
+    self.assertEqual(event_object.body, expected_body)
 
     expected_msg = (
         u'Type: SENT '

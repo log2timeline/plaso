@@ -33,15 +33,15 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
         self._plugin, 'single', top_level_dict_single)
     event_objects = self._GetEventObjectsFromQueue(event_object_generator)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2012-11-02 01:21:38.997672')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.root, u'/DE-00-AD-00-BE-EF')
-    self.assertEquals(event_object.key, u'LastUsed')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.root, u'/DE-00-AD-00-BE-EF')
+    self.assertEqual(event_object.key, u'LastUsed')
 
     expected_string = (
         u'/DE-00-AD-00-BE-EF/LastUsed')
@@ -80,15 +80,15 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
         self._plugin, 'nested', top_level_dict_many_keys)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
 
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         '2011-04-07 17:56:53.524275')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
-    self.assertEquals(event_object.key, u'LastNameUpdate')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
+    self.assertEqual(event_object.key, u'LastNameUpdate')
 
 
 if __name__ == '__main__':

@@ -24,12 +24,12 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     # The file contains 14 lines which results in 14 event objects.
-    self.assertEquals(len(event_objects), 14)
+    self.assertEqual(len(event_objects), 14)
 
     # Test that the UTF-8 byte order mark gets removed from the first line.
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.timestamp, 1380292946000000)
+    self.assertEqual(event_object.timestamp, 1380292946000000)
 
     # Test this entry:
     # 9/27/2013 2:42:26 PM  Blocked by Access Protection rule
@@ -40,9 +40,9 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.timestamp, 1380292959000000)
-    self.assertEquals(event_object.username, u'SOMEDOMAIN\\someUser')
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, 1380292959000000)
+    self.assertEqual(event_object.username, u'SOMEDOMAIN\\someUser')
+    self.assertEqual(
         event_object.full_path, u'C:\\Windows\\System32\\procexp64.exe')
 
     expected_msg = (

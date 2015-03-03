@@ -73,7 +73,7 @@ class ParsersManagerTest(unittest.TestCase):
     number_of_parsers = len(manager.ParsersManager._parser_classes)
 
     manager.ParsersManager.RegisterParser(TestParser)
-    self.assertEquals(
+    self.assertEqual(
         len(manager.ParsersManager._parser_classes),
         number_of_parsers + 1)
 
@@ -81,7 +81,7 @@ class ParsersManagerTest(unittest.TestCase):
       manager.ParsersManager.RegisterParser(TestParser)
 
     manager.ParsersManager.DeregisterParser(TestParser)
-    self.assertEquals(
+    self.assertEqual(
         len(manager.ParsersManager._parser_classes),
         number_of_parsers)
 
@@ -89,14 +89,14 @@ class ParsersManagerTest(unittest.TestCase):
     """Tests the RegisterPlugin and DeregisterPlugin functions."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
     # pylint: disable=protected-access
-    self.assertEquals(
+    self.assertEqual(
         len(TestParserWithPlugins._plugin_classes), 1)
 
     with self.assertRaises(KeyError):
       TestParserWithPlugins.RegisterPlugin(TestPlugin)
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
-    self.assertEquals(
+    self.assertEqual(
         len(TestParserWithPlugins._plugin_classes), 0)
 
   def testGetFilterListsFromString(self):
@@ -108,19 +108,19 @@ class ParsersManagerTest(unittest.TestCase):
     includes, excludes = manager.ParsersManager.GetFilterListsFromString(
         'test_parser')
 
-    self.assertEquals(includes, ['test_parser'])
-    self.assertEquals(excludes, [])
+    self.assertEqual(includes, ['test_parser'])
+    self.assertEqual(excludes, [])
 
     includes, excludes = manager.ParsersManager.GetFilterListsFromString(
         '-test_parser')
 
-    self.assertEquals(includes, [])
-    self.assertEquals(excludes, ['test_parser'])
+    self.assertEqual(includes, [])
+    self.assertEqual(excludes, ['test_parser'])
 
     includes, excludes = manager.ParsersManager.GetFilterListsFromString(
         'test_parser_with_plugins')
 
-    self.assertEquals(includes, ['test_parser_with_plugins', 'test_plugin'])
+    self.assertEqual(includes, ['test_parser_with_plugins', 'test_plugin'])
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)

@@ -25,17 +25,17 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 1)
+    self.assertEqual(len(event_objects), 1)
 
     event_object = event_objects[0]
 
-    self.assertEquals(event_object.orig_filename, (
+    self.assertEqual(event_object.orig_filename, (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip'))
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2012-03-12 20:49:58.633')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.file_size, 724919)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.file_size, 724919)
 
     expected_msg = (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip '
@@ -60,18 +60,18 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 4)
+    self.assertEqual(len(event_objects), 4)
 
     event_object = event_objects[0]
 
     expected_timestamp = timelib_test.CopyStringToTimestamp(
         u'2004-08-25 16:18:25.237')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.timestamp_desc,
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp_desc,
                       eventdata.EventTimestamp.DELETED_TIME)
 
-    self.assertEquals(event_object.index, 1)
-    self.assertEquals(event_object.orig_filename, (
+    self.assertEqual(event_object.index, 1)
+    self.assertEqual(event_object.orig_filename, (
         u'C:\\Documents and Settings\\Mr. Evil\\Desktop\\lalsetup250.exe'))
 
     event_object = event_objects[1]

@@ -27,14 +27,14 @@ class SingleProcessQueueTest(unittest.TestCase):
     for item in self._ITEMS:
       test_queue.PushItem(item)
 
-    self.assertEquals(len(test_queue), len(self._ITEMS))
+    self.assertEqual(len(test_queue), len(self._ITEMS))
 
     test_queue.SignalEndOfInput()
     test_queue_consumer = test_lib.TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()
 
     expected_number_of_items = len(self._ITEMS)
-    self.assertEquals(
+    self.assertEqual(
         test_queue_consumer.number_of_items, expected_number_of_items)
 
   def testQueueEmpty(self):
@@ -62,7 +62,7 @@ class SingleProcessQueueTest(unittest.TestCase):
     test_queue_consumer.ConsumeItems()
 
     expected_number_of_items = len(self._ITEMS)
-    self.assertEquals(
+    self.assertEqual(
         test_queue_consumer.number_of_items, expected_number_of_items + 1)
 
 

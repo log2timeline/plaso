@@ -45,25 +45,25 @@ class DynamicFilterTest(test_helper.FilterTestHelper):
   def testFilterFields(self):
     query = 'SELECT stuff FROM machine WHERE some_stuff is "random"'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['stuff'], self.test_filter.fields)
+    self.assertEqual(['stuff'], self.test_filter.fields)
 
     query = 'SELECT stuff, a, b, date FROM machine WHERE some_stuff is "random"'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['stuff', 'a', 'b', 'date'], self.test_filter.fields)
+    self.assertEqual(['stuff', 'a', 'b', 'date'], self.test_filter.fields)
 
     query = 'SELECT date, message, zone, hostname WHERE some_stuff is "random"'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['date', 'message', 'zone', 'hostname'],
+    self.assertEqual(['date', 'message', 'zone', 'hostname'],
                       self.test_filter.fields)
 
     query = 'SELECT hlutir'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['hlutir'], self.test_filter.fields)
+    self.assertEqual(['hlutir'], self.test_filter.fields)
 
     query = 'SELECT hlutir LIMIT 10'
     self.test_filter.CompileFilter(query)
-    self.assertEquals(['hlutir'], self.test_filter.fields)
-    self.assertEquals(10, self.test_filter.limit)
+    self.assertEqual(['hlutir'], self.test_filter.fields)
+    self.assertEqual(10, self.test_filter.limit)
 
 
 if __name__ == '__main__':

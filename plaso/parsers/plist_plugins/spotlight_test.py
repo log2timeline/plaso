@@ -26,7 +26,7 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
         self._parser, self._plugin, [plist_name], plist_name)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEquals(len(event_objects), 9)
+    self.assertEqual(len(event_objects), 9)
 
     timestamps = []
     for event_object in event_objects:
