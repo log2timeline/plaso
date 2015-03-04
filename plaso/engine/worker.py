@@ -19,6 +19,7 @@ import pysigscan
 from plaso.engine import collector
 from plaso.engine import queue
 from plaso.lib import errors
+from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 
 
@@ -32,6 +33,8 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
   for parsing a particular file is available. All extracted event objects
   are pushed on a storage queue for further processing.
   """
+
+  DEFAULT_HASH_READ_SIZE = 4096
 
   def __init__(
       self, identifier, process_queue, event_queue_producer,
@@ -52,6 +55,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """
     super(BaseEventExtractionWorker, self).__init__(process_queue)
     self._enable_debug_output = False
+    self._hasher_names = None
     self._identifier = identifier
     self._file_scanner = None
     self._filestat_parser_object = None
@@ -90,6 +94,17 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       logging.warning(u'Unable to open file entry: {0:s}'.format(
           path_spec.comparable))
       return
+
+    if self._hasher_names:
+      try:
+        digests = self.HashFileEntry(file_entry)
+        if digests:
+          for hash_name, digest in digests.iteritems():
+            attribute_string = u'{0:s}_hash'.format(hash_name)
+            self._parser_mediator.AddEventAttribute(attribute_string, digest)
+      except IOError as exception:
+        logging.warning(u'Unable to hash file: {0:s} with error: {1:s}'.format(
+           path_spec.comparable, exception))
 
     try:
       self.ParseFileEntry(file_entry)
@@ -138,9 +153,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     Raises:
       QueueFull: If a queue is full.
     """
-    # We need to reset the parser chain before each file, in case there's a
-    # stale entry there due a bug in a parser.
-    self._parser_mediator.ClearParserChain()
+    # We need to reset the parser mediator before each file, to clear out any
+    # lingering data from the previous file parsed.
+    self._parser_mediator.Reset()
     self._parser_mediator.SetFileEntry(file_entry)
     try:
       parser_object.UpdateChainAndParse(self._parser_mediator)
@@ -213,7 +228,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         logging.debug((
             u'Unsupported archive format type indicator: {0:s} for '
             u'archive file: {1:s}').format(
-                type_indicator, archive_path_spec.comparable))
+                type_indicator, file_entry.path_spec.comparable))
 
         archive_path_spec = None
 
@@ -316,6 +331,63 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         u'identifier': u'Worker_{0:d}'.format(self._identifier),
         u'current_file': self._current_working_file,
         u'counter': self._parser_mediator.number_of_events}
+
+  def HashFileEntry(self, file_entry):
+    """Produces a dictionary containing hash digests of the file entry content.
+
+    Args:
+      file_entry: The file entry object to be hashed (instance of
+                  dfvfs.FileEntry)
+
+    Returns:
+      A dictionary mapping hasher names to the digest calculated by that hasher,
+      or None if the file_entry is not a file, or no hashers are enabled.
+    """
+    logging.debug(u'[HashFileEntry] Hashing: {0:s}'.format(
+        file_entry.path_spec.comparable))
+    if not file_entry.IsFile() or not self._hasher_names:
+      return
+
+    hasher_objects = hashers_manager.HashersManager.GetHasherObjects(
+        self._hasher_names)
+
+    file_object = file_entry.GetFileObject()
+
+    try:
+      # We only do one read, then pass it to each of the hashers in turn.
+      data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
+      while data:
+        for hasher in hasher_objects:
+          hasher.Update(data)
+        data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
+
+      digests = {}
+      # Get the digest values for every active hasher.
+      for hasher in hasher_objects:
+        digests[hasher.NAME] = hasher.GetStringDigest()
+        logging.debug(
+            u'[HashFileEntry] Digest {0:s} calculated for {1:s}.'.format(
+                hasher.GetStringDigest(), file_entry.path_spec.comparable))
+    finally:
+      file_object.close()
+
+    if self._enable_profiling:
+      self._ProfilingUpdate()
+
+    logging.debug(u'[HashFileEntry] Finished hashing: {0:s}'.format(
+        file_entry.path_spec.comparable))
+    return digests
+
+  def SetHashers(self, hasher_names_string):
+    """Initializes the hasher objects.
+
+    Args:
+      hasher_names_string: Comma separated string of names of
+                           hashers to enable.
+    """
+    names = hashers_manager.HashersManager.GetHasherNamesFromString(
+        hasher_names_string)
+    self._hasher_names = names
 
   def InitializeParserObjects(self, parser_filter_string=None):
     """Initializes the parser objects.

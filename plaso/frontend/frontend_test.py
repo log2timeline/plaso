@@ -215,6 +215,10 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
       test_file = self._GetTestFilePath([u'nosuchfile.raw'])
       self._TestScanSourceImage(test_file)
 
+  def testHashing(self):
+    """Tests hashing functionality."""
+    self._GetTestFilePath([u'ímynd.dd'])
+
 
 if __name__ == '__main__':
   unittest.main()

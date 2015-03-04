@@ -174,15 +174,21 @@ class SingleProcessEngine(engine.BaseEngine):
     return extraction_worker
 
   def ProcessSource(
-      self, collector_object, storage_writer, parser_filter_string=None):
+      self, collector_object, storage_writer, parser_filter_string=None,
+      hasher_names_string=None):
     """Processes the source and extracts event objects.
 
     Args:
       collector_object: A collector object (instance of Collector).
       storage_writer: A storage writer object (instance of BaseStorageWriter).
       parser_filter_string: Optional parser filter string. The default is None.
+      hasher_names_string: Optional comma separated string of names of
+                           hashers to enable. The default is None.
     """
     extraction_worker = self.CreateExtractionWorker(0)
+
+    if hasher_names_string:
+      extraction_worker.SetHashers(hasher_names_string)
 
     extraction_worker.InitializeParserObjects(
         parser_filter_string=parser_filter_string)
