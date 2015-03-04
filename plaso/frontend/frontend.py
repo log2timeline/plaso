@@ -18,6 +18,7 @@ from dfvfs.volume import vshadow_volume_system
 
 import plaso
 from plaso import parsers   # pylint: disable=unused-import
+from plaso import hashers   # pylint: disable=unused-import
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.engine import worker
@@ -27,7 +28,9 @@ from plaso.lib import pfilter
 from plaso.lib import storage
 from plaso.lib import timelib
 from plaso.multi_processing import multi_process
+from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
+
 
 import pytz
 
@@ -238,7 +241,7 @@ class StorageMediaFrontend(Frontend):
     return u'{0:s} / {1:s} ({2:d} B)'.format(
         size_string_1024, size_string_1000, size)
 
-  def _GetPartionIdentifierFromUser(self, volume_system, volume_identifiers):
+  def _GetPartitionIdentifierFromUser(self, volume_system, volume_identifiers):
     """Asks the user to provide the partitioned volume identifier.
 
     Args:
@@ -358,7 +361,7 @@ class StorageMediaFrontend(Frontend):
 
     else:
       try:
-        selected_volume_identifier = self._GetPartionIdentifierFromUser(
+        selected_volume_identifier = self._GetPartitionIdentifierFromUser(
             volume_system, volume_identifiers)
       except KeyboardInterrupt:
         raise errors.UserAbort(u'File system scan aborted.')
@@ -1068,7 +1071,7 @@ class ExtractionFrontend(StorageMediaFrontend):
           pre_obj.zone = pytz.utc
     else:
       # TODO: shouldn't the user to be able to always override the timezone
-      # detection? Or do we need an input sanitation function.
+      # detection? Or do we need an input sanitization function.
       pre_obj.zone = self._timezone
 
     if not getattr(pre_obj, 'zone', None):
@@ -1077,7 +1080,7 @@ class ExtractionFrontend(StorageMediaFrontend):
   def _ProcessSourceMultiProcessMode(self, options):
     """Processes the source in a multiple process.
 
-    Muliprocessing is used to start up separate processes.
+    Multiprocessing is used to start up separate processes.
 
     Args:
       options: the command line arguments (instance of argparse.Namespace).
@@ -1121,6 +1124,14 @@ class ExtractionFrontend(StorageMediaFrontend):
     for _, parser_class in parsers_manager.ParsersManager.GetParsers(
         parser_filter_string=parser_filter_string):
       self._parser_names.append(parser_class.NAME)
+
+    hasher_names_string = getattr(options, u'hashers', u'')
+
+    self._hasher_names = []
+    hasher_manager = hashers_manager.HashersManager
+    for _, hasher_class in hasher_manager.GetHasherNamesFromString(
+        hasher_names_string=hasher_names_string):
+      self._hasher_names.append(hasher_class.NAME)
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
 
@@ -1185,7 +1196,7 @@ class ExtractionFrontend(StorageMediaFrontend):
       # The tool should generally not be run in single process mode
       # for other reasons than to debug. Hence the general error
       # catching.
-      logging.error(u'An uncaught exception occured: {0:s}.\n{1:s}'.format(
+      logging.error(u'An uncaught exception occurred: {0:s}.\n{1:s}'.format(
           exception, traceback.format_exc()))
       if self._debug_mode:
         pdb.post_mortem()
@@ -1273,10 +1284,13 @@ class ExtractionFrontend(StorageMediaFrontend):
           buffer_size=self._buffer_size, pre_obj=pre_obj,
           serializer_format=self._storage_serializer_format)
 
+    hasher_names_string = getattr(options, u'hashers', u'')
+
     try:
       self._engine.ProcessSource(
           self._collector, storage_writer,
-          parser_filter_string=parser_filter_string)
+          parser_filter_string=parser_filter_string,
+          hasher_names_string=hasher_names_string)
 
     except KeyboardInterrupt:
       self._CleanUpAfterAbort()

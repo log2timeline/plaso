@@ -28,6 +28,7 @@ class ParserMediator(object):
     super(ParserMediator, self).__init__()
     self._abort = False
     self._event_queue_producer = event_queue_producer
+    self._extra_event_attributes = {}
     self._file_entry = None
     self._filter_object = None
     self._knowledge_base = knowledge_base
@@ -74,9 +75,33 @@ class ParserMediator(object):
     """The year."""
     return self._knowledge_base.year
 
+  def AddEventAttribute(self, attribute_name, attribute_value):
+    """Add an attribute that will be set on all events produced.
+
+    Setting attributes using this method will cause events produced via this
+    mediator to have an attribute with the provided name set with the
+    provided value.
+
+    Args:
+      attribute_name: The name of the attribute to set.
+      attribute_value: The value of the attribute to set.
+
+    Raises:
+      KeyError: If an attribute with the given name is already set.
+    """
+    if hasattr(self._extra_event_attributes, attribute_name):
+      raise KeyError(u'Value already set for attribute {0:s}'.format(
+          attribute_name))
+
+    self._extra_event_attributes[attribute_name] = attribute_value
+
   def AppendToParserChain(self, plugin_or_parser):
     """Add a parser or plugin to the chain to the chain."""
     self._parser_chain_components.append(plugin_or_parser.NAME)
+
+  def ClearEventAttributes(self):
+    """Clear out attributes that should be added to all events."""
+    self._extra_event_attributes = {}
 
   def ClearParserChain(self):
     """Reset the parser chain to an empty value."""
@@ -213,6 +238,12 @@ class ParserMediator(object):
     if not getattr(event_object, 'query', None) and query:
       event_object.query = query
 
+    for attribute, value in self._extra_event_attributes.iteritems():
+      if hasattr(event_object, attribute):
+        raise KeyError(u'Event already has a value for {0:s}'.format(attribute))
+
+      setattr(event_object, attribute, value)
+
   def ProduceEvent(self, event_object, query=None):
     """Produces an event onto the queue.
 
@@ -254,6 +285,21 @@ class ParserMediator(object):
       self._parse_error_queue_producer.ProduceItem(parse_error)
       self.number_of_parse_errors += 1
 
+
+  def Reset(self):
+    """Resets the internal state of the mediator.
+
+    This method will reset:
+      * The parser chain
+      * All event attributes
+      * The event and parser error counters
+      * The file entry attribute (to None)
+    """
+    self.ClearParserChain()
+    self.ClearEventAttributes()
+    self.ResetCounters()
+    self.SetFileEntry(None)
+    self.SetFilterObject(None)
 
   def ResetCounters(self):
     """Resets the counters."""
