@@ -16,6 +16,7 @@ from plaso import output as _  # pylint: disable=unused-import
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
+from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 
 import pytz
@@ -65,40 +66,46 @@ class Log2TimelineFrontend(frontend.ExtractionFrontend):
     # TODO: remove this hack includes should be a the top if this does not work
     # remove the need for implicit behavior on import.
     from plaso import filters
-    from plaso import parsers as _  # pylint: disable=redefined-outer-name
+    from plaso import hashers as _  # pylint: disable=redefined-outer-name
+    from plaso import parsers as _   # pylint: disable=redefined-outer-name
     from plaso import output as _  # pylint: disable=redefined-outer-name
     from plaso.frontend import presets
     from plaso.output import manager as output_manager
 
-    return_dict['Versions'] = [
-        ('plaso engine', plaso.GetVersion()),
-        ('python', sys.version)]
+    return_dict[u'Versions'] = [
+        (u'plaso engine', plaso.GetVersion()),
+        (u'python', sys.version)]
 
-    return_dict['Parsers'] = []
+    return_dict[u'Hashers'] = []
+    for _, hasher_class in hashers_manager.HashersManager.GetHashers():
+      description = getattr(hasher_class, u'DESCRIPTION', u'')
+      return_dict[u'Hashers'].append((hasher_class.NAME, description))
+
+    return_dict[u'Parsers'] = []
     for _, parser_class in parsers_manager.ParsersManager.GetParsers():
-      description = getattr(parser_class, 'DESCRIPTION', u'')
-      return_dict['Parsers'].append((parser_class.NAME, description))
+      description = getattr(parser_class, u'DESCRIPTION', u'')
+      return_dict[u'Parsers'].append((parser_class.NAME, description))
 
-    return_dict['Parser Lists'] = []
+    return_dict[u'Parser Lists'] = []
     for category, parsers in sorted(presets.categories.items()):
-      return_dict['Parser Lists'].append((category, ', '.join(parsers)))
+      return_dict[u'Parser Lists'].append((category, ', '.join(parsers)))
 
-    return_dict['Output Modules'] = []
+    return_dict[u'Output Modules'] = []
     for name, description in sorted(
         output_manager.OutputManager.GetOutputs()):
-      return_dict['Output Modules'].append((name, description))
+      return_dict[u'Output Modules'].append((name, description))
 
-    return_dict['Plugins'] = []
+    return_dict[u'Plugins'] = []
     for _, parser_class in parsers_manager.ParsersManager.GetParsers():
       if parser_class.SupportsPlugins():
         for _, plugin_class in parser_class.GetPlugins():
-          description = getattr(plugin_class, 'DESCRIPTION', u'')
-          return_dict['Plugins'].append((plugin_class.NAME, description))
+          description = getattr(plugin_class, u'DESCRIPTION', u'')
+          return_dict[u'Plugins'].append((plugin_class.NAME, description))
 
-    return_dict['Filters'] = []
+    return_dict[u'Filters'] = []
     for filter_obj in sorted(filters.ListFilters()):
       doc_string, _, _ = filter_obj.__doc__.partition('\n')
-      return_dict['Filters'].append((filter_obj.filter_name, doc_string))
+      return_dict[u'Filters'].append((filter_obj.filter_name, doc_string))
 
     return return_dict
 
@@ -208,6 +215,14 @@ def Main():
           u'all parser names or the glob pattern "sky[pd]" that would match '
           u'all parsers that have the string "skyp" or "skyd" in it\'s name. '
           u'All matching is case insensitive.'))
+
+  function_group.add_argument(
+      '--hashers', dest='hashers', type=str, action='store', default='',
+      metavar='HASHER_LIST', help=(
+          u'Define a list of hashers to use by the tool. This is a comma '
+          u'separated list where each entry is the name of a hasher. eg. md5,'
+          u'sha256.'
+      ))
 
   info_group.add_argument(
       '-h', '--help', action='help', help=u'Show this help message and exit.')

@@ -162,6 +162,35 @@ class BaseEventExtractionWorkerTest(test_lib.EngineTestCase):
 
     self.assertEqual(test_queue_consumer.number_of_items, 17)
 
+  def testExtractionWorkerHashing(self):
+    """Test that the worker sets up and runs hashing code correctly."""
+    collection_queue = single_process.SingleProcessQueue()
+    storage_queue = single_process.SingleProcessQueue()
+    parse_error_queue = single_process.SingleProcessQueue()
+    event_queue_producer = single_process.SingleProcessItemQueueProducer(
+        storage_queue)
+    parse_error_queue_producer = single_process.SingleProcessItemQueueProducer(
+        parse_error_queue)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    parser_mediator = parsers_mediator.ParserMediator(
+        event_queue_producer, parse_error_queue_producer,
+        knowledge_base_object)
+
+    resolver_context = context.Context()
+
+    extraction_worker = worker.BaseEventExtractionWorker(
+        0, collection_queue, event_queue_producer, parse_error_queue_producer,
+        parser_mediator, resolver_context=resolver_context)
+
+    # We're going to check that the worker set up its internal state correctly.
+    # pylint: disable=protected-access
+    extraction_worker.SetHashers(hasher_names_string=u'md5')
+    self.assertEqual(1, len(extraction_worker._hasher_names))
+
+    extraction_worker.InitializeParserObjects()
+
 
 if __name__ == '__main__':
   unittest.main()

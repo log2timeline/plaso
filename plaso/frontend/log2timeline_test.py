@@ -13,6 +13,9 @@ from plaso.frontend import test_lib
 from plaso.lib import pfilter
 from plaso.lib import storage
 
+# We access some protected methods in order to test them.
+# pylint: disable=protected-access
+
 
 class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
   """Tests for the log2timeline front-end."""
@@ -53,6 +56,22 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     # Make sure we can read an event out of the storage.
     event_object = storage_file.GetSortedEntry()
     self.assertIsNotNone(event_object)
+
+  def testPluginData(self):
+    """Tests the _GetPluginData method, which provides the info function."""
+    test_front_end = log2timeline.Log2TimelineFrontend()
+    plugin_info = test_front_end._GetPluginData()
+
+    self.assertIn(u'Hashers', plugin_info)
+    available_hasher_names = []
+    for hasher_info in plugin_info[u'Hashers']:
+      available_hasher_names.append(hasher_info[0])
+    self.assertIn(u'sha256', available_hasher_names)
+
+    self.assertIn(u'Parsers', plugin_info)
+    self.assertIsNotNone(plugin_info[u'Parsers'])
+    self.assertIn(u'Plugins', plugin_info)
+    self.assertIsNotNone(plugin_info[u'Plugins'])
 
     # TODO: add more tests that cover more of the functionality of the frontend.
 
