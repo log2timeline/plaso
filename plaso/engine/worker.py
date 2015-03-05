@@ -387,6 +387,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     """
     names = hashers_manager.HashersManager.GetHasherNamesFromString(
         hasher_names_string)
+    logging.debug('[SetHashers] Enabling hashers: {0:s}.'.format(names))
     self._hasher_names = names
 
   def InitializeParserObjects(self, parser_filter_string=None):

@@ -1129,9 +1129,9 @@ class ExtractionFrontend(StorageMediaFrontend):
 
     self._hasher_names = []
     hasher_manager = hashers_manager.HashersManager
-    for _, hasher_class in hasher_manager.GetHasherNamesFromString(
+    for hasher_name in hasher_manager.GetHasherNamesFromString(
         hasher_names_string=hasher_names_string):
-      self._hasher_names.append(hasher_class.NAME)
+      self._hasher_names.append(hasher_name)
 
     self._PreprocessSetCollectionInformation(options, pre_obj)
 
@@ -1173,6 +1173,7 @@ class ExtractionFrontend(StorageMediaFrontend):
       self._engine.ProcessSource(
           self._collector, storage_writer,
           parser_filter_string=parser_filter_string,
+          hasher_names_string=hasher_names_string,
           number_of_extraction_workers=self._number_of_worker_processes,
           have_collection_process=start_collection_process,
           have_foreman_process=self._run_foreman,
