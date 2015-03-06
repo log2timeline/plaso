@@ -92,7 +92,6 @@ class ParserMediator(object):
     if hasattr(self._extra_event_attributes, attribute_name):
       raise KeyError(u'Value already set for attribute {0:s}'.format(
           attribute_name))
-
     self._extra_event_attributes[attribute_name] = attribute_value
 
   def AppendToParserChain(self, plugin_or_parser):
@@ -241,7 +240,6 @@ class ParserMediator(object):
     for attribute, value in self._extra_event_attributes.iteritems():
       if hasattr(event_object, attribute):
         raise KeyError(u'Event already has a value for {0:s}'.format(attribute))
-
       setattr(event_object, attribute, value)
 
   def ProduceEvent(self, event_object, query=None):
@@ -279,6 +277,7 @@ class ParserMediator(object):
       name: The parser or plugin name.
       description: The description of the error.
     """
+    self.number_of_parse_errors += 1
     if self._parse_error_queue_producer:
       path_spec = getattr(self._file_entry, 'path_spec', None)
       parse_error = event.ParseError(name, description, path_spec=path_spec)
@@ -287,19 +286,16 @@ class ParserMediator(object):
 
 
   def Reset(self):
-    """Resets the internal state of the mediator.
+    """Resets the attributes of the mediator that are affected by parsers.
 
     This method will reset:
       * The parser chain
-      * All event attributes
       * The event and parser error counters
       * The file entry attribute (to None)
     """
     self.ClearParserChain()
-    self.ClearEventAttributes()
     self.ResetCounters()
     self.SetFileEntry(None)
-    self.SetFilterObject(None)
 
   def ResetCounters(self):
     """Resets the counters."""
