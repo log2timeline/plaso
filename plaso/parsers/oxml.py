@@ -119,9 +119,8 @@ class OpenXMLParser(interface.BaseParser):
     try:
       rels_xml = zip_container.read('_rels/.rels')
     except zipfile.BadZipfile as exception:
-      logging.error(
-          u'Unable to parse file {0:s} with error: {1:s}'.format(
-              file_name, exception))
+      parser_mediator.ProduceParseError(
+          u'Unable to parse file with error: {0:s}'.format(exception))
       return
 
     rels_root = ElementTree.fromstring(rels_xml)

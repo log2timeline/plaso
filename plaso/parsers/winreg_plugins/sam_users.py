@@ -46,7 +46,7 @@ class UsersPlugin(interface.KeyPlugin):
 
     name_key = key.GetSubkey('Names')
     if not name_key:
-      logging.error(u'Unable to locate Names key.')
+      parser_mediator.ProduceParseError(u'Unable to locate Names key.')
       return
     values = [(v.name, v.last_written_timestamp) for v in name_key.GetSubkeys()]
     name_dict = dict(values)
@@ -58,7 +58,8 @@ class UsersPlugin(interface.KeyPlugin):
       text_dict['user_guid'] = subkey.name
       parsed_v_value = self._ParseVValue(subkey)
       if not parsed_v_value:
-        logging.error(u'V Value was not successfully parsed by ParseVValue.')
+        parser_mediator.ProduceParseError(
+            u'Unable to parse SAM key: {0:s} V value.'.format(subkey))
         return
       username = parsed_v_value[0]
       full_name = parsed_v_value[1]

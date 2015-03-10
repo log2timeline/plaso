@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Recycle files, INFO2 and $I/$R pairs."""
 
-import logging
-
 import construct
 
 from plaso.events import time_events
@@ -191,8 +189,8 @@ class WinRecyclerInfo2Parser(interface.BaseParser):
     # Limit record size to 65536 to be on the safe side.
     record_size = file_header[u'record_size']
     if record_size > 65536:
-      logging.error((
-          u'Record size: {0:d} is too large for INFO2 reducing to: '
+      parser_mediator.ProduceParseError((
+          u'Record size: {0:d} is too large for INFO2. Defaulting to: '
           u'65535').format(record_size))
       record_size = 65535
 
