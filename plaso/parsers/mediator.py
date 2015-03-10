@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The parser mediator object."""
 
+import logging
 import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -92,6 +93,7 @@ class ParserMediator(object):
     if hasattr(self._extra_event_attributes, attribute_name):
       raise KeyError(u'Value already set for attribute {0:s}'.format(
           attribute_name))
+
     self._extra_event_attributes[attribute_name] = attribute_value
 
   def AppendToParserChain(self, plugin_or_parser):
@@ -240,6 +242,7 @@ class ParserMediator(object):
     for attribute, value in self._extra_event_attributes.iteritems():
       if hasattr(event_object, attribute):
         raise KeyError(u'Event already has a value for {0:s}'.format(attribute))
+
       setattr(event_object, attribute, value)
 
   def ProduceEvent(self, event_object, query=None):
@@ -270,23 +273,28 @@ class ParserMediator(object):
     for event_object in event_objects:
       self.ProduceEvent(event_object, query=query)
 
-  def ProduceParseError(self, name, description):
+  def ProduceParseError(self, message):
     """Produces a parse error.
 
     Args:
-      name: The parser or plugin name.
-      description: The description of the error.
+      message: The message of the error.
     """
     self.number_of_parse_errors += 1
+    # TODO: Remove call to logging when parser error queue is fully functional.
+    logging.error(u'Error in {0:s} while parsing file {1:s}: {2:s}'.format(
+        self.GetParserChain(), self.GetDisplayName(), message))
+
     if self._parse_error_queue_producer:
-      path_spec = getattr(self._file_entry, 'path_spec', None)
-      parse_error = event.ParseError(name, description, path_spec=path_spec)
+      path_spec = self._file_entry.path_spec
+      parser_chain = self.GetParserChain()
+      parse_error = event.ParseError(
+          parser_chain, message, path_spec=path_spec)
       self._parse_error_queue_producer.ProduceItem(parse_error)
       self.number_of_parse_errors += 1
 
 
   def Reset(self):
-    """Resets the attributes of the mediator that are affected by parsers.
+    """Resets the internal state of the mediator.
 
     This method will reset:
       * The parser chain

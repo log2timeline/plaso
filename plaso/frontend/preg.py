@@ -1790,6 +1790,7 @@ def ParseKey(key, shell_helper, hive_helper, verbose=False, use_plugins=None):
 
   # Build a parser mediator.
   parser_mediator = shell_helper.BuildParserMediator(event_queue)
+  parser_mediator.SetFileEntry(hive_helper.file_entry)
 
   # Run all the plugins in the correct order of weight.
   for weight in plugins:

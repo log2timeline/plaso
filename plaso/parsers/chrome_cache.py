@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Google Chrome and Chromium Cache files."""
 
-import logging
 import os
 
 import construct
@@ -355,16 +354,16 @@ class ChromeCacheParser(interface.BaseParser):
           data_block_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
               data_block_file_path_spec)
         except RuntimeError as exception:
-          logging.error((
-              u'[{0:s}] Unable to open data block file: {1:s} while parsing '
-              u'{2:s} with error: {3:s}').format(
-                  parser_mediator.parser_chain, kwargs['location'],
-                  file_entry.path_spec.comparable, exception))
+          message = (
+              u'Unable to open data block file: {0:s} with error: '
+              u'{1:s}'.format(kwargs['location'], exception))
+          parser_mediator.ProduceParseError(message)
           data_block_file_entry = None
 
         if not data_block_file_entry:
-          logging.error(u'Missing data block file: {0:s}'.format(
-              cache_address.filename))
+          message = u'Missing data block file: {0:s}'.format(
+              cache_address.filename)
+          parser_mediator.ProduceParseError(message)
           data_block_file = None
 
         else:
@@ -374,9 +373,10 @@ class ChromeCacheParser(interface.BaseParser):
           try:
             data_block_file.Open(data_block_file_object)
           except IOError as exception:
-            logging.error((
+            message = (
                 u'Unable to open data block file: {0:s} with error: '
-                u'{1:s}').format(cache_address.filename, exception))
+                u'{1:s}').format(cache_address.filename, exception)
+            parser_mediator.ProduceParseError(message)
             data_block_file = None
 
         data_block_files[cache_address.filename] = data_block_file
@@ -386,19 +386,21 @@ class ChromeCacheParser(interface.BaseParser):
       cache_address_chain_length = 0
       while cache_address.value != 0x00000000:
         if cache_address_chain_length >= 64:
-          logging.error(u'Maximum allowed cache address chain length reached.')
+          parser_mediator.ProduceParseError(
+              u'Maximum allowed cache address chain length reached.')
           break
 
         data_file = data_block_files.get(cache_address.filename, None)
         if not data_file:
-          logging.debug(u'Cache address: 0x{0:08x} missing data file.'.format(
-              cache_address.value))
+          message = u'Cache address: 0x{0:08x} missing data file.'.format(
+              cache_address.value)
+          parser_mediator.ProduceParseError(message)
           break
 
         try:
           cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
         except (IOError, UnicodeDecodeError) as exception:
-          logging.error(
+          parser_mediator.ProduceParseError(
               u'Unable to parse cache entry with error: {0:s}'.format(
                   exception))
           break
