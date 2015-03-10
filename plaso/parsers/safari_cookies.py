@@ -2,7 +2,6 @@
 """Parser for Safari Binary Cookie files."""
 
 import construct
-import logging
 
 from plaso.events import time_events
 
@@ -93,19 +92,19 @@ class BinaryCookieParser(interface.BaseParser):
       file_entry: The file entry (instance of dfvfs.FileEntry).
       parser_mediator: A parser context object (instance of ParserContext).
     """
-    file_name = parser_mediator.GetDisplayName()
     try:
       page = self.PAGE_DATA.parse(page_data)
     except construct.FieldError:
-      logging.error(u'Unable to parse page from: {0:s}'.format(file_name))
+      parser_mediator.ProduceParseError(u'Unable to parse page')
       return
 
     for page_offset in page.offsets:
       try:
         cookie = self.COOKIE_DATA.parse(page_data[page_offset:])
       except construct.FieldError:
-        logging.error(u'Unable to parse cookie data from offset: {0:d}'.format(
-            page_offset))
+        message = u'Unable to parse cookie data from offset: {0:d}'.format(
+            page_offset)
+        parser_mediator.ProduceParseError(message)
         continue
 
       # The offset is determine by the range between the start of the current
@@ -195,7 +194,8 @@ class BinaryCookieParser(interface.BaseParser):
     for page_size in header.page_sizes:
       page = file_object.read(page_size)
       if len(page) != page_size:
-        logging.error(u'Unable to continue parsing Binary Cookie file')
+        parser_mediator.ProduceParseError(
+            u'Unable to continue parsing Binary Cookie file')
         break
 
       self._ParsePage(page, parser_mediator)

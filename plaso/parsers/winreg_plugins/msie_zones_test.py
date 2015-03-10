@@ -16,13 +16,16 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._plugin = msie_zones.MsieZoneSettingsSoftwareZonesPlugin()
-    self._test_file = self._GetTestFilePath([u'SOFTWARE'])
+    path_segments = [u'SOFTWARE']
+    self._test_file = self._GetTestFilePath(path_segments)
+    self._file_entry = self._GetTestFileEntryFromPath(path_segments)
 
   def testProcessForZone(self):
     """Tests the Process function."""
     key_path = u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones'
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+      self._plugin, winreg_key, file_entry=self._file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 6)
@@ -149,7 +152,8 @@ class MsieZoneSettingsSoftwareZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Lockdown_Zones')
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=self._file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 6)
@@ -273,7 +277,9 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
     self._plugin = msie_zones.MsieZoneSettingsPlugin()
-    self._test_file = self._GetTestFilePath(['NTUSER-WIN7.DAT'])
+    path_segments = [u'NTUSER-WIN7.DAT']
+    self._test_file = self._GetTestFilePath(path_segments)
+    self._file_entry = self._GetTestFileEntryFromPath(path_segments)
 
   def testProcessForZone(self):
     """Tests the Process function."""
@@ -281,7 +287,8 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Zones')
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=self._file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 6)
@@ -327,7 +334,8 @@ class MsieZoneSettingsUserZonesPluginTest(test_lib.RegistryPluginTestCase):
         u'\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
         u'\\Lockdown_Zones')
     winreg_key = self._GetKeyFromFile(self._test_file, key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, winreg_key)
+    event_queue_consumer = self._ParseKeyWithPlugin(
+        self._plugin, winreg_key, file_entry=self._file_entry)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
     self.assertEqual(len(event_objects), 6)

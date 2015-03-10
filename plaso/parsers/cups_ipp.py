@@ -61,8 +61,8 @@ class CupsIppEvent(event.EventObject):
         job_name: String with the job name.
         copies: Integer with the number of copies.
         application: String with the application that prints the document.
-        doc_usingtype: String with the type of document.
-        data_dict: Dictionary with all the parsed data comming from the file.
+        doc_type: String with the type of document.
+        data_dict: Dictionary with all the parsed data coming from the file.
     """
     super(CupsIppEvent, self).__init__()
     self.timestamp = timelib.Timestamp.FromPosixTime(timestamp)
