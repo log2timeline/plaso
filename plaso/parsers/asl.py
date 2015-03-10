@@ -75,7 +75,7 @@ class AslParser(interface.BaseParser):
   # If not right assigned, the value is "-1".
   ASL_NO_RIGHTS = 'ffffffff'
 
-  # Priority level (criticity)
+  # Priority level (criticality)
   ASL_MESSAGE_PRIORITY = {
       0 : 'EMERGENCY',
       1 : 'ALERT',
@@ -207,11 +207,12 @@ class AslParser(interface.BaseParser):
       while event_object:
         parser_mediator.ProduceEvent(event_object)
 
-        # TODO: an anomaly object must be emitted once that is implemented.
         # Sanity check, the last read element must be the same as
         # indicated by the header.
         if offset == 0 and old_offset != last_offset_header:
-          logging.warning(u'Parsing ended before the header ends.')
+          parser_mediator.ProduceParseError(
+              u'Unable to parse header. Last element header does not match '
+              u'header offset.')
         old_offset = offset
         event_object, offset = self.ReadAslEvent(file_object, offset)
 
@@ -225,7 +226,8 @@ class AslParser(interface.BaseParser):
       offset: offset where the static part of the entry starts.
 
     Returns:
-      An event object constructed from a single ASL record.
+      An event object constructed from a single ASL record, and the offset to
+      the next entry in the file.
     """
     # The heap of the entry is saved to try to avoid seek (performance issue).
     # It has the real start position of the entry.
@@ -303,7 +305,7 @@ class AslParser(interface.BaseParser):
       if field != 0:
         # The next IF ELSE is only for performance issues, avoiding seek.
         # If the pointer points a lower position than where the actual entry
-        # starts, it means that it points to a previuos entry.
+        # starts, it means that it points to a previous entry.
         pos = field - dynamic_start
         # Bigger or equal 0 means that the data is in the actual entry.
         if pos >= 0:

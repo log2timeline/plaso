@@ -251,7 +251,7 @@ class SlowLexicalTextParser(interface.BaseParser, lexer.SelfFeederMixIn):
 
     file_offset = file_object.get_offset()
     if file_offset < file_object.get_size():
-      logging.error((
+      parser_mediator.ProduceParseError((
           u'{0:s} prematurely terminated parsing: {1:s} at offset: '
           u'0x{2:08x}.').format(
               self.NAME, path_spec_printable, file_offset))
@@ -1084,8 +1084,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       try:
         self._text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
-        logging.error(
-            u'[{0:s}] Unable to read lines from file: {1:s} with error: '
-            u'{2:s}'.format(
-                parser_mediator.parser_chain, parser_mediator.GetDisplayName(),
+        parser_mediator.ProduceParseError(
+            u'Unable to read lines from file with error: {0:s}'.format(
                 exception))

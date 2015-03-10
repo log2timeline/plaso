@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import construct
-import logging
+
 from plaso.events import windows_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
@@ -41,8 +41,9 @@ class ShutdownPlugin(interface.KeyPlugin):
     try:
       filetime = self.FILETIME_STRUCT.parse(shutdown_value.data)
     except construct.FieldError as exception:
-      logging.error(
-          u'Unable to extract shutdown timestamp: {0:s}'.format(exception))
+      parser_mediator.ProduceParseError(
+          u'Unable to extract shutdown timestamp with error: {0:s}'.format(
+              exception))
       return
     timestamp = timelib.Timestamp.FromFiletime(filetime)
 

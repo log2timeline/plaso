@@ -147,11 +147,8 @@ class CustomDestinationsParser(interface.BaseParser):
       try:
         lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
       except RuntimeError as exception:
-        logging.error((
-            u'[{0:s}] Unable to open LNK file from {1:s} with error: '
-            u'{2:s}').format(
-                parser_mediator.parser_chain, parser_mediator.GetDisplayName(),
-                exception))
+        message = u'Unable to open LNK file with error'.format(exception)
+        parser_mediator.ProduceParseError(message)
         return
 
       display_name = u'{0:s} # 0x{1:08x}'.format(

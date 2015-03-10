@@ -84,7 +84,7 @@ class BootExecutePlugin(interface.KeyPlugin):
           error_string = (
               u'Key: {0:s}, value: {1:s}: unsupported value data type: '
               u'{2:s}.').format(key.path, value.name, value.data_type_string)
-          parser_mediator.ProduceParseError(self.NAME, error_string)
+          parser_mediator.ProduceParseError(error_string)
 
         # TODO: why does this have a separate event object? Remove this.
         value_dict = {'BootExecute': value_string}

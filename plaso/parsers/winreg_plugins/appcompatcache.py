@@ -545,10 +545,8 @@ class AppCompatCachePlugin(interface.KeyPlugin):
 
     format_type = self._CheckSignature(value_data)
     if not format_type:
-      # TODO: Instead of logging emit a parser error object that once that
-      # mechanism is implemented.
-      logging.error(
-          u'AppCompatCache format error: [{0:s}] Unsupported signature'.format(
+      parser_mediator.ProduceParseError(
+          u'Unsupported signature in AppCompatCache key: {0:s}'.format(
               key.path))
       return
 
@@ -564,11 +562,9 @@ class AppCompatCachePlugin(interface.KeyPlugin):
         format_type, value_data, cached_entry_offset)
 
     if not cached_entry_size:
-      # TODO: Instead of logging emit a parser error object that once that
-      # mechanism is implemented.
-      logging.error(
-          u'AppCompatCache format error: [{0:s}] Unsupported cached entry '
-          u'size.'.format(key.path))
+      parser_mediator.ProduceParseError(
+          u'Unsupported cached entry size at offset {0:d} in AppCompatCache '
+          u'key: {1:s}'.format(cached_entry_offset, key.path))
       return
 
     cached_entry_index = 0

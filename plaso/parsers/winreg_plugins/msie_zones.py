@@ -161,7 +161,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
     if key.number_of_values == 0:
       error_string = u'Key: {0:s} missing values.'.format(key.path)
-      parser_mediator.ProduceParseError(self.NAME, error_string)
+      parser_mediator.ProduceParseError(error_string)
 
     else:
       for value in key.GetValues():
@@ -192,7 +192,7 @@ class MsieZoneSettingsPlugin(interface.KeyPlugin):
 
     if key.number_of_subkeys == 0:
       error_string = u'Key: {0:s} missing subkeys.'.format(key.path)
-      parser_mediator.ProduceParseError(self.NAME, error_string)
+      parser_mediator.ProduceParseError(error_string)
       return
 
     for zone_key in key.GetSubkeys():
