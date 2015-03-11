@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the MD5 hasher."""
 
+import unittest
+
 from plaso.hashers import md5
 from plaso.hashers import test_lib
 
@@ -25,3 +27,6 @@ class MD5Test(test_lib.HasherTestCase):
     hasher = md5.MD5Hasher()
     self._AssertTestPathBinaryDigestMatch(
         hasher, [u'ímynd.dd'], unicode_file_md5.decode(u'hex'))
+
+if __name__ == '__main__':
+  unittest.main()
