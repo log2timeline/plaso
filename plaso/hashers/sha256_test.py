@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the SHA-256 hasher implementation."""
 
+import unittest
+
 from plaso.hashers import sha256
 from plaso.hashers import test_lib
 
@@ -26,3 +28,6 @@ class SHA256Test(test_lib.HasherTestCase):
     hasher = sha256.SHA256Hasher()
     self._AssertTestPathBinaryDigestMatch(
         hasher, [u'ímynd.dd'], unicode_file_sha256.decode('hex'))
+
+if __name__ == '__main__':
+  unittest.main()

@@ -67,6 +67,7 @@ class Log2TimelineFrontendTest(test_lib.FrontendTestCase):
     for hasher_info in plugin_info[u'Hashers']:
       available_hasher_names.append(hasher_info[0])
     self.assertIn(u'sha256', available_hasher_names)
+    self.assertIn(u'sha1', available_hasher_names)
 
     self.assertIn(u'Parsers', plugin_info)
     self.assertIsNotNone(plugin_info[u'Parsers'])
