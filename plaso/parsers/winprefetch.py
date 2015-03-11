@@ -398,7 +398,7 @@ class WinPrefetchParser(interface.BaseParser):
       logging.warning((
           u'[{0:s}] Unable to parse filename information from file {1:s} '
           u'with error: {2:s}').format(
-              parser_mediator.parser_chain, file_name, exception))
+              parser_mediator.GetParserChain(), file_name, exception))
       filename_strings = {}
 
     if len(metrics_array) != len(filename_strings):
