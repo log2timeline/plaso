@@ -63,3 +63,6 @@ class HashersManagerTest(unittest.TestCase):
     self.assertEqual(len(hasher_names), len(hashers))
     for hasher in hashers:
       self.assertIsInstance(hasher, interface.BaseHasher)
+
+if __name__ == '__main__':
+  unittest.main()
