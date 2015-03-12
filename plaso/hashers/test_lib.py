@@ -52,6 +52,10 @@ class HasherTestCase(unittest.TestCase):
       digest: The digest the hasher should return.
     """
     file_object = file_entry.GetFileObject()
+
+    # Make sure we are starting from the beginning of the file.
+    file_object.seek(0, os.SEEK_SET)
+
     data = file_object.read(self._DEFAULT_READ_SIZE)
     while data:
       hasher.Update(data)
@@ -79,6 +83,9 @@ class HasherTestCase(unittest.TestCase):
       hash: The digest the hasher should return.
     """
     file_object = file_entry.GetFileObject()
+    # Make sure we are starting from the beginning of the file.
+    file_object.seek(0, os.SEEK_SET)
+
     data = file_object.read(self._DEFAULT_READ_SIZE)
     while data:
       hasher.Update(data)
