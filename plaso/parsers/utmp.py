@@ -104,34 +104,40 @@ class UtmpParser(interface.BaseParser):
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
     """
     file_object = parser_mediator.GetFileObject()
     try:
+      self._ParseFileObject(parser_mediator, file_object)
+    finally:
+      file_object.close()
+
+  def _ParseFileObject(self, parser_mediator, file_object):
+    """Extract data UTMP data from a file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: The file-like object to extract data from.
+    """
+    try:
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse UTMP Header with error: {0:s}'.format(exception))
 
     if structure.type not in self.STATUS_TYPE:
-      file_object.close()
       raise errors.UnableToParseFile((
           u'Not an UTMP file, unknown type '
           u'[{0:d}].').format(structure.type))
 
     if not self._VerifyTextField(structure.terminal):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown terminal.')
 
     if not self._VerifyTextField(structure.username):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown username.')
 
     if not self._VerifyTextField(structure.hostname):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an UTMP file, unknown hostname.')
 
@@ -153,17 +159,12 @@ class UtmpParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Not an UTMP file, no timestamp set in the first record.')
 
-
-
     file_object.seek(0, os.SEEK_SET)
     event_object = self._ReadUtmpEvent(file_object)
     while event_object:
       event_object.offset = file_object.tell()
       parser_mediator.ProduceEvent(event_object)
-
       event_object = self._ReadUtmpEvent(file_object)
-
-    file_object.close()
 
   def _VerifyTextField(self, text):
     """Check if a bytestream is a null terminated string.

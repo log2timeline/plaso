@@ -116,11 +116,13 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
     # TODO: remove this check win_registry.OpenFile doesn't fail instead?
     try:
       file_object = file_entry.GetFileObject()
-      file_object.close()
     except IOError as exception:
       raise errors.PreProcessFail(
           u'Unable to open file object: {0:s} with error: {1:s}'.format(
               file_location, exception))
+    finally:
+      file_object.close()
+
 
     win_registry = winregistry.WinRegistry(
         winregistry.WinRegistry.BACKEND_PYREGF)

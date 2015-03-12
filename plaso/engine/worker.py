@@ -352,6 +352,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         self._hasher_names)
 
     file_object = file_entry.GetFileObject()
+    file_object.seek(0, os.SEEK_SET)
 
     try:
       # We only do one read, then pass it to each of the hashers in turn.
