@@ -17,15 +17,18 @@ class WinRecycleEvent(time_events.FiletimeEvent):
   DATA_TYPE = 'windows:metadata:deleted_item'
 
   def __init__(
-      self, filename_ascii, filename_utf, record_information, record_size):
+      self, filename_string, filename_utf, record_information, record_size,
+      encoding=None):
     """Initializes the event object.
 
     Args:
-      filename_ascii: the filename in ASCII.
-      filename_utf: the filename in UTF.
+      filename_string: the short filename as an extended ASCII string (codepage
+                      encoded).
+      filename_utf: the filename in Unicode.
       record_information: the record information (instance of
                           construct.Struct).
       record_size: the size of the record.
+      encoding: optional codepage used to encode the string with.
     """
     timestamp = record_information.get(u'filetime', 0)
 
@@ -41,16 +44,22 @@ class WinRecycleEvent(time_events.FiletimeEvent):
     self.drive_number = record_information.get(u'drive', None)
     self.file_size = record_information.get(u'filesize', 0)
 
+    if filename_string and encoding:
+      try:
+        short_filename = filename_string.decode(encoding)
+      except UnicodeDecodeError:
+        short_filename = filename_string.decode(encoding, errors='ignore')
+    elif filename_string:
+      short_filename = repr(filename_string)
+    else:
+      short_filename = u''
+
     if filename_utf:
       self.orig_filename = filename_utf
+      if filename_utf != short_filename:
+        self.short_filename = short_filename
     else:
-      self.orig_filename = filename_ascii
-
-    # The unicode cast is done on the ASCII string to make
-    # comparison work better (sometimes a warning that a comparison
-    # could not be made due to the objects being of different type).
-    if filename_ascii and unicode(filename_ascii) != filename_utf:
-      self.orig_filename_legacy = filename_ascii
+      self.orig_filename = short_filename
 
 
 class WinRecycleBinParser(interface.BaseParser):
@@ -196,14 +205,14 @@ class WinRecyclerInfo2Parser(interface.BaseParser):
 
     # If recordsize is 0x320 then we have UTF/unicode names as well.
     read_unicode_names = False
-    if record_size is 0x320:
+    if record_size == 0x320:
       read_unicode_names = True
 
     data = file_object.read(record_size)
     while data:
       if len(data) != record_size:
         break
-      filename_ascii = self.STRING_STRUCT.parse(data[4:])
+      filename_string = self.STRING_STRUCT.parse(data[4:])
       record_information = self.RECORD_STRUCT.parse(
           data[self.RECORD_INDEX_OFFSET:])
       if read_unicode_names:
@@ -213,7 +222,8 @@ class WinRecyclerInfo2Parser(interface.BaseParser):
         filename_utf = u''
 
       event_object = WinRecycleEvent(
-          filename_ascii, filename_utf, record_information, record_size)
+          filename_string, filename_utf, record_information, record_size,
+          encoding=parser_mediator.codepage)
       parser_mediator.ProduceEvent(event_object)
 
       data = file_object.read(record_size)

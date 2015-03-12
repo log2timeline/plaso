@@ -77,9 +77,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     expected_msg = (
         u'DC2 -> C:\\Documents and Settings\\Mr. Evil\\Desktop'
-        u'\\netstumblerinstaller_0_4_0.exe [C:\\Documents and '
-        u'Settings\\Mr. Evil\\Desktop\\netstumblerinstaller_0_4_0.exe] '
-        u'(from drive: C)')
+        u'\\netstumblerinstaller_0_4_0.exe (from drive: C)')
     expected_msg_short = (
         u'Deleted file: C:\\Documents and Settings\\Mr. Evil\\Desktop'
         u'\\netstumblerinstaller...')
