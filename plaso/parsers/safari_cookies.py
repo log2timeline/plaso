@@ -186,7 +186,7 @@ class BinaryCookieParser(interface.BaseParser):
 
     try:
       header = self.COOKIE_HEADER.parse_stream(file_object)
-    except (IOError, construct.FieldError):
+    except (IOError, construct.ArrayError, construct.FieldError):
       file_object.close()
       raise errors.UnableToParseFile(
           u'The file is not a Binary Cookie file (bad header).')

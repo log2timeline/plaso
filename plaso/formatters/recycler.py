@@ -44,7 +44,7 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'DC{index} ->',
       u'{orig_filename}',
-      u'[{orig_filename_legacy}]',
+      u'[{short_filename}]',
       u'(from drive: {drive_letter})']
 
   FORMAT_STRING_SHORT_PIECES = [
