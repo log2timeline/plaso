@@ -68,15 +68,21 @@ class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+
+    event_tag = event.EventTag()
+    event_tag.tags = [u'Malware', u'Document Printed']
+    event_tag.uuid = self.event_object.uuid
+
+    self.event_object.tag = event_tag
     self.formatter.WriteEventBody(self.event_object)
 
     expected_event_body = (
         u'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
         u'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         u'closed for user root),Reporter <CRON> PID: 8442 '
-        u'(pam_unix(cron:session): '
-        u'session closed for user root),2,log/syslog.1,-,-,-,my_number: 123  '
-        u'some_additional_foo: True \n')
+        u'(pam_unix(cron:session): session closed for user root),'
+        u'2,log/syslog.1,-,Malware Document Printed,'
+        u'-,my_number: 123  some_additional_foo: True \n')
 
     event_body = self.output.getvalue()
     self.assertEqual(event_body, expected_event_body)

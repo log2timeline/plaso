@@ -126,6 +126,32 @@ class ParsersManagerTest(unittest.TestCase):
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
 
+  def testGetParsers(self):
+    """Tests the GetParsers function."""
+    TestParserWithPlugins.RegisterPlugin(TestPlugin)
+    manager.ParsersManager.RegisterParser(TestParserWithPlugins)
+    manager.ParsersManager.RegisterParser(TestParser)
+
+    # Add a plugin, the parser name should be included.
+    test_filter_string = u'test_plugin, test_parser'
+    expected_set = set([u'test_parser', u'test_parser_with_plugins'])
+    parser_set = set([name for name, _ in list(
+        manager.ParsersManager.GetParsers(
+            parser_filter_string=test_filter_string))])
+    self.assertSetEqual(parser_set, expected_set)
+
+    # Test with a parser name, not using plugin names.
+    test_filter_string = u'test_parser_with_plugins'
+    expected_set = set([u'test_parser_with_plugins'])
+    parser_set = set([name for name, _ in list(
+        manager.ParsersManager.GetParsers(
+            parser_filter_string=test_filter_string))])
+    self.assertSetEqual(parser_set, expected_set)
+
+    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
+    manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
+    manager.ParsersManager.DeregisterParser(TestParser)
+
 
 if __name__ == '__main__':
   unittest.main()

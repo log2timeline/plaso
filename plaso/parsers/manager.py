@@ -11,6 +11,7 @@ class ParsersManager(object):
   """Class that implements the parsers manager."""
 
   _parser_classes = {}
+  _plugin_to_parser_map = {}
 
   @classmethod
   def DeregisterParser(cls, parser_class):
@@ -36,9 +37,10 @@ class ParsersManager(object):
     """Determines an include and exclude list of parser and plugin names.
 
     Takes a comma separated string and splits it up into two lists,
-    of parsers or plugins to include and to exclude from selection.
+    of parsers, those to include and exclude from selection.
+
     If a particular filter is prepended with a minus sign it will
-    be included in the exclude section, otherwise in the include.
+    be included in the exclude section, otherwise it is placed in the include.
 
     Args:
       parser_filter_string: The parser filter string.
@@ -78,6 +80,61 @@ class ParsersManager(object):
         active_list.append(filter_string)
 
     return includes, excludes
+
+  @classmethod
+  def GetParserFilterListsFromString(cls, parser_filter_string):
+    """Determines an include and exclude list of parser names.
+
+    Takes a comma separated string and splits it up into two lists,
+    of parsers to include and to exclude from selection. If a particular
+    filter is prepended with a minus sign it will be included in the
+    exclude section, otherwise in the include.
+
+    Args:
+      parser_filter_string: The parser filter string.
+
+    Returns:
+      A tuple of two lists, include and exclude.
+    """
+    if not parser_filter_string:
+      return [], []
+
+    if not cls._plugin_to_parser_map:
+      # Build the plugin to parser map.
+      for parser_name, parser_class in cls._parser_classes.iteritems():
+        if parser_class.SupportsPlugins():
+          for plugin_name in parser_class.GetPluginNames():
+            cls._plugin_to_parser_map[plugin_name] = parser_name
+
+    includes = set()
+    excludes = set()
+
+    preset_categories = presets.categories.keys()
+
+    for filter_string in parser_filter_string.split(u','):
+      filter_string = filter_string.strip()
+      if not filter_string:
+        continue
+
+      if filter_string.startswith(u'-'):
+        active_list = excludes
+        filter_string = filter_string[1:]
+      else:
+        active_list = includes
+
+      filter_string = filter_string.lower()
+      if filter_string in cls._parser_classes:
+        active_list.add(filter_string)
+
+      elif filter_string in preset_categories:
+        for entry in presets.GetParsersFromCategory(filter_string):
+          active_list.add(cls._plugin_to_parser_map.get(entry, entry))
+
+      else:
+        active_list.add(cls._plugin_to_parser_map.get(
+            filter_string, filter_string))
+
+    return list(includes), list(excludes)
 
   @classmethod
   def GetParserNames(cls, parser_filter_string=None):
@@ -120,6 +177,19 @@ class ParsersManager(object):
   def GetParsers(cls, parser_filter_string=None):
     """Retrieves the registered parsers.
 
+    Retrieves a list of all registered parsers from a parser filter string.
+    The filter string can contain direct names of parsers, presets or plugins.
+    The filter string can also negate selection if prepended with a minus sign,
+    eg: foo,-bar would include parser foo but not include parser bar.
+
+    The three types of entries in the filter string:
+     * name of a parser: this would be the exact name of a single parser to
+       include (or exclude), eg: foo;
+     * name of a preset, eg. win7: the presets are defined in
+       plaso.frontend.presets;
+     * name of a plugin: if a plugin name is included the parent parser will be
+       included in the list of registered parsers;
+
     Args:
       parser_filter_string: Optional parser filter string. The default is None.
 
@@ -127,17 +197,17 @@ class ParsersManager(object):
       A tuple that contains the uniquely identifying name of the parser
       and the parser class (subclass of BaseParser).
     """
-    if parser_filter_string:
-      includes, excludes = cls.GetFilterListsFromString(parser_filter_string)
-    else:
-      includes = None
-      excludes = None
+    parsers_to_include, parsers_to_exclude = cls.GetParserFilterListsFromString(
+        parser_filter_string)
 
+    # TODO: Add a warning in the case where an exclusion excludes a parser
+    # that is also in the inclusion list, eg: user selects chrome_history but
+    # excludes sqlite.
     for parser_name, parser_class in cls._parser_classes.iteritems():
-      if excludes and parser_name in excludes:
+      if parsers_to_exclude and parser_name in parsers_to_exclude:
         continue
 
-      if includes and parser_name not in includes:
+      if parsers_to_include and parser_name not in parsers_to_include:
         continue
 
       yield parser_name, parser_class
