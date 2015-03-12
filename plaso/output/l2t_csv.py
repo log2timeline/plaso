@@ -85,6 +85,18 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
         if check_user != u'-':
           username = check_user
 
+    notes = []
+    note_string = getattr(event_object, u'notes', None)
+    if note_string:
+      notes.append(note_string)
+
+    tag = getattr(event_object, u'tag', None)
+    if tag:
+      notes.extend(tag.tags)
+
+    if not notes:
+      notes.append(u'-')
+
     row = (
         u'{0:02d}/{1:02d}/{2:04d}'.format(
             date_use.month, date_use.day, date_use.year),
@@ -102,7 +114,7 @@ class L2tCsvOutputFormatter(interface.FileLogOutputFormatter):
         u'2',
         getattr(event_object, u'display_name', u'-'),
         inode,
-        getattr(event_object, u'notes', u'-'),  # Notes field placeholder.
+        u' '.join(notes),
         getattr(event_object, u'parser', u'-'),
         extra.replace(u'\n', u'-').replace(u'\r', u''))
 
