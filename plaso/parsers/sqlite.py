@@ -141,7 +141,7 @@ class SQLiteDatabase(object):
 
     # TODO: Remove this when the classifier gets implemented
     # and used. As of now, there is no check made against the file
-    # to verify it's signature, thus all files are sent here, meaning
+    # to verify its signature, thus all files are sent here, meaning
     # that this method assumes everything is a SQLite file and starts
     # copying the content of the file into memory, which is not good
     # for very large files.
@@ -182,6 +182,7 @@ class SQLiteDatabase(object):
       self._database.row_factory = sqlite3.Row
       self._cursor = self._database.cursor()
     except sqlite3.DatabaseError as exception:
+      file_object.close()
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
               self._file_entry.name, exception))
@@ -193,6 +194,7 @@ class SQLiteDatabase(object):
       sql_results = self._cursor.execute(
           'SELECT name FROM sqlite_master WHERE type="table"')
     except sqlite3.DatabaseError as exception:
+      file_object.close()
       logging.debug(
           u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
               self._file_entry.name, exception))
@@ -202,6 +204,7 @@ class SQLiteDatabase(object):
     for row in sql_results:
       self._tables.append(row[0])
 
+    file_object.close()
     self._open = True
 
 
