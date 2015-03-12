@@ -53,8 +53,10 @@ class PlistPreprocessPlugin(interface.PreprocessPlugin):
           u'Unable to open file: {0:s}'.format(self.PLIST_PATH))
 
     file_object = file_entry.GetFileObject()
-    value = self.ParseFile(file_entry, file_object)
-    file_object.close()
+    try:
+      value = self.ParseFile(file_entry, file_object)
+    finally:
+      file_object.close()
 
     return value
 
