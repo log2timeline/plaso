@@ -35,6 +35,7 @@ class Foreman(object):
       show_memory_usage: Optional boolean value to indicate memory information
                          should be included in logging. The default is false.
     """
+    super(Foreman, self).__init__()
     self._last_status_dict = {}
     self._process_information = process_info.ProcessInfo()
     self._process_labels = []
@@ -137,8 +138,7 @@ class Foreman(object):
     if label is None:
       if pid is None or name is None:
         return
-      label = self.PROCESS_LABEL(
-          name, pid, process_info.ProcessInfo(pid=pid))
+      label = self.PROCESS_LABEL(name, pid, process_info.ProcessInfo(pid=pid))
 
     if label not in self._process_labels:
       return
@@ -227,16 +227,17 @@ class Foreman(object):
 
       if status_dict:
         self._last_status_dict[label.pid] = status_dict
-        if status_dict.get('is_running', False):
+        if status_dict.get(u'is_running', False):
           self._LogWorkerInformation(label, status_dict)
           if self._show_memory_usage:
             self._LogMemoryUsage(label)
           return
+
         else:
-          logging.info(
-              u'Process {0:s} [{1:d}] has complete it\'s processing. Total of '
-              u'{2:d} events extracted'.format(
-                  label.label, label.pid, status_dict.get('counter', 0)))
+          logging.info((
+              u'Process {0:s} [{1:d}] has complete its processing. '
+              u'Total of {2:d} events extracted').format(
+                  label.label, label.pid, status_dict.get(u'counter', 0)))
 
     else:
       logging.info(u'Process {0:s} [{1:d}] is not alive.'.format(
@@ -252,9 +253,9 @@ class Foreman(object):
     # We need to terminate the process.
     # TODO: Add a function to start a new instance of a worker instead of
     # just removing and killing it.
-    logging.error(
+    logging.error((
         u'Process {0:s} [{1:d}] is not functioning when it should be. '
-        u'Terminating it and removing from list.'.format(
+        u'Terminating it and removing from list.').format(
             label.label, label.pid))
     self._TerminateProcess(label)
 
@@ -280,20 +281,22 @@ class Foreman(object):
 
     Args:
       label: A process label (instance of PROCESS_LABEL).
+      status: Optional worker status dictonary. The default is None.
     """
     if status:
+      # TODO: change file to "display name".
       logging.info((
-          u'{0:s} [{1:d}] - Events Extracted: {2:d} - File ({3:s}) - Running: '
+          u'{0:s} [{1:d}] - events extracted: {2:d} - file: {3:s} - running: '
           u'{4!s} <{5:s}>').format(
-              label.label, label.pid, status.get('counter', -1),
-              status.get('current_file', u''), status.get('is_running', False),
-              unicode(label.process.status)))
+              label.label, label.pid, status.get(u'counter', -1),
+              status.get(u'current_file', u''),
+              status.get(u'is_running', False), label.process.status))
 
   def _TerminateProcess(self, label):
     """Terminate a process given a process label.
 
-    Attempts to terminate a process and if successful
-    removes the label from the watch list.
+    Attempts to terminate a process and if successful removes the label from
+    the watch list.
 
     Args:
       label: A process label (instance of PROCESS_LABEL).
