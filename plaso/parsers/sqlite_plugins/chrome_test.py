@@ -38,7 +38,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-04-07 12:03:11')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = u'http://start.ubuntu.com/10.04/Google/'
     self.assertEqual(event_object.url, expected_url)
@@ -63,7 +63,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-05-23 08:35:30')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u'http://fatloss4idiotsx.com/download/funcats/'

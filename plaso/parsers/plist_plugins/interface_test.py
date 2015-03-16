@@ -45,7 +45,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     """Tests the GetPluginNames function."""
     plugin_names = plist.PlistParser.GetPluginNames()
 
-    self.assertNotEquals(plugin_names, [])
+    self.assertNotEqual(plugin_names, [])
 
     self.assertTrue('plist_default' in plugin_names)
 

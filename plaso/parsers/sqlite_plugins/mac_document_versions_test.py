@@ -35,7 +35,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-21 02:03:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.name, u'Spain is beautiful.rtf')
     self.assertEqual(event_object.path, u'/Users/moxilo/Documents')

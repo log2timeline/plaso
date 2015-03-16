@@ -25,12 +25,12 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2002-11-19 08:01:34')
     timestamp = self._parser._GetTimestamp('200A13080122', timezone=pytz.UTC)
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-30 10:47:29')
     timestamp = self._parser._GetTimestamp('2A0A1E0A2F1D', timezone=pytz.UTC)
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
   def testParse(self):
     """Tests the Parse function."""
@@ -46,8 +46,8 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-30 10:47:29')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.user, u'davnads')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.user, u'davnads')
     expected_file = (
         u'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')
     self.assertEqual(event_object.file, expected_file)

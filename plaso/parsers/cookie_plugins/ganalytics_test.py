@@ -30,7 +30,7 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
   def testParsingFirefox29CookieDatabase(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
     plugin = firefox_cookies.FirefoxCookiePlugin()
-    test_file = self._GetTestFilePath(['firefox_cookies.sqlite'])
+    test_file = self._GetTestFilePath([u'firefox_cookies.sqlite'])
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(plugin, test_file)
     event_objects = self._GetAnalyticsCookies(event_queue_consumer)
 
@@ -43,9 +43,9 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
         u'/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/')
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-30 21:56:06')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(event_object.url, u'http://ads.aha.is/')
-    self.assertEquals(event_object.utmcsr, u'mbl.is')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.url, u'http://ads.aha.is/')
+    self.assertEqual(event_object.utmcsr, u'mbl.is')
 
     expected_msg = (
         u'http://ads.aha.is/ (__utmz) Sessions: 1 Domain Hash: 137167072 '
@@ -60,7 +60,7 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
     plugin = chrome_cookies.ChromeCookiePlugin()
-    test_file = self._GetTestFilePath(['cookies.db'])
+    test_file = self._GetTestFilePath([u'cookies.db'])
     event_queue_consumer = self._ParseDatabaseFileWithPlugin(plugin, test_file)
     event_objects = self._GetAnalyticsCookies(event_queue_consumer)
 
@@ -92,11 +92,13 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-22 01:55:29')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
-        u'http://assets.tumblr.com/ (__utma) Sessions: 2 Domain Hash: '
-        u'151488169 Visitor ID: 151488169')
+        u'http://assets.tumblr.com/ (__utma) '
+        u'Sessions: 2 '
+        u'Domain Hash: 151488169 '
+        u'Visitor ID: 1827102436')
     self._TestGetMessageStrings(
         event_object, expected_msg, u'http://assets.tumblr.com/ (__utma)')
 
@@ -110,7 +112,7 @@ class GoogleAnalyticsPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-22 01:48:30')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://upressonline.com/ (__utmb) Pages Viewed: 1 Domain Hash: '

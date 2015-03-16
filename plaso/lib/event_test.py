@@ -180,9 +180,9 @@ class EventObjectTest(unittest.TestCase):
         u'This ', u'is a ', u'long string']
 
     self.assertEqual(event_a, event_b)
-    self.assertNotEquals(event_a, event_c)
+    self.assertNotEqual(event_a, event_c)
     self.assertEqual(event_a, event_e)
-    self.assertNotEquals(event_c, event_d)
+    self.assertNotEqual(event_c, event_d)
 
   def testEqualityString(self):
     """Test the EventObject EqualityString."""
@@ -237,10 +237,10 @@ class EventObjectTest(unittest.TestCase):
     event_f.weirdness = u'I am a potato'
 
     self.assertEqual(event_a.EqualityString(), event_b.EqualityString())
-    self.assertNotEquals(event_a.EqualityString(), event_c.EqualityString())
+    self.assertNotEqual(event_a.EqualityString(), event_c.EqualityString())
     self.assertEqual(event_a.EqualityString(), event_e.EqualityString())
-    self.assertNotEquals(event_c.EqualityString(), event_d.EqualityString())
-    self.assertNotEquals(event_d.EqualityString(), event_f.EqualityString())
+    self.assertNotEqual(event_c.EqualityString(), event_d.EqualityString())
+    self.assertNotEqual(event_d.EqualityString(), event_f.EqualityString())
 
   def testEqualityFileStatParserMissingInode(self):
     """Test that FileStatParser files with missing inodes are distinct"""
@@ -261,7 +261,7 @@ class EventObjectTest(unittest.TestCase):
     event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
 
-    self.assertNotEquals(event_a, event_b)
+    self.assertNotEqual(event_a, event_b)
 
   def testEqualityStringFileStatParserMissingInode(self):
     """Test that FileStatParser files with missing inodes are distinct"""
@@ -282,7 +282,7 @@ class EventObjectTest(unittest.TestCase):
     event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
 
-    self.assertNotEquals(event_a.EqualityString(), event_b.EqualityString())
+    self.assertNotEqual(event_a.EqualityString(), event_b.EqualityString())
 
   def testNotInEventAndNoParent(self):
     """Call to an attribute that does not exist."""

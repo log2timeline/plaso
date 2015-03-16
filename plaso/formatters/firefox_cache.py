@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Firefox cache records."""
+"""The Firefox cache record event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
+
 class FirefoxCacheFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Firefox cache record."""
+  """The Firefox cache record event formatter."""
 
   DATA_TYPE = 'firefox:cache:record'
 

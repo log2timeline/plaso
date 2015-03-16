@@ -36,7 +36,7 @@ class AndroidSmsTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-29 16:56:28.038')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_address = u'1 555-521-5554'
     self.assertEqual(event_object.address, expected_address)

@@ -32,7 +32,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-30 00:00:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.source_ip, u'10.10.10.100')
     self.assertEqual(event_object.dest_ip, u'10.10.10.100')
@@ -54,7 +54,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-30 00:00:05')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.http_method, 'GET')
     self.assertEqual(event_object.http_status, 200)

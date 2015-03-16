@@ -11,9 +11,9 @@ class FormatterMediatorTest(unittest.TestCase):
   """Tests for the formatter mediator object."""
 
   def testInitialization(self):
-    """Test the initialization."""
+    """Tests the initialization."""
     formatter_mediator = mediator.FormatterMediator()
-    self.assertNotEquals(formatter_mediator, None)
+    self.assertNotEqual(formatter_mediator, None)
 
 
 if __name__ == '__main__':

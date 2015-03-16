@@ -29,7 +29,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The prefetch last run event.
     event_object = event_objects[1]
 
-    self.assertEquals(event_object.version, 17)
+    self.assertEqual(event_object.version, 17)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-10 10:11:49.281250')
     self.assertEqual(event_object.timestamp, expected_timestamp)

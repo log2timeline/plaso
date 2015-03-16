@@ -33,7 +33,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:55:56.248103')
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -42,7 +42,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:55:56.248103')
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -51,7 +51,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 01:39:11.388000')
-    self.assertEquals(
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
@@ -80,7 +80,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:41:04')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: System32 '

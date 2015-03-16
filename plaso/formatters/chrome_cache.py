@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Chrome Cache files based-events."""
+"""The Google Chrome Cache files event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class ChromeCacheEntryEventFormatter(interface.ConditionalEventFormatter):
-  """Class contains the Chrome Cache Entry event formatter."""
+  """Formatter for a Chrome Cache entry event."""
 
   DATA_TYPE = 'chrome:cache:entry'
 

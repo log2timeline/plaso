@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for the Google Chrome cookie."""
+"""The Google Chrome cookies database event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class ChromeCookieFormatter(interface.ConditionalEventFormatter):
-  """The event formatter for cookie data in Chrome Cookies database."""
+  """Formatter for a Chrome cookie event."""
 
   DATA_TYPE = 'chrome:cookie:entry'
 

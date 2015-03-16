@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for CUPS IPP file."""
+"""The CUPS IPP file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class CupsIppFormatter(interface.ConditionalEventFormatter):
-  """Formatter for CUPS IPP file."""
+  """Formatter for a CUPS IPP event."""
 
   DATA_TYPE = 'cups:ipp:event'
 

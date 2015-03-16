@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatters for the file history ESE database events."""
+"""The file history ESE database event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
