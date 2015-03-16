@@ -34,15 +34,15 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-12-31 21:11:55+01:00')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-12-31 23:00:00+01:00')
-    self.assertEquals(event_objects[7].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[7].timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-12-31 23:59:00+01:00')
-    self.assertEquals(event_objects[8].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[8].timestamp, expected_timestamp)
 
     expected_string = u'XChat start logging'
     self._TestGetMessageStrings(

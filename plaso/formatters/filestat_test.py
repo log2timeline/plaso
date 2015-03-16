@@ -5,25 +5,25 @@
 import unittest
 
 from plaso.formatters import filestat
+from plaso.formatters import test_lib
 
 
-class FileStatFormatterTest(unittest.TestCase):
+class FileStatFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the file system stat event formatter."""
 
   def testInitialization(self):
-    """Test the initialization."""
+    """Tests the initialization."""
     event_formatter = filestat.FileStatFormatter()
-    self.assertNotEquals(event_formatter, None)
+    self.assertNotEqual(event_formatter, None)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = filestat.FileStatFormatter()
 
-    expected_attribute_names = sorted([
-        u'display_name', u'unallocated'])
+    expected_attribute_names = [u'display_name', u'unallocated']
 
-    attribute_names = event_formatter.GetFormatStringAttributeNames()
-    self.assertEqual(sorted(attribute_names), expected_attribute_names)
+    self._TestGetFormatStringAttributeNames(
+        event_formatter, expected_attribute_names)
 
   # TODO: add test for GetMessages.
   # TODO: add test for GetSources.

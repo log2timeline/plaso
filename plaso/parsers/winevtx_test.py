@@ -65,8 +65,8 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-14 04:17:38.276340')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
 
     expected_xml_string = (

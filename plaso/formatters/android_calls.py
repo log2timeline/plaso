@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Android contacts2.db database events."""
+"""The Android contacts2.db database event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class AndroidCallFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Android call history events."""
+  """Formatter for an Android call history event."""
 
   DATA_TYPE = 'android:event:call'
 

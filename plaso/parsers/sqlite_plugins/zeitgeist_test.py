@@ -35,7 +35,7 @@ class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-22 08:53:19.477')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = u'application://rhythmbox.desktop'
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg)

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Apple System Log binary files."""
+"""The Apple System Log (ASL) event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class AslFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an ASL log entry."""
+  """Formatter for an Apple System Log (ASL) log event."""
 
   DATA_TYPE = 'mac:asl:event'
 

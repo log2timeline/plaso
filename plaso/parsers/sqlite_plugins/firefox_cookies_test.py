@@ -53,15 +53,15 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Check one greenqloud.com event
     event_object = event_objects[32]
-    self.assertEquals(event_object.timestamp_desc, u'Cookie Expires')
-    self.assertEquals(event_object.host, u's.greenqloud.com')
-    self.assertEquals(event_object.cookie_name, u'__utma')
+    self.assertEqual(event_object.timestamp_desc, u'Cookie Expires')
+    self.assertEqual(event_object.host, u's.greenqloud.com')
+    self.assertEqual(event_object.cookie_name, u'__utma')
     self.assertFalse(event_object.httponly)
     self.assertEqual(event_object.url, u'http://s.greenqloud.com/')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-10-30 21:56:03')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://s.greenqloud.com/ (__utma) Flags: [HTTP only]: False')
@@ -75,7 +75,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         U'2013-11-29 21:56:04')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.url, u'http://pubmatic.com/')
     self.assertEqual(event_object.path, u'/')

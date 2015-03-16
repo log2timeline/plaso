@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the AppCompatCache entries inside the Windows Registry."""
+"""The Windows Registry AppCompatCache entries event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class AppCompatCacheFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an AppCompatCache Windows Registry entry."""
+  """Formatter for an AppCompatCache Windows Registry event."""
 
   DATA_TYPE = 'windows:registry:appcompatcache'
 

@@ -37,7 +37,7 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-11-25 21:08:23.698737')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_extension_id = u'ognampngfcbddbfemdapefohjiobgbdl'
     self.assertEqual(event_object.extension_id, expected_extension_id)

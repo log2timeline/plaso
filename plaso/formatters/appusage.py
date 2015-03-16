@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for the Mac OS X application usage."""
+"""The Mac OS X application usage event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class ApplicationUsageFormatter(interface.EventFormatter):
-  """Define the formatting for Application Usage information."""
+  """Formatter for a Mac OS X Application usage event."""
 
   DATA_TYPE = 'macosx:application_usage'
 

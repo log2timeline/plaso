@@ -54,7 +54,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -122,7 +122,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-28 09:23:49.002031')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[{0:s}] '
@@ -139,7 +139,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-01-14 12:03:52')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: Winnt '

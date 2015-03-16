@@ -79,7 +79,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-01 22:14:22')
-    self.assertEquals(sms_event_object.timestamp, expected_timestamp)
+    self.assertEqual(sms_event_object.timestamp, expected_timestamp)
     text_sms = (u'If you want I can copy '
                 u'some documents for you, '
                 u'if you can pay it... ;)')
@@ -89,7 +89,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-24 21:49:35')
-    self.assertEquals(event_file.timestamp, expected_timestamp)
+    self.assertEqual(event_file.timestamp, expected_timestamp)
 
     action_type = u'GETSOLICITUDE'
     self.assertEqual(event_file.action_type, action_type)
@@ -105,7 +105,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-30 21:27:11')
-    self.assertEquals(chat_event_object.timestamp, expected_timestamp)
+    self.assertEqual(chat_event_object.timestamp, expected_timestamp)
 
     title = u'European Competitor | need to know if you got it..'
     self.assertEqual(chat_event_object.title, title)
@@ -117,7 +117,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-27 15:29:19')
-    self.assertEquals(chat_room_event_object.timestamp, expected_timestamp)
+    self.assertEqual(chat_room_event_object.timestamp, expected_timestamp)
 
     title = u'European Competitor, Echo123'
     self.assertEqual(chat_room_event_object.title, title)
@@ -130,7 +130,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-01 22:12:17')
-    self.assertEquals(call_event_object.timestamp, expected_timestamp)
+    self.assertEqual(call_event_object.timestamp, expected_timestamp)
 
     self.assertEqual(call_event_object.dst_call, u'european.bbq.competitor')
     self.assertEqual(call_event_object.src_call, u'gen.beringer')
