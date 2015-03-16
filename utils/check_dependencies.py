@@ -360,7 +360,7 @@ if __name__ == '__main__':
       ('pymsiecf', 20150314),
       ('pyolecf', 20131012),
       ('pyqcow', 20131204),
-      ('pyregf', 20130716),
+      ('pyregf', 20150315),
       ('pysigscan', 20150114),
       ('pysmdev', 20140529),
       ('pysmraw', 20140612),

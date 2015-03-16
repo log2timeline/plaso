@@ -10,8 +10,8 @@ from plaso.winreg import interface
 import pyregf
 
 
-if pyregf.get_version() < '20130716':
-  raise ImportWarning('WinPyregf requires at least pyregf 20130716.')
+if pyregf.get_version() < '20150315':
+  raise ImportWarning(u'WinPyregf requires at least pyregf 20150315.')
 
 
 class WinPyregfKey(interface.WinRegKey):
@@ -115,14 +115,25 @@ class WinPyregfKey(interface.WinRegKey):
       The subkey with the relative path of name or None if not found.
     """
     subkey = self._pyregf_key.get_sub_key_by_name(name)
-
     if subkey:
       return WinPyregfKey(subkey, self.path)
 
     path_subkey = self._pyregf_key.get_sub_key_by_path(name)
     if path_subkey:
-      path, _, _ = name.rpartition('\\')
-      path = u'\\'.join([self.path, path])
+      # Split all the path segments based on the path (segment) separator.
+      path_segments = self.path.split(self.PATH_SEPARATOR)
+      path_segments.extend(name.split(self.PATH_SEPARATOR))
+
+      # Flatten the sublists into one list.
+      path_segments = [
+          element for sublist in path_segments for element in sublist]
+
+      # Remove empty path segments.
+      path_segments = filter(None, path_segments)
+
+      path = u'{0:s}{1:s}'.format(
+          self.PATH_SEPARATOR, self.PATH_SEPARATOR.join(path_segments))
+
       return WinPyregfKey(path_subkey, path)
 
   def GetSubkeys(self):
