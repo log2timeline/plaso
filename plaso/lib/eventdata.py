@@ -43,6 +43,9 @@ class EventTimestamp(object):
 
   LAST_RESUME_TIME = u'Last Resume Time'
 
+  # The timestamp does not represent a date and time value.
+  NOT_A_TIME = u'Not a time'
+
   # Note that the unknown time is used for date and time values
   # of which the exact meaning is unknown and being researched.
   # For most cases do not use this timestamp description.

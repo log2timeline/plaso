@@ -6,6 +6,11 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
+# TODO: add tests.
+# TODO: add MsiecfLeakFormatter.
+# TODO: add MsiecfRedirectedFormatter.
+
+
 class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIECF URL item."""
 
@@ -14,6 +19,7 @@ class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       u'Location: {url}',
       u'Number of hits: {number_of_hits}',
+      u'Cached file: {cached_file_path}',
       u'Cached file size: {cached_file_size}',
       u'HTTP headers: {http_headers}',
       u'{recovered_string}']
@@ -50,6 +56,13 @@ class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
 
     if event_values.get(u'recovered', None):
       event_values[u'recovered_string'] = '[Recovered Entry]'
+
+    cached_file_path = event_values.get(u'cached_filename', None)
+    if cached_file_path:
+      cache_directory_name = event_values.get(u'cache_directory_name', None)
+      if cache_directory_name:
+        cached_file_path = u'\\'.join(cache_directory_name, cached_file_path)
+      event_values[u'cached_file_path'] = cached_file_path
 
     return self._ConditionalFormatMessages(event_values)
 
