@@ -61,7 +61,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       An event object queue consumer object (instance of
       TestEventObjectQueueConsumer).
     """
-    self.assertNotEquals(winreg_key, None)
+    self.assertNotEqual(winreg_key, None)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_consumer = test_lib.TestEventObjectQueueConsumer(event_queue)

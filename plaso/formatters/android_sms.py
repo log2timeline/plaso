@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Android mmssms.db database events."""
+"""The Android mmssms.db database event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class AndroidSmsFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Android sms events."""
+  """Formatter for an Android SMS event."""
 
   DATA_TYPE = 'android:messaging:sms'
 

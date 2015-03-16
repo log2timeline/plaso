@@ -33,7 +33,7 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 17:31:00')
-    self.assertEquals(event_objects[10].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[10].timestamp, expected_timestamp)
     expected_url = u'http://netverslun.sci-mx.is/aminosyrur'
     self.assertEqual(event_object.url, expected_url)
 

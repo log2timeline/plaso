@@ -238,11 +238,11 @@ class StorageFileTest(unittest.TestCase):
     self.assertEqual(len(event_objects), 4)
     self.assertEqual(len(tags), 4)
 
-    self.assertEquals(tags[0].timestamp, 1238934459000000)
-    self.assertEquals(tags[0].store_number, 1)
-    self.assertEquals(tags[0].store_index, 0)
-    self.assertEquals(tags[0].tag.comment, u'My comment')
-    self.assertEquals(tags[0].tag.color, u'blue')
+    self.assertEqual(tags[0].timestamp, 1238934459000000)
+    self.assertEqual(tags[0].store_number, 1)
+    self.assertEqual(tags[0].store_index, 0)
+    self.assertEqual(tags[0].tag.comment, u'My comment')
+    self.assertEqual(tags[0].tag.color, u'blue')
 
     msg, _ = formatters_manager.FormattersManager.GetMessageStrings(
         self._formatter_mediator, tags[0])
@@ -266,18 +266,18 @@ class StorageFileTest(unittest.TestCase):
 
     expected_timestamps = [
         1238934459000000, 1334940286000000, 1334961526929596, 1335966206929596]
-    self.assertEquals(timestamps, expected_timestamps)
+    self.assertEqual(timestamps, expected_timestamps)
 
-    self.assertEquals(groups[0].name, u'Malicious')
-    self.assertEquals(groups[0].category, u'Malware')
-    self.assertEquals(groups[0].color, u'red')
-    self.assertEquals(groups[0].description, u'Events that are malicious')
-    self.assertEquals(groups[0].first_timestamp, 1334940286000000)
-    self.assertEquals(groups[0].last_timestamp, 1334961526929596)
+    self.assertEqual(groups[0].name, u'Malicious')
+    self.assertEqual(groups[0].category, u'Malware')
+    self.assertEqual(groups[0].color, u'red')
+    self.assertEqual(groups[0].description, u'Events that are malicious')
+    self.assertEqual(groups[0].first_timestamp, 1334940286000000)
+    self.assertEqual(groups[0].last_timestamp, 1334961526929596)
 
-    self.assertEquals(len(group_events), 2)
-    self.assertEquals(group_events[0].timestamp, 1334940286000000)
-    self.assertEquals(group_events[1].timestamp, 1334961526929596)
+    self.assertEqual(len(group_events), 2)
+    self.assertEqual(group_events[0].timestamp, 1334940286000000)
+    self.assertEqual(group_events[1].timestamp, 1334961526929596)
 
     proto_group_events = []
     for group_event in group_events:

@@ -17,7 +17,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     """Tests the GetPluginNames function."""
     all_plugin_names = sqlite.SQLiteParser.GetPluginNames()
 
-    self.assertNotEquals(all_plugin_names, [])
+    self.assertNotEqual(all_plugin_names, [])
 
     self.assertTrue('skype' in all_plugin_names)
     self.assertTrue('chrome_history' in all_plugin_names)

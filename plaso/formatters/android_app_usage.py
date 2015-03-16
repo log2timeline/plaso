@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Android Application Usage."""
+"""The Android Application Usage event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager

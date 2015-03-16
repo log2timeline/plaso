@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for the Mozilla Firefox history."""
+"""The Mozilla Firefox history event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -7,7 +7,7 @@ from plaso.lib import errors
 
 
 class FirefoxBookmarkAnnotationFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Firefox places.sqlite bookmark annotation."""
+  """The Firefox bookmark annotation event formatter."""
 
   DATA_TYPE = 'firefox:places:bookmark_annotation'
 
@@ -23,7 +23,7 @@ class FirefoxBookmarkAnnotationFormatter(interface.ConditionalEventFormatter):
 
 
 class FirefoxBookmarkFolderFormatter(interface.EventFormatter):
-  """Formatter for a Firefox places.sqlite bookmark folder."""
+  """The Firefox bookmark folder event formatter."""
 
   DATA_TYPE = 'firefox:places:bookmark_folder'
 
@@ -34,7 +34,7 @@ class FirefoxBookmarkFolderFormatter(interface.EventFormatter):
 
 
 class FirefoxBookmarkFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Firefox places.sqlite URL bookmark."""
+  """The Firefox URL bookmark event formatter."""
 
   DATA_TYPE = 'firefox:places:bookmark'
 
@@ -54,7 +54,7 @@ class FirefoxBookmarkFormatter(interface.ConditionalEventFormatter):
 
 
 class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Firefox places.sqlite page visited."""
+  """The Firefox page visited event formatter."""
 
   DATA_TYPE = 'firefox:places:page_visited'
 
@@ -124,12 +124,13 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
 
 
 class FirefoxDowloadFormatter(interface.EventFormatter):
-  """Formatter for a Firefox downloads.sqlite download."""
+  """The Firefox download event formatter."""
 
   DATA_TYPE = 'firefox:downloads:download'
 
-  FORMAT_STRING = (u'{url} ({full_path}). Received: {received_bytes} bytes '
-                   u'out of: {total_bytes} bytes.')
+  FORMAT_STRING = (
+      u'{url} ({full_path}). Received: {received_bytes} bytes '
+      u'out of: {total_bytes} bytes.')
   FORMAT_STRING_SHORT = u'{full_path} downloaded ({received_bytes} bytes)'
 
   SOURCE_LONG = 'Firefox History'

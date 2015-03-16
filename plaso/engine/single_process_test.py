@@ -77,7 +77,7 @@ class SingleProcessEngineTest(unittest.TestCase):
     test_engine = single_process.SingleProcessEngine(
         maximum_number_of_queued_items=25000)
 
-    self.assertNotEquals(test_engine, None)
+    self.assertNotEqual(test_engine, None)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -94,7 +94,7 @@ class SingleProcessEngineTest(unittest.TestCase):
 
     test_searcher = test_engine.GetSourceFileSystemSearcher(
         resolver_context=resolver_context)
-    self.assertNotEquals(test_searcher, None)
+    self.assertNotEqual(test_searcher, None)
     self.assertIsInstance(
         test_searcher, file_system_searcher.FileSystemSearcher)
 
@@ -103,12 +103,12 @@ class SingleProcessEngineTest(unittest.TestCase):
     test_collector = test_engine.CreateCollector(
         False, vss_stores=None, filter_find_specs=None,
         resolver_context=resolver_context)
-    self.assertNotEquals(test_collector, None)
+    self.assertNotEqual(test_collector, None)
     self.assertIsInstance(
         test_collector, single_process.SingleProcessCollector)
 
     test_extraction_worker = test_engine.CreateExtractionWorker(0)
-    self.assertNotEquals(test_extraction_worker, None)
+    self.assertNotEqual(test_extraction_worker, None)
     self.assertIsInstance(
         test_extraction_worker,
         single_process.SingleProcessEventExtractionWorker)

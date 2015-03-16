@@ -29,8 +29,8 @@ class SyslogUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-01-22 07:52:33')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
-    self.assertEquals(event_objects[0].hostname, 'myhostname.myhost.com')
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].hostname, 'myhostname.myhost.com')
 
     expected_string = (
         u'[client, pid: 30840] : INFO No new content.')
@@ -48,12 +48,12 @@ class SyslogUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-02-29 01:15:43')
-    self.assertEquals(event_objects[6].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[6].timestamp, expected_timestamp)
 
     # Testing year increment.
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-23 23:01:18')
-    self.assertEquals(event_objects[8].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[8].timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

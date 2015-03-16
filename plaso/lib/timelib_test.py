@@ -18,7 +18,7 @@ class TimeLibTest(unittest.TestCase):
     """Tests the CopyFromString function."""
     timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27')
     expected_timestamp = 1340755200000000
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString(None)
@@ -49,7 +49,7 @@ class TimeLibTest(unittest.TestCase):
 
     timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     expected_timestamp = 1340821021000000
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString(u'2012-06-27 18')
@@ -74,7 +74,7 @@ class TimeLibTest(unittest.TestCase):
 
     timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01.123')
     expected_timestamp = 1340821021123000
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01.')
@@ -84,7 +84,7 @@ class TimeLibTest(unittest.TestCase):
 
     timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01.123456')
     expected_timestamp = 1340821021123456
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01.1234')
@@ -94,15 +94,15 @@ class TimeLibTest(unittest.TestCase):
 
     timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01+00:00')
     expected_timestamp = 1340821021000000
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01+01:00')
     expected_timestamp = 1340817421000000
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01-07:00')
     expected_timestamp = 1340846221000000
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01+1')
@@ -124,17 +124,17 @@ class TimeLibTest(unittest.TestCase):
     timestamp = timelib.Timestamp.FromCocoaTime(395011845)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 21:30:45')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromCocoaTime(395353142)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-12 20:19:02')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromCocoaTime(394993669)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 16:27:49')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
   def testHFSTimes(self):
     """Tests the HFS timestamp conversion."""
@@ -142,17 +142,17 @@ class TimeLibTest(unittest.TestCase):
         3458215528, timezone=pytz.timezone('EST5EDT'), is_dst=True)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-01 15:25:28-04:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromHfsPlusTime(3458215528)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-01 15:25:28')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromHfsPlusTime(3413373928)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-02-29 15:25:28')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
   def testTimestampIsLeapYear(self):
     """Tests the is leap year check."""
@@ -201,14 +201,14 @@ class TimeLibTest(unittest.TestCase):
     timestamp = timelib.Timestamp.FromDelphiTime(41443.8263953)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-06-18 19:50:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
   def testTimestampFromFatDateTime(self):
     """Test the FAT date time conversion."""
     timestamp = timelib.Timestamp.FromFatDateTime(0xa8d03d0c)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-08-12 21:06:32')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     # Invalid number of seconds.
     fat_date_time = (0xa8d03d0c & ~(0x1f << 16)) | ((30 & 0x1f) << 16)
@@ -235,13 +235,13 @@ class TimeLibTest(unittest.TestCase):
     timestamp = timelib.Timestamp.FromWebKitTime(0x2dec3d061a9bfb)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-08-12 21:06:31.546875')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     webkit_time = 86400 * 1000000
     timestamp = timelib.Timestamp.FromWebKitTime(webkit_time)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'1601-01-02 00:00:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     # WebKit time that exceeds lower bound.
     webkit_time = -((1 << 63L) - 1)
@@ -252,13 +252,13 @@ class TimeLibTest(unittest.TestCase):
     timestamp = timelib.Timestamp.FromFiletime(0x01cb3a623d0a17ce)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-08-12 21:06:31.546875')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     filetime = 86400 * 10000000
     timestamp = timelib.Timestamp.FromFiletime(filetime)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'1601-01-02 00:00:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     # FILETIME that exceeds lower bound.
     filetime = -1
@@ -269,12 +269,12 @@ class TimeLibTest(unittest.TestCase):
     timestamp = timelib.Timestamp.FromPosixTime(1281647191)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-08-12 21:06:31')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.FromPosixTime(-122557518)
     expected_timestamp = timelib.Timestamp.FromTimeString(
         u'1966-02-12 1966 12:14:42 UTC')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     # POSIX time that exceeds upper bound.
     self.assertEqual(timelib.Timestamp.FromPosixTime(9223372036855), 0)
@@ -299,13 +299,13 @@ class TimeLibTest(unittest.TestCase):
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-01-01 00:00:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     local_timestamp = timelib.Timestamp.CopyFromString(u'2013-07-01 02:00:00')
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-01 00:00:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     # In the local timezone this is a non-existent timestamp.
     local_timestamp = timelib.Timestamp.CopyFromString(
@@ -317,13 +317,13 @@ class TimeLibTest(unittest.TestCase):
         local_timestamp, timezone, is_dst=True)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-31 00:00:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.LocaltimeToUTC(
         local_timestamp, timezone, is_dst=False)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-31 01:00:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     # In the local timezone this is an ambiguous timestamp.
     local_timestamp = timelib.Timestamp.CopyFromString(u'2013-10-27 02:30:00')
@@ -335,12 +335,12 @@ class TimeLibTest(unittest.TestCase):
         local_timestamp, timezone, is_dst=True)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-27 00:30:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-27 01:30:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     # Use the UTC timezone.
     self.assertEqual(
@@ -354,7 +354,7 @@ class TimeLibTest(unittest.TestCase):
     timestamp = timelib.Timestamp.LocaltimeToUTC(local_timestamp, timezone)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-01-01 05:00:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
   def testCopyToDatetime(self):
     """Test the copy to datetime object."""
@@ -364,14 +364,14 @@ class TimeLibTest(unittest.TestCase):
     datetime_object = timelib.Timestamp.CopyToDatetime(timestamp, timezone)
     expected_datetime_object = datetime.datetime(
         2013, 3, 14, 21, 20, 8, 850041, tzinfo=timezone)
-    self.assertEquals(datetime_object, expected_datetime_object)
+    self.assertEqual(datetime_object, expected_datetime_object)
 
   def testCopyToPosix(self):
     """Test converting microseconds to seconds."""
     timestamp = timelib.Timestamp.CopyFromString(u'2013-10-01 12:00:00')
     expected_posixtime, _ = divmod(timestamp, 1000000)
     posixtime = timelib.Timestamp.CopyToPosix(timestamp)
-    self.assertEquals(posixtime, expected_posixtime)
+    self.assertEqual(posixtime, expected_posixtime)
 
   def testTimestampFromTimeString(self):
     """The the FromTimeString function."""
@@ -440,17 +440,17 @@ class TimeLibTest(unittest.TestCase):
         2013, 6, 25, 22, 19, 46, 0, timezone=pytz.timezone('PST8PDT'))
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-06-25 22:19:46-07:00')
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-06-26 05:19:46')
     timestamp = timelib.Timestamp.FromTimeParts(2013, 6, 26, 5, 19, 46)
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-06-26 05:19:46.000542')
     timestamp = timelib.Timestamp.FromTimeParts(2013, 6, 26, 5, 19, 46, 542)
-    self.assertEquals(timestamp, expected_timestamp)
+    self.assertEqual(timestamp, expected_timestamp)
 
   def _TestStringToDatetime(
       self, expected_timestamp, time_string, timezone=pytz.utc, dayfirst=False):

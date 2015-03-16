@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for the Google Drive snaphots."""
+"""The Google Drive snapshots event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -9,7 +9,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class GDriveCloudEntryFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Google Drive snapshot cloud entry."""
+  """Formatter for a Google Drive snapshot cloud event."""
 
   DATA_TYPE = 'gdrive:snapshot:cloud_entry'
 
@@ -19,6 +19,7 @@ class GDriveCloudEntryFormatter(interface.ConditionalEventFormatter):
       u'Size: {size}',
       u'URL: {url}',
       u'Type: {document_type}']
+
   FORMAT_STRING_SHORT_PIECES = [u'{path}']
 
   SOURCE_LONG = 'Google Drive (cloud entry)'
@@ -26,7 +27,7 @@ class GDriveCloudEntryFormatter(interface.ConditionalEventFormatter):
 
 
 class GDriveLocalEntryFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Google Drive snapshot local entry."""
+  """Formatter for a Google Drive snapshot local event."""
 
   DATA_TYPE = 'gdrive:snapshot:local_entry'
 

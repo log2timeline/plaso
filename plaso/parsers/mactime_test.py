@@ -38,8 +38,8 @@ class MactimeUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-05-25 15:59:43')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEqual(event_object.inode, 16)
 
@@ -47,8 +47,8 @@ class MactimeUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-05-25 15:59:43')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
     expected_string = u'/a_directory/another_file'
@@ -58,16 +58,16 @@ class MactimeUnitTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-05-25 15:59:44')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
     event_object = event_objects[7]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-05-25 15:59:45')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CHANGE_TIME)
     self.assertEqual(event_object.filename, u'/a_directory/another_file')
     self.assertEqual(event_object.mode_as_string, u'r/rrw-------')

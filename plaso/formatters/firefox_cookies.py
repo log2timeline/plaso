@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for the Firefox cookie."""
+"""The Firefox cookie entry event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class FirefoxCookieFormatter(interface.ConditionalEventFormatter):
-  """The event formatter for cookie data in Firefox Cookies database."""
+  """The Firefox cookie entry event formatter."""
 
   DATA_TYPE = 'firefox:cookie:entry'
 

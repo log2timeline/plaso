@@ -32,7 +32,7 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-07 18:52:02')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.application, u'/Applications/Safari.app')
     self.assertEqual(event_object.app_version, u'9537.75.14')

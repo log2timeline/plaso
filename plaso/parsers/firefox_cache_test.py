@@ -49,7 +49,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-04-21 14:13:35')
-    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
     self.VerifyMajorMinor(event_objects)
 
@@ -86,7 +86,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-04-21 14:10:58')
-    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
     self.VerifyMajorMinor(event_objects)
 
@@ -106,7 +106,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-04-21 14:11:07')
-    self.assertEquals(event_objects[3].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[3].timestamp, expected_timestamp)
 
     self.VerifyMajorMinor(event_objects)
 
@@ -132,7 +132,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-02 14:15:03')
-    self.assertEquals(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
 
     expected_msg = (
         u'Fetched 1 time(s) '
@@ -157,7 +157,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-02 14:25:55')
-    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
   def testParseLegacyCache_003(self):
     """Test Firefox 3 cache file _CACHE_003_ parsing."""
@@ -171,7 +171,7 @@ class FirefoxCacheTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-02 14:15:07')
-    self.assertEquals(event_objects[1].timestamp, expected_timestamp)
+    self.assertEqual(event_objects[1].timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

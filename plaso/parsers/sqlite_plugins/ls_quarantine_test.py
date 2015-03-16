@@ -32,7 +32,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 21:12:03')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.agent, u'Google Chrome')
     vlc_url = (
@@ -47,14 +47,14 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-12 19:28:58')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Examine a SpeedTest event.
     event_object = event_objects[10]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-12 19:30:16')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     speedtest_message = (
         u'[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'

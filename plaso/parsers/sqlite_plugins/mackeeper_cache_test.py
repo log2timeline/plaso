@@ -32,7 +32,7 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-12 19:30:31')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Chat Outgoing Message : I have received your system scan report and '

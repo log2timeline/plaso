@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for the Google Analytics cookie."""
+"""The Google Analytics cookie event formatters."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class AnalyticsUtmaCookieFormatter(interface.ConditionalEventFormatter):
-  """The event formatter for UTMA Google Analytics cookie."""
+  """The UTMA Google Analytics cookie event formatter."""
 
   DATA_TYPE = 'cookie:google:analytics:utma'
 
@@ -15,7 +15,7 @@ class AnalyticsUtmaCookieFormatter(interface.ConditionalEventFormatter):
       u'({cookie_name})',
       u'Sessions: {sessions}',
       u'Domain Hash: {domain_hash}',
-      u'Visitor ID: {domain_hash}']
+      u'Visitor ID: {visitor_id}']
 
   FORMAT_STRING_SHORT_PIECES = [
       u'{url}',
@@ -26,7 +26,7 @@ class AnalyticsUtmaCookieFormatter(interface.ConditionalEventFormatter):
 
 
 class AnalyticsUtmbCookieFormatter(AnalyticsUtmaCookieFormatter):
-  """The event formatter for UTMB Google Analytics cookie."""
+  """The UTMB Google Analytics cookie event formatter."""
 
   DATA_TYPE = 'cookie:google:analytics:utmb'
 
@@ -38,7 +38,7 @@ class AnalyticsUtmbCookieFormatter(AnalyticsUtmaCookieFormatter):
 
 
 class AnalyticsUtmzCookieFormatter(AnalyticsUtmaCookieFormatter):
-  """The event formatter for UTMZ Google Analytics cookie."""
+  """The UTMZ Google Analytics cookie event formatter."""
 
   DATA_TYPE = 'cookie:google:analytics:utmz'
 

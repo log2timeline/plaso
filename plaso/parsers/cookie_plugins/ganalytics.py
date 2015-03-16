@@ -33,6 +33,8 @@ class GoogleAnalyticsEvent(time_events.PosixTimeEvent):
     self.url = url
     self.cookie_name = cookie_name
 
+    # TODO: refactor, this approach makes it very hard to tell
+    # which values are actually set.
     for key, value in kwargs.iteritems():
       setattr(self, key, value)
 
@@ -124,6 +126,8 @@ class GoogleAnalyticsUtmaPlugin(interface.CookiePlugin):
           len(fields)))
 
     domain_hash, visitor_id, first_visit, previous, last, sessions = fields
+
+    # TODO: catch int() throwing a ValueError.
 
     # TODO: Double check this time is stored in UTC and not local time.
     first_epoch = int(first_visit, 10)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for Hachoir events."""
+"""The Hachoir event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -10,7 +10,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 
 
 class HachoirFormatter(interface.EventFormatter):
-  """Formatter for Hachoir based events."""
+  """Formatter for a Hachoir event."""
 
   DATA_TYPE = 'metadata:hachoir'
   FORMAT_STRING = u'{data}'

@@ -53,32 +53,32 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-06-23 18:02:10.066')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_objects[9]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-06-23 18:02:10.066')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
 
     event_object = event_objects[10]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-06-29 17:55:02')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
 
     event_object = event_objects[11]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-06-23 18:02:12')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.LAST_CHECKED_TIME)
 
     expected_msg = (
