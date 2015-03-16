@@ -14,6 +14,7 @@ import datetime
 import time
 import multiprocessing
 import logging
+import os
 import pdb
 import sys
 
@@ -721,6 +722,20 @@ def Main(arguments=None):
   if options.output_format == u'list':
     front_end.ListOutputModules()
     return True
+
+  if not getattr(options, u'data_location', None):
+    # Determine if we are running from the source directory.
+    options.data_location = os.path.dirname(__file__)
+    options.data_location = os.path.dirname(options.data_location)
+    options.data_location = os.path.dirname(options.data_location)
+    options.data_location = os.path.join(options.data_location, u'data')
+
+    if not os.path.exists(options.data_location):
+      # Otherwise determine if there is shared plaso data location.
+      options.data_location = os.path.join(sys.prefix, u'share', u'plaso')
+
+    if not os.path.exists(options.data_location):
+      logging.warning(u'Unable to automatically determine data location.')
 
   try:
     front_end.ParseOptions(options)
