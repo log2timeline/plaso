@@ -17,7 +17,8 @@ class WinevtResourcesSqlite3DatabaseReaderTest(unittest.TestCase):
 
   def setUp(self):
     """Sets up the needed objects used throughout the test."""
-    self._database_path = os.path.join(os.getcwd(), u'data', u'winevt-rc.db')
+    self._database_path = os.path.join(
+        os.getcwd(), u'test_data', u'winevt-rc.db')
 
   def testGetMessage(self):
     """Tests the GetMessage function."""
