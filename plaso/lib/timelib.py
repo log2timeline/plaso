@@ -52,6 +52,11 @@ class Timestamp(object):
   # The maximum timestamp in micro seconds
   TIMESTAMP_MAX_MICRO_SECONDS = (1 << 63L) - 1
 
+  # Timestamp that represents the timestamp representing not
+  # a date and time value.
+  # TODO: replace this with a real None implementation.
+  NONE_TIMESTAMP = 0
+
   # The days per month of a non leap year
   DAYS_PER_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 

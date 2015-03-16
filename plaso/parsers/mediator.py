@@ -305,7 +305,6 @@ class ParserMediator(object):
       self._parse_error_queue_producer.ProduceItem(parse_error)
       self.number_of_parse_errors += 1
 
-
   def Reset(self):
     """Resets the internal state of the mediator.
 
