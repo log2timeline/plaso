@@ -58,7 +58,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-28 00:11:25')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = cloud_entries[16]
 
@@ -81,7 +81,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-28 00:12:27')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

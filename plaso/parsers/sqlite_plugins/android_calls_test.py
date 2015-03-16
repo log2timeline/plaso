@@ -38,7 +38,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-06 21:17:16.690')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_number = u'5404561685'
     self.assertEqual(event_object.number, expected_number)
@@ -63,16 +63,16 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp3 = timelib.Timestamp.CopyFromString(
         u'2013-11-07 00:03:36.690')
-    self.assertEquals(event_object_3.timestamp, expected_timestamp3)
+    self.assertEqual(event_object_3.timestamp, expected_timestamp3)
 
     expected_timestamp4 = timelib.Timestamp.CopyFromString(
         u'2013-11-07 00:14:15.690')
-    self.assertEquals(event_object_4.timestamp, expected_timestamp4)
+    self.assertEqual(event_object_4.timestamp, expected_timestamp4)
 
     # Ensure the difference in btw. events 3 and 4 equals the duration.
     expected_duration, _ = divmod(
         expected_timestamp4 - expected_timestamp3, 1000000)
-    self.assertEquals(event_object_4.duration, expected_duration)
+    self.assertEqual(event_object_4.duration, expected_duration)
 
 
 if __name__ == '__main__':

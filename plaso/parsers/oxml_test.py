@@ -30,8 +30,8 @@ class OXMLTest(test_lib.ParserTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-07 23:29:00')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     event_object = event_objects[1]

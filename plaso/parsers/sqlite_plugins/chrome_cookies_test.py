@@ -61,7 +61,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-08-25 21:50:27.292367')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'http://www.linkedin.com/ (leo_auth_token) Flags: [HTTP only] = False '
@@ -76,7 +76,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-01 13:54:34.949210')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.url, u'http://rubiconproject.com/')
     self.assertEqual(event_object.path, u'/')
@@ -98,14 +98,14 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-22 01:47:21.012022')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Examine a cookie that has an autologin entry.
     event_object = event_objects[1425]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-01 13:52:56.189444')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.host, u'marvel.com')
     self.assertEqual(event_object.cookie_name, u'autologin[timeout]')

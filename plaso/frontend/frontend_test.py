@@ -31,7 +31,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
-    self.assertNotEquals(path_spec, None)
+    self.assertNotEqual(path_spec, None)
     self.assertEqual(path_spec.location, os.path.abspath(test_file))
     self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_OS)
@@ -54,7 +54,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
-    self.assertNotEquals(path_spec, None)
+    self.assertNotEqual(path_spec, None)
     self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
@@ -77,7 +77,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
-    self.assertNotEquals(path_spec, None)
+    self.assertNotEqual(path_spec, None)
     self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
@@ -92,7 +92,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
-    self.assertNotEquals(path_spec, None)
+    self.assertNotEqual(path_spec, None)
     self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
@@ -106,7 +106,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
-    self.assertNotEquals(path_spec, None)
+    self.assertNotEqual(path_spec, None)
     self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
@@ -129,7 +129,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
-    self.assertNotEquals(path_spec, None)
+    self.assertNotEqual(path_spec, None)
     self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
@@ -144,7 +144,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
-    self.assertNotEquals(path_spec, None)
+    self.assertNotEqual(path_spec, None)
     self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access
@@ -159,7 +159,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
     test_front_end.ScanSource(options)
     path_spec = test_front_end.GetSourcePathSpec()
-    self.assertNotEquals(path_spec, None)
+    self.assertNotEqual(path_spec, None)
     self.assertEqual(
         path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
     # pylint: disable=protected-access

@@ -42,7 +42,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
 
     event_object = cookie_events[48]
 
-    self.assertEquals(event_object.flags, u'')
+    self.assertEqual(event_object.flags, u'')
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 20:54:50')
 

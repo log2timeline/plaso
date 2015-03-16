@@ -33,8 +33,8 @@ class MsieWebCacheEseDbPluginTest(test_lib.EseDbPluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-12 07:30:25.486198')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
-    self.assertEquals(
+    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
 
     expected_msg = (

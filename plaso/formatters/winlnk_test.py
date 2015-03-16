@@ -4,30 +4,31 @@
 
 import unittest
 
+from plaso.formatters import test_lib
 from plaso.formatters import winlnk
 
 
-class WinLnkLinkFormatterTest(unittest.TestCase):
+class WinLnkLinkFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the Windows Shortcut (LNK) event formatter."""
 
   def testInitialization(self):
-    """Test the initialization."""
+    """Tests the initialization."""
     event_formatter = winlnk.WinLnkLinkFormatter()
-    self.assertNotEquals(event_formatter, None)
+    self.assertNotEqual(event_formatter, None)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = winlnk.WinLnkLinkFormatter()
 
-    expected_attribute_names = sorted([
+    expected_attribute_names = [
         u'description', u'file_size', u'file_attribute_flags', u'drive_type',
         u'drive_serial_number', u'volume_label', u'local_path',
         u'network_path', u'command_line_arguments', u'env_var_location',
         u'relative_path', u'working_directory', u'icon_location',
-        u'link_target'])
+        u'link_target']
 
-    attribute_names = event_formatter.GetFormatStringAttributeNames()
-    self.assertEqual(sorted(attribute_names), expected_attribute_names)
+    self._TestGetFormatStringAttributeNames(
+        event_formatter, expected_attribute_names)
 
   # TODO: add test for GetMessages.
 

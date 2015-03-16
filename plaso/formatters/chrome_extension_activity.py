@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Google extension activity database events."""
+"""The Google Chrome extension activity database event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -7,7 +7,7 @@ from plaso.formatters import manager
 
 class ChromeExtensionActivityEventFormatter(
     interface.ConditionalEventFormatter):
-  """The event formatter for Chrome extension activity log entries."""
+  """Formatter for a Chrome extension activity event."""
 
   DATA_TYPE = 'chrome:extension_activity:activity_log'
 
