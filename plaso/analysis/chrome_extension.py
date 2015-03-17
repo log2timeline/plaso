@@ -101,9 +101,12 @@ class AnalyzeChromeExtensionPlugin(interface.AnalysisPlugin):
 
     self._extensions[extension_id] = u'Not Found'
 
-  def CompileReport(self):
+  def CompileReport(self, analysis_context):
     """Compiles a report of the analysis.
 
+    Args:
+      analysis_context: The analysis context object. Instance of
+                        AnalysisContext.
     Returns:
       The analysis report (instance of AnalysisReport).
     """

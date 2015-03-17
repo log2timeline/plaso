@@ -84,12 +84,16 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
     return self.NAME
 
   @abc.abstractmethod
-  def CompileReport(self):
+  def CompileReport(self, analysis_context):
     """Compiles a report of the analysis.
 
     After the plugin has received every copy of an event to
     analyze this function will be called so that the report
     can be assembled.
+
+    Args:
+      analysis_context: The analysis context object. Instance of
+                        AnalysisContext.
 
     Returns:
       The analysis report (instance of AnalysisReport).
@@ -114,7 +118,7 @@ class AnalysisPlugin(queue.EventObjectQueueConsumer):
     """
     self.ConsumeEventObjects(analysis_context=analysis_context)
 
-    analysis_report = self.CompileReport()
+    analysis_report = self.CompileReport(analysis_context)
 
     if analysis_report:
       # TODO: move this into the plugins?

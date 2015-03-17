@@ -227,8 +227,12 @@ class AnalyzeWindowsServicesPlugin(interface.AnalysisPlugin):
       string_segments.append(u'\t\t{0:s}:{1:s}'.format(source[0], source[1]))
     return u'\n'.join(string_segments)
 
-  def CompileReport(self):
+  def CompileReport(self, analysis_context):
     """Compiles a report of the analysis.
+
+    Args:
+      analysis_context: The analysis context object. Instance of
+                        AnalysisContext.
 
     Returns:
       The analysis report (instance of AnalysisReport).
