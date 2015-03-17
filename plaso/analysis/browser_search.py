@@ -171,8 +171,12 @@ class AnalyzeBrowserSearchPlugin(interface.AnalysisPlugin):
 
   # pylint: enable=unused-argument
 
-  def CompileReport(self):
+  def CompileReport(self, analysis_context):
     """Compiles a report of the analysis.
+
+    Args:
+      analysis_context: The analysis context object. Instance of
+                        AnalysisContext.
 
     Returns:
       The analysis report (instance of AnalysisReport).
