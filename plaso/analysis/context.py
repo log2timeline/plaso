@@ -26,6 +26,35 @@ class AnalysisContext(object):
     """The list of users."""
     return self._knowledge_base.users
 
+  def GetRelativePath(self, path_spec):
+    """Retrieves the relative path of the path spec.
+
+    Args:
+      path_spec: a PathSpec object (instance of dfvfs.PathSpec).
+
+    Returns:
+      A string containing the relative path or None.
+    """
+    # TODO: Solve this differently, quite possibly inside dfVFS using mount
+    # path spec.
+    file_path = getattr(path_spec, 'location', None)
+    # TODO: Determine if we need to access the mount_path, as for the parser
+    # mediator.
+    return file_path
+
+  def GetDisplayName(self, path_spec):
+    """Retrieves the display name for the path spec.
+
+    Args:
+      file_entry: PathSpec object (instance of dfvfs.PathSpec).
+
+    Returns:
+      A human readable string that describes the path to the path spec.
+    """
+    relative_path = self.GetRelativePath(path_spec)
+
+    return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
+
   def GetPathSegmentSeparator(self, path):
     """Given a path give back the path separator as a best guess.
 
