@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Simple RPC proxy server and client."""
 
-import logging
 import SimpleXMLRPCServer
 import SocketServer
 import xmlrpclib
@@ -44,12 +43,17 @@ class StandardRpcProxyServer(proxy.ProxyServer):
           u'error: {1:s}'.format(self.listening_port, exception))
 
   def SetListeningPort(self, new_port_number):
-    """Change the port number the proxy listens to."""
-    # We don't want to change the port after the proxy has been started.
+    """Change the port number the proxy listens to.
+
+    Args:
+      new_port_number: the new port number.
+
+    Raises:
+      RuntimeError: if the proxy is already started.
+    """
     if self._proxy:
-      logging.warning(
-          u'Unable to change proxy ports for an already started proxy.')
-      return
+      raise RuntimeError(
+          u'Unable to change proxy port since proxy is already started.')
 
     self._port_number = proxy.GetProxyPortNumberFromPID(new_port_number)
 
@@ -95,12 +99,12 @@ class StandardRpcProxyClient(proxy.ProxyClient):
     except SocketServer.socket.error:
       self._proxy = None
 
-  def GetData(self, call_back_name):
+  def GetData(self, callback_name):
     """Return back data from the RPC proxy using a callback method.
 
     Args:
-      call_back_name: The name of the callback method that the RPC proxy
-                      supports.
+      callback_name: The name of the callback method that the RPC proxy
+                     supports.
 
     Returns:
       The data returned back by the callback method.
@@ -108,11 +112,11 @@ class StandardRpcProxyClient(proxy.ProxyClient):
     if self._proxy is None:
       return
 
-    call_back = getattr(self._proxy, call_back_name, None)
-    if call_back is None:
+    callback = getattr(self._proxy, callback_name, None)
+    if callback is None:
       return
 
     try:
-      return call_back()
+      return callback()
     except (SocketServer.socket.error, expat.ExpatError):
       return
