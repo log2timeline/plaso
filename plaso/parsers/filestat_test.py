@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for filestat parser."""
 
+import os
 import unittest
 
 from dfvfs.lib import definitions
@@ -36,6 +37,12 @@ class FileStatTest(test_lib.ParserTestCase):
     # The TSK file entry has 3 event objects.
     self.assertEqual(len(event_objects), 3)
 
+    event_object = event_objects[0]
+
+    expected_msg = u'TSK:/passwords.txt'
+    expected_msg_short = u'/passwords.txt'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
   def testZipFile(self):
     """Test a ZIP file."""
     test_file = self._GetTestFilePath([u'syslog.zip'])
@@ -52,6 +59,12 @@ class FileStatTest(test_lib.ParserTestCase):
     # The ZIP file has 1 event object.
     self.assertEqual(len(event_objects), 1)
 
+    event_object = event_objects[0]
+
+    expected_msg = u'ZIP:/syslog'
+    expected_msg_short = u'/syslog'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
   def testGzipFile(self):
     """Test a GZIP file."""
     test_file = self._GetTestFilePath([u'syslog.gz'])
@@ -66,6 +79,13 @@ class FileStatTest(test_lib.ParserTestCase):
 
     # The gzip file has 1 event object.
     self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.gz')
+    expected_msg = u'GZIP:{0:s}'.format(test_path)
+    expected_msg_short = test_path
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testTarFile(self):
     """Test a TAR file."""
@@ -82,6 +102,12 @@ class FileStatTest(test_lib.ParserTestCase):
 
     # The tar file has 1 event object.
     self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    expected_msg = u'TAR:/syslog'
+    expected_msg_short = u'/syslog'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testNestedFile(self):
     """Test a nested file."""
@@ -101,6 +127,12 @@ class FileStatTest(test_lib.ParserTestCase):
     # The tar file has 1 event object.
     self.assertEqual(len(event_objects), 1)
 
+    event_object = event_objects[0]
+
+    expected_msg = u'TAR:/syslog'
+    expected_msg_short = u'/syslog'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+
     test_file = self._GetTestFilePath([u'syslog.tgz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=test_file)
@@ -113,6 +145,13 @@ class FileStatTest(test_lib.ParserTestCase):
 
     # The gzip file has 1 event object.
     self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.tgz')
+    expected_msg = u'GZIP:{0:s}'.format(test_path)
+    expected_msg_short = test_path
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
   def testNestedTSK(self):
     """Test a nested TSK file."""
@@ -132,6 +171,12 @@ class FileStatTest(test_lib.ParserTestCase):
 
     # The ZIP file has 1 event objects.
     self.assertEqual(len(event_objects), 1)
+
+    event_object = event_objects[0]
+
+    expected_msg = u'ZIP:/syslog'
+    expected_msg_short = u'/syslog'
+    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

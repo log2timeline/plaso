@@ -42,8 +42,7 @@ class FileStatFormatter(interface.ConditionalEventFormatter):
     if not event_values.get(u'allocated', False):
       event_values[u'unallocated'] = u'unallocated'
 
-    return self._FormatMessages(
-        self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
+    return self._ConditionalFormatMessages(event_values)
 
   def GetSources(self, event_object):
     """Determines the the short and long source for an event object.
