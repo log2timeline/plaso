@@ -310,7 +310,7 @@ class MsiecfParser(interface.BaseParser):
           self._ParseLeak(parser_mediator, cache_directories, msiecf_item)
 
         elif isinstance(msiecf_item, pymsiecf.redirected):
-          self._ParseRedidrected(
+          self._ParseRedirected(
               parser_mediator, cache_directories, msiecf_item)
 
         elif isinstance(msiecf_item, pymsiecf.url):
