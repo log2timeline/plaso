@@ -110,13 +110,9 @@ class WinLnkParser(interface.BaseParser):
       file_entry = parser_mediator.GetFileEntry()
       display_name = file_entry.name
       shell_items_parser = shell_items.ShellItemsParser(display_name)
-      parser_mediator.AppendToParserChain(shell_items_parser)
-      try:
-        shell_items_parser.Parse(
-            parser_mediator, lnk_file.link_target_identifier_data,
-            codepage=parser_mediator.codepage)
-      finally:
-        parser_mediator.PopFromParserChain()
+      shell_items_parser.UpdateChainAndParse(
+          parser_mediator, lnk_file.link_target_identifier_data, None,
+          codepage=parser_mediator.codepage)
 
       link_target = shell_items_parser.CopyToPath()
 

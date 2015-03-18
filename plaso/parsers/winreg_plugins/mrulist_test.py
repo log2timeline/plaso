@@ -126,8 +126,8 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
     expected_msg = (
         u'[{0:s}] '
-        u'Index: 1 [MRU Value a]: Shell item list: '
-        u'[My Computer, C:\\, Winnt, Profiles, Administrator, Desktop]').format(
+        u'Index: 1 [MRU Value a]: Shell item path: '
+        u'<My Computer> C:\\Winnt\\Profiles\\Administrator\\Desktop').format(
             key_path)
 
     expected_msg_short = u'[{0:s}] Index:...'.format(key_path)
@@ -143,6 +143,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
     expected_msg = (
         u'Name: Winnt '
+        u'Shell item path: <My Computer> C:\\Winnt '
         u'Origin: {0:s}').format(key_path)
 
     expected_msg_short = (

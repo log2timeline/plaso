@@ -20,7 +20,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath(['example.lnk'])
+    test_file = self._GetTestFilePath([u'example.lnk'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -54,7 +54,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # The last accessed timestamp.
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-13 23:29:02.849131')
+        u'2009-07-13 23:29:02.849131')
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -63,7 +63,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     event_object = event_objects[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-13 23:29:02.849131')
+        u'2009-07-13 23:29:02.849131')
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -72,7 +72,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     event_object = event_objects[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-14 01:39:18.220000')
+        u'2009-07-14 01:39:18.220000')
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -93,7 +93,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
-    test_file = self._GetTestFilePath(['NeroInfoTool.lnk'])
+    test_file = self._GetTestFilePath([u'NeroInfoTool.lnk'])
     event_queue_consumer = self._ParseFile(self._parser, test_file)
     event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
@@ -120,8 +120,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         u'Working dir: C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool '
         u'Icon location: %ProgramFiles%\\Nero\\Nero 9\\Nero InfoTool\\'
         u'InfoTool.exe '
-        u'Link target: [My Computer, C:\\, Program Files (x86), Nero, Nero 9, '
-        u'Nero InfoTool, InfoTool.exe]')
+        u'Link target: <My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
+        u'Nero InfoTool\\InfoTool.exe')
 
     expected_msg_short = (
         u'[Nero InfoTool provides you with information about the most '
@@ -133,13 +133,15 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     event_object = event_objects[12]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-06-05 20:13:20')
+        u'2009-06-05 20:13:20')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Name: InfoTool.exe '
         u'Long name: InfoTool.exe '
         u'NTFS file reference: 81349-1 '
+        u'Shell item path: <My Computer> C:\\Program Files (x86)\\Nero\\'
+        u'Nero 9\\Nero InfoTool\\InfoTool.exe '
         u'Origin: NeroInfoTool.lnk')
 
     expected_msg_short = (
