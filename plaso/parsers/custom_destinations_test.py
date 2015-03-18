@@ -66,8 +66,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         u'%systemroot%\\system32\\control.exe /name Microsoft.Display '
         u'env location: %SystemRoot%\\system32\\GettingStarted.exe '
         u'Icon location: %systemroot%\\system32\\display.dll '
-        u'Link target: [My Computer, C:\\, Windows, System32, '
-        u'GettingStarted.exe]')
+        u'Link target: <My Computer> C:\\Windows\\System32\\GettingStarted.exe')
 
     expected_msg_short = (
         u'[@%systemroot%\\system32\\oobefldr.dll,-1262] '
@@ -86,6 +85,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         u'Name: System32 '
         u'Long name: System32 '
         u'NTFS file reference: 2331-1 '
+        u'Shell item path: <My Computer> C:\\Windows\\System32 '
         u'Origin: 5afe4de1b92fc382.customDestinations-ms')
 
     expected_msg_short = (
