@@ -146,9 +146,7 @@ class ParserTestCase(unittest.TestCase):
     path = self._GetTestFilePath(path_segments)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=path)
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    return file_entry
-
+    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def _ParseFile(self, parser_object, path, knowledge_base_values=None):
     """Parses a file using the parser object.
