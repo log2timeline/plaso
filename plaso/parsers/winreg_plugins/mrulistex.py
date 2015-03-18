@@ -237,9 +237,9 @@ class MRUListExShellItemListPlugin(interface.KeyPlugin, MRUListExPluginMixin):
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
       shell_items_parser.UpdateChainAndParse(
-          parser_mediator, value.data, codepage=codepage)
+          parser_mediator, value.data, None, codepage=codepage)
 
-      value_string = u'Shell item list: [{0:s}]'.format(
+      value_string = u'Shell item path: {0:s}'.format(
           shell_items_parser.CopyToPath())
 
     return value_string
@@ -339,8 +339,8 @@ class MRUListExStringAndShellItemPlugin(
 
         else:
           shell_items_parser = shell_items.ShellItemsParser(key.path)
-          shell_items_parser.Parse(
-              parser_mediator, shell_item_list_data, codepage=codepage)
+          shell_items_parser.UpdateChainAndParse(
+              parser_mediator, shell_item_list_data, None, codepage=codepage)
 
           value_string = u'Path: {0:s}, Shell item: [{1:s}]'.format(
               path, shell_items_parser.CopyToPath())
@@ -443,10 +443,9 @@ class MRUListExStringAndShellItemListPlugin(
         else:
           shell_items_parser = shell_items.ShellItemsParser(key.path)
           shell_items_parser.UpdateChainAndParse(
-              parser_mediator, shell_item_list_data, codepage=codepage)
+              parser_mediator, shell_item_list_data, None, codepage=codepage)
 
-
-          value_string = u'Path: {0:s}, Shell item list: [{1:s}]'.format(
+          value_string = u'Path: {0:s}, Shell item path: {1:s}'.format(
               path, shell_items_parser.CopyToPath())
 
     return value_string

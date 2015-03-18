@@ -11,7 +11,7 @@ class ShellItemFileEntryEvent(time_events.FatDateTimeEvent):
 
   def __init__(
       self, fat_date_time, usage, name, long_name, localized_name,
-      file_reference, origin):
+      file_reference, shell_item_path, origin):
     """Initializes an event object.
 
     Args:
@@ -23,6 +23,7 @@ class ShellItemFileEntryEvent(time_events.FatDateTimeEvent):
                       shell item.
       file_reference: A string containing the NTFS file reference
                       (MTF entry - sequence number).
+      shell_item_path: A string containing the shell item path.
       origin: A string containing the origin of the event (event source).
     """
     super(ShellItemFileEntryEvent, self).__init__(fat_date_time, usage)
@@ -32,3 +33,4 @@ class ShellItemFileEntryEvent(time_events.FatDateTimeEvent):
     self.localized_name = localized_name
     self.file_reference = file_reference
     self.origin = origin
+    self.shell_item_path = shell_item_path
