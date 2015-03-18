@@ -316,4 +316,4 @@ class Foreman(object):
     else:
       logging.info(u'Process: {0:s} [{1:d}] has been terminated.'.format(
           label.label, label.pid))
-      self.StopMonitoringWorker(label)
+      self.StopMonitoringWorker(label=label)
