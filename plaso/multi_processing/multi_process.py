@@ -335,9 +335,10 @@ class MultiProcessEngine(engine.BaseEngine):
           if process_obj.is_alive():
             logging.info((
                 u'Process {0:s} [{1:d}] is not monitored by the foreman. Most '
-                u'likely due to a worker having completed it\'s processing '
+                u'likely due to a worker having completed its processing '
                 u'while waiting for another worker to complete.').format(
                     process_name, process_obj.pid))
+
             logging.info(
                 u'Waiting for worker {0:s} to complete.'.format(process_name))
             process_obj.join()
@@ -553,14 +554,23 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     self._rpc_proxy_server = rpc_proxy.StandardRpcProxyServer()
 
     try:
+      # Note the proxy will adjust the port number if pid < 1024 and
+      # pid > 65535.
       self._rpc_proxy_server.SetListeningPort(os.getpid())
       self._rpc_proxy_server.Open()
       self._rpc_proxy_server.RegisterFunction(
           'status', self._extraction_worker.GetStatus)
 
+      logging.debug(
+          u'Worker process: {0!s} monitor RPC server started'.format(
+              self._name))
+
       self._proxy_thread = threading.Thread(
           name='rpc_proxy', target=self._rpc_proxy_server.StartProxy)
       self._proxy_thread.start()
+
+      logging.debug(
+          u'Worker process: {0!s} monitor thread started'.format(self._name))
 
     except errors.ProxyFailedToStart as exception:
       logging.error((
@@ -576,8 +586,15 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     # Close the proxy, free up resources so we can shut down the thread.
     self._rpc_proxy_server.Close()
 
+    logging.debug(
+        u'Worker process: {0!s} monitor RPC server stopped'.format(
+            self._name))
+
     if self._proxy_thread.isAlive():
       self._proxy_thread.join()
+
+    logging.debug(
+        u'Worker process: {0!s} monitor thread stopped'.format(self._name))
 
     self._rpc_proxy_server = None
     self._proxy_thread = None
@@ -602,10 +619,14 @@ class MultiProcessEventExtractionWorkerProcess(multiprocessing.Process):
     logging.debug(u'Worker process: {0!s} started'.format(self._name))
     self._StartRPCProxyServerThread()
 
+    logging.debug(u'Worker process: {0!s} extraction started'.format(
+        self._name))
     self._extraction_worker.Run()
+    logging.debug(u'Worker process: {0!s} extraction stopped'.format(
+        self._name))
 
-    logging.debug(u'Worker process: {0!s} stopped'.format(self._name))
     self._StopRPCProxyServerThread()
+    logging.debug(u'Worker process: {0!s} stopped'.format(self._name))
 
   def SignalAbort(self):
     """Signals the process to abort."""
