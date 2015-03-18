@@ -147,7 +147,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       logging.warning(u'[{0:s}] invalid Container_# table'.format(self.NAME))
       return
 
-    for esedb_record in table.records:
+    for record_index, esedb_record in enumerate(table.records):
       # TODO: add support for:
       # wpnidm, iecompat, iecompatua, DNTException, DOMStore
       if container_name == u'Content':
@@ -155,8 +155,15 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       else:
         value_mappings = None
 
-      record_values = self._GetRecordValues(
-          table.name, esedb_record, value_mappings=value_mappings)
+      try:
+        record_values = self._GetRecordValues(
+            table.name, esedb_record, value_mappings=value_mappings)
+
+      except UnicodeDecodeError:
+        parser_mediator.ProduceParseError((
+            u'Unable to retrieve record values from record: {0:d} '
+            u'in table: {1:s}').format(record_index, table.name))
+        continue
 
       if (container_name in [
           u'Content', u'Cookies', u'History', u'iedownload'] or
@@ -242,8 +249,8 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       table_name = u'Container_{0:d}'.format(container_identifier)
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
-        logging.warning(
-            u'[{0:s}] missing table: {1:s}'.format(self.NAME, table_name))
+        parser_mediator.ProduceParseError(
+            u'Missing table: {0:s}'.format(table_name))
         continue
 
       self._ParseContainerTable(parser_mediator, esedb_table, container_name)
