@@ -157,6 +157,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     # lingering data from the previous file parsed.
     self._parser_mediator.Reset()
     self._parser_mediator.SetFileEntry(file_entry)
+
+    reference_count = self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec)
     try:
       parser_object.UpdateChainAndParse(self._parser_mediator)
 
@@ -190,6 +193,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
 
     finally:
       self._parser_mediator.SetFileEntry(None)
+
+    if reference_count != self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec):
+      logging.warning((
+          u'[{0:s}] did not explicitly close file-object for path '
+          u'specification: {1:s}.').format(
+              parser_object.NAME, file_entry.path_spec.comparable))
 
   def _ProcessArchiveFile(self, file_entry):
     """Processes an archive file (file that contains file entries).
@@ -432,6 +442,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     self._current_working_file = getattr(
         file_entry.path_spec, u'location', file_entry.name)
 
+    reference_count = self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec)
+
     is_archive = False
     is_compressed_stream = False
     is_file = file_entry.IsFile()
@@ -464,11 +477,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
     logging.debug(u'[ParseFileEntry] Done parsing: {0:s}'.format(
         file_entry.path_spec.comparable))
 
-    # Clean up after parsers that do not call close explicitly.
-    if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
-      logging.debug((
-          u'File-object not explicitly closed for path specification: '
-          u'{0:s}.').format(file_entry.path_spec.comparable))
+    if reference_count != self._resolver_context.GetFileObjectReferenceCount(
+        file_entry.path_spec):
+      # Clean up after parsers that do not call close explicitly.
+      if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
+        logging.debug((
+            u'File-object not explicitly closed for path specification: '
+            u'{0:s}.').format(file_entry.path_spec.comparable))
 
     if self._enable_profiling:
       self._ProfilingUpdate()

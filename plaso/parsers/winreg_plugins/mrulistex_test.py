@@ -103,11 +103,11 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
     expected_msg = (
         u'[{0:s}\\exe] '
-        u'Index: 1 [MRU Value 1]: Shell item list: [My Computer, P:\\, '
-        u'Application Tools, Firefox 6.0, Firefox Setup 6.0.exe] '
-        u'Index: 2 [MRU Value 0]: Shell item list: [Computers and Devices, '
-        u'UNKNOWN: 0x00, \\\\controller\\WebDavShare, Firefox Setup 3.6.12.exe'
-        u']').format(key_path)
+        u'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
+        u'P:\\Application Tools\\Firefox 6.0\\Firefox Setup 6.0.exe '
+        u'Index: 2 [MRU Value 0]: Shell item path: <Computers and Devices> '
+        u'<UNKNOWN: 0x00>\\\\controller\\WebDavShare\\Firefox Setup 3.6.12.exe'
+        u'').format(key_path)
 
     expected_msg_short = (
         u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
@@ -126,12 +126,14 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'Name: ALLOYR~1 '
         u'Long name: Alloy Research '
         u'NTFS file reference: 44518-33 '
+        u'Shell item path: <Shared Documents Folder (Users Files)> '
+        u'<UNKNOWN: 0x00>\\Alloy Research '
         u'Origin: {0:s}\\*').format(key_path)
 
     expected_msg_short = (
-        u'Name: ALLOYR~1 '
+        u'Name: Alloy Research '
         u'NTFS file reference: 44518-33 '
-        u'Origin: \\Software\\Microsoft\\Wind...')
+        u'Origin: \\Software\\Microsof...')
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
@@ -252,29 +254,29 @@ class TestMRUListExStringAndShellItemListPlugin(
     expected_msg = (
         u'[{0:s}] '
         u'Index: 1 [MRU Value 1]: Path: chrome.exe, '
-        u'Shell item list: [Users Libraries, UNKNOWN: 0x00, UNKNOWN: 0x00, '
-        u'UNKNOWN: 0x00] '
+        u'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
+        u'<UNKNOWN: 0x00> '
         u'Index: 2 [MRU Value 7]: '
         u'Path: {{48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}}, '
-        u'Shell item list: [Shared Documents Folder (Users Files), '
-        u'UNKNOWN: 0x00, Alloy Research] '
+        u'Shell item path: <Shared Documents Folder (Users Files)> '
+        u'<UNKNOWN: 0x00>\\Alloy Research '
         u'Index: 3 [MRU Value 6]: '
         u'Path: {{427865A0-03AF-4F25-82EE-10B6CB1DED3E}}, '
-        u'Shell item list: [Users Libraries, UNKNOWN: 0x00, UNKNOWN: 0x00] '
+        u'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
         u'Index: 4 [MRU Value 5]: '
         u'Path: {{24B5C9BB-48B5-47FF-8343-40481DBA1E2B}}, '
-        u'Shell item list: [My Computer, C:\\, Users, nfury, Documents] '
+        u'Shell item path: <My Computer> C:\\Users\\nfury\\Documents '
         u'Index: 5 [MRU Value 4]: '
         u'Path: {{0B8CFE96-DB69-4D33-8E3C-36EAB4F709E0}}, '
-        u'Shell item list: [My Computer, C:\\, Users, nfury, Documents, '
-        u'Alloy Research] '
+        u'Shell item path: <My Computer> C:\\Users\\nfury\\Documents\\'
+        u'Alloy Research '
         u'Index: 6 [MRU Value 3]: '
         u'Path: {{D4F85F66-003D-4127-BCE9-CAD7A57B2857}}, '
-        u'Shell item list: [Users Libraries, UNKNOWN: 0x00, UNKNOWN: 0x00] '
+        u'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
         u'Index: 7 [MRU Value 0]: Path: iexplore.exe, '
-        u'Shell item list: [My Computer, P:\\, Application Tools, Firefox 6.0] '
+        u'Shell item path: <My Computer> P:\\Application Tools\\Firefox 6.0 '
         u'Index: 8 [MRU Value 2]: Path: Skype.exe, '
-        u'Shell item list: [Users Libraries, UNKNOWN: 0x00]').format(key_path)
+        u'Shell item path: <Users Libraries> <UNKNOWN: 0x00>').format(key_path)
 
     expected_msg_short = (
         u'[\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'

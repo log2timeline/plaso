@@ -72,7 +72,7 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
         u'Drive serial number: 0x24ba718b '
         u'Local path: C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\'
         u'Libraries\\Documents.library-ms '
-        u'Link target: [Users Libraries, UNKNOWN: 0x00]')
+        u'Link target: <Users Libraries> <UNKNOWN: 0x00>')
 
     expected_msg_short = (
         u'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\Libraries\\'

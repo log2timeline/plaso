@@ -36,7 +36,7 @@ class BagMRUPlugin(interface.KeyPlugin):
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, key, entry_index, entry_number, text_dict,
-      value_strings, parent_value_string, codepage='cp1252', **unused_kwargs):
+      value_strings, parent_path_segments, codepage='cp1252', **unused_kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -47,10 +47,14 @@ class BagMRUPlugin(interface.KeyPlugin):
       entry_number: integer value representing the entry number.
       text_dict: text dictionary object to append textual strings.
       value_strings: value string dictionary object to append value strings.
-      parent_value_string: string containing the parent value string.
+      parent_path_segments: list containing the parent shell item path segments.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
+
+    Returns:
+      The path segment of the shell item.
     """
     value = key.GetValue(u'{0:d}'.format(entry_number))
+    path_segment = u'N/A'
     value_string = u''
     if value is None:
       parser_mediator.ProduceParseError(
@@ -65,20 +69,22 @@ class BagMRUPlugin(interface.KeyPlugin):
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(key.path)
       shell_items_parser.UpdateChainAndParse(
-          parser_mediator, value.data, codepage=codepage)
+          parser_mediator, value.data, parent_path_segments,
+          codepage=codepage)
 
+      path_segment = shell_items_parser.GetUpperPathSegment()
       value_string = shell_items_parser.CopyToPath()
-      if parent_value_string:
-        value_string = u', '.join([parent_value_string, value_string])
 
       value_strings[entry_number] = value_string
 
-      value_string = u'Shell item list: [{0:s}]'.format(value_string)
+      value_string = u'Shell item path: {0:s}'.format(value_string)
 
     value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
         entry_index + 1, entry_number)
 
     text_dict[value_text] = value_string
+
+    return path_segment
 
   def _ParseMRUListExValue(self, parser_mediator, key):
     """Parses the MRUListEx value in a given Registry key.
@@ -120,18 +126,18 @@ class BagMRUPlugin(interface.KeyPlugin):
         data_offset += 4
 
   def _ParseSubKey(
-      self, parser_mediator, key, parent_value_string, registry_type=None,
+      self, parser_mediator, key, parent_path_segments, registry_type=None,
       codepage='cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       key: the Registry key (instance of winreg.WinRegKey).
-      parent_value_string: string containing the parent value string.
+      parent_path_segments: list containing the parent shell item path segments.
       registry_type: Optional Registry type string. The default is None.
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
-    entry_numbers = []
+    entry_numbers = {}
     text_dict = {}
     value_strings = {}
 
@@ -149,11 +155,11 @@ class BagMRUPlugin(interface.KeyPlugin):
         # Only create one parser error per terminator.
         found_terminator = False
 
-      entry_numbers.append(entry_number)
-
-      self._ParseMRUListExEntryValue(
+      path_segment = self._ParseMRUListExEntryValue(
           parser_mediator, key, index, entry_number, text_dict, value_strings,
-          parent_value_string, codepage=codepage)
+          parent_path_segments, codepage=codepage)
+
+      entry_numbers[entry_number] = path_segment
 
     event_object = windows_events.WindowsRegistryEvent(
         key.last_written_timestamp, key.path, text_dict,
@@ -161,7 +167,7 @@ class BagMRUPlugin(interface.KeyPlugin):
         source_append=u': BagMRU')
     parser_mediator.ProduceEvent(event_object)
 
-    for entry_number in entry_numbers:
+    for entry_number, path_segment in entry_numbers.iteritems():
       sub_key = key.GetSubkey(u'{0:d}'.format(entry_number))
       if not sub_key:
         parser_mediator.ProduceParseError(
@@ -169,9 +175,10 @@ class BagMRUPlugin(interface.KeyPlugin):
                 entry_number, key.path))
         continue
 
-      value_string = value_strings.get(entry_number, u'')
+      parent_path_segments.append(path_segment)
       self._ParseSubKey(
-          parser_mediator, sub_key, value_string, codepage=codepage)
+          parser_mediator, sub_key, parent_path_segments, codepage=codepage)
+      _ = parent_path_segments.pop()
 
   def GetEntries(
       self, parser_mediator, key=None, registry_type=None, codepage='cp1252',
@@ -186,7 +193,7 @@ class BagMRUPlugin(interface.KeyPlugin):
       codepage: Optional extended ASCII string codepage. The default is cp1252.
     """
     self._ParseSubKey(
-        parser_mediator, key, u'', registry_type=registry_type,
+        parser_mediator, key, [], registry_type=registry_type,
         codepage=codepage)
 
 
