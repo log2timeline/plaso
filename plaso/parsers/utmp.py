@@ -54,8 +54,10 @@ class UtmpEvent(event.EventObject):
     self.terminal_id = structure.terminal_id
 
 
-class UtmpParser(interface.BaseParser):
+class UtmpParser(interface.SingleFileBaseParser):
   """Parser for Linux/Unix UTMP files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'utmp'
   DESCRIPTION = u'Parser for Linux/Unix UTMP files.'
@@ -99,25 +101,17 @@ class UtmpParser(interface.BaseParser):
   # it can be a free flowing text field.
   _DEFAULT_TEST_VALUE = u'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extract data from an UTMP file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self._ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def _ParseFileObject(self, parser_mediator, file_object):
-    """Extract data UTMP data from a file-like object.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an UTMP file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       file_object: The file-like object to extract data from.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
+    file_object.seek(0, os.SEEK_SET)
     try:
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
@@ -167,7 +161,7 @@ class UtmpParser(interface.BaseParser):
       event_object = self._ReadUtmpEvent(file_object)
 
   def _VerifyTextField(self, text):
-    """Check if a bytestream is a null terminated string.
+    """Check if a byte stream is a null terminated string.
 
     Args:
       event_object: text field from the structure.
@@ -175,10 +169,10 @@ class UtmpParser(interface.BaseParser):
     Return:
       True if it is a null terminated string, False otherwise.
     """
-    _, _, null_chars = text.partition('\x00')
+    _, _, null_chars = text.partition(b'\x00')
     if not null_chars:
       return False
-    return len(null_chars) == null_chars.count('\x00')
+    return len(null_chars) == null_chars.count(b'\x00')
 
   def _ReadUtmpEvent(self, file_object):
     """Returns an UtmpEvent from a single UTMP entry.

@@ -15,8 +15,10 @@ if pyolecf.get_version() < '20131012':
   raise ImportWarning(u'OleCfParser requires at least pyolecf 20131012.')
 
 
-class OleCfParser(interface.BasePluginsParser):
+class OleCfParser(interface.SingleFileBasePluginsParser):
   """Parses OLE Compound Files (OLECF)."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = u'olecf'
   DESCRIPTION = u'Parser for OLE Compound Files (OLECF).'
@@ -48,22 +50,7 @@ class OleCfParser(interface.BasePluginsParser):
 
     return format_specification
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses an OLE Compound File (OLECF).
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an OLE Compound File (OLECF) file-like object.
 
     Args:

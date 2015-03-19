@@ -55,8 +55,10 @@ class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
     self.volume_device_paths = volume_device_paths
 
 
-class WinPrefetchParser(interface.BaseParser):
+class WinPrefetchParser(interface.SingleFileBaseParser):
   """A parser for Windows Prefetch files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = u'prefetch'
   DESCRIPTION = u'Parser for Windows Prefetch files.'
@@ -370,22 +372,22 @@ class WinPrefetchParser(interface.BaseParser):
     format_specification.AddNewSignature(cls.FILE_SIGNATURE, offset=4)
     return format_specification
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extracts events from a Windows Prefetch file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Windows Prefetch file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_name = parser_mediator.GetDisplayName()
-    file_object = parser_mediator.GetFileObject()
+    file_object.seek(0, os.SEEK_SET)
+
     file_header = self._ParseFileHeader(file_object)
 
     format_version = file_header.get(u'version', None)
     if format_version not in [17, 23, 26]:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Unsupported format version: {0:d}'.format(format_version))
 
@@ -396,6 +398,7 @@ class WinPrefetchParser(interface.BaseParser):
       filename_strings = self._ParseFilenameStrings(
           file_object, file_information)
     except UnicodeDecodeError as exception:
+      file_name = parser_mediator.GetDisplayName()
       logging.warning((
           u'[{0:s}] Unable to parse filename information from file {1:s} '
           u'with error: {2:s}').format(
@@ -480,8 +483,6 @@ class WinPrefetchParser(interface.BaseParser):
               file_header, file_information, mapped_files, path,
               volume_serial_numbers, volume_device_paths)
           parser_mediator.ProduceEvent(event_object)
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(WinPrefetchParser)

@@ -64,8 +64,10 @@ class AslEvent(event.EventObject):
     self.extra_information = extra_information
 
 
-class AslParser(interface.BaseParser):
+class AslParser(interface.SingleFileBaseParser):
   """Parser for ASL log files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'asl_log'
   DESCRIPTION = u'Parser for ASL log files.'
@@ -176,24 +178,25 @@ class AslParser(interface.BaseParser):
           'value',
           length_field=construct.UBInt32('length')))
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extract entries from an ASL file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an ALS file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:
       header = self.ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse ASL Header with error: {0:s}.'.format(exception))
 
     if header.magic != self.ASL_MAGIC:
-      file_object.close()
       raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
 
     # Get the first and the last entry.
@@ -215,8 +218,6 @@ class AslParser(interface.BaseParser):
               u'header offset.')
         old_offset = offset
         event_object, offset = self.ReadAslEvent(file_object, offset)
-
-    file_object.close()
 
   def ReadAslEvent(self, file_object, offset):
     """Returns an AslEvent from a single ASL entry.

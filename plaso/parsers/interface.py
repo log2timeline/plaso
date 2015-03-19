@@ -235,3 +235,69 @@ class BasePluginsParser(BaseParser):
       A boolean value indicating whether the parser supports plugins.
     """
     return True
+
+
+class SingleFileBaseParser(BaseParser):
+  """Class that implements the single file parser base."""
+
+  # The initial file offset set to None if not set.
+  _INITIAL_FILE_OFFSET = 0
+
+  def Parse(self, parser_mediator, **kwargs):
+    """Parses a single file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+    """
+    # TODO: Merge with UpdateChainAndParse for less overhead.
+    file_object = parser_mediator.GetFileObject(
+        offset=self._INITIAL_FILE_OFFSET)
+    try:
+      self.ParseFileObject(parser_mediator, file_object, **kwargs)
+    finally:
+      file_object.close()
+
+  @abc.abstractmethod
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
+
+
+class SingleFileBasePluginsParser(BasePluginsParser):
+  """Class that implements the single file parser with plugins base."""
+
+  # The initial file offset set to None if not set.
+  _INITIAL_FILE_OFFSET = 0
+
+  def Parse(self, parser_mediator, **kwargs):
+    """Parses a single file.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+    """
+    # TODO: Merge with UpdateChainAndParse for less overhead.
+    file_object = parser_mediator.GetFileObject(
+        offset=self._INITIAL_FILE_OFFSET)
+    try:
+      self.ParseFileObject(parser_mediator, file_object, **kwargs)
+    finally:
+      file_object.close()
+
+  @abc.abstractmethod
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a file-like object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """

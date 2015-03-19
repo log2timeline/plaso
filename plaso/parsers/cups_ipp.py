@@ -19,9 +19,9 @@ CUPS IPP version 2.0:
 * N/A
 """
 
-import construct
 import logging
-import os
+
+import construct
 
 from plaso.lib import errors
 from plaso.lib import event
@@ -111,7 +111,7 @@ class CupsIppEvent(event.EventObject):
           u'Unable to parse log line, with error: {0:s}'.format(exception))
 
 
-class CupsIppParser(interface.BaseParser):
+class CupsIppParser(interface.SingleFileBaseParser):
   """Parser for CUPS IPP files. """
 
   NAME = 'cups_ipp'
@@ -194,27 +194,25 @@ class CupsIppParser(interface.BaseParser):
       'com.apple.print.JobInfo.PMApplicationName': u'application',
       'com.apple.print.JobInfo.PMJobOwner': u'owner'}
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extract a entry from an CUPS IPP file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a CUPS IPP file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-
-    file_object = parser_mediator.GetFileObject()
-    file_object.seek(0, os.SEEK_SET)
-
     try:
       header = self.CUPS_IPP_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse CUPS IPP Header with error: {0:s}'.format(
               exception))
 
     if (header.major_version != self.IPP_MAJOR_VERSION or
         header.minor_version != self.IPP_MINOR_VERSION):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'[{0:s}] Unsupported version number.'.format(self.NAME))
 
@@ -251,8 +249,6 @@ class CupsIppParser(interface.BaseParser):
           data_dict['time-at-completed'][0],
           eventdata.EventTimestamp.END_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
-
-    file_object.close()
 
   def ReadPair(self, parser_mediator, file_object):
     """Reads an attribute name and value pair from a CUPS IPP event.

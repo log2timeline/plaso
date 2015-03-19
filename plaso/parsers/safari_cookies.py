@@ -9,7 +9,7 @@ from plaso.lib import errors
 from plaso.lib import eventdata
 
 # Need to register cookie plugins.
-from plaso.parsers import cookie_plugins    # pylint: disable=unused-import
+from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -41,7 +41,7 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
     self.url = url
 
 
-class BinaryCookieParser(interface.BaseParser):
+class BinaryCookieParser(interface.SingleFileBaseParser):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
@@ -165,29 +165,29 @@ class BinaryCookieParser(interface.BaseParser):
         except errors.WrongPlugin:
           pass
 
-  def Parse(self, parser_mediator, **unused_kwargs):
-    """Extract data from a Safari Binary Cookie file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Safari binary cookie file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
+      file_object: A file-like object.
 
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     # Start by verifying magic value.
     # We do this here instead of in the header parsing routine due to the
     # fact that we read an integer there and create an array, which is part
     # of the header. For false hits this could end up with reading large chunks
     # of data, which we don't want for false hits.
     magic = file_object.read(4)
-    if magic != 'cook':
-      file_object.close()
+    if magic != b'cook':
       raise errors.UnableToParseFile(
           u'The file is not a Binary Cookie file. Unsupported file signature.')
 
     try:
       header = self.COOKIE_HEADER.parse_stream(file_object)
     except (IOError, construct.ArrayError, construct.FieldError):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'The file is not a Binary Cookie file (bad header).')
 
@@ -199,8 +199,6 @@ class BinaryCookieParser(interface.BaseParser):
         break
 
       self._ParsePage(page, parser_mediator)
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(BinaryCookieParser)
