@@ -62,7 +62,7 @@ class WinRecycleEvent(time_events.FiletimeEvent):
       self.orig_filename = short_filename
 
 
-class WinRecycleBinParser(interface.BaseParser):
+class WinRecycleBinParser(interface.SingleFileBaseParser):
   """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = 'recycle_bin'
@@ -78,19 +78,7 @@ class WinRecycleBinParser(interface.BaseParser):
 
   MAGIC_STRUCT = construct.ULInt64(u'magic')
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a Windows RecycleBin $Ixx file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows RecycleBin $Ixx file-like object.
 
     Args:
@@ -107,7 +95,7 @@ class WinRecycleBinParser(interface.BaseParser):
       raise errors.UnableToParseFile(
           u'Unable to parse $Ixxx file with error: {0:s}'.format(exception))
 
-    if magic_header is not 1:
+    if magic_header != 1:
       raise errors.UnableToParseFile(
           u'Not an $Ixxx file, wrong magic header.')
 
@@ -124,7 +112,7 @@ class WinRecycleBinParser(interface.BaseParser):
     parser_mediator.ProduceEvent(event_object)
 
 
-class WinRecyclerInfo2Parser(interface.BaseParser):
+class WinRecyclerInfo2Parser(interface.SingleFileBaseParser):
   """Parses the Windows Recycler INFO2 file."""
 
   NAME = 'recycle_bin_info2'
@@ -153,19 +141,7 @@ class WinRecyclerInfo2Parser(interface.BaseParser):
   UNICODE_FILENAME_OFFSET = 0x11C
   RECORD_INDEX_OFFSET = 0x108
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a Windows Recycler INFO2 file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Recycler INFO2 file-like object.
 
     Args:

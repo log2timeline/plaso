@@ -85,28 +85,15 @@ class WinEvtxRecordEvent(time_events.FiletimeEvent):
     self.xml_string = evtx_record.xml_string
 
 
-class WinEvtxParser(interface.BaseParser):
+class WinEvtxParser(interface.SingleFileBaseParser):
   """Parses Windows XML EventLog (EVTX) files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'winevtx'
   DESCRIPTION = u'Parser for Windows XML EventLog (EVTX) files.'
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a Windows XML EventLog (EVTX) file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows XML EventLog (EVTX) file-like object.
 
     Args:

@@ -111,7 +111,7 @@ class MsiecfUrlEvent(time_events.TimestampEvent):
       # OLE VT parsing.
 
 
-class MsiecfParser(interface.BaseParser):
+class MsiecfParser(interface.SingleFileBaseParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
   NAME = u'msiecf'
@@ -263,22 +263,7 @@ class MsiecfParser(interface.BaseParser):
         b'Client\x20UrlCache\x20MMF\x20Ver\x20', offset=0)
     return format_specification
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a MSIE Cache File (MSIECF).
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a MSIE Cache File (MSIECF) file-like object.
 
     Args:

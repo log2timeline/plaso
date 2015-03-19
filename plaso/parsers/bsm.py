@@ -103,8 +103,10 @@ class BsmEvent(event.EventObject):
     self.offset = offset
 
 
-class BsmParser(interface.BaseParser):
+class BsmParser(interface.SingleFileBaseParser):
   """Parser for BSM files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'bsm_log'
   DESCRIPTION = u'Parser for BSM log files.'
@@ -539,36 +541,32 @@ class BsmParser(interface.BaseParser):
     self.bsm_type_list_all = self.BSM_TYPE_LIST.copy()
     self.bsm_type_list_all.update(self.BSM_TYPE_LIST_NOT_TESTED)
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extract entries from a BSM file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a BSM file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     try:
       is_bsm = self.VerifyFile(parser_mediator, file_object)
     except (IOError, construct.FieldError) as exception:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Unable to parse BSM file with error: {0:s}'.format(exception))
 
     if not is_bsm:
-      file_object.close()
-      raise errors.UnableToParseFile(
-          u'Not a BSM File, unable to parse.')
-
-
+      raise errors.UnableToParseFile(u'Not a BSM File, unable to parse.')
 
     event_object = self.ReadBSMEvent(parser_mediator, file_object)
     while event_object:
       parser_mediator.ProduceEvent(event_object)
 
       event_object = self.ReadBSMEvent(parser_mediator, file_object)
-
-    file_object.close()
 
   def ReadBSMEvent(self, parser_mediator, file_object):
     """Returns a BsmEvent from a single BSM entry.

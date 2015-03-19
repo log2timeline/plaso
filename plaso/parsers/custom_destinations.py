@@ -15,8 +15,10 @@ from plaso.parsers import manager
 from plaso.parsers import winlnk
 
 
-class CustomDestinationsParser(interface.BaseParser):
+class CustomDestinationsParser(interface.SingleFileBaseParser):
   """Parses .customDestinations-ms files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'custom_destinations'
   DESCRIPTION = u'Parser for *.customDestinations-ms files.'
@@ -52,19 +54,7 @@ class CustomDestinationsParser(interface.BaseParser):
       u'file_footer',
       construct.ULInt32(u'signature'))
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a *.customDestinations-ms file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a *.customDestinations-ms file-like object.
 
     Args:

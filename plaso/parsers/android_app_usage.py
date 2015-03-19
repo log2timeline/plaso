@@ -37,25 +37,15 @@ class AndroidAppUsageEvent(event.EventObject):
     self.timestamp_desc = eventdata.EventTimestamp.LAST_RESUME_TIME
 
 
-class AndroidAppUsageParser(interface.BaseParser):
+class AndroidAppUsageParser(interface.SingleFileBaseParser):
   """Parses the Android usage-history.xml file."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'android_app_usage'
   DESCRIPTION = u'Parser for the Android usage-history.xml file.'
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses an Android usage-history file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an Android usage-history file-like object.
 
     Args:

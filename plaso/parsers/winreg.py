@@ -2,7 +2,6 @@
 """Parser for Windows NT Registry (REGF) files."""
 
 import logging
-import os
 
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -219,7 +218,7 @@ class WinRegistryParser(interface.BasePluginsParser):
     return plugins_list
 
   def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a Windows Registry file.
+    """Parses a Windows Registry file.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -227,15 +226,15 @@ class WinRegistryParser(interface.BasePluginsParser):
     # TODO: Remove this magic reads when the classifier has been
     # implemented, until then we need to make sure we are dealing with
     # a Windows NT Registry file before proceeding.
-    magic = 'regf'
+
+    file_object = parser_mediator.GetFileObject()
+    try:
+      data = file_object.read(4)
+    finally:
+      file_object.close()
 
     file_entry = parser_mediator.GetFileEntry()
-    file_object = parser_mediator.GetFileObject()
-    file_object.seek(0, os.SEEK_SET)
-    data = file_object.read(len(magic))
-    file_object.close()
-
-    if data != magic:
+    if data != b'regf':
       raise errors.UnableToParseFile((
           u'[{0:s}] unable to parse file: {1:s} with error: invalid '
           u'signature.').format(self.NAME, file_entry.name))

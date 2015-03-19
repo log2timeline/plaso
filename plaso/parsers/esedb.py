@@ -29,8 +29,10 @@ class EseDbCache(plugins.BasePluginCache):
     setattr(self, attribute_name, dict_object)
 
 
-class EseDbParser(interface.BasePluginsParser):
+class EseDbParser(interface.SingleFileBasePluginsParser):
   """Parses Extensible Storage Engine (ESE) database files (EDB)."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = u'esedb'
   DESCRIPTION = u'Parser for Extensible Storage Engine (ESE) database files.'
@@ -49,22 +51,7 @@ class EseDbParser(interface.BasePluginsParser):
     format_specification.AddNewSignature(b'\xef\xcd\xab\x89', offset=4)
     return format_specification
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses an ESE database file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an ESE database file-like object.
 
     Args:

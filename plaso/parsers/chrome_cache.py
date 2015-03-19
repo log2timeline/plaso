@@ -310,8 +310,48 @@ class ChromeCacheParser(interface.BaseParser):
   NAME = 'chrome_cache'
   DESCRIPTION = u'Parser for Chrome Cache files.'
 
+  def _ParseCacheEntries(self, parser_mediator, index_file, data_block_files):
+    """Parses Chrome Cache file entries.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      index_file: A Chrome cache index file object (instance of IndexFile).
+      data_block_files: A dictionary containing the data block files lookup
+                        table which contains data block file objects (instances
+                        of DataBlockFile).
+    """
+    # Parse the cache entries in the data block files.
+    for cache_address in index_file.index_table:
+      cache_address_chain_length = 0
+      while cache_address.value != 0x00000000:
+        if cache_address_chain_length >= 64:
+          parser_mediator.ProduceParseError(
+              u'Maximum allowed cache address chain length reached.')
+          break
+
+        data_file = data_block_files.get(cache_address.filename, None)
+        if not data_file:
+          message = u'Cache address: 0x{0:08x} missing data file.'.format(
+              cache_address.value)
+          parser_mediator.ProduceParseError(message)
+          break
+
+        try:
+          cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
+        except (IOError, UnicodeDecodeError) as exception:
+          parser_mediator.ProduceParseError(
+              u'Unable to parse cache entry with error: {0:s}'.format(
+                  exception))
+          break
+
+        event_object = ChromeCacheEntryEvent(cache_entry)
+        parser_mediator.ProduceEvent(event_object)
+
+        cache_address = cache_entry.next
+        cache_address_chain_length += 1
+
   def Parse(self, parser_mediator, **kwargs):
-    """Extract event objects from Chrome Cache files.
+    """Parses Chrome Cache files.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -330,7 +370,6 @@ class ChromeCacheParser(interface.BaseParser):
     # Build a lookup table for the data block files.
     file_system = file_entry.GetFileSystem()
     path_segments = file_system.SplitPath(file_entry.path_spec.location)
-
 
     data_block_files = {}
     for cache_address in index_file.index_table:
@@ -381,41 +420,14 @@ class ChromeCacheParser(interface.BaseParser):
 
         data_block_files[cache_address.filename] = data_block_file
 
-    # Parse the cache entries in the data block files.
-    for cache_address in index_file.index_table:
-      cache_address_chain_length = 0
-      while cache_address.value != 0x00000000:
-        if cache_address_chain_length >= 64:
-          parser_mediator.ProduceParseError(
-              u'Maximum allowed cache address chain length reached.')
-          break
+    try:
+      self._ParseCacheEntries(parser_mediator, index_file, data_block_files)
+    finally:
+      for data_block_file in data_block_files.itervalues():
+        if data_block_file:
+          data_block_file.Close()
 
-        data_file = data_block_files.get(cache_address.filename, None)
-        if not data_file:
-          message = u'Cache address: 0x{0:08x} missing data file.'.format(
-              cache_address.value)
-          parser_mediator.ProduceParseError(message)
-          break
-
-        try:
-          cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
-        except (IOError, UnicodeDecodeError) as exception:
-          parser_mediator.ProduceParseError(
-              u'Unable to parse cache entry with error: {0:s}'.format(
-                  exception))
-          break
-
-        event_object = ChromeCacheEntryEvent(cache_entry)
-        parser_mediator.ProduceEvent(event_object)
-
-        cache_address = cache_entry.next
-        cache_address_chain_length += 1
-
-    for data_block_file in data_block_files.itervalues():
-      if data_block_file:
-        data_block_file.Close()
-
-    index_file.Close()
+      index_file.Close()
 
 
 manager.ParsersManager.RegisterParser(ChromeCacheParser)

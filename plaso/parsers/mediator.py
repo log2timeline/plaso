@@ -176,23 +176,26 @@ class ParserMediator(object):
     """The dfVFS FileEntry object for the file being parsed."""
     return self._file_entry
 
-  def GetFileObject(self):
+  def GetFileObject(self, offset=0):
     """Provides a dfVFS FileObject for the file being parsed.
 
-    The FileObject will have its current offset set to the start of the data,
-    ie 0.
+    Args:
+      offset: the offset to seek within the file-like object. The offset is
+              relative from the start of the data. The default is 0. None
+              can be used to ignore setting the offset.
 
     Returns:
-      A dfVFS FileObject.
+      A file-like object (instance of dfvfs.FileIO).
 
     Raises:
-      KeyError: If no file entry is set in the mediator.
+      ValueError: If no file entry is set in the mediator.
     """
     if not self._file_entry:
-      raise KeyError(u'No file entry available')
+      raise ValueError(u'Missing file entry')
+
     file_object = self._file_entry.GetFileObject()
-    # Make sure we are starting from the beginning of the file.
-    file_object.seek(0, os.SEEK_SET)
+    if offset is not None:
+      file_object.seek(offset, os.SEEK_SET)
     return file_object
 
   def GetParserChain(self):
