@@ -3,7 +3,6 @@
 
 import binascii
 import operator
-import os
 import socket
 
 import dpkt
@@ -470,7 +469,7 @@ class PcapEvent(time_events.PosixTimeEvent):
     self.stream_data = repr(stream_object.stream_data[:50])
 
 
-class PcapParser(interface.BaseParser):
+class PcapParser(interface.SingleFileBaseParser):
   """Parses PCAP files."""
 
   NAME = 'pcap'
@@ -710,22 +709,7 @@ class PcapParser(interface.BaseParser):
 
     return other_streams
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a PCAP file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point. The default is None.
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a PCAP file-like object.
 
     Args:
@@ -735,7 +719,6 @@ class PcapParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
     data = file_object.read(dpkt.pcap.FileHdr.__hdr_len__)
 
     try:

@@ -16,7 +16,7 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class BencodeParser(interface.BasePluginsParser):
+class BencodeParser(interface.SingleFileBasePluginsParser):
   """Deserializes bencoded file; produces a dictionary containing bencoded data.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
@@ -29,6 +29,8 @@ class BencodeParser(interface.BasePluginsParser):
   bencode_plugins / directory for examples of how bencode plugins are
   implemented.
   """
+
+  _INITIAL_FILE_OFFSET = None
 
   # Regex match for a bencode dictionary followed by a field size.
   BENCODE_RE = re.compile('d[0-9]')
@@ -43,19 +45,7 @@ class BencodeParser(interface.BasePluginsParser):
     super(BencodeParser, self).__init__()
     self._plugins = BencodeParser.GetPluginObjects()
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a bencoded file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a bencoded file-like object.
 
     Args:

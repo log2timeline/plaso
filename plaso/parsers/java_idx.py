@@ -41,7 +41,7 @@ class JavaIDXEvent(time_events.TimestampEvent):
     self.ip_address = ip_address
 
 
-class JavaIDXParser(interface.BaseParser):
+class JavaIDXParser(interface.SingleFileBaseParser):
   """Parse Java WebStart Cache IDX files for download events.
 
   There are five structures defined. 6.02 files had one generic section
@@ -53,6 +53,8 @@ class JavaIDXParser(interface.BaseParser):
   valid, get the file version, then continue on with the correct
   structures.
   """
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'java_idx'
   DESCRIPTION = u'Parser for Java WebStart Cache IDX files.'
@@ -108,19 +110,7 @@ class JavaIDXParser(interface.BaseParser):
       construct.PascalString(
           'string', length_field=construct.UBInt16('length')))
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a Java WebStart Cache IDX file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Java WebStart Cache IDX file-like object.
 
     Args:
@@ -149,8 +139,6 @@ class JavaIDXParser(interface.BaseParser):
     if not magic.idx_version in [602, 603, 604, 605]:
       raise errors.UnableToParseFile(u'Not a valid Java IDX file')
 
-
-
     # Obtain the relevant values from the file. The last modified date
     # denotes when the file was last modified on the HOST. For example,
     # when the file was uploaded to a web server.
@@ -171,7 +159,7 @@ class JavaIDXParser(interface.BaseParser):
       section_one = self.IDX_605_SECTION_ONE_STRUCT.parse_stream(file_object)
       last_modified_date = section_one.last_modified_date
       if file_object.get_size() > 128:
-        file_object.seek(128)  # Static offset for section 2.
+        file_object.seek(128, os.SEEK_SET)  # Static offset for section 2.
         section_two = self.IDX_605_SECTION_TWO_STRUCT.parse_stream(file_object)
         url = section_two.url
         ip_address = section_two.ip_address

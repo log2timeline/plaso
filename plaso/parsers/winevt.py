@@ -67,8 +67,10 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
     self.strings = list(evt_record.strings)
 
 
-class WinEvtParser(interface.BaseParser):
+class WinEvtParser(interface.SingleFileBaseParser):
   """Parses Windows EventLog (EVT) files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'winevt'
   DESCRIPTION = u'Parser for Windows EventLog (EVT) files.'
@@ -110,22 +112,7 @@ class WinEvtParser(interface.BaseParser):
           evt_record, recovered)
       parser_mediator.ProduceEvent(event_object)
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a Windows EventLog (EVT) file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows EventLog (EVT) file-like object.
 
     Args:
