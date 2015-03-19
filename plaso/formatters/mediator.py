@@ -28,10 +28,18 @@ class FormatterMediator(object):
     self._winevt_database_reader = None
 
   def _GetWinevtRcDatabaseReader(self):
-    """Opens the Windows Event Log resource database reader."""
+    """Opens the Windows Event Log resource database reader.
+
+    Returns:
+      The Windows Event Log resource database reader (instance of
+      WinevtResourcesSqlite3DatabaseReader) or None.
+    """
     if not self._winevt_database_reader and self._data_location:
       database_path = os.path.join(
           self._data_location, self._WINEVT_RC_DATABASE)
+      if not os.path.isfile(database_path):
+        return
+
       self._winevt_database_reader = (
           winevt_rc.WinevtResourcesSqlite3DatabaseReader())
       self._winevt_database_reader.Open(database_path)
