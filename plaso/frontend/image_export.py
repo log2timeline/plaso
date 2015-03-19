@@ -1086,6 +1086,7 @@ def Main():
 
     if not os.path.exists(options.data_location):
       logging.warning(u'Unable to automatically determine data location.')
+      options.data_location = None
 
   if getattr(options, u'signature_identifiers', u'') == u'list':
     front_end.ListSignatureIdentifiers(options)

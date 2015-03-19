@@ -736,6 +736,7 @@ def Main(arguments=None):
 
     if not os.path.exists(options.data_location):
       logging.warning(u'Unable to automatically determine data location.')
+      options.data_location = None
 
   try:
     front_end.ParseOptions(options)

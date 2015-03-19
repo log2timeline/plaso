@@ -257,6 +257,8 @@ class ImageExportFrontendTest(test_lib.FrontendTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+  # TODO: add bogus data location test.
+
 
 if __name__ == '__main__':
   unittest.main()

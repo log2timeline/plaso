@@ -189,6 +189,8 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
         u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         u'version,filename,inode,notes,format,extra'))
 
+  # TODO: add bogus data location test.
+
 
 if __name__ == '__main__':
   unittest.main()
