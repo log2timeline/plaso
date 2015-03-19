@@ -202,10 +202,11 @@ class FirefoxCacheParser(interface.BaseParser):
     """
     firefox_config = self._GetFirefoxConfig(parser_mediator)
 
-    file_object = parser_mediator.GetFileObject()
-    file_name = parser_mediator.GetFileEntry().name
+    file_entry = parser_mediator.GetFileEntry()
+    file_name = file_entry.name
 
-    file_object.seek(firefox_config.first_record_offset)
+    file_object = parser_mediator.GetFileObject()
+    file_object.seek(firefox_config.first_record_offset, os.SEEK_SET)
 
     while file_object.get_offset() < file_object.get_size():
       try:

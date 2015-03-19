@@ -3,7 +3,6 @@
 # TODO: Add a unit test for this parser.
 
 import datetime
-import os
 
 import hachoir_core.config
 
@@ -45,26 +44,14 @@ class HachoirEvent(time_events.TimestampEvent):
     self.metadata = attributes
 
 
-class HachoirParser(interface.BaseParser):
-  """Parse meta data from files."""
+class HachoirParser(interface.SingleFileBaseParser):
+  """Class to parse meta data from files using Hachoir."""
 
   NAME = 'hachoir'
   DESCRIPTION = u'Parser that wraps Hachoir.'
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a file with Hachoir.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a file-like object with Hachoir.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a file-like object using Hachoir.
 
     Args:
       parser_mediator: A parser context object (instance of ParserContext).
@@ -73,7 +60,6 @@ class HachoirParser(interface.BaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
     file_name = parser_mediator.GetDisplayName()
 
     try:

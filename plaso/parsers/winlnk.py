@@ -52,8 +52,10 @@ class WinLnkLinkEvent(time_events.FiletimeEvent):
       self.link_target = link_target
 
 
-class WinLnkParser(interface.BaseParser):
+class WinLnkParser(interface.SingleFileBaseParser):
   """Parses Windows Shortcut (LNK) files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = u'lnk'
   DESCRIPTION = u'Parser for Windows Shortcut (LNK) files.'
@@ -67,19 +69,8 @@ class WinLnkParser(interface.BaseParser):
         offset=4)
     return format_specification
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Parses a Windows Shortcut (LNK) file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
-  def ParseFileObject(self, parser_mediator, file_object, display_name=None):
+  def ParseFileObject(
+      self, parser_mediator, file_object, display_name=None, **kwargs):
     """Parses a Windows Shortcut (LNK) file-like object.
 
     Args:

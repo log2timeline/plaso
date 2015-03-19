@@ -69,19 +69,24 @@ class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
       self.description = 'Last Visit'
 
 
-class OperaTypedHistoryParser(interface.BaseParser):
+class OperaTypedHistoryParser(interface.SingleFileBaseParser):
   """Parses the Opera typed_history.xml file."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'opera_typed_history'
   DESCRIPTION = u'Parser for Opera typed_history.xml files.'
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extract data from an Opera typed history file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an Opera typed history file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -91,7 +96,6 @@ class OperaTypedHistoryParser(interface.BaseParser):
     first_line = text_file_object.readline(90)
 
     if not first_line.startswith('<?xml version="1.0'):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [not a XML]')
 
@@ -102,7 +106,6 @@ class OperaTypedHistoryParser(interface.BaseParser):
     second_line = text_file_object.readline(50).strip()
 
     if second_line != '<typed_history>':
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera typed history file [wrong XML root key]')
 
@@ -122,10 +125,8 @@ class OperaTypedHistoryParser(interface.BaseParser):
       event_object = OperaTypedHistoryEvent(last_typed, content, entry_type)
       parser_mediator.ProduceEvent(event_object)
 
-    file_object.close()
 
-
-class OperaGlobalHistoryParser(interface.BaseParser):
+class OperaGlobalHistoryParser(interface.SingleFileBaseParser):
   """Parses the Opera global_history.dat file."""
 
   NAME = 'opera_global'
@@ -243,13 +244,16 @@ class OperaGlobalHistoryParser(interface.BaseParser):
 
       yield title, url, timestamp, popularity_index
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extract data from an Opera global history file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses an Opera global history file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = parser_mediator.GetFileObject()
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -258,26 +262,20 @@ class OperaGlobalHistoryParser(interface.BaseParser):
       title, url, timestamp, popularity_index = self._ReadRecord(
           text_file_object, 400)
     except errors.NotAText:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a text file].')
 
     if not title:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [no title present].')
 
     if not self._IsValidUrl(url):
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [not a valid URL].')
 
     if not timestamp:
-      file_object.close()
       raise errors.UnableToParseFile(
           u'Not an Opera history file [timestamp does not exist].')
-
-
 
     event_object = OperaGlobalHistoryEvent(
         timestamp, url, title, popularity_index)
@@ -289,8 +287,6 @@ class OperaGlobalHistoryParser(interface.BaseParser):
       event_object = OperaGlobalHistoryEvent(
           timestamp, url, title, popularity_index)
       parser_mediator.ProduceEvent(event_object)
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParsers([

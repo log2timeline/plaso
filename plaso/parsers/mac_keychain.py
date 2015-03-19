@@ -92,13 +92,15 @@ class KeychainApplicationRecordEvent(event.EventObject):
     self.ssgp_hash = ssgp_hash
 
 
-class KeychainParser(interface.BaseParser):
+class KeychainParser(interface.SingleFileBaseParser):
   """Parser for Keychain files."""
+
+  _INITIAL_FILE_OFFSET = None
 
   NAME = 'mac_keychain'
   DESCRIPTION = u'Parser for Mac OS X Keychain files.'
 
-  KEYCHAIN_MAGIC_HEADER = 'kych'
+  KEYCHAIN_MAGIC_HEADER = b'kych'
   KEYCHAIN_MAJOR_VERSION = 1
   KEYCHAIN_MINOR_VERSION = 0
 
@@ -422,16 +424,20 @@ class KeychainParser(interface.BaseParser):
       table_offsets.append(table_offset + self.KEYCHAIN_DB_HEADER.sizeof())
     return table_offsets
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extract data from a Keychain file.
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Mac OS X keychain file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator: A parser context object (instance of ParserContext).
+      file_object: A file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = parser_mediator.GetFileObject()
+    file_object.seek(0, os.SEEK_SET)
+
     table_offsets = self._VerifyStructure(file_object)
     if not table_offsets:
-      file_object.close()
       raise errors.UnableToParseFile(u'The file is not a Keychain file.')
 
     for table_offset in table_offsets:
@@ -460,8 +466,6 @@ class KeychainParser(interface.BaseParser):
       elif table.record_type == self.RECORD_TYPE_APPLICATION:
         for _ in range(table.number_of_records):
           self._ReadEntryApplication(parser_mediator, file_object)
-
-    file_object.close()
 
 
 manager.ParsersManager.RegisterParser(KeychainParser)

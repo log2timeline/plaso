@@ -2,7 +2,6 @@
 """This file contains a parser for OXML files (i.e. MS Office 2007+)."""
 
 import logging
-import os
 import re
 import struct
 import zipfile
@@ -39,7 +38,7 @@ class OpenXMLParserEvent(time_events.TimestampEvent):
       setattr(self, key, value)
 
 
-class OpenXMLParser(interface.BaseParser):
+class OpenXMLParser(interface.SingleFileBaseParser):
   """Parse metadata from OXML files."""
 
   NAME = 'openxml'
@@ -69,20 +68,8 @@ class OpenXMLParser(interface.BaseParser):
     fix_key = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 
-  def Parse(self, parser_mediator, **kwargs):
-    """Extract data from an OXML file.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-    """
-    file_object = parser_mediator.GetFileObject()
-    try:
-      self.ParseFileObject(parser_mediator, file_object)
-    finally:
-      file_object.close()
-
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a Windows EventLog (EVT) file-like object.
+    """Parses an OXML file-like object.
 
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
@@ -93,7 +80,6 @@ class OpenXMLParser(interface.BaseParser):
     """
     file_name = parser_mediator.GetDisplayName()
 
-    file_object.seek(0, os.SEEK_SET)
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
           u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
