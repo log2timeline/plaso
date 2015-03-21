@@ -46,7 +46,7 @@ def GetScripts():
       u'psort.py'])
 
   for filename in script_filenames:
-    scripts.append(os.path.join(u'plaso', u'frontend', filename))
+    scripts.append(os.path.join(u'tools', filename))
 
   return scripts
 
@@ -99,7 +99,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    packages=find_packages('.'),
+    packages=find_packages('.', exclude=[u'tools']),
     package_dir={
         'plaso': 'plaso',
     },
