@@ -27,6 +27,7 @@ from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
 from plaso.proto import plaso_storage_pb2
 from plaso.serializer import protobuf_serializer
+from plaso.winnt import language_ids
 
 import pytz
 
@@ -47,6 +48,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._filter_object = None
     self._output_filename = None
     self._output_format = None
+    self._preferred_language = u'en-US'
     self._slice_size = 5
 
   def _AppendEvent(self, event_object, output_buffer, event_queues):
@@ -160,6 +162,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       self.PrintColumnValue(name, description, format_length)
     self.PrintSeparatorLine()
 
+  def ListLanguageIdentifiers(self):
+    """Lists the language identifiers."""
+    self.PrintHeader(u'Language identifiers')
+    self.PrintColumnValue(u'Identifier', u'Language')
+    for language_id, value_list in sorted(
+        language_ids.LANGUAGE_IDENTIFIERS.items()):
+      self.PrintColumnValue(language_id, value_list[1])
+
   def ListOutputModules(self):
     """Lists the output modules."""
     self.PrintHeader(u'Output Modules')
@@ -222,6 +232,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         self._slice_size = getattr(options, u'slice_size', 5)
         self._filter_buffer = bufferlib.CircularBuffer(self._slice_size)
 
+    self._preferred_language = getattr(options, u'preferred_language', u'en-US')
+
   def ProcessStorage(self, options):
     """Open a storage file and processes the events within.
 
@@ -275,6 +287,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         output_stream = sys.stdout
 
       formatter_mediator = self.GetFormatMediator()
+
+      try:
+        formatter_mediator.SetPreferredLanguageIdentifier(
+            self._preferred_language)
+      except (KeyError, TypeError) as exception:
+        raise RuntimeError(exception)
 
       try:
         # TODO: move this into a factory function?
