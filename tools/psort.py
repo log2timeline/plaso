@@ -61,7 +61,7 @@ def Main(arguments=None):
   tool_group.add_argument(
       u'-o', u'--output_format', u'--output-format', metavar=u'FORMAT',
       dest=u'output_format', default=u'dynamic', help=(
-          u'The output format or "-o list" to see a list of available '
+          u'The output format. Use "-o list" to see a list of available '
           u'output formats.'))
 
   tool_group.add_argument(
@@ -75,10 +75,19 @@ def Main(arguments=None):
       action=u'store', type=unicode, help=u'The location of the analysis data.')
 
   tool_group.add_argument(
-      u'-z', u'--zone', metavar=u'TIMEZONE', default=u'UTC', dest=u'timezone',
-      help=(
-          u'The timezone of the output or "-z list" to see a list of available '
-          u'timezones.'))
+      u'--language', metavar=u'LANGUAGE', dest=u'preferred_language',
+      default=u'en-US', type=unicode, help=(
+          u'The preferred language identifier for Windows Event Log message '
+          u'strings. Use "--language list" to see a list of available '
+          u'language identifiers. Note that formatting will fall back on '
+          u'en-US (LCID 0x0409) if the preferred language is not available '
+          u'in the database of message string templates.'))
+
+  tool_group.add_argument(
+      u'-z', u'--zone', metavar=u'TIMEZONE', dest=u'timezone', default=u'UTC',
+      type=unicode, help=(
+          u'The timezone in which to represent the date and time values. '
+          u'Use "-z list" to see a list of available timezones.'))
 
   tool_group.add_argument(
       u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
@@ -162,16 +171,24 @@ def Main(arguments=None):
   else:
     logging.basicConfig(level=logging.INFO, format=format_str)
 
-  if options.timezone == u'list':
-    front_end.ListTimeZones()
-    return True
-
+  have_list_option = False
   if options.analysis_plugins == u'list':
     front_end.ListAnalysisPlugins()
-    return True
+    have_list_option = True
 
   if options.output_format == u'list':
     front_end.ListOutputModules()
+    have_list_option = True
+
+  if options.preferred_language == u'list':
+    front_end.ListLanguageIdentifiers()
+    have_list_option = True
+
+  if options.timezone == u'list':
+    front_end.ListTimeZones()
+    have_list_option = True
+
+  if have_list_option:
     return True
 
   if not getattr(options, u'data_location', None):
