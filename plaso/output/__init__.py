@@ -5,6 +5,10 @@ try:
   from plaso.output import elastic
 except ImportError:
   pass
+try:
+  from plaso.output import timesketch_out
+except ImportError:
+  pass
 from plaso.output import json_out
 from plaso.output import l2t_csv
 from plaso.output import l2t_tln
