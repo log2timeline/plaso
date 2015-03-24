@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Keychain password database file."""
+"""The Mac OS X keychain password database file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
-  """Formatter for keychain application record event."""
+  """Formatter for a keychain application record event."""
 
   DATA_TYPE = 'mac:keychain:application'
 
@@ -21,7 +21,7 @@ class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
 
 
 class KeychainInternetRecordFormatter(interface.ConditionalEventFormatter):
-  """Formatter for keychain internet record event."""
+  """Formatter for a keychain Internet record event."""
 
   DATA_TYPE = 'mac:keychain:internet'
 

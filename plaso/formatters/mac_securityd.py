@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for ASL securityd log file."""
+"""The Mac OS X ASL securityd log file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class MacSecuritydLogFormatter(interface.ConditionalEventFormatter):
-  """Formatter for ASL Securityd file."""
+  """Formatter for an ASL securityd log file event."""
 
   DATA_TYPE = 'mac:asl:securityd:line'
 
