@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a formatter for the Mac OS X Document Versions files."""
+"""The Mac OS X Document Versions files event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class MacDocumentVersionsFormatter(interface.ConditionalEventFormatter):
-  """The event formatter for page visited data in Document Versions."""
+  """Formatter for a Mac OS X Document Versions page visited event."""
 
   DATA_TYPE = 'mac:document_versions:file'
 

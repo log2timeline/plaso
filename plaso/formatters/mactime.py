@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Sleuthkit (TSK) bodyfile or mactime format."""
+"""The Sleuthkit (TSK) bodyfile (or mactime) event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class MactimeFormatter(interface.EventFormatter):
-  """Class that formats mactime bodyfile events."""
+  """Formatter for a mactime event."""
 
   DATA_TYPE = 'fs:mactime:line'
 
