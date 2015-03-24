@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the Mac OS X launch services quarantine events."""
+"""The Mac OS X launch services (LS) quarantine event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class LSQuarantineFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a LS Quarantine history event."""
+  """Formatter for a launch services (LS) quarantine history event."""
 
   DATA_TYPE = 'macosx:lsquarantine'
 

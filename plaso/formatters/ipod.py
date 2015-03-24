@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Formatter for the iPod device events."""
+"""The iPod device event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
 class IPodDeviceFormatter(interface.ConditionalEventFormatter):
-  """Formatter for iPod device events."""
+  """Formatter for an iPod device event."""
 
   DATA_TYPE = 'ipod:device:entry'
 
