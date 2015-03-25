@@ -8,6 +8,7 @@ import plaso
 
 # Registering output modules so that output bypass works.
 from plaso import output as _  # pylint: disable=unused-import
+from plaso.frontend import extraction_frontend
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.hashers import manager as hashers_manager
@@ -33,7 +34,7 @@ class LoggingFilter(logging.Filter):
     return True
 
 
-class Log2TimelineFrontend(frontend.ExtractionFrontend):
+class Log2TimelineFrontend(extraction_frontend.ExtractionFrontend):
   """Class that implements the log2timeline front-end."""
 
   def __init__(self):

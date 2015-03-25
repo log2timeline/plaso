@@ -20,6 +20,7 @@ from plaso.engine import single_process
 # pylint: disable=unused-import
 from plaso.formatters import winreg as winreg_formatter
 
+from plaso.frontend import extraction_frontend
 from plaso.frontend import frontend
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
@@ -72,7 +73,7 @@ class PregEventObjectQueueConsumer(queue.EventObjectQueueConsumer):
     self.event_objects.append(event_object)
 
 
-class PregFrontend(frontend.ExtractionFrontend):
+class PregFrontend(extraction_frontend.ExtractionFrontend):
   """Class that implements the preg front-end."""
 
   # All Registry plugins start with "winreg_", thus the Preg library cuts that
