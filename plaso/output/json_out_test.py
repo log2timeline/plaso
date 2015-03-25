@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """Tests for the JSON output class."""
 
-import StringIO
+import io
+import os
+import sys
 import unittest
 
 from dfvfs.lib import definitions
@@ -30,8 +32,10 @@ class JsonTestEvent(event.EventObject):
         u'closed for user root)')
     self.username = u'root'
 
+    os_location = u'{0:s}{1:s}'.format(
+        os.path.sep, os.path.join(u'cases', u'image.dd'))
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=u'/cases/image.dd')
+        definitions.TYPE_INDICATOR_OS, location=os_location)
     self.pathspec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_TSK, inode=15, location=u'/var/log/syslog.1',
         parent=os_path_spec)
@@ -43,42 +47,59 @@ class JsonOutputTest(test_lib.LogOutputFormatterTestCase):
   def setUp(self):
     """Sets up the objects needed for this test."""
     super(JsonOutputTest, self).setUp()
-    self.output = StringIO.StringIO()
-    self.formatter = json_out.JsonOutputFormatter(
-        None, self._formatter_mediator, filehandle=self.output)
-    self.event_object = JsonTestEvent()
+    self._output = io.BytesIO()
+    self._formatter = json_out.JsonOutputFormatter(
+        None, self._formatter_mediator, filehandle=self._output)
+    self._event_object = JsonTestEvent()
 
   def testWriteHeaderAndfooter(self):
     """Tests the WriteHeader and WriteFooter functions."""
-    expected_header = u'{'
-    expected_footer = u'{"event_foo": "{}"}'
+    expected_header = b'{'
+    expected_footer = b'{"event_foo": "{}"}'
 
-    self.formatter.WriteHeader()
+    self._formatter.WriteHeader()
 
-    header = self.output.getvalue()
+    header = self._output.getvalue()
     self.assertEqual(header, expected_header)
 
-    self.formatter.WriteFooter()
+    self._formatter.WriteFooter()
 
-    footer = self.output.getvalue()
+    footer = self._output.getvalue()
     self.assertEqual(footer, expected_footer)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    self.formatter.WriteEventBody(self.event_object)
+    self._formatter.WriteEventBody(self._event_object)
+
+    expected_uuid = self._event_object.uuid.encode(u'utf-8')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-06-27 18:17:01')
+
+    if sys.platform.startswith('win'):
+      expected_os_location = u'C:\\{0:s}'.format(
+          os.path.join(u'cases', u'image.dd'))
+      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
+      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
+      expected_os_location = expected_os_location.replace(u'\\', u'\\\\')
+    else:
+      expected_os_location = u'{0:s}{1:s}'.format(
+          os.path.sep, os.path.join(u'cases', u'image.dd'))
+
+    expected_os_location = expected_os_location.encode(u'utf-8')
 
     expected_event_body = (
-        '"event_0": {{"username": "root", "display_name": "OS: '
-        '/var/log/syslog.1", "uuid": "{0:s}", "data_type": "test:l2tjson", '
-        '"timestamp": 1340821021000000, "hostname": "ubuntu", "text": '
-        '"Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\\n '
-        'closed for user root)", "pathspec": "{{\\"type_indicator\\": '
-        '\\"TSK\\", \\"inode\\": 15, \\"location\\": \\"/var/log/syslog.1\\", '
-        '\\"parent\\": \\"{{\\\\\\"type_indicator\\\\\\": \\\\\\"OS\\\\\\", '
-        '\\\\\\"location\\\\\\": \\\\\\"/cases/image.dd\\\\\\"}}\\"}}", '
-        '"inode": 12345678}},\n').format(self.event_object.uuid)
+        b'"event_0": {{"username": "root", "display_name": "OS: '
+        b'/var/log/syslog.1", "uuid": "{0:s}", "data_type": "test:l2tjson", '
+        b'"timestamp": {1:d}, "hostname": "ubuntu", "text": '
+        b'"Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\\n '
+        b'closed for user root)", "pathspec": "{{\\"type_indicator\\": '
+        b'\\"TSK\\", \\"inode\\": 15, \\"location\\": \\"/var/log/syslog.1\\", '
+        b'\\"parent\\": \\"{{\\\\\\"type_indicator\\\\\\": \\\\\\"OS\\\\\\", '
+        b'\\\\\\"location\\\\\\": \\\\\\"{2:s}\\\\\\"}}\\"}}", '
+        b'"inode": 12345678}},\n').format(
+            expected_uuid, expected_timestamp, expected_os_location)
 
-    event_body = self.output.getvalue()
+    event_body = self._output.getvalue()
     self.assertEqual(event_body, expected_event_body)
 
 

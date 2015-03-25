@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 """Tests for the L2tCsv output class."""
 
-import StringIO
+import io
 import unittest
 
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib
 from plaso.output import l2t_csv
 from plaso.output import test_lib
 
@@ -20,7 +21,7 @@ class L2tTestEvent(event.EventObject):
   def __init__(self):
     """Initialize event with data."""
     super(L2tTestEvent, self).__init__()
-    self.timestamp = 1340821021000000
+    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
     self.hostname = u'ubuntu'
     self.filename = u'log/syslog.1'
@@ -41,16 +42,13 @@ class L2tTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Syslog'
 
 
-formatters_manager.FormattersManager.RegisterFormatter(L2tTestEventFormatter)
-
-
 class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
   """Contains tests to validate the L2tCSV outputter."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
     super(L2tCsvTest, self).setUp()
-    self.output = StringIO.StringIO()
+    self.output = io.BytesIO()
     self.formatter = l2t_csv.L2tCsvOutputFormatter(
         None, self._formatter_mediator, filehandle=self.output)
     self.event_object = L2tTestEvent()
@@ -58,8 +56,8 @@ class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
     expected_header = (
-        u'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        u'version,filename,inode,notes,format,extra\n')
+        b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        b'version,filename,inode,notes,format,extra\n')
 
     self.formatter.WriteHeader()
 
@@ -68,6 +66,8 @@ class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        L2tTestEventFormatter)
 
     event_tag = event.EventTag()
     event_tag.tags = [u'Malware', u'Document Printed']
@@ -77,18 +77,21 @@ class L2tCsvTest(test_lib.LogOutputFormatterTestCase):
     self.formatter.WriteEventBody(self.event_object)
 
     expected_event_body = (
-        u'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
-        u'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        u'closed for user root),Reporter <CRON> PID: 8442 '
-        u'(pam_unix(cron:session): session closed for user root),'
-        u'2,log/syslog.1,-,Malware Document Printed,'
-        u'-,my_number: 123  some_additional_foo: True \n')
+        b'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
+        b'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        b'closed for user root),Reporter <CRON> PID: 8442 '
+        b'(pam_unix(cron:session): session closed for user root),'
+        b'2,log/syslog.1,-,Malware Document Printed,'
+        b'-,my_number: 123  some_additional_foo: True \n')
 
     event_body = self.output.getvalue()
     self.assertEqual(event_body, expected_event_body)
 
     # Ensure that the only commas returned are the 16 delimeters.
-    self.assertEqual(event_body.count(u','), 16)
+    self.assertEqual(event_body.count(b','), 16)
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        L2tTestEventFormatter)
 
 
 if __name__ == '__main__':

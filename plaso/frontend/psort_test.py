@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the psort front-end."""
 
+import io
 import os
-import StringIO
 import unittest
 
 from plaso.formatters import interface as formatters_interface
@@ -152,7 +152,7 @@ class PsortFrontendTest(test_lib.FrontendTestCase):
     events.append(PsortTestEvent(5134324322))
     events.append(PsortTestEvent(5134024321))
 
-    output_fd = StringIO.StringIO()
+    output_fd = io.StringIO()
 
     with test_lib.TempDirectory() as dirname:
       temp_file = os.path.join(dirname, u'plaso.db')

@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 """Tests for the TLN output class."""
 
-import StringIO
+import io
 import unittest
 
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
+from plaso.lib import timelib
 from plaso.output import test_lib
 from plaso.output import tln
 
@@ -19,7 +20,7 @@ class TlnTestEvent(event.EventObject):
   def __init__(self):
     """Initialize event with data."""
     super(TlnTestEvent, self).__init__()
-    self.timestamp = 1340821021000000
+    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.hostname = u'ubuntu'
     self.display_name = u'OS: log/syslog.1'
     self.inode = 12345678
@@ -37,41 +38,44 @@ class L2TTlnTestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Syslog'
 
 
-formatters_manager.FormattersManager.RegisterFormatter(L2TTlnTestEventFormatter)
-
-
 class TlnTest(test_lib.LogOutputFormatterTestCase):
   """Tests for the TLN outputter."""
 
   def setUp(self):
     """Sets up the objects needed for this test."""
     super(TlnTest, self).setUp()
-    self.output = StringIO.StringIO()
-    self.formatter = tln.TlnOutputFormatter(
-        None, self._formatter_mediator, filehandle=self.output)
-    self.event_object = TlnTestEvent()
+    self._output = io.BytesIO()
+    self._formatter = tln.TlnOutputFormatter(
+        None, self._formatter_mediator, filehandle=self._output)
+    self._event_object = TlnTestEvent()
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    expected_header = u'Time|Source|Host|User|Description\n'
+    expected_header = b'Time|Source|Host|User|Description\n'
 
-    self.formatter.WriteHeader()
+    self._formatter.WriteHeader()
 
-    header = self.output.getvalue()
+    header = self._output.getvalue()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
-    self.formatter.WriteEventBody(self.event_object)
+    formatters_manager.FormattersManager.RegisterFormatter(
+        L2TTlnTestEventFormatter)
+
+    self._formatter.WriteEventBody(self._event_object)
 
     expected_event_body = (
-        u'1340821021|LOG|ubuntu|root|Reporter <CRON> PID:  8442  '
-        u'(pam_unix(cron:session): session closed for user root)\n')
+        b'1340821021|LOG|ubuntu|root|Reporter <CRON> PID:  8442  '
+        b'(pam_unix(cron:session): session closed for user root)\n')
 
-    event_body = self.output.getvalue()
+    event_body = self._output.getvalue()
     self.assertEqual(event_body, expected_event_body)
 
-    self.assertEqual(event_body.count(u'|'), 4)
+    self.assertEqual(event_body.count(b'|'), 4)
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        L2TTlnTestEventFormatter)
 
 
 if __name__ == '__main__':
