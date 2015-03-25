@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 """Tests for the dynamic output formatter for plaso."""
 
-import StringIO
+import io
 import unittest
 
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import event
 from plaso.lib import eventdata
+from plaso.lib import timelib
 from plaso.output import dynamic
 from plaso.output import test_lib
 
@@ -18,7 +19,7 @@ class TestEvent(event.EventObject):
 
   def __init__(self):
     super(TestEvent, self).__init__()
-    self.timestamp = 1340821021000000
+    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.timestamp_desc = eventdata.EventTimestamp.CHANGE_TIME
     self.hostname = 'ubuntu'
     self.filename = 'log/syslog.1'
@@ -35,13 +36,11 @@ class TestEventFormatter(formatters_interface.EventFormatter):
   SOURCE_LONG = 'Syslog'
 
 
-formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
-
-
 class FakeFilter(object):
   """Provide a fake filter, that defines which fields to use."""
 
   def __init__(self, fields, separator=u','):
+    super(FakeFilter, self).__init__()
     self.fields = fields
     self.separator = separator
 
@@ -50,83 +49,94 @@ class DynamicOutputTest(test_lib.LogOutputFormatterTestCase):
   """Test the dynamic output module."""
 
   def testHeader(self):
-    output = StringIO.StringIO()
+    """Tests the WriteHeader function."""
+    output = io.BytesIO()
     formatter = dynamic.DynamicOutput(
         None, self._formatter_mediator, filehandle=output)
-    correct_line = (
-        'datetime,timestamp_desc,source,source_long,message,parser,'
-        'display_name,tag,store_number,store_index\n')
+    expected_header = (
+        b'datetime,timestamp_desc,source,source_long,message,parser,'
+        b'display_name,tag,store_number,store_index\n')
 
     formatter.WriteHeader()
-    self.assertEqual(output.getvalue(), correct_line)
+    self.assertEqual(output.getvalue(), expected_header)
 
-    output = StringIO.StringIO()
+    output = io.BytesIO()
     filter_object = FakeFilter([
-        'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
+        u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
     formatter = dynamic.DynamicOutput(
         None, self._formatter_mediator, filehandle=output,
         filter_use=filter_object)
 
-    correct_line = 'date,time,message,hostname,filename,some_stuff\n'
+    expected_header = b'date,time,message,hostname,filename,some_stuff\n'
     formatter.WriteHeader()
-    self.assertEqual(output.getvalue(), correct_line)
+    self.assertEqual(output.getvalue(), expected_header)
 
-    output = StringIO.StringIO()
+    output = io.BytesIO()
     filter_object = FakeFilter(
-        ['date', 'time', 'message', 'hostname', 'filename', 'some_stuff'],
+        [u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'],
         separator='@')
     formatter = dynamic.DynamicOutput(
         None, self._formatter_mediator, filehandle=output,
         filter_use=filter_object)
 
-    correct_line = 'date@time@message@hostname@filename@some_stuff\n'
+    expected_header = b'date@time@message@hostname@filename@some_stuff\n'
     formatter.WriteHeader()
-    self.assertEqual(output.getvalue(), correct_line)
+    self.assertEqual(output.getvalue(), expected_header)
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        TestEventFormatter)
+
     event_object = TestEvent()
-    output = StringIO.StringIO()
+    output = io.BytesIO()
 
     filter_object = FakeFilter([
-        'date', 'time', 'timezone', 'macb', 'source', 'sourcetype', 'type',
-        'user', 'host', 'message_short', 'message', 'filename',
-        'inode', 'notes', 'format', 'extra'])
+        u'date', u'time', u'timezone', u'macb', u'source', u'sourcetype',
+        u'type', u'user', u'host', u'message_short', u'message',
+        u'filename', u'inode', u'notes', u'format', u'extra'])
     formatter = dynamic.DynamicOutput(
         None, self._formatter_mediator, filehandle=output,
         filter_use=filter_object)
 
     formatter.WriteHeader()
-    header = (
-        'date,time,timezone,macb,source,sourcetype,type,user,host,'
-        'message_short,message,filename,inode,notes,format,extra\n')
-    self.assertEqual(output.getvalue(), header)
+    expected_header = (
+        b'date,time,timezone,macb,source,sourcetype,type,user,host,'
+        b'message_short,message,filename,inode,notes,format,extra\n')
+    self.assertEqual(output.getvalue(), expected_header)
 
     formatter.WriteEventBody(event_object)
-    correct = (
-        '2012-06-27,18:17:01,UTC,..C.,LOG,Syslog,Metadata Modification Time,-,'
-        'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        'closed for user root),Reporter <CRON> PID: 8442 '
-        '(pam_unix(cron:session): session closed for user root),log/syslog.1'
-        ',-,-,-,-\n')
-    self.assertEqual(output.getvalue(), header + correct)
+    expected_event_body = (
+        b'{0:s}'
+        b'2012-06-27,18:17:01,UTC,..C.,LOG,Syslog,Metadata Modification Time,-,'
+        b'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        b'closed for user root),Reporter <CRON> PID: 8442 '
+        b'(pam_unix(cron:session): session closed for user root),log/syslog.1'
+        b',-,-,-,-\n').format(expected_header)
+    self.assertEqual(output.getvalue(), expected_event_body)
 
-    output = StringIO.StringIO()
-    filter_object = FakeFilter(['datetime', 'nonsense', 'hostname', 'message'])
+    output = io.BytesIO()
+    filter_object = FakeFilter([
+        u'datetime', u'nonsense', u'hostname', u'message'])
     formatter = dynamic.DynamicOutput(
         None, self._formatter_mediator, filehandle=output,
         filter_use=filter_object)
 
-    header = 'datetime,nonsense,hostname,message\n'
+    expected_header = b'datetime,nonsense,hostname,message\n'
     formatter.WriteHeader()
-    self.assertEqual(output.getvalue(), header)
+    self.assertEqual(output.getvalue(), expected_header)
 
-    correct = (
-        '2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
-        ' (pam_unix(cron:session): session closed for user root)\n')
+    expected_event_body = (
+        b'{0:s}'
+        b'2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
+        b' (pam_unix(cron:session): session closed for user root)\n').format(
+            expected_header)
 
     formatter.WriteEventBody(event_object)
-    self.assertEqual(output.getvalue(), header + correct)
+    self.assertEqual(output.getvalue(), expected_event_body)
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        TestEventFormatter)
 
 
 if __name__ == '__main__':
