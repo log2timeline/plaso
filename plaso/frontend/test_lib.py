@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Front-end related functions and classes for testing."""
 
+import io
 import os
 import shutil
-import StringIO
 import tempfile
 import unittest
 
@@ -14,30 +14,30 @@ class StringIOOutputWriter(object):
   def __init__(self):
     """Initialize the string output writer."""
     super(StringIOOutputWriter, self).__init__()
-    self._string_obj = StringIO.StringIO()
+    self._string_io = io.StringIO()
 
     # Make the output writer compatible with a filehandle interface.
     self.write = self.Write
 
   def flush(self):
     """Flush the internal buffer."""
-    self._string_obj.flush()
+    self._string_io.flush()
 
   def GetValue(self):
     """Returns the write buffer from the output writer."""
-    return self._string_obj.getvalue()
+    return self._string_io.getvalue()
 
   def GetLine(self):
     """Returns a single line read from the output buffer."""
-    return self._string_obj.readline()
+    return self._string_io.readline()
 
   def SeekToBeginning(self):
     """Seeks the output buffer to the beginning of the buffer."""
-    self._string_obj.seek(0)
+    self._string_io.seek(0)
 
   def Write(self, string):
     """Writes a string to the StringIO object."""
-    self._string_obj.write(string)
+    self._string_io.write(string)
 
 
 class TempDirectory(object):

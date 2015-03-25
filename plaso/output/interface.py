@@ -185,17 +185,17 @@ class FileLogOutputFormatter(LogOutputFormatter):
         store, formatter_mediator, config=config, filter_use=filter_use)
 
     if isinstance(filehandle, basestring):
-      open_filehandle = open(filehandle, 'wb')
+      open_file_object = open(filehandle, 'wb')
 
     # Check if the filehandle object has a write method.
     elif hasattr(filehandle, u'write'):
-      open_filehandle = filehandle
+      open_file_object = filehandle
 
     else:
       raise ValueError(u'Unsupported file handle.')
 
     self.filehandle = OutputFilehandle(self.encoding)
-    self.filehandle.Open(open_filehandle)
+    self.filehandle.Open(open_file_object)
 
   def Close(self):
     """Closes the output."""
@@ -324,7 +324,7 @@ class OutputFilehandle(object):
     """
     super(OutputFilehandle, self).__init__()
     self._encoding = encoding
-    self._filehandle = None
+    self._file_object = None
     # An attribute stating whether or not this is STDOUT.
     self._standard_out = False
 
@@ -337,38 +337,38 @@ class OutputFilehandle(object):
             to pass in a path to a file, and a file-like object will be created.
     """
     if path:
-      self._filehandle = open(path, 'wb')
+      self._file_object = open(path, 'wb')
     else:
-      self._filehandle = filehandle
+      self._file_object = filehandle
 
-    if not hasattr(self._filehandle, 'name'):
+    if not hasattr(self._file_object, 'name'):
       self._standard_out = True
-    elif self._filehandle.name.startswith('<stdout>'):
+    elif self._file_object.name.startswith('<stdout>'):
       self._standard_out = True
 
   def WriteLine(self, line):
     """Write a single line to the supplied filehandle."""
-    if not self._filehandle:
+    if not self._file_object:
       return
 
     if self._standard_out:
       # Write using preferred user encoding.
       try:
-        self._filehandle.write(line.encode(self._encoding))
+        self._file_object.write(line.encode(self._encoding))
       except UnicodeEncodeError:
         logging.error(
             u'Unable to properly write logline, save output to a file to '
             u'prevent missing data.')
-        self._filehandle.write(line.encode(self._encoding, 'ignore'))
+        self._file_object.write(line.encode(self._encoding, 'ignore'))
 
     else:
       # Write to a file, use unicode.
-      self._filehandle.write(line.encode(self.DEFAULT_ENCODING))
+      self._file_object.write(line.encode(self.DEFAULT_ENCODING))
 
   def Close(self):
     """Close the filehandle, if applicable."""
-    if self._filehandle and not self._standard_out:
-      self._filehandle.close()
+    if self._file_object and not self._standard_out:
+      self._file_object.close()
 
   def __exit__(self, unused_type, unused_value, unused_traceback):
     """Make usable with "with" statement."""
