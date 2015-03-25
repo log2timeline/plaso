@@ -66,7 +66,7 @@ class MsiecfRedirectedEvent(time_events.TimestampEvent):
         eventdata.EventTimestamp.NOT_A_TIME)
 
     self.recovered = recovered
-    self.location = msiecf_item.location
+    self.url = msiecf_item.location
 
 
 class MsiecfUrlEvent(time_events.TimestampEvent):
@@ -117,7 +117,7 @@ class MsiecfParser(interface.SingleFileBaseParser):
   NAME = u'msiecf'
   DESCRIPTION = u'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
 
-  def _Parseleak(
+  def _ParseLeak(
       self, parser_mediator, cache_directories, msiecf_item, recovered=False):
     """Extract data from a MSIE Cache Files (MSIECF) leak item.
 
@@ -295,8 +295,7 @@ class MsiecfParser(interface.SingleFileBaseParser):
           self._ParseLeak(parser_mediator, cache_directories, msiecf_item)
 
         elif isinstance(msiecf_item, pymsiecf.redirected):
-          self._ParseRedirected(
-              parser_mediator, cache_directories, msiecf_item)
+          self._ParseRedirected(parser_mediator, msiecf_item)
 
         elif isinstance(msiecf_item, pymsiecf.url):
           self._ParseUrl(
@@ -315,8 +314,7 @@ class MsiecfParser(interface.SingleFileBaseParser):
               parser_mediator, cache_directories, msiecf_item, recovered=True)
 
         elif isinstance(msiecf_item, pymsiecf.redirected):
-          self._ParseRedidrected(
-              parser_mediator, cache_directories, msiecf_item, recovered=True)
+          self._ParseRedirected(parser_mediator, msiecf_item, recovered=True)
 
         elif isinstance(msiecf_item, pymsiecf.url):
           self._ParseUrl(
