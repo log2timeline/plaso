@@ -6,29 +6,8 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
-# TODO: add tests.
-# TODO: add MsiecfLeakFormatter.
-# TODO: add MsiecfRedirectedFormatter.
-
-
-class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
+class MsiecfItemFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MSIECF URL item."""
-
-  DATA_TYPE = 'msiecf:url'
-
-  FORMAT_STRING_PIECES = [
-      u'Location: {url}',
-      u'Number of hits: {number_of_hits}',
-      u'Cached file: {cached_file_path}',
-      u'Cached file size: {cached_file_size}',
-      u'HTTP headers: {http_headers}',
-      u'{recovered_string}']
-
-  FORMAT_STRING_SHORT_PIECES = [
-      u'Location: {url}']
-
-  SOURCE_LONG = 'MSIE Cache File URL record'
-  SOURCE_SHORT = 'WEBHIST'
 
   def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
@@ -61,10 +40,65 @@ class MsiecfUrlFormatter(interface.ConditionalEventFormatter):
     if cached_file_path:
       cache_directory_name = event_values.get(u'cache_directory_name', None)
       if cache_directory_name:
-        cached_file_path = u'\\'.join(cache_directory_name, cached_file_path)
+        cached_file_path = u'\\'.join([cache_directory_name, cached_file_path])
       event_values[u'cached_file_path'] = cached_file_path
 
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatter(MsiecfUrlFormatter)
+class MsiecfLeakFormatter(MsiecfItemFormatter):
+  """Formatter for a MSIECF leak item event."""
+
+  DATA_TYPE = 'msiecf:leak'
+
+  FORMAT_STRING_PIECES = [
+      u'Cached file: {cached_file_path}',
+      u'Cached file size: {cached_file_size}',
+      u'{recovered_string}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Cached file: {cached_file_path}']
+
+  SOURCE_LONG = 'MSIE Cache File leak record'
+  SOURCE_SHORT = 'WEBHIST'
+
+
+class MsiecfRedirectedFormatter(MsiecfItemFormatter):
+  """Formatter for a MSIECF leak redirected event."""
+
+  DATA_TYPE = 'msiecf:redirected'
+
+  FORMAT_STRING_PIECES = [
+      u'Location: {url}',
+      u'{recovered_string}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Location: {url}']
+
+  SOURCE_LONG = 'MSIE Cache File redirected record'
+  SOURCE_SHORT = 'WEBHIST'
+
+
+class MsiecfUrlFormatter(MsiecfItemFormatter):
+  """Formatter for a MSIECF URL item event."""
+
+  DATA_TYPE = 'msiecf:url'
+
+  FORMAT_STRING_PIECES = [
+      u'Location: {url}',
+      u'Number of hits: {number_of_hits}',
+      u'Cached file: {cached_file_path}',
+      u'Cached file size: {cached_file_size}',
+      u'HTTP headers: {http_headers}',
+      u'{recovered_string}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'Location: {url}',
+      u'Cached file: {cached_file_path}']
+
+  SOURCE_LONG = 'MSIE Cache File URL record'
+  SOURCE_SHORT = 'WEBHIST'
+
+
+manager.FormattersManager.RegisterFormatters([
+    MsiecfLeakFormatter, MsiecfRedirectedFormatter, MsiecfUrlFormatter])
