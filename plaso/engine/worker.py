@@ -127,10 +127,13 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       known signatures.
     """
     parser_name_list = []
+    scan_state = pysigscan.scan_state()
 
     file_object = file_entry.GetFileObject()
-    scan_state = pysigscan.scan_state()
-    self._file_scanner.scan_file_object(scan_state, file_object)
+    try:
+      self._file_scanner.scan_file_object(scan_state, file_object)
+    finally:
+      file_object.close()
 
     for scan_result in scan_state.scan_results:
       format_specification = (
@@ -140,7 +143,6 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
       if format_specification.identifier not in parser_name_list:
         parser_name_list.append(format_specification.identifier)
 
-    file_object.close()
     return parser_name_list
 
   def _ParseFileEntryWithParser(self, parser_object, file_entry):
@@ -247,13 +249,15 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
           file_system = path_spec_resolver.Resolver.OpenFileSystem(
               archive_path_spec, resolver_context=self._resolver_context)
 
-          # TODO: change this to pass the archive file path spec to
-          # the collector process and have the collector implement a maximum
-          # path spec "depth" to prevent ZIP bombs and equiv.
-          file_system_collector = collector.FileSystemCollector(self._queue)
-          file_system_collector.Collect(file_system, archive_path_spec)
+          try:
+            # TODO: change this to pass the archive file path spec to
+            # the collector process and have the collector implement a maximum
+            # path spec "depth" to prevent ZIP bombs and equiv.
+            file_system_collector = collector.FileSystemCollector(self._queue)
+            file_system_collector.Collect(file_system, archive_path_spec)
 
-          file_system.Close()
+          finally:
+            file_system.Close()
 
         except IOError:
           logging.warning(u'Unable to process archive file:\n{0:s}'.format(
@@ -362,9 +366,9 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         self._hasher_names)
 
     file_object = file_entry.GetFileObject()
-    file_object.seek(0, os.SEEK_SET)
-
     try:
+      file_object.seek(0, os.SEEK_SET)
+
       # We only do one read, then pass it to each of the hashers in turn.
       data = file_object.read(self.DEFAULT_HASH_READ_SIZE)
       while data:
@@ -481,7 +485,7 @@ class BaseEventExtractionWorker(queue.ItemQueueConsumer):
         file_entry.path_spec):
       # Clean up after parsers that do not call close explicitly.
       if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
-        logging.debug((
+        logging.warning((
             u'File-object not explicitly closed for path specification: '
             u'{0:s}.').format(file_entry.path_spec.comparable))
 
