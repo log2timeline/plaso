@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the front-end object."""
+"""Tests for the extraction front-end object."""
 
 import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
+from plaso.frontend import extraction_frontend
 from plaso.frontend import frontend
 from plaso.frontend import test_lib
 from plaso.lib import errors
@@ -21,7 +22,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     Args:
       test_file: the path of the test file.
     """
-    test_front_end = frontend.ExtractionFrontend(
+    test_front_end = extraction_frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
     options = frontend.Options()
@@ -44,7 +45,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     Args:
       test_file: the path of the test file.
     """
-    test_front_end = frontend.ExtractionFrontend(
+    test_front_end = extraction_frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
     options = frontend.Options()
@@ -66,7 +67,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     Args:
       test_file: the path of the test file.
     """
-    test_front_end = frontend.ExtractionFrontend(
+    test_front_end = extraction_frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
     options = frontend.Options()
@@ -118,7 +119,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     Args:
       test_file: the path of the test file.
     """
-    test_front_end = frontend.ExtractionFrontend(
+    test_front_end = extraction_frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
     options = frontend.Options()
@@ -173,7 +174,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
 
   def testParseOptions(self):
     """Tests the parse options function."""
-    test_front_end = frontend.ExtractionFrontend(
+    test_front_end = extraction_frontend.ExtractionFrontend(
         self._input_reader, self._output_writer)
 
     options = frontend.Options()
