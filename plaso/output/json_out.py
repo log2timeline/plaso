@@ -71,7 +71,7 @@ class JsonOutputFormatter(interface.FileLogOutputFormatter):
     # unflatten dictionary, for more compact and usable JSON output
     json_dict = json.loads(json_string)
     if 'pathspec' in json_dict and isinstance(json_dict['pathspec'],
-        basestring):
+                                              basestring):
       # convert JSON string to a dictionary
       pathspec_dict = json.loads(json_dict['pathspec'])
       # get a reference to the dictionary
